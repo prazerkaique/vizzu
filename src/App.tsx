@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// VIZZU - AI Visual Studio for E-commerce
-// ═══════════════════════════════════════════════════════════════
-
 import React, { useState, useEffect } from 'react';
 import { Studio } from './components/Studio';
 import { Product, User, HistoryLog } from './types';
@@ -28,11 +24,12 @@ const DEMO_PRODUCTS: Product[] = [
   }
 ];
 
+type Page = 'dashboard' | 'studio' | 'products' | 'settings';
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(DEMO_PRODUCTS);
-  const [historyLog, setHistoryLog] = useState<HistoryLog[]>([]);
-  const [showSettings, setShowSettings] = useState(false);
+  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [showImport, setShowImport] = useState(false);
   
   const { userCredits, currentPlan, deductCredits, upgradePlan, setCredits } = useCredits();
@@ -79,11 +76,7 @@ function App() {
     action: string, details: string, status: HistoryLog['status'], 
     items: Product[], method: HistoryLog['method'], cost: number
   ) => {
-    const newLog: HistoryLog = {
-      id: `log-${Date.now()}`, date: new Date().toLocaleString('pt-BR'),
-      action, details, status, method, cost, itemsCount: items.length, products: items
-    };
-    setHistoryLog(prev => [newLog, ...prev]);
+    console.log('History:', { action, details, status, itemsCount: items.length, method, cost });
   };
 
   const handleImportProduct = (files: FileList) => {
@@ -121,16 +114,10 @@ function App() {
     setUser(null);
   };
 
-  // ═══════════════════════════════════════════════════════════════
   // LOGIN SCREEN
-  // ═══════════════════════════════════════════════════════════════
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4">
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
-
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-4">
@@ -161,31 +148,10 @@ function App() {
                 <div className="relative flex justify-center text-sm"><span className="px-4 text-slate-500 bg-transparent">ou</span></div>
               </div>
 
-              <button onClick={handleDemoLogin} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-colors">
+              <button onClick={handleDemoLogin} className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-colors">
                 <i className="fas fa-play"></i>
                 Testar Gratuitamente
               </button>
-            </div>
-          </div>
-
-          <div className="mt-8 grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center mx-auto mb-2">
-                <i className="fas fa-store text-purple-400"></i>
-              </div>
-              <p className="text-[10px] text-slate-500">Fundo Branco</p>
-            </div>
-            <div className="text-center">
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center mx-auto mb-2">
-                <i className="fas fa-film text-pink-400"></i>
-              </div>
-              <p className="text-[10px] text-slate-500">Cenários</p>
-            </div>
-            <div className="text-center">
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center mx-auto mb-2">
-                <i className="fas fa-user-friends text-orange-400"></i>
-              </div>
-              <p className="text-[10px] text-slate-500">Modelos IA</p>
             </div>
           </div>
         </div>
@@ -193,87 +159,354 @@ function App() {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // MAIN APP
-  // ═══════════════════════════════════════════════════════════════
+  // MAIN APP WITH SIDEBAR
   return (
-    <div className="h-screen flex flex-col bg-slate-100">
+    <div className="h-screen flex bg-slate-100">
       
-      {/* SETTINGS MODAL */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <i className="fas fa-bolt text-white text-xl"></i>
-                </div>
-                <div className="text-white">
-                  <h2 className="text-xl font-bold">Créditos & Planos</h2>
-                  <p className="text-sm text-white/70">Gerencie sua conta</p>
-                </div>
-              </div>
-              <button onClick={() => setShowSettings(false)} className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center">
-                <i className="fas fa-times"></i>
+      {/* SIDEBAR */}
+      <aside className="w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex flex-col shadow-2xl">
+        
+        {/* Logo */}
+        <div className="p-5 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg">
+              <i className="fas fa-magic text-white"></i>
+            </div>
+            <span className="text-xl font-black text-white tracking-tight">VIZZU</span>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-3 space-y-1">
+          <button
+            onClick={() => setCurrentPage('dashboard')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'dashboard'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-home w-5"></i>
+            Dashboard
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('studio')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'studio'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-wand-magic-sparkles w-5"></i>
+            Vizzu Studio
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('products')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'products'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-box w-5"></i>
+            Produtos
+          </button>
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="p-3 border-t border-white/10 space-y-3">
+          
+          {/* Credits */}
+          <div className="bg-white/5 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
+              <button 
+                onClick={() => setCurrentPage('settings')}
+                className="text-purple-400 hover:text-purple-300 text-xs font-bold"
+              >
+                + Add
               </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto">
-              <div className="bg-slate-50 rounded-2xl p-6 mb-6 border border-slate-200">
-                <div className="flex items-center justify-between mb-4">
+            <p className="text-2xl font-black text-white">{userCredits.toLocaleString()}</p>
+            <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all"
+                style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Settings Button */}
+          <button
+            onClick={() => setCurrentPage('settings')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'settings'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-cog w-5"></i>
+            Configurações
+          </button>
+
+          {/* User Profile */}
+          <div className="flex items-center gap-3 px-2 py-2">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+              {user.avatar ? (
+                <img src={user.avatar} className="w-full h-full object-cover" alt="" />
+              ) : (
+                <i className="fas fa-user text-white text-sm"></i>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">{user.name}</p>
+              <p className="text-[10px] text-slate-500">Plano {currentPlan.name}</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <main className="flex-1 overflow-hidden flex flex-col">
+        
+        {/* DASHBOARD PAGE */}
+        {currentPage === 'dashboard' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-3xl font-black text-slate-800 mb-2">Bem-vindo, {user.name.split(' ')[0]}!</h1>
+              <p className="text-slate-500 mb-8">Resumo do seu estúdio de imagens AI</p>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                      <i className="fas fa-box"></i>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 uppercase">Total Produtos</span>
+                  </div>
+                  <p className="text-3xl font-black text-slate-800">{products.length}</p>
+                  <p className="text-xs text-slate-500 mt-1">No catálogo</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                      <i className="fas fa-image"></i>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 uppercase">Imagens Geradas</span>
+                  </div>
+                  <p className="text-3xl font-black text-slate-800">0</p>
+                  <p className="text-xs text-slate-500 mt-1">Este mês</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                      <i className="fas fa-coins"></i>
+                    </div>
+                    <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
+                  </div>
+                  <p className="text-3xl font-black text-slate-800">{userCredits}</p>
+                  <p className="text-xs text-slate-500 mt-1">Disponíveis</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-5 shadow-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center">
+                      <i className="fas fa-crown"></i>
+                    </div>
+                    <span className="text-xs font-bold text-white/70 uppercase">Plano</span>
+                  </div>
+                  <p className="text-3xl font-black text-white">{currentPlan.name}</p>
+                  <p className="text-xs text-white/70 mt-1">{currentPlan.limit} créd./mês</p>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <h2 className="text-lg font-bold text-slate-700 mb-4">Ações Rápidas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button 
+                  onClick={() => setCurrentPage('studio')}
+                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i className="fas fa-wand-magic-sparkles text-xl"></i>
+                  </div>
+                  <h3 className="font-bold text-slate-800 mb-1">Abrir Studio</h3>
+                  <p className="text-sm text-slate-500">Gerar imagens com IA</p>
+                </button>
+
+                <button 
+                  onClick={() => setShowImport(true)}
+                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i className="fas fa-cloud-upload-alt text-xl"></i>
+                  </div>
+                  <h3 className="font-bold text-slate-800 mb-1">Importar Produtos</h3>
+                  <p className="text-sm text-slate-500">Adicionar novas imagens</p>
+                </button>
+
+                <button 
+                  onClick={() => setCurrentPage('settings')}
+                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i className="fas fa-bolt text-xl"></i>
+                  </div>
+                  <h3 className="font-bold text-slate-800 mb-1">Comprar Créditos</h3>
+                  <p className="text-sm text-slate-500">Upgrade de plano</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STUDIO PAGE */}
+        {currentPage === 'studio' && (
+          <Studio
+            products={products}
+            userCredits={userCredits}
+            onUpdateProduct={handleUpdateProduct}
+            onDeductCredits={handleDeductCredits}
+            onAddHistoryLog={handleAddHistoryLog}
+            onOpenSettings={() => setCurrentPage('settings')}
+            onImport={() => setShowImport(true)}
+          />
+        )}
+
+        {/* PRODUCTS PAGE */}
+        {currentPage === 'products' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-800 mb-2">Produtos</h1>
+                  <p className="text-slate-500">Gerencie seu catálogo de produtos</p>
+                </div>
+                <button 
+                  onClick={() => setShowImport(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                >
+                  <i className="fas fa-plus mr-2"></i>Importar
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6">
+                  {products.map(product => (
+                    <div 
+                      key={product.id}
+                      onClick={() => setCurrentPage('studio')}
+                      className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group"
+                    >
+                      <div className="aspect-square bg-white relative overflow-hidden">
+                        <img 
+                          src={product.images[0]?.base64 || product.images[0]?.url} 
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">{product.sku}</p>
+                        <p className="text-xs font-bold text-slate-700 truncate">{product.name}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS PAGE */}
+        {currentPage === 'settings' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-3xl font-black text-slate-800 mb-2">Configurações</h1>
+              <p className="text-slate-500 mb-8">Gerencie sua conta e plano</p>
+
+              {/* Current Plan */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+                <h2 className="text-lg font-bold text-slate-700 mb-4">Plano Atual</h2>
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase">Plano Atual</p>
-                    <h3 className="text-2xl font-black text-slate-800">{currentPlan.name}</h3>
+                    <p className="text-3xl font-black text-slate-800">{currentPlan.name}</p>
+                    <p className="text-slate-500">{currentPlan.price}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-bold text-slate-400 uppercase">Créditos</p>
+                    <p className="text-sm text-slate-500">Créditos restantes</p>
                     <p className="text-3xl font-black text-purple-600">{userCredits}</p>
                   </div>
                 </div>
-                <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all" style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}></div>
+                <div className="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+                    style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
+                  ></div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">{userCredits} de {currentPlan.limit} créditos disponíveis</p>
               </div>
 
-              <h4 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Escolha seu plano</h4>
-              <div className="grid grid-cols-2 gap-4">
-                {PLANS.map(plan => (
-                  <div key={plan.id} className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${currentPlan.id === plan.id ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-purple-300'}`} onClick={() => upgradePlan(plan.id)}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h5 className="font-bold text-slate-800">{plan.name}</h5>
-                      {currentPlan.id === plan.id && <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">ATUAL</span>}
+              {/* Plans */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+                <h2 className="text-lg font-bold text-slate-700 mb-4">Planos Disponíveis</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {PLANS.map(plan => (
+                    <div 
+                      key={plan.id}
+                      onClick={() => upgradePlan(plan.id)}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        currentPlan.id === plan.id 
+                          ? 'border-purple-500 bg-purple-50' 
+                          : 'border-slate-200 hover:border-purple-300'
+                      }`}
+                    >
+                      <h3 className="font-bold text-slate-800">{plan.name}</h3>
+                      <p className="text-2xl font-black text-slate-800 my-2">{plan.limit}</p>
+                      <p className="text-xs text-slate-500">créditos/mês</p>
+                      <p className="text-sm font-bold text-purple-600 mt-2">{plan.price}</p>
+                      {currentPlan.id === plan.id && (
+                        <span className="inline-block mt-2 text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                          ATUAL
+                        </span>
+                      )}
                     </div>
-                    <p className="text-2xl font-black text-slate-800 mb-1">{plan.limit} <span className="text-xs font-normal text-slate-500">créd./mês</span></p>
-                    <p className="text-xs text-slate-500">{plan.price}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-slate-200">
+              {/* Account */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h2 className="text-lg font-bold text-slate-700 mb-4">Conta</h2>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
                       {user.avatar ? (
-                        <img src={user.avatar} className="w-full h-full rounded-full object-cover" alt="" />
+                        <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                       ) : (
-                        <i className="fas fa-user text-purple-600"></i>
+                        <i className="fas fa-user text-white text-xl"></i>
                       )}
                     </div>
                     <div>
                       <p className="font-bold text-slate-800">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
+                      <p className="text-sm text-slate-500">{user.email}</p>
                     </div>
                   </div>
-                  <button onClick={handleLogout} className="px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <button 
+                    onClick={handleLogout}
+                    className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-colors"
+                  >
                     <i className="fas fa-sign-out-alt mr-2"></i>Sair
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
 
       {/* IMPORT MODAL */}
       {showImport && (
@@ -309,17 +542,6 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* MAIN STUDIO */}
-      <Studio
-        products={products}
-        userCredits={userCredits}
-        onUpdateProduct={handleUpdateProduct}
-        onDeductCredits={handleDeductCredits}
-        onAddHistoryLog={handleAddHistoryLog}
-        onOpenSettings={() => setShowSettings(true)}
-        onImport={() => setShowImport(true)}
-      />
     </div>
   );
 }
