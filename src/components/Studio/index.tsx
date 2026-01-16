@@ -2,9 +2,11 @@
 // VIZZU - AI Visual Studio Main Component
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Product, VisualStudioGeneration, SavedModelProfile, HistoryLog, LookComposition } from '../../types';
-import { LookComposer } from './LookComposer';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Product, VisualStudioGeneration, SavedModelProfile, HistoryLog } from '../../types';
+import { EditorModal } from './EditorModal';
+import { GenerationHistory } from './GenerationHistory';
+// import { generateVisualStudioImage } from '../../services/geminiService';
 
 interface StudioProps {
   products: Product[];
@@ -21,40 +23,101 @@ const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestido
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 
-// Ferramentas disponíveis com novos nomes
-const TOOLS = [
-  { id: 'fundo', label: 'Fundo Profissional', icon: 'fa-store', desc: 'Fundo branco perfeito', credits: 1, color: 'purple' },
-  { id: 'promocional', label: 'Foto Promocional', icon: 'fa-image', desc: 'Cenários criativos', credits: 2, color: 'pink' },
-  { id: 'look', label: 'Look Virtual', icon: 'fa-user-astronaut', desc: 'Modelo com roupas', credits: 2, color: 'indigo' },
-];
-
 export const Studio: React.FC<StudioProps> = ({
-  products, userCredits, onUpdateProduct, onDeductCredits, onAddHistoryLog, onOpenSettings, onImport, currentPlan
+  products,
+  userCredits,
+  onUpdateProduct,
+  onDeductCredits,
+  onAddHistoryLog,
+  onOpenSettings,
+  onImport,
+  currentPlan
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterCollection, setFilterCollection] = useState('');
   const [filterColor, setFilterColor] = useState('');
+  
   const [generations, setGenerations] = useState<VisualStudioGeneration[]>([]);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
-  
-  // Editor states
-  const [selectedTool, setSelectedTool] = useState<string>('fundo');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [lookComposition, setLookComposition] = useState<LookComposition>({});
-  const [showImageOptions, setShowImageOptions] = useState(false);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load saved models from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('vizzu_saved_models');
     if (saved) {
-      try { setSavedModels(JSON.parse(saved)); } catch(e) { console.error(e); }
+      try {
+        setSavedModels(JSON.parse(saved));
+      } catch(e) { console.error('Erro ao carregar modelos salvos', e); }
     }
   }, []);
+
+  const handleSaveModelProfile = (profile: SavedModelProfile) => {
+    const updated = [...savedModels, profile];
+    setSavedModels(updated);
+    localStorage.setItem('vizzu_saved_models', JSON.stringify(updated));
+  };
+
+  const handleDeleteModelProfile = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
+      const updated = savedModels.filter(m => m.id !== id);
+      setSavedModels(updated);
+      localStorage.setItem('vizzu_saved_models', JSON.stringify(updated));
+    }
+  };
+
+  const handleGenerateImage = async (
+    product: Product,
+    toolType: 'studio' | 'cenario' | 'lifestyle' | 'provador' | 'refine',
+    prompt?: string,
+    options?: any
+  ): Promise<{ image: string | null; generationId: string | null }> => {
+    try {
+      const result = await generateVisualStudioImage(product, toolType, prompt, options);
+      
+      if (result.image) {
+        const newGeneration: VisualStudioGeneration = {
+          id: result.generationId || `gen-${Date.now()}`,
+          productId: product.id,
+          productName: product.name,
+          originalImage: product.images[0]?.base64 || product.images[0]?.url || '',
+          generatedImage: result.image,
+          toolType,
+          prompt: prompt || '',
+          timestamp: new Date().toISOString(),
+          saved: false
+        };
+        setGenerations(prev => [newGeneration, ...prev]);
+        
+        onAddHistoryLog(
+          `Imagem gerada: ${toolType}`,
+          `Produto: ${product.name}`,
+          'success',
+          [product],
+          'ai',
+          toolType === 'studio' ? 1 : toolType === 'cenario' ? 2 : 3
+        );
+      }
+      
+      return result;
+    } catch (error: any) {
+      onAddHistoryLog(
+        `Erro na geração: ${toolType}`,
+        error.message || 'Erro desconhecido',
+        'error',
+        [product],
+        'ai',
+        0
+      );
+      throw error;
+    }
+  };
+
+  const handleMarkSaved = (generationId: string) => {
+    setGenerations(prev => prev.map(g => 
+      g.id === generationId ? { ...g, saved: true } : g
+    ));
+  };
 
   const productsWithImages = useMemo(() => {
     return products.filter(p => {
@@ -72,245 +135,7 @@ export const Studio: React.FC<StudioProps> = ({
     });
   }, [products, searchTerm, filterCategory, filterCollection, filterColor]);
 
-  const handleSelectProduct = (product: Product) => {
-    setSelectedProduct(product);
-    setGeneratedImage(null);
-    setCustomPrompt('');
-    setLookComposition({});
-  };
-
-  const handleBack = () => {
-    setSelectedProduct(null);
-    setGeneratedImage(null);
-  };
-
-  const handleGenerate = async () => {
-    if (!selectedProduct || userCredits < TOOLS.find(t => t.id === selectedTool)!.credits) return;
-    
-    const tool = TOOLS.find(t => t.id === selectedTool)!;
-    setIsGenerating(true);
-    
-    // Simular geração
-    setTimeout(() => {
-      const originalImage = selectedProduct.images[0]?.base64 || selectedProduct.images[0]?.url;
-      setGeneratedImage(originalImage); // Na prática, seria a imagem gerada pela IA
-      onDeductCredits(tool.credits, 'Vizzu Studio - ' + tool.label);
-      setIsGenerating(false);
-    }, 2500);
-  };
-
-  const handleSaveToProduct = () => {
-    if (!selectedProduct || !generatedImage) return;
-    
-    const newImages = [
-      { name: 'generated-' + Date.now() + '.jpg', base64: generatedImage },
-      ...selectedProduct.images
-    ];
-    onUpdateProduct(selectedProduct.id, { images: newImages });
-    alert('Imagem salva no produto!');
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedProduct) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      const newImages = [
-        { name: file.name, base64 },
-        ...selectedProduct.images.slice(1)
-      ];
-      onUpdateProduct(selectedProduct.id, { images: newImages });
-      setSelectedProduct({ ...selectedProduct, images: newImages });
-    };
-    reader.readAsDataURL(file);
-    setShowImageOptions(false);
-  };
-
-  const handleTakePhoto = () => {
-    // Em mobile, isso abre a câmera
-    if (fileInputRef.current) {
-      fileInputRef.current.setAttribute('capture', 'environment');
-      fileInputRef.current.click();
-    }
-    setShowImageOptions(false);
-  };
-
-  const handleChooseFromGallery = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.removeAttribute('capture');
-      fileInputRef.current.click();
-    }
-    setShowImageOptions(false);
-  };
-
   const planName = currentPlan?.name || 'Free';
-  const planLimit = currentPlan?.limit || 50;
-
-  // ═══════════════════════════════════════════════════════════════
-  // EDITOR VIEW (quando produto está selecionado)
-  // ═══════════════════════════════════════════════════════════════
-  if (selectedProduct) {
-    const currentTool = TOOLS.find(t => t.id === selectedTool)!;
-    const productImage = selectedProduct.images[0]?.base64 || selectedProduct.images[0]?.url;
-    
-    return (
-      <div className="flex-1 overflow-y-auto bg-slate-50 h-full flex flex-col">
-        {/* Header com voltar */}
-        <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shadow-sm z-10 flex-shrink-0">
-          <button onClick={handleBack} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200">
-            <i className="fas fa-arrow-left"></i>
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-500 uppercase font-bold">{selectedProduct.sku}</p>
-            <h1 className="text-sm font-bold text-slate-800 truncate">{selectedProduct.name}</h1>
-          </div>
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-3 py-1.5">
-            <span className="text-xs font-bold text-white">{userCredits} créd.</span>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 pb-24">
-          {/* Imagem principal com botão + */}
-          <div className="relative mb-4">
-            <div className="aspect-square bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
-              {generatedImage ? (
-                <img src={generatedImage} alt="Gerado" className="w-full h-full object-contain" />
-              ) : (
-                <img src={productImage} alt={selectedProduct.name} className="w-full h-full object-contain" />
-              )}
-            </div>
-            
-            {/* Botão + para adicionar/trocar foto */}
-            <button 
-              onClick={() => setShowImageOptions(true)}
-              className="absolute bottom-3 right-3 w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center"
-            >
-              <i className="fas fa-plus text-lg"></i>
-            </button>
-
-            {/* Badge de gerado */}
-            {generatedImage && (
-              <div className="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                <i className="fas fa-check"></i> Gerado
-              </div>
-            )}
-          </div>
-
-          {/* Opções de imagem (tirar foto / galeria) */}
-          {showImageOptions && (
-            <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center" onClick={() => setShowImageOptions(false)}>
-              <div className="bg-white rounded-t-3xl w-full p-6 pb-8" onClick={e => e.stopPropagation()}>
-                <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-6"></div>
-                <h3 className="text-lg font-bold text-slate-800 text-center mb-6">Adicionar Imagem</h3>
-                
-                <div className="space-y-3">
-                  <button onClick={handleTakePhoto} className="w-full py-4 bg-purple-100 text-purple-700 rounded-xl font-bold flex items-center justify-center gap-3">
-                    <i className="fas fa-camera text-xl"></i>
-                    Tirar Foto
-                  </button>
-                  <button onClick={handleChooseFromGallery} className="w-full py-4 bg-slate-100 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-3">
-                    <i className="fas fa-images text-xl"></i>
-                    Escolher da Galeria
-                  </button>
-                </div>
-                
-                <button onClick={() => setShowImageOptions(false)} className="w-full mt-4 py-3 text-slate-500 font-medium">
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept="image/*" 
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-
-          {/* Seletor de Ferramentas */}
-          <div className="mb-4">
-            <h3 className="text-xs font-bold text-slate-500 uppercase mb-3">Escolha a ferramenta</h3>
-            <div className="grid grid-cols-3 gap-2">
-              {TOOLS.map(tool => (
-                <button
-                  key={tool.id}
-                  onClick={() => setSelectedTool(tool.id)}
-                  className={'p-3 rounded-xl border-2 transition-all text-center ' + 
-                    (selectedTool === tool.id 
-                      ? 'border-purple-500 bg-purple-50' 
-                      : 'border-slate-200 bg-white hover:border-purple-300')}
-                >
-                  <div className={'w-10 h-10 rounded-lg mx-auto mb-2 flex items-center justify-center ' +
-                    (tool.color === 'purple' ? 'bg-purple-100 text-purple-600' :
-                     tool.color === 'pink' ? 'bg-pink-100 text-pink-600' :
-                     'bg-indigo-100 text-indigo-600')}>
-                    <i className={'fas ' + tool.icon}></i>
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-800 leading-tight">{tool.label}</p>
-                  <span className="text-[9px] text-amber-600 font-bold">{tool.credits} créd.</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Opções específicas da ferramenta */}
-          {selectedTool === 'promocional' && (
-            <div className="mb-4">
-              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Descreva o cenário</label>
-              <textarea
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Ex: Na praia, ao pôr do sol, com coqueiros..."
-                rows={3}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm resize-none"
-              />
-            </div>
-          )}
-
-          {selectedTool === 'look' && (
-            <div className="mb-4">
-              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Monte o Look</label>
-              <LookComposer 
-                products={products} 
-                composition={lookComposition} 
-                onChange={setLookComposition}
-                collections={COLLECTIONS}
-              />
-            </div>
-          )}
-
-          {/* Se já gerou, mostrar botão de salvar */}
-          {generatedImage && (
-            <button
-              onClick={handleSaveToProduct}
-              className="w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 mb-4"
-            >
-              <i className="fas fa-save"></i> Salvar no Produto
-            </button>
-          )}
-        </div>
-
-        {/* CTA Fixo - Menor */}
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 md:p-4 z-30">
-          <button
-            onClick={handleGenerate}
-            disabled={isGenerating || userCredits < currentTool.credits}
-            className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-          >
-            {isGenerating ? (
-              <><i className="fas fa-spinner fa-spin"></i> Gerando...</>
-            ) : (
-              <><i className="fas fa-wand-magic-sparkles"></i> Gerar ({currentTool.credits} créd.)</>
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // ═══════════════════════════════════════════════════════════════
   // GALLERY VIEW (lista de produtos)
@@ -330,6 +155,25 @@ export const Studio: React.FC<StudioProps> = ({
               <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase">{planName}</span>
             </div>
             <p className="text-xs text-slate-500">Estúdio com IA para lojistas</p>
+          </div>
+        </div>
+        
+        {/* Credits Badge - Desktop */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl px-5 py-3 min-w-[120px] shadow-lg">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Créditos</span>
+            {onOpenSettings && (
+              <button onClick={onOpenSettings} className="text-amber-400 hover:text-amber-300 text-xs">
+                <i className="fas fa-plus"></i>
+              </button>
+            )}
+          </div>
+          <p className="text-2xl font-black text-white leading-none">{userCredits}</p>
+          <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, (userCredits / 500) * 100)}%` }}
+            ></div>
           </div>
         </div>
       </div>
@@ -352,8 +196,19 @@ export const Studio: React.FC<StudioProps> = ({
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-3 py-2 min-w-[80px] shadow-lg">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[8px] font-bold text-slate-400 uppercase">Créditos</span>
+            {onOpenSettings && (
+              <button onClick={onOpenSettings} className="text-amber-400 hover:text-amber-300 text-[10px]">
+                <i className="fas fa-plus"></i>
+              </button>
+            )}
           </div>
           <p className="text-lg font-black text-white leading-none">{userCredits}</p>
+          <div className="mt-1.5 h-1 bg-slate-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+              style={{ width: `${Math.min(100, (userCredits / 500) * 100)}%` }}
+            ></div>
+          </div>
         </div>
       </div>
 
@@ -413,7 +268,7 @@ export const Studio: React.FC<StudioProps> = ({
               )}
             </div>
             
-            <p className="text-[10px] text-slate-400 mt-2">{productsWithImages.length} de {products.length} produtos</p>
+            <p className="text-[10px] text-slate-400 mt-2">{productsWithImages.length} de {products.length} produtos com imagem</p>
           </div>
 
           {/* GRID DE PRODUTOS */}
@@ -426,7 +281,7 @@ export const Studio: React.FC<StudioProps> = ({
                 {searchTerm || filterCategory || filterCollection || filterColor ? 'Nenhum resultado' : 'Galeria Vazia'}
               </h3>
               <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchTerm ? 'Tente outros filtros.' : 'Adicione produtos com imagens para começar.'}
+                {searchTerm ? 'Tente outros filtros.' : 'Adicione produtos com imagens para começar a usar o Vizzu Studio.'}
               </p>
               {!searchTerm && onImport && (
                 <button onClick={onImport} className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-lg text-sm">
@@ -439,7 +294,7 @@ export const Studio: React.FC<StudioProps> = ({
               {productsWithImages.map((product) => (
                 <div
                   key={product.id}
-                  onClick={() => handleSelectProduct(product)}
+                  onClick={() => setSelectedProduct(product)}
                   className="bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                 >
                   <div className="aspect-[3/4] bg-slate-100 relative overflow-hidden">
@@ -453,6 +308,13 @@ export const Studio: React.FC<StudioProps> = ({
                         <i className="fas fa-wand-magic-sparkles mr-1"></i> Editar
                       </span>
                     </div>
+                    
+                    {/* Badge de imagens geradas */}
+                    {generations.filter(g => g.productId === product.id).length > 0 && (
+                      <div className="absolute top-2 right-2 bg-purple-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        {generations.filter(g => g.productId === product.id).length}
+                      </div>
+                    )}
                   </div>
                   <div className="p-2">
                     <p className="text-[8px] font-bold text-slate-400 uppercase">{product.sku}</p>
@@ -474,6 +336,25 @@ export const Studio: React.FC<StudioProps> = ({
           )}
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* EDITOR MODAL - Abre quando produto é selecionado */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {selectedProduct && (
+        <EditorModal
+          product={selectedProduct}
+          products={products}
+          userCredits={userCredits}
+          savedModels={savedModels}
+          onSaveModel={handleSaveModelProfile}
+          onDeleteModel={handleDeleteModelProfile}
+          onClose={() => setSelectedProduct(null)}
+          onUpdateProduct={onUpdateProduct}
+          onDeductCredits={onDeductCredits}
+          onGenerateImage={handleGenerateImage}
+          onMarkSaved={handleMarkSaved}
+        />
+      )}
     </div>
   );
 };
