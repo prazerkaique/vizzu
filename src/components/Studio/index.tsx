@@ -15,7 +15,7 @@ interface StudioProps {
   onOpenSettings?: () => void;
   onImport?: () => void;
   currentPlan?: { name: string; limit: number };
-  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<string | null>;
+  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<string>;
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -55,7 +55,7 @@ export const Studio: React.FC<StudioProps> = ({
       const matchesCategory = !filterCategory || product.category === filterCategory;
       const matchesCollection = !filterCollection || product.collection === filterCollection;
       const matchesColor = !filterColor || product.color === filterColor;
-      const matchesGender = !filterGender || product.gender === filterGender;
+      const matchesGender = !filterGender || (product as any).gender === filterGender;
       return matchesSearch && matchesCategory && matchesCollection && matchesColor && matchesGender;
     });
   }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender]);
@@ -70,7 +70,7 @@ export const Studio: React.FC<StudioProps> = ({
 
   // Produtos editados (que têm imagens geradas)
   const editedProducts = useMemo(() => {
-    return products.filter(p => p.generatedImages && p.generatedImages.length > 0);
+    return products.filter(p => (p as any).generatedImages && (p as any).generatedImages.length > 0);
   }, [products]);
 
   const handleSaveModelProfile = (model: SavedModelProfile) => {
@@ -355,14 +355,14 @@ export const Studio: React.FC<StudioProps> = ({
                       <div className="p-3">
                         <p className="font-medium text-white text-sm truncate">{model.name}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          {model.gender && (
+                          {(model as any).gender && (
                             <span className="text-[9px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded">
-                              {model.gender}
+                              {(model as any).gender}
                             </span>
                           )}
-                          {model.bodyType && (
+                          {(model as any).bodyType && (
                             <span className="text-[9px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded">
-                              {model.bodyType}
+                              {(model as any).bodyType}
                             </span>
                           )}
                         </div>
@@ -416,10 +416,10 @@ export const Studio: React.FC<StudioProps> = ({
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
-                      {product.generatedImages && product.generatedImages.length > 0 && (
+                      {(product as any).generatedImages && (product as any).generatedImages.length > 0 && (
                         <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
                           <i className="fas fa-check text-[6px]"></i>
-                          {product.generatedImages.length}
+                          {(product as any).generatedImages.length}
                         </div>
                       )}
                       <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
