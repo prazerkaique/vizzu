@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Studio } from './components/Studio';
-import { Product, User, HistoryLog } from './types';
+import { Product, User, HistoryLog, Client, Collection, WhatsAppTemplate } from './types';
 import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 
@@ -31,6 +31,13 @@ const DEMO_PRODUCTS: Product[] = [
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
+const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Outlet', 'Lançamentos'];
+
+const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
+  { id: '1', name: 'Provador Virtual', message: 'Olá {nome}! 🛍️\n\nPreparei um visual especial para você! Veja como ficou {produto} em você.\n\nO que achou? 😍', isDefault: true },
+  { id: '2', name: 'Look Completo', message: 'Oi {nome}! ✨\n\nMontei um look completo pensando em você!\n\nProdutos:\n{produtos}\n\nPosso reservar para você?', isDefault: false },
+  { id: '3', name: 'Novidades', message: 'Oi {nome}! 👋\n\nTemos novidades que combinam com você! Olha só como ficou:\n\nGostou? Posso separar! 💜', isDefault: false },
+];
 
 type Page = 'dashboard' | 'studio' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'company' | 'plan' | 'integrations';
@@ -59,10 +66,38 @@ function App() {
     brand: '',
     color: '',
     fit: '',
-    category: ''
+    category: '',
+    collection: ''
   });
   
+  // Clients State
+  const [clients, setClients] = useState<Client[]>([]);
+  const [showCreateClient, setShowCreateClient] = useState(false);
+  const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
+  const [showProvadorIA, setShowProvadorIA] = useState(false);
+  const [selectedClientForProvador, setSelectedClientForProvador] = useState<Client | null>(null);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [newClient, setNewClient] = useState({
+    firstName: '',
+    lastName: '',
+    whatsapp: '',
+    email: '',
+    photo: '',
+    notes: ''
+  });
+  
+  // Collections State
+  const [collections, setCollections] = useState<Collection[]>(
+    COLLECTIONS.map((name, i) => ({ id: `col-${i}`, name, createdAt: new Date().toISOString() }))
+  );
+  const [filterCollection, setFilterCollection] = useState('');
+  
+  // WhatsApp Templates
+  const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(DEFAULT_WHATSAPP_TEMPLATES[0]);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const clientPhotoInputRef = useRef<HTMLInputElement>(null);
   
   const { userCredits, currentPlan, deductCredits, upgradePlan, setCredits } = useCredits();
 
@@ -77,9 +112,21 @@ function App() {
     const matchesColor = !filterColor || product.color === filterColor;
     const matchesBrand = !filterBrand || product.brand === filterBrand;
     const matchesFit = !filterFit || product.fit === filterFit;
+    const matchesCollection = !filterCollection || product.collection === filterCollection;
     
-    return matchesSearch && matchesCategory && matchesColor && matchesBrand && matchesFit;
+    return matchesSearch && matchesCategory && matchesColor && matchesBrand && matchesFit && matchesCollection;
   });
+  
+  // Filtered clients
+  const filteredClients = clients.filter(client => {
+    const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
+    return fullName.includes(clientSearchTerm.toLowerCase()) ||
+           client.whatsapp.includes(clientSearchTerm) ||
+           (client.email && client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()));
+  });
+  
+  // Clients with Provador IA enabled
+  const clientsWithProvador = clients.filter(c => c.hasProvadorIA && c.photo);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -153,13 +200,83 @@ function App() {
       color: newProduct.color,
       fit: newProduct.fit,
       category: newProduct.category,
+      collection: newProduct.collection,
       images: [{ name: `${newProduct.name}.jpg`, base64: selectedImage }]
     };
 
     setProducts(prev => [...prev, product]);
     setShowCreateProduct(false);
     setSelectedImage(null);
-    setNewProduct({ name: '', brand: '', color: '', fit: '', category: '' });
+    setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+  };
+
+  // ══════════════════════════════════════════════════════════════════
+  // CLIENT HANDLERS
+  // ══════════════════════════════════════════════════════════════════
+  
+  const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setNewClient(prev => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreateClient = () => {
+    if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) {
+      alert('Preencha nome, sobrenome e WhatsApp');
+      return;
+    }
+
+    const client: Client = {
+      id: `client-${Date.now()}`,
+      firstName: newClient.firstName,
+      lastName: newClient.lastName,
+      whatsapp: newClient.whatsapp.replace(/\D/g, ''), // Remove non-digits
+      email: newClient.email || undefined,
+      photo: newClient.photo || undefined,
+      hasProvadorIA: !!newClient.photo,
+      notes: newClient.notes || undefined,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      totalOrders: 0
+    };
+
+    setClients(prev => [...prev, client]);
+    setShowCreateClient(false);
+    setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photo: '', notes: '' });
+  };
+
+  const handleDeleteClient = (clientId: string) => {
+    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+      setClients(prev => prev.filter(c => c.id !== clientId));
+      setShowClientDetail(null);
+    }
+  };
+
+  const handleOpenProvadorIA = (client: Client) => {
+    setSelectedClientForProvador(client);
+    setShowProvadorIA(true);
+    setShowClientDetail(null);
+  };
+
+  const formatWhatsApp = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 11) {
+      return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+    }
+    return phone;
+  };
+
+  const handleSendWhatsApp = (client: Client, message: string, imageUrl?: string) => {
+    const phone = client.whatsapp.replace(/\D/g, '');
+    const fullPhone = phone.startsWith('55') ? phone : `55${phone}`;
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${fullPhone}?text=${encodedMessage}`;
+    window.open(url, '_blank');
   };
 
   const handleGenerateDescription = async (product: Product) => {
@@ -181,6 +298,7 @@ function App() {
     setFilterColor('');
     setFilterBrand('');
     setFilterFit('');
+    setFilterCollection('');
   };
 
   const handleGoogleLogin = async () => {
@@ -555,8 +673,20 @@ function App() {
                     ))}
                   </select>
 
+                  {/* Collection Filter */}
+                  <select
+                    value={filterCollection}
+                    onChange={(e) => setFilterCollection(e.target.value)}
+                    className="hidden md:block flex-shrink-0 px-3 py-2 md:py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Coleção</option>
+                    {collections.map(col => (
+                      <option key={col.id} value={col.name}>{col.name}</option>
+                    ))}
+                  </select>
+
                   {/* Clear Filters */}
-                  {(searchTerm || filterCategory || filterColor || filterBrand || filterFit) && (
+                  {(searchTerm || filterCategory || filterColor || filterBrand || filterFit || filterCollection) && (
                     <button
                       onClick={clearFilters}
                       className="flex-shrink-0 px-3 py-2 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium"
@@ -643,10 +773,11 @@ function App() {
                       <h1 className="text-xl md:text-2xl font-black text-slate-800">Clientes</h1>
                       <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] md:text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
                     </div>
-                    <p className="text-slate-500 text-xs md:text-sm">Gerencie seus clientes e acessos</p>
+                    <p className="text-slate-500 text-xs md:text-sm">Gerencie seus clientes e Provador IA</p>
                   </div>
                 </div>
                 <button 
+                  onClick={() => setShowCreateClient(true)}
                   className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm md:text-base"
                 >
                   <i className="fas fa-plus mr-2"></i>
@@ -663,7 +794,7 @@ function App() {
                       <i className="fas fa-users text-sm"></i>
                     </div>
                   </div>
-                  <p className="text-2xl font-black text-slate-800">0</p>
+                  <p className="text-2xl font-black text-slate-800">{clients.length}</p>
                   <p className="text-[10px] md:text-xs text-slate-500">Total Clientes</p>
                 </div>
                 <div className="bg-white rounded-2xl p-4 border border-slate-200">
@@ -672,39 +803,371 @@ function App() {
                       <i className="fas fa-user-check text-sm"></i>
                     </div>
                   </div>
-                  <p className="text-2xl font-black text-slate-800">0</p>
+                  <p className="text-2xl font-black text-slate-800">{clients.filter(c => c.status === 'active').length}</p>
                   <p className="text-[10px] md:text-xs text-slate-500">Ativos</p>
                 </div>
                 <div className="bg-white rounded-2xl p-4 border border-slate-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                      <i className="fas fa-clock text-sm"></i>
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                      <i className="fas fa-camera text-sm"></i>
                     </div>
                   </div>
-                  <p className="text-2xl font-black text-slate-800">0</p>
-                  <p className="text-[10px] md:text-xs text-slate-500">Pendentes</p>
+                  <p className="text-2xl font-black text-slate-800">{clientsWithProvador.length}</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Provador IA</p>
                 </div>
                 <div className="bg-white rounded-2xl p-4 border border-slate-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
                       <i className="fas fa-crown text-sm"></i>
                     </div>
                   </div>
-                  <p className="text-2xl font-black text-slate-800">0</p>
-                  <p className="text-[10px] md:text-xs text-slate-500">Premium</p>
+                  <p className="text-2xl font-black text-slate-800">{clients.filter(c => c.status === 'vip').length}</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">VIP</p>
                 </div>
               </div>
 
-              {/* Empty State */}
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="p-8 md:p-12 text-center">
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 md:mb-6">
-                    <i className="fas fa-users text-green-400 text-2xl md:text-3xl"></i>
+              {/* Search */}
+              {clients.length > 0 && (
+                <div className="mb-4">
+                  <div className="relative">
+                    <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input
+                      type="text"
+                      placeholder="Buscar por nome, WhatsApp ou e-mail..."
+                      value={clientSearchTerm}
+                      onChange={(e) => setClientSearchTerm(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
-                  <p className="text-slate-500 text-sm mb-6">Adicione clientes para gerenciar acessos e permissões</p>
-                  <button className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:shadow-lg transition-all text-sm">
-                    <i className="fas fa-plus mr-2"></i>Adicionar Primeiro Cliente
+                </div>
+              )}
+
+              {/* Clients List or Empty State */}
+              {clients.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                  <div className="p-8 md:p-12 text-center">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 md:mb-6">
+                      <i className="fas fa-users text-green-400 text-2xl md:text-3xl"></i>
+                    </div>
+                    <h3 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
+                    <p className="text-slate-500 text-sm mb-6">Adicione clientes para usar o Provador IA e enviar pelo WhatsApp</p>
+                    <button 
+                      onClick={() => setShowCreateClient(true)}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:shadow-lg transition-all text-sm"
+                    >
+                      <i className="fas fa-plus mr-2"></i>Adicionar Primeiro Cliente
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                  <div className="divide-y divide-slate-100">
+                    {filteredClients.map(client => (
+                      <div 
+                        key={client.id} 
+                        className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                        onClick={() => setShowClientDetail(client)}
+                      >
+                        <div className="flex items-center gap-4">
+                          {/* Avatar */}
+                          <div className="relative">
+                            {client.photo ? (
+                              <img 
+                                src={client.photo} 
+                                alt={client.firstName}
+                                className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-md"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+                                <span className="text-lg md:text-xl font-bold text-slate-500">
+                                  {client.firstName[0]}{client.lastName[0]}
+                                </span>
+                              </div>
+                            )}
+                            {client.hasProvadorIA && (
+                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-white">
+                                <i className="fas fa-camera text-white text-[8px]"></i>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-slate-800 truncate">
+                                {client.firstName} {client.lastName}
+                              </h3>
+                              {client.status === 'vip' && (
+                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded-full">
+                                  VIP
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-slate-500">{formatWhatsApp(client.whatsapp)}</p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            {client.hasProvadorIA && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleOpenProvadorIA(client); }}
+                                className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center hover:bg-purple-200 transition-colors"
+                                title="Provador IA"
+                              >
+                                <i className="fas fa-wand-magic-sparkles"></i>
+                              </button>
+                            )}
+                            <button 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                handleSendWhatsApp(client, `Olá ${client.firstName}!`); 
+                              }}
+                              className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center hover:bg-green-200 transition-colors"
+                              title="WhatsApp"
+                            >
+                              <i className="fab fa-whatsapp text-lg"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CREATE CLIENT MODAL */}
+        {showCreateClient && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between z-10">
+                <h3 className="text-lg font-bold text-slate-800">Novo Cliente</h3>
+                <button 
+                  onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photo: '', notes: '' }); }}
+                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Photo Upload */}
+                <div className="flex flex-col items-center mb-6">
+                  <div 
+                    onClick={() => clientPhotoInputRef.current?.click()}
+                    className="relative cursor-pointer group"
+                  >
+                    {newClient.photo ? (
+                      <img 
+                        src={newClient.photo} 
+                        alt="Preview" 
+                        className="w-24 h-24 rounded-full object-cover border-4 border-purple-200 shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border-4 border-slate-200">
+                        <i className="fas fa-camera text-slate-400 text-2xl"></i>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <i className="fas fa-camera text-white text-xl"></i>
+                    </div>
+                  </div>
+                  <input
+                    ref={clientPhotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    onChange={handleClientPhotoUpload}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">Foto para Provador IA (opcional)</p>
+                  {newClient.photo && (
+                    <div className="flex items-center gap-1 mt-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                      <i className="fas fa-check text-[10px]"></i>
+                      <span className="text-[10px] font-bold">Provador IA ativado</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Nome *</label>
+                    <input
+                      type="text"
+                      value={newClient.firstName}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))}
+                      placeholder="Maria"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Sobrenome *</label>
+                    <input
+                      type="text"
+                      value={newClient.lastName}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))}
+                      placeholder="Silva"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* WhatsApp */}
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">WhatsApp *</label>
+                  <div className="relative">
+                    <i className="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-green-500"></i>
+                    <input
+                      type="tel"
+                      value={newClient.whatsapp}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))}
+                      placeholder="(11) 99999-9999"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">E-mail (opcional)</label>
+                  <div className="relative">
+                    <i className="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="maria@email.com"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Observações (opcional)</label>
+                  <textarea
+                    value={newClient.notes}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Preferências, tamanhos, etc..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  onClick={handleCreateClient}
+                  disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp}
+                  className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i className="fas fa-user-plus mr-2"></i>Cadastrar Cliente
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CLIENT DETAIL MODAL */}
+        {showClientDetail && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              {/* Header with gradient */}
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-6 text-center relative">
+                <button 
+                  onClick={() => setShowClientDetail(null)}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+                
+                {/* Avatar */}
+                <div className="relative inline-block">
+                  {showClientDetail.photo ? (
+                    <img 
+                      src={showClientDetail.photo} 
+                      alt={showClientDetail.firstName}
+                      className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg mx-auto"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto">
+                      <span className="text-2xl font-bold text-slate-500">
+                        {showClientDetail.firstName[0]}{showClientDetail.lastName[0]}
+                      </span>
+                    </div>
+                  )}
+                  {showClientDetail.hasProvadorIA && (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center border-2 border-white">
+                      <i className="fas fa-camera text-white text-[10px]"></i>
+                    </div>
+                  )}
+                </div>
+                
+                <h2 className="text-xl font-bold text-white mt-3">
+                  {showClientDetail.firstName} {showClientDetail.lastName}
+                </h2>
+                <p className="text-white/80 text-sm">{formatWhatsApp(showClientDetail.whatsapp)}</p>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Status Badges */}
+                <div className="flex flex-wrap gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    showClientDetail.status === 'active' ? 'bg-green-100 text-green-700' :
+                    showClientDetail.status === 'vip' ? 'bg-amber-100 text-amber-700' :
+                    'bg-slate-100 text-slate-700'
+                  }`}>
+                    {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
+                  </span>
+                  {showClientDetail.hasProvadorIA && (
+                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+                      <i className="fas fa-camera mr-1"></i>Provador IA
+                    </span>
+                  )}
+                </div>
+
+                {/* Info */}
+                {showClientDetail.email && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                    <i className="fas fa-envelope text-slate-400"></i>
+                    <span className="text-sm text-slate-600">{showClientDetail.email}</span>
+                  </div>
+                )}
+                
+                {showClientDetail.notes && (
+                  <div className="p-3 bg-slate-50 rounded-xl">
+                    <p className="text-xs font-bold text-slate-500 mb-1">Observações</p>
+                    <p className="text-sm text-slate-600">{showClientDetail.notes}</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  {showClientDetail.hasProvadorIA && (
+                    <button
+                      onClick={() => handleOpenProvadorIA(showClientDetail)}
+                      className="col-span-2 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                    >
+                      <i className="fas fa-wand-magic-sparkles"></i>
+                      Provador IA
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleSendWhatsApp(showClientDetail, `Olá ${showClientDetail.firstName}!`)}
+                    className="py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                  >
+                    <i className="fab fa-whatsapp"></i>
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClient(showClientDetail.id)}
+                    className="py-3 bg-red-100 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2"
+                  >
+                    <i className="fas fa-trash"></i>
+                    Excluir
                   </button>
                 </div>
               </div>
@@ -1222,6 +1685,21 @@ function App() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Coleção */}
+              <div>
+                <label className="block text-xs md:text-sm font-bold text-slate-600 mb-1.5 md:mb-2">Coleção</label>
+                <select 
+                  value={newProduct.collection}
+                  onChange={(e) => setNewProduct({...newProduct, collection: e.target.value})}
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm"
+                >
+                  <option value="">Selecione (opcional)</option>
+                  {COLLECTIONS.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
               </div>
 
               <button 
