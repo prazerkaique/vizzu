@@ -202,39 +202,43 @@ export const Studio: React.FC<StudioProps> = ({
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
             
-          {/* TOOLS SHOWCASE */}
+          {/* TOOLS SHOWCASE - NOVOS NOMES */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+            
+            {/* STUDIO (antigo Studio Ready) */}
             <div className="bg-white rounded-2xl border border-slate-200 p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:border-purple-300 transition-colors shadow-sm hover:shadow-md">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg md:text-xl">
                 <i className="fas fa-store"></i>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm font-bold text-slate-800">Studio Ready</p>
+                <p className="text-xs md:text-sm font-bold text-slate-800">STUDIO</p>
                 <p className="text-[10px] md:text-xs text-slate-500">Fundo branco perfeito</p>
               </div>
               <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full whitespace-nowrap">1 créd.</span>
             </div>
             
+            {/* LOOK VIRTUAL (antigo Cenário Criativo) */}
             <div className="bg-white rounded-2xl border border-slate-200 p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:border-pink-300 transition-colors shadow-sm hover:shadow-md">
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-lg md:text-xl">
-                <i className="fas fa-film"></i>
+                <i className="fas fa-layer-group"></i>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm font-bold text-slate-800">Cenário Criativo</p>
-                <p className="text-[10px] md:text-xs text-slate-500">Ambientação temática</p>
+                <p className="text-xs md:text-sm font-bold text-slate-800">LOOK VIRTUAL</p>
+                <p className="text-[10px] md:text-xs text-slate-500">Composição de looks</p>
               </div>
               <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full whitespace-nowrap">2 créd.</span>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 p-3 md:p-4 flex items-center gap-3 md:gap-4 hover:border-orange-300 transition-colors shadow-sm hover:shadow-md">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-lg md:text-xl">
-                <i className="fas fa-user-friends"></i>
+            {/* VIZZU PROVADOR (antigo Modelo Humano) */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-3 md:p-4 flex items-center gap-3 md:gap-4 shadow-lg hover:shadow-xl transition-all">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/20 text-white flex items-center justify-center text-lg md:text-xl">
+                <i className="fas fa-user-tag"></i>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm font-bold text-slate-800">Modelo Humano</p>
-                <p className="text-[10px] md:text-xs text-slate-500">Geração de Lifestyle</p>
+                <p className="text-xs md:text-sm font-bold text-white">VIZZU PROVADOR</p>
+                <p className="text-[10px] md:text-xs text-white/80">Vista seus clientes</p>
               </div>
-              <span className="text-[10px] md:text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full whitespace-nowrap">3 créd.</span>
+              <span className="text-[10px] md:text-xs font-bold text-white bg-white/20 px-2 py-1 rounded-full whitespace-nowrap">3 créd.</span>
             </div>
           </div>
 
