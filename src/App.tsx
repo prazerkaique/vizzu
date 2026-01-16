@@ -1450,17 +1450,17 @@ function App() {
               
               <button 
                 onClick={() => { setShowStudioPicker(false); setCurrentPage('provador'); }}
-                className="bg-neutral-800 border border-pink-500/30 rounded-xl p-4 text-left hover:border-pink-500/50 transition-all group"
+                className={(theme === 'dark' ? 'bg-neutral-800 border-pink-500/30 hover:border-pink-500/50' : 'bg-pink-50 border-pink-200 hover:border-pink-400 hover:bg-pink-100') + ' border rounded-xl p-4 text-left transition-all group'}
               >
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-3 group-hover:from-pink-500/30 group-hover:to-orange-400/30 transition-colors">
-                  <i className="fas fa-shirt text-pink-400 text-sm"></i>
+                <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 group-hover:from-pink-500/30 group-hover:to-orange-400/30' : 'bg-gradient-to-r from-pink-100 to-orange-100 group-hover:from-pink-200 group-hover:to-orange-200') + ' w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors'}>
+                  <i className="fas fa-shirt text-pink-500 text-sm"></i>
                 </div>
-                <h4 className="font-medium text-white text-sm mb-0.5">Vizzu Provador®</h4>
-                <p className="text-[10px] text-neutral-500 leading-relaxed">Vista seus clientes virtualmente</p>
+                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-0.5'}>Vizzu Provador®</h4>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>Vista seus clientes virtualmente</p>
               </button>
             </div>
             
-            <button onClick={() => setShowStudioPicker(false)} className="w-full mt-5 py-2.5 text-neutral-500 font-medium text-xs hover:text-white transition-colors">
+            <button onClick={() => setShowStudioPicker(false)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-700') + ' w-full mt-5 py-2.5 font-medium text-xs transition-colors'}>
               Cancelar
             </button>
           </div>
