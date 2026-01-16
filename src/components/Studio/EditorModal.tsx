@@ -20,9 +20,9 @@ interface Props {
 type ToolType = 'studio' | 'cenario' | 'lifestyle' | null;
 
 const TOOL_CFG = {
-  studio: { name: 'Studio Ready', icon: 'fa-store', credits: 1 },
-  cenario: { name: 'Cenário', icon: 'fa-film', credits: 2 },
-  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3 }
+  studio: { name: 'Studio', icon: 'fa-store', credits: 1, color: 'purple' },
+  cenario: { name: 'Cenário', icon: 'fa-film', credits: 2, color: 'pink' },
+  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3, color: 'orange' }
 };
 
 const MODEL_OPTS = {
@@ -61,6 +61,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
   const [showRefine, setShowRefine] = useState(false);
   const [refinePrompt, setRefinePrompt] = useState('');
   const [zoom, setZoom] = useState<string|null>(null);
+  const [viewMode, setViewMode] = useState<'original'|'result'>('original');
 
   useEffect(() => { if (product.images) setImages(product.images); }, [product.images]);
 
@@ -99,7 +100,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           : { modelPrompt: buildModelPrompt(), clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined };
         result = await onGenerateImage(product, 'lifestyle', undefined, opts);
       }
-      if (result?.image) { setGenImg(result.image); setGenId(result.generationId); }
+      if (result?.image) { setGenImg(result.image); setGenId(result.generationId); setViewMode('result'); }
       else setError('IA não retornou imagem');
     } catch (e: any) { setError(e.message || 'Erro'); }
     finally { setIsGen(false); }
@@ -150,29 +151,326 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
     }
   };
 
+  const handleSelectTool = (t: ToolType) => {
+    if (genImg && tool !== t && !confirm('Descartar imagem gerada?')) return;
+    setGenImg(null); setGenId(null); setShowRefine(false); setError(null); setTool(t); setViewMode('original');
+  };
+
+  const displayImage = viewMode === 'result' && genImg ? genImg : (current?.base64 || current?.url);
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      {zoom && <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center" onClick={() => setZoom(null)}><button className="absolute top-4 right-4 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center"><i className="fas fa-times text-xl"></i></button><img src={zoom} className="max-w-full max-h-[90vh] object-contain rounded-lg" /></div>}
+    <div className="fixed inset-0 z-50 bg-black/90 md:bg-black/80 md:backdrop-blur-sm flex items-end md:items-center justify-center">
       
+      {/* Zoom Modal */}
+      {zoom && (
+        <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4" onClick={() => setZoom(null)}>
+          <button className="absolute top-4 right-4 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center">
+            <i className="fas fa-times text-xl"></i>
+          </button>
+          <img src={zoom} className="max-w-full max-h-[90vh] object-contain rounded-lg" />
+        </div>
+      )}
+      
+      {/* Save Model Modal */}
       {showSaveModal && genImg && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-6"><h3 className="text-xl font-bold">Salvar Modelo</h3><button onClick={() => setShowSaveModal(false)} className="text-slate-400"><i className="fas fa-times"></i></button></div>
-            <div className="flex justify-center mb-6"><div className="w-32 h-32 rounded-full border-4 border-indigo-200 overflow-hidden"><img src={genImg} className="w-full h-full object-cover object-top" /></div></div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">Salvar Modelo</h3>
+              <button onClick={() => setShowSaveModal(false)} className="text-slate-400"><i className="fas fa-times"></i></button>
+            </div>
+            <div className="flex justify-center mb-6">
+              <div className="w-32 h-32 rounded-full border-4 border-purple-200 overflow-hidden">
+                <img src={genImg} className="w-full h-full object-cover object-top" />
+              </div>
+            </div>
             <input type="text" value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder="Nome do modelo..." className="w-full p-3 border border-slate-300 rounded-lg mb-4" autoFocus />
-            <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold disabled:opacity-50"><i className="fas fa-save mr-2"></i>Salvar</button>
+            <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold disabled:opacity-50">
+              <i className="fas fa-save mr-2"></i>Salvar
+            </button>
           </div>
         </div>
       )}
 
-      <div className="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MOBILE LAYOUT */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="md:hidden w-full h-full bg-white flex flex-col">
+        
+        {/* Mobile Header */}
+        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 px-4 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center">
+              <i className="fas fa-arrow-left text-sm"></i>
+            </button>
+            <div className="text-white min-w-0">
+              <h2 className="font-bold text-sm truncate max-w-[180px]">{product.name}</h2>
+              <p className="text-[10px] text-white/70 font-mono">{product.sku}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="bg-white/20 rounded-lg px-3 py-1.5 text-white flex items-center gap-1.5">
+              <i className="fas fa-bolt text-yellow-300 text-xs"></i>
+              <span className="font-bold text-sm">{userCredits}</span>
+            </div>
+            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center">
+              <i className="fas fa-times text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto pb-24">
+          
+          {/* Image Display */}
+          <div className="relative bg-slate-100">
+            <div className="aspect-square flex items-center justify-center overflow-hidden">
+              {isGen ? (
+                <div className="flex flex-col items-center text-purple-500">
+                  <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin mb-3"></div>
+                  <p className="text-sm font-bold">Gerando...</p>
+                </div>
+              ) : displayImage ? (
+                <img 
+                  src={displayImage} 
+                  className="w-full h-full object-contain"
+                  onClick={() => setZoom(displayImage)}
+                />
+              ) : (
+                <div className="text-slate-400 text-center">
+                  <i className="fas fa-image text-4xl mb-2"></i>
+                  <p className="text-sm">Sem imagem</p>
+                </div>
+              )}
+            </div>
+            
+            {/* View Toggle */}
+            {genImg && !isGen && (
+              <div className="absolute top-3 left-3 bg-white rounded-lg shadow-lg p-1 flex gap-1">
+                <button 
+                  onClick={() => setViewMode('original')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'original' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}
+                >
+                  Original
+                </button>
+                <button 
+                  onClick={() => setViewMode('result')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'result' ? 'bg-purple-600 text-white' : 'text-slate-500'}`}
+                >
+                  Resultado
+                </button>
+              </div>
+            )}
+
+            {/* Zoom button */}
+            {displayImage && !isGen && (
+              <button 
+                onClick={() => setZoom(displayImage)} 
+                className="absolute top-3 right-3 w-10 h-10 bg-black/50 text-white rounded-lg flex items-center justify-center"
+              >
+                <i className="fas fa-expand"></i>
+              </button>
+            )}
+          </div>
+
+          {/* Gallery - Horizontal Scroll */}
+          <div className="bg-white border-b border-slate-200 px-4 py-3">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {images.map((img, idx) => (
+                <div 
+                  key={idx} 
+                  onClick={() => { setSelIdx(idx); setViewMode('original'); }}
+                  className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all relative ${
+                    selIdx === idx ? 'border-purple-500 ring-2 ring-purple-500/20' : 'border-slate-200'
+                  }`}
+                >
+                  <img src={img.base64 || img.url} className="w-full h-full object-cover" />
+                  {selIdx === idx && (
+                    <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                        <i className="fas fa-check text-white text-[8px]"></i>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <button className="flex-shrink-0 w-14 h-14 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                <i className="fas fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="mx-4 mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+              <i className="fas fa-exclamation-circle text-red-500"></i>
+              <p className="text-xs text-red-700 flex-1">{error}</p>
+              <button onClick={() => setError(null)} className="text-red-400"><i className="fas fa-times"></i></button>
+            </div>
+          )}
+
+          {/* Tools Tabs */}
+          <div className="px-4 py-3">
+            <h3 className="text-xs font-bold text-slate-500 uppercase mb-2">Ferramentas</h3>
+            <div className="flex gap-2">
+              {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
+                <button
+                  key={t}
+                  onClick={() => handleSelectTool(t)}
+                  className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all flex flex-col items-center gap-1 ${
+                    tool === t 
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  <i className={`fas ${TOOL_CFG[t].icon}`}></i>
+                  <span>{TOOL_CFG[t].name}</span>
+                  <span className={`text-[10px] ${tool === t ? 'text-white/70' : 'text-amber-600'}`}>
+                    {TOOL_CFG[t].credits} créd.
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tool Config */}
+          {tool && (
+            <div className="px-4 pb-4">
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                
+                {tool === 'studio' && (
+                  <div className="text-center py-4">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-magic text-purple-600 text-2xl"></i>
+                    </div>
+                    <p className="text-sm text-slate-600">Remove o fundo e aplica fundo branco profissional</p>
+                  </div>
+                )}
+                
+                {tool === 'cenario' && (
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 mb-2 block">Descreva o cenário</label>
+                    <textarea 
+                      value={cenPrompt} 
+                      onChange={(e) => setCenPrompt(e.target.value)} 
+                      placeholder="Ex: Em uma praia tropical ao pôr do sol..."
+                      className="w-full p-3 border border-slate-200 rounded-xl text-sm resize-none" 
+                      rows={3} 
+                    />
+                  </div>
+                )}
+                
+                {tool === 'lifestyle' && (
+                  <div className="space-y-4">
+                    <div className="flex bg-slate-200 rounded-lg p-1">
+                      <button onClick={() => setModelTab('new')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'new' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Novo Modelo</button>
+                      <button onClick={() => setModelTab('saved')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'saved' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Salvos ({savedModels.length})</button>
+                    </div>
+                    
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                      <label className="text-[10px] font-bold text-amber-700 uppercase mb-1 block"><i className="fas fa-exclamation-triangle mr-1"></i>Descreva o produto</label>
+                      <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs resize-none" rows={2} />
+                    </div>
+                    
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Tipo do produto</label>
+                      <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                      </select>
+                    </div>
+                    
+                    {modelTab === 'new' && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          {MODEL_OPTS.gender.map(g => (
+                            <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-3 rounded-xl text-sm font-bold border-2 ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200'}`}>{g.label}</button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className="p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
+                          <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className="p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
+                        </div>
+                        <select value={modelSettings.ageRange} onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
+                        <textarea value={modelDetail} onChange={(e) => setModelDetail(e.target.value)} placeholder="Detalhes adicionais..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                      </div>
+                    )}
+                    
+                    {modelTab === 'saved' && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {savedModels.length === 0 ? (
+                          <div className="text-center py-6 text-slate-400 text-sm bg-white rounded-xl border border-dashed border-slate-300">
+                            <i className="fas fa-user-slash text-2xl mb-2"></i>
+                            <p>Nenhum modelo salvo</p>
+                          </div>
+                        ) : savedModels.map(m => (
+                          <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-3 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selModelId === m.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200'}`}>
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 flex-shrink-0"><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
+                            <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{m.name}</p><p className={`text-xs ${selModelId === m.id ? 'text-slate-400' : 'text-slate-500'}`}>Usado {m.usageCount}x</p></div>
+                            <button onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} className={`${selModelId === m.id ? 'text-slate-500' : 'text-slate-300'} hover:text-red-400`}><i className="fas fa-trash text-xs"></i></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="space-y-3 pt-3 border-t border-slate-200">
+                      <textarea value={clothing} onChange={(e) => setClothing(e.target.value)} placeholder="Roupas adicionais (opcional)..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                      <textarea value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Pose do modelo (opcional)..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                    </div>
+                    
+                    <button onClick={() => setShowLook(!showLook)} className="w-full flex items-center justify-between p-3 bg-indigo-50 rounded-xl border border-indigo-200">
+                      <span className="text-sm font-bold text-slate-800"><i className="fas fa-layer-group text-indigo-600 mr-2"></i>Compor Look {Object.keys(look).length > 0 && <span className="text-indigo-600">({Object.keys(look).length})</span>}</span>
+                      <i className={`fas fa-chevron-down text-slate-400 transition-transform ${showLook ? 'rotate-180' : ''}`}></i>
+                    </button>
+                    {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} /></div>}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Refine */}
+          {showRefine && genImg && (
+            <div className="px-4 pb-4">
+              <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
+                <h4 className="text-sm font-bold text-purple-800 mb-2"><i className="fas fa-magic mr-2"></i>Refinar Imagem</h4>
+                <textarea value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="O que ajustar?" className="w-full p-3 border border-purple-200 rounded-xl text-sm resize-none mb-3" rows={2} />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowRefine(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-500 bg-white rounded-xl border border-slate-200">Cancelar</button>
+                  <button onClick={handleRefine} disabled={!refinePrompt.trim()} className="flex-1 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl disabled:opacity-50"><i className="fas fa-magic mr-1"></i>Refinar (1 créd.)</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Bottom Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 flex gap-3">
+          {genImg && !isGen ? (
+            <>
+              <button onClick={() => { setGenImg(null); setGenId(null); setViewMode('original'); }} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-200"><i className="fas fa-trash-alt"></i></button>
+              <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar na Galeria</button>
+              <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-200"><i className="fas fa-magic"></i></button>
+              {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-200"><i className="fas fa-user-plus"></i></button>}
+            </>
+          ) : (
+            <button onClick={handleGen} disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} className="flex-1 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500">
+              {isGen ? <><i className="fas fa-spinner fa-spin"></i><span>Gerando...</span></> : <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar Imagem</span>{tool && <span className="text-white/70">({TOOL_CFG[tool].credits} créd.)</span>}</>}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* DESKTOP LAYOUT */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="hidden md:flex bg-slate-50 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex-col">
         <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center"><i className="fas fa-arrow-left"></i></button>
             <div className="text-white"><h2 className="font-bold text-lg">{product.name}</h2><p className="text-sm text-white/70 font-mono">{product.sku}</p></div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 rounded-xl px-4 py-2 text-white flex items-center gap-2"><i className="fas fa-bolt"></i><span className="font-bold">{userCredits}</span></div>
+            <div className="bg-white/20 rounded-xl px-4 py-2 text-white flex items-center gap-2"><i className="fas fa-bolt text-yellow-300"></i><span className="font-bold">{userCredits}</span></div>
             <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center"><i className="fas fa-times"></i></button>
           </div>
         </div>
@@ -237,8 +535,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
             <h3 className="text-lg font-bold text-slate-800 mb-4"><i className="fas fa-toolbox text-purple-500 mr-2"></i>Ferramentas</h3>
             <div className="space-y-3">
               {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
-                <div key={t} onClick={() => { if (genImg && tool !== t && !confirm('Descartar imagem?')) return; setGenImg(null); setGenId(null); setShowRefine(false); setError(null); setTool(t); }}
-                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-purple-500 bg-purple-50 shadow-md' : 'border-slate-200 hover:border-purple-200'}`}>
+                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-purple-500 bg-purple-50 shadow-md' : 'border-slate-200 hover:border-purple-200'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${tool === t ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-500'}`}><i className={`fas ${TOOL_CFG[t].icon}`}></i></div>
@@ -274,9 +571,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
                         
                         {modelTab === 'new' && (
                           <div className="space-y-3 mb-3">
-                            <div className="grid grid-cols-2 gap-2">
-                              {MODEL_OPTS.gender.map(g => <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-1.5 rounded-lg text-xs font-bold border ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600'}`}>{g.label}</button>)}
-                            </div>
+                            <div className="grid grid-cols-2 gap-2">{MODEL_OPTS.gender.map(g => <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-1.5 rounded-lg text-xs font-bold border ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600'}`}>{g.label}</button>)}</div>
                             <div className="grid grid-cols-2 gap-2">
                               <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className="p-1.5 bg-white border border-slate-200 rounded text-xs">{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
                               <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className="p-1.5 bg-white border border-slate-200 rounded text-xs">{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
