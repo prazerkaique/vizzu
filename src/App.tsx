@@ -1180,7 +1180,7 @@ function App() {
           <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col md:flex-row h-full">
               {/* Sidebar */}
-              <div className="md:w-56 bg-neutral-950 border-b md:border-b-0 md:border-r border-neutral-900 p-2 md:p-3">
+              <div className={'md:w-56 border-b md:border-b-0 md:border-r p-2 md:p-3 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200')}>
                 <nav className="flex md:flex-col gap-0.5 overflow-x-auto">
                   {[
                     { id: 'profile' as SettingsTab, icon: 'fa-user', label: 'Perfil' },
@@ -1189,11 +1189,11 @@ function App() {
                     { id: 'plan' as SettingsTab, icon: 'fa-credit-card', label: 'Plano' },
                     { id: 'integrations' as SettingsTab, icon: 'fa-plug', label: 'Integrações' },
                   ].map(item => (
-                    <button key={item.id} onClick={() => setSettingsTab(item.id)} className={'flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ' + (settingsTab === item.id ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white hover:bg-neutral-900')}>
+                    <button key={item.id} onClick={() => setSettingsTab(item.id)} className={'flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ' + (settingsTab === item.id ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-900') : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'))}>
                       <i className={'fas ' + item.icon + ' w-3.5 text-[10px]'}></i>{item.label}
                     </button>
                   ))}
-                  <button onClick={handleLogout} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 md:mt-4 md:pt-3 md:border-t md:border-neutral-800">
+                  <button onClick={handleLogout} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 md:mt-4 md:pt-3 md:border-t md:border-neutral-800">
                     <i className="fas fa-sign-out-alt w-3.5 text-[10px]"></i>Sair
                   </button>
                 </nav>
@@ -1206,32 +1206,32 @@ function App() {
                   {/* Plan Tab */}
                   {settingsTab === 'plan' && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">Plano & Créditos</h3>
-                      <div className="bg-neutral-900 border border-pink-500/30 rounded-xl p-4 mb-4">
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Plano & Créditos</h3>
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-pink-500/30' : 'bg-white border-pink-200 shadow-sm') + ' border rounded-xl p-4 mb-4'}>
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Plano Atual</p>
-                            <p className="text-xl font-bold text-white">{currentPlan.name}</p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano Atual</p>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{currentPlan.name}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Créditos</p>
-                            <p className="text-xl font-bold text-white">{userCredits}</p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Créditos</p>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits}</p>
                           </div>
                         </div>
-                        <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-1.5 rounded-full overflow-hidden'}>
                           <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
                         </div>
                       </div>
-                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
-                        <h4 className="font-medium text-white text-sm mb-3">Escolha seu Plano</h4>
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+                        <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>Escolha seu Plano</h4>
                         <div className="grid grid-cols-2 gap-2">
                           {PLANS.map(plan => (
-                            <div key={plan.id} onClick={() => upgradePlan(plan.id)} className={'p-3 rounded-lg border cursor-pointer transition-all ' + (currentPlan.id === plan.id ? 'border-pink-500 bg-pink-500/10' : 'border-neutral-800 hover:border-neutral-700')}>
-                              <h5 className="font-medium text-white text-xs">{plan.name}</h5>
-                              <p className="text-lg font-bold text-white my-1">{plan.limit}</p>
-                              <p className="text-[10px] text-neutral-500">créd./mês</p>
-                              <p className="text-[10px] font-medium text-pink-400 mt-1">{plan.price}</p>
-                              {currentPlan.id === plan.id && <span className="inline-block mt-2 text-[8px] font-medium text-pink-400 bg-pink-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wide">ATUAL</span>}
+                            <div key={plan.id} onClick={() => upgradePlan(plan.id)} className={'p-3 rounded-lg border cursor-pointer transition-all ' + (currentPlan.id === plan.id ? 'border-pink-500 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-gray-300'))}>
+                              <h5 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{plan.name}</h5>
+                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold my-1'}>{plan.limit}</p>
+                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>créd./mês</p>
+                              <p className="text-[10px] font-medium text-pink-500 mt-1">{plan.price}</p>
+                              {currentPlan.id === plan.id && <span className="inline-block mt-2 text-[8px] font-medium text-pink-500 bg-pink-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wide">ATUAL</span>}
                             </div>
                           ))}
                         </div>
@@ -1242,22 +1242,22 @@ function App() {
                   {/* Profile Tab */}
                   {settingsTab === 'profile' && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">Perfil</h3>
-                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Perfil</h3>
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                         <div className="flex items-center gap-3 mb-5">
-                          <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center overflow-hidden">
-                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-neutral-500 text-lg"></i>}
+                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
+                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
                           </div>
-                          <button className="px-3 py-1.5 bg-neutral-800 text-white rounded-lg text-[10px] font-medium hover:bg-neutral-700 transition-colors">Alterar Foto</button>
+                          <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Nome</label>
-                            <input type="text" defaultValue={user.name} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
+                            <input type="text" defaultValue={user.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Email</label>
-                            <input type="email" defaultValue={user.email} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-500" disabled />
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
+                            <input type="email" defaultValue={user.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
                           </div>
                         </div>
                       </div>
@@ -1267,18 +1267,18 @@ function App() {
                   {/* Appearance Tab */}
                   {settingsTab === 'appearance' && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">Aparência</h3>
-                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Aparência</h3>
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-white text-sm">Tema</p>
-                            <p className="text-[10px] text-neutral-500 mt-0.5">Escolha entre tema claro ou escuro</p>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Tema</p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>Escolha entre tema claro ou escuro</p>
                           </div>
-                          <div className="flex items-center gap-1 bg-neutral-800 p-1 rounded-lg">
+                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' flex items-center gap-1 p-1 rounded-lg'}>
                             <button 
                               onClick={() => setTheme('dark')}
                               className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
-                                (theme === 'dark' ? 'bg-white text-neutral-900' : 'text-neutral-400 hover:text-white')
+                                (theme === 'dark' ? 'bg-white text-neutral-900' : 'text-gray-500 hover:text-gray-700')
                               }
                             >
                               <i className="fas fa-moon text-[10px]"></i>
@@ -1287,7 +1287,7 @@ function App() {
                             <button 
                               onClick={() => setTheme('light')}
                               className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
-                                (theme === 'light' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-neutral-400 hover:text-white')
+                                (theme === 'light' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-gray-500 hover:text-gray-700')
                               }
                             >
                               <i className="fas fa-sun text-[10px]"></i>
@@ -1297,8 +1297,8 @@ function App() {
                         </div>
                         
                         {/* Preview Comparison */}
-                        <div className="mt-5 pt-4 border-t border-neutral-800">
-                          <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-3">Preview</p>
+                        <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' mt-5 pt-4 border-t'}>
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-3'}>Preview</p>
                           <div className="grid grid-cols-2 gap-3">
                             {/* Dark Preview */}
                             <div 
@@ -1320,7 +1320,7 @@ function App() {
                             {/* Light Preview */}
                             <div 
                               onClick={() => setTheme('light')}
-                              className={'rounded-xl p-4 cursor-pointer transition-all ' + (theme === 'light' ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-neutral-900' : 'opacity-60 hover:opacity-80') + ' bg-white border border-gray-200'}
+                              className={'rounded-xl p-4 cursor-pointer transition-all ' + (theme === 'light' ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-white' : 'opacity-60 hover:opacity-80') + ' bg-white border border-gray-200'}
                             >
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center shadow-md shadow-pink-500/20">
@@ -1342,16 +1342,16 @@ function App() {
                   {/* Company Tab */}
                   {settingsTab === 'company' && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">Empresa</h3>
-                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Empresa</h3>
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Nome da Empresa</label>
-                            <input type="text" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="Sua Empresa Ltda" />
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome da Empresa</label>
+                            <input type="text" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Sua Empresa Ltda" />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">CNPJ</label>
-                            <input type="text" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="00.000.000/0000-00" />
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>CNPJ</label>
+                            <input type="text" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="00.000.000/0000-00" />
                           </div>
                           <button className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">Salvar</button>
                         </div>
@@ -1362,24 +1362,24 @@ function App() {
                   {/* Integrations Tab */}
                   {settingsTab === 'integrations' && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">Integrações</h3>
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Integrações</h3>
                       <div className="space-y-2">
                         {[
                           { icon: 'fab fa-shopify', name: 'Shopify', desc: 'Sincronize produtos' },
                           { icon: 'fab fa-wordpress', name: 'WooCommerce', desc: 'Loja WordPress' },
                           { icon: 'fas fa-store', name: 'VTEX', desc: 'VTEX IO' },
                         ].map(item => (
-                          <div key={item.name} className="bg-neutral-900 rounded-xl border border-neutral-800 p-3 flex items-center justify-between">
+                          <div key={item.name} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 flex items-center justify-between'}>
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-lg bg-neutral-800 flex items-center justify-center">
-                                <i className={item.icon + ' text-neutral-400 text-sm'}></i>
+                              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
+                                <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' ' + item.icon + ' text-sm'}></i>
                               </div>
                               <div>
-                                <h4 className="font-medium text-white text-xs">{item.name}</h4>
-                                <p className="text-[10px] text-neutral-500">{item.desc}</p>
+                                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{item.name}</h4>
+                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.desc}</p>
                               </div>
                             </div>
-                            <button className="px-3 py-1.5 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 text-[10px] transition-colors">Conectar</button>
+                            <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors'}>Conectar</button>
                           </div>
                         ))}
                       </div>
