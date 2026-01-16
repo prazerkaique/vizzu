@@ -291,20 +291,22 @@ function App() {
     setProvadorLookSearch('');
   };
 
-  // LOGIN SCREEN
+  // ═══════════════════════════════════════════════════════════════
+  // LOGIN SCREEN - SUNO STYLE
+  // ═══════════════════════════════════════════════════════════════
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
-            <img src="/logo.png" alt="Vizzu" className="h-16 mx-auto mb-4" />
-            <p className="text-slate-400 text-sm">AI Visual Studio para E-commerce</p>
+            <img src="/logo.png" alt="Vizzu" className="h-14 mx-auto mb-3" />
+            <p className="text-neutral-500 text-xs">AI Visual Studio para E-commerce</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
-            <h2 className="text-xl font-bold text-white text-center mb-6">Bem-vindo!</h2>
-            <div className="space-y-4">
-              <button onClick={handleGoogleLogin} className="w-full py-4 bg-white text-slate-800 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-100">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 p-6">
+            <h2 className="text-lg font-semibold text-white text-center mb-5">Bem-vindo!</h2>
+            <div className="space-y-3">
+              <button onClick={handleGoogleLogin} className="w-full py-3 bg-white text-neutral-900 rounded-xl font-medium text-sm flex items-center justify-center gap-3 hover:bg-neutral-100 transition-colors">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -313,11 +315,11 @@ function App() {
                 Continuar com Google
               </button>
               <div className="relative">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-                <div className="relative flex justify-center text-sm"><span className="px-4 text-slate-500">ou</span></div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-800"></div></div>
+                <div className="relative flex justify-center text-xs"><span className="px-3 bg-neutral-900 text-neutral-600">ou</span></div>
               </div>
-              <button onClick={handleDemoLogin} className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold flex items-center justify-center gap-3">
-                <i className="fas fa-play"></i>Testar Gratuitamente
+              <button onClick={handleDemoLogin} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                <i className="fas fa-play text-xs"></i>Testar Gratuitamente
               </button>
             </div>
           </div>
@@ -326,17 +328,19 @@ function App() {
     );
   }
 
-  // MAIN LAYOUT
+  // ═══════════════════════════════════════════════════════════════
+  // MAIN LAYOUT - SUNO STYLE
+  // ═══════════════════════════════════════════════════════════════
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-slate-100">
+    <div className="h-screen flex flex-col md:flex-row bg-black">
       
-      {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex-col shadow-2xl">
-        <div className="p-6 border-b border-white/10 flex flex-col items-center">
-          <img src="/logo.png" alt="Vizzu" className="h-12" />
-          <span className="text-[10px] text-purple-300/70 mt-1">Estúdio com IA para lojistas</span>
+      {/* DESKTOP SIDEBAR - SUNO STYLE */}
+      <aside className="hidden md:flex w-52 bg-neutral-950 flex-col border-r border-neutral-900">
+        <div className="p-5 border-b border-neutral-900 flex flex-col items-center">
+          <img src="/logo.png" alt="Vizzu" className="h-10" />
+          <span className="text-[9px] text-neutral-600 mt-1">Estúdio com IA para lojistas</span>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-2 space-y-0.5">
           {[
             { id: 'dashboard' as Page, icon: 'fa-home', label: 'Dashboard' },
             { id: 'studio' as Page, icon: 'fa-wand-magic-sparkles', label: 'Vizzu Studio®' },
@@ -348,105 +352,127 @@ function App() {
             <button 
               key={item.id} 
               onClick={() => setCurrentPage(item.id)} 
-              className={'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ' + (currentPage === item.id ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5')}
+              className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + (currentPage === item.id ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white hover:bg-neutral-900')}
             >
-              <i className={'fas ' + item.icon + ' w-5'}></i>{item.label}
+              <i className={'fas ' + item.icon + ' w-4 text-[10px]'}></i>{item.label}
             </button>
           ))}
         </nav>
-        <div className="p-3 border-t border-white/10 space-y-3">
-          <div className="bg-white/5 rounded-xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
-              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-purple-400 hover:text-purple-300 text-xs font-bold">+ Add</button>
+        <div className="p-3 border-t border-neutral-900 space-y-2">
+          <div className="bg-neutral-900 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide">Créditos</span>
+              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-pink-400 hover:text-pink-300 text-[9px] font-medium">+ Add</button>
             </div>
-            <p className="text-2xl font-black text-white">{userCredits.toLocaleString()}</p>
-            <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+            <p className="text-xl font-bold text-white">{userCredits.toLocaleString()}</p>
+            <div className="mt-2 h-1 bg-neutral-800 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
           <button 
             onClick={() => setCurrentPage('settings')} 
-            className={'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ' + (currentPage === 'settings' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + (currentPage === 'settings' ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white hover:bg-neutral-900')}
           >
-            <i className="fas fa-cog w-5"></i>Configurações
+            <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
           </button>
-          <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
-              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-white text-sm"></i>}
+          <div className="flex items-center gap-2.5 px-2 py-2">
+            <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center overflow-hidden">
+              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-neutral-500 text-xs"></i>}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{user.name}</p>
-              <p className="text-[10px] text-slate-500">Plano {currentPlan.name}</p>
+              <p className="text-xs font-medium text-white truncate">{user.name}</p>
+              <p className="text-[9px] text-neutral-600">{currentPlan.name}</p>
             </div>
           </div>
         </div>
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-hidden flex flex-col pb-20 md:pb-0">
+      <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0">
 
-        {/* DASHBOARD */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* DASHBOARD - SUNO STYLE */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'dashboard' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                  <i className="fas fa-home text-white text-2xl"></i>
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-5xl mx-auto">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+                  <i className="fas fa-home text-neutral-400 text-sm"></i>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-black text-slate-800">Dashboard</h1>
-                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
+                    <h1 className="text-lg font-semibold text-white">Dashboard</h1>
+                    <span className="px-2 py-0.5 bg-neutral-800 text-neutral-400 text-[9px] font-medium rounded-full uppercase tracking-wide">{currentPlan.name}</span>
                   </div>
-                  <p className="text-slate-500 text-sm">Resumo do seu estúdio de imagens AI</p>
+                  <p className="text-neutral-500 text-xs">Resumo do seu estúdio</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-2"><i className="fas fa-box"></i></div>
-                  <p className="text-2xl font-black text-slate-800">{products.length}</p>
-                  <p className="text-xs text-slate-500">Produtos</p>
+              
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
+                    <i className="fas fa-box text-neutral-400 text-xs"></i>
+                  </div>
+                  <p className="text-xl font-bold text-white">{products.length}</p>
+                  <p className="text-[10px] text-neutral-500">Produtos</p>
                 </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center mb-2"><i className="fas fa-users"></i></div>
-                  <p className="text-2xl font-black text-slate-800">{clients.length}</p>
-                  <p className="text-xs text-slate-500">Clientes</p>
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
+                    <i className="fas fa-users text-neutral-400 text-xs"></i>
+                  </div>
+                  <p className="text-xl font-bold text-white">{clients.length}</p>
+                  <p className="text-[10px] text-neutral-500">Clientes</p>
                 </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-2"><i className="fas fa-coins"></i></div>
-                  <p className="text-2xl font-black text-slate-800">{userCredits}</p>
-                  <p className="text-xs text-slate-500">Créditos</p>
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
+                    <i className="fas fa-coins text-neutral-400 text-xs"></i>
+                  </div>
+                  <p className="text-xl font-bold text-white">{userCredits}</p>
+                  <p className="text-[10px] text-neutral-500">Créditos</p>
                 </div>
-                <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-4 shadow-lg">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center mb-2"><i className="fas fa-crown"></i></div>
-                  <p className="text-2xl font-black text-white">{currentPlan.name}</p>
-                  <p className="text-xs text-white/70">Plano</p>
+                <div className="bg-neutral-900 rounded-xl p-3 border border-pink-500/30">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-2">
+                    <i className="fas fa-crown text-pink-400 text-xs"></i>
+                  </div>
+                  <p className="text-xl font-bold text-white">{currentPlan.name}</p>
+                  <p className="text-[10px] text-neutral-500">Plano</p>
                 </div>
               </div>
-              <h2 className="text-base font-bold text-slate-700 mb-3">Ações Rápidas</h2>
+              
+              {/* Quick Actions */}
+              <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Ações Rápidas</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button onClick={() => setCurrentPage('studio')} className="bg-white rounded-2xl p-5 border border-slate-200 hover:shadow-lg transition-all text-left group">
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i className="fas fa-wand-magic-sparkles text-xl"></i></div>
-                  <h3 className="font-bold text-slate-800 mb-1">Vizzu Studio®</h3>
-                  <p className="text-sm text-slate-500">Gerar imagens com IA</p>
+                <button onClick={() => setCurrentPage('studio')} className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 hover:border-neutral-700 transition-all text-left group">
+                  <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center mb-3 group-hover:bg-neutral-700 transition-colors">
+                    <i className="fas fa-wand-magic-sparkles text-neutral-400 text-sm"></i>
+                  </div>
+                  <h3 className="font-medium text-white text-sm mb-0.5">Vizzu Studio®</h3>
+                  <p className="text-xs text-neutral-500">Gerar imagens com IA</p>
                 </button>
-                <button onClick={() => setCurrentPage('provador')} className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 border border-purple-200 hover:shadow-lg transition-all text-left group">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i className="fas fa-user-tag text-xl"></i></div>
-                  <h3 className="font-bold text-slate-800 mb-1">Vizzu Provador®</h3>
-                  <p className="text-sm text-slate-500">Vista seus clientes</p>
+                <button onClick={() => setCurrentPage('provador')} className="bg-neutral-900 rounded-xl p-4 border border-pink-500/30 hover:border-pink-500/50 transition-all text-left group">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-3 group-hover:from-pink-500/30 group-hover:to-orange-400/30 transition-colors">
+                    <i className="fas fa-user-tag text-pink-400 text-sm"></i>
+                  </div>
+                  <h3 className="font-medium text-white text-sm mb-0.5">Vizzu Provador®</h3>
+                  <p className="text-xs text-neutral-500">Vista seus clientes</p>
                 </button>
-                <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="bg-white rounded-2xl p-5 border border-slate-200 hover:shadow-lg transition-all text-left group">
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i className="fas fa-bolt text-xl"></i></div>
-                  <h3 className="font-bold text-slate-800 mb-1">Comprar Créditos</h3>
-                  <p className="text-sm text-slate-500">Upgrade de plano</p>
+                <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 hover:border-neutral-700 transition-all text-left group">
+                  <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center mb-3 group-hover:bg-neutral-700 transition-colors">
+                    <i className="fas fa-bolt text-neutral-400 text-sm"></i>
+                  </div>
+                  <h3 className="font-medium text-white text-sm mb-0.5">Comprar Créditos</h3>
+                  <p className="text-xs text-neutral-500">Upgrade de plano</p>
                 </button>
               </div>
             </div>
           </div>
         )}
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* STUDIO */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'studio' && (
           <Studio 
             products={products} 
@@ -460,34 +486,35 @@ function App() {
           />
         )}
 
-        {/* PROVADOR */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* PROVADOR - SUNO STYLE */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'provador' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-6xl mx-auto">
               
-              {/* Page Header - Simplificado no Mobile */}
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                    <i className="fas fa-user-tag text-white text-lg md:text-2xl"></i>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
+                    <i className="fas fa-user-tag text-pink-400 text-sm"></i>
                   </div>
                   <div>
-                    <h1 className="text-lg md:text-2xl font-black text-slate-800">Vizzu Provador®</h1>
-                    <p className="text-slate-500 text-xs md:text-sm hidden md:block">Vista seus clientes virtualmente e envie pelo WhatsApp</p>
+                    <h1 className="text-lg font-semibold text-white">Vizzu Provador®</h1>
+                    <p className="text-neutral-500 text-xs hidden md:block">Vista seus clientes virtualmente</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 md:px-3 md:py-1.5 bg-amber-50 text-amber-700 text-[10px] md:text-xs font-bold rounded-full">3 créd.</span>
+                  <span className="px-2 py-1 bg-neutral-900 border border-neutral-800 text-neutral-400 text-[10px] font-medium rounded-lg">3 créd.</span>
                   {(provadorClient || Object.keys(provadorLook).length > 0) && (
-                    <button onClick={handleProvadorReset} className="p-2 md:px-4 md:py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200">
+                    <button onClick={handleProvadorReset} className="p-2 bg-neutral-900 border border-neutral-800 text-neutral-400 rounded-lg text-xs hover:bg-neutral-800 hover:text-white transition-colors">
                       <i className="fas fa-undo"></i>
-                      <span className="hidden md:inline ml-2">Limpar</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Mobile Progress Bar */}
+              {/* Mobile Progress */}
               <div className="lg:hidden mb-4">
                 <div className="flex items-center justify-between mb-2">
                   {[1, 2, 3, 4].map(step => {
@@ -500,21 +527,21 @@ function App() {
                       <div key={step} className="flex items-center">
                         <div 
                           onClick={() => setProvadorStep(step as 1|2|3|4)}
-                          className={'w-8 h-8 rounded-full flex items-center justify-center text-xs font-black cursor-pointer transition-all ' + 
+                          className={'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-all ' + 
                             (isCompleted ? 'bg-green-500 text-white' : 
-                             isCurrent ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white scale-110 shadow-lg' : 
-                             'bg-slate-200 text-slate-500')}
+                             isCurrent ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white scale-110' : 
+                             'bg-neutral-800 text-neutral-500')}
                         >
-                          {isCompleted ? <i className="fas fa-check"></i> : step}
+                          {isCompleted ? <i className="fas fa-check text-[8px]"></i> : step}
                         </div>
                         {step < 4 && (
-                          <div className={'h-1 w-8 mx-1 rounded-full ' + (isCompleted ? 'bg-green-500' : 'bg-slate-200')}></div>
+                          <div className={'h-0.5 w-8 mx-1 rounded-full ' + (isCompleted ? 'bg-green-500' : 'bg-neutral-800')}></div>
                         )}
                       </div>
                     );
                   })}
                 </div>
-                <p className="text-xs text-slate-500 text-center">
+                <p className="text-[10px] text-neutral-500 text-center">
                   {provadorStep === 1 && 'Selecione o cliente'}
                   {provadorStep === 2 && 'Escolha a foto'}
                   {provadorStep === 3 && 'Monte o look'}
@@ -522,46 +549,46 @@ function App() {
                 </p>
               </div>
               
-              {/* Desktop: Grid 4 colunas | Mobile: Accordion */}
-              <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+              {/* Desktop Grid */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-4">
                 
-                {/* Desktop Coluna 1: Selecionar Cliente */}
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (provadorClient ? 'bg-green-500 text-white' : 'bg-purple-100 text-purple-600')}>
-                        {provadorClient ? <i className="fas fa-check"></i> : '1'}
+                {/* Col 1: Cliente */}
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                  <div className="p-3 border-b border-neutral-800">
+                    <h3 className="font-medium text-white text-xs flex items-center gap-2">
+                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (provadorClient ? 'bg-green-500 text-white' : 'bg-neutral-800 text-neutral-400')}>
+                        {provadorClient ? <i className="fas fa-check text-[8px]"></i> : '1'}
                       </span>
                       Selecionar Cliente
                     </h3>
                   </div>
-                  <div className="p-4">
+                  <div className="p-3">
                     {provadorClient ? (
                       <div className="text-center">
-                        <div className="relative inline-block mb-3">
-                          <img src={getClientPhoto(provadorClient, provadorPhotoType) || getClientPhoto(provadorClient)} alt={provadorClient.firstName} className="w-20 h-20 rounded-full object-cover border-4 border-purple-200" />
-                          <button onClick={() => { setProvadorClient(null); setProvadorStep(1); }} className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">
+                        <div className="relative inline-block mb-2">
+                          <img src={getClientPhoto(provadorClient, provadorPhotoType) || getClientPhoto(provadorClient)} alt={provadorClient.firstName} className="w-16 h-16 rounded-full object-cover border-2 border-pink-500/50" />
+                          <button onClick={() => { setProvadorClient(null); setProvadorStep(1); }} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600">
                             <i className="fas fa-times"></i>
                           </button>
                         </div>
-                        <p className="font-bold text-slate-800 text-sm">{provadorClient.firstName} {provadorClient.lastName}</p>
-                        <p className="text-xs text-slate-500">{formatWhatsApp(provadorClient.whatsapp)}</p>
+                        <p className="font-medium text-white text-xs">{provadorClient.firstName} {provadorClient.lastName}</p>
+                        <p className="text-[10px] text-neutral-500">{formatWhatsApp(provadorClient.whatsapp)}</p>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-56 overflow-y-auto">
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {clientsWithProvador.length > 0 ? clientsWithProvador.slice(0, 5).map(client => (
-                          <div key={client.id} onClick={() => setProvadorClient(client)} className="flex items-center gap-3 p-2 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all">
-                            <img src={getClientPhoto(client)} alt="" className="w-10 h-10 rounded-full object-cover" />
+                          <div key={client.id} onClick={() => setProvadorClient(client)} className="flex items-center gap-2 p-2 rounded-lg border border-neutral-800 hover:border-pink-500/50 hover:bg-neutral-800 cursor-pointer transition-all">
+                            <img src={getClientPhoto(client)} alt="" className="w-8 h-8 rounded-full object-cover" />
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-sm text-slate-800 truncate">{client.firstName} {client.lastName}</p>
-                              <p className="text-xs text-slate-500">{client.photos?.length || 1} foto(s)</p>
+                              <p className="font-medium text-xs text-white truncate">{client.firstName} {client.lastName}</p>
+                              <p className="text-[9px] text-neutral-500">{client.photos?.length || 1} foto(s)</p>
                             </div>
                           </div>
                         )) : (
-                          <div className="text-center py-6">
-                            <i className="fas fa-user-plus text-slate-300 text-2xl mb-2"></i>
-                            <p className="text-xs text-slate-500">Nenhum cliente</p>
-                            <button onClick={() => setCurrentPage('clients')} className="mt-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">Cadastrar</button>
+                          <div className="text-center py-4">
+                            <i className="fas fa-user-plus text-neutral-700 text-lg mb-2"></i>
+                            <p className="text-[10px] text-neutral-500">Nenhum cliente</p>
+                            <button onClick={() => setCurrentPage('clients')} className="mt-2 px-3 py-1 bg-neutral-800 text-white rounded-lg text-[10px] font-medium hover:bg-neutral-700">Cadastrar</button>
                           </div>
                         )}
                       </div>
@@ -569,180 +596,174 @@ function App() {
                   </div>
                 </div>
 
-                {/* Desktop Coluna 2: Selecionar Foto */}
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (provadorClient && provadorPhotoType ? 'bg-green-500 text-white' : 'bg-pink-100 text-pink-600')}>
-                        {provadorClient && provadorPhotoType ? <i className="fas fa-check"></i> : '2'}
+                {/* Col 2: Foto */}
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                  <div className="p-3 border-b border-neutral-800">
+                    <h3 className="font-medium text-white text-xs flex items-center gap-2">
+                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (provadorClient && provadorPhotoType ? 'bg-green-500 text-white' : 'bg-neutral-800 text-neutral-400')}>
+                        {provadorClient && provadorPhotoType ? <i className="fas fa-check text-[8px]"></i> : '2'}
                       </span>
                       Selecionar Foto
                     </h3>
                   </div>
-                  <div className="p-4">
+                  <div className="p-3">
                     {provadorClient ? (
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {PHOTO_TYPES.map(photoType => {
                           const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
                           const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
                           return (
                             <div key={photoType.id} onClick={() => hasPhoto && setProvadorPhotoType(photoType.id)} 
-                              className={'flex items-center gap-3 p-2 rounded-xl border-2 transition-all ' + (!hasPhoto ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed' : provadorPhotoType === photoType.id ? 'border-purple-500 bg-purple-50 cursor-pointer' : 'border-slate-200 hover:border-purple-300 cursor-pointer')}>
-                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center"><i className={'fas ' + photoType.icon + ' text-slate-400 text-sm'}></i></div>}
+                              className={'flex items-center gap-2 p-2 rounded-lg border transition-all ' + (!hasPhoto ? 'border-neutral-800 opacity-50 cursor-not-allowed' : provadorPhotoType === photoType.id ? 'border-pink-500 bg-pink-500/10 cursor-pointer' : 'border-neutral-800 hover:border-neutral-700 cursor-pointer')}>
+                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-8 h-8 rounded-lg object-cover" /> : <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center"><i className={'fas ' + photoType.icon + ' text-neutral-600 text-[10px]'}></i></div>}
                               <div className="flex-1">
-                                <p className="font-bold text-sm text-slate-800">{photoType.label}</p>
-                                <p className="text-[10px] text-slate-500">{hasPhoto ? 'Disponível' : 'Não cadastrada'}</p>
+                                <p className="font-medium text-xs text-white">{photoType.label}</p>
+                                <p className="text-[9px] text-neutral-500">{hasPhoto ? 'Disponível' : 'Não cadastrada'}</p>
                               </div>
-                              {hasPhoto && provadorPhotoType === photoType.id && <i className="fas fa-check text-purple-500"></i>}
+                              {hasPhoto && provadorPhotoType === photoType.id && <i className="fas fa-check text-pink-400 text-xs"></i>}
                             </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-slate-400">
-                        <i className="fas fa-image text-2xl mb-2"></i>
-                        <p className="text-xs">Selecione um cliente</p>
+                      <div className="text-center py-6 text-neutral-600">
+                        <i className="fas fa-image text-lg mb-2"></i>
+                        <p className="text-[10px]">Selecione um cliente</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Desktop Coluna 3: Composição do Look */}
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : 'bg-indigo-100 text-indigo-600')}>
-                        {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check"></i> : '3'}
+                {/* Col 3: Look */}
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                  <div className="p-3 border-b border-neutral-800">
+                    <h3 className="font-medium text-white text-xs flex items-center gap-2">
+                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : 'bg-neutral-800 text-neutral-400')}>
+                        {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check text-[8px]"></i> : '3'}
                       </span>
                       Look
-                      {Object.keys(provadorLook).length > 0 && <span className="ml-auto text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{Object.keys(provadorLook).length}</span>}
+                      {Object.keys(provadorLook).length > 0 && <span className="ml-auto text-[9px] text-pink-400 bg-pink-500/20 px-1.5 py-0.5 rounded-full">{Object.keys(provadorLook).length}</span>}
                     </h3>
                   </div>
-                  <div className="p-3">
-                    <div className="flex gap-2 mb-3">
-                      <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
-                        <option value="">Todas coleções</option>
-                        {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div className="max-h-[280px] overflow-y-auto">
+                  <div className="p-2">
+                    <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="w-full px-2 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-[10px] text-white mb-2">
+                      <option value="">Todas coleções</option>
+                      {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <div className="max-h-[240px] overflow-y-auto">
                       <LookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} />
                     </div>
                   </div>
                 </div>
 
-                {/* Desktop Coluna 4: Gerar e Enviar */}
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : 'bg-green-100 text-green-600')}>
-                        {provadorGeneratedImage ? <i className="fas fa-check"></i> : '4'}
+                {/* Col 4: Gerar */}
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                  <div className="p-3 border-b border-neutral-800">
+                    <h3 className="font-medium text-white text-xs flex items-center gap-2">
+                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : 'bg-neutral-800 text-neutral-400')}>
+                        {provadorGeneratedImage ? <i className="fas fa-check text-[8px]"></i> : '4'}
                       </span>
                       Gerar e Enviar
                     </h3>
                   </div>
-                  <div className="p-4">
-                    <div className="aspect-[3/4] bg-slate-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
+                  <div className="p-3">
+                    <div className="aspect-[3/4] bg-neutral-800 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                       {isGeneratingProvador ? (
-                        <div className="text-center"><div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-2"></div><p className="text-xs text-slate-500">Gerando...</p></div>
+                        <div className="text-center"><div className="w-8 h-8 border-2 border-neutral-600 border-t-pink-500 rounded-full animate-spin mx-auto mb-2"></div><p className="text-[10px] text-neutral-500">Gerando...</p></div>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
-                        <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-50" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-3"><i className="fas fa-wand-magic-sparkles text-purple-500 text-xl mb-1"></i><p className="text-xs text-slate-600">Clique em Gerar</p></div></div></div>
+                        <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><i className="fas fa-wand-magic-sparkles text-pink-400 text-lg mb-1"></i><p className="text-[10px] text-neutral-400">Clique em Gerar</p></div></div></div>
                       ) : (
-                        <div className="text-center p-4"><i className="fas fa-image text-slate-300 text-3xl mb-2"></i><p className="text-xs text-slate-400">Preview aqui</p></div>
+                        <div className="text-center p-4"><i className="fas fa-image text-neutral-700 text-2xl mb-2"></i><p className="text-[10px] text-neutral-600">Preview</p></div>
                       )}
                     </div>
-                    <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs mb-2">
+                    <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-2 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-[10px] text-white mb-2">
                       {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
-                    <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs resize-none mb-3" placeholder="Mensagem..." />
+                    <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className="w-full px-2 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-[10px] text-white resize-none mb-3" placeholder="Mensagem..." />
                     <div className="space-y-2">
-                      <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                        {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar (3 créd.)</>}
+                      <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
+                        {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin text-[10px]"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles text-[10px]"></i>Gerar (3 créd.)</>}
                       </button>
-                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                        <i className="fab fa-whatsapp"></i>Enviar WhatsApp
+                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors">
+                        <i className="fab fa-whatsapp text-[10px]"></i>Enviar WhatsApp
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Mobile Accordion Steps */}
-              <div className="lg:hidden space-y-3">
+              {/* Mobile Accordion */}
+              <div className="lg:hidden space-y-2">
                 
-                {/* Step 1: Cliente */}
-                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 1 ? 'border-purple-500 shadow-lg' : provadorClient ? 'border-green-500' : 'border-slate-200')}>
-                  <div onClick={() => setProvadorStep(1)} className="p-4 flex items-center gap-3 cursor-pointer">
-                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + (provadorClient ? 'bg-green-500 text-white' : provadorStep === 1 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
-                      {provadorClient ? <i className="fas fa-check"></i> : '1'}
+                {/* Step 1 */}
+                <div className={'bg-neutral-900 rounded-xl border overflow-hidden transition-all ' + (provadorStep === 1 ? 'border-pink-500' : provadorClient ? 'border-green-500/50' : 'border-neutral-800')}>
+                  <div onClick={() => setProvadorStep(1)} className="p-3 flex items-center gap-3 cursor-pointer">
+                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + (provadorClient ? 'bg-green-500 text-white' : provadorStep === 1 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'bg-neutral-800 text-neutral-500')}>
+                      {provadorClient ? <i className="fas fa-check text-[10px]"></i> : '1'}
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-slate-800">Selecionar Cliente</p>
-                      {provadorClient && provadorStep !== 1 && (
-                        <p className="text-xs text-green-600">{provadorClient.firstName} {provadorClient.lastName}</p>
-                      )}
+                      <p className="font-medium text-white text-sm">Selecionar Cliente</p>
+                      {provadorClient && provadorStep !== 1 && <p className="text-[10px] text-green-400">{provadorClient.firstName} {provadorClient.lastName}</p>}
                     </div>
-                    <i className={'fas transition-transform ' + (provadorStep === 1 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                    <i className={'fas text-neutral-500 text-xs ' + (provadorStep === 1 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
                   </div>
                   {provadorStep === 1 && (
-                    <div className="px-4 pb-4 border-t border-slate-100">
+                    <div className="px-3 pb-3 border-t border-neutral-800">
                       {clientsWithProvador.length > 0 ? (
-                        <div className="space-y-2 mt-3 max-h-64 overflow-y-auto">
+                        <div className="space-y-2 mt-3 max-h-56 overflow-y-auto">
                           {clientsWithProvador.map(client => (
-                            <div key={client.id} onClick={() => { setProvadorClient(client); setProvadorStep(2); }} className={'flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ' + (provadorClient?.id === client.id ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-purple-300')}>
-                              <img src={getClientPhoto(client)} alt="" className="w-12 h-12 rounded-full object-cover" />
+                            <div key={client.id} onClick={() => { setProvadorClient(client); setProvadorStep(2); }} className={'flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all ' + (provadorClient?.id === client.id ? 'border-pink-500 bg-pink-500/10' : 'border-neutral-800 hover:border-neutral-700')}>
+                              <img src={getClientPhoto(client)} alt="" className="w-10 h-10 rounded-full object-cover" />
                               <div className="flex-1 min-w-0">
-                                <p className="font-bold text-slate-800">{client.firstName} {client.lastName}</p>
-                                <p className="text-xs text-slate-500">{formatWhatsApp(client.whatsapp)}</p>
+                                <p className="font-medium text-white text-sm">{client.firstName} {client.lastName}</p>
+                                <p className="text-[10px] text-neutral-500">{formatWhatsApp(client.whatsapp)}</p>
                               </div>
-                              {provadorClient?.id === client.id && <i className="fas fa-check text-purple-500"></i>}
+                              {provadorClient?.id === client.id && <i className="fas fa-check text-pink-400 text-xs"></i>}
                             </div>
                           ))}
                         </div>
                       ) : (
                         <div className="text-center py-6">
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                            <i className="fas fa-user-plus text-slate-300 text-2xl"></i>
+                          <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
+                            <i className="fas fa-user-plus text-neutral-600 text-lg"></i>
                           </div>
-                          <p className="text-sm text-slate-500 mb-3">Nenhum cliente com foto</p>
-                          <button onClick={() => setCurrentPage('clients')} className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-bold">Cadastrar Cliente</button>
+                          <p className="text-xs text-neutral-500 mb-3">Nenhum cliente com foto</p>
+                          <button onClick={() => setCurrentPage('clients')} className="px-4 py-2 bg-neutral-800 text-white rounded-lg text-xs font-medium hover:bg-neutral-700">Cadastrar Cliente</button>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* Step 2: Foto */}
-                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 2 ? 'border-purple-500 shadow-lg' : (provadorClient && provadorPhotoType) ? 'border-green-500' : 'border-slate-200')}>
-                  <div onClick={() => provadorClient && setProvadorStep(2)} className={'p-4 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
-                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + ((provadorClient && provadorPhotoType) ? 'bg-green-500 text-white' : provadorStep === 2 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
-                      {(provadorClient && provadorPhotoType) ? <i className="fas fa-check"></i> : '2'}
+                {/* Step 2 */}
+                <div className={'bg-neutral-900 rounded-xl border overflow-hidden transition-all ' + (provadorStep === 2 ? 'border-pink-500' : (provadorClient && provadorPhotoType) ? 'border-green-500/50' : 'border-neutral-800')}>
+                  <div onClick={() => provadorClient && setProvadorStep(2)} className={'p-3 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
+                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + ((provadorClient && provadorPhotoType) ? 'bg-green-500 text-white' : provadorStep === 2 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'bg-neutral-800 text-neutral-500')}>
+                      {(provadorClient && provadorPhotoType) ? <i className="fas fa-check text-[10px]"></i> : '2'}
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-slate-800">Selecionar Foto</p>
-                      {provadorPhotoType && provadorStep !== 2 && (
-                        <p className="text-xs text-green-600">Foto: {PHOTO_TYPES.find(p => p.id === provadorPhotoType)?.label}</p>
-                      )}
+                      <p className="font-medium text-white text-sm">Selecionar Foto</p>
+                      {provadorPhotoType && provadorStep !== 2 && <p className="text-[10px] text-green-400">Foto: {PHOTO_TYPES.find(p => p.id === provadorPhotoType)?.label}</p>}
                     </div>
-                    <i className={'fas transition-transform ' + (provadorStep === 2 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                    <i className={'fas text-neutral-500 text-xs ' + (provadorStep === 2 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
                   </div>
                   {provadorStep === 2 && provadorClient && (
-                    <div className="px-4 pb-4 border-t border-slate-100">
+                    <div className="px-3 pb-3 border-t border-neutral-800">
                       <div className="space-y-2 mt-3">
                         {PHOTO_TYPES.map(photoType => {
                           const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
                           const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
                           return (
                             <div key={photoType.id} onClick={() => { if (hasPhoto) { setProvadorPhotoType(photoType.id); setProvadorStep(3); } }} 
-                              className={'flex items-center gap-3 p-3 rounded-xl border-2 transition-all ' + (!hasPhoto ? 'border-slate-100 bg-slate-50 opacity-50' : provadorPhotoType === photoType.id ? 'border-purple-500 bg-purple-50 cursor-pointer' : 'border-slate-200 hover:border-purple-300 cursor-pointer')}>
-                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-14 h-14 rounded-xl object-cover" /> : <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center"><i className={'fas ' + photoType.icon + ' text-slate-400'}></i></div>}
+                              className={'flex items-center gap-3 p-2.5 rounded-lg border transition-all ' + (!hasPhoto ? 'border-neutral-800 opacity-50' : provadorPhotoType === photoType.id ? 'border-pink-500 bg-pink-500/10 cursor-pointer' : 'border-neutral-800 hover:border-neutral-700 cursor-pointer')}>
+                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-12 h-12 rounded-lg object-cover" /> : <div className="w-12 h-12 rounded-lg bg-neutral-800 flex items-center justify-center"><i className={'fas ' + photoType.icon + ' text-neutral-600'}></i></div>}
                               <div className="flex-1">
-                                <p className="font-bold text-slate-800">{photoType.label}</p>
-                                <p className="text-xs text-slate-500">{hasPhoto ? 'Toque para selecionar' : 'Não cadastrada'}</p>
+                                <p className="font-medium text-white text-sm">{photoType.label}</p>
+                                <p className="text-[10px] text-neutral-500">{hasPhoto ? 'Toque para selecionar' : 'Não cadastrada'}</p>
                               </div>
-                              {hasPhoto && provadorPhotoType === photoType.id && <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center"><i className="fas fa-check text-white text-xs"></i></div>}
+                              {hasPhoto && provadorPhotoType === photoType.id && <div className="w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center"><i className="fas fa-check text-white text-[8px]"></i></div>}
                             </div>
                           );
                         })}
@@ -751,36 +772,32 @@ function App() {
                   )}
                 </div>
 
-                {/* Step 3: Look */}
-                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 3 ? 'border-purple-500 shadow-lg' : Object.keys(provadorLook).length > 0 ? 'border-green-500' : 'border-slate-200')}>
-                  <div onClick={() => provadorClient && setProvadorStep(3)} className={'p-4 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
-                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : provadorStep === 3 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
-                      {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check"></i> : '3'}
+                {/* Step 3 */}
+                <div className={'bg-neutral-900 rounded-xl border overflow-hidden transition-all ' + (provadorStep === 3 ? 'border-pink-500' : Object.keys(provadorLook).length > 0 ? 'border-green-500/50' : 'border-neutral-800')}>
+                  <div onClick={() => provadorClient && setProvadorStep(3)} className={'p-3 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
+                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : provadorStep === 3 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'bg-neutral-800 text-neutral-500')}>
+                      {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check text-[10px]"></i> : '3'}
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-slate-800">Composição do Look</p>
-                      {Object.keys(provadorLook).length > 0 && provadorStep !== 3 && (
-                        <p className="text-xs text-green-600">{Object.keys(provadorLook).length} peça(s) selecionada(s)</p>
-                      )}
+                      <p className="font-medium text-white text-sm">Composição do Look</p>
+                      {Object.keys(provadorLook).length > 0 && provadorStep !== 3 && <p className="text-[10px] text-green-400">{Object.keys(provadorLook).length} peça(s)</p>}
                     </div>
-                    {Object.keys(provadorLook).length > 0 && <span className="px-2 py-1 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full">{Object.keys(provadorLook).length}</span>}
-                    <i className={'fas transition-transform ' + (provadorStep === 3 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                    {Object.keys(provadorLook).length > 0 && <span className="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[10px] font-medium rounded-full">{Object.keys(provadorLook).length}</span>}
+                    <i className={'fas text-neutral-500 text-xs ' + (provadorStep === 3 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
                   </div>
                   {provadorStep === 3 && (
-                    <div className="px-4 pb-4 border-t border-slate-100">
-                      {/* Filtros */}
+                    <div className="px-3 pb-3 border-t border-neutral-800">
                       <div className="flex gap-2 mt-3 mb-3">
                         <div className="relative flex-1">
-                          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                          <input type="text" placeholder="Buscar produto..." value={provadorLookSearch} onChange={(e) => setProvadorLookSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                          <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-600 text-[10px]"></i>
+                          <input type="text" placeholder="Buscar produto..." value={provadorLookSearch} onChange={(e) => setProvadorLookSearch(e.target.value)} className="w-full pl-7 pr-2 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white" />
                         </div>
-                        <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                        <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="px-2 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white">
                           <option value="">Todas</option>
                           {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
-                      {/* Look Composer */}
-                      <div className="max-h-[350px] overflow-y-auto">
+                      <div className="max-h-[300px] overflow-y-auto">
                         <LookComposer 
                           products={products.filter(p => {
                             const matchesSearch = !provadorLookSearch || p.name.toLowerCase().includes(provadorLookSearch.toLowerCase()) || p.sku.toLowerCase().includes(provadorLookSearch.toLowerCase());
@@ -791,77 +808,69 @@ function App() {
                           onChange={setProvadorLook} 
                         />
                       </div>
-                      {/* Botão Continuar */}
                       {Object.keys(provadorLook).length > 0 && (
-                        <button onClick={() => setProvadorStep(4)} className="w-full mt-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold flex items-center justify-center gap-2">
-                          Continuar <i className="fas fa-arrow-right"></i>
+                        <button onClick={() => setProvadorStep(4)} className="w-full mt-3 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                          Continuar <i className="fas fa-arrow-right text-[10px]"></i>
                         </button>
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* Step 4: Gerar e Enviar */}
-                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 4 ? 'border-purple-500 shadow-lg' : provadorGeneratedImage ? 'border-green-500' : 'border-slate-200')}>
-                  <div onClick={() => (provadorClient && Object.keys(provadorLook).length > 0) && setProvadorStep(4)} className={'p-4 flex items-center gap-3 ' + ((provadorClient && Object.keys(provadorLook).length > 0) ? 'cursor-pointer' : 'opacity-50')}>
-                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : provadorStep === 4 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
-                      {provadorGeneratedImage ? <i className="fas fa-check"></i> : '4'}
+                {/* Step 4 */}
+                <div className={'bg-neutral-900 rounded-xl border overflow-hidden transition-all ' + (provadorStep === 4 ? 'border-pink-500' : provadorGeneratedImage ? 'border-green-500/50' : 'border-neutral-800')}>
+                  <div onClick={() => (provadorClient && Object.keys(provadorLook).length > 0) && setProvadorStep(4)} className={'p-3 flex items-center gap-3 ' + ((provadorClient && Object.keys(provadorLook).length > 0) ? 'cursor-pointer' : 'opacity-50')}>
+                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : provadorStep === 4 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'bg-neutral-800 text-neutral-500')}>
+                      {provadorGeneratedImage ? <i className="fas fa-check text-[10px]"></i> : '4'}
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-slate-800">Gerar e Enviar</p>
-                      {provadorGeneratedImage && provadorStep !== 4 && (
-                        <p className="text-xs text-green-600">Imagem gerada!</p>
-                      )}
+                      <p className="font-medium text-white text-sm">Gerar e Enviar</p>
+                      {provadorGeneratedImage && provadorStep !== 4 && <p className="text-[10px] text-green-400">Imagem gerada!</p>}
                     </div>
-                    <i className={'fas transition-transform ' + (provadorStep === 4 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                    <i className={'fas text-neutral-500 text-xs ' + (provadorStep === 4 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
                   </div>
                   {provadorStep === 4 && (
-                    <div className="px-4 pb-4 border-t border-slate-100">
-                      {/* Preview */}
-                      <div className="aspect-square bg-slate-100 rounded-xl mt-3 mb-4 flex items-center justify-center overflow-hidden">
+                    <div className="px-3 pb-3 border-t border-neutral-800">
+                      <div className="aspect-square bg-neutral-800 rounded-lg mt-3 mb-3 flex items-center justify-center overflow-hidden">
                         {isGeneratingProvador ? (
                           <div className="text-center">
-                            <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
-                            <p className="text-sm text-slate-500">Gerando imagem...</p>
+                            <div className="w-10 h-10 border-2 border-neutral-600 border-t-pink-500 rounded-full animate-spin mx-auto mb-2"></div>
+                            <p className="text-xs text-neutral-500">Gerando imagem...</p>
                           </div>
                         ) : provadorGeneratedImage ? (
                           <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                         ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
                           <div className="relative w-full h-full">
-                            <img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-50" />
+                            <img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" />
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="text-center bg-white/90 backdrop-blur-sm rounded-2xl p-6">
-                                <i className="fas fa-wand-magic-sparkles text-purple-500 text-3xl mb-3"></i>
-                                <p className="text-slate-600 font-medium">Pronto para gerar!</p>
+                              <div className="text-center">
+                                <i className="fas fa-wand-magic-sparkles text-pink-400 text-2xl mb-2"></i>
+                                <p className="text-neutral-400 text-xs">Pronto para gerar!</p>
                               </div>
                             </div>
                           </div>
                         ) : (
                           <div className="text-center p-4">
-                            <i className="fas fa-image text-slate-300 text-4xl mb-3"></i>
-                            <p className="text-sm text-slate-400">Preview</p>
+                            <i className="fas fa-image text-neutral-700 text-3xl mb-2"></i>
+                            <p className="text-xs text-neutral-600">Preview</p>
                           </div>
                         )}
                       </div>
-
-                      {/* Mensagem WhatsApp */}
-                      <div className="mb-4">
-                        <label className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1">
+                      <div className="mb-3">
+                        <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
                           <i className="fab fa-whatsapp text-green-500"></i>Mensagem
                         </label>
-                        <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm mb-2">
+                        <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white mb-2">
                           {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                         </select>
-                        <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={3} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm resize-none" placeholder="Mensagem personalizada..." />
+                        <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={3} className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white resize-none" placeholder="Mensagem personalizada..." />
                       </div>
-
-                      {/* Botões */}
-                      <div className="space-y-3">
-                        <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                          {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar Imagem (3 créd.)</>}
+                      <div className="space-y-2">
+                        <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                          {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin text-sm"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles text-sm"></i>Gerar Imagem (3 créd.)</>}
                         </button>
-                        <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                          <i className="fab fa-whatsapp text-xl"></i>Enviar pelo WhatsApp
+                        <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
+                          <i className="fab fa-whatsapp text-lg"></i>Enviar pelo WhatsApp
                         </button>
                       </div>
                     </div>
@@ -873,62 +882,68 @@ function App() {
           </div>
         )}
 
-        {/* PRODUCTS */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* PRODUCTS - SUNO STYLE */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'products' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                    <i className="fas fa-box text-white text-xl"></i>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+                    <i className="fas fa-box text-neutral-400 text-sm"></i>
                   </div>
                   <div>
-                    <h1 className="text-xl font-black text-slate-800">Produtos</h1>
-                    <p className="text-slate-500 text-xs">Gerencie seu catálogo</p>
+                    <h1 className="text-lg font-semibold text-white">Produtos</h1>
+                    <p className="text-neutral-500 text-xs">Gerencie seu catálogo</p>
                   </div>
                 </div>
-                <button onClick={() => setShowImport(true)} className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg text-sm">
-                  <i className="fas fa-plus mr-2"></i>Novo
+                <button onClick={() => setShowImport(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                  <i className="fas fa-plus mr-1.5"></i>Novo
                 </button>
               </div>
-              <div className="bg-white rounded-2xl border border-slate-200 p-3 mb-4">
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  <div className="flex-shrink-0 w-48">
+              
+              {/* Filters */}
+              <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-3 mb-4">
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  <div className="flex-shrink-0 w-44">
                     <div className="relative">
-                      <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                      <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                      <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-600 text-[10px]"></i>
+                      <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-7 pr-2 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white" />
                     </div>
                   </div>
-                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="flex-shrink-0 px-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white">
                     <option value="">Categoria</option>
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">{filteredProducts.length} de {products.length} produtos</p>
+                <p className="text-[10px] text-neutral-600 mt-2">{filteredProducts.length} de {products.length} produtos</p>
               </div>
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              
+              {/* Grid */}
+              <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
                 {filteredProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
                     {filteredProducts.map(product => (
-                      <div key={product.id} onClick={() => setShowProductDetail(product)} className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group">
-                        <div className="aspect-square bg-white relative overflow-hidden">
+                      <div key={product.id} onClick={() => setShowProductDetail(product)} className="bg-neutral-800 rounded-lg overflow-hidden cursor-pointer hover:bg-neutral-700 transition-colors group">
+                        <div className="aspect-square bg-neutral-700 relative overflow-hidden">
                           <img src={product.images[0]?.base64 || product.images[0]?.url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         </div>
                         <div className="p-2">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase">{product.sku}</p>
-                          <p className="text-[11px] font-bold text-slate-700 truncate">{product.name}</p>
+                          <p className="text-[8px] font-medium text-neutral-500 uppercase tracking-wide">{product.sku}</p>
+                          <p className="text-[10px] font-medium text-white truncate">{product.name}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="p-8 text-center">
-                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                      <i className="fas fa-search text-slate-300 text-2xl"></i>
+                    <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-search text-neutral-600 text-xl"></i>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-700 mb-2">Nenhum produto</h3>
-                    <button onClick={() => setShowImport(true)} className="px-5 py-2.5 bg-purple-100 text-purple-700 rounded-xl font-bold text-sm">
-                      <i className="fas fa-plus mr-2"></i>Adicionar
+                    <h3 className="text-sm font-medium text-white mb-1">Nenhum produto</h3>
+                    <button onClick={() => setShowImport(true)} className="mt-3 px-4 py-2 bg-neutral-800 text-white rounded-lg font-medium text-xs hover:bg-neutral-700">
+                      <i className="fas fa-plus mr-1.5"></i>Adicionar
                     </button>
                   </div>
                 )}
@@ -937,98 +952,106 @@ function App() {
           </div>
         )}
 
-        {/* CLIENTS */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* CLIENTS - SUNO STYLE */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'clients' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
-            <div className="max-w-6xl mx-auto">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                    <i className="fas fa-users text-white text-xl"></i>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+                    <i className="fas fa-users text-neutral-400 text-sm"></i>
                   </div>
                   <div>
-                    <h1 className="text-xl font-black text-slate-800">Clientes</h1>
-                    <p className="text-slate-500 text-xs">Gerencie seus clientes</p>
+                    <h1 className="text-lg font-semibold text-white">Clientes</h1>
+                    <p className="text-neutral-500 text-xs">Gerencie seus clientes</p>
                   </div>
                 </div>
-                <button onClick={() => setShowCreateClient(true)} className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg text-sm">
-                  <i className="fas fa-plus mr-2"></i>Novo
+                <button onClick={() => setShowCreateClient(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                  <i className="fas fa-plus mr-1.5"></i>Novo
                 </button>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <p className="text-2xl font-black text-slate-800">{clients.length}</p>
-                  <p className="text-xs text-slate-500">Total</p>
+              
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <p className="text-xl font-bold text-white">{clients.length}</p>
+                  <p className="text-[10px] text-neutral-500">Total</p>
                 </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <p className="text-2xl font-black text-slate-800">{clients.filter(c => c.status === 'active').length}</p>
-                  <p className="text-xs text-slate-500">Ativos</p>
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <p className="text-xl font-bold text-white">{clients.filter(c => c.status === 'active').length}</p>
+                  <p className="text-[10px] text-neutral-500">Ativos</p>
                 </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <p className="text-2xl font-black text-slate-800">{clientsWithProvador.length}</p>
-                  <p className="text-xs text-slate-500">Provador IA</p>
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <p className="text-xl font-bold text-white">{clientsWithProvador.length}</p>
+                  <p className="text-[10px] text-neutral-500">Provador IA</p>
                 </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200">
-                  <p className="text-2xl font-black text-slate-800">{clients.filter(c => c.status === 'vip').length}</p>
-                  <p className="text-xs text-slate-500">VIP</p>
+                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                  <p className="text-xl font-bold text-white">{clients.filter(c => c.status === 'vip').length}</p>
+                  <p className="text-[10px] text-neutral-500">VIP</p>
                 </div>
               </div>
+              
+              {/* Search */}
               {clients.length > 0 && (
                 <div className="mb-4">
                   <div className="relative">
-                    <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl" />
+                    <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 text-xs"></i>
+                    <input type="text" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white" />
                   </div>
                 </div>
               )}
+              
+              {/* List */}
               {clients.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                    <i className="fas fa-users text-green-400 text-2xl"></i>
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-8 text-center">
+                  <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
+                    <i className="fas fa-users text-neutral-600 text-xl"></i>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
-                  <p className="text-slate-500 text-sm mb-6">Adicione clientes para usar o Vizzu Provador®</p>
-                  <button onClick={() => setShowCreateClient(true)} className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-sm">
-                    <i className="fas fa-plus mr-2"></i>Adicionar Cliente
+                  <h3 className="text-sm font-medium text-white mb-1">Nenhum cliente cadastrado</h3>
+                  <p className="text-neutral-500 text-xs mb-4">Adicione clientes para usar o Vizzu Provador®</p>
+                  <button onClick={() => setShowCreateClient(true)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                    <i className="fas fa-plus mr-1.5"></i>Adicionar Cliente
                   </button>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                  <div className="divide-y divide-slate-100">
+                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                  <div className="divide-y divide-neutral-800">
                     {filteredClients.map(client => (
-                      <div key={client.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setShowClientDetail(client)}>
-                        <div className="flex items-center gap-4">
+                      <div key={client.id} className="p-3 hover:bg-neutral-800/50 transition-colors cursor-pointer" onClick={() => setShowClientDetail(client)}>
+                        <div className="flex items-center gap-3">
                           <div className="relative">
                             {getClientPhoto(client) ? (
-                              <img src={getClientPhoto(client)} alt={client.firstName} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                              <img src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full object-cover" />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
-                                <span className="text-lg font-bold text-slate-500">{client.firstName[0]}{client.lastName[0]}</span>
+                              <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                                <span className="text-sm font-medium text-neutral-400">{client.firstName[0]}{client.lastName[0]}</span>
                               </div>
                             )}
                             {client.hasProvadorIA && (
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-white">
-                                <i className="fas fa-camera text-white text-[8px]"></i>
+                              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-pink-500 rounded-full flex items-center justify-center">
+                                <i className="fas fa-camera text-white text-[6px]"></i>
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-slate-800 truncate">{client.firstName} {client.lastName}</h3>
+                              <h3 className="font-medium text-white text-sm truncate">{client.firstName} {client.lastName}</h3>
                               {client.photos && client.photos.length > 1 && (
-                                <span className="text-[9px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-full">{client.photos.length} fotos</span>
+                                <span className="text-[8px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded-full">{client.photos.length} fotos</span>
                               )}
                             </div>
-                            <p className="text-sm text-slate-500">{formatWhatsApp(client.whatsapp)}</p>
+                            <p className="text-xs text-neutral-500">{formatWhatsApp(client.whatsapp)}</p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {client.hasProvadorIA && (
-                              <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center hover:bg-purple-200" title="Vizzu Provador®">
-                                <i className="fas fa-wand-magic-sparkles"></i>
+                              <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className="w-8 h-8 rounded-lg bg-neutral-800 text-pink-400 flex items-center justify-center hover:bg-neutral-700 transition-colors" title="Vizzu Provador®">
+                                <i className="fas fa-wand-magic-sparkles text-xs"></i>
                               </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center hover:bg-green-200" title="WhatsApp">
-                              <i className="fab fa-whatsapp text-lg"></i>
+                            <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className="w-8 h-8 rounded-lg bg-neutral-800 text-green-400 flex items-center justify-center hover:bg-neutral-700 transition-colors" title="WhatsApp">
+                              <i className="fab fa-whatsapp text-sm"></i>
                             </button>
                           </div>
                         </div>
@@ -1041,153 +1064,169 @@ function App() {
           </div>
         )}
 
-        {/* HISTORY */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* HISTORY - SUNO STYLE */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'history' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
-                  <i className="fas fa-clock-rotate-left text-white text-lg"></i>
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-5xl mx-auto">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+                  <i className="fas fa-clock-rotate-left text-neutral-400 text-sm"></i>
                 </div>
                 <div>
-                  <h1 className="text-xl font-black text-slate-800">Histórico</h1>
-                  <p className="text-slate-500 text-xs">Suas atividades</p>
+                  <h1 className="text-lg font-semibold text-white">Histórico</h1>
+                  <p className="text-neutral-500 text-xs">Suas atividades</p>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-clock-rotate-left text-slate-300 text-2xl"></i>
+              <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-8 text-center">
+                <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
+                  <i className="fas fa-clock-rotate-left text-neutral-600 text-xl"></i>
                 </div>
-                <h3 className="text-lg font-bold text-slate-700 mb-2">Nenhuma atividade</h3>
-                <p className="text-slate-500 text-sm">As atividades aparecerão aqui</p>
+                <h3 className="text-sm font-medium text-white mb-1">Nenhuma atividade</h3>
+                <p className="text-neutral-500 text-xs">As atividades aparecerão aqui</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* SETTINGS */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SETTINGS - SUNO STYLE */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'settings' && (
           <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col md:flex-row h-full">
-              <div className="md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-2 md:p-4">
-                <nav className="flex md:flex-col gap-1 overflow-x-auto">
+              {/* Sidebar */}
+              <div className="md:w-56 bg-neutral-950 border-b md:border-b-0 md:border-r border-neutral-900 p-2 md:p-3">
+                <nav className="flex md:flex-col gap-0.5 overflow-x-auto">
                   {[
                     { id: 'profile' as SettingsTab, icon: 'fa-user', label: 'Perfil' },
                     { id: 'company' as SettingsTab, icon: 'fa-building', label: 'Empresa' },
                     { id: 'plan' as SettingsTab, icon: 'fa-credit-card', label: 'Plano' },
                     { id: 'integrations' as SettingsTab, icon: 'fa-plug', label: 'Integrações' },
                   ].map(item => (
-                    <button key={item.id} onClick={() => setSettingsTab(item.id)} className={'flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ' + (settingsTab === item.id ? 'bg-purple-100 text-purple-700' : 'text-slate-600 hover:bg-slate-100')}>
-                      <i className={'fas ' + item.icon + ' w-4'}></i>{item.label}
+                    <button key={item.id} onClick={() => setSettingsTab(item.id)} className={'flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ' + (settingsTab === item.id ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white hover:bg-neutral-900')}>
+                      <i className={'fas ' + item.icon + ' w-3.5 text-[10px]'}></i>{item.label}
                     </button>
                   ))}
-                  <button onClick={handleLogout} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 md:mt-4 md:pt-4 md:border-t md:border-slate-200">
-                    <i className="fas fa-sign-out-alt w-4"></i>Sair
+                  <button onClick={handleLogout} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 md:mt-4 md:pt-3 md:border-t md:border-neutral-800">
+                    <i className="fas fa-sign-out-alt w-3.5 text-[10px]"></i>Sair
                   </button>
                 </nav>
               </div>
-              <div className="flex-1 p-4 md:p-8 overflow-y-auto">
-                <div className="max-w-2xl">
+              
+              {/* Content */}
+              <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+                <div className="max-w-xl">
+                  
+                  {/* Plan Tab */}
                   {settingsTab === 'plan' && (
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-4">Plano &amp; Créditos</h3>
-                      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-4 mb-4 text-white">
+                      <h3 className="text-lg font-semibold text-white mb-4">Plano & Créditos</h3>
+                      <div className="bg-neutral-900 border border-pink-500/30 rounded-xl p-4 mb-4">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="text-xs text-white/70">Plano Atual</p>
-                            <p className="text-2xl font-black">{currentPlan.name}</p>
+                            <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Plano Atual</p>
+                            <p className="text-xl font-bold text-white">{currentPlan.name}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs text-white/70">Créditos</p>
-                            <p className="text-2xl font-black">{userCredits}</p>
+                            <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Créditos</p>
+                            <p className="text-xl font-bold text-white">{userCredits}</p>
                           </div>
                         </div>
-                        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                          <div className="h-full bg-white rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+                        <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
                         </div>
                       </div>
-                      <div className="bg-white rounded-2xl border border-slate-200 p-4">
-                        <h4 className="font-bold text-slate-700 mb-4">Escolha seu Plano</h4>
-                        <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+                        <h4 className="font-medium text-white text-sm mb-3">Escolha seu Plano</h4>
+                        <div className="grid grid-cols-2 gap-2">
                           {PLANS.map(plan => (
-                            <div key={plan.id} onClick={() => upgradePlan(plan.id)} className={'p-3 rounded-xl border-2 cursor-pointer transition-all ' + (currentPlan.id === plan.id ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-purple-300')}>
-                              <h5 className="font-bold text-slate-800 text-sm">{plan.name}</h5>
-                              <p className="text-xl font-black text-slate-800 my-1">{plan.limit}</p>
-                              <p className="text-xs text-slate-500">créd./mês</p>
-                              <p className="text-xs font-bold text-purple-600 mt-1">{plan.price}</p>
-                              {currentPlan.id === plan.id && <span className="inline-block mt-2 text-[9px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">ATUAL</span>}
+                            <div key={plan.id} onClick={() => upgradePlan(plan.id)} className={'p-3 rounded-lg border cursor-pointer transition-all ' + (currentPlan.id === plan.id ? 'border-pink-500 bg-pink-500/10' : 'border-neutral-800 hover:border-neutral-700')}>
+                              <h5 className="font-medium text-white text-xs">{plan.name}</h5>
+                              <p className="text-lg font-bold text-white my-1">{plan.limit}</p>
+                              <p className="text-[10px] text-neutral-500">créd./mês</p>
+                              <p className="text-[10px] font-medium text-pink-400 mt-1">{plan.price}</p>
+                              {currentPlan.id === plan.id && <span className="inline-block mt-2 text-[8px] font-medium text-pink-400 bg-pink-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wide">ATUAL</span>}
                             </div>
                           ))}
                         </div>
                       </div>
                     </div>
                   )}
+                  
+                  {/* Profile Tab */}
                   {settingsTab === 'profile' && (
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-4">Perfil</h3>
-                      <div className="bg-white rounded-2xl border border-slate-200 p-4">
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
-                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-white text-xl"></i>}
+                      <h3 className="text-lg font-semibold text-white mb-4">Perfil</h3>
+                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+                        <div className="flex items-center gap-3 mb-5">
+                          <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center overflow-hidden">
+                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-neutral-500 text-lg"></i>}
                           </div>
-                          <button className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50">Alterar Foto</button>
+                          <button className="px-3 py-1.5 bg-neutral-800 text-white rounded-lg text-[10px] font-medium hover:bg-neutral-700 transition-colors">Alterar Foto</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-bold text-slate-600 mb-2">Nome</label>
-                            <input type="text" defaultValue={user.name} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" />
+                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Nome</label>
+                            <input type="text" defaultValue={user.name} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
                           </div>
                           <div>
-                            <label className="block text-xs font-bold text-slate-600 mb-2">Email</label>
-                            <input type="email" defaultValue={user.email} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-sm" disabled />
+                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Email</label>
+                            <input type="email" defaultValue={user.email} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-500" disabled />
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
+                  
+                  {/* Company Tab */}
                   {settingsTab === 'company' && (
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-4">Empresa</h3>
-                      <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                      <h3 className="text-lg font-semibold text-white mb-4">Empresa</h3>
+                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-xs font-bold text-slate-600 mb-2">Nome da Empresa</label>
-                            <input type="text" className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" placeholder="Sua Empresa Ltda" />
+                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Nome da Empresa</label>
+                            <input type="text" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="Sua Empresa Ltda" />
                           </div>
                           <div>
-                            <label className="block text-xs font-bold text-slate-600 mb-2">CNPJ</label>
-                            <input type="text" className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" placeholder="00.000.000/0000-00" />
+                            <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">CNPJ</label>
+                            <input type="text" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="00.000.000/0000-00" />
                           </div>
-                          <button className="w-full md:w-auto px-6 py-2.5 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 text-sm">Salvar</button>
+                          <button className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">Salvar</button>
                         </div>
                       </div>
                     </div>
                   )}
+                  
+                  {/* Integrations Tab */}
                   {settingsTab === 'integrations' && (
                     <div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-4">Integrações</h3>
-                      <div className="space-y-3">
+                      <h3 className="text-lg font-semibold text-white mb-4">Integrações</h3>
+                      <div className="space-y-2">
                         {[
                           { icon: 'fab fa-shopify', name: 'Shopify', desc: 'Sincronize produtos' },
                           { icon: 'fab fa-wordpress', name: 'WooCommerce', desc: 'Loja WordPress' },
                           { icon: 'fas fa-store', name: 'VTEX', desc: 'VTEX IO' },
                         ].map(item => (
-                          <div key={item.name} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between">
+                          <div key={item.name} className="bg-neutral-900 rounded-xl border border-neutral-800 p-3 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                                <i className={item.icon + ' text-slate-600 text-lg'}></i>
+                              <div className="w-9 h-9 rounded-lg bg-neutral-800 flex items-center justify-center">
+                                <i className={item.icon + ' text-neutral-400 text-sm'}></i>
                               </div>
                               <div>
-                                <h4 className="font-bold text-slate-800 text-sm">{item.name}</h4>
-                                <p className="text-xs text-slate-500">{item.desc}</p>
+                                <h4 className="font-medium text-white text-xs">{item.name}</h4>
+                                <p className="text-[10px] text-neutral-500">{item.desc}</p>
                               </div>
                             </div>
-                            <button className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 text-xs">Conectar</button>
+                            <button className="px-3 py-1.5 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 text-[10px] transition-colors">Conectar</button>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
+                  
                 </div>
               </div>
             </div>
@@ -1195,125 +1234,121 @@ function App() {
         )}
       </main>
 
-      {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 px-2 py-2 z-40">
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MOBILE BOTTOM NAVIGATION - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-neutral-950 border-t border-neutral-900 px-2 py-1.5 z-40">
         <div className="flex items-center justify-around">
-          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl ' + (currentPage === 'dashboard' ? 'text-white' : 'text-slate-500')}>
-            <i className="fas fa-home text-lg"></i>
-            <span className="text-[10px] font-medium">Home</span>
+          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? 'text-white' : 'text-neutral-600')}>
+            <i className="fas fa-home text-sm"></i>
+            <span className="text-[9px] font-medium">Home</span>
           </button>
-          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl ' + (currentPage === 'products' ? 'text-white' : 'text-slate-500')}>
-            <i className="fas fa-box text-lg"></i>
-            <span className="text-[10px] font-medium">Produtos</span>
+          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? 'text-white' : 'text-neutral-600')}>
+            <i className="fas fa-box text-sm"></i>
+            <span className="text-[9px] font-medium">Produtos</span>
           </button>
           
-          {/* Botão Central - Abre modal de escolha */}
-          <button onClick={() => setShowStudioPicker(true)} className="relative -mt-6">
-            <div className={'w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 scale-110' : 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400')}>
-              <i className="fas fa-wand-magic-sparkles text-white text-2xl"></i>
+          {/* Central Button */}
+          <button onClick={() => setShowStudioPicker(true)} className="relative -mt-5">
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500/80 to-orange-400/80')}>
+              <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            <span className={'block text-[10px] font-bold mt-1 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'text-white' : 'text-slate-400')}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'text-white' : 'text-neutral-500')}>Criar</span>
           </button>
           
-          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl ' + (currentPage === 'clients' ? 'text-white' : 'text-slate-500')}>
-            <i className="fas fa-users text-lg"></i>
-            <span className="text-[10px] font-medium">Clientes</span>
+          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? 'text-white' : 'text-neutral-600')}>
+            <i className="fas fa-users text-sm"></i>
+            <span className="text-[9px] font-medium">Clientes</span>
           </button>
-          <button onClick={() => setCurrentPage('settings')} className={'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl ' + (currentPage === 'settings' ? 'text-white' : 'text-slate-500')}>
-            <i className="fas fa-cog text-lg"></i>
-            <span className="text-[10px] font-medium">Config</span>
+          <button onClick={() => setCurrentPage('settings')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' ? 'text-white' : 'text-neutral-600')}>
+            <i className="fas fa-cog text-sm"></i>
+            <span className="text-[9px] font-medium">Config</span>
           </button>
         </div>
       </nav>
 
-      {/* STUDIO PICKER MODAL (Mobile) */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* STUDIO PICKER MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showStudioPicker && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
-          <div className="bg-white rounded-t-3xl w-full p-6 pb-10 animate-slide-up" onClick={(e) => e.stopPropagation()}>
-            <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-6"></div>
-            <h3 className="text-xl font-black text-slate-800 text-center mb-2">O que você quer criar?</h3>
-            <p className="text-sm text-slate-500 text-center mb-6">Escolha uma das opções abaixo</p>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
+          <div className="bg-neutral-900 rounded-t-2xl w-full p-5 pb-8 border-t border-neutral-800" onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-neutral-700 rounded-full mx-auto mb-5"></div>
+            <h3 className="text-lg font-semibold text-white text-center mb-1">O que você quer criar?</h3>
+            <p className="text-xs text-neutral-500 text-center mb-5">Escolha uma das opções</p>
             
-            <div className="grid grid-cols-2 gap-4">
-              {/* Vizzu Studio */}
+            <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); }}
-                className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-5 text-left hover:border-purple-400 hover:shadow-lg transition-all group"
+                className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 text-left hover:border-neutral-600 transition-all group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                  <i className="fas fa-wand-magic-sparkles text-white text-xl"></i>
+                <div className="w-11 h-11 rounded-xl bg-neutral-700 flex items-center justify-center mb-3 group-hover:bg-neutral-600 transition-colors">
+                  <i className="fas fa-wand-magic-sparkles text-neutral-300 text-sm"></i>
                 </div>
-                <h4 className="font-black text-slate-800 text-lg mb-1">Vizzu Studio®</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">Gere fotos profissionais dos seus produtos com IA</p>
-                <div className="mt-3 flex items-center gap-1 text-purple-600">
-                  <span className="text-[10px] font-bold">ACESSAR</span>
-                  <i className="fas fa-arrow-right text-[10px]"></i>
-                </div>
+                <h4 className="font-medium text-white text-sm mb-0.5">Vizzu Studio®</h4>
+                <p className="text-[10px] text-neutral-500 leading-relaxed">Gere fotos profissionais com IA</p>
               </button>
               
-              {/* Vizzu Provador */}
               <button 
                 onClick={() => { setShowStudioPicker(false); setCurrentPage('provador'); }}
-                className="bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-5 text-left hover:border-pink-400 hover:shadow-lg transition-all group"
+                className="bg-neutral-800 border border-pink-500/30 rounded-xl p-4 text-left hover:border-pink-500/50 transition-all group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                  <i className="fas fa-user-tag text-white text-xl"></i>
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-3 group-hover:from-pink-500/30 group-hover:to-orange-400/30 transition-colors">
+                  <i className="fas fa-user-tag text-pink-400 text-sm"></i>
                 </div>
-                <h4 className="font-black text-slate-800 text-lg mb-1">Vizzu Provador®</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">Vista seus clientes virtualmente e envie por WhatsApp</p>
-                <div className="mt-3 flex items-center gap-1 text-pink-600">
-                  <span className="text-[10px] font-bold">ACESSAR</span>
-                  <i className="fas fa-arrow-right text-[10px]"></i>
-                </div>
+                <h4 className="font-medium text-white text-sm mb-0.5">Vizzu Provador®</h4>
+                <p className="text-[10px] text-neutral-500 leading-relaxed">Vista seus clientes virtualmente</p>
               </button>
             </div>
             
-            <button onClick={() => setShowStudioPicker(false)} className="w-full mt-6 py-3 text-slate-500 font-bold text-sm">
+            <button onClick={() => setShowStudioPicker(false)} className="w-full mt-5 py-2.5 text-neutral-500 font-medium text-xs hover:text-white transition-colors">
               Cancelar
             </button>
           </div>
         </div>
       )}
 
-      {/* CREATE CLIENT MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CREATE CLIENT MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showCreateClient && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between z-10">
-              <h3 className="text-lg font-bold text-slate-800">Novo Cliente</h3>
-              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' }); }} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600">
-                <i className="fas fa-times"></i>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center justify-between z-10">
+              <h3 className="text-sm font-medium text-white">Novo Cliente</h3>
+              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' }); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+                <i className="fas fa-times text-xs"></i>
               </button>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-4 space-y-4">
               {/* Photo Upload */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase mb-3 block">
-                  <i className="fas fa-camera text-purple-500 mr-1"></i>Fotos para Provador IA
+                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2 block">
+                  <i className="fas fa-camera text-pink-400 mr-1"></i>Fotos para Provador IA
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {PHOTO_TYPES.map(photoType => {
                     const existingPhoto = newClient.photos.find(p => p.type === photoType.id);
                     return (
                       <div key={photoType.id} className="text-center">
                         <div 
                           onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }} 
-                          className={'relative aspect-square rounded-xl overflow-hidden border-2 border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-purple-300 bg-purple-50' : 'border-slate-200 hover:border-purple-400 hover:bg-purple-50')}
+                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800')}
                         >
                           {existingPhoto ? (
                             <>
                               <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
-                              <button onClick={(e) => { e.stopPropagation(); handleRemoveClientPhoto(photoType.id); }} className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">
+                              <button onClick={(e) => { e.stopPropagation(); handleRemoveClientPhoto(photoType.id); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600">
                                 <i className="fas fa-times"></i>
                               </button>
-                              <div className="absolute bottom-0 left-0 right-0 bg-purple-500 text-white text-[10px] py-1 font-bold">
-                                <i className="fas fa-check mr-1"></i>{photoType.label}
+                              <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium">
+                                <i className="fas fa-check mr-0.5"></i>{photoType.label}
                               </div>
                             </>
                           ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                              <i className={'fas ' + photoType.icon + ' text-2xl mb-1'}></i>
-                              <span className="text-[10px] font-bold">{photoType.label}</span>
+                            <div className="flex flex-col items-center justify-center h-full text-neutral-600">
+                              <i className={'fas ' + photoType.icon + ' text-lg mb-1'}></i>
+                              <span className="text-[9px] font-medium">{photoType.label}</span>
                             </div>
                           )}
                         </div>
@@ -1323,47 +1358,51 @@ function App() {
                 </div>
                 <input ref={clientPhotoInputRef} type="file" accept="image/*" capture="user" onChange={handleClientPhotoUpload} className="hidden" />
                 {newClient.photos.length > 0 && (
-                  <div className="flex items-center gap-1 mt-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg">
-                    <i className="fas fa-check text-sm"></i>
-                    <span className="text-xs font-bold">Provador IA ativado - {newClient.photos.length} foto(s)</span>
+                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-pink-500/10 text-pink-400 rounded-lg">
+                    <i className="fas fa-check text-[10px]"></i>
+                    <span className="text-[10px] font-medium">Provador IA ativado - {newClient.photos.length} foto(s)</span>
                   </div>
                 )}
-                <p className="text-[10px] text-slate-400 mt-2">Adicione fotos do cliente para usar no Provador IA</p>
               </div>
+              
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Nome *</label>
-                  <input type="text" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">Nome *</label>
+                  <input type="text" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Sobrenome *</label>
-                  <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">Sobrenome *</label>
+                  <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
                 </div>
               </div>
+              
               {/* WhatsApp */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">WhatsApp *</label>
+                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">WhatsApp *</label>
                 <div className="relative">
-                  <i className="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-green-500"></i>
-                  <input type="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
+                  <i className="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm"></i>
+                  <input type="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className="w-full pl-9 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
                 </div>
               </div>
+              
               {/* Email */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">E-mail (opcional)</label>
+                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">E-mail (opcional)</label>
                 <div className="relative">
-                  <i className="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                  <input type="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl" />
+                  <i className="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 text-xs"></i>
+                  <input type="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className="w-full pl-9 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
                 </div>
               </div>
+              
               {/* Notes */}
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Observações (opcional)</label>
-                <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl resize-none" />
+                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">Observações (opcional)</label>
+                <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white resize-none" />
               </div>
+              
               {/* Submit */}
-              <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp} className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+              <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <i className="fas fa-user-plus mr-2"></i>Cadastrar Cliente
               </button>
             </div>
@@ -1371,78 +1410,80 @@ function App() {
         </div>
       )}
 
-      {/* CLIENT DETAIL MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CLIENT DETAIL MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showClientDetail && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-6 text-center relative">
-              <button onClick={() => setShowClientDetail(null)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
-                <i className="fas fa-times"></i>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
+              <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+                <i className="fas fa-times text-xs"></i>
               </button>
               <div className="relative inline-block">
                 {getClientPhoto(showClientDetail) ? (
-                  <img src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg mx-auto" />
+                  <img src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full object-cover border-2 border-neutral-600 mx-auto" />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mx-auto">
-                    <span className="text-2xl font-bold text-slate-500">{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
+                  <div className="w-16 h-16 rounded-full bg-neutral-700 flex items-center justify-center mx-auto">
+                    <span className="text-xl font-medium text-neutral-400">{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
                   </div>
                 )}
                 {showClientDetail.hasProvadorIA && (
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <i className="fas fa-camera text-white text-[10px]"></i>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center border-2 border-neutral-800">
+                    <i className="fas fa-camera text-white text-[8px]"></i>
                   </div>
                 )}
               </div>
-              <h2 className="text-xl font-bold text-white mt-3">{showClientDetail.firstName} {showClientDetail.lastName}</h2>
-              <p className="text-white/80 text-sm">{formatWhatsApp(showClientDetail.whatsapp)}</p>
+              <h2 className="text-base font-semibold text-white mt-2">{showClientDetail.firstName} {showClientDetail.lastName}</h2>
+              <p className="text-neutral-400 text-xs">{formatWhatsApp(showClientDetail.whatsapp)}</p>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-4 space-y-3">
               {showClientDetail.photos && showClientDetail.photos.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Fotos Cadastradas</p>
+                  <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2">Fotos Cadastradas</p>
                   <div className="flex gap-2">
                     {showClientDetail.photos.map(photo => (
                       <div key={photo.type} className="relative">
-                        <img src={photo.base64} alt={photo.type} className="w-16 h-16 rounded-lg object-cover" />
-                        <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] py-0.5 text-center font-bold capitalize">{photo.type}</span>
+                        <img src={photo.base64} alt={photo.type} className="w-14 h-14 rounded-lg object-cover" />
+                        <span className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[7px] py-0.5 text-center font-medium capitalize">{photo.type}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="flex flex-wrap gap-2">
-                <span className={'px-3 py-1 rounded-full text-xs font-bold ' + (showClientDetail.status === 'active' ? 'bg-green-100 text-green-700' : showClientDetail.status === 'vip' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700')}>
+              <div className="flex flex-wrap gap-1.5">
+                <span className={'px-2 py-1 rounded-full text-[10px] font-medium ' + (showClientDetail.status === 'active' ? 'bg-green-500/20 text-green-400' : showClientDetail.status === 'vip' ? 'bg-amber-500/20 text-amber-400' : 'bg-neutral-800 text-neutral-400')}>
                   {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
                 </span>
                 {showClientDetail.hasProvadorIA && (
-                  <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+                  <span className="px-2 py-1 bg-pink-500/20 text-pink-400 rounded-full text-[10px] font-medium">
                     <i className="fas fa-camera mr-1"></i>Vizzu Provador®
                   </span>
                 )}
               </div>
               {showClientDetail.email && (
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <i className="fas fa-envelope text-slate-400"></i>
-                  <span className="text-sm text-slate-600">{showClientDetail.email}</span>
+                <div className="flex items-center gap-2.5 p-2.5 bg-neutral-800 rounded-lg">
+                  <i className="fas fa-envelope text-neutral-500 text-xs"></i>
+                  <span className="text-xs text-neutral-300">{showClientDetail.email}</span>
                 </div>
               )}
               {showClientDetail.notes && (
-                <div className="p-3 bg-slate-50 rounded-xl">
-                  <p className="text-xs font-bold text-slate-500 mb-1">Observações</p>
-                  <p className="text-sm text-slate-600">{showClientDetail.notes}</p>
+                <div className="p-2.5 bg-neutral-800 rounded-lg">
+                  <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Observações</p>
+                  <p className="text-xs text-neutral-300">{showClientDetail.notes}</p>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-2 pt-2">
                 {showClientDetail.hasProvadorIA && (
-                  <button onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }} className="col-span-2 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold flex items-center justify-center gap-2">
-                    <i className="fas fa-wand-magic-sparkles"></i>Vizzu Provador®
+                  <button onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }} className="col-span-2 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2">
+                    <i className="fas fa-wand-magic-sparkles text-[10px]"></i>Vizzu Provador®
                   </button>
                 )}
-                <button onClick={() => handleSendWhatsApp(showClientDetail, 'Olá ' + showClientDetail.firstName + '!')} className="py-3 bg-green-500 text-white rounded-xl font-bold flex items-center justify-center gap-2">
-                  <i className="fab fa-whatsapp"></i>WhatsApp
+                <button onClick={() => handleSendWhatsApp(showClientDetail, 'Olá ' + showClientDetail.firstName + '!')} className="py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                  <i className="fab fa-whatsapp text-sm"></i>WhatsApp
                 </button>
-                <button onClick={() => handleDeleteClient(showClientDetail.id)} className="py-3 bg-red-100 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2">
-                  <i className="fas fa-trash"></i>Excluir
+                <button onClick={() => handleDeleteClient(showClientDetail.id)} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                  <i className="fas fa-trash text-[10px]"></i>Excluir
                 </button>
               </div>
             </div>
@@ -1450,29 +1491,31 @@ function App() {
         </div>
       )}
 
-      {/* CLIENT PICKER MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CLIENT PICKER MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showClientPicker && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Selecionar Cliente</h3>
-              <button onClick={() => setShowClientPicker(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                <i className="fas fa-times"></i>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-sm max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
+              <h3 className="text-sm font-medium text-white">Selecionar Cliente</h3>
+              <button onClick={() => setShowClientPicker(false)} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+                <i className="fas fa-times text-xs"></i>
               </button>
             </div>
             <div className="p-4">
-              <input type="text" placeholder="Buscar cliente..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl mb-4" />
+              <input type="text" placeholder="Buscar cliente..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white mb-3" />
               <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                 {clientsWithProvador.filter(c => (c.firstName + ' ' + c.lastName).toLowerCase().includes(clientSearchTerm.toLowerCase())).map(client => (
-                  <div key={client.id} onClick={() => { setProvadorClient(client); setShowClientPicker(false); }} className={'flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ' + (provadorClient?.id === client.id ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-purple-300 hover:bg-slate-50')}>
-                    <img src={getClientPhoto(client)} alt={client.firstName} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                  <div key={client.id} onClick={() => { setProvadorClient(client); setShowClientPicker(false); }} className={'flex items-center gap-3 p-2.5 rounded-lg cursor-pointer border transition-all ' + (provadorClient?.id === client.id ? 'border-pink-500 bg-pink-500/10' : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800')}>
+                    <img src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full object-cover" />
                     <div className="flex-1">
-                      <p className="font-bold text-slate-800">{client.firstName} {client.lastName}</p>
-                      <p className="text-xs text-slate-500">{client.photos?.length || 1} foto(s)</p>
+                      <p className="font-medium text-white text-sm">{client.firstName} {client.lastName}</p>
+                      <p className="text-[10px] text-neutral-500">{client.photos?.length || 1} foto(s)</p>
                     </div>
                     {provadorClient?.id === client.id && (
-                      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                        <i className="fas fa-check text-white text-xs"></i>
+                      <div className="w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center">
+                        <i className="fas fa-check text-white text-[8px]"></i>
                       </div>
                     )}
                   </div>
@@ -1483,65 +1526,69 @@ function App() {
         </div>
       )}
 
-      {/* IMPORT MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* IMPORT MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showImport && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md p-5 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-slate-800">Adicionar Produto</h3>
-              <button onClick={() => setShowImport(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600">
-                <i className="fas fa-times"></i>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-white">Adicionar Produto</h3>
+              <button onClick={() => setShowImport(false)} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+                <i className="fas fa-times text-xs"></i>
               </button>
             </div>
-            <p className="text-slate-500 text-sm mb-5">Escolha como adicionar a imagem:</p>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
+            <p className="text-neutral-500 text-xs mb-4">Escolha como adicionar a imagem:</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <label className="flex flex-col items-center gap-2 p-4 border border-dashed border-neutral-700 rounded-xl hover:border-pink-500/50 hover:bg-neutral-800 transition-all cursor-pointer">
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files)} />
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                  <i className="fas fa-images text-purple-600 text-lg"></i>
+                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                  <i className="fas fa-images text-neutral-400 text-sm"></i>
                 </div>
-                <span className="text-xs font-bold text-slate-700">Galeria</span>
+                <span className="text-[10px] font-medium text-neutral-300">Galeria</span>
               </label>
-              <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-2xl hover:border-pink-400 hover:bg-pink-50/50 transition-all cursor-pointer">
+              <label className="flex flex-col items-center gap-2 p-4 border border-dashed border-neutral-700 rounded-xl hover:border-pink-500/50 hover:bg-neutral-800 transition-all cursor-pointer">
                 <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files)} />
-                <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
-                  <i className="fas fa-camera text-pink-600 text-lg"></i>
+                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                  <i className="fas fa-camera text-neutral-400 text-sm"></i>
                 </div>
-                <span className="text-xs font-bold text-slate-700">Câmera</span>
+                <span className="text-[10px] font-medium text-neutral-300">Câmera</span>
               </label>
             </div>
           </div>
         </div>
       )}
 
-      {/* CREATE PRODUCT MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CREATE PRODUCT MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showCreateProduct && selectedImage && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-slate-800">Criar Produto</h3>
-              <button onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600">
-                <i className="fas fa-times"></i>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-white">Criar Produto</h3>
+              <button onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+                <i className="fas fa-times text-xs"></i>
               </button>
             </div>
-            <div className="mb-5">
-              <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 mx-auto">
+            <div className="mb-4">
+              <div className="w-20 h-20 rounded-lg overflow-hidden border border-neutral-700 mx-auto">
                 <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">Nome do Produto *</label>
-                <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" placeholder="Ex: Camiseta Básica Branca" />
+                <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Nome do Produto *</label>
+                <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="Ex: Camiseta Básica Branca" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Marca</label>
-                  <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm" placeholder="Ex: Nike" />
+                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Marca</label>
+                  <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="Ex: Nike" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Cor</label>
-                  <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm">
+                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Cor</label>
+                  <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white">
                     <option value="">Selecione</option>
                     {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
                   </select>
@@ -1549,76 +1596,78 @@ function App() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Caimento</label>
-                  <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm">
+                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Caimento</label>
+                  <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white">
                     <option value="">Selecione</option>
                     {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Categoria *</label>
-                  <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm">
+                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Categoria *</label>
+                  <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white">
                     <option value="">Selecione</option>
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
               </div>
-              <button onClick={handleCreateProduct} className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 text-sm">
-                <i className="fas fa-check mr-2"></i>Criar Produto
+              <button onClick={handleCreateProduct} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity">
+                <i className="fas fa-check mr-1.5"></i>Criar Produto
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PRODUCT DETAIL MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* PRODUCT DETAIL MODAL - SUNO STYLE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-800">Detalhes do Produto</h3>
-              <button onClick={() => setShowProductDetail(null)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600">
-                <i className="fas fa-times"></i>
+              <h3 className="text-sm font-medium text-white">Detalhes do Produto</h3>
+              <button onClick={() => setShowProductDetail(null)} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+                <i className="fas fa-times text-xs"></i>
               </button>
             </div>
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-48 h-48 rounded-2xl overflow-hidden border border-slate-200 flex-shrink-0">
+              <div className="w-full md:w-40 h-40 rounded-xl overflow-hidden border border-neutral-700 flex-shrink-0">
                 <img src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url} alt={showProductDetail.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-bold text-slate-400 uppercase mb-1">{showProductDetail.sku}</p>
-                <h4 className="text-xl font-bold text-slate-800 mb-3">{showProductDetail.name}</h4>
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-0.5">{showProductDetail.sku}</p>
+                <h4 className="text-base font-semibold text-white mb-3">{showProductDetail.name}</h4>
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   {showProductDetail.brand && (
-                    <div className="bg-slate-50 rounded-xl p-2.5">
-                      <p className="text-[9px] text-slate-400 uppercase mb-0.5">Marca</p>
-                      <p className="text-xs font-bold text-slate-700">{showProductDetail.brand}</p>
+                    <div className="bg-neutral-800 rounded-lg p-2">
+                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Marca</p>
+                      <p className="text-[10px] font-medium text-white">{showProductDetail.brand}</p>
                     </div>
                   )}
                   {showProductDetail.category && (
-                    <div className="bg-slate-50 rounded-xl p-2.5">
-                      <p className="text-[9px] text-slate-400 uppercase mb-0.5">Categoria</p>
-                      <p className="text-xs font-bold text-slate-700">{showProductDetail.category}</p>
+                    <div className="bg-neutral-800 rounded-lg p-2">
+                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Categoria</p>
+                      <p className="text-[10px] font-medium text-white">{showProductDetail.category}</p>
                     </div>
                   )}
                   {showProductDetail.color && (
-                    <div className="bg-slate-50 rounded-xl p-2.5">
-                      <p className="text-[9px] text-slate-400 uppercase mb-0.5">Cor</p>
-                      <p className="text-xs font-bold text-slate-700">{showProductDetail.color}</p>
+                    <div className="bg-neutral-800 rounded-lg p-2">
+                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Cor</p>
+                      <p className="text-[10px] font-medium text-white">{showProductDetail.color}</p>
                     </div>
                   )}
                   {showProductDetail.fit && (
-                    <div className="bg-slate-50 rounded-xl p-2.5">
-                      <p className="text-[9px] text-slate-400 uppercase mb-0.5">Caimento</p>
-                      <p className="text-xs font-bold text-slate-700">{showProductDetail.fit}</p>
+                    <div className="bg-neutral-800 rounded-lg p-2">
+                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Caimento</p>
+                      <p className="text-[10px] font-medium text-white">{showProductDetail.fit}</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t border-slate-200">
-              <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="flex-1 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-sm">
-                <i className="fas fa-wand-magic-sparkles mr-2"></i>Abrir no Studio
+            <div className="flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t border-neutral-800">
+              <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                <i className="fas fa-wand-magic-sparkles mr-1.5"></i>Abrir no Studio
               </button>
             </div>
           </div>
