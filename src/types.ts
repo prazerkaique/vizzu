@@ -22,7 +22,7 @@ export interface Product {
   name: string;
   description?: string;
   category: string;
-  collection?: string;        // NOVO: Coleção do produto
+  collection?: string;
   brand?: string;
   color?: string;
   fit?: string;
@@ -40,7 +40,7 @@ export interface VisualStudioGeneration {
   productId: string;
   productSku?: string;
   productName?: string;
-  type: 'studio' | 'cenario' | 'lifestyle' | 'refine';
+  type: 'studio' | 'cenario' | 'lifestyle' | 'provador' | 'refine';
   prompt?: string;
   originalImage: string;
   generatedImage: string;
@@ -108,8 +108,14 @@ export interface CreditHistoryItem {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Client Types
+// Client Types (ATUALIZADO - Múltiplas Fotos)
 // ═══════════════════════════════════════════════════════════════
+
+export interface ClientPhoto {
+  type: 'frente' | 'costas' | 'rosto';
+  base64: string;
+  createdAt: string;
+}
 
 export interface Client {
   id: string;
@@ -117,8 +123,9 @@ export interface Client {
   lastName: string;
   whatsapp: string;
   email?: string;
-  photo?: string;             // Base64 da foto para Provador IA
-  hasProvadorIA: boolean;     // Flag indicando se tem foto para Provador
+  photo?: string;             // Foto principal (compatibilidade) - usar photos preferencialmente
+  photos?: ClientPhoto[];     // NOVO: Array de fotos (frente, costas, rosto)
+  hasProvadorIA: boolean;     // true se tiver pelo menos 1 foto
   notes?: string;
   tags?: string[];
   createdAt: string;
@@ -149,7 +156,8 @@ export interface ProvadorSession {
   clientId: string;
   clientName: string;
   clientPhoto: string;
-  products: ProvadorProduct[];
+  photoType: 'frente' | 'costas' | 'rosto';
+  lookComposition: LookComposition;
   generatedImage?: string;
   whatsappMessage?: string;
   status: 'draft' | 'generated' | 'sent';
@@ -162,7 +170,7 @@ export interface ProvadorProduct {
   productName: string;
   productSku: string;
   productImage: string;
-  slot: 'top' | 'bottom' | 'shoes' | 'accessory' | 'fullbody';
+  slot: 'head' | 'top' | 'bottom' | 'feet' | 'accessory1' | 'accessory2';
 }
 
 export interface WhatsAppTemplate {
