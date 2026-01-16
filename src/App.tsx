@@ -122,12 +122,11 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4">
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-2xl shadow-purple-500/50">
-                <i className="fas fa-magic text-white text-2xl"></i>
-              </div>
-            </div>
-            <h1 className="text-4xl font-black text-white tracking-tight mb-2">VIZZU</h1>
+            <img 
+              src="/logo.png" 
+              alt="Vizzu" 
+              className="h-16 mx-auto mb-4"
+            />
             <p className="text-slate-400 text-sm">AI Visual Studio para E-commerce</p>
           </div>
 
@@ -170,12 +169,11 @@ function App() {
         
         {/* Logo */}
         <div className="p-5 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg">
-              <i className="fas fa-magic text-white"></i>
-            </div>
-            <span className="text-xl font-black text-white tracking-tight">VIZZU</span>
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="Vizzu" 
+            className="h-8"
+          />
         </div>
 
         {/* Navigation */}
