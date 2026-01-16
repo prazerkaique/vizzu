@@ -82,6 +82,7 @@ function App() {
   const [provadorStep, setProvadorStep] = useState<1 | 2 | 3 | 4>(1);
   const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
+  const [showStudioPicker, setShowStudioPicker] = useState(false);
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
   
@@ -1205,12 +1206,15 @@ function App() {
             <i className="fas fa-box text-lg"></i>
             <span className="text-[10px] font-medium">Produtos</span>
           </button>
-          <button onClick={() => setCurrentPage('provador')} className="relative -mt-6">
-            <div className={'w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all ' + (currentPage === 'provador' ? 'bg-gradient-to-r from-purple-600 to-pink-600 scale-110' : 'bg-gradient-to-r from-purple-500 to-pink-500')}>
-              <i className="fas fa-user-tag text-white text-xl"></i>
+          
+          {/* Botão Central - Abre modal de escolha */}
+          <button onClick={() => setShowStudioPicker(true)} className="relative -mt-6">
+            <div className={'w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 scale-110' : 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400')}>
+              <i className="fas fa-wand-magic-sparkles text-white text-2xl"></i>
             </div>
-            <span className={'block text-[10px] font-bold mt-1 text-center ' + (currentPage === 'provador' ? 'text-white' : 'text-slate-400')}>Provador</span>
+            <span className={'block text-[10px] font-bold mt-1 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'text-white' : 'text-slate-400')}>Criar</span>
           </button>
+          
           <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl ' + (currentPage === 'clients' ? 'text-white' : 'text-slate-500')}>
             <i className="fas fa-users text-lg"></i>
             <span className="text-[10px] font-medium">Clientes</span>
@@ -1221,6 +1225,55 @@ function App() {
           </button>
         </div>
       </nav>
+
+      {/* STUDIO PICKER MODAL (Mobile) */}
+      {showStudioPicker && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
+          <div className="bg-white rounded-t-3xl w-full p-6 pb-10 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mb-6"></div>
+            <h3 className="text-xl font-black text-slate-800 text-center mb-2">O que você quer criar?</h3>
+            <p className="text-sm text-slate-500 text-center mb-6">Escolha uma das opções abaixo</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {/* Vizzu Studio */}
+              <button 
+                onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); }}
+                className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-5 text-left hover:border-purple-400 hover:shadow-lg transition-all group"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <i className="fas fa-wand-magic-sparkles text-white text-xl"></i>
+                </div>
+                <h4 className="font-black text-slate-800 text-lg mb-1">Vizzu Studio®</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Gere fotos profissionais dos seus produtos com IA</p>
+                <div className="mt-3 flex items-center gap-1 text-purple-600">
+                  <span className="text-[10px] font-bold">ACESSAR</span>
+                  <i className="fas fa-arrow-right text-[10px]"></i>
+                </div>
+              </button>
+              
+              {/* Vizzu Provador */}
+              <button 
+                onClick={() => { setShowStudioPicker(false); setCurrentPage('provador'); }}
+                className="bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-2xl p-5 text-left hover:border-pink-400 hover:shadow-lg transition-all group"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <i className="fas fa-user-tag text-white text-xl"></i>
+                </div>
+                <h4 className="font-black text-slate-800 text-lg mb-1">Vizzu Provador®</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">Vista seus clientes virtualmente e envie por WhatsApp</p>
+                <div className="mt-3 flex items-center gap-1 text-pink-600">
+                  <span className="text-[10px] font-bold">ACESSAR</span>
+                  <i className="fas fa-arrow-right text-[10px]"></i>
+                </div>
+              </button>
+            </div>
+            
+            <button onClick={() => setShowStudioPicker(false)} className="w-full mt-6 py-3 text-slate-500 font-bold text-sm">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
