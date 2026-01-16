@@ -336,10 +336,10 @@ function App() {
     <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
       {/* DESKTOP SIDEBAR */}
-      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200')}>
-        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-gray-100')}>
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-gradient-to-b from-purple-50 to-pink-50 border-purple-100')}>
+        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-100/50')}>
           <img src="/logo.png" alt="Vizzu" className="h-10" />
-          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>Estúdio com IA para lojistas</span>
+          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-purple-400')}>Estúdio com IA para lojistas</span>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {[
@@ -356,7 +356,7 @@ function App() {
               className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
                 (currentPage === item.id 
                   ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/25') 
-                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')
+                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-600 hover:text-purple-900 hover:bg-purple-100/50')
                 )
               }
             >
@@ -364,14 +364,14 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-gray-100')}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-gradient-to-r from-pink-50 to-orange-50 border border-pink-100') + ' rounded-xl p-3'}>
+        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-100/50')}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/80 backdrop-blur-sm border border-purple-100 shadow-sm') + ' rounded-xl p-3'}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Créditos</span>
+              <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500')}>Créditos</span>
               <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-pink-500 hover:text-pink-400 text-[9px] font-medium">+ Add</button>
             </div>
             <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits.toLocaleString()}</p>
-            <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-pink-100')}>
+            <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100')}>
               <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
@@ -379,20 +379,20 @@ function App() {
             onClick={() => setCurrentPage('settings')} 
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
               (currentPage === 'settings' 
-                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-900') 
-                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')
+                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-purple-100 text-purple-900') 
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-600 hover:text-purple-900 hover:bg-purple-100/50')
               )
             }
           >
             <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
           </button>
           <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
-              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}></i>}
+            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100')}>
+              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-400')}></i>}
             </div>
             <div className="flex-1 min-w-0">
               <p className={'text-xs font-medium truncate ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{user.name}</p>
-              <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-500')}>Plano {currentPlan.name}</p>
+              <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-purple-500')}>Plano {currentPlan.name}</p>
             </div>
           </div>
         </div>
@@ -563,7 +563,8 @@ function App() {
             onAddHistoryLog={handleAddHistoryLog} 
             onOpenSettings={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} 
             onImport={() => setShowImport(true)} 
-            currentPlan={currentPlan} 
+            currentPlan={currentPlan}
+            theme={theme}
           />
         )}
 
@@ -1078,36 +1079,36 @@ function App() {
               {clients.length > 0 && (
                 <div className="mb-4">
                   <div className="relative">
-                    <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 text-xs"></i>
-                    <input type="text" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white" />
+                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
+                    <input type="text" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-gray-200 text-gray-900 shadow-sm') + ' w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm'} />
                   </div>
                 </div>
               )}
               
               {/* List */}
               {clients.length === 0 ? (
-                <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-8 text-center">
-                  <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
-                    <i className="fas fa-users text-neutral-600 text-xl"></i>
+                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-users text-xl'}></i>
                   </div>
-                  <h3 className="text-sm font-medium text-white mb-1">Nenhum cliente cadastrado</h3>
-                  <p className="text-neutral-500 text-xs mb-4">Adicione clientes para usar o Vizzu Provador®</p>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum cliente cadastrado</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Adicione clientes para usar o Vizzu Provador®</p>
                   <button onClick={() => setShowCreateClient(true)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
                     <i className="fas fa-plus mr-1.5"></i>Adicionar Cliente
                   </button>
                 </div>
               ) : (
-                <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
-                  <div className="divide-y divide-neutral-800">
+                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
+                  <div className={'divide-y ' + (theme === 'dark' ? 'divide-neutral-800' : 'divide-gray-100')}>
                     {filteredClients.map(client => (
-                      <div key={client.id} className="p-3 hover:bg-neutral-800/50 transition-colors cursor-pointer" onClick={() => setShowClientDetail(client)}>
+                      <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-purple-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => setShowClientDetail(client)}>
                         <div className="flex items-center gap-3">
                           <div className="relative">
                             {getClientPhoto(client) ? (
                               <img src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full object-cover" />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
-                                <span className="text-sm font-medium text-neutral-400">{client.firstName[0]}{client.lastName[0]}</span>
+                              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+                                <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
                               </div>
                             )}
                             {client.hasProvadorIA && (
@@ -1118,20 +1119,20 @@ function App() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-medium text-white text-sm truncate">{client.firstName} {client.lastName}</h3>
+                              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{client.firstName} {client.lastName}</h3>
                               {client.photos && client.photos.length > 1 && (
-                                <span className="text-[8px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded-full">{client.photos.length} fotos</span>
+                                <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-purple-100 text-purple-600') + ' text-[8px] px-1.5 py-0.5 rounded-full'}>{client.photos.length} fotos</span>
                               )}
                             </div>
-                            <p className="text-xs text-neutral-500">{formatWhatsApp(client.whatsapp)}</p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(client.whatsapp)}</p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             {client.hasProvadorIA && (
-                              <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className="w-8 h-8 rounded-lg bg-neutral-800 text-pink-400 flex items-center justify-center hover:bg-neutral-700 transition-colors" title="Vizzu Provador®">
+                              <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-pink-100 hover:bg-pink-200') + ' w-8 h-8 rounded-lg text-pink-500 flex items-center justify-center transition-colors'} title="Vizzu Provador®">
                                 <i className="fas fa-wand-magic-sparkles text-xs"></i>
                               </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className="w-8 h-8 rounded-lg bg-neutral-800 text-green-400 flex items-center justify-center hover:bg-neutral-700 transition-colors" title="WhatsApp">
+                            <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-green-100 hover:bg-green-200') + ' w-8 h-8 rounded-lg text-green-500 flex items-center justify-center transition-colors'} title="WhatsApp">
                               <i className="fab fa-whatsapp text-sm"></i>
                             </button>
                           </div>
@@ -1152,20 +1153,20 @@ function App() {
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
-                  <i className="fas fa-clock-rotate-left text-pink-400 text-sm"></i>
+                <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+                  <i className={'fas fa-clock-rotate-left text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-white">Histórico</h1>
-                  <p className="text-neutral-500 text-xs">Suas atividades</p>
+                  <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Histórico</h1>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Suas atividades</p>
                 </div>
               </div>
-              <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-8 text-center">
-                <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-clock-rotate-left text-neutral-600 text-xl"></i>
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-clock-rotate-left text-xl'}></i>
                 </div>
-                <h3 className="text-sm font-medium text-white mb-1">Nenhuma atividade</h3>
-                <p className="text-neutral-500 text-xs">As atividades aparecerão aqui</p>
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
               </div>
             </div>
           </div>
