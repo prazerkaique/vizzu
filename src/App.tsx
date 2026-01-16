@@ -63,7 +63,6 @@ function App() {
   });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   const { userCredits, currentPlan, deductCredits, upgradePlan, setCredits } = useCredits();
 
@@ -137,12 +136,6 @@ function App() {
         setShowCreateProduct(true);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCameraCapture = () => {
-    if (cameraInputRef.current) {
-      cameraInputRef.current.click();
     }
   };
 
@@ -254,8 +247,9 @@ function App() {
       {/* DESKTOP SIDEBAR - Hidden on mobile */}
       <aside className="hidden md:flex w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex-col shadow-2xl">
         
-        <div className="p-6 border-b border-white/10 flex justify-center">
+        <div className="p-6 border-b border-white/10 flex flex-col items-center">
           <img src="/logo.png" alt="Vizzu" className="h-12" />
+          <span className="text-[10px] text-purple-300/70 mt-1">Estúdio Digital com IAs</span>
         </div>
 
         {/* Navigation */}
@@ -281,7 +275,7 @@ function App() {
             }`}
           >
             <i className="fas fa-wand-magic-sparkles w-5"></i>
-            Vizzu Studio
+            Vizzu Studio®
           </button>
 
           <button
@@ -366,21 +360,24 @@ function App() {
       <main className="flex-1 overflow-hidden flex flex-col pb-20 md:pb-0">
         
         {/* MOBILE HEADER */}
-        <header className="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-          <img src="/logo.png" alt="Vizzu" className="h-8" />
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs font-bold">
-              <i className="fas fa-coins mr-1"></i>
+        <header className="md:hidden bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 px-4 py-4 flex items-center justify-between">
+          <div className="flex flex-col">
+            <img src="/logo.png" alt="Vizzu" className="h-7" />
+            <span className="text-[9px] text-purple-300/70 mt-0.5">Estúdio Digital com IAs</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="bg-white/10 text-white px-3 py-1.5 rounded-full text-xs font-bold">
+              <i className="fas fa-coins mr-1 text-yellow-400"></i>
               {userCredits}
             </div>
             <button 
               onClick={() => setCurrentPage('settings')}
-              className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center"
+              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"
             >
               {user.avatar ? (
                 <img src={user.avatar} className="w-full h-full rounded-full object-cover" alt="" />
               ) : (
-                <i className="fas fa-user text-slate-500 text-sm"></i>
+                <i className="fas fa-user text-white text-sm"></i>
               )}
             </button>
           </div>
@@ -895,7 +892,7 @@ function App() {
       </main>
 
       {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 px-2 py-2 z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 px-2 py-2 z-40">
         <div className="flex items-center justify-around">
           {/* Dashboard */}
           <button
@@ -933,7 +930,7 @@ function App() {
             </div>
             <span className={`block text-[10px] font-bold mt-1 text-center ${
               currentPage === 'studio' ? 'text-white' : 'text-slate-400'
-            }`}>Studio</span>
+            }`}>Studio®</span>
           </button>
 
           {/* History */}
@@ -974,48 +971,37 @@ function App() {
             <p className="text-slate-500 text-sm mb-5 md:mb-6">Escolha como adicionar a imagem:</p>
 
             <div className="grid grid-cols-2 gap-3 md:gap-4 mb-5 md:mb-6">
-              {/* Upload de Arquivo */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50/50 transition-all active:scale-95"
-              >
+              {/* Upload de Arquivo - Galeria */}
+              <label className="flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50/50 transition-all active:scale-95 cursor-pointer">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden"
+                  onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
+                />
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-purple-100 flex items-center justify-center">
-                  <i className="fas fa-folder-open text-purple-600 text-lg md:text-xl"></i>
+                  <i className="fas fa-images text-purple-600 text-lg md:text-xl"></i>
                 </div>
                 <span className="text-xs md:text-sm font-bold text-slate-700">Galeria</span>
-                <span className="text-[10px] md:text-xs text-slate-400">PNG, JPG, WEBP</span>
-              </button>
+                <span className="text-[10px] md:text-xs text-slate-400">Escolher foto</span>
+              </label>
 
               {/* Tirar Foto - Camera */}
-              <button
-                onClick={handleCameraCapture}
-                className="flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-pink-400 hover:bg-pink-50/50 transition-all active:scale-95"
-              >
+              <label className="flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-pink-400 hover:bg-pink-50/50 transition-all active:scale-95 cursor-pointer">
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
+                />
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-pink-100 flex items-center justify-center">
                   <i className="fas fa-camera text-pink-600 text-lg md:text-xl"></i>
                 </div>
                 <span className="text-xs md:text-sm font-bold text-slate-700">Câmera</span>
-                <span className="text-[10px] md:text-xs text-slate-400">Tirar foto</span>
-              </button>
+                <span className="text-[10px] md:text-xs text-slate-400">Tirar foto agora</span>
+              </label>
             </div>
-
-            {/* Hidden inputs */}
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept="image/*" 
-              className="hidden"
-              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
-            />
-            {/* Camera input - capture forces camera on mobile */}
-            <input 
-              ref={cameraInputRef}
-              type="file" 
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
-            />
 
             {/* Drag and drop - Desktop only */}
             <div 
@@ -1026,6 +1012,15 @@ function App() {
             >
               <p className="text-sm text-slate-500">Ou arraste uma imagem aqui</p>
             </div>
+
+            {/* Hidden input for drag and drop */}
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              className="hidden"
+              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
+            />
           </div>
         </div>
       )}
