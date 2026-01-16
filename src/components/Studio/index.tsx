@@ -502,6 +502,7 @@ export const Studio: React.FC<StudioProps> = ({
             const result = await onGenerateImage(p, t, prompt, opts);
             return { image: result || '', generationId: Date.now().toString() };
           } : async () => ({ image: '', generationId: '' })}
+          theme={theme}
         />
       )}
     </div>
