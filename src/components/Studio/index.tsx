@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Product, VisualStudioGeneration, SavedModelProfile, HistoryLog } from '../../types';
 import { EditorModal } from './EditorModal';
 import { GenerationHistory } from './GenerationHistory';
-// import { generateVisualStudioImage } from '../../services/geminiService';
+import { generateVisualStudioImage } from '../../services/geminiService';
 
 interface StudioProps {
   products: Product[];
@@ -82,7 +82,7 @@ export const Studio: React.FC<StudioProps> = ({
           productName: product.name,
           originalImage: product.images[0]?.base64 || product.images[0]?.url || '',
           generatedImage: result.image,
-          toolType,
+          tool: toolType,
           prompt: prompt || '',
           timestamp: new Date().toISOString(),
           saved: false
