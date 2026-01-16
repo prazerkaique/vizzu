@@ -397,27 +397,44 @@ function App() {
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
-                  <i className="fas fa-home text-neutral-400 text-sm"></i>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
+                  <i className="fas fa-home text-pink-400 text-sm"></i>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-lg font-semibold text-white">Dashboard</h1>
-                    <span className="px-2 py-0.5 bg-neutral-800 text-neutral-400 text-[9px] font-medium rounded-full uppercase tracking-wide">{currentPlan.name}</span>
+                    <span className="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[9px] font-medium rounded-full uppercase tracking-wide">{currentPlan.name}</span>
                   </div>
                   <p className="text-neutral-500 text-xs">Resumo do seu estúdio</p>
                 </div>
               </div>
               
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
-                  <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
-                    <i className="fas fa-box text-neutral-400 text-xs"></i>
-                  </div>
-                  <p className="text-xl font-bold text-white">{products.length}</p>
-                  <p className="text-[10px] text-neutral-500">Produtos</p>
+              {/* Banner Principal */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                {/* Seus Produtos */}
+                <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20">
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wide mb-1">Seus produtos</p>
+                  <p className="text-3xl font-bold text-white">{products.length}</p>
+                  <p className="text-[10px] text-neutral-500 mt-1">cadastrados no catálogo</p>
                 </div>
+                
+                {/* Banner Funcionalidades */}
+                <div className="md:col-span-2 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20 flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full uppercase">Novo</span>
+                      <p className="text-xs font-medium text-white">Vizzu Provador® com IA</p>
+                    </div>
+                    <p className="text-[10px] text-neutral-400 leading-relaxed">Vista seus clientes virtualmente e envie looks personalizados direto pelo WhatsApp.</p>
+                  </div>
+                  <button onClick={() => setCurrentPage('provador')} className="ml-4 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
+                    Experimentar
+                  </button>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 md:grid-cols-3 gap-3 mb-5">
                 <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
                   <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
                     <i className="fas fa-users text-neutral-400 text-xs"></i>
@@ -686,7 +703,7 @@ function App() {
                       <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
                         {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin text-[10px]"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles text-[10px]"></i>Gerar (3 créd.)</>}
                       </button>
-                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors">
+                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors">
                         <i className="fab fa-whatsapp text-[10px]"></i>Enviar WhatsApp
                       </button>
                     </div>
@@ -869,7 +886,7 @@ function App() {
                         <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                           {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin text-sm"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles text-sm"></i>Gerar Imagem (3 créd.)</>}
                         </button>
-                        <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
+                        <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
                           <i className="fab fa-whatsapp text-lg"></i>Enviar pelo WhatsApp
                         </button>
                       </div>
@@ -890,8 +907,8 @@ function App() {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
-                    <i className="fas fa-box text-neutral-400 text-sm"></i>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
+                    <i className="fas fa-box text-pink-400 text-sm"></i>
                   </div>
                   <div>
                     <h1 className="text-lg font-semibold text-white">Produtos</h1>
@@ -960,8 +977,8 @@ function App() {
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
-                    <i className="fas fa-users text-neutral-400 text-sm"></i>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
+                    <i className="fas fa-users text-pink-400 text-sm"></i>
                   </div>
                   <div>
                     <h1 className="text-lg font-semibold text-white">Clientes</h1>
@@ -1071,8 +1088,8 @@ function App() {
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center">
-                  <i className="fas fa-clock-rotate-left text-neutral-400 text-sm"></i>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
+                  <i className="fas fa-clock-rotate-left text-pink-400 text-sm"></i>
                 </div>
                 <div>
                   <h1 className="text-lg font-semibold text-white">Histórico</h1>
@@ -1479,7 +1496,7 @@ function App() {
                     <i className="fas fa-wand-magic-sparkles text-[10px]"></i>Vizzu Provador®
                   </button>
                 )}
-                <button onClick={() => handleSendWhatsApp(showClientDetail, 'Olá ' + showClientDetail.firstName + '!')} className="py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                <button onClick={() => handleSendWhatsApp(showClientDetail, 'Olá ' + showClientDetail.firstName + '!')} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fab fa-whatsapp text-sm"></i>WhatsApp
                 </button>
                 <button onClick={() => handleDeleteClient(showClientDetail.id)} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
