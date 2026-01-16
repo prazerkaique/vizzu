@@ -30,6 +30,7 @@ const DEMO_PRODUCTS: Product[] = [
 ];
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
+const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
 
@@ -78,6 +79,9 @@ function App() {
   const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(DEFAULT_WHATSAPP_TEMPLATES[0]);
+  const [provadorStep, setProvadorStep] = useState<1 | 2 | 3 | 4>(1);
+  const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
+  const [provadorLookSearch, setProvadorLookSearch] = useState('');
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
   
@@ -280,7 +284,10 @@ function App() {
     setProvadorPhotoType('frente'); 
     setProvadorLook({}); 
     setProvadorGeneratedImage(null); 
-    setProvadorMessage(DEFAULT_WHATSAPP_TEMPLATES[0].message); 
+    setProvadorMessage(DEFAULT_WHATSAPP_TEMPLATES[0].message);
+    setProvadorStep(1);
+    setProvadorLookFilter('');
+    setProvadorLookSearch('');
   };
 
   // LOGIN SCREEN
@@ -457,38 +464,73 @@ function App() {
           <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
               
-              {/* Page Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                    <i className="fas fa-user-tag text-white text-2xl"></i>
+              {/* Page Header - Simplificado no Mobile */}
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                    <i className="fas fa-user-tag text-white text-lg md:text-2xl"></i>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-2xl font-black text-slate-800">Vizzu Provador®</h1>
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
-                    </div>
-                    <p className="text-slate-500 text-sm">Vista seus clientes virtualmente e envie pelo WhatsApp</p>
+                    <h1 className="text-lg md:text-2xl font-black text-slate-800">Vizzu Provador®</h1>
+                    <p className="text-slate-500 text-xs md:text-sm hidden md:block">Vista seus clientes virtualmente e envie pelo WhatsApp</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">3 créd./geração</span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 md:px-3 md:py-1.5 bg-amber-50 text-amber-700 text-[10px] md:text-xs font-bold rounded-full">3 créd.</span>
                   {(provadorClient || Object.keys(provadorLook).length > 0) && (
-                    <button onClick={handleProvadorReset} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200">
-                      <i className="fas fa-undo mr-2"></i>Limpar
+                    <button onClick={handleProvadorReset} className="p-2 md:px-4 md:py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200">
+                      <i className="fas fa-undo"></i>
+                      <span className="hidden md:inline ml-2">Limpar</span>
                     </button>
                   )}
                 </div>
               </div>
+
+              {/* Mobile Progress Bar */}
+              <div className="lg:hidden mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  {[1, 2, 3, 4].map(step => {
+                    const isCompleted = (step === 1 && provadorClient) || 
+                                       (step === 2 && provadorClient && provadorPhotoType) || 
+                                       (step === 3 && Object.keys(provadorLook).length > 0) ||
+                                       (step === 4 && provadorGeneratedImage);
+                    const isCurrent = provadorStep === step;
+                    return (
+                      <div key={step} className="flex items-center">
+                        <div 
+                          onClick={() => setProvadorStep(step as 1|2|3|4)}
+                          className={'w-8 h-8 rounded-full flex items-center justify-center text-xs font-black cursor-pointer transition-all ' + 
+                            (isCompleted ? 'bg-green-500 text-white' : 
+                             isCurrent ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white scale-110 shadow-lg' : 
+                             'bg-slate-200 text-slate-500')}
+                        >
+                          {isCompleted ? <i className="fas fa-check"></i> : step}
+                        </div>
+                        {step < 4 && (
+                          <div className={'h-1 w-8 mx-1 rounded-full ' + (isCompleted ? 'bg-green-500' : 'bg-slate-200')}></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-slate-500 text-center">
+                  {provadorStep === 1 && 'Selecione o cliente'}
+                  {provadorStep === 2 && 'Escolha a foto'}
+                  {provadorStep === 3 && 'Monte o look'}
+                  {provadorStep === 4 && 'Gere e envie'}
+                </p>
+              </div>
               
-              {/* Main Grid - 4 Colunas */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Desktop: Grid 4 colunas | Mobile: Accordion */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-6">
                 
-                {/* Coluna 1: Selecionar Cliente */}
+                {/* Desktop Coluna 1: Selecionar Cliente */}
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                   <div className="p-4 border-b border-slate-100 bg-slate-50">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-black">1</span>
+                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (provadorClient ? 'bg-green-500 text-white' : 'bg-purple-100 text-purple-600')}>
+                        {provadorClient ? <i className="fas fa-check"></i> : '1'}
+                      </span>
                       Selecionar Cliente
                     </h3>
                   </div>
@@ -496,201 +538,336 @@ function App() {
                     {provadorClient ? (
                       <div className="text-center">
                         <div className="relative inline-block mb-3">
-                          <img src={getClientPhoto(provadorClient, provadorPhotoType) || getClientPhoto(provadorClient)} alt={provadorClient.firstName} className="w-24 h-24 rounded-full object-cover border-4 border-purple-200" />
-                          <button onClick={() => setProvadorClient(null)} className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">
+                          <img src={getClientPhoto(provadorClient, provadorPhotoType) || getClientPhoto(provadorClient)} alt={provadorClient.firstName} className="w-20 h-20 rounded-full object-cover border-4 border-purple-200" />
+                          <button onClick={() => { setProvadorClient(null); setProvadorStep(1); }} className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">
                             <i className="fas fa-times"></i>
                           </button>
                         </div>
-                        <p className="font-bold text-slate-800">{provadorClient.firstName} {provadorClient.lastName}</p>
-                        <p className="text-sm text-slate-500">{formatWhatsApp(provadorClient.whatsapp)}</p>
-                        <button onClick={() => setShowClientPicker(true)} className="mt-3 text-xs text-purple-600 font-bold hover:underline">Trocar cliente</button>
+                        <p className="font-bold text-slate-800 text-sm">{provadorClient.firstName} {provadorClient.lastName}</p>
+                        <p className="text-xs text-slate-500">{formatWhatsApp(provadorClient.whatsapp)}</p>
                       </div>
                     ) : (
-                      <div>
-                        {clientsWithProvador.length > 0 ? (
-                          <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {clientsWithProvador.slice(0, 5).map(client => (
-                              <div key={client.id} onClick={() => setProvadorClient(client)} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all">
-                                <img src={getClientPhoto(client)} alt="" className="w-10 h-10 rounded-full object-cover" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-bold text-sm text-slate-800 truncate">{client.firstName} {client.lastName}</p>
-                                  <p className="text-xs text-slate-500">{client.photos?.length || 1} foto(s)</p>
-                                </div>
-                              </div>
-                            ))}
-                            {clientsWithProvador.length > 5 && (
-                              <button onClick={() => setShowClientPicker(true)} className="w-full py-2 text-sm text-purple-600 font-bold hover:bg-purple-50 rounded-lg">
-                                Ver todos ({clientsWithProvador.length})
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                              <i className="fas fa-user-plus text-slate-300 text-2xl"></i>
+                      <div className="space-y-2 max-h-56 overflow-y-auto">
+                        {clientsWithProvador.length > 0 ? clientsWithProvador.slice(0, 5).map(client => (
+                          <div key={client.id} onClick={() => setProvadorClient(client)} className="flex items-center gap-3 p-2 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all">
+                            <img src={getClientPhoto(client)} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-slate-800 truncate">{client.firstName} {client.lastName}</p>
+                              <p className="text-xs text-slate-500">{client.photos?.length || 1} foto(s)</p>
                             </div>
-                            <p className="text-sm text-slate-500 mb-4">Nenhum cliente com foto cadastrado</p>
-                            <button onClick={() => setCurrentPage('clients')} className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-bold">Cadastrar Cliente</button>
+                          </div>
+                        )) : (
+                          <div className="text-center py-6">
+                            <i className="fas fa-user-plus text-slate-300 text-2xl mb-2"></i>
+                            <p className="text-xs text-slate-500">Nenhum cliente</p>
+                            <button onClick={() => setCurrentPage('clients')} className="mt-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">Cadastrar</button>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
                 </div>
-                
-                {/* Coluna 2: Selecionar Foto */}
+
+                {/* Desktop Coluna 2: Selecionar Foto */}
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                   <div className="p-4 border-b border-slate-100 bg-slate-50">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-xs font-black">2</span>
+                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (provadorClient && provadorPhotoType ? 'bg-green-500 text-white' : 'bg-pink-100 text-pink-600')}>
+                        {provadorClient && provadorPhotoType ? <i className="fas fa-check"></i> : '2'}
+                      </span>
                       Selecionar Foto
                     </h3>
                   </div>
                   <div className="p-4">
                     {provadorClient ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {PHOTO_TYPES.map(photoType => {
                           const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
                           const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
                           return (
-                            <div 
-                              key={photoType.id} 
-                              onClick={() => hasPhoto && setProvadorPhotoType(photoType.id)} 
-                              className={'flex items-center gap-3 p-3 rounded-xl border-2 transition-all ' + (!hasPhoto ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed' : provadorPhotoType === photoType.id ? 'border-purple-500 bg-purple-50 cursor-pointer' : 'border-slate-200 hover:border-purple-300 cursor-pointer')}
-                            >
-                              {hasPhoto && photoSrc ? (
-                                <img src={photoSrc} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                              ) : (
-                                <div className="w-12 h-12 rounded-lg bg-slate-200 flex items-center justify-center">
-                                  <i className={'fas ' + photoType.icon + ' text-slate-400'}></i>
-                                </div>
-                              )}
+                            <div key={photoType.id} onClick={() => hasPhoto && setProvadorPhotoType(photoType.id)} 
+                              className={'flex items-center gap-3 p-2 rounded-xl border-2 transition-all ' + (!hasPhoto ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed' : provadorPhotoType === photoType.id ? 'border-purple-500 bg-purple-50 cursor-pointer' : 'border-slate-200 hover:border-purple-300 cursor-pointer')}>
+                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center"><i className={'fas ' + photoType.icon + ' text-slate-400 text-sm'}></i></div>}
                               <div className="flex-1">
                                 <p className="font-bold text-sm text-slate-800">{photoType.label}</p>
-                                <p className="text-xs text-slate-500">{hasPhoto ? 'Disponível' : 'Não cadastrada'}</p>
+                                <p className="text-[10px] text-slate-500">{hasPhoto ? 'Disponível' : 'Não cadastrada'}</p>
                               </div>
-                              {hasPhoto && provadorPhotoType === photoType.id && (
-                                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                                  <i className="fas fa-check text-white text-xs"></i>
-                                </div>
-                              )}
+                              {hasPhoto && provadorPhotoType === photoType.id && <i className="fas fa-check text-purple-500"></i>}
                             </div>
                           );
                         })}
                       </div>
                     ) : (
                       <div className="text-center py-8 text-slate-400">
-                        <i className="fas fa-image text-3xl mb-3"></i>
-                        <p className="text-sm">Selecione um cliente primeiro</p>
+                        <i className="fas fa-image text-2xl mb-2"></i>
+                        <p className="text-xs">Selecione um cliente</p>
                       </div>
                     )}
                   </div>
                 </div>
-                
-                {/* Coluna 3: Composição do Look */}
+
+                {/* Desktop Coluna 3: Composição do Look */}
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                   <div className="p-4 border-b border-slate-100 bg-slate-50">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-black">3</span>
-                      Composição do Look
-                      {Object.keys(provadorLook).length > 0 && (
-                        <span className="ml-auto text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{Object.keys(provadorLook).length} peça(s)</span>
-                      )}
+                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : 'bg-indigo-100 text-indigo-600')}>
+                        {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check"></i> : '3'}
+                      </span>
+                      Look
+                      {Object.keys(provadorLook).length > 0 && <span className="ml-auto text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{Object.keys(provadorLook).length}</span>}
                     </h3>
                   </div>
-                  <div className="p-4 max-h-[400px] overflow-y-auto">
-                    <LookComposer products={products} composition={provadorLook} onChange={setProvadorLook} />
+                  <div className="p-3">
+                    <div className="flex gap-2 mb-3">
+                      <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs">
+                        <option value="">Todas coleções</option>
+                        {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div className="max-h-[280px] overflow-y-auto">
+                      <LookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} />
+                    </div>
                   </div>
                 </div>
-                
-                {/* Coluna 4: Gerar e Enviar */}
+
+                {/* Desktop Coluna 4: Gerar e Enviar */}
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                   <div className="p-4 border-b border-slate-100 bg-slate-50">
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-black">4</span>
+                      <span className={'w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : 'bg-green-100 text-green-600')}>
+                        {provadorGeneratedImage ? <i className="fas fa-check"></i> : '4'}
+                      </span>
                       Gerar e Enviar
                     </h3>
                   </div>
                   <div className="p-4">
-                    {/* Preview */}
-                    <div className="aspect-[3/4] bg-slate-100 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
+                    <div className="aspect-[3/4] bg-slate-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
                       {isGeneratingProvador ? (
-                        <div className="text-center">
-                          <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
-                          <p className="text-sm text-slate-500">Gerando imagem...</p>
-                        </div>
+                        <div className="text-center"><div className="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-2"></div><p className="text-xs text-slate-500">Gerando...</p></div>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
-                        <div className="relative w-full h-full">
-                          <img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-50" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-4">
-                              <i className="fas fa-wand-magic-sparkles text-purple-500 text-2xl mb-2"></i>
-                              <p className="text-sm text-slate-600">Clique em Gerar</p>
-                            </div>
-                          </div>
-                        </div>
+                        <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-50" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center bg-white/80 backdrop-blur-sm rounded-xl p-3"><i className="fas fa-wand-magic-sparkles text-purple-500 text-xl mb-1"></i><p className="text-xs text-slate-600">Clique em Gerar</p></div></div></div>
                       ) : (
-                        <div className="text-center p-4">
-                          <i className="fas fa-image text-slate-300 text-4xl mb-3"></i>
-                          <p className="text-sm text-slate-400">Preview aparecerá aqui</p>
-                        </div>
+                        <div className="text-center p-4"><i className="fas fa-image text-slate-300 text-3xl mb-2"></i><p className="text-xs text-slate-400">Preview aqui</p></div>
                       )}
                     </div>
-                    
-                    {/* Mensagem WhatsApp */}
-                    <div className="mb-4">
-                      <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">
-                        <i className="fab fa-whatsapp text-green-500 mr-1"></i>Mensagem
-                      </label>
-                      <select 
-                        value={selectedTemplate.id} 
-                        onChange={(e) => { 
-                          const t = whatsappTemplates.find(x => x.id === e.target.value); 
-                          if (t) { 
-                            setSelectedTemplate(t); 
-                            setProvadorMessage(t.message); 
-                          } 
-                        }} 
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-2"
-                      >
-                        {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                      </select>
-                      <textarea 
-                        value={provadorMessage} 
-                        onChange={(e) => setProvadorMessage(e.target.value)} 
-                        rows={3} 
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none" 
-                        placeholder="Mensagem personalizada..." 
-                      />
-                      <p className="text-[10px] text-slate-400 mt-1">Use &#123;nome&#125; para o nome do cliente</p>
-                    </div>
-                    
-                    {/* Botões */}
+                    <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs mb-2">
+                      {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                    <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs resize-none mb-3" placeholder="Mensagem..." />
                     <div className="space-y-2">
-                      <button 
-                        onClick={handleProvadorGenerate} 
-                        disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} 
-                        className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        {isGeneratingProvador ? (
-                          <><i className="fas fa-spinner fa-spin"></i>Gerando...</>
-                        ) : (
-                          <><i className="fas fa-wand-magic-sparkles"></i>Gerar Imagem (3 créd.)</>
-                        )}
+                      <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar (3 créd.)</>}
                       </button>
-                      <button 
-                        onClick={handleProvadorSendWhatsApp} 
-                        disabled={!provadorClient || !provadorGeneratedImage} 
-                        className="w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <i className="fab fa-whatsapp text-lg"></i>Enviar WhatsApp
+                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        <i className="fab fa-whatsapp"></i>Enviar WhatsApp
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Mobile Accordion Steps */}
+              <div className="lg:hidden space-y-3">
+                
+                {/* Step 1: Cliente */}
+                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 1 ? 'border-purple-500 shadow-lg' : provadorClient ? 'border-green-500' : 'border-slate-200')}>
+                  <div onClick={() => setProvadorStep(1)} className="p-4 flex items-center gap-3 cursor-pointer">
+                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + (provadorClient ? 'bg-green-500 text-white' : provadorStep === 1 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
+                      {provadorClient ? <i className="fas fa-check"></i> : '1'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800">Selecionar Cliente</p>
+                      {provadorClient && provadorStep !== 1 && (
+                        <p className="text-xs text-green-600">{provadorClient.firstName} {provadorClient.lastName}</p>
+                      )}
+                    </div>
+                    <i className={'fas transition-transform ' + (provadorStep === 1 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                  </div>
+                  {provadorStep === 1 && (
+                    <div className="px-4 pb-4 border-t border-slate-100">
+                      {clientsWithProvador.length > 0 ? (
+                        <div className="space-y-2 mt-3 max-h-64 overflow-y-auto">
+                          {clientsWithProvador.map(client => (
+                            <div key={client.id} onClick={() => { setProvadorClient(client); setProvadorStep(2); }} className={'flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ' + (provadorClient?.id === client.id ? 'border-purple-500 bg-purple-50' : 'border-slate-200 hover:border-purple-300')}>
+                              <img src={getClientPhoto(client)} alt="" className="w-12 h-12 rounded-full object-cover" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-800">{client.firstName} {client.lastName}</p>
+                                <p className="text-xs text-slate-500">{formatWhatsApp(client.whatsapp)}</p>
+                              </div>
+                              {provadorClient?.id === client.id && <i className="fas fa-check text-purple-500"></i>}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                            <i className="fas fa-user-plus text-slate-300 text-2xl"></i>
+                          </div>
+                          <p className="text-sm text-slate-500 mb-3">Nenhum cliente com foto</p>
+                          <button onClick={() => setCurrentPage('clients')} className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-bold">Cadastrar Cliente</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 2: Foto */}
+                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 2 ? 'border-purple-500 shadow-lg' : (provadorClient && provadorPhotoType) ? 'border-green-500' : 'border-slate-200')}>
+                  <div onClick={() => provadorClient && setProvadorStep(2)} className={'p-4 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
+                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + ((provadorClient && provadorPhotoType) ? 'bg-green-500 text-white' : provadorStep === 2 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
+                      {(provadorClient && provadorPhotoType) ? <i className="fas fa-check"></i> : '2'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800">Selecionar Foto</p>
+                      {provadorPhotoType && provadorStep !== 2 && (
+                        <p className="text-xs text-green-600">Foto: {PHOTO_TYPES.find(p => p.id === provadorPhotoType)?.label}</p>
+                      )}
+                    </div>
+                    <i className={'fas transition-transform ' + (provadorStep === 2 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                  </div>
+                  {provadorStep === 2 && provadorClient && (
+                    <div className="px-4 pb-4 border-t border-slate-100">
+                      <div className="space-y-2 mt-3">
+                        {PHOTO_TYPES.map(photoType => {
+                          const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
+                          const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
+                          return (
+                            <div key={photoType.id} onClick={() => { if (hasPhoto) { setProvadorPhotoType(photoType.id); setProvadorStep(3); } }} 
+                              className={'flex items-center gap-3 p-3 rounded-xl border-2 transition-all ' + (!hasPhoto ? 'border-slate-100 bg-slate-50 opacity-50' : provadorPhotoType === photoType.id ? 'border-purple-500 bg-purple-50 cursor-pointer' : 'border-slate-200 hover:border-purple-300 cursor-pointer')}>
+                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-14 h-14 rounded-xl object-cover" /> : <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center"><i className={'fas ' + photoType.icon + ' text-slate-400'}></i></div>}
+                              <div className="flex-1">
+                                <p className="font-bold text-slate-800">{photoType.label}</p>
+                                <p className="text-xs text-slate-500">{hasPhoto ? 'Toque para selecionar' : 'Não cadastrada'}</p>
+                              </div>
+                              {hasPhoto && provadorPhotoType === photoType.id && <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center"><i className="fas fa-check text-white text-xs"></i></div>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 3: Look */}
+                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 3 ? 'border-purple-500 shadow-lg' : Object.keys(provadorLook).length > 0 ? 'border-green-500' : 'border-slate-200')}>
+                  <div onClick={() => provadorClient && setProvadorStep(3)} className={'p-4 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
+                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : provadorStep === 3 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
+                      {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check"></i> : '3'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800">Composição do Look</p>
+                      {Object.keys(provadorLook).length > 0 && provadorStep !== 3 && (
+                        <p className="text-xs text-green-600">{Object.keys(provadorLook).length} peça(s) selecionada(s)</p>
+                      )}
+                    </div>
+                    {Object.keys(provadorLook).length > 0 && <span className="px-2 py-1 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full">{Object.keys(provadorLook).length}</span>}
+                    <i className={'fas transition-transform ' + (provadorStep === 3 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                  </div>
+                  {provadorStep === 3 && (
+                    <div className="px-4 pb-4 border-t border-slate-100">
+                      {/* Filtros */}
+                      <div className="flex gap-2 mt-3 mb-3">
+                        <div className="relative flex-1">
+                          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                          <input type="text" placeholder="Buscar produto..." value={provadorLookSearch} onChange={(e) => setProvadorLookSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                        </div>
+                        <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                          <option value="">Todas</option>
+                          {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      {/* Look Composer */}
+                      <div className="max-h-[350px] overflow-y-auto">
+                        <LookComposer 
+                          products={products.filter(p => {
+                            const matchesSearch = !provadorLookSearch || p.name.toLowerCase().includes(provadorLookSearch.toLowerCase()) || p.sku.toLowerCase().includes(provadorLookSearch.toLowerCase());
+                            const matchesCollection = !provadorLookFilter || p.collection === provadorLookFilter;
+                            return matchesSearch && matchesCollection;
+                          })} 
+                          composition={provadorLook} 
+                          onChange={setProvadorLook} 
+                        />
+                      </div>
+                      {/* Botão Continuar */}
+                      {Object.keys(provadorLook).length > 0 && (
+                        <button onClick={() => setProvadorStep(4)} className="w-full mt-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold flex items-center justify-center gap-2">
+                          Continuar <i className="fas fa-arrow-right"></i>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 4: Gerar e Enviar */}
+                <div className={'bg-white rounded-2xl border-2 overflow-hidden transition-all ' + (provadorStep === 4 ? 'border-purple-500 shadow-lg' : provadorGeneratedImage ? 'border-green-500' : 'border-slate-200')}>
+                  <div onClick={() => (provadorClient && Object.keys(provadorLook).length > 0) && setProvadorStep(4)} className={'p-4 flex items-center gap-3 ' + ((provadorClient && Object.keys(provadorLook).length > 0) ? 'cursor-pointer' : 'opacity-50')}>
+                    <div className={'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : provadorStep === 4 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-200 text-slate-500')}>
+                      {provadorGeneratedImage ? <i className="fas fa-check"></i> : '4'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800">Gerar e Enviar</p>
+                      {provadorGeneratedImage && provadorStep !== 4 && (
+                        <p className="text-xs text-green-600">Imagem gerada!</p>
+                      )}
+                    </div>
+                    <i className={'fas transition-transform ' + (provadorStep === 4 ? 'fa-chevron-up' : 'fa-chevron-down') + ' text-slate-400'}></i>
+                  </div>
+                  {provadorStep === 4 && (
+                    <div className="px-4 pb-4 border-t border-slate-100">
+                      {/* Preview */}
+                      <div className="aspect-square bg-slate-100 rounded-xl mt-3 mb-4 flex items-center justify-center overflow-hidden">
+                        {isGeneratingProvador ? (
+                          <div className="text-center">
+                            <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3"></div>
+                            <p className="text-sm text-slate-500">Gerando imagem...</p>
+                          </div>
+                        ) : provadorGeneratedImage ? (
+                          <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
+                        ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
+                          <div className="relative w-full h-full">
+                            <img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-50" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="text-center bg-white/90 backdrop-blur-sm rounded-2xl p-6">
+                                <i className="fas fa-wand-magic-sparkles text-purple-500 text-3xl mb-3"></i>
+                                <p className="text-slate-600 font-medium">Pronto para gerar!</p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center p-4">
+                            <i className="fas fa-image text-slate-300 text-4xl mb-3"></i>
+                            <p className="text-sm text-slate-400">Preview</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mensagem WhatsApp */}
+                      <div className="mb-4">
+                        <label className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-1">
+                          <i className="fab fa-whatsapp text-green-500"></i>Mensagem
+                        </label>
+                        <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm mb-2">
+                          {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                        <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={3} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm resize-none" placeholder="Mensagem personalizada..." />
+                      </div>
+
+                      {/* Botões */}
+                      <div className="space-y-3">
+                        <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                          {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar Imagem (3 créd.)</>}
+                        </button>
+                        <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                          <i className="fab fa-whatsapp text-xl"></i>Enviar pelo WhatsApp
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
         )}
