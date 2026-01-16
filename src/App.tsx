@@ -249,7 +249,7 @@ function App() {
         
         <div className="p-6 border-b border-white/10 flex flex-col items-center">
           <img src="/logo.png" alt="Vizzu" className="h-12" />
-          <span className="text-[10px] text-purple-300/70 mt-1">Estúdio Digital com IAs</span>
+          <span className="text-[10px] text-purple-300/70 mt-1">Estúdio com IA para lojistas</span>
         </div>
 
         {/* Navigation */}
@@ -363,7 +363,7 @@ function App() {
         <header className="md:hidden bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 px-4 py-4 flex items-center justify-between">
           <div className="flex flex-col">
             <img src="/logo.png" alt="Vizzu" className="h-7" />
-            <span className="text-[9px] text-purple-300/70 mt-0.5">Estúdio Digital com IAs</span>
+            <span className="text-[9px] text-purple-300/70 mt-0.5">Estúdio com IA para lojistas</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="bg-white/10 text-white px-3 py-1.5 rounded-full text-xs font-bold">
@@ -387,8 +387,19 @@ function App() {
         {currentPage === 'dashboard' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-              <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-2">Olá, {user.name.split(' ')[0]}!</h1>
-              <p className="text-slate-500 text-sm md:text-base mb-6 md:mb-8">Resumo do seu estúdio de imagens AI</p>
+              {/* Page Header */}
+              <div className="flex items-center gap-4 mb-6 md:mb-8">
+                <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                  <i className="fas fa-home text-white text-xl md:text-2xl"></i>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-800">Dashboard</h1>
+                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] md:text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
+                  </div>
+                  <p className="text-slate-500 text-sm">Resumo do seu estúdio de imagens AI</p>
+                </div>
+              </div>
 
               {/* Stats Cards - 2 cols on mobile */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
@@ -490,11 +501,19 @@ function App() {
         {currentPage === 'products' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
-              {/* Header */}
+              {/* Page Header */}
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-1 md:mb-2">Produtos</h1>
-                  <p className="text-slate-500 text-sm">Gerencie seu catálogo</p>
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <i className="fas fa-box text-white text-lg md:text-xl"></i>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl md:text-2xl font-black text-slate-800">Produtos</h1>
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] md:text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
+                    </div>
+                    <p className="text-slate-500 text-xs md:text-sm">Gerencie seu catálogo de produtos</p>
+                  </div>
                 </div>
                 <button 
                   onClick={() => setShowImport(true)}
@@ -624,10 +643,17 @@ function App() {
         {currentPage === 'history' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-6 md:mb-8">
+              {/* Page Header */}
+              <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                  <i className="fas fa-clock-rotate-left text-white text-lg md:text-xl"></i>
+                </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-1 md:mb-2">Histórico</h1>
-                  <p className="text-slate-500 text-sm">Suas atividades</p>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl md:text-2xl font-black text-slate-800">Histórico</h1>
+                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] md:text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
+                  </div>
+                  <p className="text-slate-500 text-xs md:text-sm">Acompanhe todas as suas atividades</p>
                 </div>
               </div>
 
@@ -651,7 +677,18 @@ function App() {
               
               {/* Settings Tabs - Horizontal scroll on mobile */}
               <div className="md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-2 md:p-4">
-                <h2 className="hidden md:block text-lg font-bold text-slate-800 mb-4 px-3">Configurações</h2>
+                {/* Settings Header - Desktop only */}
+                <div className="hidden md:flex items-center gap-3 mb-4 px-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center">
+                    <i className="fas fa-cog text-white"></i>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold text-slate-800">Configurações</h2>
+                    </div>
+                    <p className="text-[10px] text-slate-400">Gerencie sua conta</p>
+                  </div>
+                </div>
                 <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
                   <button
                     onClick={() => setSettingsTab('profile')}
