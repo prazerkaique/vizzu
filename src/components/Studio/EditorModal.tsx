@@ -24,73 +24,31 @@ interface Props {
 
 type ToolType = 'studio' | 'cenario' | 'lifestyle' | null;
 
-// ═══════════════════════════════════════════════════════════════
-// CONFIGURAÇÕES DAS FERRAMENTAS - Nomes conforme design
-// ═══════════════════════════════════════════════════════════════
 const TOOL_CFG = {
-  studio: { 
-    name: 'Studio Ready', 
-    icon: 'fa-store', 
-    credits: 1, 
-    color: 'purple',
-    desc: 'Fundo branco',
-    fullDesc: 'Fundo branco profissional com sombra suave. Ideal para e-commerce.'
-  },
-  cenario: { 
-    name: 'Cenário Criativo', 
-    icon: 'fa-film', 
-    credits: 2, 
-    color: 'pink',
-    desc: 'Ambiente personalizado',
-    fullDesc: 'Crie um ambiente promocional personalizado para seu produto.'
-  },
-  lifestyle: { 
-    name: 'Modelo IA', 
-    icon: 'fa-user-friends', 
-    credits: 3, 
-    color: 'orange',
-    desc: 'Humano com produto',
-    fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!'
-  }
+  studio: { name: 'Studio Ready', icon: 'fa-store', credits: 1, desc: 'Fundo branco', fullDesc: 'Fundo branco profissional com sombra suave. Ideal para e-commerce.' },
+  cenario: { name: 'Cenário Criativo', icon: 'fa-film', credits: 2, desc: 'Ambiente personalizado', fullDesc: 'Crie um ambiente promocional personalizado para seu produto.' },
+  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3, desc: 'Humano com produto', fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!' }
 };
 
 const MODEL_OPTS = {
   gender: [{ id: 'woman', label: 'Mulher' }, { id: 'man', label: 'Homem' }],
-  ethnicity: [
-    { id: 'caucasian', label: 'Branca/Caucasiana' }, 
-    { id: 'black', label: 'Negra/Afrodescendente' }, 
-    { id: 'asian', label: 'Asiática' }, 
-    { id: 'latino', label: 'Latina/Hispânica' }, 
-    { id: 'middleeastern', label: 'Oriente Médio' },
-    { id: 'mixed', label: 'Mista/Parda' }
-  ],
-  bodyType: [
-    { id: 'slim', label: 'Magro(a)' }, 
-    { id: 'athletic', label: 'Atlético(a)' }, 
-    { id: 'average', label: 'Médio' }, 
-    { id: 'curvy', label: 'Curvilíneo(a)' }, 
-    { id: 'plussize', label: 'Plus Size' }
-  ],
-  ageRange: [
-    { id: 'young', label: '18-25 anos' }, 
-    { id: 'adult', label: '26-35 anos' }, 
-    { id: 'mature', label: '36-50 anos' }, 
-    { id: 'senior', label: '50+ anos' }
-  ]
+  ethnicity: [{ id: 'caucasian', label: 'Branca/Caucasiana' }, { id: 'black', label: 'Negra/Afrodescendente' }, { id: 'asian', label: 'Asiática' }, { id: 'latino', label: 'Latina/Hispânica' }, { id: 'middleeastern', label: 'Oriente Médio' }, { id: 'mixed', label: 'Mista/Parda' }],
+  bodyType: [{ id: 'slim', label: 'Magro(a)' }, { id: 'athletic', label: 'Atlético(a)' }, { id: 'average', label: 'Médio' }, { id: 'curvy', label: 'Curvilíneo(a)' }, { id: 'plussize', label: 'Plus Size' }],
+  ageRange: [{ id: 'young', label: '18-25 anos' }, { id: 'adult', label: '26-35 anos' }, { id: 'mature', label: '36-50 anos' }, { id: 'senior', label: '50+ anos' }]
 };
 
 const CATEGORIES = [
-  { id: 'top', label: 'Parte de Cima (Camiseta, Blusa, Casaco)' }, 
-  { id: 'bottom', label: 'Parte de Baixo (Calça, Short, Saia)' }, 
-  { id: 'shoes', label: 'Calçado (Tênis, Sapato, Sandália)' }, 
-  { id: 'fullbody', label: 'Corpo Inteiro (Vestido, Macacão)' }, 
+  { id: 'top', label: 'Parte de Cima (Camiseta, Blusa, Casaco)' },
+  { id: 'bottom', label: 'Parte de Baixo (Calça, Short, Saia)' },
+  { id: 'shoes', label: 'Calçado (Tênis, Sapato, Sandália)' },
+  { id: 'fullbody', label: 'Corpo Inteiro (Vestido, Macacão)' },
   { id: 'accessory', label: 'Acessório (Bolsa, Chapéu, Joia)' }
 ];
 
-export const EditorModal: React.FC<Props> = ({ 
-  product, products, userCredits, savedModels, clients = [], 
-  selectedClient: initialSelectedClient, companyLogo, 
-  onSaveModel, onDeleteModel, onClose, onUpdateProduct, 
+export const EditorModal: React.FC<Props> = ({
+  product, products, userCredits, savedModels, clients = [],
+  selectedClient: initialSelectedClient, companyLogo,
+  onSaveModel, onDeleteModel, onClose, onUpdateProduct,
   onDeductCredits, onGenerateImage, onMarkSaved, onSendWhatsApp,
   theme = 'dark'
 }) => {
@@ -102,28 +60,17 @@ export const EditorModal: React.FC<Props> = ({
   const [images, setImages] = useState<ProductImage[]>(product.images || []);
   const [selIdx, setSelIdx] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Cenário states
   const [cenPrompt, setCenPrompt] = useState('');
-  
-  // Modelo IA states
   const [modelTab, setModelTab] = useState<'new'|'saved'>('new');
   const [selModelId, setSelModelId] = useState<string|null>(null);
   const [category, setCategory] = useState('top');
   const [prodDesc, setProdDesc] = useState('');
-  const [modelSettings, setModelSettings] = useState({ 
-    gender: 'woman' as 'woman'|'man', 
-    ethnicity: 'caucasian', 
-    bodyType: 'average', 
-    ageRange: 'adult' 
-  });
+  const [modelSettings, setModelSettings] = useState({ gender: 'woman' as 'woman'|'man', ethnicity: 'caucasian', bodyType: 'average', ageRange: 'adult' });
   const [modelDetail, setModelDetail] = useState('');
   const [clothing, setClothing] = useState('');
   const [pose, setPose] = useState('');
   const [showLook, setShowLook] = useState(false);
   const [look, setLook] = useState<LookComposition>({});
-  
-  // Other states
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newModelName, setNewModelName] = useState('');
   const [showRefine, setShowRefine] = useState(false);
@@ -136,9 +83,7 @@ export const EditorModal: React.FC<Props> = ({
   const current = images[selIdx];
   const hasOrig = !!current?.base64 || !!current?.url;
   const selModel = savedModels.find(m => m.id === selModelId);
-  
-  // Theme classes
-  const isLight = theme === 'light';
+  const isDark = theme === 'dark';
 
   const buildModelPrompt = () => {
     const g = modelSettings.gender === 'woman' ? 'Female' : 'Male';
@@ -157,7 +102,6 @@ export const EditorModal: React.FC<Props> = ({
     if (tool === 'cenario' && !cenPrompt.trim()) { setError('Descreva o cenário'); return; }
     if (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) { setError('Selecione um modelo'); return; }
     if (!onDeductCredits(cost, `VIZZU: ${TOOL_CFG[tool].name}`)) { setError('Erro ao processar créditos'); return; }
-    
     setIsGen(true); setError(null);
     try {
       let result;
@@ -172,7 +116,7 @@ export const EditorModal: React.FC<Props> = ({
         result = await onGenerateImage(product, 'lifestyle', undefined, opts);
       }
       if (result?.image) { setGenImg(result.image); setGenId(result.generationId); setViewMode('result'); }
-      else setError('A IA não retornou uma imagem válida. Verifique se o prompt não viola políticas de segurança ou tente simplificar.');
+      else setError('A IA não retornou uma imagem válida.');
     } catch (e: any) { setError(e.message || 'Erro na geração'); }
     finally { setIsGen(false); }
   };
@@ -207,15 +151,7 @@ export const EditorModal: React.FC<Props> = ({
 
   const handleSaveModel = () => {
     if (!newModelName.trim() || !genImg) return;
-    const profile: SavedModelProfile = { 
-      id: `model-${Date.now()}`, 
-      name: newModelName.trim(), 
-      referenceImage: genImg, 
-      settings: { ...modelSettings }, 
-      modelPrompt: buildModelPrompt(), 
-      createdAt: new Date().toISOString(), 
-      usageCount: 0 
-    };
+    const profile: SavedModelProfile = { id: `model-${Date.now()}`, name: newModelName.trim(), referenceImage: genImg, settings: { ...modelSettings }, modelPrompt: buildModelPrompt(), createdAt: new Date().toISOString(), usageCount: 0 };
     onSaveModel(profile);
     setNewModelName(''); setShowSaveModal(false); setModelTab('saved'); setSelModelId(profile.id);
   };
@@ -243,9 +179,7 @@ export const EditorModal: React.FC<Props> = ({
       {/* Zoom Modal */}
       {zoom && (
         <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4" onClick={() => setZoom(null)}>
-          <button className="absolute top-4 right-4 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center">
-            <i className="fas fa-times text-xl"></i>
-          </button>
+          <button className="absolute top-4 right-4 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center"><i className="fas fa-times text-xl"></i></button>
           <img src={zoom} className="max-w-full max-h-[90vh] object-contain rounded-lg" />
         </div>
       )}
@@ -253,21 +187,19 @@ export const EditorModal: React.FC<Props> = ({
       {/* Save Model Modal */}
       {showSaveModal && genImg && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
-          <div className={(isLight ? 'bg-white' : 'bg-white') + ' rounded-2xl shadow-2xl p-6 w-full max-w-md'}>
+          <div className={`rounded-2xl shadow-2xl p-6 w-full max-w-md border ${isDark ? 'bg-neutral-900 border-neutral-700' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Salvar Modelo</h3>
-              <button onClick={() => setShowSaveModal(false)} className="text-slate-400"><i className="fas fa-times"></i></button>
+              <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Salvar Modelo</h3>
+              <button onClick={() => setShowSaveModal(false)} className={isDark ? 'text-neutral-500' : 'text-gray-400'}><i className="fas fa-times"></i></button>
             </div>
             <div className="flex justify-center mb-6">
-              <div className="w-32 h-32 rounded-full border-4 border-purple-200 overflow-hidden">
+              <div className="w-32 h-32 rounded-full border-4 border-pink-500/30 overflow-hidden">
                 <img src={genImg} className="w-full h-full object-cover object-top" />
               </div>
             </div>
-            <p className="text-sm text-slate-500 text-center mb-4">
-              Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.
-            </p>
-            <input type="text" value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder="Nome do modelo..." className="w-full p-3 border border-slate-300 rounded-lg mb-4 text-slate-800" autoFocus />
-            <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold disabled:opacity-50">
+            <p className={`text-sm text-center mb-4 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.</p>
+            <input type="text" value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder="Nome do modelo..." className={`w-full p-3 border rounded-lg mb-4 ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} autoFocus />
+            <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-bold disabled:opacity-50">
               <i className="fas fa-save mr-2"></i>Salvar
             </button>
           </div>
@@ -277,14 +209,12 @@ export const EditorModal: React.FC<Props> = ({
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* DESKTOP LAYOUT */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className={'hidden md:flex rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex-col ' + (isLight ? 'bg-gray-50' : 'bg-slate-50')}>
+      <div className={`hidden md:flex rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex-col ${isDark ? 'bg-neutral-950' : 'bg-gray-50'}`}>
         
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
-              <i className="fas fa-arrow-left"></i>
-            </button>
+            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"><i className="fas fa-arrow-left"></i></button>
             <div className="text-white">
               <h2 className="font-bold text-lg">{product.name}</h2>
               <p className="text-sm text-white/70 font-mono">{product.sku}</p>
@@ -296,9 +226,7 @@ export const EditorModal: React.FC<Props> = ({
               <span className="font-bold">{userCredits}</span>
               <span className="text-white/70 text-sm">créditos</span>
             </div>
-            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
-              <i className="fas fa-times"></i>
-            </button>
+            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"><i className="fas fa-times"></i></button>
           </div>
         </div>
         
@@ -309,16 +237,16 @@ export const EditorModal: React.FC<Props> = ({
             {/* Image Preview Area */}
             <div className="flex gap-4 min-h-[300px]">
               {/* Original */}
-              <div className={'w-1/3 rounded-2xl border p-4 flex flex-col shadow-sm ' + (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}>
-                <h3 className={'text-xs font-bold uppercase mb-3 flex items-center gap-2 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                  <i className={'fas fa-bullseye ' + (isLight ? 'text-gray-400' : 'text-slate-400')}></i>
+              <div className={`w-1/3 rounded-2xl border p-4 flex flex-col shadow-sm ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+                <h3 className={`text-xs font-bold uppercase mb-3 flex items-center gap-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                  <i className={`fas fa-bullseye ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
                   Imagem de Referência
                 </h3>
-                <div className={'flex-1 rounded-xl overflow-hidden flex items-center justify-center ' + (isLight ? 'bg-gray-100' : 'bg-slate-100')}>
+                <div className={`flex-1 rounded-xl overflow-hidden flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
                   {hasOrig ? (
                     <img src={current.base64 || current.url} className="w-full h-full object-contain" />
                   ) : (
-                    <div className={'text-center text-xs ' + (isLight ? 'text-gray-400' : 'text-slate-400')}>
+                    <div className={`text-center text-xs ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
                       <i className="fas fa-image text-3xl mb-2"></i>
                       <p>Selecione uma imagem</p>
                     </div>
@@ -327,59 +255,51 @@ export const EditorModal: React.FC<Props> = ({
               </div>
               
               {/* Result */}
-              <div className={'flex-1 rounded-2xl border p-4 flex flex-col relative group shadow-sm ' + (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}>
-                <h3 className={'text-sm font-bold mb-3 ' + (isLight ? 'text-gray-700' : 'text-slate-700')}>Resultado</h3>
-                <div className={'flex-1 rounded-xl overflow-hidden relative flex items-center justify-center ' + (isLight ? 'bg-gradient-to-br from-gray-100 to-gray-50' : 'bg-gradient-to-br from-slate-100 to-slate-50')}>
+              <div className={`flex-1 rounded-2xl border p-4 flex flex-col relative group shadow-sm ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+                <h3 className={`text-sm font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Resultado</h3>
+                <div className={`flex-1 rounded-xl overflow-hidden relative flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
                   {isGen ? (
-                    <div className="flex flex-col items-center text-purple-500">
-                      <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin mb-3"></div>
+                    <div className="flex flex-col items-center text-pink-500">
+                      <div className="w-12 h-12 rounded-full border-4 border-pink-500/30 border-t-pink-500 animate-spin mb-3"></div>
                       <p className="text-sm font-bold">Gerando...</p>
                     </div>
                   ) : genImg ? (
                     <>
                       <img src={genImg} className="w-full h-full object-contain" />
-                      <button onClick={() => setZoom(genImg)} className="absolute top-3 right-3 w-10 h-10 bg-black/50 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i className="fas fa-expand"></i>
-                      </button>
+                      <button onClick={() => setZoom(genImg)} className="absolute top-3 right-3 w-10 h-10 bg-black/50 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i className="fas fa-expand"></i></button>
                     </>
                   ) : (
-                    <div className={'text-center p-8 ' + (isLight ? 'text-gray-400' : 'text-slate-400')}>
-                      <div className={'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 ' + (isLight ? 'bg-gray-100' : 'bg-slate-100')}>
-                        <i className={'fas fa-wand-magic-sparkles text-2xl ' + (isLight ? 'text-gray-300' : 'text-slate-300')}></i>
+                    <div className={`text-center p-8 ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}`}>
+                        <i className={`fas fa-wand-magic-sparkles text-2xl ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
                       </div>
                       <p className="text-sm">Configure ao lado e clique em Gerar</p>
                     </div>
                   )}
                 </div>
                 
-                {/* Action buttons when image generated */}
+                {/* Action buttons */}
                 {genImg && !isGen && !showRefine && (
                   <div className="absolute bottom-6 left-6 right-6 flex justify-center gap-3">
-                    <button onClick={() => { setGenImg(null); setGenId(null); }} className="w-12 h-12 bg-white text-red-500 rounded-full shadow-lg flex items-center justify-center border border-red-100 hover:bg-red-50 transition-colors">
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
+                    <button onClick={() => { setGenImg(null); setGenId(null); }} className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center border text-red-500 ${isDark ? 'bg-neutral-800 border-red-500/30 hover:bg-red-500/10' : 'bg-white border-red-200 hover:bg-red-50'}`}><i className="fas fa-trash-alt"></i></button>
                     <button onClick={handleSave} disabled={isSaving} className="flex-1 max-w-xs h-12 bg-green-600 hover:bg-green-700 text-white font-bold rounded-full shadow-xl flex items-center justify-center gap-2 transition-colors">
                       {isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}
                       Salvar no Produto
                     </button>
-                    <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-white text-purple-600 rounded-full shadow-lg flex items-center justify-center border border-purple-100 hover:bg-purple-50 transition-colors">
-                      <i className="fas fa-magic"></i>
-                    </button>
+                    <button onClick={() => setShowRefine(true)} className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center border text-pink-500 ${isDark ? 'bg-neutral-800 border-pink-500/30 hover:bg-pink-500/10' : 'bg-white border-pink-200 hover:bg-pink-50'}`}><i className="fas fa-magic"></i></button>
                     {tool === 'lifestyle' && modelTab === 'new' && (
-                      <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-white text-indigo-600 rounded-full shadow-lg flex items-center justify-center border border-indigo-100 hover:bg-indigo-50 transition-colors">
-                        <i className="fas fa-user-plus"></i>
-                      </button>
+                      <button onClick={() => setShowSaveModal(true)} className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center border text-purple-500 ${isDark ? 'bg-neutral-800 border-purple-500/30 hover:bg-purple-500/10' : 'bg-white border-purple-200 hover:bg-purple-50'}`}><i className="fas fa-user-plus"></i></button>
                     )}
                   </div>
                 )}
                 
                 {/* Refine Panel */}
                 {showRefine && genImg && (
-                  <div className="absolute bottom-4 left-4 right-4 p-4 bg-white shadow-lg rounded-xl border border-purple-100">
-                    <textarea value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="O que você gostaria de ajustar na imagem?" className="w-full p-2 border border-purple-200 rounded-lg text-sm resize-none mb-2 text-slate-800" rows={2} />
+                  <div className={`absolute bottom-4 left-4 right-4 p-4 shadow-lg rounded-xl border ${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200'}`}>
+                    <textarea value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="O que você gostaria de ajustar?" className={`w-full p-2 border rounded-lg text-sm resize-none mb-2 ${isDark ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => setShowRefine(false)} className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700">Cancelar</button>
-                      <button onClick={handleRefine} disabled={!refinePrompt.trim() || isGen} className="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 disabled:opacity-50">
+                      <button onClick={() => setShowRefine(false)} className={`px-3 py-1.5 text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Cancelar</button>
+                      <button onClick={handleRefine} disabled={!refinePrompt.trim() || isGen} className="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-xs font-bold rounded-lg disabled:opacity-50">
                         <i className="fas fa-magic mr-1"></i>Refinar (1 créd.)
                       </button>
                     </div>
@@ -388,270 +308,155 @@ export const EditorModal: React.FC<Props> = ({
               </div>
             </div>
             
-            {/* Error Message */}
+            {/* Error */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+              <div className={`rounded-xl p-3 flex items-center gap-3 ${isDark ? 'bg-red-500/10 border border-red-500/30' : 'bg-red-50 border border-red-200'}`}>
                 <i className="fas fa-exclamation-circle text-red-500"></i>
-                <p className="text-xs text-red-700 flex-1">{error}</p>
-                <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
-                  <i className="fas fa-times"></i>
-                </button>
+                <p className={`text-xs flex-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
+                <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300"><i className="fas fa-times"></i></button>
               </div>
             )}
 
             {/* Gallery */}
-            <div className={'flex-1 rounded-2xl border p-4 flex flex-col min-h-[120px] shadow-sm ' + (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}>
-              <h3 className={'text-xs font-bold uppercase mb-3 flex items-center gap-2 ' + (isLight ? 'text-gray-700' : 'text-slate-700')}>
-                <i className={'fas fa-th-large ' + (isLight ? 'text-gray-400' : 'text-slate-400')}></i>
+            <div className={`flex-1 rounded-2xl border p-4 flex flex-col min-h-[120px] shadow-sm ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+              <h3 className={`text-xs font-bold uppercase mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <i className={`fas fa-th-large ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
                 Galeria do Produto
               </h3>
               <div className="flex-1 overflow-y-auto">
                 {images.length > 0 ? (
                   <div className="grid grid-cols-6 lg:grid-cols-8 gap-2">
                     {images.map((img, idx) => (
-                      <div 
-                        key={idx} 
-                        onClick={() => setSelIdx(idx)} 
-                        className={`aspect-square rounded-xl overflow-hidden cursor-pointer relative group border-2 transition-all ${
-                          selIdx === idx 
-                            ? 'border-purple-500 ring-2 ring-purple-500/20' 
-                            : (isLight ? 'border-gray-100 hover:border-gray-300' : 'border-slate-100 hover:border-slate-300')
-                        }`}
-                      >
+                      <div key={idx} onClick={() => setSelIdx(idx)} className={`aspect-square rounded-xl overflow-hidden cursor-pointer relative group border-2 transition-all ${selIdx === idx ? 'border-pink-500 ring-2 ring-pink-500/20' : isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300'}`}>
                         <img src={img.base64 || img.url} className="w-full h-full object-cover" />
                         {selIdx === idx && (
-                          <div className="absolute inset-0 bg-purple-500/10 flex items-center justify-center">
-                            <div className="bg-purple-500 text-white w-5 h-5 rounded-full flex items-center justify-center">
-                              <i className="fas fa-check text-[8px]"></i>
-                            </div>
+                          <div className="absolute inset-0 bg-pink-500/10 flex items-center justify-center">
+                            <div className="bg-pink-500 text-white w-5 h-5 rounded-full flex items-center justify-center"><i className="fas fa-check text-[8px]"></i></div>
                           </div>
                         )}
-                        <button 
-                          onClick={(e) => handleDeleteImg(idx, e)} 
-                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 text-[8px] transition-opacity"
-                        >
-                          <i className="fas fa-times"></i>
-                        </button>
+                        <button onClick={(e) => handleDeleteImg(idx, e)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 text-[8px] transition-opacity"><i className="fas fa-times"></i></button>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className={'h-full flex items-center justify-center text-xs ' + (isLight ? 'text-gray-400' : 'text-slate-400')}>
-                    Nenhuma imagem no produto
-                  </div>
+                  <div className={`h-full flex items-center justify-center text-xs ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Nenhuma imagem no produto</div>
                 )}
               </div>
             </div>
           </div>
           
           {/* Right Panel - Tools */}
-          <div className={'w-80 border-l p-5 overflow-y-auto flex-shrink-0 ' + (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}>
-            <h3 className={'text-lg font-bold mb-4 flex items-center gap-2 ' + (isLight ? 'text-gray-800' : 'text-slate-800')}>
-              <i className="fas fa-toolbox text-purple-500"></i>
+          <div className={`w-80 border-l p-5 overflow-y-auto flex-shrink-0 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <i className="fas fa-toolbox text-pink-500"></i>
               Ferramentas
             </h3>
             
             <div className="space-y-3">
               {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
-                <div 
-                  key={t} 
-                  onClick={() => handleSelectTool(t)} 
-                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    tool === t 
-                      ? 'border-purple-500 bg-purple-50 shadow-md' 
-                      : (isLight ? 'border-gray-200 hover:border-purple-200' : 'border-slate-200 hover:border-purple-200')
-                  }`}
-                >
+                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-pink-500 bg-pink-500/10 shadow-md' : isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        tool === t 
-                          ? 'bg-purple-600 text-white' 
-                          : (isLight ? 'bg-gray-100 text-gray-500' : 'bg-slate-100 text-slate-500')
-                      }`}>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${tool === t ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
                         <i className={`fas ${TOOL_CFG[t].icon}`}></i>
                       </div>
                       <div>
-                        <span className={'font-bold block ' + (isLight ? 'text-gray-800' : 'text-slate-800')}>{TOOL_CFG[t].name}</span>
-                        <span className={'text-xs ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>{TOOL_CFG[t].desc}</span>
+                        <span className={`font-bold block ${isDark ? 'text-white' : 'text-gray-900'}`}>{TOOL_CFG[t].name}</span>
+                        <span className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG[t].desc}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold px-2 py-1 rounded-full text-amber-600 bg-amber-50">
-                      {TOOL_CFG[t].credits} créd.
-                    </span>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full text-pink-500 bg-pink-500/10">{TOOL_CFG[t].credits} créd.</span>
                   </div>
                   
-                  {/* Tool expanded content */}
+                  {/* Tool expanded */}
                   {tool === t && (
-                    <div className={'mt-3 pt-3 border-t ' + (isLight ? 'border-gray-200' : 'border-slate-200')} onClick={(e) => e.stopPropagation()}>
+                    <div className={`mt-3 pt-3 border-t ${isDark ? 'border-neutral-700' : 'border-gray-200'}`} onClick={(e) => e.stopPropagation()}>
                       
-                      {/* STUDIO READY */}
                       {t === 'studio' && (
                         <>
-                          <p className={'text-xs mb-3 ' + (isLight ? 'text-gray-600' : 'text-slate-600')}>{TOOL_CFG.studio.fullDesc}</p>
-                          <button 
-                            onClick={handleGen} 
-                            disabled={isGen || !hasOrig} 
-                            className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
-                          >
+                          <p className={`text-xs mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.studio.fullDesc}</p>
+                          <button onClick={handleGen} disabled={isGen || !hasOrig} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25">
                             {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
                             {isGen ? 'Gerando...' : 'Gerar'}
                           </button>
                         </>
                       )}
                       
-                      {/* CENÁRIO CRIATIVO */}
                       {t === 'cenario' && (
                         <>
-                          <p className={'text-xs mb-3 ' + (isLight ? 'text-gray-600' : 'text-slate-600')}>{TOOL_CFG.cenario.fullDesc}</p>
-                          <textarea 
-                            value={cenPrompt} 
-                            onChange={(e) => setCenPrompt(e.target.value)} 
-                            placeholder="Descreva o cenário... Ex: Mesa de madeira com plantas, luz natural..." 
-                            className={'w-full p-2 border rounded-lg text-sm resize-none mb-3 ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} 
-                            rows={3} 
-                          />
-                          <button 
-                            onClick={handleGen} 
-                            disabled={isGen || !hasOrig || !cenPrompt.trim()} 
-                            className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
-                          >
+                          <p className={`text-xs mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.cenario.fullDesc}</p>
+                          <textarea value={cenPrompt} onChange={(e) => setCenPrompt(e.target.value)} placeholder="Descreva o cenário..." className={`w-full p-2 border rounded-lg text-sm resize-none mb-3 ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={3} />
+                          <button onClick={handleGen} disabled={isGen || !hasOrig || !cenPrompt.trim()} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25">
                             {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
                             {isGen ? 'Gerando...' : 'Gerar Cenário'}
                           </button>
                         </>
                       )}
                       
-                      {/* MODELO IA */}
                       {t === 'lifestyle' && (
                         <>
-                          <p className={'text-xs mb-3 ' + (isLight ? 'text-gray-600' : 'text-slate-600')}>{TOOL_CFG.lifestyle.fullDesc}</p>
+                          <p className={`text-xs mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.lifestyle.fullDesc}</p>
                           
                           {/* Tabs */}
-                          <div className={'flex rounded-lg p-1 mb-3 ' + (isLight ? 'bg-gray-200' : 'bg-slate-200')}>
-                            <button 
-                              onClick={() => setModelTab('new')} 
-                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
-                                modelTab === 'new' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-                              }`}
-                            >
-                              Novo Modelo
-                            </button>
-                            <button 
-                              onClick={() => setModelTab('saved')} 
-                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
-                                modelTab === 'saved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-                              }`}
-                            >
-                              Salvos ({savedModels.length})
-                            </button>
+                          <div className={`flex rounded-lg p-1 mb-3 ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
+                            <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${modelTab === 'new' ? isDark ? 'bg-neutral-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Novo Modelo</button>
+                            <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${modelTab === 'saved' ? isDark ? 'bg-neutral-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Salvos ({savedModels.length})</button>
                           </div>
                           
-                          {/* Product Description - IMPORTANT */}
-                          <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                            <label className="text-[9px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
-                              <i className="fas fa-exclamation-triangle"></i>
-                              Descreva o produto principal
-                            </label>
-                            <textarea 
-                              value={prodDesc} 
-                              onChange={(e) => setProdDesc(e.target.value)} 
-                              placeholder="Ex: Camiseta preta com logo Nike branco no peito, gola redonda, tecido algodão, corte regular..." 
-                              className="w-full p-2 bg-white border border-amber-300 rounded text-[11px] resize-none text-slate-800" 
-                              rows={2} 
-                            />
-                            <p className="text-[9px] text-amber-600 mt-1">
-                              <i className="fas fa-info-circle mr-1"></i>
-                              Quanto mais detalhes (cor, estampa, logo, corte, tecido), mais fiel será o resultado.
-                            </p>
+                          {/* Product Description */}
+                          <div className={`mb-3 p-2 rounded-lg border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                            <label className="text-[9px] font-bold text-amber-500 uppercase mb-1 flex items-center gap-1"><i className="fas fa-exclamation-triangle"></i>Descreva o produto principal</label>
+                            <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo Nike branco..." className={`w-full p-2 border rounded text-[11px] resize-none ${isDark ? 'bg-neutral-800 border-amber-500/30 text-white placeholder-neutral-500' : 'bg-white border-amber-300 text-gray-900 placeholder-gray-400'}`} rows={2} />
+                            <p className="text-[9px] text-amber-500/80 mt-1"><i className="fas fa-info-circle mr-1"></i>Quanto mais detalhes, mais fiel o resultado.</p>
                           </div>
                           
-                          {/* Product Category */}
+                          {/* Category */}
                           <div className="mb-3">
-                            <label className={'text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                              <i className={'fas fa-tshirt ' + (isLight ? 'text-gray-400' : 'text-slate-400')}></i>
-                              O que é o produto principal?
-                            </label>
-                            <select 
-                              value={category} 
-                              onChange={(e) => setCategory(e.target.value)} 
-                              className={'w-full p-2 bg-white border rounded-lg text-xs ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}
-                            >
+                            <label className={`text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}><i className={`fas fa-tshirt ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Categoria</label>
+                            <select value={category} onChange={(e) => setCategory(e.target.value)} className={`w-full p-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
                               {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                             </select>
-                            <p className={'text-[9px] mt-1 ' + (isLight ? 'text-gray-400' : 'text-slate-400')}>A IA usará isso para não alterar o produto.</p>
                           </div>
                           
                           {/* New Model Options */}
                           {modelTab === 'new' && (
                             <div className="space-y-3 mb-3">
-                              {/* Gender */}
                               <div>
-                                <label className={'text-[9px] font-bold uppercase mb-1.5 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Gênero</label>
+                                <label className={`text-[9px] font-bold uppercase mb-1.5 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Gênero</label>
                                 <div className="grid grid-cols-2 gap-2">
                                   {MODEL_OPTS.gender.map(g => (
-                                    <button 
-                                      key={g.id} 
-                                      onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} 
-                                      className={`py-2 rounded-lg text-xs font-bold border-2 transition-all flex items-center justify-center gap-2 ${
-                                        modelSettings.gender === g.id 
-                                          ? 'bg-slate-900 border-slate-900 text-white' 
-                                          : (isLight ? 'bg-white border-gray-200 text-gray-600 hover:border-gray-400' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400')
-                                      }`}
-                                    >
-                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>
-                                      {g.label}
+                                    <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-2 rounded-lg text-xs font-bold border-2 transition-all flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-neutral-400' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>{g.label}
                                     </button>
                                   ))}
                                 </div>
                               </div>
                               
-                              {/* Ethnicity & Body Type */}
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className={'text-[9px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Etnia</label>
-                                  <select 
-                                    value={modelSettings.ethnicity} 
-                                    onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} 
-                                    className={'w-full p-1.5 bg-white border rounded text-xs ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}
-                                  >
+                                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Etnia</label>
+                                  <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
                                     {MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
                                   </select>
                                 </div>
                                 <div>
-                                  <label className={'text-[9px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Porte Físico</label>
-                                  <select 
-                                    value={modelSettings.bodyType} 
-                                    onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} 
-                                    className={'w-full p-1.5 bg-white border rounded text-xs ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}
-                                  >
+                                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Porte</label>
+                                  <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
                                     {MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
                                   </select>
                                 </div>
                               </div>
                               
-                              {/* Age */}
                               <div>
-                                <label className={'text-[9px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Faixa Etária</label>
-                                <select 
-                                  value={modelSettings.ageRange} 
-                                  onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} 
-                                  className={'w-full p-1.5 bg-white border rounded text-xs ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}
-                                >
+                                <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Idade</label>
+                                <select value={modelSettings.ageRange} onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
                                   {MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
                                 </select>
                               </div>
                               
-                              {/* Facial Details */}
                               <div>
-                                <label className={'text-[9px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Detalhes Faciais (opcional)</label>
-                                <textarea 
-                                  value={modelDetail} 
-                                  onChange={(e) => setModelDetail(e.target.value)} 
-                                  placeholder="Ex: Cabelos longos ondulados, olhos verdes, sardas..." 
-                                  className={'w-full p-2 bg-white border rounded text-xs resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} 
-                                  rows={2} 
-                                />
+                                <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Detalhes Faciais (opcional)</label>
+                                <textarea value={modelDetail} onChange={(e) => setModelDetail(e.target.value)} placeholder="Ex: Cabelos longos ondulados, olhos verdes..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
                               </div>
                             </div>
                           )}
@@ -660,98 +465,52 @@ export const EditorModal: React.FC<Props> = ({
                           {modelTab === 'saved' && (
                             <div className="space-y-2 mb-3 max-h-32 overflow-y-auto">
                               {savedModels.length === 0 ? (
-                                <div className={'text-center py-4 text-xs rounded-lg border border-dashed ' + (isLight ? 'text-gray-400 bg-gray-50' : 'text-slate-400 bg-slate-50')}>
+                                <div className={`text-center py-4 text-xs rounded-lg border border-dashed ${isDark ? 'text-neutral-500 bg-neutral-800/50 border-neutral-700' : 'text-gray-400 bg-gray-50 border-gray-300'}`}>
                                   <i className="fas fa-user-slash text-lg mb-1"></i>
                                   <p>Nenhum modelo salvo</p>
                                 </div>
                               ) : savedModels.map(m => (
-                                <div 
-                                  key={m.id} 
-                                  onClick={() => setSelModelId(m.id)} 
-                                  className={`p-2 rounded-lg border-2 cursor-pointer flex items-center gap-2 transition-all ${
-                                    selModelId === m.id 
-                                      ? 'bg-slate-900 border-slate-900 text-white' 
-                                      : (isLight ? 'bg-white border-gray-200 hover:border-gray-400 text-gray-700' : 'bg-white border-slate-200 hover:border-slate-400 text-slate-700')
-                                  }`}
-                                >
-                                  <div className={'w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ' + (isLight ? 'bg-gray-100' : 'bg-slate-100')}>
+                                <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-2 rounded-lg border-2 cursor-pointer flex items-center gap-2 transition-all ${selModelId === m.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+                                  <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}>
                                     <img src={m.referenceImage} className="w-full h-full object-cover object-top" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="font-bold text-xs truncate">{m.name}</p>
-                                    <p className={`text-[9px] ${selModelId === m.id ? 'text-slate-400' : (isLight ? 'text-gray-500' : 'text-slate-500')}`}>
-                                      Usado {m.usageCount}x
-                                    </p>
+                                    <p className={`text-[9px] ${selModelId === m.id ? 'text-white/70' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Usado {m.usageCount}x</p>
                                   </div>
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} 
-                                    className={`${selModelId === m.id ? 'text-slate-500' : (isLight ? 'text-gray-300' : 'text-slate-300')} hover:text-red-400`}
-                                  >
-                                    <i className="fas fa-trash text-[10px]"></i>
-                                  </button>
+                                  <button onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} className={`hover:text-red-400 ${selModelId === m.id ? 'text-white/70' : isDark ? 'text-neutral-500' : 'text-gray-400'}`}><i className="fas fa-trash text-[10px]"></i></button>
                                 </div>
                               ))}
                             </div>
                           )}
                           
                           {/* Additional Options */}
-                          <div className={'space-y-2 pt-2 border-t ' + (isLight ? 'border-gray-200' : 'border-slate-200')}>
+                          <div className={`space-y-2 pt-2 border-t ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                             <div>
-                              <label className={'text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                                <i className={'fas fa-shirt ' + (isLight ? 'text-gray-400' : 'text-slate-400')}></i>
-                                Roupa
-                              </label>
-                              <textarea 
-                                value={clothing} 
-                                onChange={(e) => setClothing(e.target.value)} 
-                                placeholder="Ex: Camiseta branca básica, jeans azul..." 
-                                className={'w-full p-2 bg-white border rounded text-xs resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} 
-                                rows={2} 
-                              />
+                              <label className={`text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}><i className={`fas fa-shirt ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Roupa</label>
+                              <textarea value={clothing} onChange={(e) => setClothing(e.target.value)} placeholder="Ex: Camiseta branca básica, jeans azul..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
                             </div>
                             <div>
-                              <label className={'text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                                <i className={'fas fa-walking ' + (isLight ? 'text-gray-400' : 'text-slate-400')}></i>
-                                Pose / Expressão
-                              </label>
-                              <textarea 
-                                value={pose} 
-                                onChange={(e) => setPose(e.target.value)} 
-                                placeholder="Ex: Em pé confiante, mãos no bolso..." 
-                                className={'w-full p-2 bg-white border rounded text-xs resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} 
-                                rows={2} 
-                              />
+                              <label className={`text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}><i className={`fas fa-walking ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Pose / Expressão</label>
+                              <textarea value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Ex: Em pé confiante, mãos no bolso..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
                             </div>
                           </div>
                           
                           {/* Look Composer */}
                           <div className="mt-3">
-                            <button 
-                              onClick={() => setShowLook(!showLook)} 
-                              className="w-full flex items-center justify-between p-2 bg-indigo-50 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors"
-                            >
-                              <span className={'text-xs font-bold flex items-center gap-2 ' + (isLight ? 'text-gray-800' : 'text-slate-800')}>
-                                <i className="fas fa-layer-group text-indigo-600"></i>
+                            <button onClick={() => setShowLook(!showLook)} className={`w-full flex items-center justify-between p-2 rounded-lg border transition-colors ${isDark ? 'bg-pink-500/10 border-pink-500/30 hover:bg-pink-500/20' : 'bg-pink-50 border-pink-200 hover:bg-pink-100'}`}>
+                              <span className={`text-xs font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                <i className="fas fa-layer-group text-pink-500"></i>
                                 Composição de Look
-                                {Object.keys(look).length > 0 && (
-                                  <span className="text-indigo-600">({Object.keys(look).length})</span>
-                                )}
+                                {Object.keys(look).length > 0 && <span className="text-pink-500">({Object.keys(look).length})</span>}
                               </span>
-                              <i className={'fas fa-chevron-down transition-transform ' + (isLight ? 'text-gray-400' : 'text-slate-400') + (showLook ? ' rotate-180' : '')}></i>
+                              <i className={`fas fa-chevron-down transition-transform ${isDark ? 'text-neutral-500' : 'text-gray-400'} ${showLook ? 'rotate-180' : ''}`}></i>
                             </button>
-                            {showLook && (
-                              <div className="mt-2">
-                                <LookComposer products={products} composition={look} onChange={setLook} theme={theme} />
-                              </div>
-                            )}
+                            {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} theme={theme} /></div>}
                           </div>
                           
                           {/* Generate Button */}
-                          <button 
-                            onClick={handleGen} 
-                            disabled={isGen || !hasOrig || (modelTab === 'saved' && !selModelId)} 
-                            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-4 shadow-lg shadow-slate-900/20 transition-colors"
-                          >
+                          <button onClick={handleGen} disabled={isGen || !hasOrig || (modelTab === 'saved' && !selModelId)} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-4 shadow-lg shadow-pink-500/25">
                             {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
                             {isGen ? 'Gerando...' : `Gerar com Modelo (${TOOL_CFG.lifestyle.credits} créd.)`}
                           </button>
@@ -764,12 +523,11 @@ export const EditorModal: React.FC<Props> = ({
             </div>
             
             {/* Tip */}
-            <div className={'mt-6 p-4 rounded-xl border ' + (isLight ? 'bg-gradient-to-br from-gray-50 to-white border-gray-200' : 'bg-gradient-to-br from-slate-50 to-white border-slate-200')}>
-              <h4 className={'text-xs font-bold mb-2 flex items-center gap-2 ' + (isLight ? 'text-gray-700' : 'text-slate-700')}>
-                <i className="fas fa-lightbulb text-yellow-500"></i>
-                Dica de Consistência
+            <div className={`mt-6 p-4 rounded-xl border ${isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200'}`}>
+              <h4 className={`text-xs font-bold mb-2 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <i className="fas fa-lightbulb text-yellow-500"></i>Dica de Consistência
               </h4>
-              <p className={'text-xs leading-relaxed ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                 Ao <strong>Salvar um Modelo</strong>, a imagem gerada será usada como <strong>referência facial</strong>. Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.
               </p>
             </div>
@@ -780,14 +538,12 @@ export const EditorModal: React.FC<Props> = ({
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* MOBILE LAYOUT */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className={'md:hidden w-full h-full flex flex-col ' + (isLight ? 'bg-white' : 'bg-white')}>
+      <div className={`md:hidden w-full h-full flex flex-col ${isDark ? 'bg-neutral-900' : 'bg-white'}`}>
         
         {/* Mobile Header */}
         <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center">
-              <i className="fas fa-arrow-left text-sm"></i>
-            </button>
+            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center"><i className="fas fa-arrow-left text-sm"></i></button>
             <div className="text-white min-w-0">
               <h2 className="font-bold text-sm truncate max-w-[180px]">{product.name}</h2>
               <p className="text-[10px] text-white/70 font-mono">{product.sku}</p>
@@ -797,11 +553,8 @@ export const EditorModal: React.FC<Props> = ({
             <div className="bg-white/20 rounded-lg px-3 py-1.5 text-white flex items-center gap-1.5">
               <i className="fas fa-bolt text-yellow-300 text-xs"></i>
               <span className="font-bold text-sm">{userCredits}</span>
-              <span className="text-white/70 text-xs">créditos</span>
             </div>
-            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center">
-              <i className="fas fa-times text-sm"></i>
-            </button>
+            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center"><i className="fas fa-times text-sm"></i></button>
           </div>
         </div>
 
@@ -809,187 +562,115 @@ export const EditorModal: React.FC<Props> = ({
         <div className="flex-1 overflow-y-auto pb-24">
           
           {/* Image Display */}
-          <div className={'relative ' + (isLight ? 'bg-gray-100' : 'bg-slate-100')}>
+          <div className={isDark ? 'bg-neutral-800' : 'bg-gray-100'}>
             <div className="aspect-square flex items-center justify-center overflow-hidden">
               {isGen ? (
-                <div className="flex flex-col items-center text-purple-500">
-                  <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin mb-3"></div>
+                <div className="flex flex-col items-center text-pink-500">
+                  <div className="w-12 h-12 rounded-full border-4 border-pink-500/30 border-t-pink-500 animate-spin mb-3"></div>
                   <p className="text-sm font-bold">Gerando...</p>
                 </div>
               ) : displayImage ? (
-                <img 
-                  src={displayImage} 
-                  className="w-full h-full object-contain"
-                  onClick={() => setZoom(displayImage)}
-                />
+                <img src={displayImage} className="w-full h-full object-contain" onClick={() => setZoom(displayImage)} />
               ) : (
-                <div className={(isLight ? 'text-gray-400' : 'text-slate-400') + ' text-center'}>
+                <div className={`text-center ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
                   <i className="fas fa-image text-4xl mb-2"></i>
                   <p className="text-sm">Sem imagem</p>
                 </div>
               )}
             </div>
             
-            {/* View Toggle */}
             {genImg && !isGen && (
-              <div className="absolute top-3 left-3 bg-white rounded-lg shadow-lg p-1 flex gap-1">
-                <button 
-                  onClick={() => setViewMode('original')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'original' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}
-                >
-                  Original
-                </button>
-                <button 
-                  onClick={() => setViewMode('result')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'result' ? 'bg-purple-600 text-white' : 'text-slate-500'}`}
-                >
-                  Resultado
-                </button>
+              <div className={`absolute top-3 left-3 rounded-lg shadow-lg p-1 flex gap-1 ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                <button onClick={() => setViewMode('original')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'original' ? 'bg-pink-500 text-white' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Original</button>
+                <button onClick={() => setViewMode('result')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'result' ? 'bg-pink-500 text-white' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Resultado</button>
               </div>
-            )}
-
-            {displayImage && !isGen && (
-              <button 
-                onClick={() => setZoom(displayImage)} 
-                className="absolute top-3 right-3 w-10 h-10 bg-black/50 text-white rounded-lg flex items-center justify-center"
-              >
-                <i className="fas fa-expand"></i>
-              </button>
             )}
           </div>
 
           {/* Gallery */}
-          <div className={'border-b px-4 py-3 ' + (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}>
+          <div className={`border-b px-4 py-3 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {images.map((img, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => { setSelIdx(idx); setViewMode('original'); }}
-                  className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all relative ${
-                    selIdx === idx ? 'border-purple-500 ring-2 ring-purple-500/20' : (isLight ? 'border-gray-200' : 'border-slate-200')
-                  }`}
-                >
+                <div key={idx} onClick={() => { setSelIdx(idx); setViewMode('original'); }} className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all relative ${selIdx === idx ? 'border-pink-500 ring-2 ring-pink-500/20' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                   <img src={img.base64 || img.url} className="w-full h-full object-cover" />
                   {selIdx === idx && (
-                    <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                        <i className="fas fa-check text-white text-[8px]"></i>
-                      </div>
+                    <div className="absolute inset-0 bg-pink-500/20 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-pink-500 rounded-full flex items-center justify-center"><i className="fas fa-check text-white text-[8px]"></i></div>
                     </div>
                   )}
                 </div>
               ))}
-              <button className={'flex-shrink-0 w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center ' + (isLight ? 'border-gray-300 text-gray-400' : 'border-slate-300 text-slate-400')}>
-                <i className="fas fa-plus"></i>
-              </button>
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="mx-4 mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+            <div className={`mx-4 mt-3 rounded-xl p-3 flex items-center gap-3 ${isDark ? 'bg-red-500/10 border border-red-500/30' : 'bg-red-50 border border-red-200'}`}>
               <i className="fas fa-exclamation-circle text-red-500"></i>
-              <p className="text-xs text-red-700 flex-1">{error}</p>
+              <p className={`text-xs flex-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
               <button onClick={() => setError(null)} className="text-red-400"><i className="fas fa-times"></i></button>
             </div>
           )}
 
           {/* Tools */}
           <div className="px-4 py-3">
-            <h3 className={'text-xs font-bold uppercase mb-2 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Ferramentas</h3>
+            <h3 className={`text-xs font-bold uppercase mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Ferramentas</h3>
             <div className="space-y-2">
               {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
-                <div
-                  key={t}
-                  onClick={() => handleSelectTool(t)}
-                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    tool === t 
-                      ? 'border-purple-500 bg-purple-50 shadow-md' 
-                      : (isLight ? 'border-gray-200 bg-white' : 'border-slate-200 bg-white')
-                  }`}
-                >
+                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-pink-500 bg-pink-500/10 shadow-md' : isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-white'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        tool === t ? 'bg-purple-600 text-white' : (isLight ? 'bg-gray-100 text-gray-500' : 'bg-slate-100 text-slate-500')
-                      }`}>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${tool === t ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
                         <i className={`fas ${TOOL_CFG[t].icon}`}></i>
                       </div>
                       <div>
-                        <span className={'font-bold block text-sm ' + (isLight ? 'text-gray-800' : 'text-slate-800')}>{TOOL_CFG[t].name}</span>
-                        <span className={'text-xs ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>{TOOL_CFG[t].desc}</span>
+                        <span className={`font-bold block text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{TOOL_CFG[t].name}</span>
+                        <span className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG[t].desc}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold px-2 py-1 rounded-full text-amber-600 bg-amber-50">
-                      {TOOL_CFG[t].credits} créd.
-                    </span>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full text-pink-500 bg-pink-500/10">{TOOL_CFG[t].credits} créd.</span>
                   </div>
                   
-                  {/* Expanded Tool Config */}
                   {tool === t && (
-                    <div className={'mt-3 pt-3 border-t ' + (isLight ? 'border-gray-200' : 'border-slate-200')} onClick={e => e.stopPropagation()}>
+                    <div className={`mt-3 pt-3 border-t ${isDark ? 'border-neutral-700' : 'border-gray-200'}`} onClick={e => e.stopPropagation()}>
+                      {t === 'studio' && <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.studio.fullDesc}</p>}
                       
-                      {/* STUDIO */}
-                      {t === 'studio' && (
-                        <p className={'text-xs ' + (isLight ? 'text-gray-600' : 'text-slate-600')}>{TOOL_CFG.studio.fullDesc}</p>
-                      )}
-                      
-                      {/* CENÁRIO */}
                       {t === 'cenario' && (
                         <>
-                          <p className={'text-xs mb-2 ' + (isLight ? 'text-gray-600' : 'text-slate-600')}>{TOOL_CFG.cenario.fullDesc}</p>
-                          <textarea 
-                            value={cenPrompt} 
-                            onChange={e => setCenPrompt(e.target.value)}
-                            placeholder="Descreva o cenário... Ex: Mesa de madeira com plantas, luz natural..."
-                            className={'w-full p-3 border rounded-xl text-sm resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}
-                            rows={3}
-                          />
+                          <p className={`text-xs mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.cenario.fullDesc}</p>
+                          <textarea value={cenPrompt} onChange={e => setCenPrompt(e.target.value)} placeholder="Descreva o cenário..." className={`w-full p-3 border rounded-xl text-sm resize-none ${isDark ? 'bg-neutral-700 border-neutral-600 text-white placeholder-neutral-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={3} />
                         </>
                       )}
                       
-                      {/* MODELO IA */}
                       {t === 'lifestyle' && (
                         <div className="space-y-3">
-                          <p className={'text-xs ' + (isLight ? 'text-gray-600' : 'text-slate-600')}>{TOOL_CFG.lifestyle.fullDesc}</p>
+                          <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.lifestyle.fullDesc}</p>
                           
-                          <div className={'flex rounded-lg p-1 ' + (isLight ? 'bg-gray-200' : 'bg-slate-200')}>
-                            <button onClick={() => setModelTab('new')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'new' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Novo Modelo</button>
-                            <button onClick={() => setModelTab('saved')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'saved' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Salvos ({savedModels.length})</button>
+                          <div className={`flex rounded-lg p-1 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}>
+                            <button onClick={() => setModelTab('new')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'new' ? isDark ? 'bg-neutral-600 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Novo</button>
+                            <button onClick={() => setModelTab('saved')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'saved' ? isDark ? 'bg-neutral-600 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Salvos ({savedModels.length})</button>
                           </div>
                           
-                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                            <label className="text-[10px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
-                              <i className="fas fa-exclamation-triangle"></i>
-                              Descreva o produto principal
-                            </label>
-                            <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs resize-none text-slate-800" rows={2} />
-                            <p className="text-[9px] text-amber-600 mt-1">
-                              <i className="fas fa-info-circle mr-1"></i>
-                              Quanto mais detalhes (cor, estampa, logo, corte, tecido), mais fiel será o resultado.
-                            </p>
+                          <div className={`p-3 rounded-xl border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                            <label className="text-[10px] font-bold text-amber-500 uppercase mb-1 flex items-center gap-1"><i className="fas fa-exclamation-triangle"></i>Descreva o produto</label>
+                            <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className={`w-full p-2 border rounded-lg text-xs resize-none ${isDark ? 'bg-neutral-800 border-amber-500/30 text-white placeholder-neutral-500' : 'bg-white border-amber-300 text-gray-900 placeholder-gray-400'}`} rows={2} />
                           </div>
                           
                           <div>
-                            <label className={'text-[10px] font-bold uppercase mb-1 flex items-center gap-1 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                              <i className={(isLight ? 'text-gray-400' : 'text-slate-400') + ' fas fa-tshirt'}></i>
-                              O que é o produto principal?
-                            </label>
-                            <select value={category} onChange={e => setCategory(e.target.value)} className={'w-full p-3 bg-white border rounded-xl text-sm ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}>
+                            <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Categoria</label>
+                            <select value={category} onChange={e => setCategory(e.target.value)} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
                               {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                             </select>
-                            <p className={'text-[9px] mt-1 ' + (isLight ? 'text-gray-400' : 'text-slate-400')}>A IA usará isso para não alterar o produto.</p>
                           </div>
                           
                           {modelTab === 'new' && (
                             <div className="space-y-3">
                               <div>
-                                <label className={'text-[10px] font-bold uppercase mb-1.5 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Gênero</label>
+                                <label className={`text-[10px] font-bold uppercase mb-1.5 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Gênero</label>
                                 <div className="grid grid-cols-2 gap-2">
                                   {MODEL_OPTS.gender.map(g => (
-                                    <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-3 rounded-xl text-sm font-bold border-2 flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}`}>
-                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>
-                                      {g.label}
+                                    <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-3 rounded-xl text-sm font-bold border-2 flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-700 border-neutral-600 text-neutral-400' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>{g.label}
                                     </button>
                                   ))}
                                 </div>
@@ -997,23 +678,18 @@ export const EditorModal: React.FC<Props> = ({
                               
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className={'text-[10px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Etnia</label>
-                                  <select value={modelSettings.ethnicity} onChange={e => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className={'w-full p-3 bg-white border rounded-xl text-sm ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}>{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
+                                  <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Etnia</label>
+                                  <select value={modelSettings.ethnicity} onChange={e => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
                                 </div>
                                 <div>
-                                  <label className={'text-[10px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Porte Físico</label>
-                                  <select value={modelSettings.bodyType} onChange={e => setModelSettings(p => ({...p, bodyType: e.target.value}))} className={'w-full p-3 bg-white border rounded-xl text-sm ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}>{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
+                                  <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Porte</label>
+                                  <select value={modelSettings.bodyType} onChange={e => setModelSettings(p => ({...p, bodyType: e.target.value}))} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
                                 </div>
                               </div>
                               
                               <div>
-                                <label className={'text-[10px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Faixa Etária</label>
-                                <select value={modelSettings.ageRange} onChange={e => setModelSettings(p => ({...p, ageRange: e.target.value}))} className={'w-full p-3 bg-white border rounded-xl text-sm ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')}>{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
-                              </div>
-                              
-                              <div>
-                                <label className={'text-[10px] font-bold uppercase mb-1 block ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>Detalhes Faciais (opcional)</label>
-                                <textarea value={modelDetail} onChange={e => setModelDetail(e.target.value)} placeholder="Ex: Cabelos longos ondulados, olhos verdes, sardas..." className={'w-full p-3 bg-white border rounded-xl text-sm resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} rows={2} />
+                                <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Idade</label>
+                                <select value={modelSettings.ageRange} onChange={e => setModelSettings(p => ({...p, ageRange: e.target.value}))} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
                               </div>
                             </div>
                           )}
@@ -1021,40 +697,22 @@ export const EditorModal: React.FC<Props> = ({
                           {modelTab === 'saved' && (
                             <div className="space-y-2 max-h-40 overflow-y-auto">
                               {savedModels.length === 0 ? (
-                                <div className={'text-center py-6 text-sm rounded-xl border border-dashed ' + (isLight ? 'text-gray-400 bg-white border-gray-300' : 'text-slate-400 bg-white border-slate-300')}>
+                                <div className={`text-center py-6 text-sm rounded-xl border border-dashed ${isDark ? 'text-neutral-500 bg-neutral-800 border-neutral-700' : 'text-gray-400 bg-gray-50 border-gray-300'}`}>
                                   <i className="fas fa-user-slash text-2xl mb-2"></i>
                                   <p>Nenhum modelo salvo</p>
                                 </div>
                               ) : savedModels.map(m => (
-                                <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-3 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selModelId === m.id ? 'bg-slate-900 border-slate-900 text-white' : (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}`}>
-                                  <div className={(isLight ? 'bg-gray-100' : 'bg-slate-100') + ' w-12 h-12 rounded-full overflow-hidden flex-shrink-0'}><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
-                                  <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{m.name}</p><p className={`text-xs ${selModelId === m.id ? 'text-slate-400' : (isLight ? 'text-gray-500' : 'text-slate-500')}`}>Usado {m.usageCount}x</p></div>
-                                  <button onClick={e => { e.stopPropagation(); onDeleteModel(m.id); }} className={`${selModelId === m.id ? 'text-slate-500' : (isLight ? 'text-gray-300' : 'text-slate-300')} hover:text-red-400`}><i className="fas fa-trash text-xs"></i></button>
+                                <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-3 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selModelId === m.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+                                  <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
+                                  <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{m.name}</p></div>
                                 </div>
                               ))}
                             </div>
                           )}
                           
-                          <div className={'space-y-3 pt-3 border-t ' + (isLight ? 'border-gray-200' : 'border-slate-200')}>
-                            <div>
-                              <label className={'text-[10px] font-bold uppercase mb-1 flex items-center gap-1 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                                <i className={(isLight ? 'text-gray-400' : 'text-slate-400') + ' fas fa-shirt'}></i>
-                                Roupa
-                              </label>
-                              <textarea value={clothing} onChange={e => setClothing(e.target.value)} placeholder="Ex: Camiseta branca básica, jeans azul..." className={'w-full p-3 bg-white border rounded-xl text-sm resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} rows={2} />
-                            </div>
-                            <div>
-                              <label className={'text-[10px] font-bold uppercase mb-1 flex items-center gap-1 ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                                <i className={(isLight ? 'text-gray-400' : 'text-slate-400') + ' fas fa-walking'}></i>
-                                Pose / Expressão
-                              </label>
-                              <textarea value={pose} onChange={e => setPose(e.target.value)} placeholder="Ex: Em pé confiante, mãos no bolso..." className={'w-full p-3 bg-white border rounded-xl text-sm resize-none ' + (isLight ? 'border-gray-200 text-gray-800' : 'border-slate-200 text-slate-800')} rows={2} />
-                            </div>
-                          </div>
-                          
-                          <button onClick={() => setShowLook(!showLook)} className="w-full flex items-center justify-between p-3 bg-indigo-50 rounded-xl border border-indigo-200">
-                            <span className={(isLight ? 'text-gray-800' : 'text-slate-800') + ' text-sm font-bold'}><i className="fas fa-layer-group text-indigo-600 mr-2"></i>Composição de Look {Object.keys(look).length > 0 && <span className="text-indigo-600">({Object.keys(look).length})</span>}</span>
-                            <i className={(isLight ? 'text-gray-400' : 'text-slate-400') + ' fas fa-chevron-down transition-transform ' + (showLook ? 'rotate-180' : '')}></i>
+                          <button onClick={() => setShowLook(!showLook)} className={`w-full flex items-center justify-between p-3 rounded-xl border ${isDark ? 'bg-pink-500/10 border-pink-500/30' : 'bg-pink-50 border-pink-200'}`}>
+                            <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}><i className="fas fa-layer-group text-pink-500 mr-2"></i>Look {Object.keys(look).length > 0 && <span className="text-pink-500">({Object.keys(look).length})</span>}</span>
+                            <i className={`fas fa-chevron-down ${isDark ? 'text-neutral-500' : 'text-gray-400'} ${showLook ? 'rotate-180' : ''}`}></i>
                           </button>
                           {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} theme={theme} /></div>}
                         </div>
@@ -1066,48 +724,25 @@ export const EditorModal: React.FC<Props> = ({
             </div>
             
             {/* Tip */}
-            <div className={'mt-4 p-3 rounded-xl border ' + (isLight ? 'bg-gray-50 border-gray-200' : 'bg-slate-50 border-slate-200')}>
-              <h4 className={'text-xs font-bold mb-1 flex items-center gap-2 ' + (isLight ? 'text-gray-700' : 'text-slate-700')}>
-                <i className="fas fa-lightbulb text-yellow-500"></i>
-                Dica de Consistência
-              </h4>
-              <p className={'text-[11px] leading-relaxed ' + (isLight ? 'text-gray-500' : 'text-slate-500')}>
-                Ao <strong>Salvar um Modelo</strong>, a imagem gerada será usada como <strong>referência facial</strong>. Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.
-              </p>
+            <div className={`mt-4 p-3 rounded-xl border ${isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200'}`}>
+              <h4 className={`text-xs font-bold mb-1 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}><i className="fas fa-lightbulb text-yellow-500"></i>Dica</h4>
+              <p className={`text-[11px] leading-relaxed ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Ao <strong>Salvar um Modelo</strong>, a IA tentará manter os mesmos traços nas próximas gerações.</p>
             </div>
           </div>
-
-          {/* Refine */}
-          {showRefine && genImg && (
-            <div className="px-4 pb-4">
-              <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
-                <h4 className="text-sm font-bold text-purple-800 mb-2"><i className="fas fa-magic mr-2"></i>Refinar Imagem</h4>
-                <textarea value={refinePrompt} onChange={e => setRefinePrompt(e.target.value)} placeholder="O que ajustar?" className="w-full p-3 border border-purple-200 rounded-xl text-sm resize-none mb-3 text-slate-800" rows={2} />
-                <div className="flex gap-2">
-                  <button onClick={() => setShowRefine(false)} className={'flex-1 py-2.5 text-sm font-bold rounded-xl border ' + (isLight ? 'text-gray-500 bg-white border-gray-200' : 'text-slate-500 bg-white border-slate-200')}>Cancelar</button>
-                  <button onClick={handleRefine} disabled={!refinePrompt.trim()} className="flex-1 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl disabled:opacity-50"><i className="fas fa-magic mr-1"></i>Refinar (1 créd.)</button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Mobile Bottom Bar */}
-        <div className={'fixed bottom-0 left-0 right-0 border-t p-4 flex gap-3 ' + (isLight ? 'bg-white border-gray-200' : 'bg-white border-slate-200')}>
+        <div className={`fixed bottom-0 left-0 right-0 border-t p-4 flex gap-3 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
           {genImg && !isGen ? (
             <>
-              <button onClick={() => { setGenImg(null); setGenId(null); setViewMode('original'); }} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-200"><i className="fas fa-trash-alt"></i></button>
+              <button onClick={() => { setGenImg(null); setGenId(null); setViewMode('original'); }} className={`w-12 h-12 rounded-xl flex items-center justify-center border text-red-500 ${isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'}`}><i className="fas fa-trash-alt"></i></button>
               <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar</button>
-              <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-200"><i className="fas fa-magic"></i></button>
-              {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-200"><i className="fas fa-user-plus"></i></button>}
+              <button onClick={() => setShowRefine(true)} className={`w-12 h-12 rounded-xl flex items-center justify-center border text-pink-500 ${isDark ? 'bg-pink-500/10 border-pink-500/30' : 'bg-pink-50 border-pink-200'}`}><i className="fas fa-magic"></i></button>
+              {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className={`w-12 h-12 rounded-xl flex items-center justify-center border text-purple-500 ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}><i className="fas fa-user-plus"></i></button>}
             </>
           ) : (
-            <button 
-              onClick={handleGen} 
-              disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} 
-              className="flex-1 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500"
-            >
-              {isGen ? <><i className="fas fa-spinner fa-spin"></i><span>Gerando...</span></> : <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar Imagem</span>{tool && <span className="text-white/70">({TOOL_CFG[tool].credits} créd.)</span>}</>}
+            <button onClick={handleGen} disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} className={`flex-1 h-14 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 ${isGen || !hasOrig || !tool ? 'bg-neutral-400' : 'bg-gradient-to-r from-pink-500 to-orange-400'}`}>
+              {isGen ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar Imagem{tool && <span className="text-white/70">({TOOL_CFG[tool].credits})</span>}</>}
             </button>
           )}
         </div>
