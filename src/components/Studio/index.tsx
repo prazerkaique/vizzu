@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - AI Visual Studio Main Component
+// VIZZU - Studio (Redesign Suno Style)
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -18,10 +18,6 @@ interface StudioProps {
   onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<{ image: string | null; generationId: string | null }>;
 }
 
-const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
-const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
-const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
-
 export const Studio: React.FC<StudioProps> = ({
   products,
   userCredits,
@@ -35,19 +31,13 @@ export const Studio: React.FC<StudioProps> = ({
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
-  const [filterCollection, setFilterCollection] = useState('');
-  const [filterColor, setFilterColor] = useState('');
-  
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'recent' | 'edited'>('all');
 
-  // Load saved models from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('vizzu_saved_models');
     if (saved) {
-      try {
-        setSavedModels(JSON.parse(saved));
-      } catch(e) { console.error('Erro ao carregar modelos salvos', e); }
+      try { setSavedModels(JSON.parse(saved)); } catch(e) { console.error(e); }
     }
   }, []);
 
@@ -58,7 +48,7 @@ export const Studio: React.FC<StudioProps> = ({
   };
 
   const handleDeleteModelProfile = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
+    if (window.confirm('Excluir este modelo?')) {
       const updated = savedModels.filter(m => m.id !== id);
       setSavedModels(updated);
       localStorage.setItem('vizzu_saved_models', JSON.stringify(updated));
@@ -71,10 +61,8 @@ export const Studio: React.FC<StudioProps> = ({
     prompt?: string,
     options?: any
   ): Promise<{ image: string | null; generationId: string | null }> => {
-    // Se tiver onGenerateImage passado como prop, usa ele
     if (onGenerateImage) {
       const result = await onGenerateImage(product, toolType, prompt, options);
-      
       if (result.image) {
         onAddHistoryLog(
           `Imagem gerada: ${toolType}`,
@@ -85,11 +73,8 @@ export const Studio: React.FC<StudioProps> = ({
           toolType === 'studio' ? 1 : toolType === 'cenario' ? 2 : 3
         );
       }
-      
       return result;
     }
-    
-    // Fallback: retorna null se não tiver a função
     return { image: null, generationId: null };
   };
 
@@ -101,211 +86,194 @@ export const Studio: React.FC<StudioProps> = ({
       const matchesSearch = !searchTerm || 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         p.sku.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !filterCategory || p.category === filterCategory;
-      const matchesCollection = !filterCollection || p.collection === filterCollection;
-      const matchesColor = !filterColor || p.color === filterColor;
       
-      return matchesSearch && matchesCategory && matchesCollection && matchesColor;
+      return matchesSearch;
     });
-  }, [products, searchTerm, filterCategory, filterCollection, filterColor]);
+  }, [products, searchTerm]);
 
   const planName = currentPlan?.name || 'Free';
 
-  // ═══════════════════════════════════════════════════════════════
-  // GALLERY VIEW (lista de produtos)
-  // ═══════════════════════════════════════════════════════════════
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 relative h-full flex flex-col">
+    <div className="min-h-screen bg-black">
       
-      {/* HEADER - DESKTOP */}
-      <div className="hidden md:flex bg-white border-b border-slate-200 px-8 py-4 items-center justify-between shadow-sm z-10 flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <i className="fas fa-magic text-white text-2xl"></i>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Vizzu Studio®</h1>
-              <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase">{planName}</span>
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* HEADER */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-xl border-b border-neutral-800/50">
+        <div className="px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo/Title */}
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">Studio</h1>
             </div>
-            <p className="text-xs text-slate-500">Estúdio com IA para lojistas</p>
-          </div>
-        </div>
-        
-        {/* Credits Badge - Desktop */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl px-5 py-3 min-w-[120px] shadow-lg">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Créditos</span>
-            {onOpenSettings && (
-              <button onClick={onOpenSettings} className="text-amber-400 hover:text-amber-300 text-xs">
-                <i className="fas fa-plus"></i>
-              </button>
-            )}
-          </div>
-          <p className="text-2xl font-black text-white leading-none">{userCredits}</p>
-          <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (userCredits / 500) * 100)}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
 
-      {/* HEADER - MOBILE */}
-      <div className="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm z-10 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center shadow-lg">
-            <i className="fas fa-magic text-white text-lg"></i>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-lg font-black text-slate-800">Studio®</h1>
-              <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-bold uppercase">{planName}</span>
+            {/* Right Actions */}
+            <div className="flex items-center gap-3">
+              {/* Credits - Estilo Suno */}
+              <button 
+                onClick={onOpenSettings}
+                className="flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 rounded-full px-3 py-1.5 transition-colors"
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center">
+                  <i className="fas fa-bolt text-[8px] text-white"></i>
+                </div>
+                <span className="text-sm font-semibold text-white">{userCredits}</span>
+              </button>
+
+              {/* Search */}
+              <button className="w-9 h-9 rounded-full bg-neutral-900 hover:bg-neutral-800 flex items-center justify-center transition-colors">
+                <i className="fas fa-search text-neutral-400 text-sm"></i>
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Credits Badge - Mobile */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-3 py-2 min-w-[80px] shadow-lg">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[8px] font-bold text-slate-400 uppercase">Créditos</span>
-            {onOpenSettings && (
-              <button onClick={onOpenSettings} className="text-amber-400 hover:text-amber-300 text-[10px]">
-                <i className="fas fa-plus"></i>
-              </button>
-            )}
-          </div>
-          <p className="text-lg font-black text-white leading-none">{userCredits}</p>
-          <div className="mt-1.5 h-1 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-              style={{ width: `${Math.min(100, (userCredits / 500) * 100)}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20">
-        <div className="max-w-7xl mx-auto">
-
-          {/* FILTROS DE BUSCA */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-3 md:p-4 mb-4 shadow-sm">
-            {/* Busca */}
-            <div className="relative mb-3">
-              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          {/* Search Bar - Expandida */}
+          <div className="mt-4">
+            <div className="relative">
+              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs"></i>
               <input
                 type="text"
-                placeholder="Buscar produto..."
+                placeholder="Buscar produtos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm"
+                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-700 transition-colors"
               />
             </div>
-            
-            {/* Filtros em linha */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              <select 
-                value={filterCategory} 
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white min-w-[100px]"
-              >
-                <option value="">Categoria</option>
-                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
-              
-              <select 
-                value={filterCollection} 
-                onChange={(e) => setFilterCollection(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white min-w-[100px]"
-              >
-                <option value="">Coleção</option>
-                {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
-              </select>
-              
-              <select 
-                value={filterColor} 
-                onChange={(e) => setFilterColor(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white min-w-[90px]"
-              >
-                <option value="">Cor</option>
-                {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
-              </select>
-              
-              {(filterCategory || filterCollection || filterColor) && (
-                <button 
-                  onClick={() => { setFilterCategory(''); setFilterCollection(''); setFilterColor(''); }}
-                  className="flex-shrink-0 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold"
-                >
-                  <i className="fas fa-times mr-1"></i>Limpar
-                </button>
-              )}
-            </div>
-            
-            <p className="text-[10px] text-slate-400 mt-2">{productsWithImages.length} de {products.length} produtos com imagem</p>
           </div>
 
-          {/* GRID DE PRODUTOS */}
-          {productsWithImages.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-camera text-slate-300 text-3xl"></i>
-              </div>
-              <h3 className="text-lg font-bold text-slate-700 mb-2">
-                {searchTerm || filterCategory || filterCollection || filterColor ? 'Nenhum resultado' : 'Galeria Vazia'}
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchTerm ? 'Tente outros filtros.' : 'Adicione produtos com imagens para começar a usar o Vizzu Studio.'}
-              </p>
-              {!searchTerm && onImport && (
-                <button onClick={onImport} className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-lg text-sm">
-                  <i className="fas fa-plus mr-2"></i> Adicionar Produtos
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-              {productsWithImages.map((product) => (
-                <div
-                  key={product.id}
-                  onClick={() => setSelectedProduct(product)}
-                  className="bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  <div className="aspect-[3/4] bg-slate-100 relative overflow-hidden">
-                    <img 
-                      src={product.images[0]?.base64 || product.images[0]?.url} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                      <span className="text-white text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                        <i className="fas fa-wand-magic-sparkles mr-1"></i> Editar
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">{product.sku}</p>
-                    <h3 className="text-[10px] font-bold text-slate-800 line-clamp-2 leading-snug">{product.name}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Botão Importar Flutuante Mobile */}
-          {onImport && (
-            <button 
-              onClick={onImport}
-              className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-xl flex items-center justify-center text-white z-30"
-            >
-              <i className="fas fa-plus text-xl"></i>
-            </button>
-          )}
+          {/* Filter Tabs - Estilo Suno */}
+          <div className="flex gap-1 mt-4">
+            {[
+              { id: 'all', label: 'Todos' },
+              { id: 'recent', label: 'Recentes' },
+              { id: 'edited', label: 'Editados' }
+            ].map(filter => (
+              <button
+                key={filter.id}
+                onClick={() => setActiveFilter(filter.id as any)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  activeFilter === filter.id
+                    ? 'bg-white text-black'
+                    : 'bg-transparent text-neutral-400 hover:text-white'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* EDITOR MODAL - Abre quando produto é selecionado */}
+      {/* CONTENT */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="px-4 md:px-6 py-4 pb-24">
+        
+        {/* Stats Card - Opcional, estilo Suno */}
+        <div className="mb-6 p-4 bg-gradient-to-br from-pink-600/20 via-purple-600/10 to-transparent rounded-2xl border border-pink-500/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-neutral-400 mb-1">Seus produtos</p>
+              <p className="text-2xl font-bold text-white">{productsWithImages.length}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-neutral-400 mb-1">Plano</p>
+              <span className="text-xs font-medium text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full">
+                {planName}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-white">Meus produtos</h2>
+          <button className="text-xs text-neutral-400 hover:text-white transition-colors">
+            Filtro <i className="fas fa-sliders-h ml-1 text-[10px]"></i>
+          </button>
+        </div>
+
+        {/* Grid */}
+        {productsWithImages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 rounded-full bg-neutral-900 flex items-center justify-center mb-4">
+              <i className="fas fa-image text-neutral-600 text-xl"></i>
+            </div>
+            <h3 className="text-base font-medium text-white mb-1">
+              {searchTerm ? 'Nenhum resultado' : 'Nenhum produto'}
+            </h3>
+            <p className="text-sm text-neutral-500 text-center max-w-xs mb-6">
+              {searchTerm ? 'Tente buscar por outro termo.' : 'Adicione produtos com imagens para começar.'}
+            </p>
+            {!searchTerm && onImport && (
+              <button 
+                onClick={onImport}
+                className="px-5 py-2.5 bg-white hover:bg-neutral-100 text-black text-sm font-semibold rounded-full transition-colors"
+              >
+                Adicionar
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {productsWithImages.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => setSelectedProduct(product)}
+                className="group text-left bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800/50 hover:border-neutral-700 transition-all duration-200"
+              >
+                {/* Image */}
+                <div className="aspect-square bg-neutral-800 relative overflow-hidden">
+                  <img 
+                    src={product.images[0]?.base64 || product.images[0]?.url} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                  />
+                  
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <i className="fas fa-wand-magic-sparkles text-white text-sm"></i>
+                    </div>
+                  </div>
+
+                  {/* Image Count Badge */}
+                  {product.images.length > 1 && (
+                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium px-1.5 py-0.5 rounded-md">
+                      {product.images.length}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Info */}
+                <div className="p-3">
+                  <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-wide mb-0.5">
+                    {product.sku}
+                  </p>
+                  <h3 className="text-xs font-medium text-white line-clamp-2 leading-tight">
+                    {product.name}
+                  </h3>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* FAB - Floating Action Button (Estilo Suno) */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {onImport && productsWithImages.length > 0 && (
+        <button 
+          onClick={onImport}
+          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-400 rounded-full shadow-lg shadow-pink-500/25 flex items-center justify-center text-white hover:scale-105 transition-transform z-30"
+        >
+          <i className="fas fa-plus text-lg"></i>
+        </button>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* EDITOR MODAL */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       {selectedProduct && (
         <EditorModal
