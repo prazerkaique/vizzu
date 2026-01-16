@@ -333,13 +333,13 @@ function App() {
   // MAIN LAYOUT - SUNO STYLE
   // ═══════════════════════════════════════════════════════════════
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-black">
+    <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
-      {/* DESKTOP SIDEBAR - SUNO STYLE */}
-      <aside className="hidden md:flex w-52 bg-neutral-950 flex-col border-r border-neutral-900">
-        <div className="p-5 border-b border-neutral-900 flex flex-col items-center">
+      {/* DESKTOP SIDEBAR */}
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200')}>
+        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-gray-100')}>
           <img src="/logo.png" alt="Vizzu" className="h-10" />
-          <span className="text-[9px] text-neutral-600 mt-1">Estúdio com IA para lojistas</span>
+          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>Estúdio com IA para lojistas</span>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {[
@@ -353,36 +353,46 @@ function App() {
             <button 
               key={item.id} 
               onClick={() => setCurrentPage(item.id)} 
-              className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + (currentPage === item.id ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white hover:bg-neutral-900')}
+              className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
+                (currentPage === item.id 
+                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/25') 
+                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')
+                )
+              }
             >
               <i className={'fas ' + item.icon + ' w-4 text-[10px]'}></i>{item.label}
             </button>
           ))}
         </nav>
-        <div className="p-3 border-t border-neutral-900 space-y-2">
-          <div className="bg-neutral-900 rounded-xl p-3">
+        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-gray-100')}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-gradient-to-r from-pink-50 to-orange-50 border border-pink-100') + ' rounded-xl p-3'}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide">Créditos</span>
-              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-pink-400 hover:text-pink-300 text-[9px] font-medium">+ Add</button>
+              <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Créditos</span>
+              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-pink-500 hover:text-pink-400 text-[9px] font-medium">+ Add</button>
             </div>
-            <p className="text-xl font-bold text-white">{userCredits.toLocaleString()}</p>
-            <div className="mt-2 h-1 bg-neutral-800 rounded-full overflow-hidden">
+            <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits.toLocaleString()}</p>
+            <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-pink-100')}>
               <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
           <button 
             onClick={() => setCurrentPage('settings')} 
-            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + (currentPage === 'settings' ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-white hover:bg-neutral-900')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
+              (currentPage === 'settings' 
+                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-900') 
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')
+              )
+            }
           >
             <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
           </button>
           <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center overflow-hidden">
-              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-neutral-500 text-xs"></i>}
+            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}></i>}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-white truncate">{user.name}</p>
-              <p className="text-[9px] text-neutral-600">{currentPlan.name}</p>
+              <p className={'text-xs font-medium truncate ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{user.name}</p>
+              <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-500')}>Plano {currentPlan.name}</p>
             </div>
           </div>
         </div>
@@ -397,110 +407,145 @@ function App() {
         {currentPage === 'dashboard' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
-                  <i className="fas fa-home text-pink-400 text-sm"></i>
+              <div className="flex items-center gap-3 mb-6">
+                <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+                  <i className={'fas fa-home text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold text-white">Dashboard</h1>
-                    <span className="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[9px] font-medium rounded-full uppercase tracking-wide">{currentPlan.name}</span>
+                    <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dashboard</h1>
+                    <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>{currentPlan.name}</span>
                   </div>
-                  <p className="text-neutral-500 text-xs">Resumo do seu estúdio</p>
+                  <p className={theme === 'dark' ? 'text-neutral-500 text-sm' : 'text-gray-500 text-sm'}>Resumo do seu estúdio de imagens AI</p>
                 </div>
               </div>
               
-              {/* Banner Principal */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-                {/* Seus Produtos */}
-                <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20">
-                  <p className="text-[10px] text-neutral-400 uppercase tracking-wide mb-1">Seus produtos</p>
-                  <p className="text-3xl font-bold text-white">{products.length}</p>
-                  <p className="text-[10px] text-neutral-500 mt-1">cadastrados no catálogo</p>
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* CARD CRIAR - Destaque Principal */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div className={'rounded-2xl p-5 mb-5 ' + (theme === 'dark' ? 'bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 border border-neutral-800' : 'bg-white shadow-xl shadow-gray-200/50 border border-gray-100')}>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-gradient-to-r from-pink-500 to-orange-400')}>
+                    <i className="fas fa-sparkles text-white text-xs"></i>
+                  </div>
+                  <h2 className={'text-base font-bold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Criar</h2>
                 </div>
                 
-                {/* Card Studio */}
-                <div className="bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-xl p-4 border border-purple-500/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2 py-0.5 bg-purple-500 text-white text-[8px] font-bold rounded-full uppercase">IA</span>
-                        <p className="text-xs font-medium text-white">Vizzu Studio®</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Vizzu Studio */}
+                  <button 
+                    onClick={() => setCurrentPage('studio')}
+                    className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all ' + (theme === 'dark' ? 'bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20 hover:border-purple-500/40 hover:from-purple-500/20' : 'bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 border-2 border-purple-100 hover:border-purple-300 hover:shadow-lg hover:shadow-purple-100')}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-2 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                          <span className={'text-lg font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Studio®</span>
+                        </div>
+                        <p className={theme === 'dark' ? 'text-neutral-400 text-sm leading-relaxed' : 'text-gray-600 text-sm leading-relaxed'}>
+                          Gere fotos profissionais dos seus produtos com inteligência artificial.
+                        </p>
                       </div>
-                      <p className="text-[10px] text-neutral-400 leading-relaxed">Gere fotos profissionais dos seus produtos com inteligência artificial.</p>
-                    </div>
-                    <button onClick={() => setCurrentPage('studio')} className="ml-3 w-9 h-9 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-400 rounded-lg flex items-center justify-center transition-colors">
-                      <i className="fas fa-arrow-right text-xs"></i>
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Card Provador */}
-                <div className="bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full uppercase">Novo</span>
-                        <p className="text-xs font-medium text-white">Vizzu Provador®</p>
+                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ' + (theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-500 text-white shadow-lg shadow-purple-500/30')}>
+                        <i className="fas fa-arrow-right text-sm"></i>
                       </div>
-                      <p className="text-[10px] text-neutral-400 leading-relaxed">Vista seus clientes virtualmente e envie pelo WhatsApp.</p>
                     </div>
-                    <button onClick={() => setCurrentPage('provador')} className="ml-3 w-9 h-9 bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 text-pink-400 rounded-lg flex items-center justify-center transition-colors">
-                      <i className="fas fa-arrow-right text-xs"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 md:grid-cols-3 gap-3 mb-5">
-                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
-                  <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
-                    <i className="fas fa-users text-neutral-400 text-xs"></i>
-                  </div>
-                  <p className="text-xl font-bold text-white">{clients.length}</p>
-                  <p className="text-[10px] text-neutral-500">Clientes</p>
-                </div>
-                <div className="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
-                  <div className="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center mb-2">
-                    <i className="fas fa-coins text-neutral-400 text-xs"></i>
-                  </div>
-                  <p className="text-xl font-bold text-white">{userCredits}</p>
-                  <p className="text-[10px] text-neutral-500">Créditos</p>
-                </div>
-                <div className="bg-neutral-900 rounded-xl p-3 border border-pink-500/30">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-2">
-                    <i className="fas fa-crown text-pink-400 text-xs"></i>
-                  </div>
-                  <p className="text-xl font-bold text-white">{currentPlan.name}</p>
-                  <p className="text-[10px] text-neutral-500">Plano</p>
+                    <div className={'absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left'}></div>
+                  </button>
+                  
+                  {/* Vizzu Provador */}
+                  <button 
+                    onClick={() => setCurrentPage('provador')}
+                    className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all ' + (theme === 'dark' ? 'bg-gradient-to-br from-pink-500/10 via-rose-500/10 to-orange-500/10 border border-pink-500/20 hover:border-pink-500/40 hover:from-pink-500/20' : 'bg-gradient-to-br from-pink-50 via-rose-50 to-orange-50 border-2 border-pink-100 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-100')}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
+                          <span className={'text-lg font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Provador®</span>
+                        </div>
+                        <p className={theme === 'dark' ? 'text-neutral-400 text-sm leading-relaxed' : 'text-gray-600 text-sm leading-relaxed'}>
+                          Vista seus clientes virtualmente e envie pelo WhatsApp.
+                        </p>
+                      </div>
+                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ' + (theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30')}>
+                        <i className="fas fa-arrow-right text-sm"></i>
+                      </div>
+                    </div>
+                    <div className={'absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-orange-400 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left'}></div>
+                  </button>
                 </div>
               </div>
               
-              {/* Quick Actions */}
-              <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Ações Rápidas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button onClick={() => setCurrentPage('studio')} className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 hover:border-neutral-700 transition-all text-left group">
-                  <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center mb-3 group-hover:bg-neutral-700 transition-colors">
-                    <i className="fas fa-wand-magic-sparkles text-neutral-400 text-sm"></i>
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* STATS GRID */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                {/* Produtos */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
+                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
+                    <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
                   </div>
-                  <h3 className="font-medium text-white text-sm mb-0.5">Vizzu Studio®</h3>
-                  <p className="text-xs text-neutral-500">Gerar imagens com IA</p>
-                </button>
-                <button onClick={() => setCurrentPage('provador')} className="bg-neutral-900 rounded-xl p-4 border border-pink-500/30 hover:border-pink-500/50 transition-all text-left group">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-3 group-hover:from-pink-500/30 group-hover:to-orange-400/30 transition-colors">
-                    <i className="fas fa-shirt text-pink-400 text-sm"></i>
+                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
+                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Produtos</p>
+                </div>
+                
+                {/* Otimizados */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
+                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100')}>
+                    <i className={'fas fa-check-circle text-sm ' + (theme === 'dark' ? 'text-green-400' : 'text-green-600')}></i>
                   </div>
-                  <h3 className="font-medium text-white text-sm mb-0.5">Vizzu Provador®</h3>
-                  <p className="text-xs text-neutral-500">Vista seus clientes</p>
-                </button>
-                <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 hover:border-neutral-700 transition-all text-left group">
-                  <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center mb-3 group-hover:bg-neutral-700 transition-colors">
-                    <i className="fas fa-bolt text-neutral-400 text-sm"></i>
+                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.filter(p => (p as any).generatedImages?.length > 0).length}</p>
+                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Otimizados</p>
+                </div>
+                
+                {/* Clientes */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
+                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
+                    <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
                   </div>
-                  <h3 className="font-medium text-white text-sm mb-0.5">Comprar Créditos</h3>
-                  <p className="text-xs text-neutral-500">Upgrade de plano</p>
-                </button>
+                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
+                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Clientes</p>
+                </div>
+                
+                {/* Créditos */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
+                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
+                    <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
+                  </div>
+                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits}</p>
+                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Créditos</p>
+                </div>
+              </div>
+              
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* CARD PLANO - CTA Destaque */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div className={'rounded-2xl p-5 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border border-pink-500/20' : 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400')}>
+                {/* Background decoration */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-white/5 to-transparent rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white/20 backdrop-blur-sm')}>
+                      <i className={'fas fa-crown text-lg ' + (theme === 'dark' ? 'text-white' : 'text-white')}></i>
+                    </div>
+                    <div>
+                      <p className={theme === 'dark' ? 'text-neutral-400 text-xs uppercase tracking-wide' : 'text-white/80 text-xs uppercase tracking-wide'}>Seu plano atual</p>
+                      <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-white')}>{currentPlan.name}</p>
+                      <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-white/70 text-xs'}>{currentPlan.limit} créditos/mês • {userCredits} disponíveis</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+                    className={'px-5 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90' : 'bg-white text-purple-600 hover:bg-white/90 shadow-lg')}
+                  >
+                    <i className="fas fa-bolt text-xs"></i>
+                    Fazer Upgrade
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1240,7 +1285,7 @@ function App() {
                             <button 
                               onClick={() => setTheme('light')}
                               className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
-                                (theme === 'light' ? 'bg-white text-neutral-900' : 'text-neutral-400 hover:text-white')
+                                (theme === 'light' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-neutral-400 hover:text-white')
                               }
                             >
                               <i className="fas fa-sun text-[10px]"></i>
@@ -1249,30 +1294,42 @@ function App() {
                           </div>
                         </div>
                         
-                        {theme === 'light' && (
-                          <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                            <div className="flex items-start gap-2">
-                              <i className="fas fa-flask text-amber-400 text-xs mt-0.5"></i>
-                              <div>
-                                <p className="text-xs font-medium text-amber-400">Em breve</p>
-                                <p className="text-[10px] text-neutral-400 mt-0.5">O tema claro está em desenvolvimento e será liberado em breve.</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Preview */}
-                        <div className="mt-4 pt-4 border-t border-neutral-800">
+                        {/* Preview Comparison */}
+                        <div className="mt-5 pt-4 border-t border-neutral-800">
                           <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-3">Preview</p>
-                          <div className={'rounded-lg p-4 border ' + (theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200')}>
-                            <div className="flex items-center gap-3">
-                              <div className={'w-10 h-10 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20' : 'bg-pink-100')}>
-                                <i className={'fas fa-wand-magic-sparkles ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-600')}></i>
+                          <div className="grid grid-cols-2 gap-3">
+                            {/* Dark Preview */}
+                            <div 
+                              onClick={() => setTheme('dark')}
+                              className={'rounded-xl p-4 cursor-pointer transition-all ' + (theme === 'dark' ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-neutral-900' : 'opacity-60 hover:opacity-80') + ' bg-neutral-800 border border-neutral-700'}
+                            >
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
+                                  <i className="fas fa-wand-magic-sparkles text-pink-400 text-xs"></i>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-xs text-white">Vizzu Studio®</p>
+                                  <p className="text-[9px] text-neutral-500">Exemplo</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className={'font-medium text-sm ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Studio®</p>
-                                <p className={'text-[10px] ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Exemplo de card</p>
+                              <p className="text-[9px] text-neutral-500 text-center uppercase tracking-wide">Escuro</p>
+                            </div>
+                            
+                            {/* Light Preview */}
+                            <div 
+                              onClick={() => setTheme('light')}
+                              className={'rounded-xl p-4 cursor-pointer transition-all ' + (theme === 'light' ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-neutral-900' : 'opacity-60 hover:opacity-80') + ' bg-white border border-gray-200'}
+                            >
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center shadow-md shadow-pink-500/20">
+                                  <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-xs text-gray-900">Vizzu Studio®</p>
+                                  <p className="text-[9px] text-gray-500">Exemplo</p>
+                                </div>
                               </div>
+                              <p className="text-[9px] text-gray-500 text-center uppercase tracking-wide">Claro</p>
                             </div>
                           </div>
                         </div>
