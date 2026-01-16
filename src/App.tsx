@@ -32,7 +32,7 @@ const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestido
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
 
-type Page = 'dashboard' | 'studio' | 'products' | 'history' | 'settings';
+type Page = 'dashboard' | 'studio' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'company' | 'plan' | 'integrations';
 
 function App() {
@@ -288,6 +288,18 @@ function App() {
           >
             <i className="fas fa-box w-5"></i>
             Produtos
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('clients')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'clients'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-users w-5"></i>
+            Clientes
           </button>
 
           <button
@@ -610,6 +622,90 @@ function App() {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CLIENTS PAGE */}
+        {currentPage === 'clients' && (
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
+            <div className="max-w-6xl mx-auto">
+              {/* Page Header */}
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                    <i className="fas fa-users text-white text-lg md:text-xl"></i>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl md:text-2xl font-black text-slate-800">Clientes</h1>
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] md:text-xs font-bold rounded-full uppercase">{currentPlan.name}</span>
+                    </div>
+                    <p className="text-slate-500 text-xs md:text-sm">Gerencie seus clientes e acessos</p>
+                  </div>
+                </div>
+                <button 
+                  className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm md:text-base"
+                >
+                  <i className="fas fa-plus mr-2"></i>
+                  <span className="hidden md:inline">Novo Cliente</span>
+                  <span className="md:hidden">Novo</span>
+                </button>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+                <div className="bg-white rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+                      <i className="fas fa-users text-sm"></i>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-black text-slate-800">0</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Total Clientes</p>
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                      <i className="fas fa-user-check text-sm"></i>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-black text-slate-800">0</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Ativos</p>
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                      <i className="fas fa-clock text-sm"></i>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-black text-slate-800">0</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Pendentes</p>
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                      <i className="fas fa-crown text-sm"></i>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-black text-slate-800">0</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Premium</p>
+                </div>
+              </div>
+
+              {/* Empty State */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="p-8 md:p-12 text-center">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 md:mb-6">
+                    <i className="fas fa-users text-green-400 text-2xl md:text-3xl"></i>
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
+                  <p className="text-slate-500 text-sm mb-6">Adicione clientes para gerenciar acessos e permissões</p>
+                  <button className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:shadow-lg transition-all text-sm">
+                    <i className="fas fa-plus mr-2"></i>Adicionar Primeiro Cliente
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -946,15 +1042,15 @@ function App() {
             }`}>Studio®</span>
           </button>
 
-          {/* History */}
+          {/* Clients */}
           <button
-            onClick={() => setCurrentPage('history')}
+            onClick={() => setCurrentPage('clients')}
             className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
-              currentPage === 'history' ? 'text-white' : 'text-slate-500'
+              currentPage === 'clients' ? 'text-white' : 'text-slate-500'
             }`}
           >
-            <i className="fas fa-clock-rotate-left text-lg"></i>
-            <span className="text-[10px] font-medium">Histórico</span>
+            <i className="fas fa-users text-lg"></i>
+            <span className="text-[10px] font-medium">Clientes</span>
           </button>
 
           {/* Settings */}
