@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - AI Visual Studio Main Component
+// VIZZU - Studio (Suno Style)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Product, SavedModelProfile, HistoryLog } from '../../types';
 import { EditorModal } from './EditorModal';
 
@@ -15,12 +15,14 @@ interface StudioProps {
   onOpenSettings?: () => void;
   onImport?: () => void;
   currentPlan?: { name: string; limit: number };
-  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<{ image: string | null; generationId: string | null }>;
+  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<string>;
+  theme?: 'dark' | 'light';
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
+const GENDERS = ['Masculino', 'Feminino', 'Unissex'];
 
 export const Studio: React.FC<StudioProps> = ({
   products,
@@ -31,281 +33,459 @@ export const Studio: React.FC<StudioProps> = ({
   onOpenSettings,
   onImport,
   currentPlan,
-  onGenerateImage
+  onGenerateImage,
+  theme = 'dark'
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
+  const [activeTab, setActiveTab] = useState<'todos' | 'recentes' | 'editados' | 'modelos'>('todos');
+  
+  // Filtros
+  const [showFilters, setShowFilters] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterCollection, setFilterCollection] = useState('');
   const [filterColor, setFilterColor] = useState('');
-  
-  const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
+  const [filterGender, setFilterGender] = useState('');
 
-  // Load saved models from LocalStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('vizzu_saved_models');
-    if (saved) {
-      try {
-        setSavedModels(JSON.parse(saved));
-      } catch(e) { console.error('Erro ao carregar modelos salvos', e); }
-    }
-  }, []);
-
-  const handleSaveModelProfile = (profile: SavedModelProfile) => {
-    const updated = [...savedModels, profile];
-    setSavedModels(updated);
-    localStorage.setItem('vizzu_saved_models', JSON.stringify(updated));
-  };
-
-  const handleDeleteModelProfile = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
-      const updated = savedModels.filter(m => m.id !== id);
-      setSavedModels(updated);
-      localStorage.setItem('vizzu_saved_models', JSON.stringify(updated));
-    }
-  };
-
-  const handleGenerateImage = async (
-    product: Product,
-    toolType: 'studio' | 'cenario' | 'lifestyle' | 'provador' | 'refine',
-    prompt?: string,
-    options?: any
-  ): Promise<{ image: string | null; generationId: string | null }> => {
-    // Se tiver onGenerateImage passado como prop, usa ele
-    if (onGenerateImage) {
-      const result = await onGenerateImage(product, toolType, prompt, options);
-      
-      if (result.image) {
-        onAddHistoryLog(
-          `Imagem gerada: ${toolType}`,
-          `Produto: ${product.name}`,
-          'success',
-          [product],
-          'ai',
-          toolType === 'studio' ? 1 : toolType === 'cenario' ? 2 : 3
-        );
-      }
-      
-      return result;
-    }
-    
-    // Fallback: retorna null se não tiver a função
-    return { image: null, generationId: null };
-  };
-
-  const productsWithImages = useMemo(() => {
-    return products.filter(p => {
-      const hasImage = p.images?.length > 0 && (p.images[0]?.base64 || p.images[0]?.url);
-      if (!hasImage) return false;
-      
+  // Filtrar produtos
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
       const matchesSearch = !searchTerm || 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        p.sku.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !filterCategory || p.category === filterCategory;
-      const matchesCollection = !filterCollection || p.collection === filterCollection;
-      const matchesColor = !filterColor || p.color === filterColor;
-      
-      return matchesSearch && matchesCategory && matchesCollection && matchesColor;
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !filterCategory || product.category === filterCategory;
+      const matchesCollection = !filterCollection || product.collection === filterCollection;
+      const matchesColor = !filterColor || product.color === filterColor;
+      const matchesGender = !filterGender || (product as any).gender === filterGender;
+      return matchesSearch && matchesCategory && matchesCollection && matchesColor && matchesGender;
     });
-  }, [products, searchTerm, filterCategory, filterCollection, filterColor]);
+  }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender]);
 
-  const planName = currentPlan?.name || 'Free';
+  // Produtos recentes (últimos 10 atualizados)
+  const recentProducts = useMemo(() => {
+    return [...products]
+      .filter(p => p.updatedAt)
+      .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
+      .slice(0, 10);
+  }, [products]);
 
-  // ═══════════════════════════════════════════════════════════════
-  // GALLERY VIEW (lista de produtos)
-  // ═══════════════════════════════════════════════════════════════
+  // Produtos editados (que têm imagens geradas)
+  const editedProducts = useMemo(() => {
+    return products.filter(p => (p as any).generatedImages && (p as any).generatedImages.length > 0);
+  }, [products]);
+
+  const handleSaveModelProfile = (model: SavedModelProfile) => {
+    setSavedModels(prev => {
+      const exists = prev.find(m => m.id === model.id);
+      if (exists) {
+        return prev.map(m => m.id === model.id ? model : m);
+      }
+      return [...prev, model];
+    });
+  };
+
+  const handleDeleteModelProfile = (modelId: string) => {
+    setSavedModels(prev => prev.filter(m => m.id !== modelId));
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterCategory('');
+    setFilterCollection('');
+    setFilterColor('');
+    setFilterGender('');
+  };
+
+  const hasActiveFilters = searchTerm || filterCategory || filterCollection || filterColor || filterGender;
+
+  const displayProducts = activeTab === 'todos' ? filteredProducts : 
+                          activeTab === 'recentes' ? recentProducts : 
+                          activeTab === 'editados' ? editedProducts : [];
+
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 relative h-full flex flex-col">
-      
-      {/* HEADER - DESKTOP */}
-      <div className="hidden md:flex bg-white border-b border-slate-200 px-8 py-4 items-center justify-between shadow-sm z-10 flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <i className="fas fa-magic text-white text-2xl"></i>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Vizzu Studio®</h1>
-              <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase">{planName}</span>
-            </div>
-            <p className="text-xs text-slate-500">Estúdio com IA para lojistas</p>
-          </div>
-        </div>
+    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+      <div className="max-w-7xl mx-auto">
         
-        {/* Credits Badge - Desktop */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl px-5 py-3 min-w-[120px] shadow-lg">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Créditos</span>
-            {onOpenSettings && (
-              <button onClick={onOpenSettings} className="text-amber-400 hover:text-amber-300 text-xs">
-                <i className="fas fa-plus"></i>
-              </button>
-            )}
-          </div>
-          <p className="text-2xl font-black text-white leading-none">{userCredits}</p>
-          <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (userCredits / 500) * 100)}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* HEADER - MOBILE */}
-      <div className="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm z-10 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center shadow-lg">
-            <i className="fas fa-magic text-white text-lg"></i>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-lg font-black text-slate-800">Studio®</h1>
-              <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-bold uppercase">{planName}</span>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* HEADER - Padronizado */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+              <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
             </div>
-          </div>
-        </div>
-
-        {/* Credits Badge - Mobile */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-3 py-2 min-w-[80px] shadow-lg">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[8px] font-bold text-slate-400 uppercase">Créditos</span>
-            {onOpenSettings && (
-              <button onClick={onOpenSettings} className="text-amber-400 hover:text-amber-300 text-[10px]">
-                <i className="fas fa-plus"></i>
-              </button>
-            )}
-          </div>
-          <p className="text-lg font-black text-white leading-none">{userCredits}</p>
-          <div className="mt-1.5 h-1 bg-slate-700 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-              style={{ width: `${Math.min(100, (userCredits / 500) * 100)}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20">
-        <div className="max-w-7xl mx-auto">
-
-          {/* FILTROS DE BUSCA */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-3 md:p-4 mb-4 shadow-sm">
-            {/* Busca */}
-            <div className="relative mb-3">
-              <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-              <input
-                type="text"
-                placeholder="Buscar produto..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm"
-              />
-            </div>
-            
-            {/* Filtros em linha */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              <select 
-                value={filterCategory} 
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white min-w-[100px]"
-              >
-                <option value="">Categoria</option>
-                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
-              
-              <select 
-                value={filterCollection} 
-                onChange={(e) => setFilterCollection(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white min-w-[100px]"
-              >
-                <option value="">Coleção</option>
-                {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
-              </select>
-              
-              <select 
-                value={filterColor} 
-                onChange={(e) => setFilterColor(e.target.value)}
-                className="flex-shrink-0 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white min-w-[90px]"
-              >
-                <option value="">Cor</option>
-                {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
-              </select>
-              
-              {(filterCategory || filterCollection || filterColor) && (
-                <button 
-                  onClick={() => { setFilterCategory(''); setFilterCollection(''); setFilterColor(''); }}
-                  className="flex-shrink-0 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold"
-                >
-                  <i className="fas fa-times mr-1"></i>Limpar
-                </button>
-              )}
-            </div>
-            
-            <p className="text-[10px] text-slate-400 mt-2">{productsWithImages.length} de {products.length} produtos com imagem</p>
-          </div>
-
-          {/* GRID DE PRODUTOS */}
-          {productsWithImages.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-camera text-slate-300 text-3xl"></i>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Studio®</h1>
+                {currentPlan && (
+                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+                    {currentPlan.name}
+                  </span>
+                )}
               </div>
-              <h3 className="text-lg font-bold text-slate-700 mb-2">
-                {searchTerm || filterCategory || filterCollection || filterColor ? 'Nenhum resultado' : 'Galeria Vazia'}
-              </h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
-                {searchTerm ? 'Tente outros filtros.' : 'Adicione produtos com imagens para começar a usar o Vizzu Studio.'}
-              </p>
-              {!searchTerm && onImport && (
-                <button onClick={onImport} className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-lg text-sm">
-                  <i className="fas fa-plus mr-2"></i> Adicionar Produtos
-                </button>
-              )}
+              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gere imagens profissionais com IA</p>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-              {productsWithImages.map((product) => (
-                <div
-                  key={product.id}
-                  onClick={() => setSelectedProduct(product)}
-                  className="bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  <div className="aspect-[3/4] bg-slate-100 relative overflow-hidden">
-                    <img 
-                      src={product.images[0]?.base64 || product.images[0]?.url} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                      <span className="text-white text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                        <i className="fas fa-wand-magic-sparkles mr-1"></i> Editar
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-2">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">{product.sku}</p>
-                    <h3 className="text-[10px] font-bold text-slate-800 line-clamp-2 leading-snug">{product.name}</h3>
-                  </div>
-                </div>
-              ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
+              <i className="fas fa-coins text-pink-400 text-xs"></i>
+              <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
-          )}
+            {onImport && (
+              <button 
+                onClick={onImport}
+                className="p-2 md:px-3 md:py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+              >
+                <i className="fas fa-plus md:mr-1.5"></i>
+                <span className="hidden md:inline">Importar</span>
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* Botão Importar Flutuante Mobile */}
-          {onImport && (
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SEARCH BAR */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="relative mb-4">
+          <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
+          <input
+            type="text"
+            placeholder="Buscar produtos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-pink-500/50' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-pink-400 shadow-sm') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
+          />
+          {searchTerm && (
             <button 
-              onClick={onImport}
-              className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-xl flex items-center justify-center text-white z-30"
+              onClick={() => setSearchTerm('')}
+              className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' absolute right-3 top-1/2 -translate-y-1/2'}
             >
-              <i className="fas fa-plus text-xl"></i>
+              <i className="fas fa-times text-xs"></i>
             </button>
           )}
         </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TABS */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="flex items-center justify-between mb-4">
+          <div className={'flex items-center gap-1 p-1 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white border border-gray-200 shadow-sm')}>
+            {[
+              { id: 'todos' as const, label: 'Todos' },
+              { id: 'recentes' as const, label: 'Recentes' },
+              { id: 'editados' as const, label: 'Editados' },
+              { id: 'modelos' as const, label: 'Meus Modelos' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' + 
+                  (activeTab === tab.id 
+                    ? (theme === 'dark' ? 'bg-white text-neutral-900' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')
+                    : (theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                  )
+                }
+              >
+                {tab.label}
+                {tab.id === 'modelos' && savedModels.length > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 bg-pink-500 text-white text-[9px] rounded-full">
+                    {savedModels.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' +
+              (showFilters || hasActiveFilters
+                ? 'bg-pink-500/20 text-pink-500 border border-pink-500/30'
+                : (theme === 'dark' ? 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white' : 'bg-white text-gray-500 border border-gray-200 hover:text-gray-700 shadow-sm')
+              )
+            }
+          >
+            <i className="fas fa-sliders text-[10px]"></i>
+            Filtros
+            {hasActiveFilters && (
+              <span className="w-1.5 h-1.5 bg-pink-500 rounded-full"></span>
+            )}
+          </button>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* FILTERS - Sempre visíveis quando showFilters = true */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {showFilters && activeTab !== 'modelos' && (
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
+            <div className="flex items-center justify-between mb-3">
+              <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar por</span>
+              {hasActiveFilters && (
+                <button 
+                  onClick={clearFilters}
+                  className="text-[10px] text-pink-500 hover:text-pink-400 font-medium"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {/* Categoria */}
+              <div>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+                >
+                  <option value="">Todas</option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Coleção */}
+              <div>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
+                <select
+                  value={filterCollection}
+                  onChange={(e) => setFilterCollection(e.target.value)}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+                >
+                  <option value="">Todas</option>
+                  {COLLECTIONS.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Cor */}
+              <div>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+                <select
+                  value={filterColor}
+                  onChange={(e) => setFilterColor(e.target.value)}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+                >
+                  <option value="">Todas</option>
+                  {COLORS.map(color => (
+                    <option key={color} value={color}>{color}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Gênero */}
+              <div>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
+                <select
+                  value={filterGender}
+                  onChange={(e) => setFilterGender(e.target.value)}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+                >
+                  <option value="">Todos</option>
+                  {GENDERS.map(gender => (
+                    <option key={gender} value={gender}>{gender}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* BANNER - Seus Produtos + Plano */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeTab !== 'modelos' && (
+          <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus produtos</p>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>{filteredProducts.length}</p>
+                {hasActiveFilters && (
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>de {products.length} no catálogo</p>
+                )}
+              </div>
+              {currentPlan && (
+                <div className="text-right">
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
+                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
+                    {currentPlan.name}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TAB: MEUS MODELOS */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeTab === 'modelos' && (
+          <div>
+            {savedModels.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>{savedModels.length} modelo(s) salvo(s)</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {savedModels.map(model => (
+                    <div 
+                      key={model.id}
+                      className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm') + ' rounded-xl border overflow-hidden transition-all group'}
+                    >
+                      <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] relative overflow-hidden'}>
+                        {model.referenceImage ? (
+                          <img 
+                            src={model.referenceImage} 
+                            alt={model.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user text-3xl'}></i>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleDeleteModelProfile(model.id)}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <i className="fas fa-trash text-[9px]"></i>
+                        </button>
+                      </div>
+                      <div className="p-3">
+                        <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{model.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {(model as any).gender && (
+                            <span className={(theme === 'dark' ? 'text-neutral-500 bg-neutral-800' : 'text-gray-500 bg-gray-100') + ' text-[9px] px-1.5 py-0.5 rounded'}>
+                              {(model as any).gender}
+                            </span>
+                          )}
+                          {(model as any).bodyType && (
+                            <span className={(theme === 'dark' ? 'text-neutral-500 bg-neutral-800' : 'text-gray-500 bg-gray-100') + ' text-[9px] px-1.5 py-0.5 rounded'}>
+                              {(model as any).bodyType}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-user-plus text-xl'}></i>
+                </div>
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum modelo salvo</h3>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Crie modelos personalizados ao editar seus produtos</p>
+                <button 
+                  onClick={() => setActiveTab('todos')}
+                  className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
+                >
+                  Ver produtos
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* PRODUCTS GRID */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeTab !== 'modelos' && (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                {activeTab === 'todos' && 'Meus produtos'}
+                {activeTab === 'recentes' && 'Recentes'}
+                {activeTab === 'editados' && 'Editados'}
+              </h2>
+            </div>
+
+            {displayProducts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {displayProducts.map(product => (
+                  <div
+                    key={product.id}
+                    onClick={() => setSelectedProduct(product)}
+                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                  >
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                      <img
+                        src={product.images[0]?.base64 || product.images[0]?.url}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                      {(product as any).generatedImages && (product as any).generatedImages.length > 0 && (
+                        <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
+                          <i className="fas fa-check text-[6px]"></i>
+                          {(product as any).generatedImages.length}
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                          <i className="fas fa-wand-magic-sparkles mr-1"></i>Editar
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-2.5">
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                      {product.category && (
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-search text-xl'}></i>
+                </div>
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
+                  {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
+                </h3>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+                  {hasActiveFilters ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
+                </p>
+                {hasActiveFilters ? (
+                  <button 
+                    onClick={clearFilters}
+                    className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
+                  >
+                    Limpar filtros
+                  </button>
+                ) : onImport && (
+                  <button 
+                    onClick={onImport}
+                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                  >
+                    <i className="fas fa-plus mr-1.5"></i>Importar produto
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* FAB - Floating Action Button (Mobile) */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {onImport && (
+          <button
+            onClick={onImport}
+            className="md:hidden fixed bottom-20 right-4 w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl shadow-lg flex items-center justify-center z-30"
+          >
+            <i className="fas fa-plus text-lg"></i>
+          </button>
+        )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* EDITOR MODAL - Abre quando produto é selecionado */}
+      {/* EDITOR MODAL */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       {selectedProduct && (
         <EditorModal
@@ -318,7 +498,11 @@ export const Studio: React.FC<StudioProps> = ({
           onClose={() => setSelectedProduct(null)}
           onUpdateProduct={onUpdateProduct}
           onDeductCredits={onDeductCredits}
-          onGenerateImage={handleGenerateImage}
+          onGenerateImage={onGenerateImage ? async (p, t, prompt, opts) => {
+            const result = await onGenerateImage(p, t, prompt, opts);
+            return { image: result || '', generationId: Date.now().toString() };
+          } : async () => ({ image: '', generationId: '' })}
+          theme={theme}
         />
       )}
     </div>
