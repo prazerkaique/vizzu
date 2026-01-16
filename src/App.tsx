@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Studio } from './components/Studio';
 import { Product, User, HistoryLog } from './types';
 import { useCredits, PLANS } from './hooks/useCredits';
@@ -7,22 +7,30 @@ import { supabase } from './services/supabaseClient';
 const DEMO_PRODUCTS: Product[] = [
   {
     id: '1', sku: 'TSH-001', name: 'Camiseta Premium Algodão Preta',
-    description: 'Camiseta 100% algodão premium na cor preta', category: 'Vestuário',
+    description: 'Camiseta 100% algodão premium na cor preta', category: 'Camisetas',
+    brand: 'Vizzu Wear', color: 'Preto', fit: 'Regular',
     images: [{ name: 'camiseta-preta.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTEwMCAxMDAgTDE1MCA1MCBMMjUwIDUwIEwzMDAgMTAwIEwzMDAgMzUwIEwxMjUgMzUwIEwxMDAgMzUwIFoiIGZpbGw9IiMyMDIwMjAiLz48dGV4dCB4PSIyMDAiIHk9IjQ1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2Ij5UU0gtMDAxPC90ZXh0Pjwvc3ZnPg==' }]
   },
   {
-    id: '2', sku: 'TSH-002', name: 'Camiseta Estampada Summer Vibes', category: 'Vestuário',
+    id: '2', sku: 'TSH-002', name: 'Camiseta Estampada Summer Vibes', category: 'Camisetas',
+    brand: 'Vizzu Wear', color: 'Azul', fit: 'Slim',
     images: [{ name: 'camiseta-estampada.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTEwMCAxMDAgTDE1MCA1MCBMMjUwIDUwIEwzMDAgMTAwIEwzMDAgMzUwIEwxMjUgMzUwIEwxMDAgMzUwIFoiIGZpbGw9IiMxODkyZDIiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjQwIiBmaWxsPSIjZmZkNzAwIi8+PHRleHQgeD0iMjAwIiB5PSI0NTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiI+VFNILTAwMjwvdGV4dD48L3N2Zz4=' }]
   },
   {
-    id: '3', sku: 'JNS-001', name: 'Calça Jeans Slim Fit Azul', category: 'Vestuário',
+    id: '3', sku: 'JNS-001', name: 'Calça Jeans Slim Fit Azul', category: 'Calças',
+    brand: 'Denim Co', color: 'Azul', fit: 'Slim',
     images: [{ name: 'jeans-azul.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTEzMCA1MCBMMjcwIDUwIEwyODAgODAgTDI3NSA0MDAgTDIyMCA0MDAgTDIwMCAyNTAgTDE4MCA0MDAgTDEyNSA0MDAgTDEyMCA4MCBaIiBmaWxsPSIjMWQ0ZWQ4Ii8+PHRleHQgeD0iMjAwIiB5PSI0NTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiI+Sk5TLTAwMTwvdGV4dD48L3N2Zz4=' }]
   },
   {
     id: '4', sku: 'SNK-001', name: 'Tênis Running Performance', category: 'Calçados',
+    brand: 'SportMax', color: 'Preto', fit: 'Regular',
     images: [{ name: 'tenis-running.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTUwLDI5MCBDNTAsMjkwIDEwMCwyMzAgMTgwLDIzMCBDMjUwLDIzMCAzMDAsMjUwIDM1MCwyODAgTDM1MCwzMjAgQzM1MCwzMjAgMzAwLDM0MCAyMDAsMzQwIEMxNDUsMzQwIDUwLDMyMCA1MCwzMjAgWiIgZmlsbD0iIzIzMjMyMyIvPjxwYXRoIGQ9Ik01MCwzMTUgTDM1MCwzMTUgTDM1MCwzMzAgTDUwLDMzMCBaIiBmaWxsPSIjZmZmIi8+PHRleHQgeD0iMjAwIiB5PSI0NTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiI+U05LLTAwMTwvdGV4dD48L3N2Zz4=' }]
   }
 ];
+
+const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
+const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
+const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
 
 type Page = 'dashboard' | 'studio' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'company' | 'plan' | 'integrations';
@@ -33,8 +41,46 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
   const [showImport, setShowImport] = useState(false);
+  const [showCreateProduct, setShowCreateProduct] = useState(false);
+  const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterColor, setFilterColor] = useState('');
+  const [filterBrand, setFilterBrand] = useState('');
+  const [filterFit, setFilterFit] = useState('');
+  
+  // New Product Form
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    brand: '',
+    color: '',
+    fit: '',
+    category: ''
+  });
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   const { userCredits, currentPlan, deductCredits, upgradePlan, setCredits } = useCredits();
+
+  // Get unique brands from products
+  const uniqueBrands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+
+  // Filtered products
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !filterCategory || product.category === filterCategory;
+    const matchesColor = !filterColor || product.color === filterColor;
+    const matchesBrand = !filterBrand || product.brand === filterBrand;
+    const matchesFit = !filterFit || product.fit === filterFit;
+    
+    return matchesSearch && matchesCategory && matchesColor && matchesBrand && matchesFit;
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -81,22 +127,64 @@ function App() {
     console.log('History:', { action, details, status, itemsCount: items.length, method, cost });
   };
 
-  const handleImportProduct = (files: FileList) => {
-    Array.from(files).forEach((file, index) => {
+  const handleFileSelect = (files: FileList) => {
+    if (files.length > 0) {
+      const file = files[0];
       const reader = new FileReader();
       reader.onload = () => {
-        const newProduct: Product = {
-          id: `imported-${Date.now()}-${index}`,
-          sku: `IMP-${Date.now().toString().slice(-4)}-${index}`,
-          name: file.name.replace(/\.[^/.]+$/, ''),
-          category: 'Importado',
-          images: [{ name: file.name, base64: reader.result as string }]
-        };
-        setProducts(prev => [...prev, newProduct]);
+        setSelectedImage(reader.result as string);
+        setShowImport(false);
+        setShowCreateProduct(true);
       };
       reader.readAsDataURL(file);
-    });
-    setShowImport(false);
+    }
+  };
+
+  const handleCreateProduct = () => {
+    if (!selectedImage || !newProduct.name || !newProduct.category) {
+      alert('Preencha pelo menos o nome e a categoria do produto');
+      return;
+    }
+
+    const product: Product = {
+      id: `product-${Date.now()}`,
+      sku: `SKU-${Date.now().toString().slice(-6)}`,
+      name: newProduct.name,
+      brand: newProduct.brand,
+      color: newProduct.color,
+      fit: newProduct.fit,
+      category: newProduct.category,
+      images: [{ name: `${newProduct.name}.jpg`, base64: selectedImage }]
+    };
+
+    setProducts(prev => [...prev, product]);
+    setShowCreateProduct(false);
+    setSelectedImage(null);
+    setNewProduct({ name: '', brand: '', color: '', fit: '', category: '' });
+  };
+
+  const handleGenerateDescription = async (product: Product) => {
+    setIsGeneratingDescription(true);
+    // Aqui você vai chamar o webhook do n8n
+    // Por enquanto só simula um delay
+    setTimeout(() => {
+      setIsGeneratingDescription(false);
+      alert('Descrição enviada para geração! Você receberá o resultado em breve.');
+    }, 2000);
+  };
+
+  const handleOpenInStudio = (product: Product) => {
+    setShowProductDetail(null);
+    setCurrentPage('studio');
+    // O Studio deve receber o produto selecionado
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterCategory('');
+    setFilterColor('');
+    setFilterBrand('');
+    setFilterFit('');
   };
 
   const handleGoogleLogin = async () => {
@@ -116,7 +204,7 @@ function App() {
     setUser(null);
   };
 
-  // LOGIN SCREEN - COM LOGO PNG
+  // LOGIN SCREEN
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4">
@@ -164,7 +252,7 @@ function App() {
   return (
     <div className="h-screen flex bg-slate-100">
       
-      {/* SIDEBAR - COM LOGO PNG CENTRALIZADO */}
+      {/* SIDEBAR */}
       <aside className="w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex flex-col shadow-2xl">
         
         <div className="p-6 border-b border-white/10 flex justify-center">
@@ -401,11 +489,12 @@ function App() {
           />
         )}
 
-        {/* PRODUCTS PAGE */}
+        {/* PRODUCTS PAGE - IMPROVED */}
         {currentPage === 'products' && (
           <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-black text-slate-800 mb-2">Produtos</h1>
                   <p className="text-slate-500">Gerencie seu catálogo de produtos</p>
@@ -414,32 +503,148 @@ function App() {
                   onClick={() => setShowImport(true)}
                   className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
                 >
-                  <i className="fas fa-plus mr-2"></i>Importar
+                  <i className="fas fa-plus mr-2"></i>Novo Produto
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6">
-                  {products.map(product => (
-                    <div 
-                      key={product.id}
-                      onClick={() => setCurrentPage('studio')}
-                      className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group"
-                    >
-                      <div className="aspect-square bg-white relative overflow-hidden">
-                        <img 
-                          src={product.images[0]?.base64 || product.images[0]?.url} 
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      </div>
-                      <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">{product.sku}</p>
-                        <p className="text-xs font-bold text-slate-700 truncate">{product.name}</p>
-                      </div>
+              {/* Filters */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
+                <div className="flex flex-wrap gap-3">
+                  {/* Search */}
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="relative">
+                      <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                      <input
+                        type="text"
+                        placeholder="Buscar por nome ou SKU..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Category Filter */}
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Todas Categorias</option>
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+
+                  {/* Color Filter */}
+                  <select
+                    value={filterColor}
+                    onChange={(e) => setFilterColor(e.target.value)}
+                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Todas Cores</option>
+                    {COLORS.map(color => (
+                      <option key={color} value={color}>{color}</option>
+                    ))}
+                  </select>
+
+                  {/* Brand Filter */}
+                  <select
+                    value={filterBrand}
+                    onChange={(e) => setFilterBrand(e.target.value)}
+                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Todas Marcas</option>
+                    {uniqueBrands.map(brand => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
+
+                  {/* Fit Filter */}
+                  <select
+                    value={filterFit}
+                    onChange={(e) => setFilterFit(e.target.value)}
+                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Todos Caimentos</option>
+                    {FITS.map(fit => (
+                      <option key={fit} value={fit}>{fit}</option>
+                    ))}
+                  </select>
+
+                  {/* Clear Filters */}
+                  {(searchTerm || filterCategory || filterColor || filterBrand || filterFit) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium"
+                    >
+                      <i className="fas fa-times mr-2"></i>Limpar
+                    </button>
+                  )}
                 </div>
+
+                {/* Results count */}
+                <p className="text-xs text-slate-400 mt-3">
+                  Mostrando {filteredProducts.length} de {products.length} produtos
+                </p>
+              </div>
+
+              {/* Products Grid */}
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                {filteredProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-6">
+                    {filteredProducts.map(product => (
+                      <div 
+                        key={product.id}
+                        onClick={() => setShowProductDetail(product)}
+                        className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group"
+                      >
+                        <div className="aspect-square bg-white relative overflow-hidden">
+                          <img 
+                            src={product.images[0]?.base64 || product.images[0]?.url} 
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                          {product.brand && (
+                            <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[10px] font-bold text-slate-600 px-2 py-1 rounded-full">
+                              {product.brand}
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">{product.sku}</p>
+                          <p className="text-xs font-bold text-slate-700 truncate">{product.name}</p>
+                          <div className="flex gap-1 mt-2 flex-wrap">
+                            {product.category && (
+                              <span className="text-[9px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded">
+                                {product.category}
+                              </span>
+                            )}
+                            {product.color && (
+                              <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                {product.color}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
+                      <i className="fas fa-search text-slate-300 text-3xl"></i>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum produto encontrado</h3>
+                    <p className="text-slate-500 mb-6">Tente ajustar os filtros ou adicione novos produtos</p>
+                    <button 
+                      onClick={() => setShowImport(true)}
+                      className="px-6 py-3 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors"
+                    >
+                      <i className="fas fa-plus mr-2"></i>Adicionar Produto
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -742,7 +947,6 @@ function App() {
                       <h3 className="text-2xl font-bold text-slate-800 mb-6">Integrações</h3>
                       
                       <div className="space-y-4">
-                        {/* Shopify */}
                         <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
@@ -758,7 +962,6 @@ function App() {
                           </button>
                         </div>
 
-                        {/* WooCommerce */}
                         <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
@@ -774,7 +977,6 @@ function App() {
                           </button>
                         </div>
 
-                        {/* Magento */}
                         <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
@@ -790,7 +992,6 @@ function App() {
                           </button>
                         </div>
 
-                        {/* VTEX */}
                         <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
@@ -806,7 +1007,6 @@ function App() {
                           </button>
                         </div>
 
-                        {/* API */}
                         <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -831,36 +1031,266 @@ function App() {
         )}
       </main>
 
-      {/* IMPORT MODAL */}
+      {/* IMPORT MODAL - Escolher arquivo ou câmera */}
       {showImport && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Importar Produtos</h3>
+              <h3 className="text-xl font-bold text-slate-800">Adicionar Produto</h3>
               <button onClick={() => setShowImport(false)} className="text-slate-400 hover:text-slate-600">
                 <i className="fas fa-times"></i>
               </button>
             </div>
             
+            <p className="text-slate-500 text-sm mb-6">Escolha como você quer adicionar a imagem do produto:</p>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {/* Upload de Arquivo */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50/50 transition-all"
+              >
+                <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center">
+                  <i className="fas fa-folder-open text-purple-600 text-xl"></i>
+                </div>
+                <span className="text-sm font-bold text-slate-700">Escolher Arquivo</span>
+                <span className="text-xs text-slate-400">PNG, JPG, WEBP</span>
+              </button>
+
+              {/* Tirar Foto */}
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-pink-400 hover:bg-pink-50/50 transition-all"
+              >
+                <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center">
+                  <i className="fas fa-camera text-pink-600 text-xl"></i>
+                </div>
+                <span className="text-sm font-bold text-slate-700">Tirar Foto</span>
+                <span className="text-xs text-slate-400">Usar câmera</span>
+              </button>
+            </div>
+
+            {/* Hidden inputs */}
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              className="hidden"
+              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
+            />
+            <input 
+              ref={cameraInputRef}
+              type="file" 
+              accept="image/*" 
+              capture="environment"
+              className="hidden"
+              onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
+            />
+
+            {/* Drag and drop area */}
             <div 
-              className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
-              onClick={() => document.getElementById('file-input')?.click()}
+              className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => { e.preventDefault(); handleImportProduct(e.dataTransfer.files); }}
+              onDrop={(e) => { e.preventDefault(); handleFileSelect(e.dataTransfer.files); }}
             >
-              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-cloud-upload-alt text-purple-600 text-2xl"></i>
+              <p className="text-sm text-slate-500">Ou arraste uma imagem aqui</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE PRODUCT MODAL */}
+      {showCreateProduct && selectedImage && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Criar Produto</h3>
+              <button 
+                onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} 
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            {/* Preview da imagem */}
+            <div className="mb-6">
+              <div className="w-32 h-32 rounded-xl overflow-hidden border border-slate-200 mx-auto">
+                <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
               </div>
-              <p className="text-sm font-bold text-slate-700 mb-2">Arraste imagens aqui</p>
-              <p className="text-xs text-slate-500">ou clique para selecionar</p>
-              <input 
-                id="file-input" 
-                type="file" 
-                accept="image/*" 
-                multiple 
-                className="hidden"
-                onChange={(e) => e.target.files && handleImportProduct(e.target.files)}
-              />
+            </div>
+
+            {/* Formulário */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-600 mb-2">Nome do Produto *</label>
+                <input 
+                  type="text" 
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                  placeholder="Ex: Camiseta Básica Branca"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Marca</label>
+                  <input 
+                    type="text" 
+                    value={newProduct.brand}
+                    onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                    placeholder="Ex: Nike"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Cor</label>
+                  <select 
+                    value={newProduct.color}
+                    onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Selecione</option>
+                    {COLORS.map(color => (
+                      <option key={color} value={color}>{color}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Caimento</label>
+                  <select 
+                    value={newProduct.fit}
+                    onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Selecione</option>
+                    {FITS.map(fit => (
+                      <option key={fit} value={fit}>{fit}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-600 mb-2">Categoria *</label>
+                  <select 
+                    value={newProduct.category}
+                    onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Selecione</option>
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleCreateProduct}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+              >
+                <i className="fas fa-check mr-2"></i>Criar Produto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCT DETAIL MODAL */}
+      {showProductDetail && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Detalhes do Produto</h3>
+              <button 
+                onClick={() => setShowProductDetail(null)} 
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="flex gap-6">
+              {/* Imagem */}
+              <div className="w-48 h-48 rounded-2xl overflow-hidden border border-slate-200 flex-shrink-0">
+                <img 
+                  src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url} 
+                  alt={showProductDetail.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Info */}
+              <div className="flex-1">
+                <p className="text-xs font-bold text-slate-400 uppercase mb-1">{showProductDetail.sku}</p>
+                <h4 className="text-2xl font-bold text-slate-800 mb-4">{showProductDetail.name}</h4>
+                
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {showProductDetail.brand && (
+                    <div className="bg-slate-50 rounded-xl p-3">
+                      <p className="text-[10px] text-slate-400 uppercase mb-1">Marca</p>
+                      <p className="text-sm font-bold text-slate-700">{showProductDetail.brand}</p>
+                    </div>
+                  )}
+                  {showProductDetail.category && (
+                    <div className="bg-slate-50 rounded-xl p-3">
+                      <p className="text-[10px] text-slate-400 uppercase mb-1">Categoria</p>
+                      <p className="text-sm font-bold text-slate-700">{showProductDetail.category}</p>
+                    </div>
+                  )}
+                  {showProductDetail.color && (
+                    <div className="bg-slate-50 rounded-xl p-3">
+                      <p className="text-[10px] text-slate-400 uppercase mb-1">Cor</p>
+                      <p className="text-sm font-bold text-slate-700">{showProductDetail.color}</p>
+                    </div>
+                  )}
+                  {showProductDetail.fit && (
+                    <div className="bg-slate-50 rounded-xl p-3">
+                      <p className="text-[10px] text-slate-400 uppercase mb-1">Caimento</p>
+                      <p className="text-sm font-bold text-slate-700">{showProductDetail.fit}</p>
+                    </div>
+                  )}
+                </div>
+
+                {showProductDetail.description && (
+                  <div className="mb-6">
+                    <p className="text-[10px] text-slate-400 uppercase mb-1">Descrição</p>
+                    <p className="text-sm text-slate-600">{showProductDetail.description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+              <button 
+                onClick={() => handleOpenInStudio(showProductDetail)}
+                className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+              >
+                <i className="fas fa-wand-magic-sparkles mr-2"></i>
+                Otimizar no Studio
+              </button>
+              <button 
+                onClick={() => handleGenerateDescription(showProductDetail)}
+                disabled={isGeneratingDescription}
+                className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors disabled:opacity-50"
+              >
+                {isGeneratingDescription ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-file-lines mr-2"></i>
+                    Gerar Descrição
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
