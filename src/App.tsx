@@ -1026,22 +1026,111 @@ function App() {
             <span className="text-[10px] font-medium">Produtos</span>
           </button>
 
-          {/* STUDIO - CENTER HIGHLIGHT */}
+          {/* STUDIO - CENTER HIGHLIGHT with Liquid Glass */}
           <button
             onClick={() => setCurrentPage('studio')}
             className="relative -mt-6"
           >
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
-              currentPage === 'studio' 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 scale-110' 
-                : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            <div className={`studio-liquid-glass-btn w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${
+              currentPage === 'studio' ? 'scale-110' : ''
             }`}>
-              <i className="fas fa-wand-magic-sparkles text-white text-xl"></i>
+              <div className="studio-glass-effect"></div>
+              <div className="studio-glass-tint"></div>
+              <div className="studio-glass-shine"></div>
+              <div className="studio-glass-icon">
+                <i className="fas fa-wand-magic-sparkles text-white text-2xl drop-shadow-lg"></i>
+              </div>
             </div>
             <span className={`block text-[10px] font-bold mt-1 text-center ${
               currentPage === 'studio' ? 'text-white' : 'text-slate-400'
             }`}>Studio®</span>
           </button>
+
+          {/* SVG Filter for Studio Button Liquid Glass */}
+          <svg style={{ display: 'none' }}>
+            <filter id="studio-btn-glass" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02 0.02" numOctaves="2" seed="3" result="turbulence" />
+              <feGaussianBlur in="turbulence" stdDeviation="1.5" result="softMap" />
+              <feSpecularLighting in="softMap" surfaceScale="4" specularConstant="1" specularExponent="100" lightingColor="white" result="specLight">
+                <fePointLight x="-50" y="-50" z="150" />
+              </feSpecularLighting>
+              <feComposite in="specLight" operator="arithmetic" k1="0" k2="0.8" k3="0.8" k4="0" result="litImage" />
+              <feDisplacementMap in="SourceGraphic" in2="softMap" scale="4" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+          </svg>
+
+          {/* Liquid Glass Styles for Studio Button */}
+          <style>{`
+            .studio-liquid-glass-btn {
+              position: relative;
+              overflow: hidden;
+              box-shadow: 
+                0 8px 32px rgba(147, 51, 234, 0.4),
+                0 4px 16px rgba(219, 39, 119, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            }
+            .studio-glass-effect {
+              position: absolute;
+              z-index: 0;
+              inset: 0;
+              border-radius: 1rem;
+              backdrop-filter: blur(20px) saturate(200%);
+              filter: url(#studio-btn-glass);
+              background: linear-gradient(
+                135deg,
+                rgba(147, 51, 234, 0.6) 0%,
+                rgba(219, 39, 119, 0.6) 50%,
+                rgba(249, 115, 22, 0.5) 100%
+              );
+            }
+            .studio-glass-tint {
+              z-index: 1;
+              position: absolute;
+              inset: 0;
+              border-radius: 1rem;
+              background: linear-gradient(
+                145deg,
+                rgba(255, 255, 255, 0.4) 0%,
+                rgba(255, 255, 255, 0.1) 40%,
+                rgba(255, 255, 255, 0.2) 100%
+              );
+            }
+            .studio-glass-shine {
+              position: absolute;
+              inset: 0;
+              z-index: 2;
+              overflow: hidden;
+              border-radius: 1rem;
+              box-shadow: 
+                inset 2px 2px 0 0 rgba(255, 255, 255, 0.5),
+                inset -1px -1px 0 0 rgba(255, 255, 255, 0.2);
+            }
+            .studio-glass-shine::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -20%;
+              width: 140%;
+              height: 50%;
+              background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.7) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+              );
+              border-radius: 0 0 100% 100% / 0 0 100% 100%;
+            }
+            .studio-glass-icon {
+              position: relative;
+              z-index: 3;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .studio-liquid-glass-btn:active {
+              transform: scale(0.95);
+            }
+          `}</style>
 
           {/* Clients */}
           <button
