@@ -3,10 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Product, VisualStudioGeneration, SavedModelProfile, HistoryLog } from '../../types';
+import { Product, SavedModelProfile, HistoryLog } from '../../types';
 import { EditorModal } from './EditorModal';
-import { GenerationHistory } from './GenerationHistory';
-import { generateVisualStudioImage } from '../../services/geminiService';
 
 interface StudioProps {
   products: Product[];
@@ -17,6 +15,7 @@ interface StudioProps {
   onOpenSettings?: () => void;
   onImport?: () => void;
   currentPlan?: { name: string; limit: number };
+  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<{ image: string | null; generationId: string | null }>;
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -31,7 +30,8 @@ export const Studio: React.FC<StudioProps> = ({
   onAddHistoryLog,
   onOpenSettings,
   onImport,
-  currentPlan
+  currentPlan,
+  onGenerateImage
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,7 +39,6 @@ export const Studio: React.FC<StudioProps> = ({
   const [filterCollection, setFilterCollection] = useState('');
   const [filterColor, setFilterColor] = useState('');
   
-  const [generations, setGenerations] = useState<VisualStudioGeneration[]>([]);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
 
   // Load saved models from LocalStorage
@@ -72,23 +71,11 @@ export const Studio: React.FC<StudioProps> = ({
     prompt?: string,
     options?: any
   ): Promise<{ image: string | null; generationId: string | null }> => {
-    try {
-      const result = await generateVisualStudioImage(product, toolType, prompt, options);
+    // Se tiver onGenerateImage passado como prop, usa ele
+    if (onGenerateImage) {
+      const result = await onGenerateImage(product, toolType, prompt, options);
       
       if (result.image) {
-        const newGeneration: VisualStudioGeneration = {
-          id: result.generationId || `gen-${Date.now()}`,
-          productId: product.id,
-          productName: product.name,
-          originalImage: product.images[0]?.base64 || product.images[0]?.url || '',
-          generatedImage: result.image,
-          tool: toolType,
-          prompt: prompt || '',
-          timestamp: new Date().toISOString(),
-          saved: false
-        };
-        setGenerations(prev => [newGeneration, ...prev]);
-        
         onAddHistoryLog(
           `Imagem gerada: ${toolType}`,
           `Produto: ${product.name}`,
@@ -100,23 +87,10 @@ export const Studio: React.FC<StudioProps> = ({
       }
       
       return result;
-    } catch (error: any) {
-      onAddHistoryLog(
-        `Erro na geração: ${toolType}`,
-        error.message || 'Erro desconhecido',
-        'error',
-        [product],
-        'ai',
-        0
-      );
-      throw error;
     }
-  };
-
-  const handleMarkSaved = (generationId: string) => {
-    setGenerations(prev => prev.map(g => 
-      g.id === generationId ? { ...g, saved: true } : g
-    ));
+    
+    // Fallback: retorna null se não tiver a função
+    return { image: null, generationId: null };
   };
 
   const productsWithImages = useMemo(() => {
@@ -308,13 +282,6 @@ export const Studio: React.FC<StudioProps> = ({
                         <i className="fas fa-wand-magic-sparkles mr-1"></i> Editar
                       </span>
                     </div>
-                    
-                    {/* Badge de imagens geradas */}
-                    {generations.filter(g => g.productId === product.id).length > 0 && (
-                      <div className="absolute top-2 right-2 bg-purple-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                        {generations.filter(g => g.productId === product.id).length}
-                      </div>
-                    )}
                   </div>
                   <div className="p-2">
                     <p className="text-[8px] font-bold text-slate-400 uppercase">{product.sku}</p>
@@ -352,7 +319,6 @@ export const Studio: React.FC<StudioProps> = ({
           onUpdateProduct={onUpdateProduct}
           onDeductCredits={onDeductCredits}
           onGenerateImage={handleGenerateImage}
-          onMarkSaved={handleMarkSaved}
         />
       )}
     </div>
