@@ -83,6 +83,7 @@ function App() {
   const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
   const [showStudioPicker, setShowStudioPicker] = useState(false);
+  const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
@@ -421,60 +422,153 @@ function App() {
               </div>
               
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* CARD CRIAR - Destaque Principal */}
+              {/* CARD CRIAR - Com Vídeo Tutorial */}
               {/* ═══════════════════════════════════════════════════════════════ */}
+              <style>{`
+                @keyframes gradient-shift {
+                  0% { background-position: 0% 50%; }
+                  50% { background-position: 100% 50%; }
+                  100% { background-position: 0% 50%; }
+                }
+                .animated-gradient-btn {
+                  background-size: 200% 200%;
+                  transition: all 0.3s ease;
+                }
+                .animated-gradient-btn:hover {
+                  animation: gradient-shift 3s ease infinite;
+                  transform: translateY(-2px);
+                  box-shadow: 0 10px 40px -10px rgba(236, 72, 153, 0.5);
+                }
+                .video-card {
+                  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .video-card:hover {
+                  transform: translateY(-4px);
+                }
+                .video-card:hover .video-overlay {
+                  opacity: 0.4;
+                }
+                .video-card:hover .play-btn {
+                  transform: scale(1.1);
+                  box-shadow: 0 0 30px rgba(255,255,255,0.3);
+                }
+              `}</style>
+              
               <div className={'rounded-2xl p-5 mb-5 ' + (theme === 'dark' ? 'bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 border border-neutral-800' : 'bg-white shadow-xl shadow-gray-200/50 border border-gray-100')}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-gradient-to-r from-pink-500 to-orange-400')}>
-                    <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-gradient-to-r from-pink-500 to-orange-400')}>
+                      <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
+                    </div>
+                    <h2 className={'text-base font-bold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Criar</h2>
                   </div>
-                  <h2 className={'text-base font-bold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Criar</h2>
+                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>
+                    <i className="fas fa-play-circle mr-1"></i>Clique para ver tutorial
+                  </span>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Vizzu Studio */}
-                  <button 
-                    onClick={() => setCurrentPage('studio')}
-                    className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all ' + (theme === 'dark' ? 'bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20 hover:border-purple-500/40 hover:from-purple-500/20' : 'bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 border-2 border-purple-100 hover:border-purple-300 hover:shadow-lg hover:shadow-purple-100')}
+                  {/* Vizzu Studio - Video Card */}
+                  <div 
+                    onClick={() => setShowVideoTutorial('studio')}
+                    className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                    style={{ aspectRatio: '16/9', minHeight: '180px' }}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    {/* Video Background Placeholder - Replace src with actual video */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600">
+                      <video 
+                        className="w-full h-full object-cover opacity-60"
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline
+                        poster=""
+                      >
+                        {/* <source src="/videos/studio-preview.mp4" type="video/mp4" /> */}
+                      </video>
+                    </div>
+                    
+                    {/* Overlay */}
+                    <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                    
+                    {/* Content */}
+                    <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
+                      <div>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="px-2 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                          <span className={'text-lg font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Studio®</span>
+                          <span className="text-white/60 text-xs">1-3 créditos</span>
                         </div>
-                        <p className={theme === 'dark' ? 'text-neutral-400 text-sm leading-relaxed' : 'text-gray-600 text-sm leading-relaxed'}>
-                          Gere fotos profissionais dos seus produtos com inteligência artificial.
-                        </p>
+                        <h3 className="text-xl font-bold text-white mb-1">Vizzu Studio®</h3>
+                        <p className="text-white/70 text-sm">Gere fotos profissionais com IA</p>
                       </div>
-                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ' + (theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-500 text-white shadow-lg shadow-purple-500/30')}>
-                        <i className="fas fa-arrow-right text-sm"></i>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                          <i className="fas fa-play text-white ml-1"></i>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setCurrentPage('studio'); }}
+                          className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                        >
+                          Acessar <i className="fas fa-arrow-right text-xs"></i>
+                        </button>
                       </div>
                     </div>
-                    <div className={'absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left'}></div>
-                  </button>
+                    
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                  </div>
                   
-                  {/* Vizzu Provador */}
-                  <button 
-                    onClick={() => setCurrentPage('provador')}
-                    className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all ' + (theme === 'dark' ? 'bg-gradient-to-br from-pink-500/10 via-rose-500/10 to-orange-500/10 border border-pink-500/20 hover:border-pink-500/40 hover:from-pink-500/20' : 'bg-gradient-to-br from-pink-50 via-rose-50 to-orange-50 border-2 border-pink-100 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-100')}
+                  {/* Vizzu Provador - Video Card */}
+                  <div 
+                    onClick={() => setShowVideoTutorial('provador')}
+                    className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                    style={{ aspectRatio: '16/9', minHeight: '180px' }}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    {/* Video Background Placeholder - Replace src with actual video */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500">
+                      <video 
+                        className="w-full h-full object-cover opacity-60"
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline
+                        poster=""
+                      >
+                        {/* <source src="/videos/provador-preview.mp4" type="video/mp4" /> */}
+                      </video>
+                    </div>
+                    
+                    {/* Overlay */}
+                    <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                    
+                    {/* Content */}
+                    <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
+                      <div>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
-                          <span className={'text-lg font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Provador®</span>
+                          <span className="text-white/60 text-xs">3 créditos</span>
                         </div>
-                        <p className={theme === 'dark' ? 'text-neutral-400 text-sm leading-relaxed' : 'text-gray-600 text-sm leading-relaxed'}>
-                          Vista seus clientes virtualmente e envie pelo WhatsApp.
-                        </p>
+                        <h3 className="text-xl font-bold text-white mb-1">Vizzu Provador®</h3>
+                        <p className="text-white/70 text-sm">Vista seus clientes virtualmente</p>
                       </div>
-                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 ' + (theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30')}>
-                        <i className="fas fa-arrow-right text-sm"></i>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                          <i className="fas fa-play text-white ml-1"></i>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setCurrentPage('provador'); }}
+                          className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                        >
+                          Acessar <i className="fas fa-arrow-right text-xs"></i>
+                        </button>
                       </div>
                     </div>
-                    <div className={'absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-orange-400 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left'}></div>
-                  </button>
+                    
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                  </div>
                 </div>
               </div>
               
@@ -1425,6 +1519,148 @@ function App() {
           </button>
         </div>
       </nav>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* VIDEO TUTORIAL MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {showVideoTutorial && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowVideoTutorial(null)}>
+          <div 
+            className={'relative w-full max-w-4xl rounded-2xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button 
+              onClick={() => setShowVideoTutorial(null)}
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            
+            {/* Video Container */}
+            <div className="relative aspect-video bg-black">
+              {showVideoTutorial === 'studio' ? (
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center">
+                  {/* Replace with actual video */}
+                  <video 
+                    className="w-full h-full object-cover"
+                    controls
+                    autoPlay
+                    playsInline
+                  >
+                    {/* <source src="/videos/studio-tutorial.mp4" type="video/mp4" /> */}
+                  </video>
+                  {/* Placeholder when no video */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
+                      <i className="fas fa-play text-3xl ml-1"></i>
+                    </div>
+                    <p className="text-lg font-medium mb-1">Tutorial Vizzu Studio®</p>
+                    <p className="text-white/60 text-sm">Vídeo em breve...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500 flex items-center justify-center">
+                  {/* Replace with actual video */}
+                  <video 
+                    className="w-full h-full object-cover"
+                    controls
+                    autoPlay
+                    playsInline
+                  >
+                    {/* <source src="/videos/provador-tutorial.mp4" type="video/mp4" /> */}
+                  </video>
+                  {/* Placeholder when no video */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
+                      <i className="fas fa-play text-3xl ml-1"></i>
+                    </div>
+                    <p className="text-lg font-medium mb-1">Tutorial Vizzu Provador®</p>
+                    <p className="text-white/60 text-sm">Vídeo em breve...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Bottom CTA */}
+            <div className={'p-5 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold'}>
+                    {showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}
+                  </h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>
+                    {showVideoTutorial === 'studio' 
+                      ? 'Transforme suas fotos de produto em imagens profissionais' 
+                      : 'Vista seus clientes virtualmente e aumente suas vendas'}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => { setShowVideoTutorial(null); setCurrentPage(showVideoTutorial); }}
+                  className={'animated-gradient-btn px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500')}
+                >
+                  <i className="fas fa-rocket"></i>
+                  Começar Agora
+                  <i className="fas fa-arrow-right text-sm"></i>
+                </button>
+              </div>
+              
+              {/* Quick tips */}
+              <div className={'mt-4 pt-4 border-t grid grid-cols-3 gap-4 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+                {showVideoTutorial === 'studio' ? (
+                  <>
+                    <div className="text-center">
+                      <div className={(theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
+                        <i className="fas fa-store text-sm"></i>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Studio Ready</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>1 crédito</p>
+                    </div>
+                    <div className="text-center">
+                      <div className={(theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
+                        <i className="fas fa-film text-sm"></i>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Cenário Criativo</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>2 créditos</p>
+                    </div>
+                    <div className="text-center">
+                      <div className={(theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
+                        <i className="fas fa-user-friends text-sm"></i>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Modelo IA</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>3 créditos</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <div className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
+                        <i className="fas fa-user text-sm"></i>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Foto do Cliente</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Upload fácil</p>
+                    </div>
+                    <div className="text-center">
+                      <div className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
+                        <i className="fas fa-shirt text-sm"></i>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Monte o Look</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Seus produtos</p>
+                    </div>
+                    <div className="text-center">
+                      <div className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
+                        <i className="fab fa-whatsapp text-sm"></i>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Envie WhatsApp</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>1 clique</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* STUDIO PICKER MODAL - SUNO STYLE */}
