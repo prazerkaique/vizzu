@@ -181,16 +181,20 @@ export const Studio: React.FC<StudioProps> = ({
           </div>
         </div>
 
-        {/* Credits Badge - Mobile */}
-        <div className="flex items-center gap-2">
-          <div className="bg-slate-900 rounded-xl px-3 py-2 flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-[8px] font-bold text-slate-400 uppercase leading-none">Créditos</p>
-              <p className="text-base font-black text-white leading-none">{userCredits}</p>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <i className="fas fa-bolt text-yellow-300 text-sm"></i>
-            </div>
+        {/* Credits Badge - Mobile (mini card style) */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-3 py-2 min-w-[100px] shadow-lg">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[8px] font-bold text-slate-400 uppercase">Créditos</span>
+            <button onClick={onOpenSettings} className="text-purple-400 hover:text-purple-300 text-[8px] font-bold">
+              + Add
+            </button>
+          </div>
+          <p className="text-lg font-black text-white leading-none mb-1.5">{userCredits}</p>
+          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+              style={{ width: `${Math.min(100, (userCredits / planLimit) * 100)}%` }}
+            ></div>
           </div>
         </div>
       </div>
