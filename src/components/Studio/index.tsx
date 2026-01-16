@@ -83,6 +83,11 @@ export const Studio: React.FC<StudioProps> = ({
     }
   };
 
+  const handleViewGeneration = (generation: VisualStudioGeneration) => {
+    const product = products.find(p => p.id === generation.productId);
+    if (product) setSelectedProduct(product);
+  };
+
   const handleGenerateImage = async (
     product: Product, 
     type: 'studio' | 'cenario' | 'lifestyle' | 'refine',
@@ -315,10 +320,11 @@ export const Studio: React.FC<StudioProps> = ({
           {/* HISTORY */}
           {generations.length > 0 && (
             <div className="mt-12">
-              <GenerationHistory generations={generations} onViewGeneration={(gen) => {
-                const product = products.find(p => p.id === gen.productId);
-                if (product) setSelectedProduct(product);
-              }} onDeleteGeneration={deleteGeneration} />
+              <GenerationHistory 
+                generations={generations} 
+                onView={handleViewGeneration} 
+                onDelete={deleteGeneration} 
+              />
             </div>
           )}
 
