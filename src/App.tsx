@@ -1026,84 +1026,22 @@ function App() {
             <span className="text-[10px] font-medium">Produtos</span>
           </button>
 
-          {/* STUDIO - CENTER HIGHLIGHT with Liquid Glass */}
+          {/* STUDIO - CENTER HIGHLIGHT */}
           <button
             onClick={() => setCurrentPage('studio')}
             className="relative -mt-6"
           >
-            <div className={`studio-liquid-glass-btn w-16 h-16 rounded-2xl flex items-center justify-center transition-all ${
-              currentPage === 'studio' ? 'scale-110' : ''
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
+              currentPage === 'studio' 
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 scale-110' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500'
             }`}>
-              <div className="studio-glass-effect"></div>
-              <div className="studio-glass-tint"></div>
-              <div className="studio-glass-shine"></div>
-              <div className="studio-glass-icon">
-                <i className="fas fa-wand-magic-sparkles text-2xl"></i>
-              </div>
+              <i className="fas fa-wand-magic-sparkles text-white text-xl"></i>
             </div>
             <span className={`block text-[10px] font-bold mt-1 text-center ${
               currentPage === 'studio' ? 'text-white' : 'text-slate-400'
             }`}>Studio®</span>
           </button>
-
-          {/* Liquid Glass Styles for Studio Button */}
-          <style>{`
-            .studio-liquid-glass-btn {
-              position: relative;
-              overflow: hidden;
-              box-shadow: 
-                0 4px 24px rgba(0, 0, 0, 0.15),
-                inset 0 0 0 0.5px rgba(255, 255, 255, 0.2);
-            }
-            .studio-glass-effect {
-              position: absolute;
-              z-index: 0;
-              inset: 0;
-              border-radius: 1rem;
-              backdrop-filter: blur(50px) saturate(120%);
-              -webkit-backdrop-filter: blur(50px) saturate(120%);
-              background: rgba(120, 120, 130, 0.35);
-            }
-            .studio-glass-tint {
-              z-index: 1;
-              position: absolute;
-              inset: 0;
-              border-radius: 1rem;
-              background: linear-gradient(
-                180deg,
-                rgba(255, 255, 255, 0.15) 0%,
-                rgba(255, 255, 255, 0.02) 100%
-              );
-            }
-            .studio-glass-shine {
-              position: absolute;
-              inset: 0;
-              z-index: 2;
-              overflow: hidden;
-              border-radius: 1rem;
-              box-shadow: 
-                inset 0 0.5px 0 0 rgba(255, 255, 255, 0.3),
-                inset 0 -0.5px 0 0 rgba(0, 0, 0, 0.05);
-            }
-            .studio-glass-icon {
-              position: relative;
-              z-index: 3;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .studio-glass-icon i {
-              background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f97316 100%);
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              background-clip: text;
-              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-            }
-            .studio-liquid-glass-btn:active {
-              transform: scale(0.95);
-              filter: brightness(0.9);
-            }
-          `}</style>
 
           {/* Clients */}
           <button
