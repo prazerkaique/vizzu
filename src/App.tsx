@@ -482,6 +482,7 @@ function App() {
             onAddHistoryLog={handleAddHistoryLog}
             onOpenSettings={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
             onImport={() => setShowImport(true)}
+            currentPlan={currentPlan}
           />
         )}
 
