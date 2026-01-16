@@ -181,105 +181,22 @@ export const Studio: React.FC<StudioProps> = ({
           </div>
         </div>
 
-        {/* Liquid Glass Credits Badge */}
-        <div className="liquid-glass-credits">
-          <div className="liquid-glass-effect"></div>
-          <div className="liquid-glass-tint"></div>
-          <div className="liquid-glass-shine"></div>
-          <div className="liquid-glass-content">
-            <div className="flex flex-col items-end">
-              <span className="text-[8px] font-bold text-slate-500 uppercase leading-none">Créditos</span>
-              <span className="text-lg font-black text-slate-800 leading-none">{userCredits}</span>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-sm">
-              <i className="fas fa-bolt text-yellow-300 text-sm"></i>
-            </div>
+        {/* Credits Badge - Mobile (mini card style) */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-3 py-2 min-w-[100px] shadow-lg">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[8px] font-bold text-slate-400 uppercase">Créditos</span>
+            <button className="text-purple-400 hover:text-purple-300 text-[8px] font-bold">
+              + Add
+            </button>
+          </div>
+          <p className="text-lg font-black text-white leading-none mb-1.5">{userCredits}</p>
+          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+              style={{ width: `${Math.min(100, (userCredits / planLimit) * 100)}%` }}
+            ></div>
           </div>
         </div>
-
-        {/* SVG Filter for Liquid Glass */}
-        <svg style={{ display: 'none' }}>
-          <filter id="glass-distortion-studio" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015 0.015" numOctaves="1" seed="7" result="turbulence" />
-            <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap" />
-            <feSpecularLighting in="softMap" surfaceScale="3" specularConstant="0.75" specularExponent="60" lightingColor="white" result="specLight">
-              <fePointLight x="-150" y="-150" z="250" />
-            </feSpecularLighting>
-            <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
-            <feDisplacementMap in="SourceGraphic" in2="softMap" scale="6" xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </svg>
-
-        {/* Liquid Glass Styles */}
-        <style>{`
-          .liquid-glass-credits {
-            position: relative;
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 
-              0 4px 16px rgba(0, 0, 0, 0.1),
-              0 2px 4px rgba(0, 0, 0, 0.05),
-              0 0 0 1px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.5);
-          }
-          .liquid-glass-credits:active {
-            transform: scale(0.97);
-          }
-          .liquid-glass-effect {
-            position: absolute;
-            z-index: 0;
-            inset: 0;
-            backdrop-filter: blur(16px) saturate(200%);
-            filter: url(#glass-distortion-studio);
-            background: rgba(255, 255, 255, 0.2);
-          }
-          .liquid-glass-tint {
-            z-index: 1;
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-              145deg,
-              rgba(255, 255, 255, 0.9) 0%,
-              rgba(255, 255, 255, 0.7) 40%,
-              rgba(240, 240, 255, 0.8) 100%
-            );
-          }
-          .liquid-glass-shine {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            overflow: hidden;
-            border-radius: 16px;
-            box-shadow: 
-              inset 1.5px 1.5px 0 0 rgba(255, 255, 255, 1),
-              inset -1px -1px 0 0 rgba(200, 200, 220, 0.3);
-          }
-          .liquid-glass-shine::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -30%;
-            width: 160%;
-            height: 45%;
-            background: linear-gradient(
-              180deg,
-              rgba(255, 255, 255, 0.8) 0%,
-              rgba(255, 255, 255, 0.2) 60%,
-              rgba(255, 255, 255, 0) 100%
-            );
-            border-radius: 0 0 100% 100% / 0 0 80% 80%;
-          }
-          .liquid-glass-content {
-            position: relative;
-            z-index: 3;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-        `}</style>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
