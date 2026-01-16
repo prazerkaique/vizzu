@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// VIZZU - Gemini AI Service
-// ═══════════════════════════════════════════════════════════════
-
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 export type VisualStudioAction = 'studio' | 'cenario' | 'lifestyle' | 'refine';
@@ -40,7 +36,6 @@ Requirements:
 - Professional studio lighting, evenly lit
 - Product centered in frame
 - Clean, high-end e-commerce aesthetic
-- The product should look like it's floating slightly above the surface
 Do NOT change the product design, colors, or any details. Only change the background and lighting.`;
 
     case 'cenario':
@@ -51,7 +46,6 @@ CRITICAL RULES:
 - Product should occupy at least 40% of the image
 - Background/scene should complement but not overshadow the product
 - Professional commercial photography style
-- High quality, 4K aesthetic
 
 Scene description: ${prompt || 'Modern, clean promotional environment'}
 
@@ -67,21 +61,12 @@ EXACT PRODUCT DESCRIPTION (YOU MUST FOLLOW THIS):
 "${productDescription.trim()}"
 
 The model MUST wear a ${categoryRef} that matches this EXACT description.
-- Same color(s) as described
-- Same pattern/print as described
-- Same logo/branding as described (if any)
-- Same cut/style as described
-- Same fabric appearance as described
 `;
       } else {
         productDetailSection = `
 PRODUCT REFERENCE:
 Look at the FIRST image carefully. The model must wear a ${categoryRef} that is 
 VISUALLY IDENTICAL to what you see in that image.
-- Same colors
-- Same patterns/prints
-- Same logos/branding
-- Same cut and style
 `;
       }
 
@@ -105,8 +90,6 @@ You are generating a professional e-commerce photo with a human model.
 
 THE MOST IMPORTANT RULE: The model must wear the EXACT product from image #1.
 
-This is NOT about creating "something similar" - you must REPRODUCE the product.
-
 === MAIN PRODUCT (IMAGE #1) ===
 Product Name: "${productRef}"
 Product Type: ${categoryRef.toUpperCase()}
@@ -118,21 +101,17 @@ ${productDetailSection}
 
 The ${categoryRef} worn by the model MUST have:
 ✓ EXACT same primary color(s)
-✓ EXACT same secondary color(s) if any
 ✓ EXACT same pattern (stripes, solid, print, etc.)
 ✓ EXACT same logo/text/graphic if visible
 ✓ EXACT same neckline/collar style
 ✓ EXACT same sleeve length and style
-✓ EXACT same overall fit (slim, regular, oversized)
-✓ EXACT same fabric texture appearance
+✓ EXACT same overall fit
 
 DO NOT:
 ✗ Change the color to something "similar"
 ✗ Remove or modify any logos/graphics
 ✗ Change the pattern or print
 ✗ Alter the cut or style
-✗ Add elements that don't exist in the original
-✗ Simplify or "clean up" the design
 
 ###############################################################################
 `;
@@ -144,8 +123,7 @@ The second image shows the MODEL to use. Generate the EXACT SAME PERSON:
 - Identical face shape and features
 - Same skin tone
 - Same eye color
-- Same hair color (style can adapt to pose)
-- Immediately recognizable as the same individual
+- Same hair color
 
 Model characteristics: ${modelPrompt || 'Match the reference image exactly'}
 ${lookCompositionSection}
@@ -156,12 +134,6 @@ Additional clothing: ${clothingPrompt || 'Simple, neutral items that do not dist
 Pose: ${posePrompt || 'Natural, confident pose showing the product clearly'}
 Background: Clean studio (white or light gray)
 Lighting: Professional, soft, even lighting
-
-=== FINAL CHECK ===
-Before generating, verify:
-1. Is the ${categoryRef} an EXACT match to image #1? (colors, pattern, logo, cut)
-2. Is the model the same person as image #2?
-3. Is the main product clearly visible and prominent?
 
 ${prompt ? `\nADDITIONAL NOTES: ${prompt}` : ''}`;
       }
@@ -178,12 +150,6 @@ Additional clothing: ${clothingPrompt || 'Simple, neutral items that do not dist
 Pose: ${posePrompt || 'Natural, confident pose showing the product clearly'}
 Background: Clean studio (white or light gray)
 Lighting: Professional, soft, even lighting
-
-=== FINAL CHECK ===
-Before generating, verify:
-1. Is the ${categoryRef} an EXACT match to image #1? (colors, pattern, logo, cut)
-2. Is the main product clearly visible and prominent?
-3. Does the model match the requested description?
 
 ${prompt ? `\nADDITIONAL NOTES: ${prompt}` : ''}`;
 
@@ -216,7 +182,7 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
   
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('VITE_GEMINI_API_KEY não configurada. Adicione no arquivo .env');
+    throw new Error('VITE_GEMINI_API_KEY não configurada');
   }
   
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -227,13 +193,10 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
       { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
       { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
       { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    ],
-    generationConfig: {
-      responseMimeType: "image/png"
-    }
+    ]
   });
 
-  const parts: any[] = [];
+  const parts: Array<{ inlineData: { data: string; mimeType: string } } | { text: string }> = [];
   
   const addImagePart = (base64: string, label: string) => {
     const cleanBase64 = base64.replace(/^data:image\/\w+;base64,/, "");
@@ -272,14 +235,14 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
     
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData && part.inlineData.data) {
+        if ('inlineData' in part && part.inlineData && part.inlineData.data) {
           const mimeType = part.inlineData.mimeType || 'image/png';
           console.log('✅ [VIZZU] Imagem gerada com sucesso');
           return `data:${mimeType};base64,${part.inlineData.data}`;
         }
       }
       
-      const textPart = response.candidates[0].content.parts.find(p => p.text);
+      const textPart = response.candidates[0].content.parts.find((p): p is { text: string } => 'text' in p);
       if (textPart && textPart.text) {
         throw new Error(`Modelo recusou: "${textPart.text.substring(0, 100)}..."`);
       }
