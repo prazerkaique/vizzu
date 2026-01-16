@@ -21,28 +21,78 @@ interface Props {
   onSendWhatsApp?: (client: Client, message: string, imageUrl?: string) => void;
 }
 
-type ToolType = 'studio' | 'cenario' | 'lifestyle' | 'provador' | null;
+type ToolType = 'studio' | 'cenario' | 'lifestyle' | null;
 
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURAÇÕES DAS FERRAMENTAS - Nomes conforme design
+// ═══════════════════════════════════════════════════════════════
 const TOOL_CFG = {
-  studio: { name: 'Studio', icon: 'fa-store', credits: 1, color: 'purple' },
-  cenario: { name: 'Cenário', icon: 'fa-film', credits: 2, color: 'pink' },
-  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3, color: 'orange' },
-  provador: { name: 'Provador', icon: 'fa-shirt', credits: 3, color: 'emerald' }
+  studio: { 
+    name: 'Studio Ready', 
+    icon: 'fa-store', 
+    credits: 1, 
+    color: 'purple',
+    desc: 'Fundo branco',
+    fullDesc: 'Fundo branco profissional com sombra suave. Ideal para e-commerce.'
+  },
+  cenario: { 
+    name: 'Cenário Criativo', 
+    icon: 'fa-film', 
+    credits: 2, 
+    color: 'pink',
+    desc: 'Ambiente personalizado',
+    fullDesc: 'Crie um ambiente promocional personalizado para seu produto.'
+  },
+  lifestyle: { 
+    name: 'Modelo IA', 
+    icon: 'fa-user-friends', 
+    credits: 3, 
+    color: 'orange',
+    desc: 'Humano com produto',
+    fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!'
+  }
 };
 
 const MODEL_OPTS = {
   gender: [{ id: 'woman', label: 'Mulher' }, { id: 'man', label: 'Homem' }],
-  ethnicity: [{ id: 'caucasian', label: 'Branca' }, { id: 'black', label: 'Negra' }, { id: 'asian', label: 'Asiática' }, { id: 'latino', label: 'Latina' }, { id: 'mixed', label: 'Mista' }],
-  bodyType: [{ id: 'slim', label: 'Magro(a)' }, { id: 'athletic', label: 'Atlético(a)' }, { id: 'average', label: 'Médio' }, { id: 'curvy', label: 'Curvilíneo(a)' }, { id: 'plussize', label: 'Plus Size' }],
-  ageRange: [{ id: 'young', label: '18-25' }, { id: 'adult', label: '26-35' }, { id: 'mature', label: '36-50' }, { id: 'senior', label: '50+' }]
+  ethnicity: [
+    { id: 'caucasian', label: 'Branca/Caucasiana' }, 
+    { id: 'black', label: 'Negra/Afrodescendente' }, 
+    { id: 'asian', label: 'Asiática' }, 
+    { id: 'latino', label: 'Latina/Hispânica' }, 
+    { id: 'middleeastern', label: 'Oriente Médio' },
+    { id: 'mixed', label: 'Mista/Parda' }
+  ],
+  bodyType: [
+    { id: 'slim', label: 'Magro(a)' }, 
+    { id: 'athletic', label: 'Atlético(a)' }, 
+    { id: 'average', label: 'Médio' }, 
+    { id: 'curvy', label: 'Curvilíneo(a)' }, 
+    { id: 'plussize', label: 'Plus Size' }
+  ],
+  ageRange: [
+    { id: 'young', label: '18-25 anos' }, 
+    { id: 'adult', label: '26-35 anos' }, 
+    { id: 'mature', label: '36-50 anos' }, 
+    { id: 'senior', label: '50+ anos' }
+  ]
 };
 
 const CATEGORIES = [
-  { id: 'top', label: 'Parte de Cima' }, { id: 'bottom', label: 'Parte de Baixo' }, { id: 'shoes', label: 'Calçado' }, { id: 'fullbody', label: 'Corpo Inteiro' }, { id: 'accessory', label: 'Acessório' }
+  { id: 'top', label: 'Parte de Cima (Camiseta, Blusa, Casaco)' }, 
+  { id: 'bottom', label: 'Parte de Baixo (Calça, Short, Saia)' }, 
+  { id: 'shoes', label: 'Calçado (Tênis, Sapato, Sandália)' }, 
+  { id: 'fullbody', label: 'Corpo Inteiro (Vestido, Macacão)' }, 
+  { id: 'accessory', label: 'Acessório (Bolsa, Chapéu, Joia)' }
 ];
 
-export const EditorModal: React.FC<Props> = ({ product, products, userCredits, savedModels, clients = [], selectedClient: initialSelectedClient, companyLogo, onSaveModel, onDeleteModel, onClose, onUpdateProduct, onDeductCredits, onGenerateImage, onMarkSaved, onSendWhatsApp }) => {
-  const [tool, setTool] = useState<ToolType>(initialSelectedClient ? 'provador' : null);
+export const EditorModal: React.FC<Props> = ({ 
+  product, products, userCredits, savedModels, clients = [], 
+  selectedClient: initialSelectedClient, companyLogo, 
+  onSaveModel, onDeleteModel, onClose, onUpdateProduct, 
+  onDeductCredits, onGenerateImage, onMarkSaved, onSendWhatsApp 
+}) => {
+  const [tool, setTool] = useState<ToolType>(null);
   const [isGen, setIsGen] = useState(false);
   const [genImg, setGenImg] = useState<string|null>(null);
   const [genId, setGenId] = useState<string|null>(null);
@@ -50,35 +100,34 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
   const [images, setImages] = useState<ProductImage[]>(product.images || []);
   const [selIdx, setSelIdx] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Cenário states
   const [cenPrompt, setCenPrompt] = useState('');
+  
+  // Modelo IA states
   const [modelTab, setModelTab] = useState<'new'|'saved'>('new');
   const [selModelId, setSelModelId] = useState<string|null>(null);
   const [category, setCategory] = useState('top');
   const [prodDesc, setProdDesc] = useState('');
-  const [modelSettings, setModelSettings] = useState({ gender: 'woman' as 'woman'|'man', ethnicity: 'caucasian', bodyType: 'average', ageRange: 'adult' });
+  const [modelSettings, setModelSettings] = useState({ 
+    gender: 'woman' as 'woman'|'man', 
+    ethnicity: 'caucasian', 
+    bodyType: 'average', 
+    ageRange: 'adult' 
+  });
   const [modelDetail, setModelDetail] = useState('');
   const [clothing, setClothing] = useState('');
   const [pose, setPose] = useState('');
   const [showLook, setShowLook] = useState(false);
   const [look, setLook] = useState<LookComposition>({});
+  
+  // Other states
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newModelName, setNewModelName] = useState('');
   const [showRefine, setShowRefine] = useState(false);
   const [refinePrompt, setRefinePrompt] = useState('');
   const [zoom, setZoom] = useState<string|null>(null);
   const [viewMode, setViewMode] = useState<'original'|'result'>('original');
-  
-  // Provador IA States
-  const [provadorClient, setProvadorClient] = useState<Client | null>(initialSelectedClient || null);
-  const [provadorProducts, setProvadorProducts] = useState<Product[]>([product]);
-  const [provadorMessage, setProvadorMessage] = useState(`Olá {nome}! 🛍️\n\nPreparei um visual especial para você! Veja como ficou.\n\nO que achou? 😍`);
-  const [showClientPicker, setShowClientPicker] = useState(false);
-  const [showProductPicker, setShowProductPicker] = useState(false);
-  const [clientSearch, setClientSearch] = useState('');
-  const [addWatermark, setAddWatermark] = useState(true);
-  
-  // Clientes com Provador IA ativo
-  const clientsWithProvador = clients.filter(c => c.hasProvadorIA && c.photo);
 
   useEffect(() => { if (product.images) setImages(product.images); }, [product.images]);
 
@@ -102,7 +151,6 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
     if (userCredits < cost) { setError('Créditos insuficientes'); return; }
     if (tool === 'cenario' && !cenPrompt.trim()) { setError('Descreva o cenário'); return; }
     if (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) { setError('Selecione um modelo'); return; }
-    if (tool === 'provador' && !provadorClient) { setError('Selecione um cliente'); return; }
     if (!onDeductCredits(cost, `VIZZU: ${TOOL_CFG[tool].name}`)) { setError('Erro ao processar créditos'); return; }
     
     setIsGen(true); setError(null);
@@ -118,19 +166,9 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           : { modelPrompt: buildModelPrompt(), clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined };
         result = await onGenerateImage(product, 'lifestyle', undefined, opts);
       }
-      else if (tool === 'provador' && provadorClient) {
-        const opts = {
-          clientPhoto: provadorClient.photo,
-          clientName: `${provadorClient.firstName} ${provadorClient.lastName}`,
-          products: provadorProducts.map(p => ({ id: p.id, name: p.name, image: p.images[0]?.base64 || p.images[0]?.url })),
-          addWatermark,
-          companyLogo
-        };
-        result = await onGenerateImage(product, 'provador', undefined, opts);
-      }
       if (result?.image) { setGenImg(result.image); setGenId(result.generationId); setViewMode('result'); }
-      else setError('IA não retornou imagem');
-    } catch (e: any) { setError(e.message || 'Erro'); }
+      else setError('A IA não retornou uma imagem válida. Verifique se o prompt não viola políticas de segurança ou tente simplificar.');
+    } catch (e: any) { setError(e.message || 'Erro na geração'); }
     finally { setIsGen(false); }
   };
 
@@ -164,7 +202,15 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
 
   const handleSaveModel = () => {
     if (!newModelName.trim() || !genImg) return;
-    const profile: SavedModelProfile = { id: `model-${Date.now()}`, name: newModelName.trim(), referenceImage: genImg, settings: { ...modelSettings }, modelPrompt: buildModelPrompt(), createdAt: new Date().toISOString(), usageCount: 0 };
+    const profile: SavedModelProfile = { 
+      id: `model-${Date.now()}`, 
+      name: newModelName.trim(), 
+      referenceImage: genImg, 
+      settings: { ...modelSettings }, 
+      modelPrompt: buildModelPrompt(), 
+      createdAt: new Date().toISOString(), 
+      usageCount: 0 
+    };
     onSaveModel(profile);
     setNewModelName(''); setShowSaveModal(false); setModelTab('saved'); setSelModelId(profile.id);
   };
@@ -181,7 +227,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
 
   const handleSelectTool = (t: ToolType) => {
     if (genImg && tool !== t && !confirm('Descartar imagem gerada?')) return;
-    setGenImg(null); setGenId(null); setShowRefine(false); setError(null); setTool(t); setViewMode('original');
+    setGenImg(null); setGenId(null); setShowRefine(false); setError(null); setTool(t === tool ? null : t); setViewMode('original');
   };
 
   const displayImage = viewMode === 'result' && genImg ? genImg : (current?.base64 || current?.url);
@@ -212,6 +258,9 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
                 <img src={genImg} className="w-full h-full object-cover object-top" />
               </div>
             </div>
+            <p className="text-sm text-slate-500 text-center mb-4">
+              Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.
+            </p>
             <input type="text" value={newModelName} onChange={(e) => setNewModelName(e.target.value)} placeholder="Nome do modelo..." className="w-full p-3 border border-slate-300 rounded-lg mb-4" autoFocus />
             <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold disabled:opacity-50">
               <i className="fas fa-save mr-2"></i>Salvar
@@ -219,6 +268,509 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           </div>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* DESKTOP LAYOUT */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="hidden md:flex bg-slate-50 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex-col">
+        
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
+              <i className="fas fa-arrow-left"></i>
+            </button>
+            <div className="text-white">
+              <h2 className="font-bold text-lg">{product.name}</h2>
+              <p className="text-sm text-white/70 font-mono">{product.sku}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 rounded-xl px-4 py-2 text-white flex items-center gap-2">
+              <i className="fas fa-bolt text-yellow-300"></i>
+              <span className="font-bold">{userCredits}</span>
+              <span className="text-white/70 text-sm">créditos</span>
+            </div>
+            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors">
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left Panel - Images */}
+          <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
+            
+            {/* Image Preview Area */}
+            <div className="flex gap-4 min-h-[300px]">
+              {/* Original */}
+              <div className="w-1/3 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col shadow-sm">
+                <h3 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                  <i className="fas fa-bullseye text-slate-400"></i>
+                  Imagem de Referência
+                </h3>
+                <div className="flex-1 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center">
+                  {hasOrig ? (
+                    <img src={current.base64 || current.url} className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="text-slate-400 text-center text-xs">
+                      <i className="fas fa-image text-3xl mb-2"></i>
+                      <p>Selecione uma imagem</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Result */}
+              <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col relative group shadow-sm">
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Resultado</h3>
+                <div className="flex-1 bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl overflow-hidden relative flex items-center justify-center">
+                  {isGen ? (
+                    <div className="flex flex-col items-center text-purple-500">
+                      <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin mb-3"></div>
+                      <p className="text-sm font-bold">Gerando...</p>
+                    </div>
+                  ) : genImg ? (
+                    <>
+                      <img src={genImg} className="w-full h-full object-contain" />
+                      <button onClick={() => setZoom(genImg)} className="absolute top-3 right-3 w-10 h-10 bg-black/50 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i className="fas fa-expand"></i>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center text-slate-400 p-8">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i className="fas fa-wand-magic-sparkles text-2xl text-slate-300"></i>
+                      </div>
+                      <p className="text-sm">Configure ao lado e clique em Gerar</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action buttons when image generated */}
+                {genImg && !isGen && !showRefine && (
+                  <div className="absolute bottom-6 left-6 right-6 flex justify-center gap-3">
+                    <button onClick={() => { setGenImg(null); setGenId(null); }} className="w-12 h-12 bg-white text-red-500 rounded-full shadow-lg flex items-center justify-center border border-red-100 hover:bg-red-50 transition-colors">
+                      <i className="fas fa-trash-alt"></i>
+                    </button>
+                    <button onClick={handleSave} disabled={isSaving} className="flex-1 max-w-xs h-12 bg-green-600 hover:bg-green-700 text-white font-bold rounded-full shadow-xl flex items-center justify-center gap-2 transition-colors">
+                      {isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}
+                      Salvar no Produto
+                    </button>
+                    <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-white text-purple-600 rounded-full shadow-lg flex items-center justify-center border border-purple-100 hover:bg-purple-50 transition-colors">
+                      <i className="fas fa-magic"></i>
+                    </button>
+                    {tool === 'lifestyle' && modelTab === 'new' && (
+                      <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-white text-indigo-600 rounded-full shadow-lg flex items-center justify-center border border-indigo-100 hover:bg-indigo-50 transition-colors">
+                        <i className="fas fa-user-plus"></i>
+                      </button>
+                    )}
+                  </div>
+                )}
+                
+                {/* Refine Panel */}
+                {showRefine && genImg && (
+                  <div className="absolute bottom-4 left-4 right-4 p-4 bg-white shadow-lg rounded-xl border border-purple-100">
+                    <textarea value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="O que você gostaria de ajustar na imagem?" className="w-full p-2 border border-purple-200 rounded-lg text-sm resize-none mb-2" rows={2} />
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setShowRefine(false)} className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700">Cancelar</button>
+                      <button onClick={handleRefine} disabled={!refinePrompt.trim() || isGen} className="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 disabled:opacity-50">
+                        <i className="fas fa-magic mr-1"></i>Refinar (1 créd.)
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+                <i className="fas fa-exclamation-circle text-red-500"></i>
+                <p className="text-xs text-red-700 flex-1">{error}</p>
+                <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            )}
+
+            {/* Gallery */}
+            <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col min-h-[120px] shadow-sm">
+              <h3 className="text-xs font-bold text-slate-700 uppercase mb-3 flex items-center gap-2">
+                <i className="fas fa-th-large text-slate-400"></i>
+                Galeria do Produto
+              </h3>
+              <div className="flex-1 overflow-y-auto">
+                {images.length > 0 ? (
+                  <div className="grid grid-cols-6 lg:grid-cols-8 gap-2">
+                    {images.map((img, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => setSelIdx(idx)} 
+                        className={`aspect-square rounded-xl overflow-hidden cursor-pointer relative group border-2 transition-all ${
+                          selIdx === idx 
+                            ? 'border-purple-500 ring-2 ring-purple-500/20' 
+                            : 'border-slate-100 hover:border-slate-300'
+                        }`}
+                      >
+                        <img src={img.base64 || img.url} className="w-full h-full object-cover" />
+                        {selIdx === idx && (
+                          <div className="absolute inset-0 bg-purple-500/10 flex items-center justify-center">
+                            <div className="bg-purple-500 text-white w-5 h-5 rounded-full flex items-center justify-center">
+                              <i className="fas fa-check text-[8px]"></i>
+                            </div>
+                          </div>
+                        )}
+                        <button 
+                          onClick={(e) => handleDeleteImg(idx, e)} 
+                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 text-[8px] transition-opacity"
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-slate-400 text-xs">
+                    Nenhuma imagem no produto
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Panel - Tools */}
+          <div className="w-80 bg-white border-l border-slate-200 p-5 overflow-y-auto flex-shrink-0">
+            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <i className="fas fa-toolbox text-purple-500"></i>
+              Ferramentas
+            </h3>
+            
+            <div className="space-y-3">
+              {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
+                <div 
+                  key={t} 
+                  onClick={() => handleSelectTool(t)} 
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    tool === t 
+                      ? 'border-purple-500 bg-purple-50 shadow-md' 
+                      : 'border-slate-200 hover:border-purple-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        tool === t 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        <i className={`fas ${TOOL_CFG[t].icon}`}></i>
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-800 block">{TOOL_CFG[t].name}</span>
+                        <span className="text-xs text-slate-500">{TOOL_CFG[t].desc}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full text-amber-600 bg-amber-50">
+                      {TOOL_CFG[t].credits} créd.
+                    </span>
+                  </div>
+                  
+                  {/* Tool expanded content */}
+                  {tool === t && (
+                    <div className="mt-3 pt-3 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
+                      
+                      {/* STUDIO READY */}
+                      {t === 'studio' && (
+                        <>
+                          <p className="text-xs text-slate-600 mb-3">{TOOL_CFG.studio.fullDesc}</p>
+                          <button 
+                            onClick={handleGen} 
+                            disabled={isGen || !hasOrig} 
+                            className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                          >
+                            {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
+                            {isGen ? 'Gerando...' : 'Gerar'}
+                          </button>
+                        </>
+                      )}
+                      
+                      {/* CENÁRIO CRIATIVO */}
+                      {t === 'cenario' && (
+                        <>
+                          <p className="text-xs text-slate-600 mb-3">{TOOL_CFG.cenario.fullDesc}</p>
+                          <textarea 
+                            value={cenPrompt} 
+                            onChange={(e) => setCenPrompt(e.target.value)} 
+                            placeholder="Descreva o cenário... Ex: Mesa de madeira com plantas, luz natural..." 
+                            className="w-full p-2 border border-slate-200 rounded-lg text-sm resize-none mb-3" 
+                            rows={3} 
+                          />
+                          <button 
+                            onClick={handleGen} 
+                            disabled={isGen || !hasOrig || !cenPrompt.trim()} 
+                            className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                          >
+                            {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
+                            {isGen ? 'Gerando...' : 'Gerar Cenário'}
+                          </button>
+                        </>
+                      )}
+                      
+                      {/* MODELO IA */}
+                      {t === 'lifestyle' && (
+                        <>
+                          <p className="text-xs text-slate-600 mb-3">{TOOL_CFG.lifestyle.fullDesc}</p>
+                          
+                          {/* Tabs */}
+                          <div className="flex bg-slate-200 rounded-lg p-1 mb-3">
+                            <button 
+                              onClick={() => setModelTab('new')} 
+                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                modelTab === 'new' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                              }`}
+                            >
+                              Novo Modelo
+                            </button>
+                            <button 
+                              onClick={() => setModelTab('saved')} 
+                              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                                modelTab === 'saved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                              }`}
+                            >
+                              Salvos ({savedModels.length})
+                            </button>
+                          </div>
+                          
+                          {/* Product Description - IMPORTANT */}
+                          <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                            <label className="text-[9px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
+                              <i className="fas fa-exclamation-triangle"></i>
+                              Descreva o produto principal
+                            </label>
+                            <textarea 
+                              value={prodDesc} 
+                              onChange={(e) => setProdDesc(e.target.value)} 
+                              placeholder="Ex: Camiseta preta com logo Nike branco no peito, gola redonda, tecido algodão, corte regular..." 
+                              className="w-full p-2 bg-white border border-amber-300 rounded text-[11px] resize-none" 
+                              rows={2} 
+                            />
+                            <p className="text-[9px] text-amber-600 mt-1">
+                              <i className="fas fa-info-circle mr-1"></i>
+                              Quanto mais detalhes (cor, estampa, logo, corte, tecido), mais fiel será o resultado.
+                            </p>
+                          </div>
+                          
+                          {/* Product Category */}
+                          <div className="mb-3">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                              <i className="fas fa-tshirt text-slate-400"></i>
+                              O que é o produto principal?
+                            </label>
+                            <select 
+                              value={category} 
+                              onChange={(e) => setCategory(e.target.value)} 
+                              className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs"
+                            >
+                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                            </select>
+                            <p className="text-[9px] text-slate-400 mt-1">A IA usará isso para não alterar o produto.</p>
+                          </div>
+                          
+                          {/* New Model Options */}
+                          {modelTab === 'new' && (
+                            <div className="space-y-3 mb-3">
+                              {/* Gender */}
+                              <div>
+                                <label className="text-[9px] font-bold text-slate-500 uppercase mb-1.5 block">Gênero</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {MODEL_OPTS.gender.map(g => (
+                                    <button 
+                                      key={g.id} 
+                                      onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} 
+                                      className={`py-2 rounded-lg text-xs font-bold border-2 transition-all flex items-center justify-center gap-2 ${
+                                        modelSettings.gender === g.id 
+                                          ? 'bg-slate-900 border-slate-900 text-white' 
+                                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'
+                                      }`}
+                                    >
+                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>
+                                      {g.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Ethnicity & Body Type */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block">Etnia</label>
+                                  <select 
+                                    value={modelSettings.ethnicity} 
+                                    onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} 
+                                    className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs"
+                                  >
+                                    {MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block">Porte Físico</label>
+                                  <select 
+                                    value={modelSettings.bodyType} 
+                                    onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} 
+                                    className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs"
+                                  >
+                                    {MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+                                  </select>
+                                </div>
+                              </div>
+                              
+                              {/* Age */}
+                              <div>
+                                <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block">Faixa Etária</label>
+                                <select 
+                                  value={modelSettings.ageRange} 
+                                  onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} 
+                                  className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs"
+                                >
+                                  {MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                                </select>
+                              </div>
+                              
+                              {/* Facial Details */}
+                              <div>
+                                <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block">Detalhes Faciais (opcional)</label>
+                                <textarea 
+                                  value={modelDetail} 
+                                  onChange={(e) => setModelDetail(e.target.value)} 
+                                  placeholder="Ex: Cabelos longos ondulados, olhos verdes, sardas..." 
+                                  className="w-full p-2 bg-white border border-slate-200 rounded text-xs resize-none" 
+                                  rows={2} 
+                                />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Saved Models */}
+                          {modelTab === 'saved' && (
+                            <div className="space-y-2 mb-3 max-h-32 overflow-y-auto">
+                              {savedModels.length === 0 ? (
+                                <div className="text-center py-4 text-slate-400 text-xs bg-slate-50 rounded-lg border border-dashed">
+                                  <i className="fas fa-user-slash text-lg mb-1"></i>
+                                  <p>Nenhum modelo salvo</p>
+                                </div>
+                              ) : savedModels.map(m => (
+                                <div 
+                                  key={m.id} 
+                                  onClick={() => setSelModelId(m.id)} 
+                                  className={`p-2 rounded-lg border-2 cursor-pointer flex items-center gap-2 transition-all ${
+                                    selModelId === m.id 
+                                      ? 'bg-slate-900 border-slate-900 text-white' 
+                                      : 'bg-white border-slate-200 hover:border-slate-400 text-slate-700'
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
+                                    <img src={m.referenceImage} className="w-full h-full object-cover object-top" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-xs truncate">{m.name}</p>
+                                    <p className={`text-[9px] ${selModelId === m.id ? 'text-slate-400' : 'text-slate-500'}`}>
+                                      Usado {m.usageCount}x
+                                    </p>
+                                  </div>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} 
+                                    className={`${selModelId === m.id ? 'text-slate-500' : 'text-slate-300'} hover:text-red-400`}
+                                  >
+                                    <i className="fas fa-trash text-[10px]"></i>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Additional Options */}
+                          <div className="space-y-2 pt-2 border-t border-slate-200">
+                            <div>
+                              <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                                <i className="fas fa-shirt text-slate-400"></i>
+                                Roupa
+                              </label>
+                              <textarea 
+                                value={clothing} 
+                                onChange={(e) => setClothing(e.target.value)} 
+                                placeholder="Ex: Camiseta branca básica, jeans azul..." 
+                                className="w-full p-2 bg-white border border-slate-200 rounded text-xs resize-none" 
+                                rows={2} 
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                                <i className="fas fa-walking text-slate-400"></i>
+                                Pose / Expressão
+                              </label>
+                              <textarea 
+                                value={pose} 
+                                onChange={(e) => setPose(e.target.value)} 
+                                placeholder="Ex: Em pé confiante, mãos no bolso..." 
+                                className="w-full p-2 bg-white border border-slate-200 rounded text-xs resize-none" 
+                                rows={2} 
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Look Composer */}
+                          <div className="mt-3">
+                            <button 
+                              onClick={() => setShowLook(!showLook)} 
+                              className="w-full flex items-center justify-between p-2 bg-indigo-50 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                            >
+                              <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                                <i className="fas fa-layer-group text-indigo-600"></i>
+                                Composição de Look
+                                {Object.keys(look).length > 0 && (
+                                  <span className="text-indigo-600">({Object.keys(look).length})</span>
+                                )}
+                              </span>
+                              <i className={`fas fa-chevron-down text-slate-400 transition-transform ${showLook ? 'rotate-180' : ''}`}></i>
+                            </button>
+                            {showLook && (
+                              <div className="mt-2">
+                                <LookComposer products={products} composition={look} onChange={setLook} />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Generate Button */}
+                          <button 
+                            onClick={handleGen} 
+                            disabled={isGen || !hasOrig || (modelTab === 'saved' && !selModelId)} 
+                            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-4 shadow-lg shadow-slate-900/20 transition-colors"
+                          >
+                            {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
+                            {isGen ? 'Gerando...' : `Gerar com Modelo (${TOOL_CFG.lifestyle.credits} créd.)`}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Tip */}
+            <div className="mt-6 p-4 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200">
+              <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <i className="fas fa-lightbulb text-yellow-500"></i>
+                Dica de Consistência
+              </h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Ao <strong>Salvar um Modelo</strong>, a imagem gerada será usada como <strong>referência facial</strong>. Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* MOBILE LAYOUT */}
@@ -240,6 +792,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
             <div className="bg-white/20 rounded-lg px-3 py-1.5 text-white flex items-center gap-1.5">
               <i className="fas fa-bolt text-yellow-300 text-xs"></i>
               <span className="font-bold text-sm">{userCredits}</span>
+              <span className="text-white/70 text-xs">créditos</span>
             </div>
             <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center">
               <i className="fas fa-times text-sm"></i>
@@ -247,7 +800,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           </div>
         </div>
 
-        {/* Mobile Content - Scrollable */}
+        {/* Mobile Content */}
         <div className="flex-1 overflow-y-auto pb-24">
           
           {/* Image Display */}
@@ -290,7 +843,6 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
               </div>
             )}
 
-            {/* Zoom button */}
             {displayImage && !isGen && (
               <button 
                 onClick={() => setZoom(displayImage)} 
@@ -301,7 +853,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
             )}
           </div>
 
-          {/* Gallery - Horizontal Scroll */}
+          {/* Gallery */}
           <div className="bg-white border-b border-slate-200 px-4 py-3">
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {images.map((img, idx) => (
@@ -337,226 +889,195 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
             </div>
           )}
 
-          {/* Tools Tabs */}
+          {/* Tools */}
           <div className="px-4 py-3">
             <h3 className="text-xs font-bold text-slate-500 uppercase mb-2">Ferramentas</h3>
-            <div className="flex gap-2">
-              {(['studio', 'cenario', 'lifestyle', 'provador'] as ToolType[]).map(t => t && (
-                <button
+            <div className="space-y-2">
+              {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
+                <div
                   key={t}
                   onClick={() => handleSelectTool(t)}
-                  disabled={t === 'provador' && clientsWithProvador.length === 0}
-                  className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all flex flex-col items-center gap-1 ${
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
                     tool === t 
-                      ? t === 'provador' 
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-                        : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
-                      : t === 'provador' && clientsWithProvador.length === 0
-                        ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
-                        : 'bg-slate-100 text-slate-600'
+                      ? 'border-purple-500 bg-purple-50 shadow-md' 
+                      : 'border-slate-200 bg-white'
                   }`}
                 >
-                  <i className={`fas ${TOOL_CFG[t].icon}`}></i>
-                  <span>{TOOL_CFG[t].name}</span>
-                  <span className={`text-[10px] ${tool === t ? 'text-white/70' : 'text-amber-600'}`}>
-                    {TOOL_CFG[t].credits} créd.
-                  </span>
-                </button>
-              ))}
-            </div>
-            {clientsWithProvador.length === 0 && (
-              <p className="text-[10px] text-slate-400 mt-2 text-center">
-                <i className="fas fa-info-circle mr-1"></i>
-                Cadastre clientes com foto para usar o Provador IA
-              </p>
-            )}
-          </div>
-
-          {/* Tool Config */}
-          {tool && (
-            <div className="px-4 pb-4">
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                
-                {tool === 'studio' && (
-                  <div className="text-center py-4">
-                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <i className="fas fa-magic text-purple-600 text-2xl"></i>
-                    </div>
-                    <p className="text-sm text-slate-600">Remove o fundo e aplica fundo branco profissional</p>
-                  </div>
-                )}
-                
-                {tool === 'cenario' && (
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 mb-2 block">Descreva o cenário</label>
-                    <textarea 
-                      value={cenPrompt} 
-                      onChange={(e) => setCenPrompt(e.target.value)} 
-                      placeholder="Ex: Em uma praia tropical ao pôr do sol..."
-                      className="w-full p-3 border border-slate-200 rounded-xl text-sm resize-none" 
-                      rows={3} 
-                    />
-                  </div>
-                )}
-                
-                {tool === 'lifestyle' && (
-                  <div className="space-y-4">
-                    <div className="flex bg-slate-200 rounded-lg p-1">
-                      <button onClick={() => setModelTab('new')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'new' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Novo Modelo</button>
-                      <button onClick={() => setModelTab('saved')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'saved' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Salvos ({savedModels.length})</button>
-                    </div>
-                    
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                      <label className="text-[10px] font-bold text-amber-700 uppercase mb-1 block"><i className="fas fa-exclamation-triangle mr-1"></i>Descreva o produto</label>
-                      <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs resize-none" rows={2} />
-                    </div>
-                    
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Tipo do produto</label>
-                      <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
-                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                      </select>
-                    </div>
-                    
-                    {modelTab === 'new' && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          {MODEL_OPTS.gender.map(g => (
-                            <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-3 rounded-xl text-sm font-bold border-2 ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200'}`}>{g.label}</button>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className="p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
-                          <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className="p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
-                        </div>
-                        <select value={modelSettings.ageRange} onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
-                        <textarea value={modelDetail} onChange={(e) => setModelDetail(e.target.value)} placeholder="Detalhes adicionais..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        tool === t ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        <i className={`fas ${TOOL_CFG[t].icon}`}></i>
                       </div>
-                    )}
-                    
-                    {modelTab === 'saved' && (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {savedModels.length === 0 ? (
-                          <div className="text-center py-6 text-slate-400 text-sm bg-white rounded-xl border border-dashed border-slate-300">
-                            <i className="fas fa-user-slash text-2xl mb-2"></i>
-                            <p>Nenhum modelo salvo</p>
-                          </div>
-                        ) : savedModels.map(m => (
-                          <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-3 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selModelId === m.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200'}`}>
-                            <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 flex-shrink-0"><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
-                            <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{m.name}</p><p className={`text-xs ${selModelId === m.id ? 'text-slate-400' : 'text-slate-500'}`}>Usado {m.usageCount}x</p></div>
-                            <button onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} className={`${selModelId === m.id ? 'text-slate-500' : 'text-slate-300'} hover:text-red-400`}><i className="fas fa-trash text-xs"></i></button>
-                          </div>
-                        ))}
+                      <div>
+                        <span className="font-bold text-slate-800 block text-sm">{TOOL_CFG[t].name}</span>
+                        <span className="text-xs text-slate-500">{TOOL_CFG[t].desc}</span>
                       </div>
-                    )}
-                    
-                    <div className="space-y-3 pt-3 border-t border-slate-200">
-                      <textarea value={clothing} onChange={(e) => setClothing(e.target.value)} placeholder="Roupas adicionais (opcional)..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
-                      <textarea value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Pose do modelo (opcional)..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
                     </div>
-                    
-                    <button onClick={() => setShowLook(!showLook)} className="w-full flex items-center justify-between p-3 bg-indigo-50 rounded-xl border border-indigo-200">
-                      <span className="text-sm font-bold text-slate-800"><i className="fas fa-layer-group text-indigo-600 mr-2"></i>Compor Look {Object.keys(look).length > 0 && <span className="text-indigo-600">({Object.keys(look).length})</span>}</span>
-                      <i className={`fas fa-chevron-down text-slate-400 transition-transform ${showLook ? 'rotate-180' : ''}`}></i>
-                    </button>
-                    {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} /></div>}
+                    <span className="text-xs font-bold px-2 py-1 rounded-full text-amber-600 bg-amber-50">
+                      {TOOL_CFG[t].credits} créd.
+                    </span>
                   </div>
-                )}
-                
-                {/* PROVADOR IA CONFIG */}
-                {tool === 'provador' && (
-                  <div className="space-y-4">
-                    {/* Cliente selecionado */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Cliente</label>
-                      {provadorClient ? (
-                        <div 
-                          onClick={() => setShowClientPicker(true)}
-                          className="flex items-center gap-3 p-3 bg-white border-2 border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors"
-                        >
-                          <img src={provadorClient.photo} alt={provadorClient.firstName} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
-                          <div className="flex-1">
-                            <p className="font-bold text-slate-800">{provadorClient.firstName} {provadorClient.lastName}</p>
-                            <p className="text-xs text-slate-500">{provadorClient.whatsapp}</p>
+                  
+                  {/* Expanded Tool Config */}
+                  {tool === t && (
+                    <div className="mt-3 pt-3 border-t border-slate-200" onClick={e => e.stopPropagation()}>
+                      
+                      {/* STUDIO */}
+                      {t === 'studio' && (
+                        <p className="text-xs text-slate-600">{TOOL_CFG.studio.fullDesc}</p>
+                      )}
+                      
+                      {/* CENÁRIO */}
+                      {t === 'cenario' && (
+                        <>
+                          <p className="text-xs text-slate-600 mb-2">{TOOL_CFG.cenario.fullDesc}</p>
+                          <textarea 
+                            value={cenPrompt} 
+                            onChange={e => setCenPrompt(e.target.value)}
+                            placeholder="Descreva o cenário... Ex: Mesa de madeira com plantas, luz natural..."
+                            className="w-full p-3 border border-slate-200 rounded-xl text-sm resize-none"
+                            rows={3}
+                          />
+                        </>
+                      )}
+                      
+                      {/* MODELO IA */}
+                      {t === 'lifestyle' && (
+                        <div className="space-y-3">
+                          <p className="text-xs text-slate-600">{TOOL_CFG.lifestyle.fullDesc}</p>
+                          
+                          <div className="flex bg-slate-200 rounded-lg p-1">
+                            <button onClick={() => setModelTab('new')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'new' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Novo Modelo</button>
+                            <button onClick={() => setModelTab('saved')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'saved' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Salvos ({savedModels.length})</button>
                           </div>
-                          <i className="fas fa-chevron-right text-slate-400"></i>
+                          
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                            <label className="text-[10px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
+                              <i className="fas fa-exclamation-triangle"></i>
+                              Descreva o produto principal
+                            </label>
+                            <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs resize-none" rows={2} />
+                            <p className="text-[9px] text-amber-600 mt-1">
+                              <i className="fas fa-info-circle mr-1"></i>
+                              Quanto mais detalhes (cor, estampa, logo, corte, tecido), mais fiel será o resultado.
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                              <i className="fas fa-tshirt text-slate-400"></i>
+                              O que é o produto principal?
+                            </label>
+                            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">
+                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                            </select>
+                            <p className="text-[9px] text-slate-400 mt-1">A IA usará isso para não alterar o produto.</p>
+                          </div>
+                          
+                          {modelTab === 'new' && (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Gênero</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {MODEL_OPTS.gender.map(g => (
+                                    <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-3 rounded-xl text-sm font-bold border-2 flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200'}`}>
+                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>
+                                      {g.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Etnia</label>
+                                  <select value={modelSettings.ethnicity} onChange={e => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Porte Físico</label>
+                                  <select value={modelSettings.bodyType} onChange={e => setModelSettings(p => ({...p, bodyType: e.target.value}))} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Faixa Etária</label>
+                                <select value={modelSettings.ageRange} onChange={e => setModelSettings(p => ({...p, ageRange: e.target.value}))} className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm">{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
+                              </div>
+                              
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Detalhes Faciais (opcional)</label>
+                                <textarea value={modelDetail} onChange={e => setModelDetail(e.target.value)} placeholder="Ex: Cabelos longos ondulados, olhos verdes, sardas..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                              </div>
+                            </div>
+                          )}
+                          
+                          {modelTab === 'saved' && (
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                              {savedModels.length === 0 ? (
+                                <div className="text-center py-6 text-slate-400 text-sm bg-white rounded-xl border border-dashed border-slate-300">
+                                  <i className="fas fa-user-slash text-2xl mb-2"></i>
+                                  <p>Nenhum modelo salvo</p>
+                                </div>
+                              ) : savedModels.map(m => (
+                                <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-3 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selModelId === m.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200'}`}>
+                                  <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 flex-shrink-0"><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
+                                  <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{m.name}</p><p className={`text-xs ${selModelId === m.id ? 'text-slate-400' : 'text-slate-500'}`}>Usado {m.usageCount}x</p></div>
+                                  <button onClick={e => { e.stopPropagation(); onDeleteModel(m.id); }} className={`${selModelId === m.id ? 'text-slate-500' : 'text-slate-300'} hover:text-red-400`}><i className="fas fa-trash text-xs"></i></button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="space-y-3 pt-3 border-t border-slate-200">
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                                <i className="fas fa-shirt text-slate-400"></i>
+                                Roupa
+                              </label>
+                              <textarea value={clothing} onChange={e => setClothing(e.target.value)} placeholder="Ex: Camiseta branca básica, jeans azul..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                                <i className="fas fa-walking text-slate-400"></i>
+                                Pose / Expressão
+                              </label>
+                              <textarea value={pose} onChange={e => setPose(e.target.value)} placeholder="Ex: Em pé confiante, mãos no bolso..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm resize-none" rows={2} />
+                            </div>
+                          </div>
+                          
+                          <button onClick={() => setShowLook(!showLook)} className="w-full flex items-center justify-between p-3 bg-indigo-50 rounded-xl border border-indigo-200">
+                            <span className="text-sm font-bold text-slate-800"><i className="fas fa-layer-group text-indigo-600 mr-2"></i>Composição de Look {Object.keys(look).length > 0 && <span className="text-indigo-600">({Object.keys(look).length})</span>}</span>
+                            <i className={`fas fa-chevron-down text-slate-400 transition-transform ${showLook ? 'rotate-180' : ''}`}></i>
+                          </button>
+                          {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} /></div>}
                         </div>
-                      ) : (
-                        <button 
-                          onClick={() => setShowClientPicker(true)}
-                          className="w-full p-4 border-2 border-dashed border-slate-300 rounded-xl text-center hover:border-emerald-400 hover:bg-emerald-50 transition-colors"
-                        >
-                          <i className="fas fa-user-plus text-slate-400 text-2xl mb-2"></i>
-                          <p className="text-sm text-slate-500">Selecionar Cliente</p>
-                        </button>
                       )}
                     </div>
-                    
-                    {/* Produtos selecionados */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Produtos</label>
-                        <button onClick={() => setShowProductPicker(true)} className="text-xs text-emerald-600 font-bold"><i className="fas fa-plus mr-1"></i>Adicionar</button>
-                      </div>
-                      <div className="space-y-2">
-                        {provadorProducts.map((p, idx) => (
-                          <div key={p.id} className="flex items-center gap-3 p-2 bg-white border border-slate-200 rounded-xl">
-                            <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-800 truncate">{p.name}</p>
-                              <p className="text-[10px] text-slate-500">{p.sku}</p>
-                            </div>
-                            {provadorProducts.length > 1 && (
-                              <button onClick={() => setProvadorProducts(prev => prev.filter(x => x.id !== p.id))} className="text-slate-300 hover:text-red-400">
-                                <i className="fas fa-times"></i>
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Mensagem WhatsApp */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">
-                        <i className="fab fa-whatsapp text-green-500 mr-1"></i>Mensagem
-                      </label>
-                      <textarea 
-                        value={provadorMessage} 
-                        onChange={(e) => setProvadorMessage(e.target.value)}
-                        className="w-full p-3 border border-slate-200 rounded-xl text-sm resize-none" 
-                        rows={4}
-                        placeholder="Use {nome} para personalizar..."
-                      />
-                      <p className="text-[10px] text-slate-400 mt-1">Use {'{nome}'} para o nome do cliente</p>
-                    </div>
-                    
-                    {/* Marca d'água */}
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className="flex items-center gap-2">
-                        <i className="fas fa-copyright text-slate-400"></i>
-                        <span className="text-sm text-slate-700">Adicionar marca d'água</span>
-                      </div>
-                      <button 
-                        onClick={() => setAddWatermark(!addWatermark)}
-                        className={`w-12 h-7 rounded-full transition-colors ${addWatermark ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${addWatermark ? 'translate-x-6' : 'translate-x-1'}`}></div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ))}
             </div>
-          )}
+            
+            {/* Tip */}
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <h4 className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-2">
+                <i className="fas fa-lightbulb text-yellow-500"></i>
+                Dica de Consistência
+              </h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Ao <strong>Salvar um Modelo</strong>, a imagem gerada será usada como <strong>referência facial</strong>. Nas próximas gerações com esse modelo, a IA tentará manter os mesmos traços.
+              </p>
+            </div>
+          </div>
 
           {/* Refine */}
           {showRefine && genImg && (
             <div className="px-4 pb-4">
               <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
                 <h4 className="text-sm font-bold text-purple-800 mb-2"><i className="fas fa-magic mr-2"></i>Refinar Imagem</h4>
-                <textarea value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="O que ajustar?" className="w-full p-3 border border-purple-200 rounded-xl text-sm resize-none mb-3" rows={2} />
+                <textarea value={refinePrompt} onChange={e => setRefinePrompt(e.target.value)} placeholder="O que ajustar?" className="w-full p-3 border border-purple-200 rounded-xl text-sm resize-none mb-3" rows={2} />
                 <div className="flex gap-2">
                   <button onClick={() => setShowRefine(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-500 bg-white rounded-xl border border-slate-200">Cancelar</button>
                   <button onClick={handleRefine} disabled={!refinePrompt.trim()} className="flex-1 py-2.5 bg-purple-600 text-white text-sm font-bold rounded-xl disabled:opacity-50"><i className="fas fa-magic mr-1"></i>Refinar (1 créd.)</button>
@@ -572,380 +1093,20 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
             <>
               <button onClick={() => { setGenImg(null); setGenId(null); setViewMode('original'); }} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-200"><i className="fas fa-trash-alt"></i></button>
               <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar</button>
-              {tool === 'provador' && provadorClient && onSendWhatsApp ? (
-                <button 
-                  onClick={() => {
-                    const msg = provadorMessage.replace('{nome}', provadorClient.firstName);
-                    onSendWhatsApp(provadorClient, msg, genImg || undefined);
-                  }} 
-                  className="flex-1 h-12 bg-green-500 text-white font-bold rounded-xl flex items-center justify-center gap-2"
-                >
-                  <i className="fab fa-whatsapp text-lg"></i>WhatsApp
-                </button>
-              ) : (
-                <>
-                  <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-200"><i className="fas fa-magic"></i></button>
-                  {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-200"><i className="fas fa-user-plus"></i></button>}
-                </>
-              )}
+              <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-200"><i className="fas fa-magic"></i></button>
+              {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-200"><i className="fas fa-user-plus"></i></button>}
             </>
           ) : (
             <button 
               onClick={handleGen} 
-              disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) || (tool === 'provador' && !provadorClient)} 
-              className={`flex-1 h-14 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500 ${
-                tool === 'provador' 
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600'
-              }`}
+              disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} 
+              className="flex-1 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500"
             >
               {isGen ? <><i className="fas fa-spinner fa-spin"></i><span>Gerando...</span></> : <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar Imagem</span>{tool && <span className="text-white/70">({TOOL_CFG[tool].credits} créd.)</span>}</>}
             </button>
           )}
         </div>
       </div>
-
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* DESKTOP LAYOUT */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="hidden md:flex bg-slate-50 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex-col">
-        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-4 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center"><i className="fas fa-arrow-left"></i></button>
-            <div className="text-white"><h2 className="font-bold text-lg">{product.name}</h2><p className="text-sm text-white/70 font-mono">{product.sku}</p></div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 rounded-xl px-4 py-2 text-white flex items-center gap-2"><i className="fas fa-bolt text-yellow-300"></i><span className="font-bold">{userCredits}</span></div>
-            <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center"><i className="fas fa-times"></i></button>
-          </div>
-        </div>
-        
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
-            <div className="flex gap-4 min-h-[300px]">
-              <div className="w-1/3 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col">
-                <h3 className="text-xs font-bold text-slate-500 uppercase mb-3"><i className="fas fa-bullseye mr-1"></i>Referência</h3>
-                <div className="flex-1 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center">
-                  {hasOrig ? <img src={current.base64 || current.url} className="w-full h-full object-contain" /> : <div className="text-slate-400 text-center text-xs"><i className="fas fa-image text-3xl mb-2"></i><p>Selecione</p></div>}
-                </div>
-              </div>
-              <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col relative group">
-                <h3 className="text-sm font-bold text-slate-700 mb-3"><i className="fas fa-sparkles text-purple-500 mr-2"></i>Resultado</h3>
-                <div className="flex-1 bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl overflow-hidden relative flex items-center justify-center">
-                  {isGen ? <div className="flex flex-col items-center text-purple-500"><div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-500 animate-spin mb-3"></div><p className="text-sm font-bold">Gerando...</p></div>
-                  : genImg ? <><img src={genImg} className="w-full h-full object-contain" /><button onClick={() => setZoom(genImg)} className="absolute top-3 right-3 w-10 h-10 bg-black/50 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100"><i className="fas fa-expand"></i></button></>
-                  : <div className="text-center text-slate-400 p-8"><div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3"><i className="fas fa-wand-magic-sparkles text-2xl text-slate-300"></i></div><p className="text-sm">Configure e clique em Gerar</p></div>}
-                </div>
-                {genImg && !isGen && !showRefine && (
-                  <div className="absolute bottom-6 left-6 right-6 flex justify-center gap-3">
-                    <button onClick={() => { setGenImg(null); setGenId(null); }} className="w-12 h-12 bg-white text-red-500 rounded-full shadow-lg flex items-center justify-center border border-red-100"><i className="fas fa-trash-alt"></i></button>
-                    <button onClick={handleSave} disabled={isSaving} className="flex-1 max-w-xs h-12 bg-green-600 text-white font-bold rounded-full shadow-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar</button>
-                    <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-white text-purple-600 rounded-full shadow-lg flex items-center justify-center border border-purple-100"><i className="fas fa-magic"></i></button>
-                    {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-white text-indigo-600 rounded-full shadow-lg flex items-center justify-center border border-indigo-100"><i className="fas fa-user-plus"></i></button>}
-                  </div>
-                )}
-                {showRefine && genImg && (
-                  <div className="absolute bottom-4 left-4 right-4 p-4 bg-white shadow-lg rounded-xl border border-purple-100">
-                    <textarea value={refinePrompt} onChange={(e) => setRefinePrompt(e.target.value)} placeholder="O que ajustar?" className="w-full p-2 border border-purple-200 rounded-lg text-sm resize-none mb-2" rows={2} />
-                    <div className="flex justify-end gap-2">
-                      <button onClick={() => setShowRefine(false)} className="px-3 py-1.5 text-xs text-slate-500">Cancelar</button>
-                      <button onClick={handleRefine} className="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg"><i className="fas fa-magic mr-1"></i>Refinar (1 créd.)</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3"><i className="fas fa-exclamation-circle text-red-500"></i><p className="text-xs text-red-700">{error}</p><button onClick={() => setError(null)} className="ml-auto text-red-400"><i className="fas fa-times"></i></button></div>}
-
-            <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-4 flex flex-col min-h-[120px]">
-              <h3 className="text-xs font-bold text-slate-700 uppercase mb-3"><i className="fas fa-th-large text-slate-400 mr-1"></i>Galeria</h3>
-              <div className="flex-1 overflow-y-auto">
-                {images.length > 0 ? (
-                  <div className="grid grid-cols-6 lg:grid-cols-8 gap-2">
-                    {images.map((img, idx) => (
-                      <div key={idx} onClick={() => setSelIdx(idx)} className={`aspect-square rounded-xl overflow-hidden cursor-pointer relative group border-2 transition-all ${selIdx === idx ? 'border-purple-500 ring-2 ring-purple-500/20' : 'border-slate-100 hover:border-slate-300'}`}>
-                        <img src={img.base64 || img.url} className="w-full h-full object-cover" />
-                        {selIdx === idx && <div className="absolute inset-0 bg-purple-500/10 flex items-center justify-center"><div className="bg-purple-500 text-white w-5 h-5 rounded-full flex items-center justify-center"><i className="fas fa-check text-[8px]"></i></div></div>}
-                        <button onClick={(e) => handleDeleteImg(idx, e)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 text-[8px]"><i className="fas fa-times"></i></button>
-                      </div>
-                    ))}
-                  </div>
-                ) : <div className="h-full flex items-center justify-center text-slate-400 text-xs">Nenhuma imagem</div>}
-              </div>
-            </div>
-          </div>
-          
-          <div className="w-80 bg-white border-l border-slate-200 p-5 overflow-y-auto flex-shrink-0">
-            <h3 className="text-lg font-bold text-slate-800 mb-4"><i className="fas fa-toolbox text-purple-500 mr-2"></i>Ferramentas</h3>
-            <div className="space-y-3">
-              {(['studio', 'cenario', 'lifestyle', 'provador'] as ToolType[]).map(t => t && (
-                <div 
-                  key={t} 
-                  onClick={() => !(t === 'provador' && clientsWithProvador.length === 0) && handleSelectTool(t)} 
-                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    t === 'provador' && clientsWithProvador.length === 0 
-                      ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
-                      : tool === t 
-                        ? t === 'provador'
-                          ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                          : 'border-purple-500 bg-purple-50 shadow-md' 
-                        : 'border-slate-200 hover:border-purple-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                        tool === t 
-                          ? t === 'provador' ? 'bg-emerald-600 text-white' : 'bg-purple-600 text-white' 
-                          : 'bg-slate-100 text-slate-500'
-                      }`}><i className={`fas ${TOOL_CFG[t].icon}`}></i></div>
-                      <span className="font-bold text-slate-800">{TOOL_CFG[t].name}</span>
-                    </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      t === 'provador' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'
-                    }`}>{TOOL_CFG[t].credits} créd.</span>
-                  </div>
-                  
-                  {tool === t && (
-                    <div className="mt-3 pt-3 border-t border-slate-200" onClick={(e) => e.stopPropagation()}>
-                      {t === 'studio' && <button onClick={handleGen} disabled={isGen || !hasOrig} className="w-full py-2.5 bg-purple-600 text-white font-bold rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2">{isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}{isGen ? 'Gerando...' : 'Gerar'}</button>}
-                      
-                      {t === 'cenario' && <>
-                        <textarea value={cenPrompt} onChange={(e) => setCenPrompt(e.target.value)} placeholder="Descreva o cenário..." className="w-full p-2 border border-slate-200 rounded-lg text-sm resize-none mb-3" rows={3} />
-                        <button onClick={handleGen} disabled={isGen || !hasOrig || !cenPrompt.trim()} className="w-full py-2.5 bg-purple-600 text-white font-bold rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2">{isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}{isGen ? 'Gerando...' : 'Gerar'}</button>
-                      </>}
-                      
-                      {t === 'lifestyle' && <>
-                        <div className="flex bg-slate-200 rounded-lg p-1 mb-3">
-                          <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 text-xs font-bold rounded-md ${modelTab === 'new' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>Novo</button>
-                          <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 text-xs font-bold rounded-md ${modelTab === 'saved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>Salvos ({savedModels.length})</button>
-                        </div>
-                        
-                        <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                          <label className="text-[9px] font-bold text-amber-700 uppercase mb-1 block"><i className="fas fa-exclamation-triangle mr-1"></i>Descreva o produto</label>
-                          <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className="w-full p-2 bg-white border border-amber-300 rounded text-[11px] resize-none" rows={2} />
-                        </div>
-                        
-                        <div className="mb-3">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block">Tipo do produto</label>
-                          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs">{CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select>
-                        </div>
-                        
-                        {modelTab === 'new' && (
-                          <div className="space-y-3 mb-3">
-                            <div className="grid grid-cols-2 gap-2">{MODEL_OPTS.gender.map(g => <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-1.5 rounded-lg text-xs font-bold border ${modelSettings.gender === g.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 text-slate-600'}`}>{g.label}</button>)}</div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className="p-1.5 bg-white border border-slate-200 rounded text-xs">{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
-                              <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className="p-1.5 bg-white border border-slate-200 rounded text-xs">{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
-                            </div>
-                            <select value={modelSettings.ageRange} onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} className="w-full p-1.5 bg-white border border-slate-200 rounded text-xs">{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
-                            <textarea value={modelDetail} onChange={(e) => setModelDetail(e.target.value)} placeholder="Detalhes faciais..." className="w-full p-2 bg-white border border-slate-200 rounded text-xs resize-none" rows={2} />
-                          </div>
-                        )}
-                        
-                        {modelTab === 'saved' && (
-                          <div className="space-y-2 mb-3 max-h-32 overflow-y-auto">
-                            {savedModels.length === 0 ? <div className="text-center py-4 text-slate-400 text-xs bg-slate-50 rounded-lg border border-dashed">Nenhum modelo salvo</div> : savedModels.map(m => (
-                              <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-2 rounded-lg border cursor-pointer flex items-center gap-2 ${selModelId === m.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-200 hover:border-slate-400 text-slate-700'}`}>
-                                <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100"><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
-                                <div className="flex-1 min-w-0"><p className="font-bold text-xs truncate">{m.name}</p><p className={`text-[9px] ${selModelId === m.id ? 'text-slate-400' : 'text-slate-500'}`}>{m.usageCount}x</p></div>
-                                <button onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} className={`${selModelId === m.id ? 'text-slate-500' : 'text-slate-300'} hover:text-red-400`}><i className="fas fa-trash text-[10px]"></i></button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <div className="space-y-2 pt-2 border-t border-slate-200">
-                          <textarea value={clothing} onChange={(e) => setClothing(e.target.value)} placeholder="Roupas adicionais..." className="w-full p-2 bg-white border border-slate-200 rounded text-xs resize-none" rows={2} />
-                          <textarea value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Pose..." className="w-full p-2 bg-white border border-slate-200 rounded text-xs resize-none" rows={2} />
-                        </div>
-                        
-                        <div className="mt-3">
-                          <button onClick={() => setShowLook(!showLook)} className="w-full flex items-center justify-between p-2 bg-indigo-50 rounded-lg border border-indigo-200">
-                            <span className="text-xs font-bold text-slate-800"><i className="fas fa-layer-group text-indigo-600 mr-2"></i>Look {Object.keys(look).length > 0 && <span className="text-indigo-600">({Object.keys(look).length})</span>}</span>
-                            <i className={`fas fa-chevron-down text-slate-400 transition-transform ${showLook ? 'rotate-180' : ''}`}></i>
-                          </button>
-                          {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} /></div>}
-                        </div>
-                        
-                        <button onClick={handleGen} disabled={isGen || !hasOrig || (modelTab === 'saved' && !selModelId)} className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-3">{isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}{isGen ? 'Gerando...' : `Gerar (${TOOL_CFG.lifestyle.credits} créd.)`}</button>
-                      </>}
-                      
-                      {/* PROVADOR IA CONFIG - Desktop */}
-                      {t === 'provador' && clientsWithProvador.length > 0 && <>
-                        {/* Cliente */}
-                        <div className="mb-3">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase mb-1.5 block">Cliente</label>
-                          {provadorClient ? (
-                            <div onClick={() => setShowClientPicker(true)} className="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg cursor-pointer hover:bg-emerald-100">
-                              <img src={provadorClient.photo} alt="" className="w-8 h-8 rounded-full object-cover" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-slate-800 truncate">{provadorClient.firstName} {provadorClient.lastName}</p>
-                                <p className="text-[10px] text-slate-500">{provadorClient.whatsapp}</p>
-                              </div>
-                              <i className="fas fa-chevron-right text-slate-400 text-[10px]"></i>
-                            </div>
-                          ) : (
-                            <button onClick={() => setShowClientPicker(true)} className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-center hover:border-emerald-400">
-                              <i className="fas fa-user-plus text-slate-300 text-lg mb-1"></i>
-                              <p className="text-[10px] text-slate-400">Selecionar Cliente</p>
-                            </button>
-                          )}
-                        </div>
-                        
-                        {/* Produtos */}
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase">Produtos ({provadorProducts.length})</label>
-                            <button onClick={() => setShowProductPicker(true)} className="text-[10px] text-emerald-600 font-bold"><i className="fas fa-plus mr-1"></i>Add</button>
-                          </div>
-                          <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                            {provadorProducts.map(p => (
-                              <div key={p.id} className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-lg">
-                                <img src={p.images[0]?.base64 || p.images[0]?.url} alt="" className="w-8 h-8 rounded object-cover" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-medium text-slate-700 truncate">{p.name}</p>
-                                </div>
-                                {provadorProducts.length > 1 && (
-                                  <button onClick={() => setProvadorProducts(pr => pr.filter(x => x.id !== p.id))} className="text-slate-300 hover:text-red-400"><i className="fas fa-times text-[10px]"></i></button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {/* Mensagem */}
-                        <div className="mb-3">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block"><i className="fab fa-whatsapp text-green-500 mr-1"></i>Mensagem</label>
-                          <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} className="w-full p-2 border border-slate-200 rounded-lg text-[11px] resize-none" rows={3} />
-                        </div>
-                        
-                        {/* Marca d'água */}
-                        <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg mb-3">
-                          <span className="text-[10px] text-slate-600"><i className="fas fa-copyright mr-1"></i>Marca d'água</span>
-                          <button onClick={() => setAddWatermark(!addWatermark)} className={`w-10 h-5 rounded-full ${addWatermark ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                            <div className={`w-4 h-4 bg-white rounded-full shadow transform transition-transform ${addWatermark ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
-                          </button>
-                        </div>
-                        
-                        {/* Botões */}
-                        <div className="space-y-2">
-                          <button onClick={handleGen} disabled={isGen || !hasOrig || !provadorClient} className="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2">
-                            {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-wand-magic-sparkles"></i>}
-                            {isGen ? 'Gerando...' : `Gerar (${TOOL_CFG.provador.credits} créd.)`}
-                          </button>
-                          {genImg && provadorClient && onSendWhatsApp && (
-                            <button onClick={() => { const msg = provadorMessage.replace('{nome}', provadorClient.firstName); onSendWhatsApp(provadorClient, msg, genImg || undefined); }} className="w-full py-2.5 bg-green-500 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2">
-                              <i className="fab fa-whatsapp"></i>Enviar WhatsApp
-                            </button>
-                          )}
-                        </div>
-                      </>}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CLIENT PICKER MODAL */}
-      {showClientPicker && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Selecionar Cliente</h3>
-              <button onClick={() => setShowClientPicker(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div className="p-4">
-              <input
-                type="text"
-                placeholder="Buscar cliente..."
-                value={clientSearch}
-                onChange={(e) => setClientSearch(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl mb-4"
-              />
-              
-              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                {clientsWithProvador.filter(c => 
-                  `${c.firstName} ${c.lastName}`.toLowerCase().includes(clientSearch.toLowerCase())
-                ).map(client => (
-                  <div
-                    key={client.id}
-                    onClick={() => { setProvadorClient(client); setShowClientPicker(false); }}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${
-                      provadorClient?.id === client.id
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
-                    }`}
-                  >
-                    <img src={client.photo} alt={client.firstName} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-800">{client.firstName} {client.lastName}</p>
-                      <p className="text-xs text-slate-500">{client.whatsapp}</p>
-                    </div>
-                    {provadorClient?.id === client.id && (
-                      <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                        <i className="fas fa-check text-white text-xs"></i>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {clientsWithProvador.length === 0 && (
-                  <div className="text-center py-8 text-slate-400">
-                    <i className="fas fa-user-slash text-3xl mb-3"></i>
-                    <p className="text-sm">Nenhum cliente com foto cadastrada</p>
-                    <p className="text-xs mt-1">Cadastre clientes com foto para usar o Provador IA</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PRODUCT PICKER MODAL */}
-      {showProductPicker && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Adicionar Produto</h3>
-              <button onClick={() => setShowProductPicker(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div className="p-4">
-              <div className="grid grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto">
-                {products.filter(p => !provadorProducts.find(x => x.id === p.id)).map(p => (
-                  <div
-                    key={p.id}
-                    onClick={() => { 
-                      setProvadorProducts(prev => [...prev, p]); 
-                      setShowProductPicker(false); 
-                    }}
-                    className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:border-emerald-400 transition-colors"
-                  >
-                    <div className="aspect-square">
-                      <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-2">
-                      <p className="text-[10px] font-medium text-slate-800 truncate">{p.name}</p>
-                      <p className="text-[9px] text-slate-500">{p.sku}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
