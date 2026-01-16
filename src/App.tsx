@@ -336,10 +336,10 @@ function App() {
     <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
       {/* DESKTOP SIDEBAR */}
-      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-purple-100 border-purple-200')}>
-        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-200/50')}>
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-violet-500 border-violet-600')}>
+        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
           <img src="/logo.png" alt="Vizzu" className="h-10" />
-          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-purple-500')}>Estúdio com IA para lojistas</span>
+          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Estúdio com IA para lojistas</span>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {[
@@ -355,8 +355,8 @@ function App() {
               onClick={() => setCurrentPage(item.id)} 
               className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
                 (currentPage === item.id 
-                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/25') 
-                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-700 hover:text-purple-900 hover:bg-purple-200/50')
+                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white') 
+                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
                 )
               }
             >
@@ -364,35 +364,35 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-200/50')}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white shadow-sm') + ' rounded-xl p-3'}>
+        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/20 backdrop-blur-sm') + ' rounded-xl p-3'}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500')}>Créditos</span>
-              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-pink-500 hover:text-pink-400 text-[9px] font-medium">+ Add</button>
+              <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-white/70')}>Créditos</span>
+              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-pink-500 hover:text-pink-400' : 'text-white hover:text-white/80') + ' text-[9px] font-medium'}>+ Add</button>
             </div>
-            <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits.toLocaleString()}</p>
-            <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100')}>
-              <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+            <p className="text-xl font-bold text-white">{userCredits.toLocaleString()}</p>
+            <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/30')}>
+              <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
           <button 
             onClick={() => setCurrentPage('settings')} 
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
               (currentPage === 'settings' 
-                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-purple-200 text-purple-900') 
-                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-700 hover:text-purple-900 hover:bg-purple-200/50')
+                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-white/25 text-white') 
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
           >
             <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
           </button>
           <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-200')}>
-              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500')}></i>}
+            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/20')}>
+              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-xs text-white/70"></i>}
             </div>
             <div className="flex-1 min-w-0">
-              <p className={'text-xs font-medium truncate ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{user.name}</p>
-              <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-purple-500')}>Plano {currentPlan.name}</p>
+              <p className="text-xs font-medium truncate text-white">{user.name}</p>
+              <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Plano {currentPlan.name}</p>
             </div>
           </div>
         </div>
