@@ -1,3 +1,7 @@
+// ═══════════════════════════════════════════════════════════════
+// VIZZU - TypeScript Types
+// ═══════════════════════════════════════════════════════════════
+
 export interface User {
   id: string;
   name: string;
@@ -8,8 +12,8 @@ export interface User {
 
 export interface ProductImage {
   name: string;
-  url?: string;
   base64?: string;
+  url?: string;
 }
 
 export interface Product {
@@ -24,8 +28,8 @@ export interface Product {
 export interface VisualStudioGeneration {
   id: string;
   productId: string;
-  productSku: string;
-  productName: string;
+  productSku?: string;
+  productName?: string;
   type: 'studio' | 'cenario' | 'lifestyle' | 'refine';
   prompt?: string;
   originalImage: string;
@@ -39,25 +43,24 @@ export interface SavedModelProfile {
   id: string;
   name: string;
   referenceImage: string;
-  settings: { gender: 'woman' | 'man'; ethnicity: string; bodyType: string; ageRange: string; };
+  settings: {
+    gender: string;
+    ethnicity: string;
+    bodyType: string;
+    ageRange: string;
+  };
   modelPrompt: string;
-  createdAt: string;
   usageCount: number;
-}
-
-export interface LookCompositionItem {
-  image: string;
-  name: string;
-  sku?: string;
+  createdAt: string;
 }
 
 export interface LookComposition {
-  head?: LookCompositionItem;
-  top?: LookCompositionItem;
-  bottom?: LookCompositionItem;
-  feet?: LookCompositionItem;
-  accessory1?: LookCompositionItem;
-  accessory2?: LookCompositionItem;
+  head?: { image: string; name: string };
+  top?: { image: string; name: string };
+  bottom?: { image: string; name: string };
+  feet?: { image: string; name: string };
+  accessory1?: { image: string; name: string };
+  accessory2?: { image: string; name: string };
 }
 
 export interface HistoryLog {
@@ -65,7 +68,17 @@ export interface HistoryLog {
   date: string;
   action: string;
   details: string;
-  status: 'success' | 'error';
-  method: 'manual' | 'bulk' | 'system';
+  status: 'success' | 'error' | 'pending';
+  method: 'manual' | 'ai' | 'bulk' | 'system';
   cost: number;
+  itemsCount: number;
+  products: Product[];
+}
+
+export interface CreditHistoryItem {
+  id: string;
+  date: string;
+  action: string;
+  amount: number;
+  balance: number;
 }
