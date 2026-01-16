@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product, ProductImage, SavedModelProfile, LookComposition } from '../../types';
+import { Product, ProductImage, SavedModelProfile, LookComposition, Client } from '../../types';
 import { optimizeImage } from '../../utils/imageOptimizer';
 import { LookComposer } from './LookComposer';
 
@@ -8,21 +8,26 @@ interface Props {
   products: Product[];
   userCredits: number;
   savedModels: SavedModelProfile[];
+  clients?: Client[];
+  selectedClient?: Client | null;
+  companyLogo?: string;
   onSaveModel: (p: SavedModelProfile) => void;
   onDeleteModel: (id: string) => void;
   onClose: () => void;
   onUpdateProduct: (id: string, u: Partial<Product>) => void;
   onDeductCredits: (n: number, r: string) => boolean;
-  onGenerateImage: (p: Product, t: 'studio'|'cenario'|'lifestyle'|'refine', prompt?: string, opts?: any) => Promise<{image: string|null; generationId: string|null}>;
+  onGenerateImage: (p: Product, t: 'studio'|'cenario'|'lifestyle'|'provador'|'refine', prompt?: string, opts?: any) => Promise<{image: string|null; generationId: string|null}>;
   onMarkSaved?: (id: string) => void;
+  onSendWhatsApp?: (client: Client, message: string, imageUrl?: string) => void;
 }
 
-type ToolType = 'studio' | 'cenario' | 'lifestyle' | null;
+type ToolType = 'studio' | 'cenario' | 'lifestyle' | 'provador' | null;
 
 const TOOL_CFG = {
   studio: { name: 'Studio', icon: 'fa-store', credits: 1, color: 'purple' },
   cenario: { name: 'Cenário', icon: 'fa-film', credits: 2, color: 'pink' },
-  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3, color: 'orange' }
+  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3, color: 'orange' },
+  provador: { name: 'Provador', icon: 'fa-shirt', credits: 3, color: 'emerald' }
 };
 
 const MODEL_OPTS = {
@@ -36,8 +41,8 @@ const CATEGORIES = [
   { id: 'top', label: 'Parte de Cima' }, { id: 'bottom', label: 'Parte de Baixo' }, { id: 'shoes', label: 'Calçado' }, { id: 'fullbody', label: 'Corpo Inteiro' }, { id: 'accessory', label: 'Acessório' }
 ];
 
-export const EditorModal: React.FC<Props> = ({ product, products, userCredits, savedModels, onSaveModel, onDeleteModel, onClose, onUpdateProduct, onDeductCredits, onGenerateImage, onMarkSaved }) => {
-  const [tool, setTool] = useState<ToolType>(null);
+export const EditorModal: React.FC<Props> = ({ product, products, userCredits, savedModels, clients = [], selectedClient: initialSelectedClient, companyLogo, onSaveModel, onDeleteModel, onClose, onUpdateProduct, onDeductCredits, onGenerateImage, onMarkSaved, onSendWhatsApp }) => {
+  const [tool, setTool] = useState<ToolType>(initialSelectedClient ? 'provador' : null);
   const [isGen, setIsGen] = useState(false);
   const [genImg, setGenImg] = useState<string|null>(null);
   const [genId, setGenId] = useState<string|null>(null);
@@ -62,6 +67,18 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
   const [refinePrompt, setRefinePrompt] = useState('');
   const [zoom, setZoom] = useState<string|null>(null);
   const [viewMode, setViewMode] = useState<'original'|'result'>('original');
+  
+  // Provador IA States
+  const [provadorClient, setProvadorClient] = useState<Client | null>(initialSelectedClient || null);
+  const [provadorProducts, setProvadorProducts] = useState<Product[]>([product]);
+  const [provadorMessage, setProvadorMessage] = useState(`Olá {nome}! 🛍️\n\nPreparei um visual especial para você! Veja como ficou.\n\nO que achou? 😍`);
+  const [showClientPicker, setShowClientPicker] = useState(false);
+  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
+  const [addWatermark, setAddWatermark] = useState(true);
+  
+  // Clientes com Provador IA ativo
+  const clientsWithProvador = clients.filter(c => c.hasProvadorIA && c.photo);
 
   useEffect(() => { if (product.images) setImages(product.images); }, [product.images]);
 
@@ -85,6 +102,7 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
     if (userCredits < cost) { setError('Créditos insuficientes'); return; }
     if (tool === 'cenario' && !cenPrompt.trim()) { setError('Descreva o cenário'); return; }
     if (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) { setError('Selecione um modelo'); return; }
+    if (tool === 'provador' && !provadorClient) { setError('Selecione um cliente'); return; }
     if (!onDeductCredits(cost, `VIZZU: ${TOOL_CFG[tool].name}`)) { setError('Erro ao processar créditos'); return; }
     
     setIsGen(true); setError(null);
@@ -99,6 +117,16 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           ? { referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined }
           : { modelPrompt: buildModelPrompt(), clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined };
         result = await onGenerateImage(product, 'lifestyle', undefined, opts);
+      }
+      else if (tool === 'provador' && provadorClient) {
+        const opts = {
+          clientPhoto: provadorClient.photo,
+          clientName: `${provadorClient.firstName} ${provadorClient.lastName}`,
+          products: provadorProducts.map(p => ({ id: p.id, name: p.name, image: p.images[0]?.base64 || p.images[0]?.url })),
+          addWatermark,
+          companyLogo
+        };
+        result = await onGenerateImage(product, 'provador', undefined, opts);
       }
       if (result?.image) { setGenImg(result.image); setGenId(result.generationId); setViewMode('result'); }
       else setError('IA não retornou imagem');
@@ -313,14 +341,19 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           <div className="px-4 py-3">
             <h3 className="text-xs font-bold text-slate-500 uppercase mb-2">Ferramentas</h3>
             <div className="flex gap-2">
-              {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
+              {(['studio', 'cenario', 'lifestyle', 'provador'] as ToolType[]).map(t => t && (
                 <button
                   key={t}
                   onClick={() => handleSelectTool(t)}
+                  disabled={t === 'provador' && clientsWithProvador.length === 0}
                   className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all flex flex-col items-center gap-1 ${
                     tool === t 
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
-                      : 'bg-slate-100 text-slate-600'
+                      ? t === 'provador' 
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                        : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' 
+                      : t === 'provador' && clientsWithProvador.length === 0
+                        ? 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                        : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   <i className={`fas ${TOOL_CFG[t].icon}`}></i>
@@ -331,6 +364,12 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
                 </button>
               ))}
             </div>
+            {clientsWithProvador.length === 0 && (
+              <p className="text-[10px] text-slate-400 mt-2 text-center">
+                <i className="fas fa-info-circle mr-1"></i>
+                Cadastre clientes com foto para usar o Provador IA
+              </p>
+            )}
           </div>
 
           {/* Tool Config */}
@@ -424,6 +463,90 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
                     {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} /></div>}
                   </div>
                 )}
+                
+                {/* PROVADOR IA CONFIG */}
+                {tool === 'provador' && (
+                  <div className="space-y-4">
+                    {/* Cliente selecionado */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Cliente</label>
+                      {provadorClient ? (
+                        <div 
+                          onClick={() => setShowClientPicker(true)}
+                          className="flex items-center gap-3 p-3 bg-white border-2 border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors"
+                        >
+                          <img src={provadorClient.photo} alt={provadorClient.firstName} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                          <div className="flex-1">
+                            <p className="font-bold text-slate-800">{provadorClient.firstName} {provadorClient.lastName}</p>
+                            <p className="text-xs text-slate-500">{provadorClient.whatsapp}</p>
+                          </div>
+                          <i className="fas fa-chevron-right text-slate-400"></i>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setShowClientPicker(true)}
+                          className="w-full p-4 border-2 border-dashed border-slate-300 rounded-xl text-center hover:border-emerald-400 hover:bg-emerald-50 transition-colors"
+                        >
+                          <i className="fas fa-user-plus text-slate-400 text-2xl mb-2"></i>
+                          <p className="text-sm text-slate-500">Selecionar Cliente</p>
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Produtos selecionados */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Produtos</label>
+                        <button onClick={() => setShowProductPicker(true)} className="text-xs text-emerald-600 font-bold"><i className="fas fa-plus mr-1"></i>Adicionar</button>
+                      </div>
+                      <div className="space-y-2">
+                        {provadorProducts.map((p, idx) => (
+                          <div key={p.id} className="flex items-center gap-3 p-2 bg-white border border-slate-200 rounded-xl">
+                            <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-800 truncate">{p.name}</p>
+                              <p className="text-[10px] text-slate-500">{p.sku}</p>
+                            </div>
+                            {provadorProducts.length > 1 && (
+                              <button onClick={() => setProvadorProducts(prev => prev.filter(x => x.id !== p.id))} className="text-slate-300 hover:text-red-400">
+                                <i className="fas fa-times"></i>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Mensagem WhatsApp */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">
+                        <i className="fab fa-whatsapp text-green-500 mr-1"></i>Mensagem
+                      </label>
+                      <textarea 
+                        value={provadorMessage} 
+                        onChange={(e) => setProvadorMessage(e.target.value)}
+                        className="w-full p-3 border border-slate-200 rounded-xl text-sm resize-none" 
+                        rows={4}
+                        placeholder="Use {nome} para personalizar..."
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">Use {'{nome}'} para o nome do cliente</p>
+                    </div>
+                    
+                    {/* Marca d'água */}
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex items-center gap-2">
+                        <i className="fas fa-copyright text-slate-400"></i>
+                        <span className="text-sm text-slate-700">Adicionar marca d'água</span>
+                      </div>
+                      <button 
+                        onClick={() => setAddWatermark(!addWatermark)}
+                        className={`w-12 h-7 rounded-full transition-colors ${addWatermark ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                      >
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${addWatermark ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -448,12 +571,34 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           {genImg && !isGen ? (
             <>
               <button onClick={() => { setGenImg(null); setGenId(null); setViewMode('original'); }} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-200"><i className="fas fa-trash-alt"></i></button>
-              <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar na Galeria</button>
-              <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-200"><i className="fas fa-magic"></i></button>
-              {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-200"><i className="fas fa-user-plus"></i></button>}
+              <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar</button>
+              {tool === 'provador' && provadorClient && onSendWhatsApp ? (
+                <button 
+                  onClick={() => {
+                    const msg = provadorMessage.replace('{nome}', provadorClient.firstName);
+                    onSendWhatsApp(provadorClient, msg, genImg || undefined);
+                  }} 
+                  className="flex-1 h-12 bg-green-500 text-white font-bold rounded-xl flex items-center justify-center gap-2"
+                >
+                  <i className="fab fa-whatsapp text-lg"></i>WhatsApp
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => setShowRefine(true)} className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-200"><i className="fas fa-magic"></i></button>
+                  {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-200"><i className="fas fa-user-plus"></i></button>}
+                </>
+              )}
             </>
           ) : (
-            <button onClick={handleGen} disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} className="flex-1 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500">
+            <button 
+              onClick={handleGen} 
+              disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) || (tool === 'provador' && !provadorClient)} 
+              className={`flex-1 h-14 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500 ${
+                tool === 'provador' 
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
+                  : 'bg-gradient-to-r from-purple-600 to-pink-600'
+              }`}
+            >
               {isGen ? <><i className="fas fa-spinner fa-spin"></i><span>Gerando...</span></> : <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar Imagem</span>{tool && <span className="text-white/70">({TOOL_CFG[tool].credits} créd.)</span>}</>}
             </button>
           )}
@@ -534,14 +679,32 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           <div className="w-80 bg-white border-l border-slate-200 p-5 overflow-y-auto flex-shrink-0">
             <h3 className="text-lg font-bold text-slate-800 mb-4"><i className="fas fa-toolbox text-purple-500 mr-2"></i>Ferramentas</h3>
             <div className="space-y-3">
-              {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
-                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-purple-500 bg-purple-50 shadow-md' : 'border-slate-200 hover:border-purple-200'}`}>
+              {(['studio', 'cenario', 'lifestyle', 'provador'] as ToolType[]).map(t => t && (
+                <div 
+                  key={t} 
+                  onClick={() => !(t === 'provador' && clientsWithProvador.length === 0) && handleSelectTool(t)} 
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    t === 'provador' && clientsWithProvador.length === 0 
+                      ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
+                      : tool === t 
+                        ? t === 'provador'
+                          ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                          : 'border-purple-500 bg-purple-50 shadow-md' 
+                        : 'border-slate-200 hover:border-purple-200'
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${tool === t ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-500'}`}><i className={`fas ${TOOL_CFG[t].icon}`}></i></div>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        tool === t 
+                          ? t === 'provador' ? 'bg-emerald-600 text-white' : 'bg-purple-600 text-white' 
+                          : 'bg-slate-100 text-slate-500'
+                      }`}><i className={`fas ${TOOL_CFG[t].icon}`}></i></div>
                       <span className="font-bold text-slate-800">{TOOL_CFG[t].name}</span>
                     </div>
-                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">{TOOL_CFG[t].credits} créd.</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      t === 'provador' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'
+                    }`}>{TOOL_CFG[t].credits} créd.</span>
                   </div>
                   
                   {tool === t && (
@@ -608,6 +771,77 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
                         
                         <button onClick={handleGen} disabled={isGen || !hasOrig || (modelTab === 'saved' && !selModelId)} className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-3">{isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}{isGen ? 'Gerando...' : `Gerar (${TOOL_CFG.lifestyle.credits} créd.)`}</button>
                       </>}
+                      
+                      {/* PROVADOR IA CONFIG - Desktop */}
+                      {t === 'provador' && clientsWithProvador.length > 0 && <>
+                        {/* Cliente */}
+                        <div className="mb-3">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase mb-1.5 block">Cliente</label>
+                          {provadorClient ? (
+                            <div onClick={() => setShowClientPicker(true)} className="flex items-center gap-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg cursor-pointer hover:bg-emerald-100">
+                              <img src={provadorClient.photo} alt="" className="w-8 h-8 rounded-full object-cover" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-slate-800 truncate">{provadorClient.firstName} {provadorClient.lastName}</p>
+                                <p className="text-[10px] text-slate-500">{provadorClient.whatsapp}</p>
+                              </div>
+                              <i className="fas fa-chevron-right text-slate-400 text-[10px]"></i>
+                            </div>
+                          ) : (
+                            <button onClick={() => setShowClientPicker(true)} className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-center hover:border-emerald-400">
+                              <i className="fas fa-user-plus text-slate-300 text-lg mb-1"></i>
+                              <p className="text-[10px] text-slate-400">Selecionar Cliente</p>
+                            </button>
+                          )}
+                        </div>
+                        
+                        {/* Produtos */}
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase">Produtos ({provadorProducts.length})</label>
+                            <button onClick={() => setShowProductPicker(true)} className="text-[10px] text-emerald-600 font-bold"><i className="fas fa-plus mr-1"></i>Add</button>
+                          </div>
+                          <div className="space-y-1.5 max-h-24 overflow-y-auto">
+                            {provadorProducts.map(p => (
+                              <div key={p.id} className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-lg">
+                                <img src={p.images[0]?.base64 || p.images[0]?.url} alt="" className="w-8 h-8 rounded object-cover" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] font-medium text-slate-700 truncate">{p.name}</p>
+                                </div>
+                                {provadorProducts.length > 1 && (
+                                  <button onClick={() => setProvadorProducts(pr => pr.filter(x => x.id !== p.id))} className="text-slate-300 hover:text-red-400"><i className="fas fa-times text-[10px]"></i></button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Mensagem */}
+                        <div className="mb-3">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase mb-1 block"><i className="fab fa-whatsapp text-green-500 mr-1"></i>Mensagem</label>
+                          <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} className="w-full p-2 border border-slate-200 rounded-lg text-[11px] resize-none" rows={3} />
+                        </div>
+                        
+                        {/* Marca d'água */}
+                        <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg mb-3">
+                          <span className="text-[10px] text-slate-600"><i className="fas fa-copyright mr-1"></i>Marca d'água</span>
+                          <button onClick={() => setAddWatermark(!addWatermark)} className={`w-10 h-5 rounded-full ${addWatermark ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                            <div className={`w-4 h-4 bg-white rounded-full shadow transform transition-transform ${addWatermark ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
+                          </button>
+                        </div>
+                        
+                        {/* Botões */}
+                        <div className="space-y-2">
+                          <button onClick={handleGen} disabled={isGen || !hasOrig || !provadorClient} className="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-lg text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+                            {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-wand-magic-sparkles"></i>}
+                            {isGen ? 'Gerando...' : `Gerar (${TOOL_CFG.provador.credits} créd.)`}
+                          </button>
+                          {genImg && provadorClient && onSendWhatsApp && (
+                            <button onClick={() => { const msg = provadorMessage.replace('{nome}', provadorClient.firstName); onSendWhatsApp(provadorClient, msg, genImg || undefined); }} className="w-full py-2.5 bg-green-500 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2">
+                              <i className="fab fa-whatsapp"></i>Enviar WhatsApp
+                            </button>
+                          )}
+                        </div>
+                      </>}
                     </div>
                   )}
                 </div>
@@ -616,6 +850,102 @@ export const EditorModal: React.FC<Props> = ({ product, products, userCredits, s
           </div>
         </div>
       </div>
+
+      {/* CLIENT PICKER MODAL */}
+      {showClientPicker && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800">Selecionar Cliente</h3>
+              <button onClick={() => setShowClientPicker(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl mb-4"
+              />
+              
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                {clientsWithProvador.filter(c => 
+                  `${c.firstName} ${c.lastName}`.toLowerCase().includes(clientSearch.toLowerCase())
+                ).map(client => (
+                  <div
+                    key={client.id}
+                    onClick={() => { setProvadorClient(client); setShowClientPicker(false); }}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 transition-all ${
+                      provadorClient?.id === client.id
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <img src={client.photo} alt={client.firstName} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800">{client.firstName} {client.lastName}</p>
+                      <p className="text-xs text-slate-500">{client.whatsapp}</p>
+                    </div>
+                    {provadorClient?.id === client.id && (
+                      <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <i className="fas fa-check text-white text-xs"></i>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {clientsWithProvador.length === 0 && (
+                  <div className="text-center py-8 text-slate-400">
+                    <i className="fas fa-user-slash text-3xl mb-3"></i>
+                    <p className="text-sm">Nenhum cliente com foto cadastrada</p>
+                    <p className="text-xs mt-1">Cadastre clientes com foto para usar o Provador IA</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCT PICKER MODAL */}
+      {showProductPicker && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800">Adicionar Produto</h3>
+              <button onClick={() => setShowProductPicker(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="grid grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto">
+                {products.filter(p => !provadorProducts.find(x => x.id === p.id)).map(p => (
+                  <div
+                    key={p.id}
+                    onClick={() => { 
+                      setProvadorProducts(prev => [...prev, p]); 
+                      setShowProductPicker(false); 
+                    }}
+                    className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:border-emerald-400 transition-colors"
+                  >
+                    <div className="aspect-square">
+                      <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-2">
+                      <p className="text-[10px] font-medium text-slate-800 truncate">{p.name}</p>
+                      <p className="text-[9px] text-slate-500">{p.sku}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
