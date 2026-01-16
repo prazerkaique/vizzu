@@ -167,12 +167,12 @@ function App() {
       {/* SIDEBAR */}
       <aside className="w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex flex-col shadow-2xl">
         
-        {/* Logo */}
-        <div className="p-5 border-b border-white/10">
+        {/* Logo - MAIOR E CENTRALIZADO */}
+        <div className="p-6 border-b border-white/10 flex justify-center">
           <img 
             src="/logo.png" 
             alt="Vizzu" 
-            className="h-8"
+            className="h-12"
           />
         </div>
 
