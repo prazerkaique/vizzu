@@ -496,6 +496,10 @@ export const Studio: React.FC<StudioProps> = ({
           onClose={() => setSelectedProduct(null)}
           onUpdateProduct={onUpdateProduct}
           onDeductCredits={onDeductCredits}
+          onGenerateImage={onGenerateImage ? async (p, t, prompt, opts) => {
+            const result = await onGenerateImage(p, t, prompt, opts);
+            return { image: result || '', generationId: Date.now().toString() };
+          } : async () => ({ image: '', generationId: '' })}
         />
       )}
     </div>
