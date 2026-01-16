@@ -1,77 +1,168 @@
+// ═══════════════════════════════════════════════════════════════
+// VIZZU - Generation History Component
+// ═══════════════════════════════════════════════════════════════
+
 import React, { useState } from 'react';
 import { VisualStudioGeneration } from '../../types';
 
 interface Props {
   generations: VisualStudioGeneration[];
-  onView: (g: VisualStudioGeneration) => void;
-  onDelete: (id: string) => void;
+  onView?: (generation: VisualStudioGeneration) => void;
+  onDelete?: (id: string) => void;
 }
 
-const TYPE_CFG = {
-  studio: { label: 'Studio', icon: 'fa-store', bg: 'bg-slate-100', text: 'text-slate-600' },
-  cenario: { label: 'Cenário', icon: 'fa-film', bg: 'bg-purple-100', text: 'text-purple-600' },
-  lifestyle: { label: 'Lifestyle', icon: 'fa-user', bg: 'bg-pink-100', text: 'text-pink-600' },
-  refine: { label: 'Refine', icon: 'fa-pen', bg: 'bg-blue-100', text: 'text-blue-600' }
-};
-
 export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDelete }) => {
-  const [open, setOpen] = useState(false);
-  if (!generations.length) return null;
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
 
-  const grouped = generations.reduce((acc, g) => {
-    const d = new Date(g.createdAt).toLocaleDateString('pt-BR');
-    (acc[d] = acc[d] || []).push(g);
+  const groupedByDate = generations.reduce((acc, gen) => {
+    const date = new Date(gen.createdAt).toLocaleDateString('pt-BR');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(gen);
     return acc;
   }, {} as Record<string, VisualStudioGeneration[]>);
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'studio': return { label: 'Studio', color: 'bg-purple-100 text-purple-700', icon: 'fa-store' };
+      case 'cenario': return { label: 'Cenário', color: 'bg-pink-100 text-pink-700', icon: 'fa-film' };
+      case 'lifestyle': return { label: 'Modelo', color: 'bg-orange-100 text-orange-700', icon: 'fa-user' };
+      case 'refine': return { label: 'Refinado', color: 'bg-blue-100 text-blue-700', icon: 'fa-magic' };
+      default: return { label: type, color: 'bg-slate-100 text-slate-700', icon: 'fa-image' };
+    }
+  };
+
+  const handleDownload = (imageData: string, productName?: string) => {
+    const link = document.createElement('a');
+    link.href = imageData;
+    link.download = `vizzu-${productName || 'image'}-${Date.now()}.png`;
+    link.click();
+  };
+
+  if (generations.length === 0) return null;
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-      <div onClick={() => setOpen(!open)} className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-slate-200 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50">
-        <div className="flex items-center gap-3">
-          <h3 className="text-sm font-bold text-slate-800"><i className="fas fa-history text-purple-500 mr-2"></i>Histórico</h3>
-          <span className="text-xs font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">{generations.length}</span>
-        </div>
-        <i className={`fas fa-chevron-down text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}></i>
+    <>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <i className="fas fa-history text-white"></i>
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-slate-800">Histórico de Gerações</h3>
+              <p className="text-xs text-slate-500">{generations.length} imagens geradas</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold">
+              {generations.length}
+            </span>
+            <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-slate-400`}></i>
+          </div>
+        </button>
+
+        {isExpanded && (
+          <div className="border-t border-slate-100 p-4 max-h-[500px] overflow-y-auto">
+            {Object.entries(groupedByDate).map(([date, gens]) => (
+              <div key={date} className="mb-6 last:mb-0">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <i className="fas fa-calendar text-slate-300"></i>
+                  {date}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {gens.map(gen => {
+                    const typeInfo = getTypeLabel(gen.type);
+                    return (
+                      <div key={gen.id} className="group relative">
+                        <div className="aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                          <img
+                            src={gen.generatedImage}
+                            alt={gen.productName || 'Generated'}
+                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                            onClick={() => setZoomImage(gen.generatedImage)}
+                          />
+                        </div>
+                        
+                        {/* Type Badge */}
+                        <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${typeInfo.color}`}>
+                          <i className={`fas ${typeInfo.icon} mr-1`}></i>
+                          {typeInfo.label}
+                        </div>
+
+                        {/* Credits Badge */}
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">
+                          {gen.credits} créd.
+                        </div>
+
+                        {/* Saved Badge */}
+                        {gen.saved && (
+                          <div className="absolute bottom-2 left-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center">
+                            <i className="fas fa-check text-[10px]"></i>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => setZoomImage(gen.generatedImage)}
+                            className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100"
+                            title="Ver"
+                          >
+                            <i className="fas fa-search-plus text-sm"></i>
+                          </button>
+                          <button
+                            onClick={() => handleDownload(gen.generatedImage, gen.productName)}
+                            className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100"
+                            title="Download"
+                          >
+                            <i className="fas fa-download text-sm"></i>
+                          </button>
+                          {onDelete && (
+                            <button
+                              onClick={() => onDelete(gen.id)}
+                              className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600"
+                              title="Excluir"
+                            >
+                              <i className="fas fa-trash text-sm"></i>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Product Name */}
+                        <p className="mt-2 text-[10px] text-slate-500 truncate px-1">
+                          {gen.productName || gen.productSku || 'Produto'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {open && (
-        <div className="max-h-[400px] overflow-y-auto">
-          {Object.entries(grouped).map(([date, gens]) => (
-            <div key={date}>
-              <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 sticky top-0">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">{date}</span>
-              </div>
-              {gens.map(g => {
-                const cfg = TYPE_CFG[g.type];
-                return (
-                  <div key={g.id} className="flex items-center gap-3 p-4 border-b border-slate-100 hover:bg-slate-50 group">
-                    <div onClick={() => onView(g)} className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 cursor-pointer relative group/thumb">
-                      <img src={g.generatedImage} alt="" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 flex items-center justify-center">
-                        <i className="fas fa-expand text-white opacity-0 group-hover/thumb:opacity-100 text-xs"></i>
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}><i className={`fas ${cfg.icon} mr-1`}></i>{cfg.label}</span>
-                        {g.saved && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full"><i className="fas fa-check mr-1"></i>Salvo</span>}
-                        <span className="text-[10px] text-amber-600 font-bold">-{g.credits}</span>
-                      </div>
-                      <p className="text-sm font-bold text-slate-800 truncate">{g.productName}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{g.productSku}</p>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                      <button onClick={() => onView(g)} className="w-7 h-7 rounded bg-slate-100 hover:bg-purple-100 text-slate-500 hover:text-purple-600 flex items-center justify-center"><i className="fas fa-eye text-[10px]"></i></button>
-                      <button onClick={() => { const a = document.createElement('a'); a.href = g.generatedImage; a.download = `${g.productSku}.png`; a.click(); }} className="w-7 h-7 rounded bg-slate-100 hover:bg-green-100 text-slate-500 hover:text-green-600 flex items-center justify-center"><i className="fas fa-download text-[10px]"></i></button>
-                      <button onClick={() => onDelete(g.id)} className="w-7 h-7 rounded bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 flex items-center justify-center"><i className="fas fa-trash text-[10px]"></i></button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+      {/* Zoom Modal */}
+      {zoomImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <button className="absolute top-4 right-4 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white">
+            <i className="fas fa-times text-xl"></i>
+          </button>
+          <img 
+            src={zoomImage} 
+            alt="Zoom" 
+            className="max-w-full max-h-full rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
-    </div>
+    </>
   );
 };
