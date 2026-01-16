@@ -32,7 +32,7 @@ const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestido
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
 
-type Page = 'dashboard' | 'studio' | 'products' | 'clients' | 'history' | 'settings';
+type Page = 'dashboard' | 'studio' | 'products' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'company' | 'plan' | 'integrations';
 
 function App() {
@@ -140,6 +140,12 @@ function App() {
     }
   };
 
+  const handleCameraCapture = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+
   const handleCreateProduct = () => {
     if (!selectedImage || !newProduct.name || !newProduct.category) {
       alert('Preencha pelo menos o nome e a categoria do produto');
@@ -165,8 +171,6 @@ function App() {
 
   const handleGenerateDescription = async (product: Product) => {
     setIsGeneratingDescription(true);
-    // Aqui você vai chamar o webhook do n8n
-    // Por enquanto só simula um delay
     setTimeout(() => {
       setIsGeneratingDescription(false);
       alert('Descrição enviada para geração! Você receberá o resultado em breve.');
@@ -176,7 +180,6 @@ function App() {
   const handleOpenInStudio = (product: Product) => {
     setShowProductDetail(null);
     setCurrentPage('studio');
-    // O Studio deve receber o produto selecionado
   };
 
   const clearFilters = () => {
@@ -210,11 +213,7 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4">
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
-            <img 
-              src="/logo.png" 
-              alt="Vizzu" 
-              className="h-16 mx-auto mb-4"
-            />
+            <img src="/logo.png" alt="Vizzu" className="h-16 mx-auto mb-4" />
             <p className="text-slate-400 text-sm">AI Visual Studio para E-commerce</p>
           </div>
 
@@ -248,19 +247,15 @@ function App() {
     );
   }
 
-  // MAIN APP WITH SIDEBAR
+  // MAIN APP
   return (
-    <div className="h-screen flex bg-slate-100">
+    <div className="h-screen flex flex-col md:flex-row bg-slate-100">
       
-      {/* SIDEBAR */}
-      <aside className="w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex flex-col shadow-2xl">
+      {/* DESKTOP SIDEBAR - Hidden on mobile */}
+      <aside className="hidden md:flex w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex-col shadow-2xl">
         
         <div className="p-6 border-b border-white/10 flex justify-center">
-          <img 
-            src="/logo.png" 
-            alt="Vizzu" 
-            className="h-12"
-          />
+          <img src="/logo.png" alt="Vizzu" className="h-12" />
         </div>
 
         {/* Navigation */}
@@ -299,18 +294,6 @@ function App() {
           >
             <i className="fas fa-box w-5"></i>
             Produtos
-          </button>
-
-          <button
-            onClick={() => setCurrentPage('clients')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-              currentPage === 'clients'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <i className="fas fa-users w-5"></i>
-            Clientes
           </button>
 
           <button
@@ -380,96 +363,113 @@ function App() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-hidden flex flex-col">
+      <main className="flex-1 overflow-hidden flex flex-col pb-20 md:pb-0">
         
+        {/* MOBILE HEADER */}
+        <header className="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+          <img src="/logo.png" alt="Vizzu" className="h-8" />
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs font-bold">
+              <i className="fas fa-coins mr-1"></i>
+              {userCredits}
+            </div>
+            <button 
+              onClick={() => setCurrentPage('settings')}
+              className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center"
+            >
+              {user.avatar ? (
+                <img src={user.avatar} className="w-full h-full rounded-full object-cover" alt="" />
+              ) : (
+                <i className="fas fa-user text-slate-500 text-sm"></i>
+              )}
+            </button>
+          </div>
+        </header>
+
         {/* DASHBOARD PAGE */}
         {currentPage === 'dashboard' && (
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-              <h1 className="text-3xl font-black text-slate-800 mb-2">Bem-vindo, {user.name.split(' ')[0]}!</h1>
-              <p className="text-slate-500 mb-8">Resumo do seu estúdio de imagens AI</p>
+              <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-2">Olá, {user.name.split(' ')[0]}!</h1>
+              <p className="text-slate-500 text-sm md:text-base mb-6 md:mb-8">Resumo do seu estúdio de imagens AI</p>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                      <i className="fas fa-box"></i>
+              {/* Stats Cards - 2 cols on mobile */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                      <i className="fas fa-box text-sm md:text-base"></i>
                     </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Total Produtos</span>
                   </div>
-                  <p className="text-3xl font-black text-slate-800">{products.length}</p>
-                  <p className="text-xs text-slate-500 mt-1">No catálogo</p>
+                  <p className="text-2xl md:text-3xl font-black text-slate-800">{products.length}</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Produtos</p>
                 </div>
 
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                      <i className="fas fa-image"></i>
+                <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                      <i className="fas fa-image text-sm md:text-base"></i>
                     </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Imagens Geradas</span>
                   </div>
-                  <p className="text-3xl font-black text-slate-800">0</p>
-                  <p className="text-xs text-slate-500 mt-1">Este mês</p>
+                  <p className="text-2xl md:text-3xl font-black text-slate-800">0</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Geradas</p>
                 </div>
 
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                      <i className="fas fa-coins"></i>
+                <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                      <i className="fas fa-coins text-sm md:text-base"></i>
                     </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
                   </div>
-                  <p className="text-3xl font-black text-slate-800">{userCredits}</p>
-                  <p className="text-xs text-slate-500 mt-1">Disponíveis</p>
+                  <p className="text-2xl md:text-3xl font-black text-slate-800">{userCredits}</p>
+                  <p className="text-[10px] md:text-xs text-slate-500">Créditos</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-5 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center">
-                      <i className="fas fa-crown"></i>
+                <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-4 md:p-5 shadow-lg">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/20 text-white flex items-center justify-center">
+                      <i className="fas fa-crown text-sm md:text-base"></i>
                     </div>
-                    <span className="text-xs font-bold text-white/70 uppercase">Plano</span>
                   </div>
-                  <p className="text-3xl font-black text-white">{currentPlan.name}</p>
-                  <p className="text-xs text-white/70 mt-1">{currentPlan.limit} créd./mês</p>
+                  <p className="text-2xl md:text-3xl font-black text-white">{currentPlan.name}</p>
+                  <p className="text-[10px] md:text-xs text-white/70">Plano</p>
                 </div>
               </div>
 
               {/* Quick Actions */}
-              <h2 className="text-lg font-bold text-slate-700 mb-4">Ações Rápidas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h2 className="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4">Ações Rápidas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                 <button 
                   onClick={() => setCurrentPage('studio')}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all text-left group"
+                  className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-wand-magic-sparkles text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
+                    <i className="fas fa-wand-magic-sparkles text-lg md:text-xl"></i>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">Abrir Studio</h3>
-                  <p className="text-sm text-slate-500">Gerar imagens com IA</p>
+                  <h3 className="font-bold text-slate-800 mb-1 text-sm md:text-base">Abrir Studio</h3>
+                  <p className="text-xs md:text-sm text-slate-500">Gerar imagens com IA</p>
                 </button>
 
                 <button 
                   onClick={() => setShowImport(true)}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all text-left group"
+                  className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-cloud-upload-alt text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
+                    <i className="fas fa-cloud-upload-alt text-lg md:text-xl"></i>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">Importar Produtos</h3>
-                  <p className="text-sm text-slate-500">Adicionar novas imagens</p>
+                  <h3 className="font-bold text-slate-800 mb-1 text-sm md:text-base">Importar Produtos</h3>
+                  <p className="text-xs md:text-sm text-slate-500">Adicionar novas imagens</p>
                 </button>
 
                 <button 
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all text-left group"
+                  className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-bolt text-xl"></i>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
+                    <i className="fas fa-bolt text-lg md:text-xl"></i>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">Comprar Créditos</h3>
-                  <p className="text-sm text-slate-500">Upgrade de plano</p>
+                  <h3 className="font-bold text-slate-800 mb-1 text-sm md:text-base">Comprar Créditos</h3>
+                  <p className="text-xs md:text-sm text-slate-500">Upgrade de plano</p>
                 </button>
               </div>
             </div>
@@ -489,37 +489,39 @@ function App() {
           />
         )}
 
-        {/* PRODUCTS PAGE - IMPROVED */}
+        {/* PRODUCTS PAGE */}
         {currentPage === 'products' && (
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
               {/* Header */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-800 mb-2">Produtos</h1>
-                  <p className="text-slate-500">Gerencie seu catálogo de produtos</p>
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-1 md:mb-2">Produtos</h1>
+                  <p className="text-slate-500 text-sm">Gerencie seu catálogo</p>
                 </div>
                 <button 
                   onClick={() => setShowImport(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                  className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all text-sm md:text-base"
                 >
-                  <i className="fas fa-plus mr-2"></i>Novo Produto
+                  <i className="fas fa-plus mr-2"></i>
+                  <span className="hidden md:inline">Novo Produto</span>
+                  <span className="md:hidden">Novo</span>
                 </button>
               </div>
 
-              {/* Filters */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
-                <div className="flex flex-wrap gap-3">
+              {/* Filters - Scrollable on mobile */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-3 md:p-4 mb-4 md:mb-6">
+                <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 md:pb-0">
                   {/* Search */}
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-shrink-0 w-48 md:flex-1 md:min-w-[200px]">
                     <div className="relative">
-                      <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                      <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                       <input
                         type="text"
-                        placeholder="Buscar por nome ou SKU..."
+                        placeholder="Buscar..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 md:py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -528,47 +530,23 @@ function App() {
                   <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                    className="flex-shrink-0 px-3 py-2 md:py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
                   >
-                    <option value="">Todas Categorias</option>
+                    <option value="">Categoria</option>
                     {CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
 
-                  {/* Color Filter */}
+                  {/* Color Filter - Hidden on very small screens */}
                   <select
                     value={filterColor}
                     onChange={(e) => setFilterColor(e.target.value)}
-                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                    className="hidden sm:block flex-shrink-0 px-3 py-2 md:py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
                   >
-                    <option value="">Todas Cores</option>
+                    <option value="">Cor</option>
                     {COLORS.map(color => (
                       <option key={color} value={color}>{color}</option>
-                    ))}
-                  </select>
-
-                  {/* Brand Filter */}
-                  <select
-                    value={filterBrand}
-                    onChange={(e) => setFilterBrand(e.target.value)}
-                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">Todas Marcas</option>
-                    {uniqueBrands.map(brand => (
-                      <option key={brand} value={brand}>{brand}</option>
-                    ))}
-                  </select>
-
-                  {/* Fit Filter */}
-                  <select
-                    value={filterFit}
-                    onChange={(e) => setFilterFit(e.target.value)}
-                    className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">Todos Caimentos</option>
-                    {FITS.map(fit => (
-                      <option key={fit} value={fit}>{fit}</option>
                     ))}
                   </select>
 
@@ -576,23 +554,23 @@ function App() {
                   {(searchTerm || filterCategory || filterColor || filterBrand || filterFit) && (
                     <button
                       onClick={clearFilters}
-                      className="px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium"
+                      className="flex-shrink-0 px-3 py-2 text-sm text-purple-600 hover:bg-purple-50 rounded-lg font-medium"
                     >
-                      <i className="fas fa-times mr-2"></i>Limpar
+                      <i className="fas fa-times"></i>
                     </button>
                   )}
                 </div>
 
                 {/* Results count */}
-                <p className="text-xs text-slate-400 mt-3">
-                  Mostrando {filteredProducts.length} de {products.length} produtos
+                <p className="text-xs text-slate-400 mt-2">
+                  {filteredProducts.length} de {products.length} produtos
                 </p>
               </div>
 
-              {/* Products Grid */}
+              {/* Products Grid - 2 cols mobile, more on desktop */}
               <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                 {filteredProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 p-4 md:p-6">
                     {filteredProducts.map(product => (
                       <div 
                         key={product.id}
@@ -606,23 +584,18 @@ function App() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
                           {product.brand && (
-                            <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[10px] font-bold text-slate-600 px-2 py-1 rounded-full">
+                            <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[9px] md:text-[10px] font-bold text-slate-600 px-1.5 py-0.5 rounded-full">
                               {product.brand}
                             </span>
                           )}
                         </div>
-                        <div className="p-3">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase">{product.sku}</p>
-                          <p className="text-xs font-bold text-slate-700 truncate">{product.name}</p>
-                          <div className="flex gap-1 mt-2 flex-wrap">
+                        <div className="p-2 md:p-3">
+                          <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase">{product.sku}</p>
+                          <p className="text-[11px] md:text-xs font-bold text-slate-700 truncate">{product.name}</p>
+                          <div className="flex gap-1 mt-1.5 md:mt-2 flex-wrap">
                             {product.category && (
-                              <span className="text-[9px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded">
+                              <span className="text-[8px] md:text-[9px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded">
                                 {product.category}
-                              </span>
-                            )}
-                            {product.color && (
-                              <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                                {product.color}
                               </span>
                             )}
                           </div>
@@ -631,17 +604,17 @@ function App() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-12 text-center">
-                    <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                      <i className="fas fa-search text-slate-300 text-3xl"></i>
+                  <div className="p-8 md:p-12 text-center">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 md:mb-6">
+                      <i className="fas fa-search text-slate-300 text-2xl md:text-3xl"></i>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum produto encontrado</h3>
-                    <p className="text-slate-500 mb-6">Tente ajustar os filtros ou adicione novos produtos</p>
+                    <h3 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Nenhum produto</h3>
+                    <p className="text-slate-500 text-sm mb-4 md:mb-6">Adicione novos produtos</p>
                     <button 
                       onClick={() => setShowImport(true)}
-                      className="px-6 py-3 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors"
+                      className="px-5 py-2.5 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors text-sm"
                     >
-                      <i className="fas fa-plus mr-2"></i>Adicionar Produto
+                      <i className="fas fa-plus mr-2"></i>Adicionar
                     </button>
                   </div>
                 )}
@@ -650,60 +623,24 @@ function App() {
           </div>
         )}
 
-        {/* CLIENTS PAGE */}
-        {currentPage === 'clients' && (
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="text-3xl font-black text-slate-800 mb-2">Clientes</h1>
-                  <p className="text-slate-500">Gerencie seus clientes e acessos</p>
-                </div>
-                <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
-                  <i className="fas fa-plus mr-2"></i>Novo Cliente
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                  <i className="fas fa-users text-slate-300 text-3xl"></i>
-                </div>
-                <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
-                <p className="text-slate-500 mb-6">Adicione clientes para gerenciar acessos e permissões</p>
-                <button className="px-6 py-3 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors">
-                  <i className="fas fa-plus mr-2"></i>Adicionar Primeiro Cliente
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* HISTORY PAGE */}
         {currentPage === 'history' && (
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-6 md:mb-8">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-800 mb-2">Histórico</h1>
-                  <p className="text-slate-500">Acompanhe todas as atividades da plataforma</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
-                    <i className="fas fa-filter mr-2"></i>Filtrar
-                  </button>
-                  <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
-                    <i className="fas fa-download mr-2"></i>Exportar
-                  </button>
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-800 mb-1 md:mb-2">Histórico</h1>
+                  <p className="text-slate-500 text-sm">Suas atividades</p>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <div className="p-12 text-center">
-                  <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                    <i className="fas fa-clock-rotate-left text-slate-300 text-3xl"></i>
+                <div className="p-8 md:p-12 text-center">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 md:mb-6">
+                    <i className="fas fa-clock-rotate-left text-slate-300 text-2xl md:text-3xl"></i>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhuma atividade ainda</h3>
-                  <p className="text-slate-500">As atividades aparecerão aqui conforme você usar a plataforma</p>
+                  <h3 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Nenhuma atividade</h3>
+                  <p className="text-slate-500 text-sm">As atividades aparecerão aqui</p>
                 </div>
               </div>
             </div>
@@ -713,135 +650,129 @@ function App() {
         {/* SETTINGS PAGE */}
         {currentPage === 'settings' && (
           <div className="flex-1 overflow-y-auto">
-            <div className="flex h-full">
+            <div className="flex flex-col md:flex-row h-full">
               
-              {/* Settings Sidebar */}
-              <div className="w-64 bg-white border-r border-slate-200 p-4">
-                <h2 className="text-lg font-bold text-slate-800 mb-4 px-3">Configurações</h2>
-                <nav className="space-y-1">
+              {/* Settings Tabs - Horizontal scroll on mobile */}
+              <div className="md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-2 md:p-4">
+                <h2 className="hidden md:block text-lg font-bold text-slate-800 mb-4 px-3">Configurações</h2>
+                <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
                   <button
                     onClick={() => setSettingsTab('profile')}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                       settingsTab === 'profile'
                         ? 'bg-purple-100 text-purple-700'
                         : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <i className="fas fa-user w-5"></i>
-                    Perfil & Senha
+                    <i className="fas fa-user w-4 md:w-5"></i>
+                    Perfil
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('company')}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                       settingsTab === 'company'
                         ? 'bg-purple-100 text-purple-700'
                         : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <i className="fas fa-building w-5"></i>
-                    Infos da Empresa
+                    <i className="fas fa-building w-4 md:w-5"></i>
+                    Empresa
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('plan')}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                       settingsTab === 'plan'
                         ? 'bg-purple-100 text-purple-700'
                         : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <i className="fas fa-credit-card w-5"></i>
-                    Plano & Créditos
+                    <i className="fas fa-credit-card w-4 md:w-5"></i>
+                    Plano
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('integrations')}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                       settingsTab === 'integrations'
                         ? 'bg-purple-100 text-purple-700'
                         : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <i className="fas fa-plug w-5"></i>
+                    <i className="fas fa-plug w-4 md:w-5"></i>
                     Integrações
                   </button>
 
-                  <div className="pt-4 mt-4 border-t border-slate-200">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
-                    >
-                      <i className="fas fa-sign-out-alt w-5"></i>
-                      Sair da Conta
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium text-red-600 hover:bg-red-50 transition-all whitespace-nowrap md:mt-4 md:pt-4 md:border-t md:border-slate-200"
+                  >
+                    <i className="fas fa-sign-out-alt w-4 md:w-5"></i>
+                    Sair
+                  </button>
                 </nav>
               </div>
 
               {/* Settings Content */}
-              <div className="flex-1 p-8 overflow-y-auto">
+              <div className="flex-1 p-4 md:p-8 overflow-y-auto">
                 <div className="max-w-2xl">
                   
                   {/* Profile Tab */}
                   {settingsTab === 'profile' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Perfil & Senha</h3>
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6">Perfil & Senha</h3>
                       
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+                      <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6 mb-4 md:mb-6">
                         <h4 className="font-bold text-slate-700 mb-4">Informações Pessoais</h4>
                         
-                        <div className="flex items-center gap-6 mb-6">
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+                        <div className="flex items-center gap-4 md:gap-6 mb-4 md:mb-6">
+                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
                             {user.avatar ? (
                               <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <i className="fas fa-user text-white text-2xl"></i>
+                              <i className="fas fa-user text-white text-xl md:text-2xl"></i>
                             )}
                           </div>
-                          <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
+                          <button className="px-3 md:px-4 py-2 border border-slate-200 rounded-lg text-xs md:text-sm font-bold text-slate-600 hover:bg-slate-50">
                             Alterar Foto
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Nome</label>
+                            <label className="block text-xs md:text-sm font-bold text-slate-600 mb-2">Nome</label>
                             <input 
                               type="text" 
                               defaultValue={user.name}
-                              className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                              className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Email</label>
+                            <label className="block text-xs md:text-sm font-bold text-slate-600 mb-2">Email</label>
                             <input 
                               type="email" 
                               defaultValue={user.email}
-                              className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50"
+                              className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl bg-slate-50 text-sm"
                               disabled
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                      <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6">
                         <h4 className="font-bold text-slate-700 mb-4">Alterar Senha</h4>
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Senha Atual</label>
-                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                            <label className="block text-xs md:text-sm font-bold text-slate-600 mb-2">Senha Atual</label>
+                            <input type="password" className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl text-sm" />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Nova Senha</label>
-                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                            <label className="block text-xs md:text-sm font-bold text-slate-600 mb-2">Nova Senha</label>
+                            <input type="password" className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl text-sm" />
                           </div>
-                          <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Confirmar Nova Senha</label>
-                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
-                          </div>
-                          <button className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">
-                            Salvar Alterações
+                          <button className="w-full md:w-auto px-6 py-2.5 md:py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 text-sm">
+                            Salvar
                           </button>
                         </div>
                       </div>
@@ -851,34 +782,20 @@ function App() {
                   {/* Company Tab */}
                   {settingsTab === 'company' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Infos da Empresa</h3>
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6">Infos da Empresa</h3>
                       
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                        <div className="space-y-4">
+                      <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6">
+                        <div className="space-y-3 md:space-y-4">
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Nome da Empresa</label>
-                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="Sua Empresa Ltda" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">CNPJ</label>
-                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="00.000.000/0000-00" />
+                            <label className="block text-xs md:text-sm font-bold text-slate-600 mb-2">Nome da Empresa</label>
+                            <input type="text" className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl text-sm" placeholder="Sua Empresa Ltda" />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Endereço</label>
-                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="Rua, número, cidade" />
+                            <label className="block text-xs md:text-sm font-bold text-slate-600 mb-2">CNPJ</label>
+                            <input type="text" className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl text-sm" placeholder="00.000.000/0000-00" />
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-bold text-slate-600 mb-2">Telefone</label>
-                              <input type="tel" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="(00) 00000-0000" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-bold text-slate-600 mb-2">Website</label>
-                              <input type="url" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="https://sua-empresa.com" />
-                            </div>
-                          </div>
-                          <button className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">
-                            Salvar Informações
+                          <button className="w-full md:w-auto px-6 py-2.5 md:py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 text-sm">
+                            Salvar
                           </button>
                         </div>
                       </div>
@@ -888,18 +805,18 @@ function App() {
                   {/* Plan Tab */}
                   {settingsTab === 'plan' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Plano & Créditos</h3>
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6">Plano & Créditos</h3>
                       
                       {/* Current Status */}
-                      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-6 mb-6 text-white">
-                        <div className="flex items-center justify-between mb-4">
+                      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-4 md:p-6 mb-4 md:mb-6 text-white">
+                        <div className="flex items-center justify-between mb-3 md:mb-4">
                           <div>
-                            <p className="text-sm text-white/70">Plano Atual</p>
-                            <p className="text-3xl font-black">{currentPlan.name}</p>
+                            <p className="text-xs md:text-sm text-white/70">Plano Atual</p>
+                            <p className="text-2xl md:text-3xl font-black">{currentPlan.name}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm text-white/70">Créditos Restantes</p>
-                            <p className="text-3xl font-black">{userCredits}</p>
+                            <p className="text-xs md:text-sm text-white/70">Créditos</p>
+                            <p className="text-2xl md:text-3xl font-black">{userCredits}</p>
                           </div>
                         </div>
                         <div className="h-2 bg-white/20 rounded-full overflow-hidden">
@@ -908,29 +825,28 @@ function App() {
                             style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
                           ></div>
                         </div>
-                        <p className="text-xs text-white/70 mt-2">{userCredits} de {currentPlan.limit} créditos disponíveis</p>
                       </div>
 
                       {/* Plans */}
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                      <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6">
                         <h4 className="font-bold text-slate-700 mb-4">Escolha seu Plano</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3 md:gap-4">
                           {PLANS.map(plan => (
                             <div 
                               key={plan.id}
                               onClick={() => upgradePlan(plan.id)}
-                              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                              className={`p-3 md:p-4 rounded-xl border-2 cursor-pointer transition-all ${
                                 currentPlan.id === plan.id 
                                   ? 'border-purple-500 bg-purple-50' 
                                   : 'border-slate-200 hover:border-purple-300'
                               }`}
                             >
-                              <h5 className="font-bold text-slate-800">{plan.name}</h5>
-                              <p className="text-2xl font-black text-slate-800 my-2">{plan.limit}</p>
-                              <p className="text-xs text-slate-500">créditos/mês</p>
-                              <p className="text-sm font-bold text-purple-600 mt-2">{plan.price}</p>
+                              <h5 className="font-bold text-slate-800 text-sm md:text-base">{plan.name}</h5>
+                              <p className="text-xl md:text-2xl font-black text-slate-800 my-1 md:my-2">{plan.limit}</p>
+                              <p className="text-[10px] md:text-xs text-slate-500">créd./mês</p>
+                              <p className="text-xs md:text-sm font-bold text-purple-600 mt-1 md:mt-2">{plan.price}</p>
                               {currentPlan.id === plan.id && (
-                                <span className="inline-block mt-2 text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                                <span className="inline-block mt-2 text-[9px] md:text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
                                   ATUAL
                                 </span>
                               )}
@@ -944,83 +860,30 @@ function App() {
                   {/* Integrations Tab */}
                   {settingsTab === 'integrations' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Integrações</h3>
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-6">Integrações</h3>
                       
-                      <div className="space-y-4">
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                              <i className="fab fa-shopify text-green-600 text-2xl"></i>
+                      <div className="space-y-3 md:space-y-4">
+                        {[
+                          { icon: 'fab fa-shopify', color: 'green', name: 'Shopify', desc: 'Sincronize produtos' },
+                          { icon: 'fab fa-wordpress', color: 'purple', name: 'WooCommerce', desc: 'Loja WordPress' },
+                          { icon: 'fas fa-cube', color: 'orange', name: 'Magento', desc: 'Adobe Commerce' },
+                          { icon: 'fas fa-store', color: 'pink', name: 'VTEX', desc: 'VTEX IO' },
+                        ].map(item => (
+                          <div key={item.name} className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6 flex items-center justify-between">
+                            <div className="flex items-center gap-3 md:gap-4">
+                              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-${item.color}-100 flex items-center justify-center`}>
+                                <i className={`${item.icon} text-${item.color}-600 text-lg md:text-2xl`}></i>
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base">{item.name}</h4>
+                                <p className="text-xs md:text-sm text-slate-500">{item.desc}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800">Shopify</h4>
-                              <p className="text-sm text-slate-500">Sincronize produtos automaticamente</p>
-                            </div>
+                            <button className="px-3 md:px-4 py-1.5 md:py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 text-xs md:text-sm">
+                              Conectar
+                            </button>
                           </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
-                            Conectar
-                          </button>
-                        </div>
-
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                              <i className="fab fa-wordpress text-purple-600 text-2xl"></i>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800">WooCommerce</h4>
-                              <p className="text-sm text-slate-500">Integre com sua loja WordPress</p>
-                            </div>
-                          </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
-                            Conectar
-                          </button>
-                        </div>
-
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-                              <i className="fas fa-cube text-orange-600 text-2xl"></i>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800">Magento / Adobe Commerce</h4>
-                              <p className="text-sm text-slate-500">Conecte sua loja Magento</p>
-                            </div>
-                          </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
-                            Conectar
-                          </button>
-                        </div>
-
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
-                              <i className="fas fa-store text-pink-600 text-2xl"></i>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800">VTEX</h4>
-                              <p className="text-sm text-slate-500">Integração com VTEX IO</p>
-                            </div>
-                          </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
-                            Conectar
-                          </button>
-                        </div>
-
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
-                              <i className="fas fa-code text-slate-600 text-2xl"></i>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800">API REST</h4>
-                              <p className="text-sm text-slate-500">Acesso direto via API</p>
-                            </div>
-                          </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
-                            Ver Docs
-                          </button>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1031,42 +894,108 @@ function App() {
         )}
       </main>
 
-      {/* IMPORT MODAL - Escolher arquivo ou câmera */}
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 px-2 py-2 z-40">
+        <div className="flex items-center justify-around">
+          {/* Dashboard */}
+          <button
+            onClick={() => setCurrentPage('dashboard')}
+            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
+              currentPage === 'dashboard' ? 'text-white' : 'text-slate-500'
+            }`}
+          >
+            <i className="fas fa-home text-lg"></i>
+            <span className="text-[10px] font-medium">Home</span>
+          </button>
+
+          {/* Products */}
+          <button
+            onClick={() => setCurrentPage('products')}
+            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
+              currentPage === 'products' ? 'text-white' : 'text-slate-500'
+            }`}
+          >
+            <i className="fas fa-box text-lg"></i>
+            <span className="text-[10px] font-medium">Produtos</span>
+          </button>
+
+          {/* STUDIO - CENTER HIGHLIGHT */}
+          <button
+            onClick={() => setCurrentPage('studio')}
+            className="relative -mt-6"
+          >
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
+              currentPage === 'studio' 
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 scale-110' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            }`}>
+              <i className="fas fa-wand-magic-sparkles text-white text-xl"></i>
+            </div>
+            <span className={`block text-[10px] font-bold mt-1 text-center ${
+              currentPage === 'studio' ? 'text-white' : 'text-slate-400'
+            }`}>Studio</span>
+          </button>
+
+          {/* History */}
+          <button
+            onClick={() => setCurrentPage('history')}
+            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
+              currentPage === 'history' ? 'text-white' : 'text-slate-500'
+            }`}
+          >
+            <i className="fas fa-clock-rotate-left text-lg"></i>
+            <span className="text-[10px] font-medium">Histórico</span>
+          </button>
+
+          {/* Settings */}
+          <button
+            onClick={() => setCurrentPage('settings')}
+            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
+              currentPage === 'settings' ? 'text-white' : 'text-slate-500'
+            }`}
+          >
+            <i className="fas fa-cog text-lg"></i>
+            <span className="text-[10px] font-medium">Config</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* IMPORT MODAL */}
       {showImport && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Adicionar Produto</h3>
-              <button onClick={() => setShowImport(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-md p-5 md:p-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5 md:mb-6">
+              <h3 className="text-lg md:text-xl font-bold text-slate-800">Adicionar Produto</h3>
+              <button onClick={() => setShowImport(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600">
                 <i className="fas fa-times"></i>
               </button>
             </div>
             
-            <p className="text-slate-500 text-sm mb-6">Escolha como você quer adicionar a imagem do produto:</p>
+            <p className="text-slate-500 text-sm mb-5 md:mb-6">Escolha como adicionar a imagem:</p>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-5 md:mb-6">
               {/* Upload de Arquivo */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50/50 transition-all"
+                className="flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50/50 transition-all active:scale-95"
               >
-                <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center">
-                  <i className="fas fa-folder-open text-purple-600 text-xl"></i>
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-purple-100 flex items-center justify-center">
+                  <i className="fas fa-folder-open text-purple-600 text-lg md:text-xl"></i>
                 </div>
-                <span className="text-sm font-bold text-slate-700">Escolher Arquivo</span>
-                <span className="text-xs text-slate-400">PNG, JPG, WEBP</span>
+                <span className="text-xs md:text-sm font-bold text-slate-700">Galeria</span>
+                <span className="text-[10px] md:text-xs text-slate-400">PNG, JPG, WEBP</span>
               </button>
 
-              {/* Tirar Foto */}
+              {/* Tirar Foto - Camera */}
               <button
-                onClick={() => cameraInputRef.current?.click()}
-                className="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-pink-400 hover:bg-pink-50/50 transition-all"
+                onClick={handleCameraCapture}
+                className="flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 border-2 border-dashed border-slate-200 rounded-2xl hover:border-pink-400 hover:bg-pink-50/50 transition-all active:scale-95"
               >
-                <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center">
-                  <i className="fas fa-camera text-pink-600 text-xl"></i>
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-pink-100 flex items-center justify-center">
+                  <i className="fas fa-camera text-pink-600 text-lg md:text-xl"></i>
                 </div>
-                <span className="text-sm font-bold text-slate-700">Tirar Foto</span>
-                <span className="text-xs text-slate-400">Usar câmera</span>
+                <span className="text-xs md:text-sm font-bold text-slate-700">Câmera</span>
+                <span className="text-[10px] md:text-xs text-slate-400">Tirar foto</span>
               </button>
             </div>
 
@@ -1078,18 +1007,19 @@ function App() {
               className="hidden"
               onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
             />
+            {/* Camera input - capture forces camera on mobile */}
             <input 
               ref={cameraInputRef}
               type="file" 
-              accept="image/*" 
+              accept="image/*"
               capture="environment"
               className="hidden"
               onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
             />
 
-            {/* Drag and drop area */}
+            {/* Drag and drop - Desktop only */}
             <div 
-              className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
+              className="hidden md:block border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-8 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); handleFileSelect(e.dataTransfer.files); }}
@@ -1102,55 +1032,55 @@ function App() {
 
       {/* CREATE PRODUCT MODAL */}
       {showCreateProduct && selectedImage && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Criar Produto</h3>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg p-5 md:p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5 md:mb-6">
+              <h3 className="text-lg md:text-xl font-bold text-slate-800">Criar Produto</h3>
               <button 
                 onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} 
-                className="text-slate-400 hover:text-slate-600"
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600"
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
             {/* Preview da imagem */}
-            <div className="mb-6">
-              <div className="w-32 h-32 rounded-xl overflow-hidden border border-slate-200 mx-auto">
+            <div className="mb-5 md:mb-6">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden border border-slate-200 mx-auto">
                 <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
               </div>
             </div>
 
             {/* Formulário */}
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-600 mb-2">Nome do Produto *</label>
+                <label className="block text-xs md:text-sm font-bold text-slate-600 mb-1.5 md:mb-2">Nome do Produto *</label>
                 <input 
                   type="text" 
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm"
                   placeholder="Ex: Camiseta Básica Branca"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-2">Marca</label>
+                  <label className="block text-xs md:text-sm font-bold text-slate-600 mb-1.5 md:mb-2">Marca</label>
                   <input 
                     type="text" 
                     value={newProduct.brand}
                     onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm"
                     placeholder="Ex: Nike"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-2">Cor</label>
+                  <label className="block text-xs md:text-sm font-bold text-slate-600 mb-1.5 md:mb-2">Cor</label>
                   <select 
                     value={newProduct.color}
                     onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm"
                   >
                     <option value="">Selecione</option>
                     {COLORS.map(color => (
@@ -1160,13 +1090,13 @@ function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-2">Caimento</label>
+                  <label className="block text-xs md:text-sm font-bold text-slate-600 mb-1.5 md:mb-2">Caimento</label>
                   <select 
                     value={newProduct.fit}
                     onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm"
                   >
                     <option value="">Selecione</option>
                     {FITS.map(fit => (
@@ -1175,11 +1105,11 @@ function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-2">Categoria *</label>
+                  <label className="block text-xs md:text-sm font-bold text-slate-600 mb-1.5 md:mb-2">Categoria *</label>
                   <select 
                     value={newProduct.category}
                     onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 text-sm"
                   >
                     <option value="">Selecione</option>
                     {CATEGORIES.map(cat => (
@@ -1191,7 +1121,7 @@ function App() {
 
               <button 
                 onClick={handleCreateProduct}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                className="w-full py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-colors text-sm md:text-base"
               >
                 <i className="fas fa-check mr-2"></i>Criar Produto
               </button>
@@ -1202,21 +1132,21 @@ function App() {
 
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Detalhes do Produto</h3>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-2xl p-5 md:p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h3 className="text-lg md:text-xl font-bold text-slate-800">Detalhes do Produto</h3>
               <button 
                 onClick={() => setShowProductDetail(null)} 
-                className="text-slate-400 hover:text-slate-600"
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600"
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <div className="flex gap-6">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
               {/* Imagem */}
-              <div className="w-48 h-48 rounded-2xl overflow-hidden border border-slate-200 flex-shrink-0">
+              <div className="w-full md:w-48 h-48 rounded-2xl overflow-hidden border border-slate-200 flex-shrink-0">
                 <img 
                   src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url} 
                   alt={showProductDetail.name}
@@ -1227,49 +1157,42 @@ function App() {
               {/* Info */}
               <div className="flex-1">
                 <p className="text-xs font-bold text-slate-400 uppercase mb-1">{showProductDetail.sku}</p>
-                <h4 className="text-2xl font-bold text-slate-800 mb-4">{showProductDetail.name}</h4>
+                <h4 className="text-xl md:text-2xl font-bold text-slate-800 mb-3 md:mb-4">{showProductDetail.name}</h4>
                 
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-6">
                   {showProductDetail.brand && (
-                    <div className="bg-slate-50 rounded-xl p-3">
-                      <p className="text-[10px] text-slate-400 uppercase mb-1">Marca</p>
-                      <p className="text-sm font-bold text-slate-700">{showProductDetail.brand}</p>
+                    <div className="bg-slate-50 rounded-xl p-2.5 md:p-3">
+                      <p className="text-[9px] md:text-[10px] text-slate-400 uppercase mb-0.5">Marca</p>
+                      <p className="text-xs md:text-sm font-bold text-slate-700">{showProductDetail.brand}</p>
                     </div>
                   )}
                   {showProductDetail.category && (
-                    <div className="bg-slate-50 rounded-xl p-3">
-                      <p className="text-[10px] text-slate-400 uppercase mb-1">Categoria</p>
-                      <p className="text-sm font-bold text-slate-700">{showProductDetail.category}</p>
+                    <div className="bg-slate-50 rounded-xl p-2.5 md:p-3">
+                      <p className="text-[9px] md:text-[10px] text-slate-400 uppercase mb-0.5">Categoria</p>
+                      <p className="text-xs md:text-sm font-bold text-slate-700">{showProductDetail.category}</p>
                     </div>
                   )}
                   {showProductDetail.color && (
-                    <div className="bg-slate-50 rounded-xl p-3">
-                      <p className="text-[10px] text-slate-400 uppercase mb-1">Cor</p>
-                      <p className="text-sm font-bold text-slate-700">{showProductDetail.color}</p>
+                    <div className="bg-slate-50 rounded-xl p-2.5 md:p-3">
+                      <p className="text-[9px] md:text-[10px] text-slate-400 uppercase mb-0.5">Cor</p>
+                      <p className="text-xs md:text-sm font-bold text-slate-700">{showProductDetail.color}</p>
                     </div>
                   )}
                   {showProductDetail.fit && (
-                    <div className="bg-slate-50 rounded-xl p-3">
-                      <p className="text-[10px] text-slate-400 uppercase mb-1">Caimento</p>
-                      <p className="text-sm font-bold text-slate-700">{showProductDetail.fit}</p>
+                    <div className="bg-slate-50 rounded-xl p-2.5 md:p-3">
+                      <p className="text-[9px] md:text-[10px] text-slate-400 uppercase mb-0.5">Caimento</p>
+                      <p className="text-xs md:text-sm font-bold text-slate-700">{showProductDetail.fit}</p>
                     </div>
                   )}
                 </div>
-
-                {showProductDetail.description && (
-                  <div className="mb-6">
-                    <p className="text-[10px] text-slate-400 uppercase mb-1">Descrição</p>
-                    <p className="text-sm text-slate-600">{showProductDetail.description}</p>
-                  </div>
-                )}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-3 mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-200">
               <button 
                 onClick={() => handleOpenInStudio(showProductDetail)}
-                className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-colors"
+                className="flex-1 py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-pink-700 transition-colors text-sm"
               >
                 <i className="fas fa-wand-magic-sparkles mr-2"></i>
                 Otimizar no Studio
@@ -1277,7 +1200,7 @@ function App() {
               <button 
                 onClick={() => handleGenerateDescription(showProductDetail)}
                 disabled={isGeneratingDescription}
-                className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors disabled:opacity-50"
+                className="flex-1 py-3.5 md:py-4 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors disabled:opacity-50 text-sm"
               >
                 {isGeneratingDescription ? (
                   <>
