@@ -16,6 +16,7 @@ interface StudioProps {
   onImport?: () => void;
   currentPlan?: { name: string; limit: number };
   onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<string>;
+  theme?: 'dark' | 'light';
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -32,7 +33,8 @@ export const Studio: React.FC<StudioProps> = ({
   onOpenSettings,
   onImport,
   currentPlan,
-  onGenerateImage
+  onGenerateImage,
+  theme = 'dark'
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
@@ -102,7 +104,7 @@ export const Studio: React.FC<StudioProps> = ({
                           activeTab === 'editados' ? editedProducts : [];
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-black">
+    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       <div className="max-w-7xl mx-auto">
         
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -110,25 +112,25 @@ export const Studio: React.FC<StudioProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
-              <i className="fas fa-wand-magic-sparkles text-pink-400 text-sm"></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+              <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-white">Vizzu Studio®</h1>
+                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Studio®</h1>
                 {currentPlan && (
-                  <span className="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[9px] font-medium rounded-full uppercase tracking-wide">
+                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
                     {currentPlan.name}
                   </span>
                 )}
               </div>
-              <p className="text-neutral-500 text-xs">Gere imagens profissionais com IA</p>
+              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gere imagens profissionais com IA</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 border border-neutral-800 rounded-lg">
+            <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
               <i className="fas fa-coins text-pink-400 text-xs"></i>
-              <span className="text-white font-medium text-sm">{userCredits}</span>
+              <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
             {onImport && (
               <button 
@@ -146,18 +148,18 @@ export const Studio: React.FC<StudioProps> = ({
         {/* SEARCH BAR */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="relative mb-4">
-          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 text-sm"></i>
+          <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
           <input
             type="text"
             placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-pink-500/50"
+            className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-pink-500/50' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-pink-400 shadow-sm') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
           />
           {searchTerm && (
             <button 
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
+              className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' absolute right-3 top-1/2 -translate-y-1/2'}
             >
               <i className="fas fa-times text-xs"></i>
             </button>
@@ -168,7 +170,7 @@ export const Studio: React.FC<StudioProps> = ({
         {/* TABS */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-lg">
+          <div className={'flex items-center gap-1 p-1 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white border border-gray-200 shadow-sm')}>
             {[
               { id: 'todos' as const, label: 'Todos' },
               { id: 'recentes' as const, label: 'Recentes' },
@@ -180,8 +182,8 @@ export const Studio: React.FC<StudioProps> = ({
                 onClick={() => setActiveTab(tab.id)}
                 className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' + 
                   (activeTab === tab.id 
-                    ? 'bg-white text-neutral-900' 
-                    : 'text-neutral-400 hover:text-white'
+                    ? (theme === 'dark' ? 'bg-white text-neutral-900' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')
+                    : (theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                   )
                 }
               >
@@ -199,8 +201,8 @@ export const Studio: React.FC<StudioProps> = ({
             onClick={() => setShowFilters(!showFilters)}
             className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' +
               (showFilters || hasActiveFilters
-                ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
-                : 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white'
+                ? 'bg-pink-500/20 text-pink-500 border border-pink-500/30'
+                : (theme === 'dark' ? 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white' : 'bg-white text-gray-500 border border-gray-200 hover:text-gray-700 shadow-sm')
               )
             }
           >
@@ -216,13 +218,13 @@ export const Studio: React.FC<StudioProps> = ({
         {/* FILTERS - Sempre visíveis quando showFilters = true */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {showFilters && activeTab !== 'modelos' && (
-          <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-3 mb-4">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide">Filtrar por</span>
+              <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar por</span>
               {hasActiveFilters && (
                 <button 
                   onClick={clearFilters}
-                  className="text-[10px] text-pink-400 hover:text-pink-300 font-medium"
+                  className="text-[10px] text-pink-500 hover:text-pink-400 font-medium"
                 >
                   Limpar filtros
                 </button>
@@ -231,11 +233,11 @@ export const Studio: React.FC<StudioProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {/* Categoria */}
               <div>
-                <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Categoria</label>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white"
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
                 >
                   <option value="">Todas</option>
                   {CATEGORIES.map(cat => (
@@ -246,11 +248,11 @@ export const Studio: React.FC<StudioProps> = ({
               
               {/* Coleção */}
               <div>
-                <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Coleção</label>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
                 <select
                   value={filterCollection}
                   onChange={(e) => setFilterCollection(e.target.value)}
-                  className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white"
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
                 >
                   <option value="">Todas</option>
                   {COLLECTIONS.map(col => (
@@ -261,11 +263,11 @@ export const Studio: React.FC<StudioProps> = ({
               
               {/* Cor */}
               <div>
-                <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Cor</label>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
                 <select
                   value={filterColor}
                   onChange={(e) => setFilterColor(e.target.value)}
-                  className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white"
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
                 >
                   <option value="">Todas</option>
                   {COLORS.map(color => (
@@ -276,11 +278,11 @@ export const Studio: React.FC<StudioProps> = ({
               
               {/* Gênero */}
               <div>
-                <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Gênero</label>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
                 <select
                   value={filterGender}
                   onChange={(e) => setFilterGender(e.target.value)}
-                  className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white"
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
                 >
                   <option value="">Todos</option>
                   {GENDERS.map(gender => (
@@ -296,19 +298,19 @@ export const Studio: React.FC<StudioProps> = ({
         {/* BANNER - Seus Produtos + Plano */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {activeTab !== 'modelos' && (
-          <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20 mb-4">
+          <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-neutral-400 uppercase tracking-wide">Seus produtos</p>
-                <p className="text-3xl font-bold text-white">{filteredProducts.length}</p>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus produtos</p>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>{filteredProducts.length}</p>
                 {hasActiveFilters && (
-                  <p className="text-[10px] text-neutral-500">de {products.length} no catálogo</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>de {products.length} no catálogo</p>
                 )}
               </div>
               {currentPlan && (
                 <div className="text-right">
-                  <p className="text-[10px] text-neutral-400 uppercase tracking-wide">Plano</p>
-                  <span className="px-3 py-1 bg-pink-500/20 text-pink-400 text-sm font-medium rounded-full">
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
+                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
                     {currentPlan.name}
                   </span>
                 </div>
@@ -325,15 +327,15 @@ export const Studio: React.FC<StudioProps> = ({
             {savedModels.length > 0 ? (
               <>
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-neutral-400">{savedModels.length} modelo(s) salvo(s)</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>{savedModels.length} modelo(s) salvo(s)</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                   {savedModels.map(model => (
                     <div 
                       key={model.id}
-                      className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden hover:border-pink-500/50 transition-all group"
+                      className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm') + ' rounded-xl border overflow-hidden transition-all group'}
                     >
-                      <div className="aspect-[3/4] bg-neutral-800 relative overflow-hidden">
+                      <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] relative overflow-hidden'}>
                         {model.referenceImage ? (
                           <img 
                             src={model.referenceImage} 
@@ -342,7 +344,7 @@ export const Studio: React.FC<StudioProps> = ({
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <i className="fas fa-user text-neutral-700 text-3xl"></i>
+                            <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user text-3xl'}></i>
                           </div>
                         )}
                         <button
@@ -353,15 +355,15 @@ export const Studio: React.FC<StudioProps> = ({
                         </button>
                       </div>
                       <div className="p-3">
-                        <p className="font-medium text-white text-sm truncate">{model.name}</p>
+                        <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{model.name}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {(model as any).gender && (
-                            <span className="text-[9px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded">
+                            <span className={(theme === 'dark' ? 'text-neutral-500 bg-neutral-800' : 'text-gray-500 bg-gray-100') + ' text-[9px] px-1.5 py-0.5 rounded'}>
                               {(model as any).gender}
                             </span>
                           )}
                           {(model as any).bodyType && (
-                            <span className="text-[9px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded">
+                            <span className={(theme === 'dark' ? 'text-neutral-500 bg-neutral-800' : 'text-gray-500 bg-gray-100') + ' text-[9px] px-1.5 py-0.5 rounded'}>
                               {(model as any).bodyType}
                             </span>
                           )}
@@ -372,15 +374,15 @@ export const Studio: React.FC<StudioProps> = ({
                 </div>
               </>
             ) : (
-              <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-8 text-center">
-                <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-user-plus text-neutral-600 text-xl"></i>
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-user-plus text-xl'}></i>
                 </div>
-                <h3 className="text-sm font-medium text-white mb-1">Nenhum modelo salvo</h3>
-                <p className="text-neutral-500 text-xs mb-4">Crie modelos personalizados ao editar seus produtos</p>
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum modelo salvo</h3>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Crie modelos personalizados ao editar seus produtos</p>
                 <button 
                   onClick={() => setActiveTab('todos')}
-                  className="px-4 py-2 bg-neutral-800 text-white rounded-lg font-medium text-xs hover:bg-neutral-700 transition-colors"
+                  className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
                 >
                   Ver produtos
                 </button>
@@ -395,7 +397,7 @@ export const Studio: React.FC<StudioProps> = ({
         {activeTab !== 'modelos' && (
           <>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-medium text-white">
+              <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
                 {activeTab === 'todos' && 'Meus produtos'}
                 {activeTab === 'recentes' && 'Recentes'}
                 {activeTab === 'editados' && 'Editados'}
@@ -408,9 +410,9 @@ export const Studio: React.FC<StudioProps> = ({
                   <div
                     key={product.id}
                     onClick={() => setSelectedProduct(product)}
-                    className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden cursor-pointer hover:border-pink-500/50 transition-all group"
+                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                   >
-                    <div className="aspect-square bg-neutral-800 relative overflow-hidden">
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                       <img
                         src={product.images[0]?.base64 || product.images[0]?.url}
                         alt={product.name}
@@ -429,30 +431,30 @@ export const Studio: React.FC<StudioProps> = ({
                       </div>
                     </div>
                     <div className="p-2.5">
-                      <p className="text-[8px] font-medium text-neutral-500 uppercase tracking-wide">{product.sku}</p>
-                      <p className="text-xs font-medium text-white truncate mt-0.5">{product.name}</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
                       {product.category && (
-                        <p className="text-[9px] text-neutral-500 mt-1">{product.category}</p>
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-8 text-center">
-                <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-search text-neutral-600 text-xl"></i>
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-search text-xl'}></i>
                 </div>
-                <h3 className="text-sm font-medium text-white mb-1">
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
                   {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
                 </h3>
-                <p className="text-neutral-500 text-xs mb-4">
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
                   {hasActiveFilters ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
                 </p>
                 {hasActiveFilters ? (
                   <button 
                     onClick={clearFilters}
-                    className="px-4 py-2 bg-neutral-800 text-white rounded-lg font-medium text-xs hover:bg-neutral-700 transition-colors"
+                    className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
                   >
                     Limpar filtros
                   </button>
