@@ -358,30 +358,6 @@ function App() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 overflow-hidden flex flex-col pb-20 md:pb-0">
-        
-        {/* MOBILE HEADER */}
-        <header className="md:hidden bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 px-4 py-4 flex items-center justify-between">
-          <div className="flex flex-col">
-            <img src="/logo.png" alt="Vizzu" className="h-7" />
-            <span className="text-[9px] text-purple-300/70 mt-0.5">Estúdio com IA para lojistas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="bg-white/10 text-white px-3 py-1.5 rounded-full text-xs font-bold">
-              <i className="fas fa-coins mr-1 text-yellow-400"></i>
-              {userCredits}
-            </div>
-            <button 
-              onClick={() => setCurrentPage('settings')}
-              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"
-            >
-              {user.avatar ? (
-                <img src={user.avatar} className="w-full h-full rounded-full object-cover" alt="" />
-              ) : (
-                <i className="fas fa-user text-white text-sm"></i>
-              )}
-            </button>
-          </div>
-        </header>
 
         {/* DASHBOARD PAGE */}
         {currentPage === 'dashboard' && (
