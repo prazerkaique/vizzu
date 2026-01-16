@@ -24,12 +24,14 @@ const DEMO_PRODUCTS: Product[] = [
   }
 ];
 
-type Page = 'dashboard' | 'studio' | 'products' | 'settings';
+type Page = 'dashboard' | 'studio' | 'products' | 'clients' | 'history' | 'settings';
+type SettingsTab = 'profile' | 'company' | 'plan' | 'integrations';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(DEMO_PRODUCTS);
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
   const [showImport, setShowImport] = useState(false);
   
   const { userCredits, currentPlan, deductCredits, upgradePlan, setCredits } = useCredits();
@@ -213,6 +215,30 @@ function App() {
             <i className="fas fa-box w-5"></i>
             Produtos
           </button>
+
+          <button
+            onClick={() => setCurrentPage('clients')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'clients'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-users w-5"></i>
+            Clientes
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('history')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+              currentPage === 'history'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <i className="fas fa-clock-rotate-left w-5"></i>
+            Histórico
+          </button>
         </nav>
 
         {/* Bottom Section */}
@@ -223,7 +249,7 @@ function App() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
               <button 
-                onClick={() => setCurrentPage('settings')}
+                onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
                 className="text-purple-400 hover:text-purple-300 text-xs font-bold"
               >
                 + Add
@@ -351,7 +377,7 @@ function App() {
                 </button>
 
                 <button 
-                  onClick={() => setCurrentPage('settings')}
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
                   className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all text-left group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -373,7 +399,7 @@ function App() {
             onUpdateProduct={handleUpdateProduct}
             onDeductCredits={handleDeductCredits}
             onAddHistoryLog={handleAddHistoryLog}
-            onOpenSettings={() => setCurrentPage('settings')}
+            onOpenSettings={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
             onImport={() => setShowImport(true)}
           />
         )}
@@ -422,85 +448,385 @@ function App() {
           </div>
         )}
 
+        {/* CLIENTS PAGE */}
+        {currentPage === 'clients' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-800 mb-2">Clientes</h1>
+                  <p className="text-slate-500">Gerencie seus clientes e acessos</p>
+                </div>
+                <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
+                  <i className="fas fa-plus mr-2"></i>Novo Cliente
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
+                  <i className="fas fa-users text-slate-300 text-3xl"></i>
+                </div>
+                <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
+                <p className="text-slate-500 mb-6">Adicione clientes para gerenciar acessos e permissões</p>
+                <button className="px-6 py-3 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors">
+                  <i className="fas fa-plus mr-2"></i>Adicionar Primeiro Cliente
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HISTORY PAGE */}
+        {currentPage === 'history' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-800 mb-2">Histórico</h1>
+                  <p className="text-slate-500">Acompanhe todas as atividades da plataforma</p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
+                    <i className="fas fa-filter mr-2"></i>Filtrar
+                  </button>
+                  <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
+                    <i className="fas fa-download mr-2"></i>Exportar
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div className="p-12 text-center">
+                  <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
+                    <i className="fas fa-clock-rotate-left text-slate-300 text-3xl"></i>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhuma atividade ainda</h3>
+                  <p className="text-slate-500">As atividades aparecerão aqui conforme você usar a plataforma</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* SETTINGS PAGE */}
         {currentPage === 'settings' && (
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-black text-slate-800 mb-2">Configurações</h1>
-              <p className="text-slate-500 mb-8">Gerencie sua conta e plano</p>
-
-              {/* Current Plan */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
-                <h2 className="text-lg font-bold text-slate-700 mb-4">Plano Atual</h2>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-3xl font-black text-slate-800">{currentPlan.name}</p>
-                    <p className="text-slate-500">{currentPlan.price}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-slate-500">Créditos restantes</p>
-                    <p className="text-3xl font-black text-purple-600">{userCredits}</p>
-                  </div>
-                </div>
-                <div className="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                    style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Plans */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
-                <h2 className="text-lg font-bold text-slate-700 mb-4">Planos Disponíveis</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {PLANS.map(plan => (
-                    <div 
-                      key={plan.id}
-                      onClick={() => upgradePlan(plan.id)}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        currentPlan.id === plan.id 
-                          ? 'border-purple-500 bg-purple-50' 
-                          : 'border-slate-200 hover:border-purple-300'
-                      }`}
-                    >
-                      <h3 className="font-bold text-slate-800">{plan.name}</h3>
-                      <p className="text-2xl font-black text-slate-800 my-2">{plan.limit}</p>
-                      <p className="text-xs text-slate-500">créditos/mês</p>
-                      <p className="text-sm font-bold text-purple-600 mt-2">{plan.price}</p>
-                      {currentPlan.id === plan.id && (
-                        <span className="inline-block mt-2 text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                          ATUAL
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Account */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                <h2 className="text-lg font-bold text-slate-700 mb-4">Conta</h2>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
-                      {user.avatar ? (
-                        <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-                      ) : (
-                        <i className="fas fa-user text-white text-xl"></i>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-800">{user.name}</p>
-                      <p className="text-sm text-slate-500">{user.email}</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-bold transition-colors"
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex h-full">
+              
+              {/* Settings Sidebar */}
+              <div className="w-64 bg-white border-r border-slate-200 p-4">
+                <h2 className="text-lg font-bold text-slate-800 mb-4 px-3">Configurações</h2>
+                <nav className="space-y-1">
+                  <button
+                    onClick={() => setSettingsTab('profile')}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      settingsTab === 'profile'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
                   >
-                    <i className="fas fa-sign-out-alt mr-2"></i>Sair
+                    <i className="fas fa-user w-5"></i>
+                    Perfil & Senha
                   </button>
+
+                  <button
+                    onClick={() => setSettingsTab('company')}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      settingsTab === 'company'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <i className="fas fa-building w-5"></i>
+                    Infos da Empresa
+                  </button>
+
+                  <button
+                    onClick={() => setSettingsTab('plan')}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      settingsTab === 'plan'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <i className="fas fa-credit-card w-5"></i>
+                    Plano & Créditos
+                  </button>
+
+                  <button
+                    onClick={() => setSettingsTab('integrations')}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      settingsTab === 'integrations'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <i className="fas fa-plug w-5"></i>
+                    Integrações
+                  </button>
+
+                  <div className="pt-4 mt-4 border-t border-slate-200">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
+                    >
+                      <i className="fas fa-sign-out-alt w-5"></i>
+                      Sair da Conta
+                    </button>
+                  </div>
+                </nav>
+              </div>
+
+              {/* Settings Content */}
+              <div className="flex-1 p-8 overflow-y-auto">
+                <div className="max-w-2xl">
+                  
+                  {/* Profile Tab */}
+                  {settingsTab === 'profile' && (
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Perfil & Senha</h3>
+                      
+                      <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+                        <h4 className="font-bold text-slate-700 mb-4">Informações Pessoais</h4>
+                        
+                        <div className="flex items-center gap-6 mb-6">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+                            {user.avatar ? (
+                              <img src={user.avatar} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <i className="fas fa-user text-white text-2xl"></i>
+                            )}
+                          </div>
+                          <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
+                            Alterar Foto
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Nome</label>
+                            <input 
+                              type="text" 
+                              defaultValue={user.name}
+                              className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Email</label>
+                            <input 
+                              type="email" 
+                              defaultValue={user.email}
+                              className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50"
+                              disabled
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                        <h4 className="font-bold text-slate-700 mb-4">Alterar Senha</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Senha Atual</label>
+                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Nova Senha</label>
+                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Confirmar Nova Senha</label>
+                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                          </div>
+                          <button className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">
+                            Salvar Alterações
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Company Tab */}
+                  {settingsTab === 'company' && (
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Infos da Empresa</h3>
+                      
+                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Nome da Empresa</label>
+                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="Sua Empresa Ltda" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">CNPJ</label>
+                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="00.000.000/0000-00" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-600 mb-2">Endereço</label>
+                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="Rua, número, cidade" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-bold text-slate-600 mb-2">Telefone</label>
+                              <input type="tel" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="(00) 00000-0000" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-slate-600 mb-2">Website</label>
+                              <input type="url" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="https://sua-empresa.com" />
+                            </div>
+                          </div>
+                          <button className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">
+                            Salvar Informações
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Plan Tab */}
+                  {settingsTab === 'plan' && (
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Plano & Créditos</h3>
+                      
+                      {/* Current Status */}
+                      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-6 mb-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-sm text-white/70">Plano Atual</p>
+                            <p className="text-3xl font-black">{currentPlan.name}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-white/70">Créditos Restantes</p>
+                            <p className="text-3xl font-black">{userCredits}</p>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-white rounded-full"
+                            style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-white/70 mt-2">{userCredits} de {currentPlan.limit} créditos disponíveis</p>
+                      </div>
+
+                      {/* Plans */}
+                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                        <h4 className="font-bold text-slate-700 mb-4">Escolha seu Plano</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {PLANS.map(plan => (
+                            <div 
+                              key={plan.id}
+                              onClick={() => upgradePlan(plan.id)}
+                              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                currentPlan.id === plan.id 
+                                  ? 'border-purple-500 bg-purple-50' 
+                                  : 'border-slate-200 hover:border-purple-300'
+                              }`}
+                            >
+                              <h5 className="font-bold text-slate-800">{plan.name}</h5>
+                              <p className="text-2xl font-black text-slate-800 my-2">{plan.limit}</p>
+                              <p className="text-xs text-slate-500">créditos/mês</p>
+                              <p className="text-sm font-bold text-purple-600 mt-2">{plan.price}</p>
+                              {currentPlan.id === plan.id && (
+                                <span className="inline-block mt-2 text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                                  ATUAL
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Integrations Tab */}
+                  {settingsTab === 'integrations' && (
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Integrações</h3>
+                      
+                      <div className="space-y-4">
+                        {/* Shopify */}
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                              <i className="fab fa-shopify text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">Shopify</h4>
+                              <p className="text-sm text-slate-500">Sincronize produtos automaticamente</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                            Conectar
+                          </button>
+                        </div>
+
+                        {/* WooCommerce */}
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                              <i className="fab fa-wordpress text-purple-600 text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">WooCommerce</h4>
+                              <p className="text-sm text-slate-500">Integre com sua loja WordPress</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                            Conectar
+                          </button>
+                        </div>
+
+                        {/* Magento */}
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                              <i className="fas fa-cube text-orange-600 text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">Magento / Adobe Commerce</h4>
+                              <p className="text-sm text-slate-500">Conecte sua loja Magento</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                            Conectar
+                          </button>
+                        </div>
+
+                        {/* VTEX */}
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+                              <i className="fas fa-store text-pink-600 text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">VTEX</h4>
+                              <p className="text-sm text-slate-500">Integração com VTEX IO</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                            Conectar
+                          </button>
+                        </div>
+
+                        {/* API */}
+                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
+                              <i className="fas fa-code text-slate-600 text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">API REST</h4>
+                              <p className="text-sm text-slate-500">Acesso direto via API</p>
+                            </div>
+                          </div>
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                            Ver Docs
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
