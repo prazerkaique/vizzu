@@ -345,7 +345,7 @@ function App() {
           {[
             { id: 'dashboard' as Page, icon: 'fa-home', label: 'Dashboard' },
             { id: 'studio' as Page, icon: 'fa-wand-magic-sparkles', label: 'Vizzu Studio®' },
-            { id: 'provador' as Page, icon: 'fa-user-tag', label: 'Vizzu Provador®' },
+            { id: 'provador' as Page, icon: 'fa-shirt', label: 'Vizzu Provador®' },
             { id: 'products' as Page, icon: 'fa-box', label: 'Produtos' },
             { id: 'clients' as Page, icon: 'fa-users', label: 'Clientes' },
             { id: 'history' as Page, icon: 'fa-clock-rotate-left', label: 'Histórico' },
@@ -489,7 +489,7 @@ function App() {
                 </button>
                 <button onClick={() => setCurrentPage('provador')} className="bg-neutral-900 rounded-xl p-4 border border-pink-500/30 hover:border-pink-500/50 transition-all text-left group">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-3 group-hover:from-pink-500/30 group-hover:to-orange-400/30 transition-colors">
-                    <i className="fas fa-user-tag text-pink-400 text-sm"></i>
+                    <i className="fas fa-shirt text-pink-400 text-sm"></i>
                   </div>
                   <h3 className="font-medium text-white text-sm mb-0.5">Vizzu Provador®</h3>
                   <p className="text-xs text-neutral-500">Vista seus clientes</p>
@@ -533,7 +533,7 @@ function App() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30 flex items-center justify-center">
-                    <i className="fas fa-user-tag text-pink-400 text-sm"></i>
+                    <i className="fas fa-shirt text-pink-400 text-sm"></i>
                   </div>
                   <div>
                     <h1 className="text-lg font-semibold text-white">Vizzu Provador®</h1>
@@ -1394,7 +1394,7 @@ function App() {
                 className="bg-neutral-800 border border-pink-500/30 rounded-xl p-4 text-left hover:border-pink-500/50 transition-all group"
               >
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center mb-3 group-hover:from-pink-500/30 group-hover:to-orange-400/30 transition-colors">
-                  <i className="fas fa-user-tag text-pink-400 text-sm"></i>
+                  <i className="fas fa-shirt text-pink-400 text-sm"></i>
                 </div>
                 <h4 className="font-medium text-white text-sm mb-0.5">Vizzu Provador®</h4>
                 <p className="text-[10px] text-neutral-500 leading-relaxed">Vista seus clientes virtualmente</p>
