@@ -47,7 +47,7 @@ const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
 ];
 
 type Page = 'dashboard' | 'studio' | 'provador' | 'products' | 'clients' | 'history' | 'settings';
-type SettingsTab = 'profile' | 'company' | 'plan' | 'integrations';
+type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -83,6 +83,7 @@ function App() {
   const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
   const [showStudioPicker, setShowStudioPicker] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
   
@@ -418,18 +419,36 @@ function App() {
                   <p className="text-[10px] text-neutral-500 mt-1">cadastrados no catálogo</p>
                 </div>
                 
-                {/* Banner Funcionalidades */}
-                <div className="md:col-span-2 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20 flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full uppercase">Novo</span>
-                      <p className="text-xs font-medium text-white">Vizzu Provador® com IA</p>
+                {/* Card Studio */}
+                <div className="bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 rounded-xl p-4 border border-purple-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 bg-purple-500 text-white text-[8px] font-bold rounded-full uppercase">IA</span>
+                        <p className="text-xs font-medium text-white">Vizzu Studio®</p>
+                      </div>
+                      <p className="text-[10px] text-neutral-400 leading-relaxed">Gere fotos profissionais dos seus produtos com inteligência artificial.</p>
                     </div>
-                    <p className="text-[10px] text-neutral-400 leading-relaxed">Vista seus clientes virtualmente e envie looks personalizados direto pelo WhatsApp.</p>
+                    <button onClick={() => setCurrentPage('studio')} className="ml-3 w-9 h-9 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-400 rounded-lg flex items-center justify-center transition-colors">
+                      <i className="fas fa-arrow-right text-xs"></i>
+                    </button>
                   </div>
-                  <button onClick={() => setCurrentPage('provador')} className="ml-4 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
-                    Experimentar
-                  </button>
+                </div>
+                
+                {/* Card Provador */}
+                <div className="bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-orange-500/10 rounded-xl p-4 border border-pink-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full uppercase">Novo</span>
+                        <p className="text-xs font-medium text-white">Vizzu Provador®</p>
+                      </div>
+                      <p className="text-[10px] text-neutral-400 leading-relaxed">Vista seus clientes virtualmente e envie pelo WhatsApp.</p>
+                    </div>
+                    <button onClick={() => setCurrentPage('provador')} className="ml-3 w-9 h-9 bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 text-pink-400 rounded-lg flex items-center justify-center transition-colors">
+                      <i className="fas fa-arrow-right text-xs"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1118,6 +1137,7 @@ function App() {
                 <nav className="flex md:flex-col gap-0.5 overflow-x-auto">
                   {[
                     { id: 'profile' as SettingsTab, icon: 'fa-user', label: 'Perfil' },
+                    { id: 'appearance' as SettingsTab, icon: 'fa-palette', label: 'Aparência' },
                     { id: 'company' as SettingsTab, icon: 'fa-building', label: 'Empresa' },
                     { id: 'plan' as SettingsTab, icon: 'fa-credit-card', label: 'Plano' },
                     { id: 'integrations' as SettingsTab, icon: 'fa-plug', label: 'Integrações' },
@@ -1191,6 +1211,69 @@ function App() {
                           <div>
                             <label className="block text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5">Email</label>
                             <input type="email" defaultValue={user.email} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-neutral-500" disabled />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Appearance Tab */}
+                  {settingsTab === 'appearance' && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-4">Aparência</h3>
+                      <div className="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-white text-sm">Tema</p>
+                            <p className="text-[10px] text-neutral-500 mt-0.5">Escolha entre tema claro ou escuro</p>
+                          </div>
+                          <div className="flex items-center gap-1 bg-neutral-800 p-1 rounded-lg">
+                            <button 
+                              onClick={() => setTheme('dark')}
+                              className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
+                                (theme === 'dark' ? 'bg-white text-neutral-900' : 'text-neutral-400 hover:text-white')
+                              }
+                            >
+                              <i className="fas fa-moon text-[10px]"></i>
+                              Escuro
+                            </button>
+                            <button 
+                              onClick={() => setTheme('light')}
+                              className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
+                                (theme === 'light' ? 'bg-white text-neutral-900' : 'text-neutral-400 hover:text-white')
+                              }
+                            >
+                              <i className="fas fa-sun text-[10px]"></i>
+                              Claro
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {theme === 'light' && (
+                          <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <i className="fas fa-flask text-amber-400 text-xs mt-0.5"></i>
+                              <div>
+                                <p className="text-xs font-medium text-amber-400">Em breve</p>
+                                <p className="text-[10px] text-neutral-400 mt-0.5">O tema claro está em desenvolvimento e será liberado em breve.</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Preview */}
+                        <div className="mt-4 pt-4 border-t border-neutral-800">
+                          <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-3">Preview</p>
+                          <div className={'rounded-lg p-4 border ' + (theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200')}>
+                            <div className="flex items-center gap-3">
+                              <div className={'w-10 h-10 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20' : 'bg-pink-100')}>
+                                <i className={'fas fa-wand-magic-sparkles ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-600')}></i>
+                              </div>
+                              <div>
+                                <p className={'font-medium text-sm ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Studio®</p>
+                                <p className={'text-[10px] ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Exemplo de card</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
