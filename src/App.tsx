@@ -336,10 +336,10 @@ function App() {
     <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
       {/* DESKTOP SIDEBAR */}
-      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-gradient-to-b from-purple-50 to-pink-50 border-purple-100')}>
-        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-100/50')}>
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-purple-100 border-purple-200')}>
+        <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-200/50')}>
           <img src="/logo.png" alt="Vizzu" className="h-10" />
-          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-purple-400')}>Estúdio com IA para lojistas</span>
+          <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-purple-500')}>Estúdio com IA para lojistas</span>
         </div>
         <nav className="flex-1 p-2 space-y-0.5">
           {[
@@ -356,7 +356,7 @@ function App() {
               className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
                 (currentPage === item.id 
                   ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/25') 
-                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-600 hover:text-purple-900 hover:bg-purple-100/50')
+                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-700 hover:text-purple-900 hover:bg-purple-200/50')
                 )
               }
             >
@@ -364,8 +364,8 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-100/50')}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/80 backdrop-blur-sm border border-purple-100 shadow-sm') + ' rounded-xl p-3'}>
+        <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-purple-200/50')}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white shadow-sm') + ' rounded-xl p-3'}>
             <div className="flex items-center justify-between mb-1.5">
               <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500')}>Créditos</span>
               <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className="text-pink-500 hover:text-pink-400 text-[9px] font-medium">+ Add</button>
@@ -379,16 +379,16 @@ function App() {
             onClick={() => setCurrentPage('settings')} 
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
               (currentPage === 'settings' 
-                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-purple-100 text-purple-900') 
-                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-600 hover:text-purple-900 hover:bg-purple-100/50')
+                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-purple-200 text-purple-900') 
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-purple-700 hover:text-purple-900 hover:bg-purple-200/50')
               )
             }
           >
             <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
           </button>
           <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100')}>
-              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-400')}></i>}
+            <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-200')}>
+              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500')}></i>}
             </div>
             <div className="flex-1 min-w-0">
               <p className={'text-xs font-medium truncate ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{user.name}</p>
@@ -733,7 +733,7 @@ function App() {
                       {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <div className="max-h-[240px] overflow-y-auto">
-                      <LookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} />
+                      <LookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
                     </div>
                   </div>
                 </div>
@@ -887,7 +887,8 @@ function App() {
                             return matchesSearch && matchesCollection;
                           })} 
                           composition={provadorLook} 
-                          onChange={setProvadorLook} 
+                          onChange={setProvadorLook}
+                          theme={theme}
                         />
                       </div>
                       {Object.keys(provadorLook).length > 0 && (
@@ -1471,17 +1472,17 @@ function App() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {showCreateClient && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center justify-between z-10">
-              <h3 className="text-sm font-medium text-white">Novo Cliente</h3>
-              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' }); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
+            <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
+              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
             <div className="p-4 space-y-4">
               {/* Photo Upload */}
               <div>
-                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2 block">
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 block'}>
                   <i className="fas fa-camera text-pink-400 mr-1"></i>Fotos para Provador IA
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -1491,7 +1492,7 @@ function App() {
                       <div key={photoType.id} className="text-center">
                         <div 
                           onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }} 
-                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800')}
+                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}
                         >
                           {existingPhoto ? (
                             <>
@@ -1504,7 +1505,7 @@ function App() {
                               </div>
                             </>
                           ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-neutral-600">
+                            <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
                               <i className={'fas ' + photoType.icon + ' text-lg mb-1'}></i>
                               <span className="text-[9px] font-medium">{photoType.label}</span>
                             </div>
@@ -1516,7 +1517,7 @@ function App() {
                 </div>
                 <input ref={clientPhotoInputRef} type="file" accept="image/*" capture="user" onChange={handleClientPhotoUpload} className="hidden" />
                 {newClient.photos.length > 0 && (
-                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-pink-500/10 text-pink-400 rounded-lg">
+                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-pink-500/10 text-pink-500 rounded-lg">
                     <i className="fas fa-check text-[10px]"></i>
                     <span className="text-[10px] font-medium">Provador IA ativado - {newClient.photos.length} foto(s)</span>
                   </div>
@@ -1526,37 +1527,37 @@ function App() {
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">Nome *</label>
-                  <input type="text" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Nome *</label>
+                  <input type="text" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">Sobrenome *</label>
-                  <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Sobrenome *</label>
+                  <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
               
               {/* WhatsApp */}
               <div>
-                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">WhatsApp *</label>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>WhatsApp *</label>
                 <div className="relative">
                   <i className="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm"></i>
-                  <input type="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className="w-full pl-9 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
+                  <input type="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
               
               {/* Email */}
               <div>
-                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">E-mail (opcional)</label>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>E-mail (opcional)</label>
                 <div className="relative">
-                  <i className="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 text-xs"></i>
-                  <input type="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className="w-full pl-9 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" />
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
+                  <input type="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
               
               {/* Notes */}
               <div>
-                <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1 block">Observações (opcional)</label>
-                <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white resize-none" />
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Observações (opcional)</label>
+                <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'} />
               </div>
               
               {/* Submit */}
@@ -1689,28 +1690,28 @@ function App() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {showImport && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-white">Adicionar Produto</h3>
-              <button onClick={() => setShowImport(false)} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Adicionar Produto</h3>
+              <button onClick={() => setShowImport(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
-            <p className="text-neutral-500 text-xs mb-4">Escolha como adicionar a imagem:</p>
+            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Escolha como adicionar a imagem:</p>
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <label className="flex flex-col items-center gap-2 p-4 border border-dashed border-neutral-700 rounded-xl hover:border-pink-500/50 hover:bg-neutral-800 transition-all cursor-pointer">
+              <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files)} />
-                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
-                  <i className="fas fa-images text-neutral-400 text-sm"></i>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-images text-sm'}></i>
                 </div>
-                <span className="text-[10px] font-medium text-neutral-300">Galeria</span>
+                <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Galeria</span>
               </label>
-              <label className="flex flex-col items-center gap-2 p-4 border border-dashed border-neutral-700 rounded-xl hover:border-pink-500/50 hover:bg-neutral-800 transition-all cursor-pointer">
+              <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
                 <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files)} />
-                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
-                  <i className="fas fa-camera text-neutral-400 text-sm"></i>
+                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-camera text-sm'}></i>
                 </div>
-                <span className="text-[10px] font-medium text-neutral-300">Câmera</span>
+                <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Câmera</span>
               </label>
             </div>
           </div>
@@ -1722,31 +1723,31 @@ function App() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {showCreateProduct && selectedImage && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-white">Criar Produto</h3>
-              <button onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
+              <button onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
             <div className="mb-4">
-              <div className="w-20 h-20 rounded-lg overflow-hidden border border-neutral-700 mx-auto">
+              <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' w-20 h-20 rounded-lg overflow-hidden border mx-auto'}>
                 <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Nome do Produto *</label>
-                <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="Ex: Camiseta Básica Branca" />
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
+                <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Marca</label>
-                  <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white" placeholder="Ex: Nike" />
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
+                  <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Cor</label>
-                  <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white">
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+                  <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
                     <option value="">Selecione</option>
                     {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
                   </select>
@@ -1754,15 +1755,15 @@ function App() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Caimento</label>
-                  <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white">
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Caimento</label>
+                  <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
                     <option value="">Selecione</option>
                     {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Categoria *</label>
-                  <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white">
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
+                  <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
                     <option value="">Selecione</option>
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
@@ -1781,49 +1782,49 @@ function App() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {showProductDetail && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto'}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-white">Detalhes do Produto</h3>
-              <button onClick={() => setShowProductDetail(null)} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Detalhes do Produto</h3>
+              <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-40 h-40 rounded-xl overflow-hidden border border-neutral-700 flex-shrink-0">
+              <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' w-full md:w-40 h-40 rounded-xl overflow-hidden border flex-shrink-0'}>
                 <img src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url} alt={showProductDetail.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
-                <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-0.5">{showProductDetail.sku}</p>
-                <h4 className="text-base font-semibold text-white mb-3">{showProductDetail.name}</h4>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-0.5'}>{showProductDetail.sku}</p>
+                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mb-3'}>{showProductDetail.name}</h4>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {showProductDetail.brand && (
-                    <div className="bg-neutral-800 rounded-lg p-2">
-                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Marca</p>
-                      <p className="text-[10px] font-medium text-white">{showProductDetail.brand}</p>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Marca</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.brand}</p>
                     </div>
                   )}
                   {showProductDetail.category && (
-                    <div className="bg-neutral-800 rounded-lg p-2">
-                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Categoria</p>
-                      <p className="text-[10px] font-medium text-white">{showProductDetail.category}</p>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Categoria</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.category}</p>
                     </div>
                   )}
                   {showProductDetail.color && (
-                    <div className="bg-neutral-800 rounded-lg p-2">
-                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Cor</p>
-                      <p className="text-[10px] font-medium text-white">{showProductDetail.color}</p>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Cor</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.color}</p>
                     </div>
                   )}
                   {showProductDetail.fit && (
-                    <div className="bg-neutral-800 rounded-lg p-2">
-                      <p className="text-[8px] text-neutral-500 uppercase tracking-wide mb-0.5">Caimento</p>
-                      <p className="text-[10px] font-medium text-white">{showProductDetail.fit}</p>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Caimento</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.fit}</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t border-neutral-800">
+            <div className={'flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
                 <i className="fas fa-wand-magic-sparkles mr-1.5"></i>Abrir no Studio
               </button>
