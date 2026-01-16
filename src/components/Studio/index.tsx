@@ -496,7 +496,6 @@ export const Studio: React.FC<StudioProps> = ({
           onClose={() => setSelectedProduct(null)}
           onUpdateProduct={onUpdateProduct}
           onDeductCredits={onDeductCredits}
-          onGenerateImage={onGenerateImage}
         />
       )}
     </div>
