@@ -119,7 +119,7 @@ function App() {
   // LOGIN SCREEN
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-slate-900 flex items-center justify-center p-4 font-['Inter']">
         <div className="relative z-10 w-full max-w-md">
           <div className="text-center mb-8">
             <img 
@@ -131,10 +131,10 @@ function App() {
           </div>
 
           <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
-            <h2 className="text-xl font-bold text-white text-center mb-6">Bem-vindo!</h2>
+            <h2 className="text-xl font-semibold text-white text-center mb-6">Bem-vindo!</h2>
 
             <div className="space-y-4">
-              <button onClick={handleGoogleLogin} className="w-full py-4 bg-white text-slate-800 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors">
+              <button onClick={handleGoogleLogin} className="w-full py-4 bg-white text-slate-800 rounded-xl font-medium flex items-center justify-center gap-3 hover:bg-slate-100 transition-colors">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -149,9 +149,9 @@ function App() {
                 <div className="relative flex justify-center text-sm"><span className="px-4 text-slate-500 bg-transparent">ou</span></div>
               </div>
 
-              <button onClick={handleDemoLogin} className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold flex items-center justify-center gap-3 transition-colors">
-                <i className="fas fa-play"></i>
-                Testar Gratuitamente
+              <button onClick={handleDemoLogin} className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium flex items-center justify-center gap-3 transition-colors">
+                <i className="far fa-play-circle"></i>
+                Testar gratuitamente
               </button>
             </div>
           </div>
@@ -162,12 +162,12 @@ function App() {
 
   // MAIN APP WITH SIDEBAR
   return (
-    <div className="h-screen flex bg-slate-100">
+    <div className="h-screen flex bg-slate-50 font-['Inter']">
       
       {/* SIDEBAR */}
       <aside className="w-56 bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 flex flex-col shadow-2xl">
         
-        {/* Logo - MAIOR E CENTRALIZADO */}
+        {/* Logo */}
         <div className="p-6 border-b border-white/10 flex justify-center">
           <img 
             src="/logo.png" 
@@ -176,65 +176,65 @@ function App() {
           />
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - Outline Icons */}
         <nav className="flex-1 p-3 space-y-1">
           <button
             onClick={() => setCurrentPage('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               currentPage === 'dashboard'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                ? 'bg-white/10 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <i className="fas fa-home w-5"></i>
+            <i className="far fa-home w-5"></i>
             Dashboard
           </button>
 
           <button
             onClick={() => setCurrentPage('studio')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               currentPage === 'studio'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                ? 'bg-white/10 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <i className="fas fa-wand-magic-sparkles w-5"></i>
+            <i className="far fa-wand-magic-sparkles w-5"></i>
             Vizzu Studio
           </button>
 
           <button
             onClick={() => setCurrentPage('products')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               currentPage === 'products'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                ? 'bg-white/10 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <i className="fas fa-box w-5"></i>
+            <i className="far fa-box w-5"></i>
             Produtos
           </button>
 
           <button
             onClick={() => setCurrentPage('clients')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               currentPage === 'clients'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                ? 'bg-white/10 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <i className="fas fa-users w-5"></i>
+            <i className="far fa-users w-5"></i>
             Clientes
           </button>
 
           <button
             onClick={() => setCurrentPage('history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               currentPage === 'history'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                ? 'bg-white/10 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <i className="fas fa-clock-rotate-left w-5"></i>
+            <i className="far fa-clock-rotate-left w-5"></i>
             Histórico
           </button>
         </nav>
@@ -245,18 +245,18 @@ function App() {
           {/* Credits */}
           <div className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
+              <span className="text-xs text-slate-400">Créditos</span>
               <button 
                 onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-                className="text-purple-400 hover:text-purple-300 text-xs font-bold"
+                className="text-purple-400 hover:text-purple-300 text-xs font-medium"
               >
-                + Add
+                + Adicionar
               </button>
             </div>
-            <p className="text-2xl font-black text-white">{userCredits.toLocaleString()}</p>
-            <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <p className="text-2xl font-semibold text-white">{userCredits.toLocaleString()}</p>
+            <div className="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all"
+                className="h-full bg-purple-500 rounded-full transition-all"
                 style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
               ></div>
             </div>
@@ -265,28 +265,28 @@ function App() {
           {/* Settings Button */}
           <button
             onClick={() => setCurrentPage('settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               currentPage === 'settings'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                ? 'bg-white/10 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <i className="fas fa-cog w-5"></i>
+            <i className="far fa-cog w-5"></i>
             Configurações
           </button>
 
           {/* User Profile */}
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center overflow-hidden">
               {user.avatar ? (
                 <img src={user.avatar} className="w-full h-full object-cover" alt="" />
               ) : (
-                <i className="fas fa-user text-white text-sm"></i>
+                <i className="far fa-user text-white text-sm"></i>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{user.name}</p>
-              <p className="text-[10px] text-slate-500">Plano {currentPlan.name}</p>
+              <p className="text-sm font-medium text-white truncate">{user.name}</p>
+              <p className="text-xs text-slate-500">{currentPlan.name}</p>
             </div>
           </div>
         </div>
@@ -299,90 +299,87 @@ function App() {
         {currentPage === 'dashboard' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-6xl mx-auto">
-              <h1 className="text-3xl font-black text-slate-800 mb-2">Bem-vindo, {user.name.split(' ')[0]}!</h1>
-              <p className="text-slate-500 mb-8">Resumo do seu estúdio de imagens AI</p>
+              <h1 className="text-2xl font-semibold text-slate-800 mb-1">Bem-vindo, {user.name.split(' ')[0]}!</h1>
+              <p className="text-slate-500 text-sm mb-8">Resumo do seu estúdio de imagens AI</p>
 
-              {/* Stats Cards */}
+              {/* Stats Cards - Clean, no borders, monochromatic */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center">
+                      <i className="far fa-box"></i>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-1">Total produtos</p>
+                  <p className="text-2xl font-semibold text-slate-800">{products.length}</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center">
+                      <i className="far fa-image"></i>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-1">Imagens geradas</p>
+                  <p className="text-2xl font-semibold text-slate-800">0</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center">
+                      <i className="far fa-coins"></i>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-1">Créditos disponíveis</p>
+                  <p className="text-2xl font-semibold text-slate-800">{userCredits}</p>
+                </div>
+
+                {/* Plan Card - Subtle highlight with left border */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border-l-4 border-purple-500">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                      <i className="fas fa-box"></i>
+                      <i className="far fa-crown"></i>
                     </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Total Produtos</span>
                   </div>
-                  <p className="text-3xl font-black text-slate-800">{products.length}</p>
-                  <p className="text-xs text-slate-500 mt-1">No catálogo</p>
-                </div>
-
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                      <i className="fas fa-image"></i>
-                    </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Imagens Geradas</span>
-                  </div>
-                  <p className="text-3xl font-black text-slate-800">0</p>
-                  <p className="text-xs text-slate-500 mt-1">Este mês</p>
-                </div>
-
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                      <i className="fas fa-coins"></i>
-                    </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase">Créditos</span>
-                  </div>
-                  <p className="text-3xl font-black text-slate-800">{userCredits}</p>
-                  <p className="text-xs text-slate-500 mt-1">Disponíveis</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-5 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center">
-                      <i className="fas fa-crown"></i>
-                    </div>
-                    <span className="text-xs font-bold text-white/70 uppercase">Plano</span>
-                  </div>
-                  <p className="text-3xl font-black text-white">{currentPlan.name}</p>
-                  <p className="text-xs text-white/70 mt-1">{currentPlan.limit} créd./mês</p>
+                  <p className="text-xs text-slate-400 mb-1">Seu plano</p>
+                  <p className="text-2xl font-semibold text-slate-800">{currentPlan.name}</p>
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <h2 className="text-lg font-bold text-slate-700 mb-4">Ações Rápidas</h2>
+              {/* Quick Actions - Clean, no borders */}
+              <h2 className="text-sm font-medium text-slate-500 mb-4">Ações rápidas</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button 
                   onClick={() => setCurrentPage('studio')}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-purple-300 hover:shadow-lg transition-all text-left group"
+                  className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-wand-magic-sparkles text-xl"></i>
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mb-4 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                    <i className="far fa-wand-magic-sparkles text-xl"></i>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">Abrir Studio</h3>
-                  <p className="text-sm text-slate-500">Gerar imagens com IA</p>
+                  <h3 className="font-medium text-slate-800 mb-1">Abrir Studio</h3>
+                  <p className="text-sm text-slate-400">Gerar imagens com IA</p>
                 </button>
 
                 <button 
                   onClick={() => setShowImport(true)}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-pink-300 hover:shadow-lg transition-all text-left group"
+                  className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-cloud-upload-alt text-xl"></i>
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mb-4 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                    <i className="far fa-cloud-upload text-xl"></i>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">Importar Produtos</h3>
-                  <p className="text-sm text-slate-500">Adicionar novas imagens</p>
+                  <h3 className="font-medium text-slate-800 mb-1">Importar produtos</h3>
+                  <p className="text-sm text-slate-400">Adicionar novas imagens</p>
                 </button>
 
                 <button 
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-orange-300 hover:shadow-lg transition-all text-left group"
+                  className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all text-left group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <i className="fas fa-bolt text-xl"></i>
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mb-4 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                    <i className="far fa-bolt text-xl"></i>
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">Comprar Créditos</h3>
-                  <p className="text-sm text-slate-500">Upgrade de plano</p>
+                  <h3 className="font-medium text-slate-800 mb-1">Comprar créditos</h3>
+                  <p className="text-sm text-slate-400">Upgrade de plano</p>
                 </button>
               </div>
             </div>
@@ -408,24 +405,24 @@ function App() {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-800 mb-2">Produtos</h1>
-                  <p className="text-slate-500">Gerencie seu catálogo de produtos</p>
+                  <h1 className="text-2xl font-semibold text-slate-800 mb-1">Produtos</h1>
+                  <p className="text-slate-500 text-sm">Gerencie seu catálogo de produtos</p>
                 </div>
                 <button 
                   onClick={() => setShowImport(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium shadow-sm transition-colors"
                 >
-                  <i className="fas fa-plus mr-2"></i>Importar
+                  <i className="far fa-plus mr-2"></i>Importar
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6">
                   {products.map(product => (
                     <div 
                       key={product.id}
                       onClick={() => setCurrentPage('studio')}
-                      className="bg-slate-50 rounded-xl overflow-hidden border border-slate-200 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group"
+                      className="bg-slate-50 rounded-xl overflow-hidden cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all group"
                     >
                       <div className="aspect-square bg-white relative overflow-hidden">
                         <img 
@@ -435,8 +432,8 @@ function App() {
                         />
                       </div>
                       <div className="p-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">{product.sku}</p>
-                        <p className="text-xs font-bold text-slate-700 truncate">{product.name}</p>
+                        <p className="text-[10px] text-slate-400">{product.sku}</p>
+                        <p className="text-xs font-medium text-slate-700 truncate">{product.name}</p>
                       </div>
                     </div>
                   ))}
@@ -452,22 +449,22 @@ function App() {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-800 mb-2">Clientes</h1>
-                  <p className="text-slate-500">Gerencie seus clientes e acessos</p>
+                  <h1 className="text-2xl font-semibold text-slate-800 mb-1">Clientes</h1>
+                  <p className="text-slate-500 text-sm">Gerencie seus clientes e acessos</p>
                 </div>
-                <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
-                  <i className="fas fa-plus mr-2"></i>Novo Cliente
+                <button className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium shadow-sm transition-colors">
+                  <i className="far fa-plus mr-2"></i>Novo cliente
                 </button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                  <i className="fas fa-users text-slate-300 text-3xl"></i>
+              <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                  <i className="far fa-users text-slate-300 text-2xl"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
-                <p className="text-slate-500 mb-6">Adicione clientes para gerenciar acessos e permissões</p>
-                <button className="px-6 py-3 bg-purple-100 text-purple-700 rounded-xl font-bold hover:bg-purple-200 transition-colors">
-                  <i className="fas fa-plus mr-2"></i>Adicionar Primeiro Cliente
+                <h3 className="text-lg font-medium text-slate-700 mb-2">Nenhum cliente cadastrado</h3>
+                <p className="text-slate-400 text-sm mb-6">Adicione clientes para gerenciar acessos</p>
+                <button className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+                  <i className="far fa-plus mr-2"></i>Adicionar primeiro cliente
                 </button>
               </div>
             </div>
@@ -480,26 +477,26 @@ function App() {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-800 mb-2">Histórico</h1>
-                  <p className="text-slate-500">Acompanhe todas as atividades da plataforma</p>
+                  <h1 className="text-2xl font-semibold text-slate-800 mb-1">Histórico</h1>
+                  <p className="text-slate-500 text-sm">Acompanhe todas as atividades</p>
                 </div>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
-                    <i className="fas fa-filter mr-2"></i>Filtrar
+                  <button className="px-4 py-2 bg-white rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 shadow-sm">
+                    <i className="far fa-filter mr-2"></i>Filtrar
                   </button>
-                  <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
-                    <i className="fas fa-download mr-2"></i>Exportar
+                  <button className="px-4 py-2 bg-white rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 shadow-sm">
+                    <i className="far fa-download mr-2"></i>Exportar
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-12 text-center">
-                  <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                    <i className="fas fa-clock-rotate-left text-slate-300 text-3xl"></i>
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                    <i className="far fa-clock-rotate-left text-slate-300 text-2xl"></i>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhuma atividade ainda</h3>
-                  <p className="text-slate-500">As atividades aparecerão aqui conforme você usar a plataforma</p>
+                  <h3 className="text-lg font-medium text-slate-700 mb-2">Nenhuma atividade ainda</h3>
+                  <p className="text-slate-400 text-sm">As atividades aparecerão aqui</p>
                 </div>
               </div>
             </div>
@@ -512,18 +509,18 @@ function App() {
             <div className="flex h-full">
               
               {/* Settings Sidebar */}
-              <div className="w-64 bg-white border-r border-slate-200 p-4">
-                <h2 className="text-lg font-bold text-slate-800 mb-4 px-3">Configurações</h2>
+              <div className="w-64 bg-white border-r border-slate-100 p-4">
+                <h2 className="text-lg font-semibold text-slate-800 mb-4 px-3">Configurações</h2>
                 <nav className="space-y-1">
                   <button
                     onClick={() => setSettingsTab('profile')}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       settingsTab === 'profile'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <i className="fas fa-user w-5"></i>
+                    <i className="far fa-user w-5"></i>
                     Perfil & Senha
                   </button>
 
@@ -531,23 +528,23 @@ function App() {
                     onClick={() => setSettingsTab('company')}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       settingsTab === 'company'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <i className="fas fa-building w-5"></i>
-                    Infos da Empresa
+                    <i className="far fa-building w-5"></i>
+                    Infos da empresa
                   </button>
 
                   <button
                     onClick={() => setSettingsTab('plan')}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       settingsTab === 'plan'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <i className="fas fa-credit-card w-5"></i>
+                    <i className="far fa-credit-card w-5"></i>
                     Plano & Créditos
                   </button>
 
@@ -555,89 +552,89 @@ function App() {
                     onClick={() => setSettingsTab('integrations')}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       settingsTab === 'integrations'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-purple-50 text-purple-700'
+                        : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <i className="fas fa-plug w-5"></i>
+                    <i className="far fa-plug w-5"></i>
                     Integrações
                   </button>
 
-                  <div className="pt-4 mt-4 border-t border-slate-200">
+                  <div className="pt-4 mt-4 border-t border-slate-100">
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
                     >
-                      <i className="fas fa-sign-out-alt w-5"></i>
-                      Sair da Conta
+                      <i className="far fa-sign-out w-5"></i>
+                      Sair da conta
                     </button>
                   </div>
                 </nav>
               </div>
 
               {/* Settings Content */}
-              <div className="flex-1 p-8 overflow-y-auto">
+              <div className="flex-1 p-8 overflow-y-auto bg-slate-50">
                 <div className="max-w-2xl">
                   
                   {/* Profile Tab */}
                   {settingsTab === 'profile' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Perfil & Senha</h3>
+                      <h3 className="text-xl font-semibold text-slate-800 mb-6">Perfil & Senha</h3>
                       
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
-                        <h4 className="font-bold text-slate-700 mb-4">Informações Pessoais</h4>
+                      <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                        <h4 className="font-medium text-slate-700 mb-4">Informações pessoais</h4>
                         
                         <div className="flex items-center gap-6 mb-6">
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+                          <div className="w-20 h-20 rounded-full bg-purple-600 flex items-center justify-center overflow-hidden">
                             {user.avatar ? (
                               <img src={user.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <i className="fas fa-user text-white text-2xl"></i>
+                              <i className="far fa-user text-white text-2xl"></i>
                             )}
                           </div>
-                          <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50">
-                            Alterar Foto
+                          <button className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-200">
+                            Alterar foto
                           </button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Nome</label>
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Nome</label>
                             <input 
                               type="text" 
                               defaultValue={user.name}
-                              className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                              className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Email</label>
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Email</label>
                             <input 
                               type="email" 
                               defaultValue={user.email}
-                              className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50"
+                              className="w-full px-4 py-3 bg-slate-100 border-0 rounded-xl text-sm text-slate-400"
                               disabled
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                        <h4 className="font-bold text-slate-700 mb-4">Alterar Senha</h4>
+                      <div className="bg-white rounded-2xl shadow-sm p-6">
+                        <h4 className="font-medium text-slate-700 mb-4">Alterar senha</h4>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Senha Atual</label>
-                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Senha atual</label>
+                            <input type="password" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Nova Senha</label>
-                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Nova senha</label>
+                            <input type="password" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Confirmar Nova Senha</label>
-                            <input type="password" className="w-full px-4 py-3 border border-slate-200 rounded-xl" />
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Confirmar nova senha</label>
+                            <input type="password" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" />
                           </div>
-                          <button className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">
-                            Salvar Alterações
+                          <button className="px-5 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors">
+                            Salvar alterações
                           </button>
                         </div>
                       </div>
@@ -647,34 +644,34 @@ function App() {
                   {/* Company Tab */}
                   {settingsTab === 'company' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Infos da Empresa</h3>
+                      <h3 className="text-xl font-semibold text-slate-800 mb-6">Infos da empresa</h3>
                       
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                      <div className="bg-white rounded-2xl shadow-sm p-6">
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Nome da Empresa</label>
-                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="Sua Empresa Ltda" />
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Nome da empresa</label>
+                            <input type="text" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" placeholder="Sua Empresa Ltda" />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">CNPJ</label>
-                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="00.000.000/0000-00" />
+                            <label className="block text-sm font-medium text-slate-600 mb-2">CNPJ</label>
+                            <input type="text" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" placeholder="00.000.000/0000-00" />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-slate-600 mb-2">Endereço</label>
-                            <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="Rua, número, cidade" />
+                            <label className="block text-sm font-medium text-slate-600 mb-2">Endereço</label>
+                            <input type="text" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" placeholder="Rua, número, cidade" />
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm font-bold text-slate-600 mb-2">Telefone</label>
-                              <input type="tel" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="(00) 00000-0000" />
+                              <label className="block text-sm font-medium text-slate-600 mb-2">Telefone</label>
+                              <input type="tel" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" placeholder="(00) 00000-0000" />
                             </div>
                             <div>
-                              <label className="block text-sm font-bold text-slate-600 mb-2">Website</label>
-                              <input type="url" className="w-full px-4 py-3 border border-slate-200 rounded-xl" placeholder="https://sua-empresa.com" />
+                              <label className="block text-sm font-medium text-slate-600 mb-2">Website</label>
+                              <input type="url" className="w-full px-4 py-3 bg-slate-50 border-0 rounded-xl text-sm focus:ring-2 focus:ring-purple-500" placeholder="https://sua-empresa.com" />
                             </div>
                           </div>
-                          <button className="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">
-                            Salvar Informações
+                          <button className="px-5 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors">
+                            Salvar informações
                           </button>
                         </div>
                       </div>
@@ -684,50 +681,50 @@ function App() {
                   {/* Plan Tab */}
                   {settingsTab === 'plan' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Plano & Créditos</h3>
+                      <h3 className="text-xl font-semibold text-slate-800 mb-6">Plano & Créditos</h3>
                       
-                      {/* Current Status */}
-                      <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-6 mb-6 text-white">
+                      {/* Current Status - Subtle */}
+                      <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border-l-4 border-purple-500">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-sm text-white/70">Plano Atual</p>
-                            <p className="text-3xl font-black">{currentPlan.name}</p>
+                            <p className="text-xs text-slate-400 mb-1">Plano atual</p>
+                            <p className="text-2xl font-semibold text-slate-800">{currentPlan.name}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm text-white/70">Créditos Restantes</p>
-                            <p className="text-3xl font-black">{userCredits}</p>
+                            <p className="text-xs text-slate-400 mb-1">Créditos restantes</p>
+                            <p className="text-2xl font-semibold text-slate-800">{userCredits}</p>
                           </div>
                         </div>
-                        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-white rounded-full"
+                            className="h-full bg-purple-500 rounded-full"
                             style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
                           ></div>
                         </div>
-                        <p className="text-xs text-white/70 mt-2">{userCredits} de {currentPlan.limit} créditos disponíveis</p>
+                        <p className="text-xs text-slate-400 mt-2">{userCredits} de {currentPlan.limit} créditos disponíveis</p>
                       </div>
 
                       {/* Plans */}
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                        <h4 className="font-bold text-slate-700 mb-4">Escolha seu Plano</h4>
+                      <div className="bg-white rounded-2xl shadow-sm p-6">
+                        <h4 className="font-medium text-slate-700 mb-4">Escolha seu plano</h4>
                         <div className="grid grid-cols-2 gap-4">
                           {PLANS.map(plan => (
                             <div 
                               key={plan.id}
                               onClick={() => upgradePlan(plan.id)}
-                              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                              className={`p-4 rounded-xl cursor-pointer transition-all ${
                                 currentPlan.id === plan.id 
-                                  ? 'border-purple-500 bg-purple-50' 
-                                  : 'border-slate-200 hover:border-purple-300'
+                                  ? 'bg-purple-50 ring-2 ring-purple-500' 
+                                  : 'bg-slate-50 hover:bg-slate-100'
                               }`}
                             >
-                              <h5 className="font-bold text-slate-800">{plan.name}</h5>
-                              <p className="text-2xl font-black text-slate-800 my-2">{plan.limit}</p>
-                              <p className="text-xs text-slate-500">créditos/mês</p>
-                              <p className="text-sm font-bold text-purple-600 mt-2">{plan.price}</p>
+                              <h5 className="font-medium text-slate-800">{plan.name}</h5>
+                              <p className="text-2xl font-semibold text-slate-800 my-2">{plan.limit}</p>
+                              <p className="text-xs text-slate-400">créditos/mês</p>
+                              <p className="text-sm font-medium text-purple-600 mt-2">{plan.price}</p>
                               {currentPlan.id === plan.id && (
-                                <span className="inline-block mt-2 text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                                  ATUAL
+                                <span className="inline-block mt-2 text-[10px] font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                                  Atual
                                 </span>
                               )}
                             </div>
@@ -740,86 +737,86 @@ function App() {
                   {/* Integrations Tab */}
                   {settingsTab === 'integrations' && (
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-800 mb-6">Integrações</h3>
+                      <h3 className="text-xl font-semibold text-slate-800 mb-6">Integrações</h3>
                       
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {/* Shopify */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                              <i className="fab fa-shopify text-green-600 text-2xl"></i>
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                              <i className="fab fa-shopify text-slate-500 text-lg"></i>
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800">Shopify</h4>
-                              <p className="text-sm text-slate-500">Sincronize produtos automaticamente</p>
+                              <h4 className="font-medium text-slate-800">Shopify</h4>
+                              <p className="text-sm text-slate-400">Sincronize produtos</p>
                             </div>
                           </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
                             Conectar
                           </button>
                         </div>
 
                         {/* WooCommerce */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                              <i className="fab fa-wordpress text-purple-600 text-2xl"></i>
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                              <i className="fab fa-wordpress text-slate-500 text-lg"></i>
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800">WooCommerce</h4>
-                              <p className="text-sm text-slate-500">Integre com sua loja WordPress</p>
+                              <h4 className="font-medium text-slate-800">WooCommerce</h4>
+                              <p className="text-sm text-slate-400">Integre com WordPress</p>
                             </div>
                           </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
                             Conectar
                           </button>
                         </div>
 
                         {/* Magento */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-                              <i className="fas fa-cube text-orange-600 text-2xl"></i>
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                              <i className="far fa-cube text-slate-500 text-lg"></i>
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800">Magento / Adobe Commerce</h4>
-                              <p className="text-sm text-slate-500">Conecte sua loja Magento</p>
+                              <h4 className="font-medium text-slate-800">Magento</h4>
+                              <p className="text-sm text-slate-400">Adobe Commerce</p>
                             </div>
                           </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
                             Conectar
                           </button>
                         </div>
 
                         {/* VTEX */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
-                              <i className="fas fa-store text-pink-600 text-2xl"></i>
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                              <i className="far fa-store text-slate-500 text-lg"></i>
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800">VTEX</h4>
-                              <p className="text-sm text-slate-500">Integração com VTEX IO</p>
+                              <h4 className="font-medium text-slate-800">VTEX</h4>
+                              <p className="text-sm text-slate-400">VTEX IO</p>
                             </div>
                           </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
                             Conectar
                           </button>
                         </div>
 
                         {/* API */}
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
-                              <i className="fas fa-code text-slate-600 text-2xl"></i>
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                              <i className="far fa-code text-slate-500 text-lg"></i>
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-800">API REST</h4>
-                              <p className="text-sm text-slate-500">Acesso direto via API</p>
+                              <h4 className="font-medium text-slate-800">API REST</h4>
+                              <p className="text-sm text-slate-400">Acesso direto</p>
                             </div>
                           </div>
-                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200">
-                            Ver Docs
+                          <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
+                            Ver docs
                           </button>
                         </div>
                       </div>
@@ -834,26 +831,26 @@ function App() {
 
       {/* IMPORT MODAL */}
       {showImport && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">Importar Produtos</h3>
+              <h3 className="text-lg font-semibold text-slate-800">Importar produtos</h3>
               <button onClick={() => setShowImport(false)} className="text-slate-400 hover:text-slate-600">
-                <i className="fas fa-times"></i>
+                <i className="far fa-times"></i>
               </button>
             </div>
             
             <div 
-              className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center hover:border-purple-400 hover:bg-purple-50/50 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center hover:border-purple-300 hover:bg-purple-50/50 transition-colors cursor-pointer"
               onClick={() => document.getElementById('file-input')?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); handleImportProduct(e.dataTransfer.files); }}
             >
-              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-cloud-upload-alt text-purple-600 text-2xl"></i>
+              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                <i className="far fa-cloud-upload text-slate-400 text-xl"></i>
               </div>
-              <p className="text-sm font-bold text-slate-700 mb-2">Arraste imagens aqui</p>
-              <p className="text-xs text-slate-500">ou clique para selecionar</p>
+              <p className="text-sm font-medium text-slate-700 mb-1">Arraste imagens aqui</p>
+              <p className="text-xs text-slate-400">ou clique para selecionar</p>
               <input 
                 id="file-input" 
                 type="file" 
