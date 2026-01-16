@@ -336,7 +336,7 @@ function App() {
     <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
       {/* DESKTOP SIDEBAR */}
-      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-violet-500 border-violet-600')}>
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-gradient-to-b from-pink-500 via-fuchsia-500 to-violet-500 border-violet-600')}>
         <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
           <img src="/logo.png" alt="Vizzu" className="h-10" />
           <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Estúdio com IA para lojistas</span>
@@ -426,7 +426,7 @@ function App() {
               <div className={'rounded-2xl p-5 mb-5 ' + (theme === 'dark' ? 'bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 border border-neutral-800' : 'bg-white shadow-xl shadow-gray-200/50 border border-gray-100')}>
                 <div className="flex items-center gap-2 mb-4">
                   <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-gradient-to-r from-pink-500 to-orange-400')}>
-                    <i className="fas fa-sparkles text-white text-xs"></i>
+                    <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
                   </div>
                   <h2 className={'text-base font-bold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Criar</h2>
                 </div>
