@@ -6,30 +6,6 @@ import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTem
 import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 
-const DEMO_PRODUCTS: Product[] = [
-  {
-    id: '1', sku: 'TSH-001', name: 'Camiseta Premium Algodão Preta',
-    description: 'Camiseta 100% algodão premium na cor preta', category: 'Camisetas',
-    brand: 'Vizzu Wear', color: 'Preto', fit: 'Regular',
-    images: [{ name: 'camiseta-preta.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTEwMCAxMDAgTDE1MCA1MCBMMjUwIDUwIEwzMDAgMTAwIEwzMDAgMzUwIEwxMjUgMzUwIEwxMDAgMzUwIFoiIGZpbGw9IiMyMDIwMjAiLz48dGV4dCB4PSIyMDAiIHk9IjQ1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2Ij5UU0gtMDAxPC90ZXh0Pjwvc3ZnPg==' }]
-  },
-  {
-    id: '2', sku: 'TSH-002', name: 'Camiseta Estampada Summer Vibes', category: 'Camisetas',
-    brand: 'Vizzu Wear', color: 'Azul', fit: 'Slim',
-    images: [{ name: 'camiseta-estampada.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTEwMCAxMDAgTDE1MCA1MCBMMjUwIDUwIEwzMDAgMTAwIEwzMDAgMzUwIEwxMjUgMzUwIEwxMDAgMzUwIFoiIGZpbGw9IiMxODkyZDIiLz48Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjQwIiBmaWxsPSIjZmZkNzAwIi8+PHRleHQgeD0iMjAwIiB5PSI0NTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiI+VFNILTAwMjwvdGV4dD48L3N2Zz4=' }]
-  },
-  {
-    id: '3', sku: 'JNS-001', name: 'Calça Jeans Slim Fit Azul', category: 'Calças',
-    brand: 'Denim Co', color: 'Azul', fit: 'Slim',
-    images: [{ name: 'jeans-azul.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTEzMCA1MCBMMjcwIDUwIEwyODAgODAgTDI3NSA0MDAgTDIyMCA0MDAgTDIwMCAyNTAgTDE4MCA0MDAgTDEyNSA0MDAgTDEyMCA4MCBaIiBmaWxsPSIjMWQ0ZWQ4Ii8+PHRleHQgeD0iMjAwIiB5PSI0NTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiI+Sk5TLTAwMTwvdGV4dD48L3N2Zz4=' }]
-  },
-  {
-    id: '4', sku: 'SNK-001', name: 'Tênis Running Performance', category: 'Calçados',
-    brand: 'SportMax', color: 'Preto', fit: 'Regular',
-    images: [{ name: 'tenis-running.jpg', base64: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTUwLDI5MCBDNTAsMjkwIDEwMCwyMzAgMTgwLDIzMCBDMjUwLDIzMCAzMDAsMjUwIDM1MCwyODAgTDM1MCwzMjAgQzM1MCwzMjAgMzAwLDM0MCAyMDAsMzQwIEMxNDUsMzQwIDUwLDMyMCA1MCwzMjAgWiIgZmlsbD0iIzIzMjMyMyIvPjxwYXRoIGQ9Ik01MCwzMTUgTDM1MCwzMTUgTDM1MCwzMzAgTDUwLDMzMCBaIiBmaWxsPSIjZmZmIi8+PHRleHQgeD0iMjAwIiB5PSI0NTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiI+U05LLTAwMTwvdGV4dD48L3N2Zz4=' }]
-  }
-];
-
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
@@ -53,13 +29,14 @@ type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [products, setProducts] = useState<Product[]>(DEMO_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
   const [showImport, setShowImport] = useState(false);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -107,6 +84,45 @@ function App() {
   
   const clientsWithProvador = clients.filter(c => c.hasProvadorIA && (c.photos?.length || c.photo));
 
+  // Função para carregar produtos do usuário do Supabase
+  const loadUserProducts = async (userId: string) => {
+    try {
+      const { data: productsData, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          product_images (*)
+        `)
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      
+      if (productsData && productsData.length > 0) {
+        const formattedProducts: Product[] = productsData.map(p => ({
+          id: p.id,
+          sku: p.sku,
+          name: p.name,
+          description: p.description,
+          category: p.category,
+          brand: p.brand,
+          color: p.color,
+          fit: p.fit,
+          collection: p.collection,
+          images: p.product_images?.map((img: any) => ({
+            name: img.file_name,
+            url: img.url,
+            base64: img.url
+          })) || []
+        }));
+        setProducts(formattedProducts);
+      } else {
+        setProducts([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
+    }
+  };
+
   // Check for existing Supabase session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -119,6 +135,7 @@ function App() {
           plan: 'Free' 
         });
         setIsAuthenticated(true);
+        loadUserProducts(session.user.id);
       }
     });
     
@@ -132,6 +149,7 @@ function App() {
           plan: 'Free' 
         });
         setIsAuthenticated(true);
+        loadUserProducts(session.user.id);
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -166,26 +184,58 @@ function App() {
     }
   };
 
-  const handleCreateProduct = () => {
+  const handleCreateProduct = async () => {
     if (!selectedImage || !newProduct.name || !newProduct.category) { 
       alert('Preencha pelo menos o nome e a categoria do produto'); 
       return; 
     }
-    const product: Product = { 
-      id: 'product-' + Date.now(), 
-      sku: 'SKU-' + Date.now().toString().slice(-6), 
-      name: newProduct.name, 
-      brand: newProduct.brand, 
-      color: newProduct.color, 
-      fit: newProduct.fit, 
-      category: newProduct.category, 
-      collection: newProduct.collection, 
-      images: [{ name: newProduct.name + '.jpg', base64: selectedImage }] 
-    };
-    setProducts(prev => [...prev, product]);
-    setShowCreateProduct(false); 
-    setSelectedImage(null); 
-    setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+    
+    setIsCreatingProduct(true);
+    
+    try {
+      const response = await fetch('https://n8neditor.brainia.store/webhook/vizzu/produto-importar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id,
+          sku: 'SKU-' + Date.now().toString().slice(-6),
+          name: newProduct.name,
+          brand: newProduct.brand || null,
+          color: newProduct.color || null,
+          fit: newProduct.fit || null,
+          category: newProduct.category,
+          collection: newProduct.collection || null,
+          image_base64: selectedImage
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        const product: Product = { 
+          id: data.product.id, 
+          sku: data.product.sku, 
+          name: data.product.name, 
+          brand: newProduct.brand, 
+          color: newProduct.color, 
+          fit: newProduct.fit, 
+          category: newProduct.category, 
+          collection: newProduct.collection, 
+          images: [{ name: newProduct.name + '.jpg', base64: selectedImage, url: data.product.image_url }] 
+        };
+        setProducts(prev => [...prev, product]);
+        setShowCreateProduct(false); 
+        setSelectedImage(null); 
+        setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+      } else {
+        alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao criar produto. Verifique sua conexão.');
+    } finally {
+      setIsCreatingProduct(false);
+    }
   };
 
   const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,6 +321,7 @@ function App() {
     await supabase.auth.signOut(); 
     setUser(null);
     setIsAuthenticated(false);
+    setProducts([]);
   };
 
   const handleProvadorGenerate = async () => {
@@ -842,9 +893,10 @@ function App() {
                 ) : (
                   <div className="p-8 text-center">
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                      <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search text-xl'}></i>
+                      <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-box text-xl'}></i>
                     </div>
                     <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum produto</h3>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>Adicione seu primeiro produto</p>
                     <button onClick={() => setShowImport(true)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs'}>
                       <i className="fas fa-plus mr-1.5"></i>Adicionar
                     </button>
@@ -1471,8 +1523,17 @@ function App() {
                   </select>
                 </div>
               </div>
-              <button onClick={handleCreateProduct} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity">
-                <i className="fas fa-check mr-1.5"></i>Criar Produto
+              <button onClick={handleCreateProduct} disabled={isCreatingProduct} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {isCreatingProduct ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin text-xs"></i>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-check mr-1.5"></i>Criar Produto
+                  </>
+                )}
               </button>
             </div>
           </div>
