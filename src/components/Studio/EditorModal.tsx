@@ -20,6 +20,7 @@ interface Props {
   onMarkSaved?: (id: string) => void;
   onSendWhatsApp?: (client: Client, message: string, imageUrl?: string) => void;
   theme?: 'dark' | 'light';
+  userId?: string;
 }
 
 type ToolType = 'studio' | 'cenario' | 'lifestyle' | null;
@@ -50,7 +51,8 @@ export const EditorModal: React.FC<Props> = ({
   selectedClient: initialSelectedClient, companyLogo,
   onSaveModel, onDeleteModel, onClose, onUpdateProduct,
   onDeductCredits, onGenerateImage, onMarkSaved, onSendWhatsApp,
-  theme = 'dark'
+  theme = 'dark',
+  userId
 }) => {
   const [tool, setTool] = useState<ToolType>(null);
   const [isGen, setIsGen] = useState(false);
@@ -101,18 +103,21 @@ export const EditorModal: React.FC<Props> = ({
     if (userCredits < cost) { setError('Créditos insuficientes'); return; }
     if (tool === 'cenario' && !cenPrompt.trim()) { setError('Descreva o cenário'); return; }
     if (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) { setError('Selecione um modelo'); return; }
-    if (!onDeductCredits(cost, `VIZZU: ${TOOL_CFG[tool].name}`)) { setError('Erro ao processar créditos'); return; }
+    // NÃO deduzir créditos aqui - o backend faz isso
     setIsGen(true); setError(null);
     try {
       let result;
       const catLabel = CATEGORIES.find(c => c.id === category)?.label || 'garment';
-      if (tool === 'studio') result = await onGenerateImage(product, 'studio');
-      else if (tool === 'cenario') result = await onGenerateImage(product, 'cenario', cenPrompt);
+      if (tool === 'studio') {
+        // Passa a imagem selecionada para o backend
+        result = await onGenerateImage(product, 'studio', undefined, { selectedImage: current });
+      }
+      else if (tool === 'cenario') result = await onGenerateImage(product, 'cenario', cenPrompt, { selectedImage: current });
       else if (tool === 'lifestyle') {
         const lookItems = buildLookItems();
         const opts = modelTab === 'saved' && selModel
-          ? { referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined }
-          : { modelPrompt: buildModelPrompt(), clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined };
+          ? { selectedImage: current, referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined }
+          : { selectedImage: current, modelPrompt: buildModelPrompt(), clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined };
         result = await onGenerateImage(product, 'lifestyle', undefined, opts);
       }
       if (result?.image) { setGenImg(result.image); setGenId(result.generationId); setViewMode('result'); }
