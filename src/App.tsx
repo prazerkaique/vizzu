@@ -5,6 +5,7 @@ import { AuthPage } from './components/AuthPage';
 import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition } from './types';
 import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
+import { generateStudioReady } from './lib/api/studio';
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
@@ -109,9 +110,11 @@ function App() {
           fit: p.fit,
           collection: p.collection,
           images: p.product_images?.map((img: any) => ({
+            id: img.id,
             name: img.file_name,
             url: img.url,
-            base64: img.url
+            base64: img.url,
+            type: img.type
           })) || []
         }));
         setProducts(formattedProducts);
@@ -165,6 +168,59 @@ function App() {
   
   const handleDeductCredits = (amount: number, reason: string): boolean => { 
     return deductCredits(amount, reason); 
+  };
+
+  // Função para gerar imagens com IA via n8n
+  const handleGenerateImage = async (
+    product: Product, 
+    toolType: 'studio' | 'cenario' | 'lifestyle' | 'provador' | 'refine',
+    prompt?: string,
+    opts?: any
+  ): Promise<{ image: string | null; generationId: string | null }> => {
+    if (!user?.id) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    // Pegar a imagem selecionada (passada em opts ou primeira por padrão)
+    const selectedImage = opts?.selectedImage || product.images[0];
+    
+    if (!selectedImage?.id) {
+      throw new Error('Imagem não encontrada. Certifique-se de que o produto tem imagens.');
+    }
+
+    try {
+      if (toolType === 'studio') {
+        const result = await generateStudioReady({
+          productId: product.id,
+          userId: user.id,
+          imageId: selectedImage.id,
+        });
+
+        if (result.success && result.generation) {
+          // Atualizar créditos no estado
+          if (result.credits_remaining !== undefined) {
+            setCredits(result.credits_remaining);
+          }
+          
+          // Recarregar produtos para pegar a nova imagem
+          loadUserProducts(user.id);
+          
+          return {
+            image: result.generation.image_url,
+            generationId: result.generation.id,
+          };
+        }
+        
+        throw new Error(result.message || 'Erro ao gerar imagem');
+      }
+
+      // TODO: Implementar outros tipos (cenario, lifestyle, provador, refine)
+      throw new Error(`Ferramenta "${toolType}" ainda não implementada no backend`);
+
+    } catch (error: any) {
+      console.error('Erro na geração:', error);
+      throw error;
+    }
   };
   
   const handleAddHistoryLog = (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => { 
@@ -661,6 +717,8 @@ function App() {
             onImport={() => setShowImport(true)} 
             currentPlan={currentPlan}
             theme={theme}
+            onGenerateImage={handleGenerateImage}
+            userId={user?.id}
           />
         )}
 
