@@ -1,8 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - Auth Page (Modern Login/Signup)
+// VIZZU - Auth Page (Modern Login/Signup with 3D Robot)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
+import { Spotlight } from './Spotlight';
+
+// Lazy load Spline for better performance
+const Spline = lazy(() => import('@splinetool/react-spline'));
 
 interface AuthPageProps {
   onLogin: (user: { email: string; name: string; avatar?: string }) => void;
@@ -67,71 +71,71 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onDemoMode }) => {
     }, 1500);
   };
 
-  const features = [
-    { icon: 'fa-wand-magic-sparkles', title: 'Studio IA', desc: 'Fotos profissionais em segundos' },
-    { icon: 'fa-shirt', title: 'Provador Virtual', desc: 'Vista seus clientes remotamente' },
-    { icon: 'fa-robot', title: 'Modelos IA', desc: 'Crie e salve modelos únicos' },
-    { icon: 'fa-bolt', title: 'Super Rápido', desc: 'Resultados em menos de 30s' },
-  ];
-
   return (
     <div className="min-h-screen flex">
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* LEFT SIDE - Video/Marketing */}
+      {/* LEFT SIDE - 3D Robot */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative bg-black overflow-hidden">
-        {/* Video Background */}
-        <div className="absolute inset-0">
-          <video
-            className="w-full h-full object-cover opacity-40"
-            autoPlay
-            loop
-            muted
-            playsInline
-            poster=""
-          >
-            {/* Substitua pelo seu vídeo */}
-            {/* <source src="/videos/hero-bg.mp4" type="video/mp4" /> */}
-          </video>
-          {/* Fallback gradient if no video */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-pink-900 to-orange-900"></div>
-        </div>
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950"></div>
         
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
+        {/* Spotlight effect */}
+        <Spotlight
+          className="-top-40 left-0 md:left-60 md:-top-20"
+          fill="white"
+        />
         
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
+        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 w-full">
           {/* Logo */}
           <div>
             <img src="/logo.png" alt="Vizzu" className="h-12" />
             <p className="text-white/60 text-sm mt-1">AI Visual Studio para E-commerce</p>
           </div>
           
-          {/* Main Content */}
-          <div className="max-w-lg">
-            <h2 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-              Transforme suas fotos de produto em 
-              <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-orange-400 bg-clip-text text-transparent"> obras de arte</span>
-            </h2>
-            <p className="text-white/70 text-lg leading-relaxed mb-8">
-              Use inteligência artificial para criar imagens profissionais, 
-              vestir clientes virtualmente e aumentar suas vendas em até 300%.
-            </p>
+          {/* Main Content with Robot */}
+          <div className="flex items-center -mt-10">
+            {/* Text */}
+            <div className="flex-1 max-w-md">
+              <h2 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
+                Transforme suas fotos em 
+                <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-orange-400 bg-clip-text text-transparent"> obras de arte</span>
+              </h2>
+              <p className="text-white/70 text-lg leading-relaxed mb-8">
+                Use inteligência artificial para criar imagens profissionais e aumentar suas vendas.
+              </p>
+              
+              {/* Features inline */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: 'fa-wand-magic-sparkles', title: 'Studio IA' },
+                  { icon: 'fa-shirt', title: 'Provador Virtual' },
+                  { icon: 'fa-robot', title: 'Modelos IA' },
+                  { icon: 'fa-bolt', title: 'Super Rápido' },
+                ].map((feature, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-white/60">
+                    <i className={`fas ${feature.icon} text-pink-400 text-sm`}></i>
+                    <span className="text-sm">{feature.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            {/* Features */}
-            <div className="grid grid-cols-2 gap-4">
-              {features.map((feature, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500/20 to-orange-500/20 flex items-center justify-center flex-shrink-0">
-                    <i className={`fas ${feature.icon} text-pink-400`}></i>
+            {/* 3D Robot */}
+            <div className="flex-1 h-[500px] relative">
+              <Suspense 
+                fallback={
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-pink-500/30 border-t-pink-500 rounded-full animate-spin"></div>
                   </div>
-                  <div>
-                    <p className="text-white font-medium text-sm">{feature.title}</p>
-                    <p className="text-white/50 text-xs">{feature.desc}</p>
-                  </div>
-                </div>
-              ))}
+                }
+              >
+                <Spline
+                  scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+                  className="w-full h-full"
+                />
+              </Suspense>
             </div>
           </div>
           
@@ -157,9 +161,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onDemoMode }) => {
           </div>
         </div>
         
-        {/* Decorative elements */}
-        <div className="absolute top-20 right-20 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl"></div>
+        {/* Decorative blur circles */}
+        <div className="absolute top-20 right-20 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
