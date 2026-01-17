@@ -104,7 +104,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onDemoMode }) => {
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
           {/* Logo */}
           <div>
-            <h1 className="text-4xl font-serif font-bold text-white tracking-tight">Vizzu</h1>
+            <img src="/logo.png" alt="Vizzu" className="h-12" />
             <p className="text-white/60 text-sm mt-1">AI Visual Studio para E-commerce</p>
           </div>
           
@@ -170,8 +170,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onDemoMode }) => {
           
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
-            <h1 className="text-3xl font-serif font-bold text-gray-900">Vizzu</h1>
-            <p className="text-gray-500 text-sm">AI Visual Studio para E-commerce</p>
+            <img src="/logo.png" alt="Vizzu" className="h-10 mx-auto" />
+            <p className="text-gray-500 text-sm mt-2">AI Visual Studio para E-commerce</p>
           </div>
 
           {/* Card */}
