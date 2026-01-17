@@ -344,8 +344,6 @@ function App() {
             email: userData.email,
             name: userData.name,
             avatar: userData.avatar || '',
-            plan: 'starter',
-            credits: 50,
             createdAt: new Date().toISOString()
           });
           setIsAuthenticated(true);
@@ -356,8 +354,6 @@ function App() {
             email: 'demo@vizzu.com.br',
             name: 'Usuário Demo',
             avatar: '',
-            plan: 'starter',
-            credits: 50,
             createdAt: new Date().toISOString()
           });
           setIsAuthenticated(true);
