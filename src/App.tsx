@@ -107,19 +107,37 @@ function App() {
   
   const clientsWithProvador = clients.filter(c => c.hasProvadorIA && (c.photos?.length || c.photo));
 
+  // Check for existing Supabase session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser({ id: session.user.id, name: session.user.user_metadata?.full_name || 'Usuário', email: session.user.email || '', avatar: session.user.user_metadata?.avatar_url || '', plan: 'Free' });
+        setUser({ 
+          id: session.user.id, 
+          name: session.user.user_metadata?.full_name || 'Usuário', 
+          email: session.user.email || '', 
+          avatar: session.user.user_metadata?.avatar_url || '', 
+          plan: 'Free' 
+        });
+        setIsAuthenticated(true);
       }
     });
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ id: session.user.id, name: session.user.user_metadata?.full_name || 'Usuário', email: session.user.email || '', avatar: session.user.user_metadata?.avatar_url || '', plan: 'Free' });
+        setUser({ 
+          id: session.user.id, 
+          name: session.user.user_metadata?.full_name || 'Usuário', 
+          email: session.user.email || '', 
+          avatar: session.user.user_metadata?.avatar_url || '', 
+          plan: 'Free' 
+        });
+        setIsAuthenticated(true);
       } else {
         setUser(null);
+        setIsAuthenticated(false);
       }
     });
+    
     return () => subscription.unsubscribe();
   }, []);
 
@@ -249,18 +267,10 @@ function App() {
     window.open('https://wa.me/' + fullPhone + '?text=' + encodedMessage, '_blank');
   };
 
-  const handleGoogleLogin = async () => { 
-    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } }); 
-  };
-  
-  const handleDemoLogin = () => { 
-    setUser({ id: 'demo-user', name: 'Usuário Demo', email: 'demo@vizzu.ai', avatar: '', plan: 'Free' }); 
-    setCredits(50); 
-  };
-  
   const handleLogout = async () => { 
     await supabase.auth.signOut(); 
-    setUser(null); 
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const handleProvadorGenerate = async () => {
@@ -296,54 +306,18 @@ function App() {
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // LOGIN SCREEN - SUNO STYLE
-  // ═══════════════════════════════════════════════════════════════
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="relative z-10 w-full max-w-md">
-          <div className="text-center mb-8">
-            <img src="/logo.png" alt="Vizzu" className="h-14 mx-auto mb-3" />
-            <p className="text-neutral-500 text-xs">AI Visual Studio para E-commerce</p>
-          </div>
-          <div className="bg-neutral-900 rounded-2xl border border-neutral-800 p-6">
-            <h2 className="text-lg font-semibold text-white text-center mb-5">Bem-vindo!</h2>
-            <div className="space-y-3">
-              <button onClick={handleGoogleLogin} className="w-full py-3 bg-white text-neutral-900 rounded-xl font-medium text-sm flex items-center justify-center gap-3 hover:bg-neutral-100 transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continuar com Google
-              </button>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-800"></div></div>
-                <div className="relative flex justify-center text-xs"><span className="px-3 bg-neutral-900 text-neutral-600">ou</span></div>
-              </div>
-              <button onClick={handleDemoLogin} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                <i className="fas fa-play text-xs"></i>Testar Gratuitamente
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // AUTH CHECK - Show login page if not authenticated
+  // AUTH CHECK - Show AuthPage if not authenticated
   // ═══════════════════════════════════════════════════════════════
   if (!isAuthenticated) {
     return (
       <AuthPage 
         onLogin={(userData) => {
           setUser({
-            id: '1',
+            id: userData.id || '1',
             email: userData.email,
             name: userData.name,
-            avatar: userData.avatar || ''
+            avatar: userData.avatar || '',
+            plan: 'Free'
           } as User);
           setIsAuthenticated(true);
         }}
@@ -352,8 +326,10 @@ function App() {
             id: 'demo',
             email: 'demo@vizzu.com.br',
             name: 'Usuário Demo',
-            avatar: ''
+            avatar: '',
+            plan: 'Free'
           } as User);
+          setCredits(50);
           setIsAuthenticated(true);
         }}
       />
@@ -419,10 +395,10 @@ function App() {
           </button>
           <div className="flex items-center gap-2.5 px-2 py-2">
             <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/20')}>
-              {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-xs text-white/70"></i>}
+              {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-xs text-white/70"></i>}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate text-white">{user.name}</p>
+              <p className="text-xs font-medium truncate text-white">{user?.name}</p>
               <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Plano {currentPlan.name}</p>
             </div>
           </div>
@@ -433,7 +409,7 @@ function App() {
       <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0">
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* DASHBOARD - SUNO STYLE */}
+        {/* DASHBOARD */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'dashboard' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -451,9 +427,7 @@ function App() {
                 </div>
               </div>
               
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* CARD CRIAR - Com Vídeo Tutorial */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* CARD CRIAR */}
               <style>{`
                 @keyframes gradient-shift {
                   0% { background-position: 0% 50%; }
@@ -487,7 +461,7 @@ function App() {
               <div className={'rounded-2xl p-5 mb-5 ' + (theme === 'dark' ? 'bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 border border-neutral-800' : 'bg-white shadow-xl shadow-gray-200/50 border border-gray-100')}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-gradient-to-r from-pink-500 to-orange-400')}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-400">
                       <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
                     </div>
                     <h2 className={'text-base font-bold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Criar</h2>
@@ -498,30 +472,14 @@ function App() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Vizzu Studio - Video Card */}
+                  {/* Vizzu Studio Card */}
                   <div 
                     onClick={() => setShowVideoTutorial('studio')}
                     className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                     style={{ aspectRatio: '16/9', minHeight: '180px' }}
                   >
-                    {/* Video Background Placeholder - Replace src with actual video */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600">
-                      <video 
-                        className="w-full h-full object-cover opacity-60"
-                        autoPlay 
-                        loop 
-                        muted 
-                        playsInline
-                        poster=""
-                      >
-                        {/* <source src="/videos/studio-preview.mp4" type="video/mp4" /> */}
-                      </video>
-                    </div>
-                    
-                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600"></div>
                     <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
-                    
-                    {/* Content */}
                     <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -531,7 +489,6 @@ function App() {
                         <h3 className="text-xl font-bold text-white mb-1">Vizzu Studio®</h3>
                         <p className="text-white/70 text-sm">Gere fotos profissionais com IA</p>
                       </div>
-                      
                       <div className="flex items-center justify-between">
                         <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
                           <i className="fas fa-play text-white ml-1"></i>
@@ -544,35 +501,17 @@ function App() {
                         </button>
                       </div>
                     </div>
-                    
-                    {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                   </div>
                   
-                  {/* Vizzu Provador - Video Card */}
+                  {/* Vizzu Provador Card */}
                   <div 
                     onClick={() => setShowVideoTutorial('provador')}
                     className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                     style={{ aspectRatio: '16/9', minHeight: '180px' }}
                   >
-                    {/* Video Background Placeholder - Replace src with actual video */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500">
-                      <video 
-                        className="w-full h-full object-cover opacity-60"
-                        autoPlay 
-                        loop 
-                        muted 
-                        playsInline
-                        poster=""
-                      >
-                        {/* <source src="/videos/provador-preview.mp4" type="video/mp4" /> */}
-                      </video>
-                    </div>
-                    
-                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500"></div>
                     <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
-                    
-                    {/* Content */}
                     <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
@@ -582,7 +521,6 @@ function App() {
                         <h3 className="text-xl font-bold text-white mb-1">Vizzu Provador®</h3>
                         <p className="text-white/70 text-sm">Vista seus clientes virtualmente</p>
                       </div>
-                      
                       <div className="flex items-center justify-between">
                         <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
                           <i className="fas fa-play text-white ml-1"></i>
@@ -595,18 +533,13 @@ function App() {
                         </button>
                       </div>
                     </div>
-                    
-                    {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                   </div>
                 </div>
               </div>
               
-              {/* ═══════════════════════════════════════════════════════════════ */}
               {/* STATS GRID */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                {/* Produtos */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
                   <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
                     <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
@@ -614,8 +547,6 @@ function App() {
                   <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
                   <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Produtos</p>
                 </div>
-                
-                {/* Otimizados */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
                   <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100')}>
                     <i className={'fas fa-check-circle text-sm ' + (theme === 'dark' ? 'text-green-400' : 'text-green-600')}></i>
@@ -623,8 +554,6 @@ function App() {
                   <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.filter(p => (p as any).generatedImages?.length > 0).length}</p>
                   <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Otimizados</p>
                 </div>
-                
-                {/* Clientes */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
                   <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
                     <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
@@ -632,8 +561,6 @@ function App() {
                   <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
                   <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Clientes</p>
                 </div>
-                
-                {/* Créditos */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
                   <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
                     <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
@@ -643,22 +570,18 @@ function App() {
                 </div>
               </div>
               
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* CARD PLANO - CTA Destaque */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* CARD PLANO */}
               <div className={'rounded-2xl p-5 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border border-pink-500/20' : 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400')}>
-                {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-white/5 to-transparent rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                
                 <div className="relative flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white/20 backdrop-blur-sm')}>
-                      <i className={'fas fa-crown text-lg ' + (theme === 'dark' ? 'text-white' : 'text-white')}></i>
+                      <i className="fas fa-crown text-lg text-white"></i>
                     </div>
                     <div>
                       <p className={theme === 'dark' ? 'text-neutral-400 text-xs uppercase tracking-wide' : 'text-white/80 text-xs uppercase tracking-wide'}>Seu plano atual</p>
-                      <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-white')}>{currentPlan.name}</p>
+                      <p className="text-2xl font-bold text-white">{currentPlan.name}</p>
                       <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-white/70 text-xs'}>{currentPlan.limit} créditos/mês • {userCredits} disponíveis</p>
                     </div>
                   </div>
@@ -675,9 +598,7 @@ function App() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* STUDIO */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'studio' && (
           <Studio 
             products={products} 
@@ -692,14 +613,10 @@ function App() {
           />
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* PROVADOR - SUNO STYLE */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* PROVADOR */}
         {currentPage === 'provador' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-6xl mx-auto">
-              
-              {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
@@ -720,44 +637,8 @@ function App() {
                 </div>
               </div>
 
-              {/* Mobile Progress */}
-              <div className="lg:hidden mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  {[1, 2, 3, 4].map(step => {
-                    const isCompleted = (step === 1 && provadorClient) || 
-                                       (step === 2 && provadorClient && provadorPhotoType) || 
-                                       (step === 3 && Object.keys(provadorLook).length > 0) ||
-                                       (step === 4 && provadorGeneratedImage);
-                    const isCurrent = provadorStep === step;
-                    return (
-                      <div key={step} className="flex items-center">
-                        <div 
-                          onClick={() => setProvadorStep(step as 1|2|3|4)}
-                          className={'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-all ' + 
-                            (isCompleted ? 'bg-green-500 text-white' : 
-                             isCurrent ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white scale-110' : 
-                             (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-200 text-gray-500'))}
-                        >
-                          {isCompleted ? <i className="fas fa-check text-[8px]"></i> : step}
-                        </div>
-                        {step < 4 && (
-                          <div className={'h-0.5 w-8 mx-1 rounded-full ' + (isCompleted ? 'bg-green-500' : (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'))}></div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className={'text-[10px] text-center ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>
-                  {provadorStep === 1 && 'Selecione o cliente'}
-                  {provadorStep === 2 && 'Escolha a foto'}
-                  {provadorStep === 3 && 'Monte o look'}
-                  {provadorStep === 4 && 'Gere e envie'}
-                </p>
-              </div>
-              
               {/* Desktop Grid */}
               <div className="hidden lg:grid lg:grid-cols-4 gap-4">
-                
                 {/* Col 1: Cliente */}
                 <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
                   <div className={'p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
@@ -900,198 +781,15 @@ function App() {
                 </div>
               </div>
 
-              {/* Mobile Accordion */}
-              <div className="lg:hidden space-y-2">
-                
-                {/* Step 1 */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white shadow-sm') + ' rounded-xl border overflow-hidden transition-all ' + (provadorStep === 1 ? 'border-pink-500' : provadorClient ? 'border-green-500/50' : (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200'))}>
-                  <div onClick={() => setProvadorStep(1)} className="p-3 flex items-center gap-3 cursor-pointer">
-                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + (provadorClient ? 'bg-green-500 text-white' : provadorStep === 1 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-200 text-gray-500'))}>
-                      {provadorClient ? <i className="fas fa-check text-[10px]"></i> : '1'}
-                    </div>
-                    <div className="flex-1">
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Selecionar Cliente</p>
-                      {provadorClient && provadorStep !== 1 && <p className="text-[10px] text-green-500">{provadorClient.firstName} {provadorClient.lastName}</p>}
-                    </div>
-                    <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas text-xs ' + (provadorStep === 1 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
-                  </div>
-                  {provadorStep === 1 && (
-                    <div className={'px-3 pb-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                      {clientsWithProvador.length > 0 ? (
-                        <div className="space-y-2 mt-3 max-h-56 overflow-y-auto">
-                          {clientsWithProvador.map(client => (
-                            <div key={client.id} onClick={() => { setProvadorClient(client); setProvadorStep(2); }} className={'flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-all ' + (provadorClient?.id === client.id ? 'border-pink-500 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300'))}>
-                              <img src={getClientPhoto(client)} alt="" className="w-10 h-10 rounded-full object-cover" />
-                              <div className="flex-1 min-w-0">
-                                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{client.firstName} {client.lastName}</p>
-                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{formatWhatsApp(client.whatsapp)}</p>
-                              </div>
-                              {provadorClient?.id === client.id && <i className="fas fa-check text-pink-400 text-xs"></i>}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-6">
-                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                            <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user-plus text-lg'}></i>
-                          </div>
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>Nenhum cliente com foto</p>
-                          <button onClick={() => setCurrentPage('clients')} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' px-4 py-2 rounded-lg text-xs font-medium'}>Cadastrar Cliente</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Step 2 */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white shadow-sm') + ' rounded-xl border overflow-hidden transition-all ' + (provadorStep === 2 ? 'border-pink-500' : (provadorClient && provadorPhotoType) ? 'border-green-500/50' : (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200'))}>
-                  <div onClick={() => provadorClient && setProvadorStep(2)} className={'p-3 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
-                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + ((provadorClient && provadorPhotoType) ? 'bg-green-500 text-white' : provadorStep === 2 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-200 text-gray-500'))}>
-                      {(provadorClient && provadorPhotoType) ? <i className="fas fa-check text-[10px]"></i> : '2'}
-                    </div>
-                    <div className="flex-1">
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Selecionar Foto</p>
-                      {provadorPhotoType && provadorStep !== 2 && <p className="text-[10px] text-green-500">Foto: {PHOTO_TYPES.find(p => p.id === provadorPhotoType)?.label}</p>}
-                    </div>
-                    <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas text-xs ' + (provadorStep === 2 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
-                  </div>
-                  {provadorStep === 2 && provadorClient && (
-                    <div className={'px-3 pb-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                      <div className="space-y-2 mt-3">
-                        {PHOTO_TYPES.map(photoType => {
-                          const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
-                          const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
-                          return (
-                            <div key={photoType.id} onClick={() => { if (hasPhoto) { setProvadorPhotoType(photoType.id); setProvadorStep(3); } }} 
-                              className={'flex items-center gap-3 p-2.5 rounded-lg border transition-all ' + (!hasPhoto ? (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' opacity-50' : provadorPhotoType === photoType.id ? 'border-pink-500 bg-pink-500/10 cursor-pointer' : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300') + ' cursor-pointer')}>
-                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-12 h-12 rounded-lg object-cover" /> : <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-12 h-12 rounded-lg flex items-center justify-center'}><i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas ' + photoType.icon}></i></div>}
-                              <div className="flex-1">
-                                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{photoType.label}</p>
-                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{hasPhoto ? 'Toque para selecionar' : 'Não cadastrada'}</p>
-                              </div>
-                              {hasPhoto && provadorPhotoType === photoType.id && <div className="w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center"><i className="fas fa-check text-white text-[8px]"></i></div>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Step 3 */}
-                <div className={'bg-neutral-900 rounded-xl border overflow-hidden transition-all ' + (provadorStep === 3 ? 'border-pink-500' : Object.keys(provadorLook).length > 0 ? 'border-green-500/50' : 'border-neutral-800')}>
-                  <div onClick={() => provadorClient && setProvadorStep(3)} className={'p-3 flex items-center gap-3 ' + (provadorClient ? 'cursor-pointer' : 'opacity-50')}>
-                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : provadorStep === 3 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'bg-neutral-800 text-neutral-500')}>
-                      {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check text-[10px]"></i> : '3'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white text-sm">Composição do Look</p>
-                      {Object.keys(provadorLook).length > 0 && provadorStep !== 3 && <p className="text-[10px] text-green-400">{Object.keys(provadorLook).length} peça(s)</p>}
-                    </div>
-                    {Object.keys(provadorLook).length > 0 && <span className="px-2 py-0.5 bg-pink-500/20 text-pink-400 text-[10px] font-medium rounded-full">{Object.keys(provadorLook).length}</span>}
-                    <i className={'fas text-neutral-500 text-xs ' + (provadorStep === 3 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
-                  </div>
-                  {provadorStep === 3 && (
-                    <div className="px-3 pb-3 border-t border-neutral-800">
-                      <div className="flex gap-2 mt-3 mb-3">
-                        <div className="relative flex-1">
-                          <i className="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-600 text-[10px]"></i>
-                          <input type="text" placeholder="Buscar produto..." value={provadorLookSearch} onChange={(e) => setProvadorLookSearch(e.target.value)} className="w-full pl-7 pr-2 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white" />
-                        </div>
-                        <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className="px-2 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white">
-                          <option value="">Todas</option>
-                          {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div className="max-h-[300px] overflow-y-auto">
-                        <LookComposer 
-                          products={products.filter(p => {
-                            const matchesSearch = !provadorLookSearch || p.name.toLowerCase().includes(provadorLookSearch.toLowerCase()) || p.sku.toLowerCase().includes(provadorLookSearch.toLowerCase());
-                            const matchesCollection = !provadorLookFilter || p.collection === provadorLookFilter;
-                            return matchesSearch && matchesCollection;
-                          })} 
-                          composition={provadorLook} 
-                          onChange={setProvadorLook}
-                          theme={theme}
-                        />
-                      </div>
-                      {Object.keys(provadorLook).length > 0 && (
-                        <button onClick={() => setProvadorStep(4)} className="w-full mt-3 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
-                          Continuar <i className="fas fa-arrow-right text-[10px]"></i>
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Step 4 */}
-                <div className={'bg-neutral-900 rounded-xl border overflow-hidden transition-all ' + (provadorStep === 4 ? 'border-pink-500' : provadorGeneratedImage ? 'border-green-500/50' : 'border-neutral-800')}>
-                  <div onClick={() => (provadorClient && Object.keys(provadorLook).length > 0) && setProvadorStep(4)} className={'p-3 flex items-center gap-3 ' + ((provadorClient && Object.keys(provadorLook).length > 0) ? 'cursor-pointer' : 'opacity-50')}>
-                    <div className={'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : provadorStep === 4 ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'bg-neutral-800 text-neutral-500')}>
-                      {provadorGeneratedImage ? <i className="fas fa-check text-[10px]"></i> : '4'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white text-sm">Gerar e Enviar</p>
-                      {provadorGeneratedImage && provadorStep !== 4 && <p className="text-[10px] text-green-400">Imagem gerada!</p>}
-                    </div>
-                    <i className={'fas text-neutral-500 text-xs ' + (provadorStep === 4 ? 'fa-chevron-up' : 'fa-chevron-down')}></i>
-                  </div>
-                  {provadorStep === 4 && (
-                    <div className="px-3 pb-3 border-t border-neutral-800">
-                      <div className="aspect-square bg-neutral-800 rounded-lg mt-3 mb-3 flex items-center justify-center overflow-hidden">
-                        {isGeneratingProvador ? (
-                          <div className="text-center">
-                            <div className="w-10 h-10 border-2 border-neutral-600 border-t-pink-500 rounded-full animate-spin mx-auto mb-2"></div>
-                            <p className="text-xs text-neutral-500">Gerando imagem...</p>
-                          </div>
-                        ) : provadorGeneratedImage ? (
-                          <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
-                        ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
-                          <div className="relative w-full h-full">
-                            <img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="text-center">
-                                <i className="fas fa-wand-magic-sparkles text-pink-400 text-2xl mb-2"></i>
-                                <p className="text-neutral-400 text-xs">Pronto para gerar!</p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center p-4">
-                            <i className="fas fa-image text-neutral-700 text-3xl mb-2"></i>
-                            <p className="text-xs text-neutral-600">Preview</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mb-3">
-                        <label className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                          <i className="fab fa-whatsapp text-green-500"></i>Mensagem
-                        </label>
-                        <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white mb-2">
-                          {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
-                        <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={3} className="w-full px-2.5 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white resize-none" placeholder="Mensagem personalizada..." />
-                      </div>
-                      <div className="space-y-2">
-                        <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                          {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin text-sm"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles text-sm"></i>Gerar Imagem (3 créd.)</>}
-                        </button>
-                        <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
-                          <i className="fab fa-whatsapp text-lg"></i>Enviar pelo WhatsApp
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {/* Mobile - simplified message */}
+              <div className="lg:hidden text-center py-8">
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Use em um dispositivo maior para melhor experiência</p>
               </div>
-
             </div>
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* PRODUCTS - SUNO STYLE */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* PRODUCTS */}
         {currentPage === 'products' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-6xl mx-auto">
@@ -1110,7 +808,6 @@ function App() {
                 </button>
               </div>
               
-              {/* Filters */}
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   <div className="flex-shrink-0 w-44">
@@ -1127,7 +824,6 @@ function App() {
                 <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px] mt-2'}>{filteredProducts.length} de {products.length} produtos</p>
               </div>
               
-              {/* Grid */}
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
                 {filteredProducts.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
@@ -1159,9 +855,7 @@ function App() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* CLIENTS - SUNO STYLE */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* CLIENTS */}
         {currentPage === 'clients' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
@@ -1180,7 +874,6 @@ function App() {
                 </button>
               </div>
               
-              {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
                 <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl p-3 border'}>
                   <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.length}</p>
@@ -1200,7 +893,6 @@ function App() {
                 </div>
               </div>
               
-              {/* Search */}
               {clients.length > 0 && (
                 <div className="mb-4">
                   <div className="relative">
@@ -1210,7 +902,6 @@ function App() {
                 </div>
               )}
               
-              {/* List */}
               {clients.length === 0 ? (
                 <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
                   <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
@@ -1271,9 +962,7 @@ function App() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* HISTORY - SUNO STYLE */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* HISTORY */}
         {currentPage === 'history' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
@@ -1297,13 +986,10 @@ function App() {
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SETTINGS - SUNO STYLE */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SETTINGS */}
         {currentPage === 'settings' && (
           <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col md:flex-row h-full">
-              {/* Sidebar */}
               <div className={'md:w-56 border-b md:border-b-0 md:border-r p-2 md:p-3 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200')}>
                 <nav className="flex md:flex-col gap-0.5 overflow-x-auto">
                   {[
@@ -1323,11 +1009,8 @@ function App() {
                 </nav>
               </div>
               
-              {/* Content */}
               <div className="flex-1 p-4 md:p-6 overflow-y-auto">
                 <div className="max-w-xl">
-                  
-                  {/* Plan Tab */}
                   {settingsTab === 'plan' && (
                     <div>
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Plano & Créditos</h3>
@@ -1363,53 +1046,30 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Profile Tab */}
                   {settingsTab === 'profile' && (
                     <div>
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Perfil</h3>
                       <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                         <div className="flex items-center gap-3 mb-5">
                           <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
-                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
+                            {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
                           </div>
                           <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
-                            <input type="text" defaultValue={user.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+                            <input type="text" defaultValue={user?.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                           </div>
                           <div>
                             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
-                            <input type="email" defaultValue={user.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
+                            <input type="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
                           </div>
-                        </div>
-                      </div>
-                      
-                      {/* Logout Section */}
-                      <div className={'mt-4 rounded-xl border p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm')}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Sair da conta</p>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>Encerrar sessão no Vizzu</p>
-                          </div>
-                          <button 
-                            onClick={() => {
-                              setIsAuthenticated(false);
-                              setUser(null);
-                              setCurrentPage('dashboard');
-                            }}
-                            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-xs font-medium hover:bg-red-500/20 transition-colors flex items-center gap-2"
-                          >
-                            <i className="fas fa-sign-out-alt"></i>
-                            Sair
-                          </button>
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  {/* Appearance Tab */}
                   {settingsTab === 'appearance' && (
                     <div>
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Aparência</h3>
@@ -1420,71 +1080,18 @@ function App() {
                             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>Escolha entre tema claro ou escuro</p>
                           </div>
                           <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' flex items-center gap-1 p-1 rounded-lg'}>
-                            <button 
-                              onClick={() => setTheme('dark')}
-                              className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
-                                (theme === 'dark' ? 'bg-white text-neutral-900' : 'text-gray-500 hover:text-gray-700')
-                              }
-                            >
-                              <i className="fas fa-moon text-[10px]"></i>
-                              Escuro
+                            <button onClick={() => setTheme('dark')} className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + (theme === 'dark' ? 'bg-white text-neutral-900' : 'text-gray-500 hover:text-gray-700')}>
+                              <i className="fas fa-moon text-[10px]"></i>Escuro
                             </button>
-                            <button 
-                              onClick={() => setTheme('light')}
-                              className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + 
-                                (theme === 'light' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-gray-500 hover:text-gray-700')
-                              }
-                            >
-                              <i className="fas fa-sun text-[10px]"></i>
-                              Claro
+                            <button onClick={() => setTheme('light')} className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + (theme === 'light' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-gray-500 hover:text-gray-700')}>
+                              <i className="fas fa-sun text-[10px]"></i>Claro
                             </button>
-                          </div>
-                        </div>
-                        
-                        {/* Preview Comparison */}
-                        <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' mt-5 pt-4 border-t'}>
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-3'}>Preview</p>
-                          <div className="grid grid-cols-2 gap-3">
-                            {/* Dark Preview */}
-                            <div 
-                              onClick={() => setTheme('dark')}
-                              className={'rounded-xl p-4 cursor-pointer transition-all ' + (theme === 'dark' ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-neutral-900' : 'opacity-60 hover:opacity-80') + ' bg-neutral-800 border border-neutral-700'}
-                            >
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
-                                  <i className="fas fa-wand-magic-sparkles text-pink-400 text-xs"></i>
-                                </div>
-                                <div>
-                                  <p className="font-medium text-xs text-white">Vizzu Studio®</p>
-                                  <p className="text-[9px] text-neutral-500">Exemplo</p>
-                                </div>
-                              </div>
-                              <p className="text-[9px] text-neutral-500 text-center uppercase tracking-wide">Escuro</p>
-                            </div>
-                            
-                            {/* Light Preview */}
-                            <div 
-                              onClick={() => setTheme('light')}
-                              className={'rounded-xl p-4 cursor-pointer transition-all ' + (theme === 'light' ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-white' : 'opacity-60 hover:opacity-80') + ' bg-white border border-gray-200'}
-                            >
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center shadow-md shadow-pink-500/20">
-                                  <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
-                                </div>
-                                <div>
-                                  <p className="font-medium text-xs text-gray-900">Vizzu Studio®</p>
-                                  <p className="text-[9px] text-gray-500">Exemplo</p>
-                                </div>
-                              </div>
-                              <p className="text-[9px] text-gray-500 text-center uppercase tracking-wide">Claro</p>
-                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  {/* Company Tab */}
                   {settingsTab === 'company' && (
                     <div>
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Empresa</h3>
@@ -1504,7 +1111,6 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Integrations Tab */}
                   {settingsTab === 'integrations' && (
                     <div>
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Integrações</h3>
@@ -1530,7 +1136,6 @@ function App() {
                       </div>
                     </div>
                   )}
-                  
                 </div>
               </div>
             </div>
@@ -1538,9 +1143,7 @@ function App() {
         )}
       </main>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MOBILE BOTTOM NAVIGATION - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MOBILE BOTTOM NAVIGATION */}
       <nav className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1.5 z-40 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}>
         <div className="flex items-center justify-around">
           <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
@@ -1551,15 +1154,12 @@ function App() {
             <i className="fas fa-box text-sm"></i>
             <span className="text-[9px] font-medium">Produtos</span>
           </button>
-          
-          {/* Central Button */}
           <button onClick={() => setShowStudioPicker(true)} className="relative -mt-5">
             <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500/80 to-orange-400/80')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
             <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
-          
           <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-users text-sm"></i>
             <span className="text-[9px] font-medium">Clientes</span>
@@ -1571,174 +1171,53 @@ function App() {
         </div>
       </nav>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
       {/* VIDEO TUTORIAL MODAL */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
       {showVideoTutorial && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowVideoTutorial(null)}>
-          <div 
-            className={'relative w-full max-w-4xl rounded-2xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button 
-              onClick={() => setShowVideoTutorial(null)}
-              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
-            >
+          <div className={'relative w-full max-w-4xl rounded-2xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowVideoTutorial(null)} className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
               <i className="fas fa-times"></i>
             </button>
-            
-            {/* Video Container */}
             <div className="relative aspect-video bg-black">
-              {showVideoTutorial === 'studio' ? (
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center">
-                  {/* Replace with actual video */}
-                  <video 
-                    className="w-full h-full object-cover"
-                    controls
-                    autoPlay
-                    playsInline
-                  >
-                    {/* <source src="/videos/studio-tutorial.mp4" type="video/mp4" /> */}
-                  </video>
-                  {/* Placeholder when no video */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
-                      <i className="fas fa-play text-3xl ml-1"></i>
-                    </div>
-                    <p className="text-lg font-medium mb-1">Tutorial Vizzu Studio®</p>
-                    <p className="text-white/60 text-sm">Vídeo em breve...</p>
-                  </div>
+              <div className={'absolute inset-0 flex flex-col items-center justify-center text-white ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600' : 'bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500')}>
+                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
+                  <i className="fas fa-play text-3xl ml-1"></i>
                 </div>
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500 flex items-center justify-center">
-                  {/* Replace with actual video */}
-                  <video 
-                    className="w-full h-full object-cover"
-                    controls
-                    autoPlay
-                    playsInline
-                  >
-                    {/* <source src="/videos/provador-tutorial.mp4" type="video/mp4" /> */}
-                  </video>
-                  {/* Placeholder when no video */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
-                      <i className="fas fa-play text-3xl ml-1"></i>
-                    </div>
-                    <p className="text-lg font-medium mb-1">Tutorial Vizzu Provador®</p>
-                    <p className="text-white/60 text-sm">Vídeo em breve...</p>
-                  </div>
-                </div>
-              )}
+                <p className="text-lg font-medium mb-1">Tutorial {showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}</p>
+                <p className="text-white/60 text-sm">Vídeo em breve...</p>
+              </div>
             </div>
-            
-            {/* Bottom CTA */}
             <div className={'p-5 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold'}>
-                    {showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}
-                  </h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>
-                    {showVideoTutorial === 'studio' 
-                      ? 'Transforme suas fotos de produto em imagens profissionais' 
-                      : 'Vista seus clientes virtualmente e aumente suas vendas'}
-                  </p>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold'}>{showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{showVideoTutorial === 'studio' ? 'Transforme suas fotos de produto em imagens profissionais' : 'Vista seus clientes virtualmente e aumente suas vendas'}</p>
                 </div>
-                <button 
-                  onClick={() => { setShowVideoTutorial(null); setCurrentPage(showVideoTutorial); }}
-                  className={'animated-gradient-btn px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500')}
-                >
-                  <i className="fas fa-rocket"></i>
-                  Começar Agora
-                  <i className="fas fa-arrow-right text-sm"></i>
+                <button onClick={() => { setShowVideoTutorial(null); setCurrentPage(showVideoTutorial); }} className={'px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500')}>
+                  <i className="fas fa-rocket"></i>Começar Agora<i className="fas fa-arrow-right text-sm"></i>
                 </button>
-              </div>
-              
-              {/* Quick tips */}
-              <div className={'mt-4 pt-4 border-t grid grid-cols-3 gap-4 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                {showVideoTutorial === 'studio' ? (
-                  <>
-                    <div className="text-center">
-                      <div className={(theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
-                        <i className="fas fa-store text-sm"></i>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Studio Ready</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>1 crédito</p>
-                    </div>
-                    <div className="text-center">
-                      <div className={(theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
-                        <i className="fas fa-film text-sm"></i>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Cenário Criativo</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>2 créditos</p>
-                    </div>
-                    <div className="text-center">
-                      <div className={(theme === 'dark' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
-                        <i className="fas fa-user-friends text-sm"></i>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Modelo IA</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>3 créditos</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-center">
-                      <div className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
-                        <i className="fas fa-user text-sm"></i>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Foto do Cliente</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Upload fácil</p>
-                    </div>
-                    <div className="text-center">
-                      <div className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
-                        <i className="fas fa-shirt text-sm"></i>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Monte o Look</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Seus produtos</p>
-                    </div>
-                    <div className="text-center">
-                      <div className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-600') + ' w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2'}>
-                        <i className="fab fa-whatsapp text-sm"></i>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>Envie WhatsApp</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>1 clique</p>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* STUDIO PICKER MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* STUDIO PICKER MODAL */}
       {showStudioPicker && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl w-full p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
             <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-5'}></div>
             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold text-center mb-1'}>O que você quer criar?</h3>
             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mb-5'}>Escolha uma das opções</p>
-            
             <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); }}
-                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 border-gray-200 hover:border-purple-300 hover:bg-purple-50') + ' border rounded-xl p-4 text-left transition-all group'}
-              >
+              <button onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 border-gray-200 hover:border-purple-300 hover:bg-purple-50') + ' border rounded-xl p-4 text-left transition-all group'}>
                 <div className={(theme === 'dark' ? 'bg-neutral-700 group-hover:bg-neutral-600' : 'bg-purple-100 group-hover:bg-purple-200') + ' w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors'}>
                   <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-purple-600') + ' fas fa-wand-magic-sparkles text-sm'}></i>
                 </div>
                 <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-0.5'}>Vizzu Studio®</h4>
                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>Gere fotos profissionais com IA</p>
               </button>
-              
-              <button 
-                onClick={() => { setShowStudioPicker(false); setCurrentPage('provador'); }}
-                className={(theme === 'dark' ? 'bg-neutral-800 border-pink-500/30 hover:border-pink-500/50' : 'bg-pink-50 border-pink-200 hover:border-pink-400 hover:bg-pink-100') + ' border rounded-xl p-4 text-left transition-all group'}
-              >
+              <button onClick={() => { setShowStudioPicker(false); setCurrentPage('provador'); }} className={(theme === 'dark' ? 'bg-neutral-800 border-pink-500/30 hover:border-pink-500/50' : 'bg-pink-50 border-pink-200 hover:border-pink-400 hover:bg-pink-100') + ' border rounded-xl p-4 text-left transition-all group'}>
                 <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 group-hover:from-pink-500/30 group-hover:to-orange-400/30' : 'bg-gradient-to-r from-pink-100 to-orange-100 group-hover:from-pink-200 group-hover:to-orange-200') + ' w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors'}>
                   <i className="fas fa-shirt text-pink-500 text-sm"></i>
                 </div>
@@ -1746,17 +1225,12 @@ function App() {
                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>Vista seus clientes virtualmente</p>
               </button>
             </div>
-            
-            <button onClick={() => setShowStudioPicker(false)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-700') + ' w-full mt-5 py-2.5 font-medium text-xs transition-colors'}>
-              Cancelar
-            </button>
+            <button onClick={() => setShowStudioPicker(false)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-700') + ' w-full mt-5 py-2.5 font-medium text-xs transition-colors'}>Cancelar</button>
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* CREATE CLIENT MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
@@ -1767,7 +1241,6 @@ function App() {
               </button>
             </div>
             <div className="p-4 space-y-4">
-              {/* Photo Upload */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 block'}>
                   <i className="fas fa-camera text-pink-400 mr-1"></i>Fotos para Provador IA
@@ -1777,19 +1250,12 @@ function App() {
                     const existingPhoto = newClient.photos.find(p => p.type === photoType.id);
                     return (
                       <div key={photoType.id} className="text-center">
-                        <div 
-                          onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }} 
-                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}
-                        >
+                        <div onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }} className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}>
                           {existingPhoto ? (
                             <>
                               <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
-                              <button onClick={(e) => { e.stopPropagation(); handleRemoveClientPhoto(photoType.id); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600">
-                                <i className="fas fa-times"></i>
-                              </button>
-                              <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium">
-                                <i className="fas fa-check mr-0.5"></i>{photoType.label}
-                              </div>
+                              <button onClick={(e) => { e.stopPropagation(); handleRemoveClientPhoto(photoType.id); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
                             </>
                           ) : (
                             <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
@@ -1810,8 +1276,6 @@ function App() {
                   </div>
                 )}
               </div>
-              
-              {/* Name Fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Nome *</label>
@@ -1822,8 +1286,6 @@ function App() {
                   <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
-              
-              {/* WhatsApp */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>WhatsApp *</label>
                 <div className="relative">
@@ -1831,8 +1293,6 @@ function App() {
                   <input type="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
-              
-              {/* Email */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>E-mail (opcional)</label>
                 <div className="relative">
@@ -1840,14 +1300,10 @@ function App() {
                   <input type="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
-              
-              {/* Notes */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Observações (opcional)</label>
                 <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'} />
               </div>
-              
-              {/* Submit */}
               <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <i className="fas fa-user-plus mr-2"></i>Cadastrar Cliente
               </button>
@@ -1856,9 +1312,7 @@ function App() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* CLIENT DETAIL MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CLIENT DETAIL MODAL */}
       {showClientDetail && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -1937,44 +1391,7 @@ function App() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* CLIENT PICKER MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {showClientPicker && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-sm max-h-[80vh] overflow-hidden">
-            <div className="sticky top-0 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-white">Selecionar Cliente</h3>
-              <button onClick={() => setShowClientPicker(false)} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white">
-                <i className="fas fa-times text-xs"></i>
-              </button>
-            </div>
-            <div className="p-4">
-              <input type="text" placeholder="Buscar cliente..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white mb-3" />
-              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                {clientsWithProvador.filter(c => (c.firstName + ' ' + c.lastName).toLowerCase().includes(clientSearchTerm.toLowerCase())).map(client => (
-                  <div key={client.id} onClick={() => { setProvadorClient(client); setShowClientPicker(false); }} className={'flex items-center gap-3 p-2.5 rounded-lg cursor-pointer border transition-all ' + (provadorClient?.id === client.id ? 'border-pink-500 bg-pink-500/10' : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800')}>
-                    <img src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full object-cover" />
-                    <div className="flex-1">
-                      <p className="font-medium text-white text-sm">{client.firstName} {client.lastName}</p>
-                      <p className="text-[10px] text-neutral-500">{client.photos?.length || 1} foto(s)</p>
-                    </div>
-                    {provadorClient?.id === client.id && (
-                      <div className="w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center">
-                        <i className="fas fa-check text-white text-[8px]"></i>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* IMPORT MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* IMPORT MODAL */}
       {showImport && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
@@ -2005,9 +1422,7 @@ function App() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* CREATE PRODUCT MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* CREATE PRODUCT MODAL */}
       {showCreateProduct && selectedImage && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
@@ -2064,9 +1479,7 @@ function App() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* PRODUCT DETAIL MODAL - SUNO STYLE */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto'}>
