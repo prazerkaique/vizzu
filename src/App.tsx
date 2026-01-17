@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
+import { AuthPage } from './components/AuthPage';
 import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition } from './types';
 import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
@@ -50,6 +51,7 @@ type Page = 'dashboard' | 'studio' | 'provador' | 'products' | 'clients' | 'hist
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>(DEMO_PRODUCTS);
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -327,6 +329,40 @@ function App() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // AUTH CHECK - Show login page if not authenticated
+  // ═══════════════════════════════════════════════════════════════
+  if (!isAuthenticated) {
+    return (
+      <AuthPage 
+        onLogin={(userData) => {
+          setUser({
+            id: '1',
+            email: userData.email,
+            name: userData.name,
+            avatar: userData.avatar || '',
+            plan: 'starter',
+            credits: 50,
+            createdAt: new Date().toISOString()
+          });
+          setIsAuthenticated(true);
+        }}
+        onDemoMode={() => {
+          setUser({
+            id: 'demo',
+            email: 'demo@vizzu.com.br',
+            name: 'Usuário Demo',
+            avatar: '',
+            plan: 'starter',
+            credits: 50,
+            createdAt: new Date().toISOString()
+          });
+          setIsAuthenticated(true);
+        }}
+      />
     );
   }
 
@@ -1353,6 +1389,27 @@ function App() {
                             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
                             <input type="email" defaultValue={user.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
                           </div>
+                        </div>
+                      </div>
+                      
+                      {/* Logout Section */}
+                      <div className={'mt-4 rounded-xl border p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm')}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Sair da conta</p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>Encerrar sessão no Vizzu</p>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              setIsAuthenticated(false);
+                              setUser(null);
+                              setCurrentPage('dashboard');
+                            }}
+                            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-xs font-medium hover:bg-red-500/20 transition-colors flex items-center gap-2"
+                          >
+                            <i className="fas fa-sign-out-alt"></i>
+                            Sair
+                          </button>
                         </div>
                       </div>
                     </div>
