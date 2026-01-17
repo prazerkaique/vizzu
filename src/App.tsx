@@ -313,7 +313,7 @@ function App() {
       <AuthPage 
         onLogin={(userData) => {
           setUser({
-            id: userData.id || '1',
+            id: (userData as any).id || '1',
             email: userData.email,
             name: userData.name,
             avatar: userData.avatar || '',
