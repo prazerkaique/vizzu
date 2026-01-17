@@ -15,8 +15,9 @@ interface StudioProps {
   onOpenSettings?: () => void;
   onImport?: () => void;
   currentPlan?: { name: string; limit: number };
-  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<string>;
+  onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<{ image: string | null; generationId: string | null }>;
   theme?: 'dark' | 'light';
+  userId?: string;
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -34,7 +35,8 @@ export const Studio: React.FC<StudioProps> = ({
   onImport,
   currentPlan,
   onGenerateImage,
-  theme = 'dark'
+  theme = 'dark',
+  userId
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
@@ -500,9 +502,10 @@ export const Studio: React.FC<StudioProps> = ({
           onDeductCredits={onDeductCredits}
           onGenerateImage={onGenerateImage ? async (p, t, prompt, opts) => {
             const result = await onGenerateImage(p, t, prompt, opts);
-            return { image: result || '', generationId: Date.now().toString() };
+            return { image: result.image || '', generationId: result.generationId || '' };
           } : async () => ({ image: '', generationId: '' })}
           theme={theme}
+          userId={userId}
         />
       )}
     </div>
