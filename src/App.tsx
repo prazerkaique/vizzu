@@ -343,9 +343,8 @@ function App() {
             id: '1',
             email: userData.email,
             name: userData.name,
-            avatar: userData.avatar || '',
-            createdAt: new Date().toISOString()
-          });
+            avatar: userData.avatar || ''
+          } as User);
           setIsAuthenticated(true);
         }}
         onDemoMode={() => {
@@ -353,9 +352,8 @@ function App() {
             id: 'demo',
             email: 'demo@vizzu.com.br',
             name: 'Usuário Demo',
-            avatar: '',
-            createdAt: new Date().toISOString()
-          });
+            avatar: ''
+          } as User);
           setIsAuthenticated(true);
         }}
       />
