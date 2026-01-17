@@ -84,7 +84,7 @@ function App() {
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
   const [showStudioPicker, setShowStudioPicker] = useState(false);
   const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
   
