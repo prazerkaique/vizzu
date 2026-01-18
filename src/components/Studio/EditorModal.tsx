@@ -483,12 +483,12 @@ export const EditorModal: React.FC<Props> = ({
               </select>
             </div>
             
-            <div className={`p-3 rounded-xl ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'}`}>
-              <label className="text-[10px] font-medium text-amber-600 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                <i className="fas fa-star text-[8px]"></i>Descreva o produto *
+            <div>
+              <label className={`text-[10px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1.5 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                <i className="fas fa-star text-pink-500 text-[8px]"></i>Caimento do Produto *
               </label>
-              <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo Nike branco..." className={`w-full p-3 border rounded-lg text-sm resize-none ${isDark ? 'bg-neutral-800 border-amber-500/30 text-white placeholder-neutral-500' : 'bg-white border-amber-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
-              <p className="text-[10px] text-amber-600/70 mt-2"><i className="fas fa-lightbulb mr-1"></i>Mais detalhes = melhor resultado</p>
+              <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo Nike branco..." className={`w-full p-3 border rounded-xl text-sm resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
+              <p className={`text-[10px] mt-2 ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}><i className="fas fa-lightbulb mr-1 text-amber-500"></i>Mais detalhes = melhor resultado</p>
             </div>
             
             <button onClick={() => setLifestyleStep('model')} disabled={!isStepComplete('item')} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-medium rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
