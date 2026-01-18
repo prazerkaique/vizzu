@@ -267,38 +267,44 @@ export const EditorModal: React.FC<Props> = ({
     finally { setIsGen(false); }
   };
 
-  const handleSave = async () => {
-    if (!genImg.front) return;
-    setIsSaving(true);
-    try {
-      const optFront = await optimizeImage(genImg.front, product.name + '_front');
-      const newGeneratedSet: GeneratedImageSet = {
-        id: `gen-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        tool: tool as 'studio' | 'cenario' | 'lifestyle',
-        images: { front: optFront.base64, back: undefined },
-        metadata: { prompt: tool === 'cenario' ? cenPrompt : undefined, orientation, exportFormat: exportType }
-      };
-      
-      if (genImg.back) {
-        const optBack = await optimizeImage(genImg.back, product.name + '_back');
-        newGeneratedSet.images.back = optBack.base64;
-      }
-      
-      const currentGenerated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [] };
-      if (tool === 'studio') currentGenerated.studioReady = [...currentGenerated.studioReady, newGeneratedSet];
-      else if (tool === 'cenario') currentGenerated.cenarioCriativo = [...currentGenerated.cenarioCriativo, newGeneratedSet];
-      else if (tool === 'lifestyle') currentGenerated.modeloIA = [...currentGenerated.modeloIA, newGeneratedSet];
-      
-      const newImages = [...product.images];
-      if (optFront.success) newImages.push({ name: optFront.suggestedFileName, base64: optFront.base64, url: optFront.base64, type: 'generated' });
-      
-      onUpdateProduct(product.id, { images: newImages, generatedImages: currentGenerated, updatedAt: new Date().toISOString() });
-      if (genId && onMarkSaved) onMarkSaved(genId);
-      setGenImg({ front: null, back: null }); setGenId(null); setViewMode('original');
-    } catch { setError('Erro ao salvar'); }
-    finally { setIsSaving(false); }
-  };
+const handleSave = async () => {
+  if (!genImg.front) return;
+  setIsSaving(true);
+  try {
+    // A imagem já foi salva no Supabase pelo n8n, só precisamos atualizar o estado local
+    const newGeneratedSet: GeneratedImageSet = {
+      id: genId || `gen-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      tool: tool as 'studio' | 'cenario' | 'lifestyle',
+      images: { front: genImg.front, back: genImg.back || undefined },
+      metadata: { prompt: tool === 'cenario' ? cenPrompt : undefined, orientation, exportFormat: exportType }
+    };
+    
+    const currentGenerated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [] };
+    
+    if (tool === 'studio') {
+      currentGenerated.studioReady = [...currentGenerated.studioReady, newGeneratedSet];
+    } else if (tool === 'cenario') {
+      currentGenerated.cenarioCriativo = [...currentGenerated.cenarioCriativo, newGeneratedSet];
+    } else if (tool === 'lifestyle') {
+      currentGenerated.modeloIA = [...currentGenerated.modeloIA, newGeneratedSet];
+    }
+    
+    onUpdateProduct(product.id, { 
+      generatedImages: currentGenerated, 
+      updatedAt: new Date().toISOString() 
+    });
+    
+    if (genId && onMarkSaved) onMarkSaved(genId);
+    setGenImg({ front: null, back: null }); 
+    setGenId(null); 
+    setViewMode('original');
+  } catch { 
+    setError('Erro ao salvar'); 
+  } finally { 
+    setIsSaving(false); 
+  }
+};
 
   const handleSaveModel = () => {
     if (!newModelName.trim() || !genImg.front) return;
