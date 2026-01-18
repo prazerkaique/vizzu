@@ -295,22 +295,26 @@ const loadUserProducts = async (userId: string) => {
       throw error;
     }
   };
-  
-     reader.onload = () => {
-      if (target === 'front') {
-        setSelectedFrontImage(reader.result as string);
-      } else {
-        setSelectedBackImage(reader.result as string);
-      }
-      setShowImport(false);
-      setShowCreateProduct(true);
-    };
-    reader.readAsDataURL(file);
-  }
 };
+
+  const handleFileSelect = (files: FileList, target: 'front' | 'back' = 'front') => {
+    if (files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (target === 'front') {
+          setSelectedFrontImage(reader.result as string);
+        } else {
+          setSelectedBackImage(reader.result as string);
+        }
+        setShowImport(false);
+        setShowCreateProduct(true);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
+  const handleRemoveClientPhoto
   const handleRemoveClientPhoto = (type: ClientPhoto['type']) => { 
     setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) })); 
   };
