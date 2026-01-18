@@ -446,6 +446,32 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setProvadorLookSearch('');
   };
 const handleAddHistoryLog = (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => {
+
+  // Função para processar imagem (converte HEIC se necessário)
+  const processImageFile = async (file: File): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let processedFile: File | Blob = file;
+        
+        if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/png',
+            quality: 0.9
+          });
+          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(processedFile);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+  
     // TODO: implementar histórico
     console.log('History log:', { action, details, status, items, method, cost });
   };
@@ -1628,21 +1654,23 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
           <input 
             type="file" 
-            accept="image/*" 
+            accept="image/*,.heic,.heif" 
             className="hidden" 
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
-                const reader = new FileReader();
-                reader.onload = () => {
+                try {
+                  const base64 = await processImageFile(file);
                   if (showPhotoSourcePicker === 'front') {
-                    setSelectedFrontImage(reader.result as string);
+                    setSelectedFrontImage(base64);
                   } else {
-                    setSelectedBackImage(reader.result as string);
+                    setSelectedBackImage(base64);
                   }
                   setShowPhotoSourcePicker(null);
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                  console.error('Erro ao processar imagem:', error);
+                  alert('Erro ao processar imagem. Tente outro formato.');
+                }
               }
             }}
           />
@@ -1654,22 +1682,24 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
           <input 
             type="file" 
-            accept="image/*" 
+            accept="image/*,.heic,.heif" 
             capture="environment"
             className="hidden" 
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
-                const reader = new FileReader();
-                reader.onload = () => {
+                try {
+                  const base64 = await processImageFile(file);
                   if (showPhotoSourcePicker === 'front') {
-                    setSelectedFrontImage(reader.result as string);
+                    setSelectedFrontImage(base64);
                   } else {
-                    setSelectedBackImage(reader.result as string);
+                    setSelectedBackImage(base64);
                   }
                   setShowPhotoSourcePicker(null);
-                };
-                reader.readAsDataURL(file);
+                } catch (error) {
+                  console.error('Erro ao processar imagem:', error);
+                  alert('Erro ao processar imagem. Tente outro formato.');
+                }
               }
             }}
           />
