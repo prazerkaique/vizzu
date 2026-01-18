@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - App.tsx (VERSÃO CORRIGIDA - TYPESCRIPT ERRORS FIXED)
+// VIZZU - App.tsx (VERSÃO CORRIGIDA - COM AddProductModal)
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,6 +10,7 @@ import {
 } from './types';
 import { AuthPage } from './components/AuthPage';
 import { EditorModal } from './components/Studio';
+import { AddProductModal } from './components/Studio/AddProductModal';
 import { useCredits } from './hooks/useCredits';
 import { generateStudioReady, generateCenario, generateModeloIA } from './lib/api/studio';
 
@@ -60,18 +61,9 @@ function App() {
   const [showProductEditor, setShowProductEditor] = useState(false);
   
   // ══════════════════════════════════════════════════════════════════
-  // ADD PRODUCT MODAL STATE (MULTI-STEP)
+  // ADD PRODUCT MODAL STATE (NEW - MULTI-PHOTO)
   // ══════════════════════════════════════════════════════════════════
-  const [showImport, setShowImport] = useState(false);
-  const [showCreateProduct, setShowCreateProduct] = useState(false);
-  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
-  const [addProductStep, setAddProductStep] = useState<'source' | 'photos' | 'data'>('source');
-  const [frontImage, setFrontImage] = useState<string | null>(null);
-  const [backImage, setBackImage] = useState<string | null>(null);
-  const [showBackImageWarning, setShowBackImageWarning] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '', brand: '', color: '', fit: '', category: '', collection: ''
-  });
+  const [showAddProduct, setShowAddProduct] = useState(false);
   
   // ══════════════════════════════════════════════════════════════════
   // EDIT PRODUCT MODAL STATE
@@ -107,16 +99,13 @@ function App() {
   const [generations, setGenerations] = useState<VisualStudioGeneration[]>([]);
   
   // ══════════════════════════════════════════════════════════════════
-  // CREDITS HOOK - FIXED: Use userCredits instead of credits
+  // CREDITS HOOK
   // ══════════════════════════════════════════════════════════════════
   const { userCredits, deductCredits, currentPlan, setCredits } = useCredits(user?.id || '');
   
   // ══════════════════════════════════════════════════════════════════
   // REFS
   // ══════════════════════════════════════════════════════════════════
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const backImageInputRef = useRef<HTMLInputElement>(null);
   const editFrontInputRef = useRef<HTMLInputElement>(null);
   const editBackInputRef = useRef<HTMLInputElement>(null);
 
@@ -197,92 +186,102 @@ function App() {
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // ADD PRODUCT - MULTI-STEP HANDLERS
+  // CREATE PRODUCT - MULTI-PHOTO HANDLER (NEW)
   // ══════════════════════════════════════════════════════════════════
-  const handleFrontImageSelect = (files: FileList) => {
-    if (files.length > 0) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFrontImage(reader.result as string);
-        setShowImport(false);
-        setAddProductStep('photos');
-        setShowCreateProduct(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBackImageSelect = (files: FileList) => {
-    if (files.length > 0) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        setBackImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleNextToDataStep = () => {
-    if (!backImage) {
-      setShowBackImageWarning(true);
-    } else {
-      setAddProductStep('data');
-    }
-  };
-
-  const handleConfirmWithoutBack = () => {
-    setShowBackImageWarning(false);
-    setAddProductStep('data');
-  };
-
-  const handleCreateProduct = async () => {
-    if (!frontImage || !newProduct.name || !newProduct.category) {
-      alert('Preencha pelo menos o nome e a categoria do produto');
-      return;
-    }
-
-    setIsCreatingProduct(true);
-
+  const handleCreateProductMultiPhoto = async (
+    productData: Omit<Product, 'id' | 'sku'>,
+    frontImage: string,
+    backImage?: string
+  ) => {
     try {
       const response = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/produto-importar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: user?.id,
-          name: newProduct.name,
-          brand: newProduct.brand,
-          color: newProduct.color,
-          fit: newProduct.fit,
-          category: newProduct.category,
-          collection: newProduct.collection,
-          front_image: frontImage,
-          back_image: backImage,
+          sku: 'SKU-' + Date.now().toString().slice(-6),
+          name: productData.name,
+          brand: productData.brand || null,
+          color: productData.color || null,
+          fit: productData.fit || null,
+          category: productData.category,
+          collection: productData.collection || null,
+          // Enviar imagem de frente
+          image_base64: frontImage,
+          image_type: 'front',
+          // Enviar imagem de costas (se existir)
+          back_image_base64: backImage || null,
           has_back_image: !!backImage
         })
       });
-
+      
       const data = await response.json();
       
-      if (data.product) {
-        setProducts(prev => [data.product, ...prev]);
-        resetProductCreation();
+      if (data.success || data.product) {
+        // Criar produto com a nova estrutura
+        const product: Product = {
+          id: data.product.id,
+          sku: data.product.sku,
+          name: data.product.name,
+          brand: productData.brand,
+          color: productData.color,
+          fit: productData.fit,
+          category: productData.category,
+          collection: productData.collection,
+          hasBackImage: !!backImage,
+          // Estrutura legada (compatibilidade)
+          images: [
+            { name: productData.name + '_front.jpg', base64: frontImage, url: data.product.front_image_url || frontImage, type: 'front' as const },
+            ...(backImage ? [{ name: productData.name + '_back.jpg', base64: backImage, url: data.product.back_image_url || backImage, type: 'back' as const }] : [])
+          ],
+          // Nova estrutura organizada
+          originalImages: {
+            front: { name: productData.name + '_front.jpg', base64: frontImage, url: data.product.front_image_url || frontImage },
+            back: backImage ? { name: productData.name + '_back.jpg', base64: backImage, url: data.product.back_image_url || backImage } : undefined
+          },
+          generatedImages: {
+            studioReady: [],
+            cenarioCriativo: [],
+            modeloIA: []
+          },
+          createdAt: new Date().toISOString()
+        };
+        
+        setProducts(prev => [product, ...prev]);
+      } else {
+        throw new Error(data.error || 'Erro ao criar produto');
       }
     } catch (error) {
-      console.error('Error creating product:', error);
-      alert('Erro ao criar produto');
-    } finally {
-      setIsCreatingProduct(false);
+      console.error('Erro:', error);
+      throw error;
     }
   };
 
-  const resetProductCreation = () => {
-    setShowCreateProduct(false);
-    setAddProductStep('source');
-    setFrontImage(null);
-    setBackImage(null);
-    setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+  // ══════════════════════════════════════════════════════════════════
+  // DELETE PRODUCT HANDLER (UPDATED)
+  // ══════════════════════════════════════════════════════════════════
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      // Deletar do backend
+      await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/produto-deletar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          user_id: user?.id
+        })
+      });
+
+      // Remover do estado local
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      
+      // Fechar modal de confirmação se estiver aberto
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
+    } catch (error) {
+      console.error('Erro ao deletar produto:', error);
+      alert('Erro ao deletar produto');
+    }
   };
 
   // ══════════════════════════════════════════════════════════════════
@@ -370,31 +369,6 @@ function App() {
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // DELETE PRODUCT HANDLERS
-  // ══════════════════════════════════════════════════════════════════
-  const handleDeleteProduct = async () => {
-    if (!productToDelete) return;
-
-    try {
-      await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/produto-deletar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id: productToDelete.id,
-          user_id: user?.id
-        })
-      });
-
-      setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
-      setShowDeleteConfirm(false);
-      setProductToDelete(null);
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Erro ao deletar produto');
-    }
-  };
-
-  // ══════════════════════════════════════════════════════════════════
   // CLIENT HANDLERS
   // ══════════════════════════════════════════════════════════════════
   const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -455,7 +429,7 @@ function App() {
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // AI GENERATION HANDLER - FIXED: Correct function signatures
+  // AI GENERATION HANDLER
   // ══════════════════════════════════════════════════════════════════
   const handleGenerateImage = async (
     product: Product,
@@ -470,7 +444,6 @@ function App() {
       let result: { image: string | null; generationId: string | null; backImage?: string | null } = { image: null, generationId: null };
 
       if (type === 'studio') {
-        // Generate front - FIXED: Pass single object parameter
         const frontResult = await generateStudioReady({
           imageBase64: frontImageBase64!,
           userId: user?.id || '',
@@ -479,7 +452,6 @@ function App() {
         result.image = frontResult.imageUrl || null;
         result.generationId = frontResult.generation?.id || null;
         
-        // Generate back if exists (same 1 credit for both)
         if (backImageBase64) {
           const backResult = await generateStudioReady({
             imageBase64: backImageBase64,
@@ -638,7 +610,7 @@ function App() {
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // RENDER: AUTH CHECK - FIXED: Remove theme prop from AuthPage
+  // RENDER: AUTH CHECK
   // ══════════════════════════════════════════════════════════════════
   if (!isAuthenticated) {
     return <AuthPage onLogin={handleLogin} />;
@@ -652,9 +624,6 @@ function App() {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}`}>
       {/* Hidden File Inputs */}
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFrontImageSelect(e.target.files)} />
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFrontImageSelect(e.target.files)} />
-      <input ref={backImageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleBackImageSelect(e.target.files)} />
       <input ref={editFrontInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleEditFrontImageSelect(e.target.files)} />
       <input ref={editBackInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleEditBackImageSelect(e.target.files)} />
 
@@ -669,7 +638,7 @@ function App() {
           </div>
           
           <div className="flex items-center gap-4">
-            {/* Credits Display - FIXED: Use userCredits */}
+            {/* Credits Display */}
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-gray-100 border-gray-200'} border`}>
               <i className="fas fa-coins text-yellow-500 text-sm"></i>
               <span className="text-sm font-medium">{userCredits}</span>
@@ -839,7 +808,7 @@ function App() {
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-bold">Produtos</h1>
                 <button
-                  onClick={() => setShowImport(true)}
+                  onClick={() => setShowAddProduct(true)}
                   className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
                 >
                   <i className="fas fa-plus mr-2"></i> Adicionar
@@ -852,7 +821,7 @@ function App() {
                   <h3 className="font-bold mb-2">Nenhum produto ainda</h3>
                   <p className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'} mb-4`}>Adicione seu primeiro produto para começar</p>
                   <button
-                    onClick={() => setShowImport(true)}
+                    onClick={() => setShowAddProduct(true)}
                     className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
                   >
                     <i className="fas fa-plus mr-2"></i> Adicionar Produto
@@ -984,7 +953,7 @@ function App() {
                   <h3 className="font-bold mb-2">Nenhum produto ainda</h3>
                   <p className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'} mb-4`}>Adicione produtos para usar o Visual Studio</p>
                   <button
-                    onClick={() => { setCurrentPage('products'); setShowImport(true); }}
+                    onClick={() => { setCurrentPage('products'); setShowAddProduct(true); }}
                     className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
                   >
                     <i className="fas fa-plus mr-2"></i> Adicionar Produto
@@ -1061,237 +1030,13 @@ function App() {
         </div>
       </main>
 
-      {/* ADD PRODUCT - SOURCE MODAL */}
-      {showImport && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setShowImport(false)}></div>
-          <div className={`relative w-full md:max-w-md ${isDark ? 'bg-neutral-950' : 'bg-white'} rounded-t-3xl md:rounded-2xl p-6`}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Adicionar Produto</h3>
-              <button onClick={() => setShowImport(false)} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-full p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-neutral-900 hover:bg-neutral-800' : 'bg-gray-50 hover:bg-gray-100'}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white">
-                  <i className="fas fa-image"></i>
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Galeria</div>
-                  <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Escolha da galeria</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => cameraInputRef.current?.click()}
-                className={`w-full p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-neutral-900 hover:bg-neutral-800' : 'bg-gray-50 hover:bg-gray-100'}`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
-                  <i className="fas fa-camera"></i>
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Câmera</div>
-                  <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Tire uma foto agora</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ADD PRODUCT - PHOTOS & DATA MODAL */}
-      {showCreateProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60" onClick={resetProductCreation}></div>
-          <div className={`relative w-full max-w-lg ${isDark ? 'bg-neutral-950' : 'bg-white'} rounded-2xl p-6 max-h-[90vh] overflow-y-auto`}>
-            
-            {/* Step: Photos */}
-            {addProductStep === 'photos' && (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Fotos do Produto</h3>
-                  <button onClick={resetProductCreation} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  {/* Front Image */}
-                  <div>
-                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Frente *</label>
-                    <div className="aspect-square rounded-xl overflow-hidden bg-neutral-900">
-                      {frontImage && <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />}
-                    </div>
-                  </div>
-
-                  {/* Back Image */}
-                  <div>
-                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Costas (opcional)</label>
-                    <div
-                      onClick={() => backImageInputRef.current?.click()}
-                      className={`aspect-square rounded-xl overflow-hidden cursor-pointer ${
-                        backImage ? '' : isDark ? 'bg-neutral-900 border-2 border-dashed border-neutral-700' : 'bg-gray-100 border-2 border-dashed border-gray-300'
-                      } flex items-center justify-center`}
-                    >
-                      {backImage ? (
-                        <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-center">
-                          <i className="fas fa-plus text-2xl text-neutral-500 mb-2"></i>
-                          <div className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleNextToDataStep}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl"
-                >
-                  Continuar <i className="fas fa-arrow-right ml-2"></i>
-                </button>
-              </>
-            )}
-
-            {/* Step: Data */}
-            {addProductStep === 'data' && (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <button onClick={() => setAddProductStep('photos')} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                    <i className="fas fa-arrow-left"></i>
-                  </button>
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dados do Produto</h3>
-                  <button onClick={resetProductCreation} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Nome *</label>
-                    <input
-                      type="text"
-                      value={newProduct.name}
-                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
-                      placeholder="Ex: Camiseta Básica Preta"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Categoria *</label>
-                      <select
-                        value={newProduct.category}
-                        onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
-                      >
-                        <option value="">Selecione</option>
-                        {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Coleção</label>
-                      <select
-                        value={newProduct.collection}
-                        onChange={(e) => setNewProduct({ ...newProduct, collection: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
-                      >
-                        <option value="">Selecione</option>
-                        {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Cor</label>
-                      <select
-                        value={newProduct.color}
-                        onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
-                      >
-                        <option value="">Selecione</option>
-                        {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Modelagem</label>
-                      <select
-                        value={newProduct.fit}
-                        onChange={(e) => setNewProduct({ ...newProduct, fit: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
-                      >
-                        <option value="">Selecione</option>
-                        {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Marca</label>
-                    <input
-                      type="text"
-                      value={newProduct.brand}
-                      onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
-                      placeholder="Ex: Nike, Adidas..."
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleCreateProduct}
-                  disabled={isCreatingProduct || !newProduct.name || !newProduct.category}
-                  className="w-full py-3 mt-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50"
-                >
-                  {isCreatingProduct ? (
-                    <><i className="fas fa-spinner fa-spin mr-2"></i> Criando...</>
-                  ) : (
-                    <><i className="fas fa-check mr-2"></i> Criar Produto</>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* BACK IMAGE WARNING MODAL */}
-      {showBackImageWarning && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60"></div>
-          <div className={`relative w-full max-w-sm ${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-2xl p-6 text-center`}>
-            <i className="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
-            <h3 className="font-bold text-lg mb-2">Foto de costas não adicionada</h3>
-            <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-600'} mb-6`}>
-              Algumas ferramentas funcionam melhor com fotos de frente e costas. Deseja continuar sem a foto de costas?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowBackImageWarning(false)}
-                className={`flex-1 py-3 rounded-xl ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}
-              >
-                Voltar
-              </button>
-              <button
-                onClick={handleConfirmWithoutBack}
-                className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl"
-              >
-                Continuar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* NEW: Add Product Modal (Multi-Photo) */}
+      <AddProductModal
+        isOpen={showAddProduct}
+        onClose={() => setShowAddProduct(false)}
+        onCreateProduct={handleCreateProductMultiPhoto}
+        theme={theme}
+      />
 
       {/* EDIT PRODUCT MODAL */}
       {showEditProduct && editingProduct && (
@@ -1437,7 +1182,7 @@ function App() {
                 Cancelar
               </button>
               <button
-                onClick={handleDeleteProduct}
+                onClick={() => handleDeleteProduct(productToDelete.id)}
                 className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl"
               >
                 Deletar
@@ -1558,7 +1303,7 @@ function App() {
         </div>
       )}
 
-      {/* EDITOR MODAL - FIXED: Use userCredits */}
+      {/* EDITOR MODAL - UPDATED: Added onDeleteProduct prop */}
       {showProductEditor && selectedProduct && (
         <EditorModal
           product={selectedProduct}
@@ -1570,6 +1315,7 @@ function App() {
           onDeleteModel={handleDeleteModel}
           onClose={() => { setShowProductEditor(false); setSelectedProduct(null); }}
           onUpdateProduct={handleUpdateProduct}
+          onDeleteProduct={handleDeleteProduct}
           onDeductCredits={handleDeductCredits}
           onGenerateImage={handleGenerateImage}
           onMarkSaved={handleMarkSaved}
