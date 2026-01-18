@@ -319,11 +319,6 @@ export const EditorModal: React.FC<Props> = ({
     return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   };
 
-  // Handler for LookComposer changes
-  const handleLookChange = (newLook: LookComposition) => {
-    setLook(newLook);
-  };
-
   // ═══════════════════════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════════════════════
@@ -650,11 +645,11 @@ export const EditorModal: React.FC<Props> = ({
                                   </div>
                                 </div>
                               ) : (
-                                /* FIXED: Pass correct props to LookComposer - using composition and onCompositionChange */
+                                /* FIXED: Pass correct props to LookComposer - composition and onChange */
                                 <LookComposer 
                                   products={products} 
                                   composition={look} 
-                                  onCompositionChange={handleLookChange} 
+                                  onChange={setLook} 
                                   theme={theme} 
                                 />
                               )}
