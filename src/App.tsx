@@ -7,10 +7,12 @@ import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario } from './lib/api/studio';
 
+
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
+const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | null>(null);
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
   { id: 'frente', label: 'Frente', icon: 'fa-user' },
@@ -987,7 +989,7 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
                     <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gerencie seu catálogo</p>
                   </div>
                 </div>
-                <button onClick={() => setShowImport(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
                   <i className="fas fa-plus mr-1.5"></i>Novo
                 </button>
               </div>
@@ -1609,6 +1611,76 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
   </div>
 )}
 
+{/* PHOTO SOURCE PICKER */}
+{showPhotoSourcePicker && (
+  <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+      <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+        Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : 'de costas'}
+      </h3>
+      <div className="grid grid-cols-2 gap-3">
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-pink-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-images text-pink-500"></i>
+          </div>
+          <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+          <input 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  if (showPhotoSourcePicker === 'front') {
+                    setSelectedFrontImage(reader.result as string);
+                  } else {
+                    setSelectedBackImage(reader.result as string);
+                  }
+                  setShowPhotoSourcePicker(null);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
+        </label>
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-camera text-orange-500"></i>
+          </div>
+          <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+          <input 
+            type="file" 
+            accept="image/*" 
+            capture="environment"
+            className="hidden" 
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  if (showPhotoSourcePicker === 'front') {
+                    setSelectedFrontImage(reader.result as string);
+                  } else {
+                    setSelectedBackImage(reader.result as string);
+                  }
+                  setShowPhotoSourcePicker(null);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
+        </label>
+      </div>
+      <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+        Cancelar
+      </button>
+    </div>
+  </div>
+)}
+
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
   <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
@@ -1634,7 +1706,7 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
               <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-pink-500">
                 <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
                 <div className="absolute top-1 right-1 flex gap-1">
-                  <button onClick={() => { setUploadTarget('front'); setShowImport(true); }} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                  <button onClick={() => setShowPhotoSourcePicker('front')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
                     <i className="fas fa-sync text-[8px]"></i>
                   </button>
                   <button onClick={() => setSelectedFrontImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
@@ -1646,7 +1718,7 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
                 </div>
               </div>
             ) : (
-              <button onClick={() => { setUploadTarget('front'); setShowImport(true); }} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
+              <button onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Adicionar</span>
               </button>
@@ -1663,7 +1735,7 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
               <div className={(theme === 'dark' ? 'border-green-500' : 'border-green-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
                 <img src={selectedBackImage} alt="Costas" className="w-full h-full object-cover" />
                 <div className="absolute top-1 right-1 flex gap-1">
-                  <button onClick={() => { setUploadTarget('back'); setShowImport(true); }} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                  <button onClick={() => setShowPhotoSourcePicker('back')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
                     <i className="fas fa-sync text-[8px]"></i>
                   </button>
                   <button onClick={() => setSelectedBackImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
@@ -1675,7 +1747,7 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
                 </div>
               </div>
             ) : (
-              <button onClick={() => { setUploadTarget('back'); setShowImport(true); }} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
+              <button onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Adicionar</span>
               </button>
