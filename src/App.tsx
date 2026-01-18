@@ -36,7 +36,9 @@ function App() {
   const [showImport, setShowImport] = useState(false);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+const [selectedFrontImage, setSelectedFrontImage] = useState<string | null>(null);
+const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
+const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -294,94 +296,18 @@ const loadUserProducts = async (userId: string) => {
     }
   };
   
-  const handleAddHistoryLog = (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => { 
-    console.log('History:', { action, details, status, itemsCount: items.length, method, cost }); 
-  };
-
-  const handleFileSelect = (files: FileList) => {
-    if (files.length > 0) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => { 
-        setSelectedImage(reader.result as string); 
-        setShowImport(false); 
-        setShowCreateProduct(true); 
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCreateProduct = async () => {
-    if (!selectedImage || !newProduct.name || !newProduct.category) { 
-      alert('Preencha pelo menos o nome e a categoria do produto'); 
-      return; 
-    }
-    
-    setIsCreatingProduct(true);
-    
-    try {
-      const response = await fetch('https://n8neditor.brainia.store/webhook/vizzu/produto-importar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user?.id,
-          sku: 'SKU-' + Date.now().toString().slice(-6),
-          name: newProduct.name,
-          brand: newProduct.brand || null,
-          color: newProduct.color || null,
-          fit: newProduct.fit || null,
-          category: newProduct.category,
-          collection: newProduct.collection || null,
-          image_base64: selectedImage
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        const product: Product = { 
-          id: data.product.id, 
-          sku: data.product.sku, 
-          name: data.product.name, 
-          brand: newProduct.brand, 
-          color: newProduct.color, 
-          fit: newProduct.fit, 
-          category: newProduct.category, 
-          collection: newProduct.collection, 
-          images: [{ name: newProduct.name + '.jpg', base64: selectedImage, url: data.product.image_url }] 
-        };
-        setProducts(prev => [...prev, product]);
-        setShowCreateProduct(false); 
-        setSelectedImage(null); 
-        setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+     reader.onload = () => {
+      if (target === 'front') {
+        setSelectedFrontImage(reader.result as string);
       } else {
-        alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
+        setSelectedBackImage(reader.result as string);
       }
-    } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao criar produto. Verifique sua conexão.');
-    } finally {
-      setIsCreatingProduct(false);
-    }
-  };
-
-  const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && uploadingPhotoType) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newPhoto: ClientPhoto = { 
-          type: uploadingPhotoType, 
-          base64: reader.result as string, 
-          createdAt: new Date().toISOString() 
-        };
-        setNewClient(prev => ({ 
-          ...prev, 
-          photos: [...prev.photos.filter(p => p.type !== uploadingPhotoType), newPhoto] 
-        }));
-        setUploadingPhotoType(null);
-      };
-      reader.readAsDataURL(file);
+      setShowImport(false);
+      setShowCreateProduct(true);
+    };
+    reader.readAsDataURL(file);
+  }
+};
     }
   };
 
@@ -449,21 +375,6 @@ const loadUserProducts = async (userId: string) => {
     setUser(null);
     setIsAuthenticated(false);
     setProducts([]);
-  };
-
-  const handleProvadorGenerate = async () => {
-    if (!provadorClient) { alert('Selecione um cliente'); return; }
-    const clientPhoto = getClientPhoto(provadorClient, provadorPhotoType);
-    if (!clientPhoto) { alert('Cliente não possui foto do tipo selecionado'); return; }
-    const lookItems = Object.values(provadorLook).filter(Boolean);
-    if (lookItems.length === 0) { alert('Selecione pelo menos uma peça para o look'); return; }
-    if (userCredits < 3) { alert('Créditos insuficientes'); return; }
-    setIsGeneratingProvador(true);
-    setTimeout(() => { 
-      deductCredits(3, 'Vizzu Provador®'); 
-      setProvadorGeneratedImage(clientPhoto); 
-      setIsGeneratingProvador(false); 
-    }, 3000);
   };
   
   const handleProvadorSendWhatsApp = () => { 
@@ -1572,103 +1483,173 @@ const loadUserProducts = async (userId: string) => {
         </div>
       )}
 
-      {/* IMPORT MODAL */}
-      {showImport && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Adicionar Produto</h3>
-              <button onClick={() => setShowImport(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
-                <i className="fas fa-times text-xs"></i>
+     {/* IMPORT MODAL */}
+{showImport && (
+  <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+          Adicionar Foto {uploadTarget === 'front' ? 'de Frente' : 'de Costas'}
+        </h3>
+        <button onClick={() => setShowImport(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
+          <i className="fas fa-times text-xs"></i>
+        </button>
+      </div>
+      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Escolha como adicionar a imagem:</p>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files, uploadTarget)} />
+          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+            <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-images text-sm'}></i>
+          </div>
+          <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Galeria</span>
+        </label>
+        <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
+          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files, uploadTarget)} />
+          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+            <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-camera text-sm'}></i>
+          </div>
+          <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Câmera</span>
+        </label>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* CREATE PRODUCT MODAL */}
+{showCreateProduct && (
+  <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
+        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
+          <i className="fas fa-times text-xs"></i>
+        </button>
+      </div>
+      
+      {/* Fotos Frente/Costas */}
+      <div className="mb-4">
+        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
+        <div className="grid grid-cols-2 gap-3">
+          {/* FRENTE */}
+          <div className="flex flex-col">
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+              <i className="fas fa-image text-pink-500 text-[8px]"></i>
+              Frente <span className="text-pink-500">*</span>
+            </label>
+            {selectedFrontImage ? (
+              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-pink-500">
+                <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
+                <div className="absolute top-1 right-1 flex gap-1">
+                  <button onClick={() => { setUploadTarget('front'); setShowImport(true); }} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[8px]"></i>
+                  </button>
+                  <button onClick={() => setSelectedFrontImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[8px]"></i>
+                  </button>
+                </div>
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full">
+                  <i className="fas fa-check mr-0.5"></i>OK
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => { setUploadTarget('front'); setShowImport(true); }} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Adicionar</span>
               </button>
-            </div>
-            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Escolha como adicionar a imagem:</p>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files)} />
-                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
-                  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-images text-sm'}></i>
+            )}
+          </div>
+          
+          {/* COSTAS */}
+          <div className="flex flex-col">
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+              <i className="fas fa-image text-neutral-400 text-[8px]"></i>
+              Costas <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[8px]'}>(opcional)</span>
+            </label>
+            {selectedBackImage ? (
+              <div className={(theme === 'dark' ? 'border-green-500' : 'border-green-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
+                <img src={selectedBackImage} alt="Costas" className="w-full h-full object-cover" />
+                <div className="absolute top-1 right-1 flex gap-1">
+                  <button onClick={() => { setUploadTarget('back'); setShowImport(true); }} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[8px]"></i>
+                  </button>
+                  <button onClick={() => setSelectedBackImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[8px]"></i>
+                  </button>
                 </div>
-                <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Galeria</span>
-              </label>
-              <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files)} />
-                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
-                  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-camera text-sm'}></i>
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
+                  <i className="fas fa-check mr-0.5"></i>OK
                 </div>
-                <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Câmera</span>
-              </label>
-            </div>
+              </div>
+            ) : (
+              <button onClick={() => { setUploadTarget('back'); setShowImport(true); }} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Adicionar</span>
+              </button>
+            )}
           </div>
         </div>
-      )}
-
-      {/* CREATE PRODUCT MODAL */}
-      {showCreateProduct && selectedImage && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
-              <button onClick={() => { setShowCreateProduct(false); setSelectedImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
-                <i className="fas fa-times text-xs"></i>
-              </button>
-            </div>
-            <div className="mb-4">
-              <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' w-20 h-20 rounded-lg overflow-hidden border mx-auto'}>
-                <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
-                <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
-                  <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
-                </div>
-                <div>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
-                  <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-                    <option value="">Selecione</option>
-                    {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Caimento</label>
-                  <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-                    <option value="">Selecione</option>
-                    {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
-                  <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-                    <option value="">Selecione</option>
-                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                </div>
-              </div>
-              <button onClick={handleCreateProduct} disabled={isCreatingProduct} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                {isCreatingProduct ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin text-xs"></i>
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-check mr-1.5"></i>Criar Produto
-                  </>
-                )}
-              </button>
-            </div>
+        
+        {/* Dica */}
+        <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-lg p-2 mt-3 border'}>
+          <p className="text-amber-500 text-[10px] flex items-start gap-1.5">
+            <i className="fas fa-lightbulb mt-0.5"></i>
+            <span><strong>Dica:</strong> Adicionar foto de costas permite que a IA gere imagens de ambos os ângulos.</span>
+          </p>
+        </div>
+      </div>
+      
+      {/* Form Fields */}
+      <div className="space-y-3">
+        <div>
+          <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
+          <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
+            <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
+          </div>
+          <div>
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+            <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+              <option value="">Selecione</option>
+              {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+            </select>
           </div>
         </div>
-      )}
-
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Caimento</label>
+            <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+              <option value="">Selecione</option>
+              {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
+            <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+              <option value="">Selecione</option>
+              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+        </div>
+        <button onClick={handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          {isCreatingProduct ? (
+            <>
+              <i className="fas fa-spinner fa-spin text-xs"></i>
+              Salvando...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-check mr-1.5"></i>Criar Produto
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
