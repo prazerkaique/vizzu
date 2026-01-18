@@ -1,0 +1,530 @@
+// ═══════════════════════════════════════════════════════════════
+// VIZZU - AddProductModal (Multi-Step com Frente/Costas)
+// ═══════════════════════════════════════════════════════════════
+
+import React, { useState, useRef } from 'react';
+import { Product, ProductImage } from '../../types';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateProduct: (product: Omit<Product, 'id' | 'sku'>, frontImage: string, backImage?: string) => Promise<void>;
+  theme?: 'dark' | 'light';
+}
+
+type Step = 'source' | 'photos' | 'details';
+
+const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
+const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
+const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
+
+export const AddProductModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  onCreateProduct,
+  theme = 'dark'
+}) => {
+  const [step, setStep] = useState<Step>('source');
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
+  const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
+  const [showConfirmNoBack, setShowConfirmNoBack] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    brand: '',
+    color: '',
+    fit: '',
+    category: ''
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const isDark = theme === 'dark';
+
+  // Reset ao fechar
+  const handleClose = () => {
+    setStep('source');
+    setFrontImage(null);
+    setBackImage(null);
+    setFormData({ name: '', brand: '', color: '', fit: '', category: '' });
+    setShowConfirmNoBack(false);
+    onClose();
+  };
+
+  // Handler de seleção de arquivo
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        if (uploadTarget === 'front') {
+          setFrontImage(base64);
+        } else {
+          setBackImage(base64);
+        }
+        // Se é a primeira foto (frente), vai para step de fotos
+        if (step === 'source') {
+          setStep('photos');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input
+    if (e.target) e.target.value = '';
+  };
+
+  // Trigger upload para frente ou costas
+  const triggerUpload = (target: 'front' | 'back', useCamera: boolean = false) => {
+    setUploadTarget(target);
+    if (useCamera) {
+      cameraInputRef.current?.click();
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  // Remover foto
+  const removePhoto = (target: 'front' | 'back') => {
+    if (target === 'front') {
+      setFrontImage(null);
+      // Se removeu a frente, volta para source
+      setStep('source');
+    } else {
+      setBackImage(null);
+    }
+  };
+
+  // Continuar para detalhes
+  const goToDetails = () => {
+    if (!frontImage) return;
+    if (!backImage) {
+      setShowConfirmNoBack(true);
+    } else {
+      setStep('details');
+    }
+  };
+
+  // Confirmar sem foto de costas
+  const confirmNoBack = () => {
+    setShowConfirmNoBack(false);
+    setStep('details');
+  };
+
+  // Criar produto
+  const handleCreate = async () => {
+    if (!frontImage || !formData.name || !formData.category) {
+      alert('Preencha pelo menos o nome e a categoria do produto');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await onCreateProduct(
+        {
+          name: formData.name,
+          brand: formData.brand || undefined,
+          color: formData.color || undefined,
+          fit: formData.fit || undefined,
+          category: formData.category,
+          images: [],
+          hasBackImage: !!backImage
+        },
+        frontImage,
+        backImage || undefined
+      );
+      handleClose();
+    } catch (error) {
+      console.error('Erro ao criar produto:', error);
+      alert('Erro ao criar produto. Tente novamente.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Hidden file inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      {/* Modal Overlay */}
+      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className={`rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+          
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* STEP 1: SOURCE - Escolher fonte da imagem */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {step === 'source' && (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Adicionar Produto
+                </h3>
+                <button
+                  onClick={handleClose}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                >
+                  <i className="fas fa-times text-xs"></i>
+                </button>
+              </div>
+
+              <p className={`text-xs mb-4 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                Escolha como adicionar a imagem:
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Galeria */}
+                <button
+                  onClick={() => triggerUpload('front', false)}
+                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-200 hover:border-pink-400 hover:bg-purple-50'}`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-purple-100'}`}>
+                    <i className={`fas fa-images text-lg ${isDark ? 'text-purple-400' : 'text-purple-500'}`}></i>
+                  </div>
+                  <span className={`text-sm font-medium ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>Galeria</span>
+                </button>
+
+                {/* Câmera */}
+                <button
+                  onClick={() => triggerUpload('front', true)}
+                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-200 hover:border-pink-400 hover:bg-purple-50'}`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-purple-100'}`}>
+                    <i className={`fas fa-camera text-lg ${isDark ? 'text-purple-400' : 'text-purple-500'}`}></i>
+                  </div>
+                  <span className={`text-sm font-medium ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>Câmera</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* STEP 2: PHOTOS - Fotos de Frente e Costas */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {step === 'photos' && (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setStep('source'); setFrontImage(null); setBackImage(null); }}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <i className="fas fa-arrow-left text-xs"></i>
+                  </button>
+                  <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Fotos do Produto
+                  </h3>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                >
+                  <i className="fas fa-times text-xs"></i>
+                </button>
+              </div>
+
+              {/* Fotos Grid */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {/* FRENTE */}
+                <div className="flex flex-col">
+                  <label className={`text-[10px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                    <i className="fas fa-image text-pink-500"></i>
+                    Frente <span className="text-pink-500">*</span>
+                  </label>
+                  {frontImage ? (
+                    <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-pink-500">
+                      <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button
+                          onClick={() => triggerUpload('front', false)}
+                          className="w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                        >
+                          <i className="fas fa-sync text-[10px]"></i>
+                        </button>
+                        <button
+                          onClick={() => removePhoto('front')}
+                          className="w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
+                        >
+                          <i className="fas fa-times text-[10px]"></i>
+                        </button>
+                      </div>
+                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-pink-500 text-white text-[9px] font-bold rounded-full">
+                        <i className="fas fa-check mr-1"></i>OK
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => triggerUpload('front', false)}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50'}`}
+                    >
+                      <i className={`fas fa-plus text-lg ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                      <span className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* COSTAS */}
+                <div className="flex flex-col">
+                  <label className={`text-[10px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                    <i className="fas fa-image text-neutral-500"></i>
+                    Costas <span className={`text-[9px] ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>(opcional)</span>
+                  </label>
+                  {backImage ? (
+                    <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isDark ? 'border-green-500' : 'border-green-400'}`}>
+                      <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button
+                          onClick={() => triggerUpload('back', false)}
+                          className="w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                        >
+                          <i className="fas fa-sync text-[10px]"></i>
+                        </button>
+                        <button
+                          onClick={() => removePhoto('back')}
+                          className="w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
+                        >
+                          <i className="fas fa-times text-[10px]"></i>
+                        </button>
+                      </div>
+                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-green-500 text-white text-[9px] font-bold rounded-full">
+                        <i className="fas fa-check mr-1"></i>OK
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => triggerUpload('back', false)}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50'}`}
+                    >
+                      <i className={`fas fa-plus text-lg ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                      <span className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Dica */}
+              <div className={`rounded-lg p-3 mb-4 ${isDark ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-amber-50 border border-amber-200'}`}>
+                <p className="text-amber-500 text-[11px] flex items-start gap-2">
+                  <i className="fas fa-lightbulb mt-0.5"></i>
+                  <span>
+                    <strong>Dica:</strong> Adicionar foto de costas permite que a IA gere imagens de ambos os ângulos, melhorando muito a qualidade do resultado.
+                  </span>
+                </p>
+              </div>
+
+              {/* Botão Continuar */}
+              <button
+                onClick={goToDetails}
+                disabled={!frontImage}
+                className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Continuar
+                <i className="fas fa-arrow-right text-xs"></i>
+              </button>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* STEP 3: DETAILS - Dados do Produto */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {step === 'details' && (
+            <div className="p-5 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setStep('photos')}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                  >
+                    <i className="fas fa-arrow-left text-xs"></i>
+                  </button>
+                  <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Criar Produto
+                  </h3>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                >
+                  <i className="fas fa-times text-xs"></i>
+                </button>
+              </div>
+
+              {/* Preview das imagens */}
+              <div className="flex items-center justify-center gap-3 mb-4">
+                {frontImage && (
+                  <div className="relative">
+                    <div className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                      <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />
+                    </div>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[8px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>F</span>
+                  </div>
+                )}
+                {backImage && (
+                  <div className="relative">
+                    <div className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                      <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
+                    </div>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[8px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>C</span>
+                  </div>
+                )}
+                {!backImage && (
+                  <div className="relative opacity-40">
+                    <div className={`w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center ${isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-300 bg-gray-100'}`}>
+                      <i className={`fas fa-image ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                    </div>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[8px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'}`}>C</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Formulário */}
+              <div className="space-y-3">
+                <div>
+                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                    Nome do Produto <span className="text-pink-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                    placeholder="Ex: Camiseta Básica Branca"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Marca</label>
+                    <input
+                      type="text"
+                      value={formData.brand}
+                      onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                      className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                      placeholder="Ex: Nike"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Cor</label>
+                    <select
+                      value={formData.color}
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                    >
+                      <option value="">Selecione</option>
+                      {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Caimento</label>
+                    <select
+                      value={formData.fit}
+                      onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
+                      className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                    >
+                      <option value="">Selecione</option>
+                      {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                      Categoria <span className="text-pink-500">*</span>
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                    >
+                      <option value="">Selecione</option>
+                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Botão Criar */}
+                <button
+                  onClick={handleCreate}
+                  disabled={isCreating || !formData.name || !formData.category}
+                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isCreating ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin text-xs"></i>
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check"></i>
+                      Criar Produto
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* MODAL: Confirmação sem foto de costas */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {showConfirmNoBack && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className={`rounded-2xl border w-full max-w-sm p-5 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-amber-500/20' : 'bg-amber-100'}`}>
+                <i className="fas fa-exclamation-triangle text-amber-500"></i>
+              </div>
+              <div>
+                <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Produto sem foto de costas</h4>
+              </div>
+            </div>
+            
+            <p className={`text-sm mb-4 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+              A IA pode não conseguir gerar resultados precisos para as costas do modelo. Deseja continuar mesmo assim?
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowConfirmNoBack(false); }}
+                className={`flex-1 py-2.5 rounded-lg font-medium text-sm ${isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <i className="fas fa-plus mr-1.5"></i>
+                Adicionar
+              </button>
+              <button
+                onClick={confirmNoBack}
+                className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default AddProductModal;
