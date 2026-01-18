@@ -85,21 +85,67 @@ function App() {
   
   const clientsWithProvador = clients.filter(c => c.hasProvadorIA && (c.photos?.length || c.photo));
 
-  // Função para carregar produtos do usuário do Supabase
-  const loadUserProducts = async (userId: string) => {
-    try {
-      const { data: productsData, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_images (*)
-        `)
-        .eq('user_id', userId);
-      
-      if (error) throw error;
-      
-      if (productsData && productsData.length > 0) {
-        const formattedProducts: Product[] = productsData.map(p => ({
+// Função para carregar produtos do usuário do Supabase
+const loadUserProducts = async (userId: string) => {
+  try {
+    const { data: productsData, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        product_images (*)
+      `)
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    
+    if (productsData && productsData.length > 0) {
+      const formattedProducts: Product[] = productsData.map(p => {
+        const allImages = p.product_images || [];
+        
+        // Separar imagens originais das geradas
+        const originalImages = allImages.filter((img: any) => 
+          img.type === 'original' || img.type === 'front' || img.type === 'back'
+        );
+        
+        const generatedStudio = allImages.filter((img: any) => img.type === 'studio_ready');
+        const generatedCenario = allImages.filter((img: any) => img.type === 'cenario_criativo');
+        const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
+        
+        // Formatar imagens originais para o array images
+        const formattedOriginalImages = originalImages.map((img: any) => ({
+          id: img.id,
+          name: img.file_name,
+          url: img.url,
+          base64: img.url,
+          type: img.type === 'original' ? 'front' : img.type
+        }));
+        
+        // Formatar imagens geradas para generatedImages
+        const generatedImages = {
+          studioReady: generatedStudio.map((img: any) => ({
+            id: img.id,
+            createdAt: img.created_at,
+            tool: 'studio' as const,
+            images: { front: img.url, back: undefined },
+            metadata: {}
+          })),
+          cenarioCriativo: generatedCenario.map((img: any) => ({
+            id: img.id,
+            createdAt: img.created_at,
+            tool: 'cenario' as const,
+            images: { front: img.url, back: undefined },
+            metadata: {}
+          })),
+          modeloIA: generatedModelo.map((img: any) => ({
+            id: img.id,
+            createdAt: img.created_at,
+            tool: 'lifestyle' as const,
+            images: { front: img.url, back: undefined },
+            metadata: {}
+          }))
+        };
+        
+        return {
           id: p.id,
           sku: p.sku,
           name: p.name,
@@ -109,22 +155,19 @@ function App() {
           color: p.color,
           fit: p.fit,
           collection: p.collection,
-          images: p.product_images?.map((img: any) => ({
-            id: img.id,
-            name: img.file_name,
-            url: img.url,
-            base64: img.url,
-            type: img.type
-          })) || []
-        }));
-        setProducts(formattedProducts);
-      } else {
-        setProducts([]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
+          images: formattedOriginalImages,
+          generatedImages: generatedImages
+        };
+      });
+      
+      setProducts(formattedProducts);
+    } else {
+      setProducts([]);
     }
-  };
+  } catch (error) {
+    console.error('Erro ao carregar produtos:', error);
+  }
+};
 
   // Check for existing Supabase session on mount
   useEffect(() => {
