@@ -314,8 +314,6 @@ const loadUserProducts = async (userId: string) => {
     }
   };
 
-};
-
   const handleCreateProduct = async () => {
     if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
       alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
