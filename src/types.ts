@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - TypeScript Types (VERSÃO COMPLETA)
+// VIZZU - TypeScript Types (VERSÃO COMPLETA + MULTI-FOTO PRODUTO)
 // ═══════════════════════════════════════════════════════════════
 
 export interface User {
@@ -11,10 +11,51 @@ export interface User {
 }
 
 export interface ProductImage {
+  id?: string;
   name: string;
   base64?: string;
   url?: string;
+  type?: 'front' | 'back' | 'generated';  // NOVO: tipo da imagem
 }
+
+// ═══════════════════════════════════════════════════════════════
+// NOVO: Estrutura de Imagens Originais (Frente/Costas)
+// ═══════════════════════════════════════════════════════════════
+
+export interface ProductOriginalImages {
+  front: ProductImage;        // Obrigatório - foto de frente
+  back?: ProductImage;        // Opcional - foto de costas
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOVO: Imagens Geradas organizadas por ferramenta
+// ═══════════════════════════════════════════════════════════════
+
+export interface GeneratedImageSet {
+  id: string;
+  createdAt: string;
+  tool: 'studio' | 'cenario' | 'lifestyle';
+  images: {
+    front: string;            // URL ou base64 da imagem gerada (frente)
+    back?: string;            // URL ou base64 da imagem gerada (costas) - se tinha costas
+  };
+  metadata?: {
+    prompt?: string;
+    orientation?: string;
+    modelProfileId?: string;
+    exportFormat?: string;
+  };
+}
+
+export interface ProductGeneratedImages {
+  studioReady: GeneratedImageSet[];
+  cenarioCriativo: GeneratedImageSet[];
+  modeloIA: GeneratedImageSet[];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Product Interface (ATUALIZADO)
+// ═══════════════════════════════════════════════════════════════
 
 export interface Product {
   id: string;
@@ -26,7 +67,19 @@ export interface Product {
   brand?: string;
   color?: string;
   fit?: string;
+  
+  // LEGADO: Array simples de imagens (manter para compatibilidade)
   images: ProductImage[];
+  
+  // NOVO: Imagens originais organizadas (frente/costas)
+  originalImages?: ProductOriginalImages;
+  
+  // NOVO: Imagens geradas organizadas por ferramenta
+  generatedImages?: ProductGeneratedImages;
+  
+  // NOVO: Flag para saber se tem foto de costas
+  hasBackImage?: boolean;
+  
   createdAt?: string;
   updatedAt?: string;
 }
@@ -44,6 +97,11 @@ export interface VisualStudioGeneration {
   prompt?: string;
   originalImage: string;
   generatedImage: string;
+  // NOVO: Suporte a múltiplas imagens geradas (frente/costas)
+  generatedImages?: {
+    front: string;
+    back?: string;
+  };
   credits: number;
   createdAt: string;
   saved: boolean;
