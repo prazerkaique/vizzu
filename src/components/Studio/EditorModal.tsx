@@ -125,7 +125,7 @@ const EXPORT_OPTIONS = [
 // CSS para bordas com gradiente moderno - Clean Design
 const gradientBorderStyles = `
   .step-wrapper {
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 1.5px;
     transition: all 0.3s ease;
   }
@@ -136,7 +136,6 @@ const gradientBorderStyles = `
   
   .step-wrapper-active {
     background: linear-gradient(135deg, #ec4899, #f97316);
-    box-shadow: 0 4px 20px -4px rgba(236, 72, 153, 0.3);
   }
   
   .step-wrapper-complete {
@@ -145,7 +144,7 @@ const gradientBorderStyles = `
   
   .step-inner {
     background: white;
-    border-radius: 12.5px;
+    border-radius: 10.5px;
     overflow: hidden;
   }
   
@@ -402,23 +401,23 @@ export const EditorModal: React.FC<Props> = ({
               {isComplete && !isActive ? (
                 // Complete: Small gradient check
                 <div 
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  className="w-5 h-5 rounded flex items-center justify-center"
                   style={{ background: 'linear-gradient(135deg, #22c55e, #10b981)' }}
                 >
-                  <i className="fas fa-check text-white text-[9px]"></i>
+                  <i className="fas fa-check text-white text-[7px]"></i>
                 </div>
               ) : isActive ? (
                 // Active: Gradient icon
                 <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
                   style={{ background: 'linear-gradient(135deg, #ec4899, #f97316)' }}
                 >
-                  <i className={`fas ${icon} text-white text-xs`}></i>
+                  <i className={`fas ${icon} text-white text-[10px]`}></i>
                 </div>
               ) : (
                 // Neutral: Gray icon
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
-                  <i className={`fas ${icon} text-xs ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+                <div className={`w-5 h-5 rounded flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
+                  <i className={`fas ${icon} text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
                 </div>
               )}
               <span className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</span>
@@ -807,7 +806,7 @@ export const EditorModal: React.FC<Props> = ({
             
             <div className="space-y-3">
               {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
-                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-pink-500 bg-gradient-to-r from-pink-500/5 to-orange-500/5 shadow-lg' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border cursor-pointer transition-all ${tool === t ? 'border-pink-500/40' : 'border-transparent'} ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tool === t ? 'gradient-icon-pink' : isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
@@ -890,7 +889,7 @@ export const EditorModal: React.FC<Props> = ({
             <h3 className={`text-xs font-bold uppercase mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Ferramentas</h3>
             <div className="space-y-2">
               {(['studio', 'cenario', 'lifestyle'] as ToolType[]).map(t => t && (
-                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${tool === t ? 'border-pink-500 bg-gradient-to-r from-pink-500/5 to-orange-500/5 shadow-lg' : isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-white'}`}>
+                <div key={t} onClick={() => handleSelectTool(t)} className={`p-3 rounded-xl border cursor-pointer transition-all ${tool === t ? 'border-pink-500/40' : 'border-transparent'} ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tool === t ? 'gradient-icon-pink' : isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}>
