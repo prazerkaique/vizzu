@@ -442,9 +442,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setProvadorLookFilter('');
     setProvadorLookSearch('');
   };
-const handleAddHistoryLog = (log: HistoryLog) => {
+const handleAddHistoryLog = (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => {
     // TODO: implementar histórico
-    console.log('History log:', log);
+    console.log('History log:', { action, details, status, items, method, cost });
   };
 
   const handleProvadorGenerate = async () => {
@@ -465,6 +465,26 @@ const handleAddHistoryLog = (log: HistoryLog) => {
     } finally {
       setIsGeneratingProvador(false);
     }
+  };
+
+  const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadingPhotoType) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      const newPhoto: ClientPhoto = {
+        type: uploadingPhotoType,
+        base64,
+        createdAt: new Date().toISOString()
+      };
+      setNewClient(prev => ({
+        ...prev,
+        photos: [...prev.photos.filter(p => p.type !== uploadingPhotoType), newPhoto]
+      }));
+      setUploadingPhotoType(null);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleClientPhotoUpload = (type: ClientPhoto['type'], base64: string) => {
