@@ -361,14 +361,13 @@ const loadUserProducts = async (userId: string) => {
   };
 
   const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
-```
+};
 
----
-
-**Resumindo:** você vai procurar por:
-```
+  const handleRemoveClientPhoto = (type: ClientPhoto['type']) => { 
+    setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) })); 
   };
-  const handleRemoveClientPhoto
+
+  const handleCreateClient = () => {
   const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) })); 
   };
