@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - EditorModal (Com Galeria Organizada + Multi-Geração)
+// VIZZU - EditorModal (VERSÃO CORRIGIDA - TYPESCRIPT ERRORS FIXED)
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect } from 'react';
@@ -21,7 +21,8 @@ interface Props {
   onUpdateProduct: (id: string, u: Partial<Product>) => void;
   onDeleteProduct?: (id: string) => void;
   onDeductCredits: (n: number, r: string) => boolean;
-  onGenerateImage: (p: Product, t: 'studio'|'cenario'|'lifestyle'|'provador'|'refine', prompt?: string, opts?: any) => Promise<{image: string|null; generationId: string|null}>;
+  // FIXED: Removed 'provador' and 'refine' from type union to match App.tsx
+  onGenerateImage: (p: Product, t: 'studio'|'cenario'|'lifestyle', prompt?: string, opts?: any) => Promise<{image: string|null; generationId: string|null}>;
   onMarkSaved?: (id: string) => void;
   onSendWhatsApp?: (client: Client, message: string, imageUrl?: string) => void;
   theme?: 'dark' | 'light';
@@ -316,6 +317,11 @@ export const EditorModal: React.FC<Props> = ({
     if (galleryFilter === 'all' || galleryFilter === 'cenario') all.push(...generated.cenarioCriativo);
     if (galleryFilter === 'all' || galleryFilter === 'lifestyle') all.push(...generated.modeloIA);
     return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  };
+
+  // Handler for LookComposer changes
+  const handleLookChange = (newLook: LookComposition) => {
+    setLook(newLook);
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -644,7 +650,13 @@ export const EditorModal: React.FC<Props> = ({
                                   </div>
                                 </div>
                               ) : (
-                                <LookComposer products={products} look={look} onChange={setLook} theme={theme} />
+                                /* FIXED: Pass correct props to LookComposer - using composition and onCompositionChange */
+                                <LookComposer 
+                                  products={products} 
+                                  composition={look} 
+                                  onCompositionChange={handleLookChange} 
+                                  theme={theme} 
+                                />
                               )}
                             </div>
                           )}
