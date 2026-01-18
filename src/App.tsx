@@ -487,12 +487,6 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
     reader.readAsDataURL(file);
   };
 
-  const handleClientPhotoUpload = (type: ClientPhoto['type'], base64: string) => {
-    setNewClient(prev => ({
-      ...prev,
-      photos: [...prev.photos.filter(p => p.type !== type), { type, base64 }]
-    }));
-  };
   // ═══════════════════════════════════════════════════════════════
   // AUTH CHECK - Show AuthPage if not authenticated
   // ═══════════════════════════════════════════════════════════════
