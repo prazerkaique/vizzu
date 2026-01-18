@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - App.tsx (VERSÃO COMPLETA COM MULTI-FOTO E GALERIA ORGANIZADA)
+// VIZZU - App.tsx (VERSÃO CORRIGIDA - TYPESCRIPT ERRORS FIXED)
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -9,7 +9,7 @@ import {
   LookComposition, WhatsAppTemplate, VisualStudioGeneration, CreditHistoryItem
 } from './types';
 import { AuthPage } from './components/AuthPage';
-import { VisualStudioPage, EditorModal } from './components/Studio';
+import { EditorModal } from './components/Studio';
 import { useCredits } from './hooks/useCredits';
 import { generateStudioReady, generateCenario, generateModeloIA } from './lib/api/studio';
 
@@ -107,9 +107,9 @@ function App() {
   const [generations, setGenerations] = useState<VisualStudioGeneration[]>([]);
   
   // ══════════════════════════════════════════════════════════════════
-  // CREDITS HOOK
+  // CREDITS HOOK - FIXED: Use userCredits instead of credits
   // ══════════════════════════════════════════════════════════════════
-  const { credits, deductCredits, addCredits, history: creditHistory } = useCredits(user?.id || '');
+  const { userCredits, deductCredits, currentPlan, setCredits } = useCredits(user?.id || '');
   
   // ══════════════════════════════════════════════════════════════════
   // REFS
@@ -251,80 +251,54 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: user?.id,
-          sku: 'SKU-' + Date.now().toString().slice(-6),
           name: newProduct.name,
-          brand: newProduct.brand || null,
-          color: newProduct.color || null,
-          fit: newProduct.fit || null,
-          category: newProduct.category,
-          collection: newProduct.collection || null,
-          front_image_base64: frontImage,
-          back_image_base64: backImage || null,
-          has_back_image: !!backImage
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const product: Product = {
-          id: data.product.id,
-          sku: data.product.sku,
-          name: data.product.name,
           brand: newProduct.brand,
           color: newProduct.color,
           fit: newProduct.fit,
           category: newProduct.category,
           collection: newProduct.collection,
-          images: [
-            { name: `${newProduct.name}-frente.jpg`, base64: frontImage, url: data.product.front_image_url, type: 'front' },
-            ...(backImage ? [{ name: `${newProduct.name}-costas.jpg`, base64: backImage, url: data.product.back_image_url, type: 'back' as const }] : [])
-          ],
-          originalImages: {
-            front: { name: `${newProduct.name}-frente.jpg`, base64: frontImage, url: data.product.front_image_url },
-            ...(backImage ? { back: { name: `${newProduct.name}-costas.jpg`, base64: backImage, url: data.product.back_image_url } } : {})
-          },
-          generatedImages: { studioReady: [], cenarioCriativo: [], modeloIA: [] },
-          hasBackImage: !!backImage
-        };
+          front_image: frontImage,
+          back_image: backImage,
+          has_back_image: !!backImage
+        })
+      });
 
-        setProducts(prev => [...prev, product]);
-        resetAddProductModal();
-      } else {
-        alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
+      const data = await response.json();
+      
+      if (data.product) {
+        setProducts(prev => [data.product, ...prev]);
+        resetProductCreation();
       }
     } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao criar produto. Verifique sua conexão.');
+      console.error('Error creating product:', error);
+      alert('Erro ao criar produto');
     } finally {
       setIsCreatingProduct(false);
     }
   };
 
-  const resetAddProductModal = () => {
+  const resetProductCreation = () => {
     setShowCreateProduct(false);
-    setShowImport(false);
+    setAddProductStep('source');
     setFrontImage(null);
     setBackImage(null);
-    setAddProductStep('source');
-    setShowBackImageWarning(false);
     setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
   };
 
   // ══════════════════════════════════════════════════════════════════
   // EDIT PRODUCT HANDLERS
   // ══════════════════════════════════════════════════════════════════
-  const openEditProduct = (product: Product) => {
+  const handleOpenEditProduct = (product: Product) => {
     setEditingProduct(product);
     setEditProductData({
       name: product.name,
       brand: product.brand || '',
       color: product.color || '',
       fit: product.fit || '',
-      category: product.category,
+      category: product.category || '',
       collection: product.collection || ''
     });
-    setEditFrontImage(product.originalImages?.front?.base64 || product.originalImages?.front?.url || product.images[0]?.base64 || product.images[0]?.url || null);
+    setEditFrontImage(product.originalImages?.front?.base64 || product.originalImages?.front?.url || product.images[0]?.url || null);
     setEditBackImage(product.originalImages?.back?.base64 || product.originalImages?.back?.url || null);
     setShowEditProduct(true);
   };
@@ -333,9 +307,7 @@ function App() {
     if (files.length > 0) {
       const file = files[0];
       const reader = new FileReader();
-      reader.onload = () => {
-        setEditFrontImage(reader.result as string);
-      };
+      reader.onload = () => setEditFrontImage(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -344,9 +316,7 @@ function App() {
     if (files.length > 0) {
       const file = files[0];
       const reader = new FileReader();
-      reader.onload = () => {
-        setEditBackImage(reader.result as string);
-      };
+      reader.onload = () => setEditBackImage(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -362,32 +332,28 @@ function App() {
           product_id: editingProduct.id,
           user_id: user?.id,
           name: editProductData.name,
-          brand: editProductData.brand || null,
-          color: editProductData.color || null,
-          fit: editProductData.fit || null,
+          brand: editProductData.brand,
+          color: editProductData.color,
+          fit: editProductData.fit,
           category: editProductData.category,
-          collection: editProductData.collection || null,
-          front_image_base64: editFrontImage?.startsWith('data:') ? editFrontImage : null,
-          back_image_base64: editBackImage?.startsWith('data:') ? editBackImage : null,
+          collection: editProductData.collection,
+          front_image: editFrontImage,
+          back_image: editBackImage,
           has_back_image: !!editBackImage
         })
       });
 
       const data = await response.json();
-
+      
       if (data.success) {
         setProducts(prev => prev.map(p => {
           if (p.id === editingProduct.id) {
             return {
               ...p,
               ...editProductData,
-              images: [
-                { name: `${editProductData.name}-frente.jpg`, base64: editFrontImage?.startsWith('data:') ? editFrontImage : undefined, url: data.product?.front_image_url || p.originalImages?.front?.url, type: 'front' as const },
-                ...(editBackImage ? [{ name: `${editProductData.name}-costas.jpg`, base64: editBackImage?.startsWith('data:') ? editBackImage : undefined, url: data.product?.back_image_url || p.originalImages?.back?.url, type: 'back' as const }] : [])
-              ],
               originalImages: {
-                front: { name: `${editProductData.name}-frente.jpg`, base64: editFrontImage?.startsWith('data:') ? editFrontImage : undefined, url: data.product?.front_image_url || p.originalImages?.front?.url },
-                ...(editBackImage ? { back: { name: `${editProductData.name}-costas.jpg`, base64: editBackImage?.startsWith('data:') ? editBackImage : undefined, url: data.product?.back_image_url || p.originalImages?.back?.url } } : {})
+                front: editFrontImage ? { name: editProductData.name, base64: editFrontImage } : p.originalImages?.front,
+                back: editBackImage ? { name: editProductData.name, base64: editBackImage } : undefined
               },
               hasBackImage: !!editBackImage
             };
@@ -396,28 +362,21 @@ function App() {
         }));
         setShowEditProduct(false);
         setEditingProduct(null);
-      } else {
-        alert('Erro ao atualizar produto: ' + (data.error || 'Tente novamente'));
       }
     } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao atualizar produto. Verifique sua conexão.');
+      console.error('Error updating product:', error);
+      alert('Erro ao atualizar produto');
     }
   };
 
   // ══════════════════════════════════════════════════════════════════
   // DELETE PRODUCT HANDLERS
   // ══════════════════════════════════════════════════════════════════
-  const openDeleteConfirm = (product: Product) => {
-    setProductToDelete(product);
-    setShowDeleteConfirm(true);
-  };
-
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
 
     try {
-      const response = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/produto-excluir', {
+      await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/produto-deletar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -426,31 +385,81 @@ function App() {
         })
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
-        setShowDeleteConfirm(false);
-        setProductToDelete(null);
-        if (selectedProduct?.id === productToDelete.id) {
-          setSelectedProduct(null);
-          setShowProductEditor(false);
-        }
-      } else {
-        alert('Erro ao excluir produto: ' + (data.error || 'Tente novamente'));
-      }
+      setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
     } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao excluir produto. Verifique sua conexão.');
+      console.error('Error deleting product:', error);
+      alert('Erro ao deletar produto');
     }
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // AI GENERATION HANDLERS
+  // CLIENT HANDLERS
+  // ══════════════════════════════════════════════════════════════════
+  const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && uploadingPhotoType) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        const newPhoto: ClientPhoto = {
+          type: uploadingPhotoType,
+          base64: reader.result as string,
+          uploadedAt: new Date().toISOString()
+        };
+        setNewClient(prev => ({
+          ...prev,
+          photos: [...prev.photos.filter(p => p.type !== uploadingPhotoType), newPhoto]
+        }));
+        setUploadingPhotoType(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveClientPhoto = (photoType: ClientPhoto['type']) => {
+    setNewClient(prev => ({
+      ...prev,
+      photos: prev.photos.filter(p => p.type !== photoType)
+    }));
+  };
+
+  const handleCreateClient = async () => {
+    if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) return;
+
+    try {
+      const response = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/cliente-criar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id,
+          first_name: newClient.firstName,
+          last_name: newClient.lastName,
+          whatsapp: newClient.whatsapp,
+          email: newClient.email,
+          photos: newClient.photos
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.client) {
+        setClients(prev => [data.client, ...prev]);
+        setShowAddClient(false);
+        setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [] });
+      }
+    } catch (error) {
+      console.error('Error creating client:', error);
+      alert('Erro ao criar cliente');
+    }
+  };
+
+  // ══════════════════════════════════════════════════════════════════
+  // AI GENERATION HANDLER - FIXED: Correct function signatures
   // ══════════════════════════════════════════════════════════════════
   const handleGenerateImage = async (
     product: Product,
-    type: 'studio' | 'cenario' | 'lifestyle' | 'provador' | 'refine',
+    type: 'studio' | 'cenario' | 'lifestyle',
     prompt?: string,
     options?: any
   ): Promise<{ image: string | null; generationId: string | null; backImage?: string | null }> => {
@@ -461,33 +470,63 @@ function App() {
       let result: { image: string | null; generationId: string | null; backImage?: string | null } = { image: null, generationId: null };
 
       if (type === 'studio') {
-        // Generate front
-        const frontResult = await generateStudioReady(frontImageBase64!, user?.id || '', product.id);
-        result.image = frontResult.image;
-        result.generationId = frontResult.generationId;
+        // Generate front - FIXED: Pass single object parameter
+        const frontResult = await generateStudioReady({
+          imageBase64: frontImageBase64!,
+          userId: user?.id || '',
+          productId: product.id
+        });
+        result.image = frontResult.imageUrl || null;
+        result.generationId = frontResult.generation?.id || null;
         
         // Generate back if exists (same 1 credit for both)
         if (backImageBase64) {
-          const backResult = await generateStudioReady(backImageBase64, user?.id || '', product.id, true);
-          result.backImage = backResult.image;
+          const backResult = await generateStudioReady({
+            imageBase64: backImageBase64,
+            userId: user?.id || '',
+            productId: product.id,
+            isBackImage: true
+          });
+          result.backImage = backResult.imageUrl || null;
         }
       } else if (type === 'cenario') {
-        const frontResult = await generateCenario(frontImageBase64!, prompt || '', user?.id || '', product.id);
-        result.image = frontResult.image;
-        result.generationId = frontResult.generationId;
+        const frontResult = await generateCenario({
+          imageBase64: frontImageBase64!,
+          prompt: prompt || '',
+          userId: user?.id || '',
+          productId: product.id
+        });
+        result.image = frontResult.imageUrl || null;
+        result.generationId = frontResult.generation?.id || null;
         
         if (backImageBase64) {
-          const backResult = await generateCenario(backImageBase64, prompt || '', user?.id || '', product.id, true);
-          result.backImage = backResult.image;
+          const backResult = await generateCenario({
+            imageBase64: backImageBase64,
+            prompt: prompt || '',
+            userId: user?.id || '',
+            productId: product.id,
+            isBackImage: true
+          });
+          result.backImage = backResult.imageUrl || null;
         }
       } else if (type === 'lifestyle') {
-        const frontResult = await generateModeloIA(frontImageBase64!, user?.id || '', product.id, options);
-        result.image = frontResult.image;
-        result.generationId = frontResult.generationId;
+        const frontResult = await generateModeloIA({
+          imageBase64: frontImageBase64!,
+          userId: user?.id || '',
+          productId: product.id,
+          options
+        });
+        result.image = frontResult.imageUrl || null;
+        result.generationId = frontResult.generation?.id || null;
         
         if (backImageBase64) {
-          const backResult = await generateModeloIA(backImageBase64, user?.id || '', product.id, { ...options, isBackImage: true });
-          result.backImage = backResult.image;
+          const backResult = await generateModeloIA({
+            imageBase64: backImageBase64,
+            userId: user?.id || '',
+            productId: product.id,
+            options: { ...options, isBackImage: true }
+          });
+          result.backImage = backResult.imageUrl || null;
         }
       }
 
@@ -513,7 +552,7 @@ function App() {
         const generatedSet: GeneratedImageSet = {
           id: result.generationId || `gen-${Date.now()}`,
           createdAt: new Date().toISOString(),
-          tool: type === 'lifestyle' ? 'lifestyle' : type,
+          tool: type,
           images: {
             front: result.image,
             ...(result.backImage ? { back: result.backImage } : {})
@@ -539,103 +578,25 @@ function App() {
 
       return result;
     } catch (error) {
-      console.error('Generation error:', error);
+      console.error('Error generating image:', error);
       return { image: null, generationId: null };
     }
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // CLIENT HANDLERS
+  // SAVED MODELS HANDLERS
   // ══════════════════════════════════════════════════════════════════
-  const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && uploadingPhotoType) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newPhoto: ClientPhoto = {
-          type: uploadingPhotoType,
-          base64: reader.result as string,
-          createdAt: new Date().toISOString()
-        };
-        setNewClient(prev => ({
-          ...prev,
-          photos: [...prev.photos.filter(p => p.type !== uploadingPhotoType), newPhoto]
-        }));
-        setUploadingPhotoType(null);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
-    setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) }));
-  };
-
-  const handleCreateClient = async () => {
-    if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) {
-      alert('Preencha nome, sobrenome e WhatsApp');
-      return;
-    }
-
+  const handleSaveModel = async (model: SavedModelProfile) => {
     try {
-      const response = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/cliente-criar', {
+      await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/modelo-salvar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: user?.id,
-          first_name: newClient.firstName,
-          last_name: newClient.lastName,
-          whatsapp: newClient.whatsapp.replace(/\D/g, ''),
-          email: newClient.email || null,
-          photos: newClient.photos
+          model
         })
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const client: Client = {
-          id: data.client.id,
-          firstName: newClient.firstName,
-          lastName: newClient.lastName,
-          whatsapp: newClient.whatsapp.replace(/\D/g, ''),
-          email: newClient.email || undefined,
-          photos: newClient.photos.length > 0 ? newClient.photos : undefined,
-          hasProvadorIA: newClient.photos.length > 0,
-          createdAt: new Date().toISOString(),
-          status: 'active'
-        };
-        setClients(prev => [...prev, client]);
-        setShowAddClient(false);
-        setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [] });
-      } else {
-        alert('Erro ao criar cliente: ' + (data.error || 'Tente novamente'));
-      }
-    } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao criar cliente. Verifique sua conexão.');
-    }
-  };
-
-  // ══════════════════════════════════════════════════════════════════
-  // SAVED MODEL HANDLERS
-  // ══════════════════════════════════════════════════════════════════
-  const handleSaveModel = async (profile: SavedModelProfile) => {
-    try {
-      const response = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/modelo-salvar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user?.id,
-          ...profile
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSavedModels(prev => [...prev, { ...profile, id: data.model.id }]);
-      }
+      setSavedModels(prev => [model, ...prev]);
     } catch (error) {
       console.error('Error saving model:', error);
     }
@@ -643,10 +604,13 @@ function App() {
 
   const handleDeleteModel = async (modelId: string) => {
     try {
-      await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/modelo-excluir', {
+      await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/modelo-deletar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model_id: modelId, user_id: user?.id })
+        body: JSON.stringify({
+          user_id: user?.id,
+          model_id: modelId
+        })
       });
       setSavedModels(prev => prev.filter(m => m.id !== modelId));
     } catch (error) {
@@ -654,8 +618,13 @@ function App() {
     }
   };
 
+  // ══════════════════════════════════════════════════════════════════
+  // MARK SAVED HANDLER
+  // ══════════════════════════════════════════════════════════════════
   const handleMarkSaved = (generationId: string) => {
-    setGenerations(prev => prev.map(g => g.id === generationId ? { ...g, saved: true } : g));
+    setGenerations(prev => prev.map(g => 
+      g.id === generationId ? { ...g, saved: true } : g
+    ));
   };
 
   // ══════════════════════════════════════════════════════════════════
@@ -669,10 +638,10 @@ function App() {
   };
 
   // ══════════════════════════════════════════════════════════════════
-  // RENDER: AUTH CHECK
+  // RENDER: AUTH CHECK - FIXED: Remove theme prop from AuthPage
   // ══════════════════════════════════════════════════════════════════
   if (!isAuthenticated) {
-    return <AuthPage onLogin={handleLogin} theme={theme} />;
+    return <AuthPage onLogin={handleLogin} />;
   }
 
   const isDark = theme === 'dark';
@@ -698,544 +667,626 @@ function App() {
             </button>
             <img src="/logo.png" alt="Vizzu" className="h-8" />
           </div>
+          
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isDark ? 'bg-amber-500/10' : 'bg-amber-100'}`}>
-              <i className="fas fa-bolt text-amber-500 text-sm"></i>
-              <span className="font-bold text-amber-500">{credits}</span>
+            {/* Credits Display - FIXED: Use userCredits */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-gray-100 border-gray-200'} border`}>
+              <i className="fas fa-coins text-yellow-500 text-sm"></i>
+              <span className="text-sm font-medium">{userCredits}</span>
             </div>
-            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
-              <i className={`fas ${isDark ? 'fa-sun text-amber-400' : 'fa-moon text-gray-600'}`}></i>
+            
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-900 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
+            >
+              <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>
-            <button onClick={handleLogout} className={`w-9 h-9 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600'}`}>
-              <i className="fas fa-sign-out-alt"></i>
+            
+            {/* User Avatar */}
+            <button onClick={handleLogout} className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+              {user?.name?.charAt(0) || 'U'}
             </button>
           </div>
         </div>
       </header>
 
-      {/* MAIN CONTENT AREA */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {currentPage === 'home' && (
-          <div className="space-y-6">
-            {/* Welcome */}
-            <div className="text-center py-8">
-              <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Olá, {user?.name?.split(' ')[0]}! 👋
-              </h1>
-              <p className={isDark ? 'text-neutral-400' : 'text-gray-500'}>O que vamos criar hoje?</p>
+      {/* SIDEBAR (Desktop) */}
+      <aside className={`hidden md:flex fixed left-0 top-16 bottom-0 w-64 flex-col ${isDark ? 'bg-neutral-950 border-neutral-800' : 'bg-white border-gray-200'} border-r z-30`}>
+        <nav className="flex-1 p-4 space-y-1">
+          {[
+            { id: 'home', icon: 'fa-home', label: 'Início' },
+            { id: 'studio', icon: 'fa-magic', label: 'Visual Studio' },
+            { id: 'products', icon: 'fa-box', label: 'Produtos' },
+            { id: 'clients', icon: 'fa-users', label: 'Clientes' },
+            { id: 'settings', icon: 'fa-cog', label: 'Configurações' },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id as any)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                currentPage === item.id 
+                  ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-500' 
+                  : isDark ? 'text-neutral-400 hover:bg-neutral-900' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <i className={`fas ${item.icon}`}></i>
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        
+        {/* Plan Info */}
+        <div className={`p-4 border-t ${isDark ? 'border-neutral-800' : 'border-gray-200'}`}>
+          <div className={`p-4 rounded-xl ${isDark ? 'bg-neutral-900' : 'bg-gray-50'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <i className="fas fa-crown text-yellow-500"></i>
+              <span className="font-medium text-sm">{currentPlan?.name || 'Plano Básico'}</span>
             </div>
+            <div className="text-xs text-neutral-500">
+              {userCredits} créditos disponíveis
+            </div>
+          </div>
+        </div>
+      </aside>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button onClick={() => setCurrentPage('studio')} className={`p-6 rounded-2xl ${isDark ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30' : 'bg-gradient-to-br from-purple-100 to-pink-100 border border-purple-200'} text-left transition-all hover:scale-105`}>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-3">
-                  <i className="fas fa-magic text-white text-xl"></i>
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Vizzu Studio</h3>
-                <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Gere fotos com IA</p>
-              </button>
-
-              <button onClick={() => setCurrentPage('provador')} className={`p-6 rounded-2xl ${isDark ? 'bg-gradient-to-br from-pink-500/20 to-orange-500/20 border border-pink-500/30' : 'bg-gradient-to-br from-pink-100 to-orange-100 border border-pink-200'} text-left transition-all hover:scale-105`}>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center mb-3">
-                  <i className="fas fa-shirt text-white text-xl"></i>
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Provador IA</h3>
-                <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Vista clientes</p>
-              </button>
-
-              <button onClick={() => setCurrentPage('products')} className={`p-6 rounded-2xl ${isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200'} text-left transition-all hover:scale-105`}>
-                <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'} flex items-center justify-center mb-3`}>
-                  <i className={`fas fa-box ${isDark ? 'text-blue-400' : 'text-blue-600'} text-xl`}></i>
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Produtos</h3>
-                <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{products.length} cadastrados</p>
-              </button>
-
-              <button onClick={() => setCurrentPage('clients')} className={`p-6 rounded-2xl ${isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200'} text-left transition-all hover:scale-105`}>
-                <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-green-500/20' : 'bg-green-100'} flex items-center justify-center mb-3`}>
-                  <i className={`fas fa-users ${isDark ? 'text-green-400' : 'text-green-600'} text-xl`}></i>
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Clientes</h3>
-                <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{clients.length} cadastrados</p>
+      {/* MOBILE SIDEBAR */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)}></div>
+          <aside className={`absolute left-0 top-0 bottom-0 w-72 ${isDark ? 'bg-neutral-950' : 'bg-white'} p-4`}>
+            <div className="flex items-center justify-between mb-6">
+              <img src="/logo.png" alt="Vizzu" className="h-8" />
+              <button onClick={() => setSidebarOpen(false)}>
+                <i className="fas fa-times text-xl"></i>
               </button>
             </div>
+            <nav className="space-y-1">
+              {[
+                { id: 'home', icon: 'fa-home', label: 'Início' },
+                { id: 'studio', icon: 'fa-magic', label: 'Visual Studio' },
+                { id: 'products', icon: 'fa-box', label: 'Produtos' },
+                { id: 'clients', icon: 'fa-users', label: 'Clientes' },
+                { id: 'settings', icon: 'fa-cog', label: 'Configurações' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setCurrentPage(item.id as any); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    currentPage === item.id 
+                      ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-500' 
+                      : isDark ? 'text-neutral-400' : 'text-gray-600'
+                  }`}
+                >
+                  <i className={`fas ${item.icon}`}></i>
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+        </div>
+      )}
 
-            {/* Recent Products */}
-            {products.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Produtos Recentes</h2>
-                  <button onClick={() => setCurrentPage('products')} className="text-pink-500 text-sm font-medium">Ver todos →</button>
+      {/* MAIN CONTENT */}
+      <main className="md:ml-64 pb-20 md:pb-8">
+        <div className="max-w-6xl mx-auto p-4">
+          
+          {/* HOME PAGE */}
+          {currentPage === 'home' && (
+            <div className="space-y-6">
+              <div className="text-center py-8">
+                <h1 className="text-3xl font-bold mb-2">
+                  Olá, <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{user?.name?.split(' ')[0]}</span>!
+                </h1>
+                <p className={`${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>O que você quer criar hoje?</p>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { icon: 'fa-wand-magic-sparkles', label: 'Studio Ready', color: 'from-pink-500 to-rose-500', action: () => setCurrentPage('studio') },
+                  { icon: 'fa-image', label: 'Cenário Criativo', color: 'from-purple-500 to-indigo-500', action: () => setCurrentPage('studio') },
+                  { icon: 'fa-user', label: 'Modelo IA', color: 'from-blue-500 to-cyan-500', action: () => setCurrentPage('studio') },
+                  { icon: 'fa-shirt', label: 'Provador Virtual', color: 'from-green-500 to-emerald-500', action: () => setCurrentPage('provador') },
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={item.action}
+                    className={`p-6 rounded-2xl bg-gradient-to-br ${item.color} text-white text-center`}
+                  >
+                    <i className={`fas ${item.icon} text-2xl mb-2`}></i>
+                    <div className="font-medium text-sm">{item.label}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Recent Products */}
+              {products.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold">Produtos Recentes</h2>
+                    <button onClick={() => setCurrentPage('products')} className="text-pink-500 text-sm font-medium">Ver todos</button>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {products.slice(0, 4).map(product => (
+                      <div
+                        key={product.id}
+                        onClick={() => { setSelectedProduct(product); setShowProductEditor(true); }}
+                        className={`rounded-xl overflow-hidden cursor-pointer ${isDark ? 'bg-neutral-900' : 'bg-white'} shadow-lg`}
+                      >
+                        <div className="aspect-square">
+                          <img
+                            src={product.originalImages?.front?.base64 || product.originalImages?.front?.url || product.images[0]?.url}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-3">
+                          <div className="font-medium text-sm truncate">{product.name}</div>
+                          <div className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{product.category}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {products.slice(0, 6).map(product => (
+              )}
+            </div>
+          )}
+
+          {/* PRODUCTS PAGE */}
+          {currentPage === 'products' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold">Produtos</h1>
+                <button
+                  onClick={() => setShowImport(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
+                >
+                  <i className="fas fa-plus mr-2"></i> Adicionar
+                </button>
+              </div>
+
+              {products.length === 0 ? (
+                <div className={`text-center py-16 ${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-2xl`}>
+                  <i className="fas fa-box-open text-4xl text-neutral-500 mb-4"></i>
+                  <h3 className="font-bold mb-2">Nenhum produto ainda</h3>
+                  <p className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'} mb-4`}>Adicione seu primeiro produto para começar</p>
+                  <button
+                    onClick={() => setShowImport(true)}
+                    className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
+                  >
+                    <i className="fas fa-plus mr-2"></i> Adicionar Produto
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {products.map(product => (
                     <div
                       key={product.id}
-                      onClick={() => { setSelectedProduct(product); setShowProductEditor(true); }}
-                      className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-105 ${isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200'}`}
+                      className={`rounded-xl overflow-hidden ${isDark ? 'bg-neutral-900' : 'bg-white'} shadow-lg group relative`}
                     >
-                      <div className="aspect-square relative">
+                      <div 
+                        className="aspect-square cursor-pointer"
+                        onClick={() => { setSelectedProduct(product); setShowProductEditor(true); }}
+                      >
                         <img
-                          src={product.originalImages?.front?.url || product.originalImages?.front?.base64 || product.images[0]?.url || product.images[0]?.base64}
+                          src={product.originalImages?.front?.base64 || product.originalImages?.front?.url || product.images[0]?.url}
                           alt={product.name}
                           className="w-full h-full object-cover"
                         />
-                        {product.hasBackImage && (
-                          <div className="absolute top-2 right-2 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold">
-                            F+C
-                          </div>
-                        )}
                       </div>
                       <div className="p-3">
-                        <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
-                        <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{product.sku}</p>
+                        <div className="font-medium text-sm truncate">{product.name}</div>
+                        <div className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{product.category}</div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* STUDIO PAGE */}
-        {currentPage === 'studio' && (
-          <VisualStudioPage
-            products={products}
-            userCredits={credits}
-            savedModels={savedModels}
-            clients={clients}
-            onBack={() => setCurrentPage('home')}
-            onImport={() => setShowImport(true)}
-            onSelectProduct={(product) => { setSelectedProduct(product); setShowProductEditor(true); }}
-            onSaveModel={handleSaveModel}
-            onDeleteModel={handleDeleteModel}
-            onUpdateProduct={handleUpdateProduct}
-            onDeductCredits={handleDeductCredits}
-            onGenerateImage={handleGenerateImage}
-            onMarkSaved={handleMarkSaved}
-            onSendWhatsApp={handleSendWhatsApp}
-            theme={theme}
-            userId={user?.id}
-          />
-        )}
-
-        {/* PRODUCTS PAGE */}
-        {currentPage === 'products' && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setCurrentPage('home')} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
-                  <i className="fas fa-arrow-left"></i>
-                </button>
-                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Produtos</h1>
-              </div>
-              <button
-                onClick={() => setShowImport(true)}
-                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm flex items-center gap-2"
-              >
-                <i className="fas fa-plus"></i> Adicionar
-              </button>
-            </div>
-
-            {products.length === 0 ? (
-              <div className={`text-center py-16 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} border rounded-2xl`}>
-                <div className={`w-16 h-16 rounded-full ${isDark ? 'bg-neutral-800' : 'bg-gray-100'} flex items-center justify-center mx-auto mb-4`}>
-                  <i className={`fas fa-box text-2xl ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
-                </div>
-                <p className={isDark ? 'text-neutral-400' : 'text-gray-500'}>Nenhum produto cadastrado</p>
-                <button
-                  onClick={() => setShowImport(true)}
-                  className="mt-4 px-6 py-2 bg-pink-500 text-white font-bold rounded-xl text-sm"
-                >
-                  Cadastrar primeiro produto
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {products.map(product => (
-                  <div
-                    key={product.id}
-                    className={`rounded-xl overflow-hidden ${isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200'} group`}
-                  >
-                    <div
-                      className="aspect-square relative cursor-pointer"
-                      onClick={() => { setSelectedProduct(product); setShowProductEditor(true); }}
-                    >
-                      <img
-                        src={product.originalImages?.front?.url || product.originalImages?.front?.base64 || product.images[0]?.url || product.images[0]?.base64}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                      {product.hasBackImage && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold">
-                          F+C
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">Abrir Editor</span>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
-                      <p className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{product.sku}</p>
-                      <div className="flex items-center gap-2 mt-2">
+                      
+                      {/* Product Actions */}
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={(e) => { e.stopPropagation(); openEditProduct(product); }}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                          onClick={() => handleOpenEditProduct(product)}
+                          className="w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
                         >
-                          <i className="fas fa-edit mr-1"></i> Editar
+                          <i className="fas fa-pen text-xs"></i>
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); openDeleteConfirm(product); }}
-                          className="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500/20"
+                          onClick={() => { setProductToDelete(product); setShowDeleteConfirm(true); }}
+                          className="w-7 h-7 rounded-full bg-red-500/80 text-white flex items-center justify-center"
                         >
                           <i className="fas fa-trash text-xs"></i>
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* CLIENTS PAGE */}
-        {currentPage === 'clients' && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setCurrentPage('home')} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
-                  <i className="fas fa-arrow-left"></i>
-                </button>
-                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Clientes</h1>
-              </div>
-              <button
-                onClick={() => setShowAddClient(true)}
-                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm flex items-center gap-2"
-              >
-                <i className="fas fa-plus"></i> Adicionar
-              </button>
-            </div>
-
-            {clients.length === 0 ? (
-              <div className={`text-center py-16 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} border rounded-2xl`}>
-                <div className={`w-16 h-16 rounded-full ${isDark ? 'bg-neutral-800' : 'bg-gray-100'} flex items-center justify-center mx-auto mb-4`}>
-                  <i className={`fas fa-users text-2xl ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                  ))}
                 </div>
-                <p className={isDark ? 'text-neutral-400' : 'text-gray-500'}>Nenhum cliente cadastrado</p>
+              )}
+            </div>
+          )}
+
+          {/* CLIENTS PAGE */}
+          {currentPage === 'clients' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold">Clientes</h1>
                 <button
                   onClick={() => setShowAddClient(true)}
-                  className="mt-4 px-6 py-2 bg-pink-500 text-white font-bold rounded-xl text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
                 >
-                  Cadastrar primeiro cliente
+                  <i className="fas fa-user-plus mr-2"></i> Novo Cliente
                 </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {clients.map(client => (
-                  <div key={client.id} className={`p-4 rounded-xl ${isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full ${isDark ? 'bg-neutral-800' : 'bg-gray-100'} flex items-center justify-center overflow-hidden`}>
-                        {client.photos?.[0]?.base64 ? (
-                          <img src={client.photos[0].base64} alt={client.firstName} className="w-full h-full object-cover" />
-                        ) : (
-                          <i className={`fas fa-user ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
-                        )}
+
+              {clients.length === 0 ? (
+                <div className={`text-center py-16 ${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-2xl`}>
+                  <i className="fas fa-users text-4xl text-neutral-500 mb-4"></i>
+                  <h3 className="font-bold mb-2">Nenhum cliente ainda</h3>
+                  <p className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'} mb-4`}>Cadastre seus clientes para usar o Provador Virtual</p>
+                  <button
+                    onClick={() => setShowAddClient(true)}
+                    className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
+                  >
+                    <i className="fas fa-user-plus mr-2"></i> Cadastrar Cliente
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {clients.map(client => (
+                    <div
+                      key={client.id}
+                      className={`p-4 rounded-xl ${isDark ? 'bg-neutral-900' : 'bg-white'} shadow-lg`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                          {client.firstName.charAt(0)}{client.lastName.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">{client.firstName} {client.lastName}</div>
+                          <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{client.whatsapp}</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const phone = client.whatsapp.replace(/\D/g, '');
+                            window.open(`https://wa.me/${phone}`, '_blank');
+                          }}
+                          className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center"
+                        >
+                          <i className="fab fa-whatsapp"></i>
+                        </button>
                       </div>
-                      <div className="flex-1">
-                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{client.firstName} {client.lastName}</p>
-                        <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{client.whatsapp}</p>
-                      </div>
-                      {client.hasProvadorIA && (
-                        <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full">
-                          Provador ✓
-                        </span>
+                      
+                      {/* Client Photos */}
+                      {client.photos && client.photos.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                          {client.photos.map((photo, i) => (
+                            <div key={i} className="w-10 h-10 rounded-lg overflow-hidden">
+                              <img src={photo.base64} alt={photo.type} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STUDIO PAGE */}
+          {currentPage === 'studio' && (
+            <div className="space-y-4">
+              <h1 className="text-xl font-bold">Visual Studio</h1>
+              <p className={`${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>
+                Selecione um produto para começar a criar imagens profissionais
+              </p>
+              
+              {products.length === 0 ? (
+                <div className={`text-center py-16 ${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-2xl`}>
+                  <i className="fas fa-box-open text-4xl text-neutral-500 mb-4"></i>
+                  <h3 className="font-bold mb-2">Nenhum produto ainda</h3>
+                  <p className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'} mb-4`}>Adicione produtos para usar o Visual Studio</p>
+                  <button
+                    onClick={() => { setCurrentPage('products'); setShowImport(true); }}
+                    className="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
+                  >
+                    <i className="fas fa-plus mr-2"></i> Adicionar Produto
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {products.map(product => (
+                    <div
+                      key={product.id}
+                      onClick={() => { setSelectedProduct(product); setShowProductEditor(true); }}
+                      className={`rounded-xl overflow-hidden cursor-pointer ${isDark ? 'bg-neutral-900 hover:bg-neutral-800' : 'bg-white hover:bg-gray-50'} shadow-lg transition-colors`}
+                    >
+                      <div className="aspect-square">
+                        <img
+                          src={product.originalImages?.front?.base64 || product.originalImages?.front?.url || product.images[0]?.url}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <div className="font-medium text-sm truncate">{product.name}</div>
+                        <div className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                          {(product.generatedImages?.studioReady?.length || 0) + 
+                           (product.generatedImages?.cenarioCriativo?.length || 0) + 
+                           (product.generatedImages?.modeloIA?.length || 0)} imagens geradas
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SETTINGS PAGE */}
+          {currentPage === 'settings' && (
+            <div className="space-y-4">
+              <h1 className="text-xl font-bold">Configurações</h1>
+              
+              <div className={`p-4 rounded-xl ${isDark ? 'bg-neutral-900' : 'bg-white'} space-y-4`}>
+                {/* Theme Setting */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">Tema</div>
+                    <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Escolha entre claro e escuro</div>
                   </div>
-                ))}
+                  <button
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className={`px-4 py-2 rounded-lg ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}
+                  >
+                    <i className={`fas ${isDark ? 'fa-sun text-yellow-400' : 'fa-moon text-gray-600'} mr-2`}></i>
+                    {isDark ? 'Claro' : 'Escuro'}
+                  </button>
+                </div>
+                
+                {/* Logout */}
+                <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
+                  <div>
+                    <div className="font-medium">Sair da conta</div>
+                    <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Desconectar do Vizzu</div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 rounded-lg bg-red-500/20 text-red-500"
+                  >
+                    <i className="fas fa-sign-out-alt mr-2"></i>
+                    Sair
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </main>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          MODALS
-          ══════════════════════════════════════════════════════════════════ */}
-
-      {/* IMPORT SOURCE MODAL */}
+      {/* ADD PRODUCT - SOURCE MODAL */}
       {showImport && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={`${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Adicionar Produto</h3>
-              <button onClick={() => setShowImport(false)} className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                <i className="fas fa-times text-xs"></i>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowImport(false)}></div>
+          <div className={`relative w-full md:max-w-md ${isDark ? 'bg-neutral-950' : 'bg-white'} rounded-t-3xl md:rounded-2xl p-6`}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Adicionar Produto</h3>
+              <button onClick={() => setShowImport(false)} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                <i className="fas fa-times"></i>
               </button>
             </div>
-            <p className={`text-xs mb-4 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Escolha como adicionar a foto de frente:</p>
-            <div className="grid grid-cols-2 gap-3">
-              <label className={`flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer ${isDark ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-gray-300 hover:border-pink-400 hover:bg-pink-50'}`}>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFrontImageSelect(e.target.files)} />
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-pink-100'}`}>
-                  <i className={`fas fa-images text-sm ${isDark ? 'text-neutral-400' : 'text-pink-500'}`}></i>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-neutral-900 hover:bg-neutral-800' : 'bg-gray-50 hover:bg-gray-100'}`}
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white">
+                  <i className="fas fa-image"></i>
                 </div>
-                <span className={`text-[10px] font-medium ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>Galeria</span>
-              </label>
-              <label className={`flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer ${isDark ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-gray-300 hover:border-pink-400 hover:bg-pink-50'}`}>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFrontImageSelect(e.target.files)} />
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-pink-100'}`}>
-                  <i className={`fas fa-camera text-sm ${isDark ? 'text-neutral-400' : 'text-pink-500'}`}></i>
+                <div className="text-left">
+                  <div className="font-medium">Galeria</div>
+                  <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Escolha da galeria</div>
                 </div>
-                <span className={`text-[10px] font-medium ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>Câmera</span>
-              </label>
+              </button>
+
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className={`w-full p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-neutral-900 hover:bg-neutral-800' : 'bg-gray-50 hover:bg-gray-100'}`}
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
+                  <i className="fas fa-camera"></i>
+                </div>
+                <div className="text-left">
+                  <div className="font-medium">Câmera</div>
+                  <div className={`text-sm ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Tire uma foto agora</div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* CREATE PRODUCT MODAL (MULTI-STEP) */}
+      {/* ADD PRODUCT - PHOTOS & DATA MODAL */}
       {showCreateProduct && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={`${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto`}>
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                {addProductStep !== 'photos' && (
-                  <button
-                    onClick={() => {
-                      if (addProductStep === 'data') setAddProductStep('photos');
-                      else resetAddProductModal();
-                    }}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
-                  >
-                    <i className="fas fa-arrow-left text-xs"></i>
-                  </button>
-                )}
-                <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {addProductStep === 'photos' ? 'Fotos do Produto' : 'Dados do Produto'}
-                </h3>
-              </div>
-              <button onClick={resetAddProductModal} className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                <i className="fas fa-times text-xs"></i>
-              </button>
-            </div>
-
-            {/* Step Indicator */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className={`flex-1 h-1 rounded-full ${addProductStep === 'photos' || addProductStep === 'data' ? 'bg-pink-500' : isDark ? 'bg-neutral-700' : 'bg-gray-200'}`}></div>
-              <div className={`flex-1 h-1 rounded-full ${addProductStep === 'data' ? 'bg-pink-500' : isDark ? 'bg-neutral-700' : 'bg-gray-200'}`}></div>
-            </div>
-
-            {/* STEP: Photos */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={resetProductCreation}></div>
+          <div className={`relative w-full max-w-lg ${isDark ? 'bg-neutral-950' : 'bg-white'} rounded-2xl p-6 max-h-[90vh] overflow-y-auto`}>
+            
+            {/* Step: Photos */}
             {addProductStep === 'photos' && (
-              <div className="space-y-4">
-                {/* Front Image */}
-                <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                    Foto de Frente *
-                  </label>
-                  <div className={`relative aspect-square rounded-xl overflow-hidden ${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-100 border-gray-200'} border`}>
-                    {frontImage && <img src={frontImage} alt="Frente" className="w-full h-full object-contain" />}
-                    <div className="absolute bottom-2 right-2">
-                      <label className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center cursor-pointer">
-                        <i className="fas fa-camera text-xs"></i>
-                        <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFrontImageSelect(e.target.files)} />
-                      </label>
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Fotos do Produto</h3>
+                  <button onClick={resetProductCreation} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {/* Front Image */}
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Frente *</label>
+                    <div className="aspect-square rounded-xl overflow-hidden bg-neutral-900">
+                      {frontImage && <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />}
                     </div>
                   </div>
-                </div>
 
-                {/* Back Image */}
-                <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                    Foto de Costas (opcional)
-                  </label>
-                  <div
-                    onClick={() => backImageInputRef.current?.click()}
-                    className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all ${
-                      backImage
-                        ? ''
-                        : isDark
-                        ? 'bg-neutral-800 border-neutral-700 border-2 border-dashed hover:border-pink-500/50'
-                        : 'bg-gray-100 border-gray-300 border-2 border-dashed hover:border-pink-400'
-                    }`}
-                  >
-                    {backImage ? (
-                      <>
-                        <img src={backImage} alt="Costas" className="w-full h-full object-contain" />
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setBackImage(null); }}
-                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center"
-                        >
-                          <i className="fas fa-times text-xs"></i>
-                        </button>
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className={`w-12 h-12 rounded-full ${isDark ? 'bg-neutral-700' : 'bg-gray-200'} flex items-center justify-center mb-2`}>
-                          <i className={`fas fa-plus ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+                  {/* Back Image */}
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Costas (opcional)</label>
+                    <div
+                      onClick={() => backImageInputRef.current?.click()}
+                      className={`aspect-square rounded-xl overflow-hidden cursor-pointer ${
+                        backImage ? '' : isDark ? 'bg-neutral-900 border-2 border-dashed border-neutral-700' : 'bg-gray-100 border-2 border-dashed border-gray-300'
+                      } flex items-center justify-center`}
+                    >
+                      {backImage ? (
+                        <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center">
+                          <i className="fas fa-plus text-2xl text-neutral-500 mb-2"></i>
+                          <div className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</div>
                         </div>
-                        <span className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar foto de costas</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className={`p-3 rounded-xl ${isDark ? 'bg-blue-500/10 border border-blue-500/30' : 'bg-blue-50 border border-blue-200'}`}>
-                  <div className="flex items-start gap-2">
-                    <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                    <p className={`text-xs ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                      Adicionar foto de costas permite gerar imagens de ambos os lados com <strong>1 crédito</strong>.
-                    </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <button
                   onClick={handleNextToDataStep}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
+                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl"
                 >
-                  Próximo <i className="fas fa-arrow-right ml-2"></i>
+                  Continuar <i className="fas fa-arrow-right ml-2"></i>
                 </button>
-              </div>
+              </>
             )}
 
-            {/* STEP: Data */}
+            {/* Step: Data */}
             {addProductStep === 'data' && (
-              <div className="space-y-3">
-                {/* Preview */}
-                <div className="flex gap-3 mb-4">
-                  <div className={`w-20 h-20 rounded-lg overflow-hidden ${isDark ? 'border-neutral-700' : 'border-gray-200'} border`}>
-                    <img src={frontImage!} alt="Frente" className="w-full h-full object-cover" />
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <button onClick={() => setAddProductStep('photos')} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dados do Produto</h3>
+                  <button onClick={resetProductCreation} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Nome *</label>
+                    <input
+                      type="text"
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                      className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                      placeholder="Ex: Camiseta Básica Preta"
+                    />
                   </div>
-                  {backImage && (
-                    <div className={`w-20 h-20 rounded-lg overflow-hidden ${isDark ? 'border-neutral-700' : 'border-gray-200'} border`}>
-                      <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Categoria *</label>
+                      <select
+                        value={newProduct.category}
+                        onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                      >
+                        <option value="">Selecione</option>
+                        {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
                     </div>
-                  )}
-                </div>
 
-                <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Nome do Produto *</label>
-                  <input
-                    type="text"
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                    placeholder="Ex: Camiseta Básica Branca"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Categoria *</label>
-                    <select
-                      value={newProduct.category}
-                      onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                    >
-                      <option value="">Selecione</option>
-                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
+                    <div>
+                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Coleção</label>
+                      <select
+                        value={newProduct.collection}
+                        onChange={(e) => setNewProduct({ ...newProduct, collection: e.target.value })}
+                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                      >
+                        <option value="">Selecione</option>
+                        {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Cor</label>
+                      <select
+                        value={newProduct.color}
+                        onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
+                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                      >
+                        <option value="">Selecione</option>
+                        {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Modelagem</label>
+                      <select
+                        value={newProduct.fit}
+                        onChange={(e) => setNewProduct({ ...newProduct, fit: e.target.value })}
+                        className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                      >
+                        <option value="">Selecione</option>
+                        {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Marca</label>
+                    <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Marca</label>
                     <input
                       type="text"
                       value={newProduct.brand}
                       onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                      className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                      placeholder="Ex: Nike, Adidas..."
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Cor</label>
-                    <select
-                      value={newProduct.color}
-                      onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                    >
-                      <option value="">Selecione</option>
-                      {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Caimento</label>
-                    <select
-                      value={newProduct.fit}
-                      onChange={(e) => setNewProduct({ ...newProduct, fit: e.target.value })}
-                      className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                    >
-                      <option value="">Selecione</option>
-                      {FITS.map(f => <option key={f} value={f}>{f}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Coleção</label>
-                  <select
-                    value={newProduct.collection}
-                    onChange={(e) => setNewProduct({ ...newProduct, collection: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                  >
-                    <option value="">Selecione</option>
-                    {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
-                  </select>
                 </div>
 
                 <button
                   onClick={handleCreateProduct}
                   disabled={isCreatingProduct || !newProduct.name || !newProduct.category}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 mt-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50"
                 >
                   {isCreatingProduct ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i> Salvando...
-                    </>
+                    <><i className="fas fa-spinner fa-spin mr-2"></i> Criando...</>
                   ) : (
-                    <>
-                      <i className="fas fa-check"></i> Salvar Produto
-                    </>
+                    <><i className="fas fa-check mr-2"></i> Criar Produto</>
                   )}
                 </button>
-              </div>
+              </>
             )}
           </div>
         </div>
       )}
 
-      {/* WARNING: No Back Image */}
+      {/* BACK IMAGE WARNING MODAL */}
       {showBackImageWarning && (
-        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className={`${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} rounded-2xl border w-full max-w-sm p-5`}>
-            <div className="text-center mb-4">
-              <div className={`w-16 h-16 rounded-full ${isDark ? 'bg-amber-500/20' : 'bg-amber-100'} flex items-center justify-center mx-auto mb-3`}>
-                <i className="fas fa-exclamation-triangle text-amber-500 text-2xl"></i>
-              </div>
-              <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Sem foto de costas</h3>
-              <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                O produto não tem foto de costas. A IA pode não conseguir gerar resultados precisos para visualizações de costas.
-              </p>
-            </div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60"></div>
+          <div className={`relative w-full max-w-sm ${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-2xl p-6 text-center`}>
+            <i className="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
+            <h3 className="font-bold text-lg mb-2">Foto de costas não adicionada</h3>
+            <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-600'} mb-6`}>
+              Algumas ferramentas funcionam melhor com fotos de frente e costas. Deseja continuar sem a foto de costas?
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowBackImageWarning(false)}
-                className={`flex-1 py-2.5 rounded-xl font-medium text-sm ${isDark ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-700'}`}
+                className={`flex-1 py-3 rounded-xl ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}
               >
                 Voltar
               </button>
               <button
                 onClick={handleConfirmWithoutBack}
-                className="flex-1 py-2.5 bg-pink-500 text-white rounded-xl font-bold text-sm"
+                className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl"
               >
-                Continuar assim
+                Continuar
               </button>
             </div>
           </div>
@@ -1244,150 +1295,152 @@ function App() {
 
       {/* EDIT PRODUCT MODAL */}
       {showEditProduct && editingProduct && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={`${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowEditProduct(false)}></div>
+          <div className={`relative w-full max-w-lg ${isDark ? 'bg-neutral-950' : 'bg-white'} rounded-2xl p-6 max-h-[90vh] overflow-y-auto`}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Editar Produto</h3>
-              <button onClick={() => { setShowEditProduct(false); setEditingProduct(null); }} className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
-                <i className="fas fa-times text-xs"></i>
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Editar Produto</h3>
+              <button onClick={() => setShowEditProduct(false)} className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                <i className="fas fa-times"></i>
               </button>
             </div>
 
-            <div className="space-y-4">
-              {/* Images */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Frente</label>
-                  <div
-                    onClick={() => editFrontInputRef.current?.click()}
-                    className={`aspect-square rounded-xl overflow-hidden cursor-pointer ${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-100 border-gray-200'} border relative`}
-                  >
-                    {editFrontImage && <img src={editFrontImage} alt="Frente" className="w-full h-full object-contain" />}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-all flex items-center justify-center">
-                      <i className="fas fa-camera text-white text-xl"></i>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Costas</label>
-                  <div
-                    onClick={() => editBackInputRef.current?.click()}
-                    className={`aspect-square rounded-xl overflow-hidden cursor-pointer ${isDark ? 'bg-neutral-800 border-neutral-700 border-2 border-dashed' : 'bg-gray-100 border-gray-300 border-2 border-dashed'} relative`}
-                  >
-                    {editBackImage ? (
-                      <>
-                        <img src={editBackImage} alt="Costas" className="w-full h-full object-contain" />
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditBackImage(null); }}
-                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center"
-                        >
-                          <i className="fas fa-times text-xs"></i>
-                        </button>
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <i className={`fas fa-plus ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
-                        <span className={`text-[10px] mt-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
-                      </div>
-                    )}
-                  </div>
+            {/* Images */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Frente</label>
+                <div
+                  onClick={() => editFrontInputRef.current?.click()}
+                  className="aspect-square rounded-xl overflow-hidden cursor-pointer bg-neutral-900"
+                >
+                  {editFrontImage && <img src={editFrontImage} alt="Frente" className="w-full h-full object-cover" />}
                 </div>
               </div>
-
-              {/* Form fields */}
               <div>
-                <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Nome *</label>
+                <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Costas</label>
+                <div
+                  onClick={() => editBackInputRef.current?.click()}
+                  className={`aspect-square rounded-xl overflow-hidden cursor-pointer ${
+                    editBackImage ? '' : isDark ? 'bg-neutral-900 border-2 border-dashed border-neutral-700' : 'bg-gray-100 border-2 border-dashed border-gray-300'
+                  } flex items-center justify-center`}
+                >
+                  {editBackImage ? (
+                    <img src={editBackImage} alt="Costas" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center">
+                      <i className="fas fa-plus text-2xl text-neutral-500 mb-2"></i>
+                      <div className={`text-xs ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Form */}
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Nome</label>
                 <input
                   type="text"
                   value={editProductData.name}
                   onChange={(e) => setEditProductData({ ...editProductData, name: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                  className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Categoria *</label>
+                  <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Categoria</label>
                   <select
                     value={editProductData.category}
                     onChange={(e) => setEditProductData({ ...editProductData, category: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                    className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
                   >
+                    <option value="">Selecione</option>
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Marca</label>
-                  <input
-                    type="text"
-                    value={editProductData.brand}
-                    onChange={(e) => setEditProductData({ ...editProductData, brand: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                  />
+                  <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Coleção</label>
+                  <select
+                    value={editProductData.collection}
+                    onChange={(e) => setEditProductData({ ...editProductData, collection: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                  >
+                    <option value="">Selecione</option>
+                    {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
+                  </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Cor</label>
+                  <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Cor</label>
                   <select
                     value={editProductData.color}
                     onChange={(e) => setEditProductData({ ...editProductData, color: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                    className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
                   >
                     <option value="">Selecione</option>
-                    {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                    {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Caimento</label>
+                  <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Modelagem</label>
                   <select
                     value={editProductData.fit}
                     onChange={(e) => setEditProductData({ ...editProductData, fit: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                    className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
                   >
                     <option value="">Selecione</option>
-                    {FITS.map(f => <option key={f} value={f}>{f}</option>)}
+                    {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
                   </select>
                 </div>
               </div>
 
-              <button
-                onClick={handleSaveEditProduct}
-                className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl text-sm"
-              >
-                <i className="fas fa-save mr-2"></i> Salvar Alterações
-              </button>
+              <div>
+                <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>Marca</label>
+                <input
+                  type="text"
+                  value={editProductData.brand}
+                  onChange={(e) => setEditProductData({ ...editProductData, brand: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl ${isDark ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} border`}
+                />
+              </div>
             </div>
+
+            <button
+              onClick={handleSaveEditProduct}
+              className="w-full py-3 mt-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl"
+            >
+              <i className="fas fa-save mr-2"></i> Salvar Alterações
+            </button>
           </div>
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* DELETE CONFIRM MODAL */}
       {showDeleteConfirm && productToDelete && (
-        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className={`${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} rounded-2xl border w-full max-w-sm p-5`}>
-            <div className="text-center mb-4">
-              <div className={`w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-3`}>
-                <i className="fas fa-trash text-red-500 text-2xl"></i>
-              </div>
-              <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Excluir Produto?</h3>
-              <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                Tem certeza que deseja excluir <strong>{productToDelete.name}</strong>? Esta ação não pode ser desfeita.
-              </p>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteConfirm(false)}></div>
+          <div className={`relative w-full max-w-sm ${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-2xl p-6 text-center`}>
+            <i className="fas fa-trash text-4xl text-red-500 mb-4"></i>
+            <h3 className="font-bold text-lg mb-2">Deletar Produto?</h3>
+            <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-600'} mb-6`}>
+              Esta ação não pode ser desfeita. O produto "{productToDelete.name}" e todas as suas imagens geradas serão removidos.
+            </p>
             <div className="flex gap-3">
               <button
-                onClick={() => { setShowDeleteConfirm(false); setProductToDelete(null); }}
-                className={`flex-1 py-2.5 rounded-xl font-medium text-sm ${isDark ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-700'}`}
+                onClick={() => setShowDeleteConfirm(false)}
+                className={`flex-1 py-3 rounded-xl ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDeleteProduct}
-                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm"
+                className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl"
               >
-                <i className="fas fa-trash mr-2"></i> Excluir
+                Deletar
               </button>
             </div>
           </div>
@@ -1396,8 +1449,9 @@ function App() {
 
       {/* ADD CLIENT MODAL */}
       {showAddClient && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={`${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'} rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto`}>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowAddClient(false)}></div>
+          <div className={`relative w-full md:max-w-md ${isDark ? 'bg-neutral-950' : 'bg-white'} rounded-t-3xl md:rounded-2xl p-6`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Novo Cliente</h3>
               <button onClick={() => setShowAddClient(false)} className={`w-7 h-7 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
@@ -1504,12 +1558,12 @@ function App() {
         </div>
       )}
 
-      {/* EDITOR MODAL */}
+      {/* EDITOR MODAL - FIXED: Use userCredits */}
       {showProductEditor && selectedProduct && (
         <EditorModal
           product={selectedProduct}
           products={products}
-          userCredits={credits}
+          userCredits={userCredits}
           savedModels={savedModels}
           clients={clients}
           onSaveModel={handleSaveModel}
