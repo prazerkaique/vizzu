@@ -12,7 +12,6 @@ const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestido
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
-const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | null>(null);
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
   { id: 'frente', label: 'Frente', icon: 'fa-user' },
@@ -42,6 +41,7 @@ const [selectedFrontImage, setSelectedFrontImage] = useState<string | null>(null
 const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
 const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
