@@ -6,6 +6,7 @@ import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTem
 import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario } from './lib/api/studio';
+import heic2any from 'heic2any';
 
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
