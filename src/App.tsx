@@ -295,7 +295,6 @@ const loadUserProducts = async (userId: string) => {
       throw error;
     }
   };
-};
 
   const handleFileSelect = (files: FileList, target: 'front' | 'back' = 'front') => {
     if (files.length > 0) {
