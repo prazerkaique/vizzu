@@ -471,7 +471,30 @@ const handleAddHistoryLog = (action: string, details: string, status: 'success' 
       }
     });
   };
-  
+  // Função para processar imagem (converte HEIC se necessário)
+  const processImageFile = async (file: File): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let processedFile: File | Blob = file;
+        
+        if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/png',
+            quality: 0.9
+          });
+          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(processedFile);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
     // TODO: implementar histórico
     console.log('History log:', { action, details, status, items, method, cost });
   };
