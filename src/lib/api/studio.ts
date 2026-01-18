@@ -50,7 +50,7 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Funções para futuras ferramentas
+// CENÁRIO CRIATIVO
 // ═══════════════════════════════════════════════════════════════
 
 interface CenarioParams {
@@ -63,10 +63,9 @@ interface CenarioParams {
 /**
  * Cenário Criativo - Gera imagem com ambiente personalizado
  * Custo: 2 créditos
- * TODO: Implementar workflow no n8n
  */
 export async function generateCenario(params: CenarioParams): Promise<StudioReadyResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/cenario`, {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/cenario-criativo`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -75,7 +74,7 @@ export async function generateCenario(params: CenarioParams): Promise<StudioRead
       product_id: params.productId,
       user_id: params.userId,
       image_id: params.imageId,
-      prompt: params.prompt,
+      scene_prompt: params.prompt,
     }),
   });
 
@@ -87,6 +86,10 @@ export async function generateCenario(params: CenarioParams): Promise<StudioRead
 
   return data;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MODELO IA
+// ═══════════════════════════════════════════════════════════════
 
 interface ModeloIAParams {
   productId: string;
@@ -104,7 +107,6 @@ interface ModeloIAParams {
 /**
  * Modelo IA - Gera modelo humano usando o produto
  * Custo: 3 créditos
- * TODO: Implementar workflow no n8n
  */
 export async function generateModeloIA(params: ModeloIAParams): Promise<StudioReadyResponse> {
   const response = await fetch(`${N8N_BASE_URL}/vizzu/modelo-ia`, {
@@ -135,6 +137,10 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   return data;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// REFINAR IMAGEM
+// ═══════════════════════════════════════════════════════════════
+
 interface RefineParams {
   productId: string;
   userId: string;
@@ -146,7 +152,6 @@ interface RefineParams {
 /**
  * Refinar - Ajusta uma imagem gerada anteriormente
  * Custo: 1 crédito
- * TODO: Implementar workflow no n8n
  */
 export async function refineImage(params: RefineParams): Promise<StudioReadyResponse> {
   const response = await fetch(`${N8N_BASE_URL}/vizzu/refine`, {
