@@ -442,7 +442,37 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setProvadorLookFilter('');
     setProvadorLookSearch('');
   };
+const handleAddHistoryLog = (log: HistoryLog) => {
+    // TODO: implementar histórico
+    console.log('History log:', log);
+  };
 
+  const handleProvadorGenerate = async () => {
+    if (!provadorClient || Object.keys(provadorLook).length === 0) return;
+    if (userCredits < 3) {
+      alert('Créditos insuficientes');
+      return;
+    }
+    setIsGeneratingProvador(true);
+    try {
+      // TODO: integrar com backend
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setProvadorGeneratedImage(getClientPhoto(provadorClient, provadorPhotoType) || '');
+      deductCredits(3, 'Vizzu Provador');
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao gerar imagem');
+    } finally {
+      setIsGeneratingProvador(false);
+    }
+  };
+
+  const handleClientPhotoUpload = (type: ClientPhoto['type'], base64: string) => {
+    setNewClient(prev => ({
+      ...prev,
+      photos: [...prev.photos.filter(p => p.type !== type), { type, base64 }]
+    }));
+  };
   // ═══════════════════════════════════════════════════════════════
   // AUTH CHECK - Show AuthPage if not authenticated
   // ═══════════════════════════════════════════════════════════════
