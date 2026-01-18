@@ -314,8 +314,65 @@ const loadUserProducts = async (userId: string) => {
     }
   };
 
+};
+
+  const handleCreateProduct = async () => {
+    if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
+      alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
+      return;
+    }
+
+    setIsCreatingProduct(true);
+
+    try {
+      const response = await fetch('https://n8neditor.brainia.store/webhook/vizzu/produto-importar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id,
+          sku: 'SKU-' + Date.now().toString().slice(-6),
+          name: newProduct.name,
+          brand: newProduct.brand || null,
+          color: newProduct.color || null,
+          fit: newProduct.fit || null,
+          category: newProduct.category,
+          collection: newProduct.collection || null,
+          image_front_base64: selectedFrontImage,
+          image_back_base64: selectedBackImage || null
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        if (user?.id) {
+          await loadUserProducts(user.id);
+        }
+        setShowCreateProduct(false);
+        setSelectedFrontImage(null);
+        setSelectedBackImage(null);
+        setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+      } else {
+        alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao criar produto. Verifique sua conexão.');
+    } finally {
+      setIsCreatingProduct(false);
+    }
+  };
+
+  const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
+```
+
+---
+
+**Resumindo:** você vai procurar por:
+```
+  };
   const handleRemoveClientPhoto
-  const handleRemoveClientPhoto = (type: ClientPhoto['type']) => { 
+  const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) })); 
   };
 
