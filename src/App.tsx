@@ -9,7 +9,7 @@ import {
   LookComposition, WhatsAppTemplate, VisualStudioGeneration, CreditHistoryItem
 } from './types';
 import { AuthPage } from './components/AuthPage';
-import { EditorModal } from './components/Studio';
+import { EditorModal } from './components/Studio/EditorModal';
 import { AddProductModal } from './components/Studio/AddProductModal';
 import { useCredits } from './hooks/useCredits';
 import { generateStudioReady, generateCenario, generateModeloIA } from './lib/api/studio';
@@ -101,7 +101,7 @@ function App() {
   // ══════════════════════════════════════════════════════════════════
   // CREDITS HOOK
   // ══════════════════════════════════════════════════════════════════
-  const { userCredits, deductCredits, currentPlan, setCredits } = useCredits(user?.id || '');
+  const { userCredits, deductCredits, currentPlan, setCredits } = useCredits();
   
   // ══════════════════════════════════════════════════════════════════
   // REFS
@@ -379,7 +379,7 @@ function App() {
         const newPhoto: ClientPhoto = {
           type: uploadingPhotoType,
           base64: reader.result as string,
-          uploadedAt: new Date().toISOString()
+          createdAt: new Date().toISOString()
         };
         setNewClient(prev => ({
           ...prev,
@@ -438,67 +438,70 @@ function App() {
     options?: any
   ): Promise<{ image: string | null; generationId: string | null; backImage?: string | null }> => {
     try {
-      const frontImageBase64 = product.originalImages?.front?.base64 || product.originalImages?.front?.url || product.images[0]?.base64 || product.images[0]?.url;
-      const backImageBase64 = product.originalImages?.back?.base64 || product.originalImages?.back?.url;
+      const frontImageUrl = product.originalImages?.front?.url || product.images[0]?.url;
+      const backImageUrl = product.originalImages?.back?.url;
+      
+      // Use product.id as imageId for API calls
+      const imageId = product.id;
       
       let result: { image: string | null; generationId: string | null; backImage?: string | null } = { image: null, generationId: null };
 
       if (type === 'studio') {
         const frontResult = await generateStudioReady({
-          imageBase64: frontImageBase64!,
+          imageId: imageId,
           userId: user?.id || '',
           productId: product.id
         });
-        result.image = frontResult.imageUrl || null;
+        result.image = frontResult.generation?.image_url || null;
         result.generationId = frontResult.generation?.id || null;
         
-        if (backImageBase64) {
+        if (backImageUrl) {
           const backResult = await generateStudioReady({
-            imageBase64: backImageBase64,
+            imageId: imageId + '_back',
             userId: user?.id || '',
-            productId: product.id,
-            isBackImage: true
+            productId: product.id
           });
-          result.backImage = backResult.imageUrl || null;
+          result.backImage = backResult.generation?.image_url || null;
         }
       } else if (type === 'cenario') {
         const frontResult = await generateCenario({
-          imageBase64: frontImageBase64!,
+          imageId: imageId,
           prompt: prompt || '',
           userId: user?.id || '',
           productId: product.id
         });
-        result.image = frontResult.imageUrl || null;
+        result.image = frontResult.generation?.image_url || null;
         result.generationId = frontResult.generation?.id || null;
         
-        if (backImageBase64) {
+        if (backImageUrl) {
           const backResult = await generateCenario({
-            imageBase64: backImageBase64,
+            imageId: imageId + '_back',
             prompt: prompt || '',
             userId: user?.id || '',
-            productId: product.id,
-            isBackImage: true
+            productId: product.id
           });
-          result.backImage = backResult.imageUrl || null;
+          result.backImage = backResult.generation?.image_url || null;
         }
       } else if (type === 'lifestyle') {
         const frontResult = await generateModeloIA({
-          imageBase64: frontImageBase64!,
+          imageId: imageId,
           userId: user?.id || '',
           productId: product.id,
-          options
+          modelPrompt: options?.modelPrompt || '',
+          productCategory: product.category || ''
         });
-        result.image = frontResult.imageUrl || null;
+        result.image = frontResult.generation?.image_url || null;
         result.generationId = frontResult.generation?.id || null;
         
-        if (backImageBase64) {
+        if (backImageUrl) {
           const backResult = await generateModeloIA({
-            imageBase64: backImageBase64,
+            imageId: imageId + '_back',
             userId: user?.id || '',
             productId: product.id,
-            options: { ...options, isBackImage: true }
+            modelPrompt: options?.modelPrompt || '',
+            productCategory: product.category || ''
           });
-          result.backImage = backResult.imageUrl || null;
+          result.backImage = backResult.generation?.image_url || null;
         }
       }
 
@@ -511,7 +514,7 @@ function App() {
           productName: product.name,
           type,
           prompt,
-          originalImage: frontImageBase64!,
+          originalImage: frontImageUrl!,
           generatedImage: result.image,
           generatedImages: result.backImage ? { front: result.image, back: result.backImage } : undefined,
           credits: options?.lookMode === 'composer' ? 2 : 1,
@@ -613,7 +616,19 @@ function App() {
   // RENDER: AUTH CHECK
   // ══════════════════════════════════════════════════════════════════
   if (!isAuthenticated) {
-    return <AuthPage onLogin={handleLogin} />;
+    const handleDemoMode = () => {
+      // Demo mode - criar usuário temporário
+      const demoUser: User = {
+        id: 'demo-' + Date.now(),
+        name: 'Usuário Demo',
+        email: 'demo@vizzu.app',
+        avatar: '',
+        plan: 'free'
+      };
+      handleLogin(demoUser);
+    };
+    
+    return <AuthPage onLogin={handleLogin} onDemoMode={handleDemoMode} />;
   }
 
   const isDark = theme === 'dark';
