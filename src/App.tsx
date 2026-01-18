@@ -13,6 +13,7 @@ import { EditorModal } from './components/Studio/EditorModal';
 import { AddProductModal } from './components/Studio/AddProductModal';
 import { useCredits } from './hooks/useCredits';
 import { generateStudioReady, generateCenario, generateModeloIA } from './lib/api/studio';
+import { supabase } from './services/supabaseClient';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -110,16 +111,89 @@ function App() {
   const editBackInputRef = useRef<HTMLInputElement>(null);
 
   // ══════════════════════════════════════════════════════════════════
-  // AUTH CHECK
+  // AUTH CHECK - Verifica sessão do Supabase
   // ══════════════════════════════════════════════════════════════════
   useEffect(() => {
-    const savedUser = localStorage.getItem('vizzu_user');
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      setIsAuthenticated(true);
-      loadUserData(userData.id);
-    }
+    let mounted = true;
+
+    // Verificar sessão existente
+    const checkSession = async () => {
+      try {
+        console.log('🔍 Verificando sessão...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Erro ao verificar sessão:', error);
+          return;
+        }
+        
+        console.log('📦 Sessão:', session ? 'Encontrada' : 'Não encontrada');
+        
+        if (session?.user && mounted) {
+          console.log('✅ Usuário encontrado:', session.user.email);
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuário',
+            avatar: session.user.user_metadata?.avatar_url || '',
+            plan: 'free'
+          };
+          setUser(userData);
+          setIsAuthenticated(true);
+          localStorage.setItem('vizzu_user', JSON.stringify(userData));
+          loadUserData(userData.id);
+        } else if (mounted) {
+          // Verificar localStorage como fallback
+          const savedUser = localStorage.getItem('vizzu_user');
+          if (savedUser) {
+            console.log('📂 Usando dados do localStorage');
+            const userData = JSON.parse(savedUser);
+            setUser(userData);
+            setIsAuthenticated(true);
+            loadUserData(userData.id);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Erro no checkSession:', err);
+      }
+    };
+
+    checkSession();
+
+    // Escutar mudanças de autenticação (OAuth redirect, login, logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔔 Auth event:', event, session?.user?.email);
+      
+      if (!mounted) return;
+      
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && session?.user) {
+        console.log('✅ Login detectado:', session.user.email);
+        const userData: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Usuário',
+          avatar: session.user.user_metadata?.avatar_url || '',
+          plan: 'free'
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem('vizzu_user', JSON.stringify(userData));
+        loadUserData(userData.id);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('👋 Logout detectado');
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem('vizzu_user');
+        setProducts([]);
+        setClients([]);
+        setSavedModels([]);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadUserData = async (userId: string) => {
@@ -158,14 +232,22 @@ function App() {
   // ══════════════════════════════════════════════════════════════════
   // AUTH HANDLERS
   // ══════════════════════════════════════════════════════════════════
-  const handleLogin = (userData: User) => {
-    setUser(userData);
+  const handleLogin = (userData: { email: string; name: string; avatar?: string }) => {
+    const fullUserData: User = {
+      id: userData.email, // Usar email como ID temporário se não tiver id real
+      email: userData.email,
+      name: userData.name,
+      avatar: userData.avatar || '',
+      plan: 'free'
+    };
+    setUser(fullUserData);
     setIsAuthenticated(true);
-    localStorage.setItem('vizzu_user', JSON.stringify(userData));
-    loadUserData(userData.id);
+    localStorage.setItem('vizzu_user', JSON.stringify(fullUserData));
+    loadUserData(fullUserData.id);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('vizzu_user');
