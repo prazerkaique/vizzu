@@ -24,11 +24,15 @@ interface Props {
 }
 
 type ToolType = 'studio' | 'cenario' | 'lifestyle' | null;
+type LifestyleStep = 'item' | 'model' | 'look' | 'orientation' | 'export';
+type LookMode = 'describe' | 'composer';
+type OrientationType = 'vertical' | 'horizontal';
+type ExportType = 'social' | 'ecommerce';
 
 const TOOL_CFG = {
   studio: { name: 'Studio Ready', icon: 'fa-store', credits: 1, desc: 'Fundo branco', fullDesc: 'Fundo branco profissional com sombra suave. Ideal para e-commerce.' },
   cenario: { name: 'Cenário Criativo', icon: 'fa-film', credits: 2, desc: 'Ambiente personalizado', fullDesc: 'Crie um ambiente promocional personalizado para seu produto.' },
-  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 3, desc: 'Humano com produto', fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!' }
+  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 1, desc: 'Humano com produto', fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!' }
 };
 
 const MODEL_OPTS = {
@@ -44,6 +48,79 @@ const CATEGORIES = [
   { id: 'shoes', label: 'Calçado (Tênis, Sapato, Sandália)' },
   { id: 'fullbody', label: 'Corpo Inteiro (Vestido, Macacão)' },
   { id: 'accessory', label: 'Acessório (Bolsa, Chapéu, Joia)' }
+];
+
+// Opções de descrição de look (quando não usa Look Composer)
+const LOOK_DESCRIBE_OPTIONS = {
+  top: [
+    { id: 'tshirt_white', label: 'Camiseta branca básica' },
+    { id: 'tshirt_black', label: 'Camiseta preta básica' },
+    { id: 'shirt_social', label: 'Camisa social' },
+    { id: 'blouse_casual', label: 'Blusa casual' },
+    { id: 'sweater', label: 'Suéter/Moletom' },
+    { id: 'jacket', label: 'Jaqueta/Casaco' },
+    { id: 'none', label: 'Sem peça superior adicional' },
+  ],
+  bottom: [
+    { id: 'jeans_blue', label: 'Jeans azul' },
+    { id: 'jeans_black', label: 'Jeans preto' },
+    { id: 'chino_beige', label: 'Calça chino bege' },
+    { id: 'shorts', label: 'Shorts/Bermuda' },
+    { id: 'skirt', label: 'Saia' },
+    { id: 'dress_pants', label: 'Calça social' },
+    { id: 'none', label: 'Sem peça inferior adicional' },
+  ],
+  shoes: [
+    { id: 'sneakers_white', label: 'Tênis branco' },
+    { id: 'sneakers_black', label: 'Tênis preto' },
+    { id: 'boots', label: 'Botas' },
+    { id: 'sandals', label: 'Sandálias' },
+    { id: 'heels', label: 'Salto alto' },
+    { id: 'loafers', label: 'Mocassim/Sapatênis' },
+    { id: 'none', label: 'Sem calçado visível' },
+  ],
+  accessories: [
+    { id: 'watch', label: 'Relógio' },
+    { id: 'sunglasses', label: 'Óculos de sol' },
+    { id: 'bag', label: 'Bolsa/Mochila' },
+    { id: 'hat', label: 'Chapéu/Boné' },
+    { id: 'jewelry', label: 'Joias/Bijuterias' },
+    { id: 'none', label: 'Sem acessórios' },
+  ]
+};
+
+const ORIENTATION_OPTIONS = [
+  { 
+    id: 'vertical' as OrientationType, 
+    label: 'Vertical (9:16)', 
+    dimensions: '1080 x 1920',
+    icon: 'fa-mobile-screen',
+    usedFor: 'Stories, Reels, TikTok, Status WhatsApp'
+  },
+  { 
+    id: 'horizontal' as OrientationType, 
+    label: 'Horizontal (16:9)', 
+    dimensions: '1920 x 1080',
+    icon: 'fa-desktop',
+    usedFor: 'Banners e-commerce, YouTube, Carrossel desktop'
+  },
+];
+
+const EXPORT_OPTIONS = [
+  { 
+    id: 'social' as ExportType, 
+    label: 'Redes Sociais', 
+    format: 'PNG',
+    icon: 'fa-share-nodes',
+    desc: 'Melhor compatibilidade com redes sociais'
+  },
+  { 
+    id: 'ecommerce' as ExportType, 
+    label: 'E-commerce', 
+    format: 'SVG',
+    icon: 'fa-store',
+    desc: 'Mais leve e com qualidade vetorial'
+  },
 ];
 
 export const EditorModal: React.FC<Props> = ({
@@ -63,16 +140,37 @@ export const EditorModal: React.FC<Props> = ({
   const [selIdx, setSelIdx] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [cenPrompt, setCenPrompt] = useState('');
+  
+  // Lifestyle Step System
+  const [lifestyleStep, setLifestyleStep] = useState<LifestyleStep>('item');
   const [modelTab, setModelTab] = useState<'new'|'saved'>('new');
   const [selModelId, setSelModelId] = useState<string|null>(null);
+  
+  // Step 1: Item Principal
   const [category, setCategory] = useState('top');
   const [prodDesc, setProdDesc] = useState('');
+  
+  // Step 2: Modelo
   const [modelSettings, setModelSettings] = useState({ gender: 'woman' as 'woman'|'man', ethnicity: 'caucasian', bodyType: 'average', ageRange: 'adult' });
   const [modelDetail, setModelDetail] = useState('');
-  const [clothing, setClothing] = useState('');
   const [pose, setPose] = useState('');
-  const [showLook, setShowLook] = useState(false);
+  
+  // Step 3: Look
+  const [lookMode, setLookMode] = useState<LookMode>('describe');
   const [look, setLook] = useState<LookComposition>({});
+  const [describedLook, setDescribedLook] = useState({
+    top: 'none',
+    bottom: 'jeans_blue',
+    shoes: 'sneakers_white',
+    accessories: 'none'
+  });
+  
+  // Step 4: Orientação
+  const [orientation, setOrientation] = useState<OrientationType>('vertical');
+  
+  // Step 5: Export
+  const [exportType, setExportType] = useState<ExportType>('social');
+  
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newModelName, setNewModelName] = useState('');
   const [showRefine, setShowRefine] = useState(false);
@@ -86,38 +184,118 @@ export const EditorModal: React.FC<Props> = ({
   const hasOrig = !!current?.base64 || !!current?.url;
   const selModel = savedModels.find(m => m.id === selModelId);
   const isDark = theme === 'dark';
+  
+  // Calcula créditos dinamicamente baseado no Look Mode
+  const lifestyleCredits = lookMode === 'composer' ? 2 : 1;
 
   const buildModelPrompt = () => {
     const g = modelSettings.gender === 'woman' ? 'Female' : 'Male';
     const e = MODEL_OPTS.ethnicity.find(x => x.id === modelSettings.ethnicity)?.label || '';
     const b = MODEL_OPTS.bodyType.find(x => x.id === modelSettings.bodyType)?.label || '';
     const a = MODEL_OPTS.ageRange.find(x => x.id === modelSettings.ageRange)?.label || '';
-    return `${g} model, ${e}, ${b}, ${a}.${modelDetail ? ' ' + modelDetail : ''}`;
+    return `${g} model, ${e}, ${b}, ${a}.${modelDetail ? ' ' + modelDetail : ''}${pose ? ' Pose: ' + pose : ''}`;
   };
 
   const buildLookItems = () => Object.entries(look).map(([slot, item]) => item ? { slot, image: item.image, name: item.name } : null).filter(Boolean) as any[];
+  
+  const buildDescribedLookPrompt = () => {
+    const parts: string[] = [];
+    
+    if (describedLook.top !== 'none') {
+      const topItem = LOOK_DESCRIBE_OPTIONS.top.find(x => x.id === describedLook.top);
+      if (topItem) parts.push(topItem.label);
+    }
+    if (describedLook.bottom !== 'none') {
+      const bottomItem = LOOK_DESCRIBE_OPTIONS.bottom.find(x => x.id === describedLook.bottom);
+      if (bottomItem) parts.push(bottomItem.label);
+    }
+    if (describedLook.shoes !== 'none') {
+      const shoesItem = LOOK_DESCRIBE_OPTIONS.shoes.find(x => x.id === describedLook.shoes);
+      if (shoesItem) parts.push(shoesItem.label);
+    }
+    if (describedLook.accessories !== 'none') {
+      const accItem = LOOK_DESCRIBE_OPTIONS.accessories.find(x => x.id === describedLook.accessories);
+      if (accItem) parts.push(accItem.label);
+    }
+    
+    return parts.length > 0 ? `Wearing: ${parts.join(', ')}` : '';
+  };
+
+  const getOrientationDimensions = () => {
+    const opt = ORIENTATION_OPTIONS.find(o => o.id === orientation);
+    return opt ? { width: orientation === 'vertical' ? 1080 : 1920, height: orientation === 'vertical' ? 1920 : 1080, aspectRatio: orientation === 'vertical' ? '9:16' : '16:9' } : { width: 1080, height: 1920, aspectRatio: '9:16' };
+  };
+
+  // Step validation
+  const isStepComplete = (step: LifestyleStep): boolean => {
+    switch (step) {
+      case 'item': return !!category && !!prodDesc.trim();
+      case 'model': return modelTab === 'saved' ? !!selModelId : true;
+      case 'look': return true; // Always valid
+      case 'orientation': return true;
+      case 'export': return true;
+      default: return false;
+    }
+  };
+
+  const handleStepToggle = (step: LifestyleStep) => {
+    setLifestyleStep(lifestyleStep === step ? step : step);
+  };
 
   const handleGen = async () => {
     if (!tool || !hasOrig) return;
-    const cost = TOOL_CFG[tool].credits;
+    
+    // Calcula custo baseado na ferramenta
+    let cost = TOOL_CFG[tool].credits;
+    if (tool === 'lifestyle') {
+      cost = lifestyleCredits;
+    }
+    
     if (userCredits < cost) { setError('Créditos insuficientes'); return; }
     if (tool === 'cenario' && !cenPrompt.trim()) { setError('Descreva o cenário'); return; }
     if (tool === 'lifestyle' && modelTab === 'saved' && !selModelId) { setError('Selecione um modelo'); return; }
-    // NÃO deduzir créditos aqui - o backend faz isso
+    if (tool === 'lifestyle' && !prodDesc.trim()) { setError('Descreva o produto principal'); return; }
+    
     setIsGen(true); setError(null);
     try {
       let result;
       const catLabel = CATEGORIES.find(c => c.id === category)?.label || 'garment';
+      const orientationData = getOrientationDimensions();
+      
       if (tool === 'studio') {
-        // Passa a imagem selecionada para o backend
         result = await onGenerateImage(product, 'studio', undefined, { selectedImage: current });
       }
-      else if (tool === 'cenario') result = await onGenerateImage(product, 'cenario', cenPrompt, { selectedImage: current });
+      else if (tool === 'cenario') {
+        result = await onGenerateImage(product, 'cenario', cenPrompt, { selectedImage: current });
+      }
       else if (tool === 'lifestyle') {
-        const lookItems = buildLookItems();
+        const lookItems = lookMode === 'composer' ? buildLookItems() : [];
+        const clothingPrompt = lookMode === 'describe' ? buildDescribedLookPrompt() : undefined;
+        
         const opts = modelTab === 'saved' && selModel
-          ? { selectedImage: current, referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined }
-          : { selectedImage: current, modelPrompt: buildModelPrompt(), clothingPrompt: clothing || undefined, posePrompt: pose || undefined, lookItems: lookItems.length ? lookItems : undefined, productCategory: catLabel, productDescription: prodDesc || undefined };
+          ? { 
+              selectedImage: current, 
+              referenceImage: selModel.referenceImage, 
+              modelPrompt: selModel.modelPrompt, 
+              clothingPrompt: clothingPrompt,
+              posePrompt: pose || undefined, 
+              lookItems: lookItems.length ? lookItems : undefined, 
+              productCategory: catLabel, 
+              productDescription: prodDesc || undefined,
+              orientation: orientationData,
+              exportFormat: exportType === 'social' ? 'png' : 'svg'
+            }
+          : { 
+              selectedImage: current, 
+              modelPrompt: buildModelPrompt(), 
+              clothingPrompt: clothingPrompt,
+              posePrompt: pose || undefined, 
+              lookItems: lookItems.length ? lookItems : undefined, 
+              productCategory: catLabel, 
+              productDescription: prodDesc || undefined,
+              orientation: orientationData,
+              exportFormat: exportType === 'social' ? 'png' : 'svg'
+            };
         result = await onGenerateImage(product, 'lifestyle', undefined, opts);
       }
       if (result?.image) { setGenImg(result.image); setGenId(result.generationId); setViewMode('result'); }
@@ -174,9 +352,407 @@ export const EditorModal: React.FC<Props> = ({
   const handleSelectTool = (t: ToolType) => {
     if (genImg && tool !== t && !confirm('Descartar imagem gerada?')) return;
     setGenImg(null); setGenId(null); setShowRefine(false); setError(null); setTool(t === tool ? null : t); setViewMode('original');
+    // Reset lifestyle step quando muda de ferramenta
+    if (t === 'lifestyle') {
+      setLifestyleStep('item');
+    }
   };
 
   const displayImage = viewMode === 'result' && genImg ? genImg : (current?.base64 || current?.url);
+
+  // ═══════════════════════════════════════════════════════════════
+  // LIFESTYLE STEP COMPONENT
+  // ═══════════════════════════════════════════════════════════════
+  const LifestyleStepAccordion = ({ step, title, icon, isActive, isComplete, children }: { step: LifestyleStep; title: string; icon: string; isActive: boolean; isComplete: boolean; children: React.ReactNode }) => (
+    <div className={`rounded-xl border-2 overflow-hidden transition-all ${isActive ? 'border-pink-500 shadow-lg shadow-pink-500/10' : isComplete ? (isDark ? 'border-green-500/30 bg-green-500/5' : 'border-green-300 bg-green-50') : (isDark ? 'border-neutral-700' : 'border-gray-200')}`}>
+      <button 
+        onClick={() => handleStepToggle(step)} 
+        className={`w-full p-3 flex items-center justify-between transition-colors ${isActive ? (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : ''}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isComplete && !isActive ? 'bg-green-500 text-white' : isActive ? 'bg-pink-500 text-white' : (isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-100 text-gray-500')}`}>
+            {isComplete && !isActive ? <i className="fas fa-check text-sm"></i> : <i className={`fas ${icon} text-sm`}></i>}
+          </div>
+          <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</span>
+        </div>
+        <i className={`fas fa-chevron-down transition-transform ${isDark ? 'text-neutral-500' : 'text-gray-400'} ${isActive ? 'rotate-180' : ''}`}></i>
+      </button>
+      {isActive && (
+        <div className={`p-3 pt-0 border-t ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // LIFESTYLE PANEL CONTENT
+  // ═══════════════════════════════════════════════════════════════
+  const LifestylePanel = () => (
+    <div className="space-y-3">
+      <p className={`text-xs mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.lifestyle.fullDesc}</p>
+      
+      {/* Tabs Novo/Salvo */}
+      <div className={`flex rounded-lg p-1 mb-3 ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
+        <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${modelTab === 'new' ? isDark ? 'bg-neutral-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Novo Modelo</button>
+        <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${modelTab === 'saved' ? isDark ? 'bg-neutral-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Salvos ({savedModels.length})</button>
+      </div>
+      
+      {/* Saved Models Quick Select */}
+      {modelTab === 'saved' && (
+        <div className="space-y-2 mb-3 max-h-24 overflow-y-auto">
+          {savedModels.length === 0 ? (
+            <div className={`text-center py-3 text-xs rounded-lg border border-dashed ${isDark ? 'text-neutral-500 bg-neutral-800/50 border-neutral-700' : 'text-gray-400 bg-gray-50 border-gray-300'}`}>
+              <i className="fas fa-user-slash text-base mb-1"></i>
+              <p>Nenhum modelo salvo</p>
+            </div>
+          ) : savedModels.map(m => (
+            <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-2 rounded-lg border-2 cursor-pointer flex items-center gap-2 transition-all ${selModelId === m.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
+              <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}>
+                <img src={m.referenceImage} className="w-full h-full object-cover object-top" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-xs truncate">{m.name}</p>
+              </div>
+              <button onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} className={`hover:text-red-400 ${selModelId === m.id ? 'text-white/70' : isDark ? 'text-neutral-500' : 'text-gray-400'}`}><i className="fas fa-trash text-[10px]"></i></button>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Steps Accordion */}
+      <div className="space-y-2">
+        
+        {/* STEP 1: Item Principal */}
+        <LifestyleStepAccordion 
+          step="item" 
+          title="1. Item Principal" 
+          icon="fa-tshirt" 
+          isActive={lifestyleStep === 'item'} 
+          isComplete={isStepComplete('item')}
+        >
+          <div className="space-y-3 pt-3">
+            <div>
+              <label className={`text-[9px] font-bold uppercase mb-1.5 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                <i className={`fas fa-tag ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Categoria do Produto
+              </label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className={`w-full p-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            
+            <div className={`p-2.5 rounded-lg border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+              <label className="text-[9px] font-bold text-amber-500 uppercase mb-1 flex items-center gap-1">
+                <i className="fas fa-exclamation-triangle"></i>Descreva o produto principal *
+              </label>
+              <textarea 
+                value={prodDesc} 
+                onChange={(e) => setProdDesc(e.target.value)} 
+                placeholder="Ex: Camiseta preta com logo Nike branco no peito, tecido dry-fit..." 
+                className={`w-full p-2 border rounded text-[11px] resize-none ${isDark ? 'bg-neutral-800 border-amber-500/30 text-white placeholder-neutral-500' : 'bg-white border-amber-300 text-gray-900 placeholder-gray-400'}`} 
+                rows={2} 
+              />
+              <p className="text-[9px] text-amber-500/80 mt-1"><i className="fas fa-info-circle mr-1"></i>Quanto mais detalhes, mais fiel o resultado.</p>
+            </div>
+            
+            <button 
+              onClick={() => setLifestyleStep('model')} 
+              disabled={!isStepComplete('item')}
+              className="w-full py-2 bg-pink-500 text-white font-bold rounded-lg text-xs disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              Próximo <i className="fas fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </LifestyleStepAccordion>
+        
+        {/* STEP 2: Modelo */}
+        <LifestyleStepAccordion 
+          step="model" 
+          title="2. Modelo" 
+          icon="fa-user" 
+          isActive={lifestyleStep === 'model'} 
+          isComplete={isStepComplete('model')}
+        >
+          <div className="space-y-3 pt-3">
+            {modelTab === 'new' && (
+              <>
+                {/* Gênero */}
+                <div>
+                  <label className={`text-[9px] font-bold uppercase mb-1.5 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Gênero</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {MODEL_OPTS.gender.map(g => (
+                      <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-2 rounded-lg text-xs font-bold border-2 transition-all flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-neutral-400' : 'bg-white border-gray-200 text-gray-500'}`}>
+                        <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>{g.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Etnia e Porte */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Etnia</label>
+                    <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                      {MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Porte</label>
+                    <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                      {MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Idade */}
+                <div>
+                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Idade</label>
+                  <select value={modelSettings.ageRange} onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                    {MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
+                  </select>
+                </div>
+                
+                {/* Detalhes Faciais */}
+                <div>
+                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Detalhes Faciais (opcional)</label>
+                  <textarea value={modelDetail} onChange={(e) => setModelDetail(e.target.value)} placeholder="Ex: Cabelos longos ondulados, olhos verdes, sorriso suave..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
+                </div>
+                
+                {/* Pose */}
+                <div>
+                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Pose / Expressão (opcional)</label>
+                  <textarea value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Ex: Em pé confiante, mãos no bolso, olhando para câmera..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
+                </div>
+              </>
+            )}
+            
+            <button 
+              onClick={() => setLifestyleStep('look')} 
+              className="w-full py-2 bg-pink-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-2"
+            >
+              Próximo <i className="fas fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </LifestyleStepAccordion>
+        
+        {/* STEP 3: Look */}
+        <LifestyleStepAccordion 
+          step="look" 
+          title="3. Look" 
+          icon="fa-layer-group" 
+          isActive={lifestyleStep === 'look'} 
+          isComplete={isStepComplete('look')}
+        >
+          <div className="space-y-3 pt-3">
+            {/* Mode Selection */}
+            <div className={`flex rounded-lg p-1 ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
+              <button 
+                onClick={() => setLookMode('describe')} 
+                className={`flex-1 py-2 text-xs font-bold rounded-md transition-all flex items-center justify-center gap-1.5 ${lookMode === 'describe' ? 'bg-pink-500 text-white shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}
+              >
+                <i className="fas fa-pen text-[10px]"></i>Descrever
+              </button>
+              <button 
+                onClick={() => setLookMode('composer')} 
+                className={`flex-1 py-2 text-xs font-bold rounded-md transition-all flex items-center justify-center gap-1.5 ${lookMode === 'composer' ? 'bg-pink-500 text-white shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}
+              >
+                <i className="fas fa-th-large text-[10px]"></i>Look Composer
+              </button>
+            </div>
+            
+            {/* Cost indicator */}
+            <div className={`flex items-center justify-center gap-2 py-1.5 rounded-lg ${lookMode === 'composer' ? 'bg-amber-500/10 border border-amber-500/30' : (isDark ? 'bg-neutral-800' : 'bg-gray-100')}`}>
+              <i className={`fas fa-bolt text-xs ${lookMode === 'composer' ? 'text-amber-500' : 'text-pink-500'}`}></i>
+              <span className={`text-xs font-bold ${lookMode === 'composer' ? 'text-amber-500' : (isDark ? 'text-white' : 'text-gray-900')}`}>
+                {lookMode === 'composer' ? '2 créditos' : '1 crédito'}
+              </span>
+              {lookMode === 'composer' && (
+                <span className="text-[9px] text-amber-500/70">(usa seus produtos)</span>
+              )}
+            </div>
+            
+            {/* Describe Mode */}
+            {lookMode === 'describe' && (
+              <div className="space-y-2">
+                <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                  <i className="fas fa-info-circle mr-1"></i>Selecione peças genéricas para compor o look
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Parte de Cima</label>
+                    <select value={describedLook.top} onChange={(e) => setDescribedLook(p => ({...p, top: e.target.value}))} className={`w-full p-1.5 border rounded text-[10px] ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                      {LOOK_DESCRIBE_OPTIONS.top.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Parte de Baixo</label>
+                    <select value={describedLook.bottom} onChange={(e) => setDescribedLook(p => ({...p, bottom: e.target.value}))} className={`w-full p-1.5 border rounded text-[10px] ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                      {LOOK_DESCRIBE_OPTIONS.bottom.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Calçado</label>
+                    <select value={describedLook.shoes} onChange={(e) => setDescribedLook(p => ({...p, shoes: e.target.value}))} className={`w-full p-1.5 border rounded text-[10px] ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                      {LOOK_DESCRIBE_OPTIONS.shoes.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Acessórios</label>
+                    <select value={describedLook.accessories} onChange={(e) => setDescribedLook(p => ({...p, accessories: e.target.value}))} className={`w-full p-1.5 border rounded text-[10px] ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                      {LOOK_DESCRIBE_OPTIONS.accessories.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Composer Mode */}
+            {lookMode === 'composer' && (
+              <div>
+                <p className={`text-[10px] mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                  <i className="fas fa-store mr-1"></i>Selecione produtos da sua loja para compor o look
+                </p>
+                <LookComposer products={products} composition={look} onChange={setLook} theme={theme} />
+              </div>
+            )}
+            
+            <button 
+              onClick={() => setLifestyleStep('orientation')} 
+              className="w-full py-2 bg-pink-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-2"
+            >
+              Próximo <i className="fas fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </LifestyleStepAccordion>
+        
+        {/* STEP 4: Orientação */}
+        <LifestyleStepAccordion 
+          step="orientation" 
+          title="4. Orientação" 
+          icon="fa-crop" 
+          isActive={lifestyleStep === 'orientation'} 
+          isComplete={isStepComplete('orientation')}
+        >
+          <div className="space-y-3 pt-3">
+            <div className="space-y-2">
+              {ORIENTATION_OPTIONS.map(opt => (
+                <button 
+                  key={opt.id}
+                  onClick={() => setOrientation(opt.id)}
+                  className={`w-full p-3 rounded-xl border-2 text-left transition-all ${orientation === opt.id ? 'border-pink-500 bg-pink-500/10' : (isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300')}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${orientation === opt.id ? 'bg-pink-500 text-white' : (isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-100 text-gray-500')}`}>
+                      <i className={`fas ${opt.icon}`}></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{opt.label}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded ${isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>{opt.dimensions}</span>
+                      </div>
+                      <p className={`text-[10px] mt-0.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                        <i className="fas fa-lightbulb text-amber-500 mr-1"></i>
+                        Mais usado para: {opt.usedFor}
+                      </p>
+                    </div>
+                    {orientation === opt.id && (
+                      <div className="w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-check text-white text-[10px]"></i>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            <button 
+              onClick={() => setLifestyleStep('export')} 
+              className="w-full py-2 bg-pink-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-2"
+            >
+              Próximo <i className="fas fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </LifestyleStepAccordion>
+        
+        {/* STEP 5: Export */}
+        <LifestyleStepAccordion 
+          step="export" 
+          title="5. Formato de Export" 
+          icon="fa-download" 
+          isActive={lifestyleStep === 'export'} 
+          isComplete={isStepComplete('export')}
+        >
+          <div className="space-y-3 pt-3">
+            <div className="space-y-2">
+              {EXPORT_OPTIONS.map(opt => (
+                <button 
+                  key={opt.id}
+                  onClick={() => setExportType(opt.id)}
+                  className={`w-full p-3 rounded-xl border-2 text-left transition-all ${exportType === opt.id ? 'border-pink-500 bg-pink-500/10' : (isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300')}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${exportType === opt.id ? 'bg-pink-500 text-white' : (isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-100 text-gray-500')}`}>
+                      <i className={`fas ${opt.icon}`}></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{opt.label}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${opt.format === 'PNG' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>{opt.format}</span>
+                      </div>
+                      <p className={`text-[10px] mt-0.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{opt.desc}</p>
+                    </div>
+                    {exportType === opt.id && (
+                      <div className="w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-check text-white text-[10px]"></i>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            {/* Summary & Generate */}
+            <div className={`p-3 rounded-xl border ${isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200'}`}>
+              <h5 className={`text-[10px] font-bold uppercase mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Resumo da Geração</h5>
+              <div className="space-y-1 text-[10px]">
+                <div className="flex justify-between">
+                  <span className={isDark ? 'text-neutral-500' : 'text-gray-500'}>Categoria:</span>
+                  <span className={isDark ? 'text-white' : 'text-gray-900'}>{CATEGORIES.find(c => c.id === category)?.label.split('(')[0].trim()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={isDark ? 'text-neutral-500' : 'text-gray-500'}>Look:</span>
+                  <span className={isDark ? 'text-white' : 'text-gray-900'}>{lookMode === 'composer' ? `Composer (${Object.keys(look).length} itens)` : 'Descrito'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={isDark ? 'text-neutral-500' : 'text-gray-500'}>Orientação:</span>
+                  <span className={isDark ? 'text-white' : 'text-gray-900'}>{ORIENTATION_OPTIONS.find(o => o.id === orientation)?.label}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={isDark ? 'text-neutral-500' : 'text-gray-500'}>Export:</span>
+                  <span className={isDark ? 'text-white' : 'text-gray-900'}>{EXPORT_OPTIONS.find(e => e.id === exportType)?.format}</span>
+                </div>
+                <div className={`flex justify-between pt-2 mt-2 border-t ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                  <span className="font-bold text-pink-500">Custo:</span>
+                  <span className="font-bold text-pink-500">{lifestyleCredits} crédito{lifestyleCredits > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </LifestyleStepAccordion>
+      </div>
+      
+      {/* Generate Button */}
+      <button 
+        onClick={handleGen} 
+        disabled={isGen || !hasOrig || !prodDesc.trim() || (modelTab === 'saved' && !selModelId)} 
+        className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-4 shadow-lg shadow-pink-500/25"
+      >
+        {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
+        {isGen ? 'Gerando...' : `Gerar Modelo IA (${lifestyleCredits} créd.)`}
+      </button>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 md:bg-black/80 md:backdrop-blur-sm flex items-end md:items-center justify-center">
@@ -261,7 +837,14 @@ export const EditorModal: React.FC<Props> = ({
               
               {/* Result */}
               <div className={`flex-1 rounded-2xl border p-4 flex flex-col relative group shadow-sm ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
-                <h3 className={`text-sm font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Resultado</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Resultado</h3>
+                  {tool === 'lifestyle' && (
+                    <span className={`text-[9px] px-2 py-1 rounded-full ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                      {ORIENTATION_OPTIONS.find(o => o.id === orientation)?.dimensions}
+                    </span>
+                  )}
+                </div>
                 <div className={`flex-1 rounded-xl overflow-hidden relative flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
                   {isGen ? (
                     <div className="flex flex-col items-center text-pink-500">
@@ -289,7 +872,7 @@ export const EditorModal: React.FC<Props> = ({
                     <button onClick={() => { setGenImg(null); setGenId(null); }} className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center border text-red-500 ${isDark ? 'bg-neutral-800 border-red-500/30 hover:bg-red-500/10' : 'bg-white border-red-200 hover:bg-red-50'}`}><i className="fas fa-trash-alt"></i></button>
                     <button onClick={handleSave} disabled={isSaving} className="flex-1 max-w-xs h-12 bg-green-600 hover:bg-green-700 text-white font-bold rounded-full shadow-xl flex items-center justify-center gap-2 transition-colors">
                       {isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}
-                      Salvar no Produto
+                      Salvar ({EXPORT_OPTIONS.find(e => e.id === exportType)?.format})
                     </button>
                     <button onClick={() => setShowRefine(true)} className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center border text-pink-500 ${isDark ? 'bg-neutral-800 border-pink-500/30 hover:bg-pink-500/10' : 'bg-white border-pink-200 hover:bg-pink-50'}`}><i className="fas fa-magic"></i></button>
                     {tool === 'lifestyle' && modelTab === 'new' && (
@@ -370,7 +953,9 @@ export const EditorModal: React.FC<Props> = ({
                         <span className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG[t].desc}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold px-2 py-1 rounded-full text-pink-500 bg-pink-500/10">{TOOL_CFG[t].credits} créd.</span>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full text-pink-500 bg-pink-500/10">
+                      {t === 'lifestyle' ? `${lifestyleCredits} créd.` : `${TOOL_CFG[t].credits} créd.`}
+                    </span>
                   </div>
                   
                   {/* Tool expanded */}
@@ -398,129 +983,7 @@ export const EditorModal: React.FC<Props> = ({
                         </>
                       )}
                       
-                      {t === 'lifestyle' && (
-                        <>
-                          <p className={`text-xs mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.lifestyle.fullDesc}</p>
-                          
-                          {/* Tabs */}
-                          <div className={`flex rounded-lg p-1 mb-3 ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
-                            <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${modelTab === 'new' ? isDark ? 'bg-neutral-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Novo Modelo</button>
-                            <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${modelTab === 'saved' ? isDark ? 'bg-neutral-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Salvos ({savedModels.length})</button>
-                          </div>
-                          
-                          {/* Product Description */}
-                          <div className={`mb-3 p-2 rounded-lg border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
-                            <label className="text-[9px] font-bold text-amber-500 uppercase mb-1 flex items-center gap-1"><i className="fas fa-exclamation-triangle"></i>Descreva o produto principal</label>
-                            <textarea value={prodDesc} onChange={(e) => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo Nike branco..." className={`w-full p-2 border rounded text-[11px] resize-none ${isDark ? 'bg-neutral-800 border-amber-500/30 text-white placeholder-neutral-500' : 'bg-white border-amber-300 text-gray-900 placeholder-gray-400'}`} rows={2} />
-                            <p className="text-[9px] text-amber-500/80 mt-1"><i className="fas fa-info-circle mr-1"></i>Quanto mais detalhes, mais fiel o resultado.</p>
-                          </div>
-                          
-                          {/* Category */}
-                          <div className="mb-3">
-                            <label className={`text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}><i className={`fas fa-tshirt ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Categoria</label>
-                            <select value={category} onChange={(e) => setCategory(e.target.value)} className={`w-full p-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
-                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                            </select>
-                          </div>
-                          
-                          {/* New Model Options */}
-                          {modelTab === 'new' && (
-                            <div className="space-y-3 mb-3">
-                              <div>
-                                <label className={`text-[9px] font-bold uppercase mb-1.5 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Gênero</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {MODEL_OPTS.gender.map(g => (
-                                    <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-2 rounded-lg text-xs font-bold border-2 transition-all flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-neutral-400' : 'bg-white border-gray-200 text-gray-500'}`}>
-                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>{g.label}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Etnia</label>
-                                  <select value={modelSettings.ethnicity} onChange={(e) => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
-                                    {MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Porte</label>
-                                  <select value={modelSettings.bodyType} onChange={(e) => setModelSettings(p => ({...p, bodyType: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
-                                    {MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
-                                  </select>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Idade</label>
-                                <select value={modelSettings.ageRange} onChange={(e) => setModelSettings(p => ({...p, ageRange: e.target.value}))} className={`w-full p-1.5 border rounded text-xs ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
-                                  {MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
-                                </select>
-                              </div>
-                              
-                              <div>
-                                <label className={`text-[9px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Detalhes Faciais (opcional)</label>
-                                <textarea value={modelDetail} onChange={(e) => setModelDetail(e.target.value)} placeholder="Ex: Cabelos longos ondulados, olhos verdes..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Saved Models */}
-                          {modelTab === 'saved' && (
-                            <div className="space-y-2 mb-3 max-h-32 overflow-y-auto">
-                              {savedModels.length === 0 ? (
-                                <div className={`text-center py-4 text-xs rounded-lg border border-dashed ${isDark ? 'text-neutral-500 bg-neutral-800/50 border-neutral-700' : 'text-gray-400 bg-gray-50 border-gray-300'}`}>
-                                  <i className="fas fa-user-slash text-lg mb-1"></i>
-                                  <p>Nenhum modelo salvo</p>
-                                </div>
-                              ) : savedModels.map(m => (
-                                <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-2 rounded-lg border-2 cursor-pointer flex items-center gap-2 transition-all ${selModelId === m.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
-                                  <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}>
-                                    <img src={m.referenceImage} className="w-full h-full object-cover object-top" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-xs truncate">{m.name}</p>
-                                    <p className={`text-[9px] ${selModelId === m.id ? 'text-white/70' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Usado {m.usageCount}x</p>
-                                  </div>
-                                  <button onClick={(e) => { e.stopPropagation(); onDeleteModel(m.id); }} className={`hover:text-red-400 ${selModelId === m.id ? 'text-white/70' : isDark ? 'text-neutral-500' : 'text-gray-400'}`}><i className="fas fa-trash text-[10px]"></i></button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {/* Additional Options */}
-                          <div className={`space-y-2 pt-2 border-t ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
-                            <div>
-                              <label className={`text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}><i className={`fas fa-shirt ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Roupa</label>
-                              <textarea value={clothing} onChange={(e) => setClothing(e.target.value)} placeholder="Ex: Camiseta branca básica, jeans azul..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
-                            </div>
-                            <div>
-                              <label className={`text-[9px] font-bold uppercase mb-1 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}><i className={`fas fa-walking ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>Pose / Expressão</label>
-                              <textarea value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Ex: Em pé confiante, mãos no bolso..." className={`w-full p-2 border rounded text-xs resize-none ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`} rows={2} />
-                            </div>
-                          </div>
-                          
-                          {/* Look Composer */}
-                          <div className="mt-3">
-                            <button onClick={() => setShowLook(!showLook)} className={`w-full flex items-center justify-between p-2 rounded-lg border transition-colors ${isDark ? 'bg-pink-500/10 border-pink-500/30 hover:bg-pink-500/20' : 'bg-pink-50 border-pink-200 hover:bg-pink-100'}`}>
-                              <span className={`text-xs font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                <i className="fas fa-layer-group text-pink-500"></i>
-                                Composição de Look
-                                {Object.keys(look).length > 0 && <span className="text-pink-500">({Object.keys(look).length})</span>}
-                              </span>
-                              <i className={`fas fa-chevron-down transition-transform ${isDark ? 'text-neutral-500' : 'text-gray-400'} ${showLook ? 'rotate-180' : ''}`}></i>
-                            </button>
-                            {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} theme={theme} /></div>}
-                          </div>
-                          
-                          {/* Generate Button */}
-                          <button onClick={handleGen} disabled={isGen || !hasOrig || (modelTab === 'saved' && !selModelId)} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-4 shadow-lg shadow-pink-500/25">
-                            {isGen ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-magic"></i>}
-                            {isGen ? 'Gerando...' : `Gerar com Modelo (${TOOL_CFG.lifestyle.credits} créd.)`}
-                          </button>
-                        </>
-                      )}
+                      {t === 'lifestyle' && <LifestylePanel />}
                     </div>
                   )}
                 </div>
@@ -633,7 +1096,9 @@ export const EditorModal: React.FC<Props> = ({
                         <span className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG[t].desc}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold px-2 py-1 rounded-full text-pink-500 bg-pink-500/10">{TOOL_CFG[t].credits} créd.</span>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full text-pink-500 bg-pink-500/10">
+                      {t === 'lifestyle' ? `${lifestyleCredits} créd.` : `${TOOL_CFG[t].credits} créd.`}
+                    </span>
                   </div>
                   
                   {tool === t && (
@@ -647,81 +1112,7 @@ export const EditorModal: React.FC<Props> = ({
                         </>
                       )}
                       
-                      {t === 'lifestyle' && (
-                        <div className="space-y-3">
-                          <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{TOOL_CFG.lifestyle.fullDesc}</p>
-                          
-                          <div className={`flex rounded-lg p-1 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}>
-                            <button onClick={() => setModelTab('new')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'new' ? isDark ? 'bg-neutral-600 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Novo</button>
-                            <button onClick={() => setModelTab('saved')} className={`flex-1 py-2 text-xs font-bold rounded-md ${modelTab === 'saved' ? isDark ? 'bg-neutral-600 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Salvos ({savedModels.length})</button>
-                          </div>
-                          
-                          <div className={`p-3 rounded-xl border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
-                            <label className="text-[10px] font-bold text-amber-500 uppercase mb-1 flex items-center gap-1"><i className="fas fa-exclamation-triangle"></i>Descreva o produto</label>
-                            <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} placeholder="Ex: Camiseta preta com logo..." className={`w-full p-2 border rounded-lg text-xs resize-none ${isDark ? 'bg-neutral-800 border-amber-500/30 text-white placeholder-neutral-500' : 'bg-white border-amber-300 text-gray-900 placeholder-gray-400'}`} rows={2} />
-                          </div>
-                          
-                          <div>
-                            <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Categoria</label>
-                            <select value={category} onChange={e => setCategory(e.target.value)} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
-                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                            </select>
-                          </div>
-                          
-                          {modelTab === 'new' && (
-                            <div className="space-y-3">
-                              <div>
-                                <label className={`text-[10px] font-bold uppercase mb-1.5 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Gênero</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                  {MODEL_OPTS.gender.map(g => (
-                                    <button key={g.id} onClick={() => setModelSettings(p => ({...p, gender: g.id as 'woman'|'man'}))} className={`py-3 rounded-xl text-sm font-bold border-2 flex items-center justify-center gap-2 ${modelSettings.gender === g.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-700 border-neutral-600 text-neutral-400' : 'bg-white border-gray-200 text-gray-500'}`}>
-                                      <i className={`fas ${g.id === 'woman' ? 'fa-venus' : 'fa-mars'}`}></i>{g.label}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Etnia</label>
-                                  <select value={modelSettings.ethnicity} onChange={e => setModelSettings(p => ({...p, ethnicity: e.target.value}))} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>{MODEL_OPTS.ethnicity.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}</select>
-                                </div>
-                                <div>
-                                  <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Porte</label>
-                                  <select value={modelSettings.bodyType} onChange={e => setModelSettings(p => ({...p, bodyType: e.target.value}))} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>{MODEL_OPTS.bodyType.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}</select>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <label className={`text-[10px] font-bold uppercase mb-1 block ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>Idade</label>
-                                <select value={modelSettings.ageRange} onChange={e => setModelSettings(p => ({...p, ageRange: e.target.value}))} className={`w-full p-3 border rounded-xl text-sm ${isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>{MODEL_OPTS.ageRange.map(a => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {modelTab === 'saved' && (
-                            <div className="space-y-2 max-h-40 overflow-y-auto">
-                              {savedModels.length === 0 ? (
-                                <div className={`text-center py-6 text-sm rounded-xl border border-dashed ${isDark ? 'text-neutral-500 bg-neutral-800 border-neutral-700' : 'text-gray-400 bg-gray-50 border-gray-300'}`}>
-                                  <i className="fas fa-user-slash text-2xl mb-2"></i>
-                                  <p>Nenhum modelo salvo</p>
-                                </div>
-                              ) : savedModels.map(m => (
-                                <div key={m.id} onClick={() => setSelModelId(m.id)} className={`p-3 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selModelId === m.id ? 'bg-pink-500 border-pink-500 text-white' : isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
-                                  <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${isDark ? 'bg-neutral-700' : 'bg-gray-100'}`}><img src={m.referenceImage} className="w-full h-full object-cover object-top" /></div>
-                                  <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{m.name}</p></div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          <button onClick={() => setShowLook(!showLook)} className={`w-full flex items-center justify-between p-3 rounded-xl border ${isDark ? 'bg-pink-500/10 border-pink-500/30' : 'bg-pink-50 border-pink-200'}`}>
-                            <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}><i className="fas fa-layer-group text-pink-500 mr-2"></i>Look {Object.keys(look).length > 0 && <span className="text-pink-500">({Object.keys(look).length})</span>}</span>
-                            <i className={`fas fa-chevron-down ${isDark ? 'text-neutral-500' : 'text-gray-400'} ${showLook ? 'rotate-180' : ''}`}></i>
-                          </button>
-                          {showLook && <div className="mt-2"><LookComposer products={products} composition={look} onChange={setLook} theme={theme} /></div>}
-                        </div>
-                      )}
+                      {t === 'lifestyle' && <LifestylePanel />}
                     </div>
                   )}
                 </div>
@@ -741,13 +1132,20 @@ export const EditorModal: React.FC<Props> = ({
           {genImg && !isGen ? (
             <>
               <button onClick={() => { setGenImg(null); setGenId(null); setViewMode('original'); }} className={`w-12 h-12 rounded-xl flex items-center justify-center border text-red-500 ${isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'}`}><i className="fas fa-trash-alt"></i></button>
-              <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">{isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}Salvar</button>
+              <button onClick={handleSave} disabled={isSaving} className="flex-1 h-12 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2">
+                {isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}
+                Salvar ({EXPORT_OPTIONS.find(e => e.id === exportType)?.format})
+              </button>
               <button onClick={() => setShowRefine(true)} className={`w-12 h-12 rounded-xl flex items-center justify-center border text-pink-500 ${isDark ? 'bg-pink-500/10 border-pink-500/30' : 'bg-pink-50 border-pink-200'}`}><i className="fas fa-magic"></i></button>
               {tool === 'lifestyle' && modelTab === 'new' && <button onClick={() => setShowSaveModal(true)} className={`w-12 h-12 rounded-xl flex items-center justify-center border text-purple-500 ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}><i className="fas fa-user-plus"></i></button>}
             </>
           ) : (
-            <button onClick={handleGen} disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} className={`flex-1 h-14 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 ${isGen || !hasOrig || !tool ? 'bg-neutral-400' : 'bg-gradient-to-r from-pink-500 to-orange-400'}`}>
-              {isGen ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar Imagem{tool && <span className="text-white/70">({TOOL_CFG[tool].credits})</span>}</>}
+            <button 
+              onClick={handleGen} 
+              disabled={isGen || !hasOrig || !tool || (tool === 'cenario' && !cenPrompt.trim()) || (tool === 'lifestyle' && !prodDesc.trim()) || (tool === 'lifestyle' && modelTab === 'saved' && !selModelId)} 
+              className={`flex-1 h-14 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25 ${isGen || !hasOrig || !tool ? 'bg-neutral-400' : 'bg-gradient-to-r from-pink-500 to-orange-400'}`}
+            >
+              {isGen ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar Imagem{tool && <span className="text-white/70">({tool === 'lifestyle' ? lifestyleCredits : TOOL_CFG[tool].credits})</span>}</>}
             </button>
           )}
         </div>
