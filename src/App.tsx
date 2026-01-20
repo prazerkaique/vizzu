@@ -993,7 +993,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <i className={`fas fa-chevron-down text-[8px] transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`}></i>
             </button>
             {showSettingsDropdown && (
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white/95 border-white/20') + ' absolute left-0 right-0 mt-1 rounded-lg border shadow-lg overflow-hidden z-50'}>
+              <div className="absolute left-0 right-0 bottom-full mb-1 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/90 backdrop-blur-md">
                 {[
                   { id: 'profile', label: 'Perfil', icon: 'fa-user' },
                   { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
@@ -1004,7 +1004,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <button
                     key={item.id}
                     onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className={(theme === 'dark' ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white' : 'hover:bg-white/20 text-white/80 hover:text-white') + ' w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors'}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-400 hover:text-white hover:bg-fuchsia-500/20 hover:pl-4"
                   >
                     <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
                     {item.label}
@@ -1950,7 +1950,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     ];
 
                     return (
-                    <div className="max-w-4xl">
+                    <div className="max-w-6xl">
                       {/* Header */}
                       <div className="text-center mb-6">
                         <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1'}>Escolha o plano ideal para seu negocio</h2>
@@ -1997,7 +1997,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
 
                       {/* Cards dos Planos */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
                         {PLANS.map(plan => {
                           const isCurrentPlan = currentPlan.id === plan.id;
                           const price = billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly;
@@ -2061,7 +2061,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                   <p className="text-neutral-500 text-[10px] mt-1">R$ {plan.creditPrice.toFixed(2).replace('.', ',')} por credito extra</p>
                                 </div>
 
-                                <ul className="space-y-1.5 mb-4 max-h-48 overflow-y-auto pr-1">
+                                <ul className="space-y-2 mb-4">
                                   {ALL_FEATURES.map((feature) => {
                                     const hasFeature = feature.plans.includes(plan.id);
                                     return (
@@ -2441,7 +2441,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <span className="text-[9px] font-medium">Config</span>
             </button>
             {showSettingsDropdown && (
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' absolute bottom-full right-0 mb-2 w-40 rounded-lg border shadow-lg overflow-hidden z-50'}>
+              <div className="absolute bottom-full right-0 mb-2 w-44 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/90 backdrop-blur-md">
                 {[
                   { id: 'profile', label: 'Perfil', icon: 'fa-user' },
                   { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
@@ -2452,7 +2452,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <button
                     key={item.id}
                     onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className={(theme === 'dark' ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900') + ' w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors text-left'}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-400 hover:text-white hover:bg-fuchsia-500/20 hover:pl-4 text-left"
                   >
                     <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
                     {item.label}
