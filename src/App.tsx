@@ -315,7 +315,29 @@ const loadUserProducts = async (userId: string) => {
       reader.readAsDataURL(file);
     }
   };
+// Drag and Drop para imagens de produto
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, type: 'front' | 'back') => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        if (type === 'front') {
+          setSelectedFrontImage(base64);
+        } else {
+          setSelectedBackImage(base64);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
   const handleCreateProduct = async () => {
     if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
       alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
@@ -1840,7 +1862,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         </button>
       </div>
       
-      {/* Fotos Frente/Costas */}
+ {/* Fotos Frente/Costas */}
       <div className="mb-4">
         <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
         <div className="grid grid-cols-2 gap-3">
@@ -1866,10 +1888,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
+              <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Adicionar</span>
-              </button>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
+              </div>
             )}
           </div>
           
@@ -1895,14 +1917,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all'}>
+              <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Adicionar</span>
-              </button>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
+              </div>
             )}
           </div>
         </div>
-        
+
         {/* Dica */}
         <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-lg p-2 mt-3 border'}>
           <p className="text-amber-500 text-[10px] flex items-start gap-1.5">
