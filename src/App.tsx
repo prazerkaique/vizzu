@@ -140,10 +140,14 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     };
   });
 
-  // Persistir company settings
+  // Persistir company settings (localStorage + Supabase)
   useEffect(() => {
     localStorage.setItem('vizzu_company_settings', JSON.stringify(companySettings));
-  }, [companySettings]);
+    // Sincronizar com Supabase se usuário estiver logado
+    if (user?.id && companySettings.name) {
+      saveCompanySettingsToSupabase(companySettings, user.id);
+    }
+  }, [companySettings, user?.id]);
 
   // Persistir clientes
   useEffect(() => {
@@ -341,6 +345,254 @@ const loadUserProducts = async (userId: string) => {
   }
 };
 
+// Função para carregar clientes do usuário do Supabase
+const loadUserClients = async (userId: string) => {
+  try {
+    const { data: clientsData, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      // Tabela pode não existir ainda - usar apenas localStorage
+      console.log('Clientes carregados do localStorage (tabela não existe no Supabase)');
+      return;
+    }
+
+    if (clientsData && clientsData.length > 0) {
+      const formattedClients: Client[] = clientsData.map(c => ({
+        id: c.id,
+        firstName: c.first_name,
+        lastName: c.last_name,
+        whatsapp: c.whatsapp,
+        email: c.email || undefined,
+        photo: c.photo || undefined,
+        photos: c.photos || [],
+        hasProvadorIA: c.has_provador_ia || false,
+        notes: c.notes || undefined,
+        tags: c.tags || [],
+        createdAt: c.created_at,
+        updatedAt: c.updated_at || undefined,
+        lastContactAt: c.last_contact_at || undefined,
+        totalOrders: c.total_orders || 0,
+        status: c.status || 'active',
+      }));
+
+      // Merge com clientes locais (prioridade para os do servidor)
+      setClients(prev => {
+        const serverIds = new Set(formattedClients.map(c => c.id));
+        const localOnly = prev.filter(c => !serverIds.has(c.id));
+        // Sincronizar clientes locais que não estão no servidor
+        localOnly.forEach(localClient => {
+          saveClientToSupabase(localClient, userId);
+        });
+        return [...formattedClients, ...localOnly];
+      });
+    } else {
+      // Se não há clientes no servidor, sincronizar os locais
+      const localClients = JSON.parse(localStorage.getItem('vizzu_clients') || '[]');
+      if (localClients.length > 0) {
+        localClients.forEach((client: Client) => {
+          saveClientToSupabase(client, userId);
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar clientes:', error);
+  }
+};
+
+// Função para salvar cliente no Supabase
+const saveClientToSupabase = async (client: Client, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .upsert({
+        id: client.id,
+        user_id: userId,
+        first_name: client.firstName,
+        last_name: client.lastName,
+        whatsapp: client.whatsapp,
+        email: client.email || null,
+        photo: client.photo || null,
+        photos: client.photos || [],
+        has_provador_ia: client.hasProvadorIA,
+        notes: client.notes || null,
+        tags: client.tags || [],
+        created_at: client.createdAt,
+        updated_at: client.updatedAt || null,
+        last_contact_at: client.lastContactAt || null,
+        total_orders: client.totalOrders || 0,
+        status: client.status,
+      }, { onConflict: 'id' });
+
+    if (error) {
+      console.log('Erro ao salvar cliente no Supabase (tabela pode não existir):', error.message);
+    }
+  } catch (error) {
+    console.error('Erro ao salvar cliente:', error);
+  }
+};
+
+// Função para deletar cliente do Supabase
+const deleteClientFromSupabase = async (clientId: string) => {
+  try {
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', clientId);
+
+    if (error) {
+      console.log('Erro ao deletar cliente do Supabase:', error.message);
+    }
+  } catch (error) {
+    console.error('Erro ao deletar cliente:', error);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SINCRONIZAÇÃO DE HISTÓRICO
+// ═══════════════════════════════════════════════════════════════
+
+const loadUserHistory = async (userId: string) => {
+  try {
+    const { data: historyData, error } = await supabase
+      .from('history_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(100); // Limitar a 100 registros mais recentes
+
+    if (error) {
+      console.log('Histórico carregado do localStorage (tabela não existe no Supabase)');
+      return;
+    }
+
+    if (historyData && historyData.length > 0) {
+      const formattedHistory: HistoryLog[] = historyData.map(h => ({
+        id: h.id,
+        date: h.date,
+        action: h.action,
+        details: h.details,
+        status: h.status,
+        method: h.method,
+        cost: h.cost || 0,
+        itemsCount: h.items_count || 0,
+        createdAt: h.created_at ? new Date(h.created_at) : undefined,
+      }));
+
+      setHistoryLogs(formattedHistory);
+    } else {
+      // Sincronizar histórico local para o servidor
+      const localHistory = JSON.parse(localStorage.getItem('vizzu_history') || '[]');
+      if (localHistory.length > 0) {
+        localHistory.slice(0, 50).forEach((log: HistoryLog) => {
+          saveHistoryToSupabase(log, userId);
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar histórico:', error);
+  }
+};
+
+const saveHistoryToSupabase = async (log: HistoryLog, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('history_logs')
+      .upsert({
+        id: log.id,
+        user_id: userId,
+        date: log.date || new Date().toISOString(),
+        action: log.action,
+        details: log.details,
+        status: log.status,
+        method: log.method,
+        cost: log.cost || 0,
+        items_count: log.itemsCount || log.items?.length || log.products?.length || 0,
+        created_at: log.createdAt?.toISOString() || new Date().toISOString(),
+      }, { onConflict: 'id' });
+
+    if (error) {
+      console.log('Erro ao salvar histórico no Supabase:', error.message);
+    }
+  } catch (error) {
+    console.error('Erro ao salvar histórico:', error);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SINCRONIZAÇÃO DE CONFIGURAÇÕES DA EMPRESA
+// ═══════════════════════════════════════════════════════════════
+
+const loadUserCompanySettings = async (userId: string) => {
+  try {
+    const { data: settingsData, error } = await supabase
+      .from('company_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code !== 'PGRST116') { // Não é erro de "não encontrado"
+        console.log('Configurações carregadas do localStorage (tabela não existe no Supabase)');
+      }
+      // Se não existe no servidor, sincronizar o local
+      const localSettings = JSON.parse(localStorage.getItem('vizzu_company_settings') || '{}');
+      if (localSettings.name) {
+        saveCompanySettingsToSupabase(localSettings, userId);
+      }
+      return;
+    }
+
+    if (settingsData) {
+      const formattedSettings: CompanySettings = {
+        name: settingsData.name || '',
+        cnpj: settingsData.cnpj || undefined,
+        instagram: settingsData.instagram || undefined,
+        targetAudience: settingsData.target_audience || '',
+        voiceTone: settingsData.voice_tone || 'casual',
+        voiceExamples: settingsData.voice_examples || undefined,
+        hashtags: settingsData.hashtags || [],
+        emojisEnabled: settingsData.emojis_enabled ?? true,
+        captionStyle: settingsData.caption_style || 'media',
+        callToAction: settingsData.call_to_action || undefined,
+      };
+
+      setCompanySettings(formattedSettings);
+    }
+  } catch (error) {
+    console.error('Erro ao carregar configurações:', error);
+  }
+};
+
+const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('company_settings')
+      .upsert({
+        user_id: userId,
+        name: settings.name,
+        cnpj: settings.cnpj || null,
+        instagram: settings.instagram || null,
+        target_audience: settings.targetAudience,
+        voice_tone: settings.voiceTone,
+        voice_examples: settings.voiceExamples || null,
+        hashtags: settings.hashtags || [],
+        emojis_enabled: settings.emojisEnabled,
+        caption_style: settings.captionStyle,
+        call_to_action: settings.callToAction || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+
+    if (error) {
+      console.log('Erro ao salvar configurações no Supabase:', error.message);
+    }
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error);
+  }
+};
+
   // Check for existing Supabase session on mount
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -353,21 +605,29 @@ const loadUserProducts = async (userId: string) => {
           plan: 'Free' 
         });
         setIsAuthenticated(true);
+        // Carregar todos os dados do usuário
         loadUserProducts(session.user.id);
+        loadUserClients(session.user.id);
+        loadUserHistory(session.user.id);
+        loadUserCompanySettings(session.user.id);
       }
     });
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser({ 
-          id: session.user.id, 
-          name: session.user.user_metadata?.full_name || 'Usuário', 
-          email: session.user.email || '', 
-          avatar: session.user.user_metadata?.avatar_url || '', 
-          plan: 'Free' 
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata?.full_name || 'Usuário',
+          email: session.user.email || '',
+          avatar: session.user.user_metadata?.avatar_url || '',
+          plan: 'Free'
         });
         setIsAuthenticated(true);
+        // Carregar todos os dados do usuário
         loadUserProducts(session.user.id);
+        loadUserClients(session.user.id);
+        loadUserHistory(session.user.id);
+        loadUserCompanySettings(session.user.id);
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -797,6 +1057,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setShowCreateClient(false);
     setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' });
 
+    // Sincronizar com Supabase se usuário estiver logado
+    if (user?.id) {
+      saveClientToSupabase(client, user.id);
+    }
+
     // Log no histórico
     handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
 
@@ -815,6 +1080,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
       setClients(prev => prev.filter(c => c.id !== clientId));
       setShowClientDetail(null);
+
+      // Sincronizar deleção com Supabase
+      deleteClientFromSupabase(clientId);
+
       if (client) {
         handleAddHistoryLog('Cliente excluído', `${client.firstName} ${client.lastName} foi removido`, 'success', [], 'manual', 0);
       }
@@ -882,6 +1151,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       createdAt: new Date(),
     };
     setHistoryLogs(prev => [newLog, ...prev].slice(0, 100)); // Mantém últimos 100 registros
+
+    // Sincronizar com Supabase se usuário estiver logado
+    if (user?.id) {
+      saveHistoryToSupabase(newLog, user.id);
+    }
   };
 
   // Função para processar imagem (converte HEIC se necessário)
