@@ -471,7 +471,6 @@ export const Studio: React.FC<StudioProps> = ({
               <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
                 {activeTab === 'todos' && 'Meus produtos'}
                 {activeTab === 'recentes' && 'Recentes'}
-                {activeTab === 'editados' && 'Editados'}
               </h2>
             </div>
 
