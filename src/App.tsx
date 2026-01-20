@@ -355,9 +355,12 @@ const loadUserClients = async (userId: string) => {
 
     if (error) {
       // Tabela pode não existir ainda - usar apenas localStorage
-      console.log('Clientes carregados do localStorage (tabela não existe no Supabase)');
+      console.log('Clientes: tabela não existe no Supabase, usando localStorage');
       return;
     }
+
+    // Pegar clientes locais para possível sincronização
+    const localClients: Client[] = JSON.parse(localStorage.getItem('vizzu_clients') || '[]');
 
     if (clientsData && clientsData.length > 0) {
       const formattedClients: Client[] = clientsData.map(c => ({
@@ -378,23 +381,28 @@ const loadUserClients = async (userId: string) => {
         status: c.status || 'active',
       }));
 
-      // Merge com clientes locais (prioridade para os do servidor)
-      setClients(prev => {
-        const serverIds = new Set(formattedClients.map(c => c.id));
-        const localOnly = prev.filter(c => !serverIds.has(c.id));
-        // Sincronizar clientes locais que não estão no servidor
-        localOnly.forEach(localClient => {
-          saveClientToSupabase(localClient, userId);
-        });
-        return [...formattedClients, ...localOnly];
+      // Sincronizar clientes locais que não estão no servidor
+      const serverIds = new Set(formattedClients.map(c => c.id));
+      const localOnly = localClients.filter(c => !serverIds.has(c.id));
+      localOnly.forEach(localClient => {
+        saveClientToSupabase(localClient, userId);
       });
+
+      // IMPORTANTE: Substituir estado local com dados do servidor + locais sincronizados
+      setClients([...formattedClients, ...localOnly]);
+      console.log(`Clientes: ${formattedClients.length} do servidor + ${localOnly.length} locais sincronizados`);
     } else {
-      // Se não há clientes no servidor, sincronizar os locais
-      const localClients = JSON.parse(localStorage.getItem('vizzu_clients') || '[]');
+      // Servidor vazio - sincronizar locais para o servidor
       if (localClients.length > 0) {
-        localClients.forEach((client: Client) => {
-          saveClientToSupabase(client, userId);
-        });
+        console.log(`Clientes: sincronizando ${localClients.length} clientes locais para o servidor`);
+        for (const client of localClients) {
+          await saveClientToSupabase(client, userId);
+        }
+        // Manter os clientes locais já que foram sincronizados
+      } else {
+        // Servidor vazio e local vazio - limpar estado
+        setClients([]);
+        console.log('Clientes: nenhum cliente encontrado');
       }
     }
   } catch (error) {
@@ -461,12 +469,14 @@ const loadUserHistory = async (userId: string) => {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(100); // Limitar a 100 registros mais recentes
+      .limit(100);
 
     if (error) {
-      console.log('Histórico carregado do localStorage (tabela não existe no Supabase)');
+      console.log('Histórico: tabela não existe no Supabase, usando localStorage');
       return;
     }
+
+    const localHistory: HistoryLog[] = JSON.parse(localStorage.getItem('vizzu_history') || '[]');
 
     if (historyData && historyData.length > 0) {
       const formattedHistory: HistoryLog[] = historyData.map(h => ({
@@ -481,14 +491,19 @@ const loadUserHistory = async (userId: string) => {
         createdAt: h.created_at ? new Date(h.created_at) : undefined,
       }));
 
+      // Substituir estado com dados do servidor
       setHistoryLogs(formattedHistory);
+      console.log(`Histórico: ${formattedHistory.length} registros carregados do servidor`);
     } else {
-      // Sincronizar histórico local para o servidor
-      const localHistory = JSON.parse(localStorage.getItem('vizzu_history') || '[]');
+      // Servidor vazio - sincronizar locais
       if (localHistory.length > 0) {
-        localHistory.slice(0, 50).forEach((log: HistoryLog) => {
-          saveHistoryToSupabase(log, userId);
-        });
+        console.log(`Histórico: sincronizando ${localHistory.length} registros locais`);
+        for (const log of localHistory.slice(0, 50)) {
+          await saveHistoryToSupabase(log, userId);
+        }
+      } else {
+        setHistoryLogs([]);
+        console.log('Histórico: nenhum registro encontrado');
       }
     }
   } catch (error) {
@@ -533,14 +548,17 @@ const loadUserCompanySettings = async (userId: string) => {
       .eq('user_id', userId)
       .single();
 
+    const localSettings = JSON.parse(localStorage.getItem('vizzu_company_settings') || '{}');
+
     if (error) {
-      if (error.code !== 'PGRST116') { // Não é erro de "não encontrado"
-        console.log('Configurações carregadas do localStorage (tabela não existe no Supabase)');
-      }
-      // Se não existe no servidor, sincronizar o local
-      const localSettings = JSON.parse(localStorage.getItem('vizzu_company_settings') || '{}');
-      if (localSettings.name) {
-        saveCompanySettingsToSupabase(localSettings, userId);
+      if (error.code === 'PGRST116') {
+        // Não encontrado no servidor - sincronizar local se existir
+        if (localSettings.name) {
+          console.log('Configurações: sincronizando do localStorage para o servidor');
+          await saveCompanySettingsToSupabase(localSettings, userId);
+        }
+      } else {
+        console.log('Configurações: tabela não existe no Supabase, usando localStorage');
       }
       return;
     }
@@ -560,6 +578,7 @@ const loadUserCompanySettings = async (userId: string) => {
       };
 
       setCompanySettings(formattedSettings);
+      console.log('Configurações: carregadas do servidor');
     }
   } catch (error) {
     console.error('Erro ao carregar configurações:', error);
@@ -597,37 +616,78 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser({ 
-          id: session.user.id, 
-          name: session.user.user_metadata?.full_name || 'Usuário', 
-          email: session.user.email || '', 
-          avatar: session.user.user_metadata?.avatar_url || '', 
-          plan: 'Free' 
-        });
-        setIsAuthenticated(true);
-        // Carregar todos os dados do usuário
-        loadUserProducts(session.user.id);
-        loadUserClients(session.user.id);
-        loadUserHistory(session.user.id);
-        loadUserCompanySettings(session.user.id);
-      }
-    });
+        const userId = session.user.id;
+        const userEmail = session.user.email;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
+        // DEBUG: Log para verificar se o userId é o mesmo em todos os dispositivos
+        console.log('═══════════════════════════════════════════════════');
+        console.log('🔐 VIZZU AUTH DEBUG');
+        console.log('User ID:', userId);
+        console.log('Email:', userEmail);
+        console.log('═══════════════════════════════════════════════════');
+
+        // Verificar se é um usuário diferente do último logado
+        const lastUserId = localStorage.getItem('vizzu_last_user_id');
+        if (lastUserId && lastUserId !== userId) {
+          console.log('⚠️ Usuário diferente detectado! Limpando dados locais antigos...');
+          localStorage.removeItem('vizzu_clients');
+          localStorage.removeItem('vizzu_history');
+          localStorage.removeItem('vizzu_company_settings');
+          localStorage.removeItem('vizzu_credits_data');
+        }
+        localStorage.setItem('vizzu_last_user_id', userId);
+
         setUser({
-          id: session.user.id,
+          id: userId,
           name: session.user.user_metadata?.full_name || 'Usuário',
-          email: session.user.email || '',
+          email: userEmail || '',
           avatar: session.user.user_metadata?.avatar_url || '',
           plan: 'Free'
         });
         setIsAuthenticated(true);
         // Carregar todos os dados do usuário
-        loadUserProducts(session.user.id);
-        loadUserClients(session.user.id);
-        loadUserHistory(session.user.id);
-        loadUserCompanySettings(session.user.id);
+        loadUserProducts(userId);
+        loadUserClients(userId);
+        loadUserHistory(userId);
+        loadUserCompanySettings(userId);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const userId = session.user.id;
+        const userEmail = session.user.email;
+
+        console.log('═══════════════════════════════════════════════════');
+        console.log('🔐 VIZZU AUTH STATE CHANGE');
+        console.log('User ID:', userId);
+        console.log('Email:', userEmail);
+        console.log('═══════════════════════════════════════════════════');
+
+        // Verificar se é um usuário diferente
+        const lastUserId = localStorage.getItem('vizzu_last_user_id');
+        if (lastUserId && lastUserId !== userId) {
+          console.log('⚠️ Usuário diferente detectado! Limpando dados locais antigos...');
+          localStorage.removeItem('vizzu_clients');
+          localStorage.removeItem('vizzu_history');
+          localStorage.removeItem('vizzu_company_settings');
+          localStorage.removeItem('vizzu_credits_data');
+        }
+        localStorage.setItem('vizzu_last_user_id', userId);
+
+        setUser({
+          id: userId,
+          name: session.user.user_metadata?.full_name || 'Usuário',
+          email: userEmail || '',
+          avatar: session.user.user_metadata?.avatar_url || '',
+          plan: 'Free'
+        });
+        setIsAuthenticated(true);
+        // Carregar todos os dados do usuário
+        loadUserProducts(userId);
+        loadUserClients(userId);
+        loadUserHistory(userId);
+        loadUserCompanySettings(userId);
       } else {
         setUser(null);
         setIsAuthenticated(false);
