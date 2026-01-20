@@ -104,6 +104,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
   const [showStudioPicker, setShowStudioPicker] = useState(false);
+  const [showAddProductHint, setShowAddProductHint] = useState(false);
   const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('vizzu_theme');
@@ -1085,12 +1086,24 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </div>
           <div className="flex items-center gap-2">
             {currentPage !== 'products' && (
-              <button
-                onClick={() => setShowImport(true)}
-                className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 text-white flex items-center justify-center shadow-md"
-              >
-                <i className="fas fa-plus text-sm"></i>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => { setShowImport(true); setShowAddProductHint(false); }}
+                  className={`w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 text-white flex items-center justify-center shadow-md transition-all ${showAddProductHint ? 'animate-pulse ring-2 ring-pink-400 ring-offset-2 ring-offset-neutral-950' : ''}`}
+                >
+                  <i className="fas fa-plus text-sm"></i>
+                </button>
+                {/* Tooltip de dica */}
+                {showAddProductHint && (
+                  <div className="absolute top-full right-0 mt-2 w-48 animate-fade-in">
+                    <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200 shadow-lg') + ' rounded-lg border p-2.5 relative'}>
+                      <div className={'absolute -top-1.5 right-4 w-3 h-3 rotate-45 ' + (theme === 'dark' ? 'bg-neutral-800 border-l border-t border-neutral-700' : 'bg-white border-l border-t border-gray-200')}></div>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium mb-0.5'}>Adicionar produto</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Toque aqui para adicionar um novo produto</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <button
               onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
@@ -2609,7 +2622,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold text-center mb-1'}>O que você quer criar?</h3>
             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mb-5'}>Escolha uma das opções</p>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 border-gray-200 hover:border-purple-300 hover:bg-purple-50') + ' border rounded-xl p-4 text-left transition-all group'}>
+              <button onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); setShowAddProductHint(true); setTimeout(() => setShowAddProductHint(false), 4000); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 border-gray-200 hover:border-purple-300 hover:bg-purple-50') + ' border rounded-xl p-4 text-left transition-all group'}>
                 <div className={(theme === 'dark' ? 'bg-neutral-700 group-hover:bg-neutral-600' : 'bg-purple-100 group-hover:bg-purple-200') + ' w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors'}>
                   <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-purple-600') + ' fas fa-wand-magic-sparkles text-sm'}></i>
                 </div>
