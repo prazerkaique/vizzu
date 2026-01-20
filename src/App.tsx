@@ -2455,11 +2455,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
       >
         <div className="flex items-center justify-around">
-          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-home text-sm"></i>
             <span className="text-[9px] font-medium">Home</span>
           </button>
-          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-box text-sm"></i>
             <span className="text-[9px] font-medium">Produtos</span>
           </button>
@@ -2469,46 +2469,48 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             </div>
             <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
-          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-users text-sm"></i>
             <span className="text-[9px] font-medium">Clientes</span>
           </button>
-          <button onClick={() => setCurrentPage('history')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'history' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
-            <i className="fas fa-clock-rotate-left text-sm"></i>
-            <span className="text-[9px] font-medium">Histórico</span>
+          <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' || currentPage === 'history' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+            <i className="fas fa-ellipsis text-sm"></i>
+            <span className="text-[9px] font-medium">Mais</span>
           </button>
-          <div className="relative">
-            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'settings' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
-              <i className="fas fa-cog text-sm"></i>
-              <span className="text-[9px] font-medium">Config</span>
-            </button>
-            {showSettingsDropdown && (
-              <div className={'absolute bottom-full right-0 mb-2 w-44 rounded-xl border shadow-xl overflow-hidden z-50 backdrop-blur-md ' + (theme === 'dark' ? 'bg-neutral-900/95 border-neutral-700/50' : 'bg-white/95 border-gray-200')}>
-                {[
-                  { id: 'profile', label: 'Perfil', icon: 'fa-user' },
-                  { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
-                  { id: 'company', label: 'Empresa', icon: 'fa-building' },
-                  { id: 'plan', label: 'Plano & Créditos', icon: 'fa-credit-card' },
-                  { id: 'integrations', label: 'Integrações', icon: 'fa-plug' },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className={'w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-left ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')}
-                  >
-                    <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </nav>
 
-      {/* Settings Dropdown Backdrop */}
+      {/* Mobile Settings Dropdown - fora do nav para z-index funcionar */}
       {showSettingsDropdown && (
-        <div className="fixed inset-0 z-[45]" onClick={() => setShowSettingsDropdown(false)} />
+        <>
+          <div className="md:hidden fixed inset-0 z-[60]" onClick={() => setShowSettingsDropdown(false)} />
+          <div className={'md:hidden fixed bottom-16 right-2 w-48 rounded-xl border shadow-xl overflow-hidden z-[70] backdrop-blur-md ' + (theme === 'dark' ? 'bg-neutral-900/95 border-neutral-700/50' : 'bg-white/95 border-gray-200')} style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
+            <button
+              onClick={() => { setCurrentPage('history'); setShowSettingsDropdown(false); }}
+              className={'w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-left ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')}
+            >
+              <i className="fas fa-clock-rotate-left w-4 text-[10px]"></i>
+              Histórico
+            </button>
+            <div className={'border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')} />
+            {[
+              { id: 'profile', label: 'Perfil', icon: 'fa-user' },
+              { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
+              { id: 'company', label: 'Empresa', icon: 'fa-building' },
+              { id: 'plan', label: 'Plano & Créditos', icon: 'fa-credit-card' },
+              { id: 'integrations', label: 'Integrações', icon: 'fa-plug' },
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
+                className={'w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-left ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')}
+              >
+                <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* VIDEO TUTORIAL MODAL */}
