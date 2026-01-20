@@ -43,6 +43,7 @@ export const Studio: React.FC<StudioProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
   const [activeTab, setActiveTab] = useState<'todos' | 'recentes' | 'editados' | 'modelos'>('todos');
+  const [fabExpanded, setFabExpanded] = useState(false);
   
   // Filtros
   const [showFilters, setShowFilters] = useState(true);
@@ -139,10 +140,10 @@ export const Studio: React.FC<StudioProps> = ({
             {onImport && (
               <button
                 onClick={onImport}
-                className="p-2 md:px-3 md:py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
-                <i className="fas fa-plus md:mr-1.5"></i>
-                <span className="hidden md:inline">Novo</span>
+                <i className="fas fa-plus"></i>
+                <span>Novo</span>
               </button>
             )}
           </div>
@@ -481,10 +482,20 @@ export const Studio: React.FC<StudioProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {onImport && (
           <button
-            onClick={onImport}
-            className="md:hidden fixed bottom-20 right-4 w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl shadow-lg flex items-center justify-center z-30"
+            onClick={() => {
+              setFabExpanded(true);
+              setTimeout(() => {
+                setFabExpanded(false);
+                onImport();
+              }, 300);
+            }}
+            className={`md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-full shadow-lg flex items-center justify-center z-30 transition-all duration-300 ease-out ${
+              fabExpanded
+                ? 'w-14 h-14 scale-110'
+                : 'w-10 h-10 scale-100'
+            }`}
           >
-            <i className="fas fa-plus text-lg"></i>
+            <i className={`fas fa-plus transition-transform duration-300 ${fabExpanded ? 'rotate-90 text-lg' : 'text-sm'}`}></i>
           </button>
         )}
       </div>

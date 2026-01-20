@@ -451,20 +451,91 @@ const loadUserProducts = async (userId: string) => {
   };
 
   // Função para deletar um produto
-  const handleDeleteProduct = (product: Product) => {
+  const handleDeleteProduct = async (product: Product) => {
+    // Remover do estado local imediatamente (UX responsiva)
     setProducts(prev => prev.filter(p => p.id !== product.id));
     setSelectedProducts(prev => prev.filter(id => id !== product.id));
-    showToast(`"${product.name}" foi excluído`, 'success');
-    handleAddHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
+
+    // Deletar do Supabase
+    try {
+      // Primeiro deletar as imagens do produto
+      const { error: imagesError } = await supabase
+        .from('product_images')
+        .delete()
+        .eq('product_id', product.id);
+
+      if (imagesError) {
+        console.error('Erro ao deletar imagens:', imagesError);
+      }
+
+      // Depois deletar o produto
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', product.id);
+
+      if (error) {
+        console.error('Erro ao deletar produto:', error);
+        showToast('Erro ao excluir produto do servidor', 'error');
+        // Recarregar produtos em caso de erro
+        if (user?.id) {
+          loadUserProducts(user.id);
+        }
+        return;
+      }
+
+      showToast(`"${product.name}" foi excluído`, 'success');
+      handleAddHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
+    } catch (e) {
+      console.error('Erro ao deletar produto:', e);
+      showToast('Erro ao excluir produto', 'error');
+    }
   };
 
   // Função para deletar produtos selecionados
-  const handleDeleteSelectedProducts = () => {
+  const handleDeleteSelectedProducts = async () => {
     const count = selectedProducts.length;
+    const productsToDelete = products.filter(p => selectedProducts.includes(p.id));
+
+    // Remover do estado local imediatamente (UX responsiva)
     setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
     setSelectedProducts([]);
     setShowDeleteProductsModal(false);
-    showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
+
+    // Deletar do Supabase
+    try {
+      // Primeiro deletar as imagens dos produtos
+      const { error: imagesError } = await supabase
+        .from('product_images')
+        .delete()
+        .in('product_id', selectedProducts);
+
+      if (imagesError) {
+        console.error('Erro ao deletar imagens:', imagesError);
+      }
+
+      // Depois deletar os produtos
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .in('id', selectedProducts);
+
+      if (error) {
+        console.error('Erro ao deletar produtos:', error);
+        showToast('Erro ao excluir produtos do servidor', 'error');
+        // Recarregar produtos em caso de erro
+        if (user?.id) {
+          loadUserProducts(user.id);
+        }
+        return;
+      }
+
+      showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
+      handleAddHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
+    } catch (e) {
+      console.error('Erro ao deletar produtos:', e);
+      showToast('Erro ao excluir produtos', 'error');
+    }
   };
 
   // Função para gerar imagens com IA via n8n
@@ -929,7 +1000,24 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0">
+      <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0 pt-12 md:pt-0">
+
+        {/* MOBILE TOP HEADER */}
+        <div className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center">
+              <span className="text-white font-bold text-xs">V</span>
+            </div>
+            <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Vizzu</span>
+          </div>
+          <button
+            onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+            className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30' : 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200')}
+          >
+            <i className="fas fa-coins text-[10px]"></i>
+            <span>{userCredits}</span>
+          </button>
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* DASHBOARD */}
@@ -1767,29 +1855,47 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* SETTINGS */}
         {currentPage === 'settings' && (
-          <div className="flex-1 overflow-y-auto">
-            <div className="flex flex-col md:flex-row h-full">
-              <div className={'md:w-56 border-b md:border-b-0 md:border-r p-2 md:p-3 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200')}>
-                <nav className="flex md:flex-col gap-0.5 overflow-x-auto">
-                  {[
-                    { id: 'profile' as SettingsTab, icon: 'fa-user', label: 'Perfil' },
-                    { id: 'appearance' as SettingsTab, icon: 'fa-palette', label: 'Aparência' },
-                    { id: 'company' as SettingsTab, icon: 'fa-building', label: 'Empresa' },
-                    { id: 'plan' as SettingsTab, icon: 'fa-credit-card', label: 'Plano' },
-                    { id: 'integrations' as SettingsTab, icon: 'fa-plug', label: 'Integrações' },
-                  ].map(item => (
-                    <button key={item.id} onClick={() => setSettingsTab(item.id)} className={'flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ' + (settingsTab === item.id ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-900') : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'))}>
-                      <i className={'fas ' + item.icon + ' w-3.5 text-[10px]'}></i>{item.label}
-                    </button>
-                  ))}
-                  <button onClick={handleLogout} className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 md:mt-4 md:pt-3 md:border-t md:border-neutral-800">
-                    <i className="fas fa-sign-out-alt w-3.5 text-[10px]"></i>Sair
-                  </button>
-                </nav>
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-2xl mx-auto">
+              {/* Header com Dropdown */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-fuchsia-500/20 to-rose-400/20 border border-fuchsia-500/30' : 'bg-gradient-to-r from-fuchsia-500 to-rose-400 shadow-lg shadow-fuchsia-500/25')}>
+                    <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-fuchsia-400' : 'text-white')}></i>
+                  </div>
+                  <div>
+                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Configurações</h1>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs hidden md:block'}>Gerencie sua conta e preferências</p>
+                  </div>
+                </div>
+                <button onClick={handleLogout} className={'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 transition-colors ' + (theme === 'dark' ? 'hover:bg-red-500/10' : 'hover:bg-red-50')}>
+                  <i className="fas fa-sign-out-alt"></i>
+                  <span className="hidden md:inline">Sair</span>
+                </button>
               </div>
-              
-              <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-                <div className="max-w-xl">
+
+              {/* Dropdown de Seção */}
+              <div className="mb-6">
+                <div className="relative">
+                  <select
+                    value={settingsTab}
+                    onChange={(e) => setSettingsTab(e.target.value as SettingsTab)}
+                    className={'w-full appearance-none px-4 py-3 pr-10 rounded-xl text-sm font-medium cursor-pointer transition-colors ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 text-white focus:border-fuchsia-500' : 'bg-white border border-gray-200 text-gray-900 focus:border-fuchsia-400') + ' focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20'}
+                  >
+                    <option value="profile">👤 Perfil</option>
+                    <option value="appearance">🎨 Aparência</option>
+                    <option value="company">🏢 Empresa</option>
+                    <option value="plan">💳 Plano & Créditos</option>
+                    <option value="integrations">🔌 Integrações</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-down text-xs'}></i>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conteúdo da Seção */}
+              <div className="max-w-xl">
                   {settingsTab === 'plan' && (
                     <div className="max-w-4xl">
                       {/* Header */}
@@ -2232,7 +2338,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                   )}
                 </div>
-              </div>
             </div>
           </div>
         )}

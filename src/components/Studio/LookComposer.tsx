@@ -165,10 +165,10 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
         )}
       </div>
 
-      {/* Dica de Drag and Drop */}
-      <div className={`mb-2 p-2 rounded-lg text-[9px] ${theme === 'dark' ? 'bg-neutral-700/50 text-neutral-400' : 'bg-purple-50 text-purple-600'}`}>
-        <i className="fas fa-hand-pointer mr-1.5"></i>
-        Arraste imagens do Google ou cole (Ctrl+V) para compor o look
+      {/* Dica de uso */}
+      <div className={`mb-2 p-2.5 rounded-lg text-[10px] leading-relaxed ${theme === 'dark' ? 'bg-neutral-700/50 text-neutral-400' : 'bg-purple-50 text-purple-600'}`}>
+        <i className="fas fa-lightbulb mr-1.5"></i>
+        <span className="font-medium">Clique no slot</span> para escolher um produto cadastrado, ou <span className="font-medium">arraste imagens</span> do Google / <span className="font-medium">cole (Ctrl+V)</span>
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
