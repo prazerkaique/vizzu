@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/n8n/:path*",
+      "destination": "https://n8neditor.brainia.store/webhook/:path*"
+    }
+  ]
+}
