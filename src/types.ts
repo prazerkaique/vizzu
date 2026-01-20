@@ -67,19 +67,22 @@ export interface Product {
   brand?: string;
   color?: string;
   fit?: string;
-  
+
+  // Atributos específicos por categoria (ex: caimento, comprimento, modelagem)
+  attributes?: ProductAttributes;
+
   // LEGADO: Array simples de imagens (manter para compatibilidade)
   images: ProductImage[];
-  
+
   // NOVO: Imagens originais organizadas (frente/costas)
   originalImages?: ProductOriginalImages;
-  
+
   // NOVO: Imagens geradas organizadas por ferramenta
   generatedImages?: ProductGeneratedImages;
-  
+
   // NOVO: Flag para saber se tem foto de costas
   hasBackImage?: boolean;
-  
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -237,3 +240,506 @@ export interface WhatsAppTemplate {
   message: string;
   isDefault?: boolean;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Atributos de Produto por Categoria
+// ═══════════════════════════════════════════════════════════════
+
+export interface ProductAttributes {
+  [key: string]: string;
+}
+
+export interface CategoryAttributeOption {
+  id: string;
+  label: string;
+}
+
+export interface CategoryAttributeConfig {
+  id: string;
+  label: string;
+  options: CategoryAttributeOption[];
+}
+
+export interface CategoryAttributesMap {
+  [category: string]: CategoryAttributeConfig[];
+}
+
+// Estrutura de atributos por categoria
+export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
+  'Camisetas': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'slim', label: 'Slim (justa)' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'relaxed', label: 'Relaxed' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'boxy', label: 'Boxy' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'curta', label: 'Curta' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'longline', label: 'Longline' },
+      ]
+    }
+  ],
+  'Blusas': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justa', label: 'Justa' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'solta', label: 'Solta' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped (acima do umbigo)' },
+        { id: 'curta', label: 'Curta (na cintura)' },
+        { id: 'regular', label: 'Regular (abaixo da cintura)' },
+      ]
+    }
+  ],
+  'Regatas': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justa', label: 'Justa' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'solta', label: 'Solta' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped (acima do umbigo)' },
+        { id: 'curta', label: 'Curta (na cintura)' },
+        { id: 'regular', label: 'Regular (abaixo da cintura)' },
+      ]
+    }
+  ],
+  'Tops': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justa', label: 'Justa' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'solta', label: 'Solta' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped (acima do umbigo)' },
+        { id: 'curta', label: 'Curta (na cintura)' },
+        { id: 'regular', label: 'Regular (abaixo da cintura)' },
+      ]
+    }
+  ],
+  'Camisas': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'slim', label: 'Slim' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'boxy', label: 'Boxy' },
+      ]
+    }
+  ],
+  'Vestidos': [
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'mini', label: 'Mini (acima do joelho)' },
+        { id: 'midi', label: 'Midi (no joelho)' },
+        { id: 'midi-longo', label: 'Midi-longo (abaixo do joelho)' },
+        { id: 'longo', label: 'Longo (canela)' },
+        { id: 'maxi', label: 'Maxi (chão)' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo' },
+        { id: 'evase', label: 'Evasê' },
+        { id: 'reto', label: 'Reto' },
+        { id: 'amplo', label: 'Amplo/Solto' },
+      ]
+    }
+  ],
+  'Saias': [
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'mini', label: 'Mini' },
+        { id: 'midi', label: 'Midi' },
+        { id: 'longa', label: 'Longa' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justa', label: 'Justa' },
+        { id: 'evase', label: 'Evasê' },
+        { id: 'reta', label: 'Reta' },
+        { id: 'gode', label: 'Godê' },
+      ]
+    }
+  ],
+  'Calças': [
+    {
+      id: 'modelagem',
+      label: 'Modelagem',
+      options: [
+        { id: 'skinny', label: 'Skinny' },
+        { id: 'slim', label: 'Slim' },
+        { id: 'reta', label: 'Reta' },
+        { id: 'wide-leg', label: 'Wide leg' },
+        { id: 'flare', label: 'Flare' },
+        { id: 'pantalona', label: 'Pantalona' },
+        { id: 'jogger', label: 'Jogger' },
+        { id: 'cargo', label: 'Cargo' },
+      ]
+    },
+    {
+      id: 'cintura',
+      label: 'Cintura',
+      options: [
+        { id: 'baixa', label: 'Baixa' },
+        { id: 'media', label: 'Média' },
+        { id: 'alta', label: 'Alta' },
+      ]
+    }
+  ],
+  'Shorts': [
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'curto', label: 'Curto (meio da coxa)' },
+        { id: 'medio', label: 'Médio (acima do joelho)' },
+        { id: 'bermuda', label: 'Bermuda (no joelho)' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'solto', label: 'Solto' },
+        { id: 'mom', label: 'Mom' },
+      ]
+    }
+  ],
+  'Bermudas': [
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'curto', label: 'Curto (meio da coxa)' },
+        { id: 'medio', label: 'Médio (acima do joelho)' },
+        { id: 'bermuda', label: 'Bermuda (no joelho)' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'solto', label: 'Solto' },
+        { id: 'mom', label: 'Mom' },
+      ]
+    }
+  ],
+  'Jaquetas': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'slim', label: 'Slim' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'alongado', label: 'Alongado' },
+      ]
+    }
+  ],
+  'Casacos': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'slim', label: 'Slim' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'alongado', label: 'Alongado' },
+      ]
+    }
+  ],
+  'Blazers': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'slim', label: 'Slim' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'alongado', label: 'Alongado' },
+      ]
+    }
+  ],
+  'Moletons': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'slim', label: 'Slim' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'oversized', label: 'Oversized' },
+        { id: 'cropped', label: 'Cropped' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'cropped', label: 'Cropped' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'alongado', label: 'Alongado' },
+      ]
+    }
+  ],
+  'Macacões': [
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'curto', label: 'Curto' },
+        { id: 'pantacourt', label: 'Pantacourt' },
+        { id: 'longo', label: 'Longo' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'amplo', label: 'Amplo' },
+      ]
+    }
+  ],
+  'Jardineiras': [
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'curto', label: 'Curto' },
+        { id: 'pantacourt', label: 'Pantacourt' },
+        { id: 'longo', label: 'Longo' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'amplo', label: 'Amplo' },
+      ]
+    }
+  ],
+  'Bodies': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo' },
+        { id: 'regular', label: 'Regular' },
+        { id: 'solto', label: 'Solto' },
+      ]
+    },
+    {
+      id: 'decote',
+      label: 'Decote',
+      options: [
+        { id: 'fechado', label: 'Fechado' },
+        { id: 'moderado', label: 'Moderado' },
+        { id: 'decotado', label: 'Decotado' },
+      ]
+    }
+  ],
+  'Biquínis': [
+    {
+      id: 'cobertura',
+      label: 'Cobertura inferior',
+      options: [
+        { id: 'fio-dental', label: 'Fio dental' },
+        { id: 'asa-delta', label: 'Asa delta' },
+        { id: 'tradicional', label: 'Tradicional' },
+        { id: 'hot-pants', label: 'Hot pants' },
+      ]
+    },
+    {
+      id: 'bojo',
+      label: 'Bojo',
+      options: [
+        { id: 'com-bojo', label: 'Com bojo' },
+        { id: 'sem-bojo', label: 'Sem bojo' },
+        { id: 'bojo-removivel', label: 'Bojo removível' },
+      ]
+    }
+  ],
+  'Maiôs': [
+    {
+      id: 'cobertura',
+      label: 'Cobertura inferior',
+      options: [
+        { id: 'fio-dental', label: 'Fio dental' },
+        { id: 'asa-delta', label: 'Asa delta' },
+        { id: 'tradicional', label: 'Tradicional' },
+        { id: 'hot-pants', label: 'Hot pants' },
+      ]
+    },
+    {
+      id: 'bojo',
+      label: 'Bojo',
+      options: [
+        { id: 'com-bojo', label: 'Com bojo' },
+        { id: 'sem-bojo', label: 'Sem bojo' },
+        { id: 'bojo-removivel', label: 'Bojo removível' },
+      ]
+    }
+  ],
+  'Leggings': [
+    {
+      id: 'cintura',
+      label: 'Cintura',
+      options: [
+        { id: 'media', label: 'Média' },
+        { id: 'alta', label: 'Alta' },
+        { id: 'super-alta', label: 'Super alta' },
+      ]
+    },
+    {
+      id: 'compressao',
+      label: 'Compressão',
+      options: [
+        { id: 'leve', label: 'Leve' },
+        { id: 'media', label: 'Média' },
+        { id: 'alta', label: 'Alta' },
+      ]
+    }
+  ],
+  'Shorts Fitness': [
+    {
+      id: 'cintura',
+      label: 'Cintura',
+      options: [
+        { id: 'media', label: 'Média' },
+        { id: 'alta', label: 'Alta' },
+        { id: 'super-alta', label: 'Super alta' },
+      ]
+    },
+    {
+      id: 'compressao',
+      label: 'Compressão',
+      options: [
+        { id: 'leve', label: 'Leve' },
+        { id: 'media', label: 'Média' },
+        { id: 'alta', label: 'Alta' },
+      ]
+    }
+  ],
+  'Calçados': [
+    {
+      id: 'altura',
+      label: 'Altura',
+      options: [
+        { id: 'rasteiro', label: 'Rasteiro' },
+        { id: 'salto-baixo', label: 'Salto baixo (3-5cm)' },
+        { id: 'salto-medio', label: 'Salto médio (5-8cm)' },
+        { id: 'salto-alto', label: 'Salto alto (8cm+)' },
+        { id: 'plataforma', label: 'Plataforma' },
+      ]
+    }
+  ],
+  'Bolsas': [
+    {
+      id: 'tamanho',
+      label: 'Tamanho',
+      options: [
+        { id: 'mini', label: 'Mini' },
+        { id: 'pequena', label: 'Pequena' },
+        { id: 'media', label: 'Média' },
+        { id: 'grande', label: 'Grande' },
+        { id: 'maxi', label: 'Maxi' },
+      ]
+    }
+  ],
+  'Acessórios': [
+    {
+      id: 'tamanho',
+      label: 'Tamanho',
+      options: [
+        { id: 'unico', label: 'Único' },
+        { id: 'pequeno', label: 'Pequeno' },
+        { id: 'medio', label: 'Médio' },
+        { id: 'grande', label: 'Grande' },
+      ]
+    }
+  ],
+};

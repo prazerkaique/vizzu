@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - AddProductModal (Multi-Step com Frente/Costas)
+// VIZZU - AddProductModal (Multi-Step com Frente/Costas + Atributos)
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useRef } from 'react';
-import { Product, ProductImage } from '../../types';
+import { Product, ProductImage, ProductAttributes, CATEGORY_ATTRIBUTES } from '../../types';
 
 interface Props {
   isOpen: boolean;
@@ -14,9 +14,35 @@ interface Props {
 
 type Step = 'source' | 'photos' | 'details';
 
-const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
-const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
-const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
+// Lista expandida de categorias
+const CATEGORIES = [
+  'Camisetas',
+  'Blusas',
+  'Regatas',
+  'Tops',
+  'Camisas',
+  'Vestidos',
+  'Saias',
+  'Calças',
+  'Shorts',
+  'Bermudas',
+  'Jaquetas',
+  'Casacos',
+  'Blazers',
+  'Moletons',
+  'Macacões',
+  'Jardineiras',
+  'Bodies',
+  'Biquínis',
+  'Maiôs',
+  'Leggings',
+  'Shorts Fitness',
+  'Calçados',
+  'Bolsas',
+  'Acessórios',
+];
+
+const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege', 'Laranja', 'Roxo', 'Nude', 'Estampado', 'Multicolor'];
 
 export const AddProductModal: React.FC<Props> = ({
   isOpen,
@@ -30,26 +56,32 @@ export const AddProductModal: React.FC<Props> = ({
   const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [showConfirmNoBack, setShowConfirmNoBack] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
     color: '',
-    fit: '',
     category: ''
   });
+
+  // Estado para atributos dinâmicos
+  const [attributes, setAttributes] = useState<ProductAttributes>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const isDark = theme === 'dark';
 
+  // Pegar atributos da categoria selecionada
+  const categoryAttrs = formData.category ? CATEGORY_ATTRIBUTES[formData.category] || [] : [];
+
   // Reset ao fechar
   const handleClose = () => {
     setStep('source');
     setFrontImage(null);
     setBackImage(null);
-    setFormData({ name: '', brand: '', color: '', fit: '', category: '' });
+    setFormData({ name: '', brand: '', color: '', category: '' });
+    setAttributes({});
     setShowConfirmNoBack(false);
     onClose();
   };
@@ -114,6 +146,17 @@ export const AddProductModal: React.FC<Props> = ({
     setStep('details');
   };
 
+  // Handler para mudança de categoria (limpa atributos antigos)
+  const handleCategoryChange = (category: string) => {
+    setFormData({ ...formData, category });
+    setAttributes({}); // Limpa atributos ao trocar categoria
+  };
+
+  // Handler para mudança de atributo
+  const handleAttributeChange = (attrId: string, value: string) => {
+    setAttributes(prev => ({ ...prev, [attrId]: value }));
+  };
+
   // Criar produto
   const handleCreate = async () => {
     if (!frontImage || !formData.name || !formData.category) {
@@ -128,8 +171,8 @@ export const AddProductModal: React.FC<Props> = ({
           name: formData.name,
           brand: formData.brand || undefined,
           color: formData.color || undefined,
-          fit: formData.fit || undefined,
           category: formData.category,
+          attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
           images: [],
           hasBackImage: !!backImage
         },
@@ -169,7 +212,7 @@ export const AddProductModal: React.FC<Props> = ({
       {/* Modal Overlay */}
       <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
         <div className={`rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
-          
+
           {/* ═══════════════════════════════════════════════════════════ */}
           {/* STEP 1: SOURCE - Escolher fonte da imagem */}
           {/* ═══════════════════════════════════════════════════════════ */}
@@ -347,7 +390,7 @@ export const AddProductModal: React.FC<Props> = ({
           {/* STEP 3: DETAILS - Dados do Produto */}
           {/* ═══════════════════════════════════════════════════════════ */}
           {step === 'details' && (
-            <div className="p-5 overflow-y-auto">
+            <div className="p-5 overflow-y-auto max-h-[80vh]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <button
@@ -435,32 +478,57 @@ export const AddProductModal: React.FC<Props> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Caimento</label>
-                    <select
-                      value={formData.fit}
-                      onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
-                      className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                    >
-                      <option value="">Selecione</option>
-                      {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                      Categoria <span className="text-pink-500">*</span>
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                    >
-                      <option value="">Selecione</option>
-                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                  </div>
+                {/* Categoria */}
+                <div>
+                  <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                    Categoria <span className="text-pink-500">*</span>
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                  >
+                    <option value="">Selecione</option>
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
                 </div>
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* ATRIBUTOS CONDICIONAIS POR CATEGORIA */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {categoryAttrs.length > 0 && (
+                  <div className={`p-3 rounded-xl border transition-all ${isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-purple-200'}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <i className={`fas fa-sliders text-xs ${isDark ? 'text-pink-400' : 'text-pink-500'}`}></i>
+                      <span className={`text-[10px] font-medium uppercase tracking-wide ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>
+                        Atributos de {formData.category}
+                      </span>
+                    </div>
+                    <div className={`grid gap-3 ${categoryAttrs.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {categoryAttrs.map(attr => (
+                        <div key={attr.id}>
+                          <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                            {attr.label}
+                          </label>
+                          <select
+                            value={attributes[attr.id] || ''}
+                            onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+                            className={`w-full px-3 py-2 border rounded-lg text-sm ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                          >
+                            <option value="">Selecione</option>
+                            {attr.options.map(opt => (
+                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                    <p className={`text-[9px] mt-2 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
+                      <i className="fas fa-info-circle mr-1"></i>
+                      Esses atributos ajudam a IA a gerar imagens mais precisas
+                    </p>
+                  </div>
+                )}
 
                 {/* Botão Criar */}
                 <button
@@ -500,7 +568,7 @@ export const AddProductModal: React.FC<Props> = ({
                 <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Produto sem foto de costas</h4>
               </div>
             </div>
-            
+
             <p className={`text-sm mb-4 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
               A IA pode não conseguir gerar resultados precisos para as costas do modelo. Deseja continuar mesmo assim?
             </p>

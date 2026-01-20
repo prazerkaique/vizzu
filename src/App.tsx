@@ -2,17 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
 import { AuthPage } from './components/AuthPage';
-import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition } from './types';
+import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES } from './types';
 import { useCredits, PLANS } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario } from './lib/api/studio';
 import heic2any from 'heic2any';
 
 
-const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
+const CATEGORIES = [
+  'Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Vestidos', 'Saias', 'Calças',
+  'Shorts', 'Bermudas', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Macacões',
+  'Jardineiras', 'Bodies', 'Biquínis', 'Maiôs', 'Leggings', 'Shorts Fitness',
+  'Calçados', 'Bolsas', 'Acessórios'
+];
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
-const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
-const FITS = ['Slim', 'Regular', 'Oversized', 'Skinny', 'Relaxed'];
+const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege', 'Laranja', 'Roxo', 'Nude', 'Estampado', 'Multicolor'];
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
   { id: 'frente', label: 'Frente', icon: 'fa-user' },
@@ -53,7 +57,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   
-  const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
+  const [productAttributes, setProductAttributes] = useState<ProductAttributes>({});
   
   const [clients, setClients] = useState<Client[]>([]);
   const [showCreateClient, setShowCreateClient] = useState(false);
@@ -411,9 +416,9 @@ const loadUserProducts = async (userId: string) => {
           name: newProduct.name,
           brand: newProduct.brand || null,
           color: newProduct.color || null,
-          fit: newProduct.fit || null,
           category: newProduct.category,
           collection: newProduct.collection || null,
+          attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
           image_front_base64: selectedFrontImage,
           image_back_base64: selectedBackImage || null
         })
@@ -429,7 +434,8 @@ const loadUserProducts = async (userId: string) => {
         setShowImport(false);
         setSelectedFrontImage(null);
         setSelectedBackImage(null);
-        setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+        setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
+        setProductAttributes({});
 
         // Notificação de sucesso
         setSuccessNotification('Produto criado com sucesso!');
@@ -2032,22 +2038,43 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             </select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Caimento</label>
-            <select value={newProduct.fit} onChange={(e) => setNewProduct({...newProduct, fit: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-              <option value="">Selecione</option>
-              {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
-            <select value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-              <option value="">Selecione</option>
-              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </div>
+        <div>
+          <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
+          <select value={newProduct.category} onChange={(e) => { setNewProduct({...newProduct, category: e.target.value}); setProductAttributes({}); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+            <option value="">Selecione</option>
+            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
         </div>
+
+        {/* Atributos condicionais por categoria */}
+        {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
+          <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-purple-200') + ' p-3 rounded-xl border'}>
+            <div className="flex items-center gap-2 mb-2">
+              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-sliders text-xs'}></i>
+              <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
+            </div>
+            <div className={`grid gap-3 ${CATEGORY_ATTRIBUTES[newProduct.category].length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              {CATEGORY_ATTRIBUTES[newProduct.category].map(attr => (
+                <div key={attr.id}>
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>{attr.label}</label>
+                  <select
+                    value={productAttributes[attr.id] || ''}
+                    onChange={(e) => setProductAttributes(prev => ({ ...prev, [attr.id]: e.target.value }))}
+                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                  >
+                    <option value="">Selecione</option>
+                    {attr.options.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-2'}>
+              <i className="fas fa-info-circle mr-1"></i>
+              Esses atributos ajudam a IA a gerar imagens mais precisas
+            </p>
+          </div>
+        )}
+
         <button onClick={handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           {isCreatingProduct ? (
             <>
