@@ -3,6 +3,7 @@ import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
+import { BulkImportModal } from './components/BulkImportModal';
 import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
@@ -619,13 +620,6 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
         const userId = session.user.id;
         const userEmail = session.user.email;
 
-        // DEBUG: Log para verificar se o userId é o mesmo em todos os dispositivos
-        console.log('═══════════════════════════════════════════════════');
-        console.log('🔐 VIZZU AUTH DEBUG');
-        console.log('User ID:', userId);
-        console.log('Email:', userEmail);
-        console.log('═══════════════════════════════════════════════════');
-
         // Verificar se é um usuário diferente do último logado
         const lastUserId = localStorage.getItem('vizzu_last_user_id');
         if (lastUserId && lastUserId !== userId) {
@@ -658,16 +652,10 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
         const userId = session.user.id;
         const userEmail = session.user.email;
 
-        console.log('═══════════════════════════════════════════════════');
-        console.log('🔐 VIZZU AUTH STATE CHANGE');
-        console.log('User ID:', userId);
-        console.log('Email:', userEmail);
-        console.log('═══════════════════════════════════════════════════');
-
         // Verificar se é um usuário diferente
         const lastUserId = localStorage.getItem('vizzu_last_user_id');
         if (lastUserId && lastUserId !== userId) {
-          console.log('⚠️ Usuário diferente detectado! Limpando dados locais antigos...');
+          // Usuário diferente - limpar dados locais antigos
           localStorage.removeItem('vizzu_clients');
           localStorage.removeItem('vizzu_history');
           localStorage.removeItem('vizzu_company_settings');
@@ -1038,7 +1026,11 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     setIsCreatingProduct(true);
 
     try {
-      const response = await fetch('https://n8neditor.brainia.store/webhook/vizzu/produto-importar', {
+      const n8nUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      if (!n8nUrl) {
+        throw new Error('URL do webhook não configurada');
+      }
+      const response = await fetch(`${n8nUrl}/vizzu/produto-importar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3484,87 +3476,43 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MODAL: IMPORTAÇÃO EM MASSA (XML Google Shopping) */}
+      {/* MODAL: IMPORTAÇÃO EM MASSA (Google Sheets, XML, ZIP) */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {showBulkImport && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-lg overflow-hidden'}>
-            {/* Header */}
-            <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' flex items-center justify-between p-4 border-b'}>
-              <div className="flex items-center gap-3">
-                <div className={(theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100') + ' w-10 h-10 rounded-xl flex items-center justify-center'}>
-                  <i className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-500') + ' fas fa-file-import text-sm'}></i>
-                </div>
-                <div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Importação em Massa</h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>XML padrão Google Shopping</p>
-                </div>
-              </div>
-              <button onClick={() => setShowBulkImport(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
-                <i className="fas fa-times text-xs"></i>
-              </button>
-            </div>
+      <BulkImportModal
+        isOpen={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+        onImport={(importedProducts) => {
+          const newProducts = importedProducts.map(p => ({
+            ...p,
+            id: p.id || `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            sku: p.sku || `SKU-${Date.now()}`,
+            name: p.name || 'Produto Importado',
+            category: p.category || '',
+            images: p.images || [],
+            createdAt: p.createdAt || new Date().toISOString(),
+          } as Product));
 
-            {/* Content */}
-            <div className="p-5">
-              {/* Upload Area */}
-              <div className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all'}>
-                <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-cloud-upload-alt text-xl'}></i>
-                </div>
-                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>Arraste seu arquivo XML aqui</p>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>ou clique para selecionar</p>
-                <input type="file" accept=".xml" className="hidden" />
-                <button className={(theme === 'dark' ? 'bg-neutral-700 text-white hover:bg-neutral-600' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') + ' px-4 py-2 rounded-lg text-xs font-medium'}>
-                  Selecionar Arquivo
-                </button>
-              </div>
+          setProducts(prev => [...prev, ...newProducts]);
 
-              {/* Info */}
-              <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200') + ' rounded-xl p-3 mt-4 border'}>
-                <p className="text-blue-500 text-xs flex items-start gap-2">
-                  <i className="fas fa-info-circle mt-0.5"></i>
-                  <span>
-                    <strong>Formato suportado:</strong> XML padrão Google Shopping com campos: id, title, description, image_link, brand, color, product_type.
-                  </span>
-                </p>
-              </div>
+          // Log da importação
+          const newLog: HistoryLog = {
+            id: `log-${Date.now()}`,
+            date: new Date().toISOString(),
+            action: 'Importação em Massa',
+            details: `${newProducts.length} produtos importados`,
+            status: 'success',
+            method: 'bulk',
+            cost: 0,
+            itemsCount: newProducts.length,
+          };
+          setHistoryLogs(prev => [newLog, ...prev]);
 
-              {/* Exemplo de estrutura */}
-              <details className="mt-4">
-                <summary className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs cursor-pointer'}>
-                  <i className="fas fa-code mr-1.5"></i>Ver exemplo de estrutura XML
-                </summary>
-                <pre className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-100 text-gray-700') + ' mt-2 p-3 rounded-lg text-[10px] overflow-x-auto'}>
-{`<rss>
-  <channel>
-    <item>
-      <g:id>SKU-001</g:id>
-      <g:title>Camiseta Básica</g:title>
-      <g:image_link>https://...</g:image_link>
-      <g:brand>Marca</g:brand>
-      <g:color>Preto</g:color>
-      <g:product_type>Camisetas</g:product_type>
-    </item>
-  </channel>
-</rss>`}
-                </pre>
-              </details>
-            </div>
-
-            {/* Footer */}
-            <div className={(theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-gray-200 bg-gray-50') + ' p-4 border-t flex gap-2'}>
-              <button onClick={() => setShowBulkImport(false)} className={(theme === 'dark' ? 'bg-neutral-700 text-white hover:bg-neutral-600' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') + ' flex-1 py-2.5 rounded-lg font-medium text-sm'}>
-                Cancelar
-              </button>
-              <button disabled className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
-                <i className="fas fa-upload"></i>
-                Importar Produtos
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          // Notificação
+          setSuccessNotification(`${newProducts.length} produtos importados com sucesso!`);
+          setTimeout(() => setSuccessNotification(null), 3000);
+        }}
+        theme={theme}
+      />
 
       {/* Modal de confirmação de exclusão de produtos */}
       {showDeleteProductsModal && (

@@ -3,7 +3,11 @@
 // Chamadas para os webhooks do n8n
 // ═══════════════════════════════════════════════════════════════
 
-const N8N_BASE_URL = 'https://n8nwebhook.brainia.store/webhook';
+const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
+
+if (!N8N_BASE_URL) {
+  console.warn('VITE_N8N_WEBHOOK_URL não configurada - funcionalidades de geração indisponíveis');
+}
 
 interface StudioReadyParams {
   productId: string;
