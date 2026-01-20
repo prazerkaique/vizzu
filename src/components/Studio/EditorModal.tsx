@@ -126,6 +126,7 @@ export const EditorModal: React.FC<Props> = ({
   const [isGen, setIsGen] = useState(false);
   const [genImg, setGenImg] = useState<{ front: string | null; back: string | null }>({ front: null, back: null });
   const [genId, setGenId] = useState<string | null>(null);
+  const [isFromHistory, setIsFromHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [cenPrompt, setCenPrompt] = useState('');
@@ -202,8 +203,8 @@ export const EditorModal: React.FC<Props> = ({
   };
 
   const handleSelectTool = (t: ToolType) => {
-    if ((genImg.front || genImg.back) && tool !== t && !confirm('Descartar imagem gerada?')) return;
-    setGenImg({ front: null, back: null }); setGenId(null); setShowRefine(false); setError(null); setTool(t === tool ? null : t); setViewMode('original');
+  if ((genImg.front || genImg.back) && !isFromHistory && tool !== t && !confirm('Descartar imagem gerada?')) return;
+   setGenImg({ front: null, back: null }); setGenId(null); setIsFromHistory(false); setShowRefine(false); setError(null); setTool(t === tool ? null : t); setViewMode('original');
     if (t === 'lifestyle') setLifestyleStep('item');
   };
 
@@ -257,6 +258,8 @@ export const EditorModal: React.FC<Props> = ({
       
       if (frontResult?.image) { 
         setGenImg({ front: frontResult.image, back: backResult?.image || null }); 
+        setGenImg({ front: frontResult.image, back: backResult?.image || null }); 
+setIsFromHistory(false);
         setGenId(frontResult.generationId); 
         setViewMode('result'); 
         setCurrentView('front');
@@ -477,7 +480,7 @@ const handleSave = async () => {
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {getFilteredGeneratedImages().map(gen => (
-                      <div key={gen.id} className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300'}`} onClick={() => { setGenImg({ front: gen.images.front, back: gen.images.back || null }); setViewMode('result'); setCurrentView('front'); }}>
+                      <div key={gen.id} className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300'}`} onClick={() => { setGenImg({ front: gen.images.front, back: gen.images.back || null }); setIsFromHistory(true); setViewMode('result'); setCurrentView('front'); }}>
                         <img src={gen.images.front} alt="Gerada" className="w-full h-full object-cover" />
                         <span className={`absolute bottom-0.5 left-0.5 px-1 py-0.5 text-[7px] font-bold rounded ${gen.tool === 'studio' ? 'bg-blue-500 text-white' : gen.tool === 'cenario' ? 'bg-purple-500 text-white' : 'bg-pink-500 text-white'}`}>
                           {gen.tool === 'studio' ? 'S' : gen.tool === 'cenario' ? 'C' : 'IA'}
