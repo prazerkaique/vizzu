@@ -714,8 +714,8 @@ const handleSave = async () => {
           {/* FOOTER: Action Buttons */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div className={`flex-shrink-0 p-4 border-t ${isDark ? 'border-neutral-800' : 'border-gray-200'}`}>
-            {/* Result Actions */}
-            {(genImg.front || genImg.back) ? (
+            {/* Result Actions - só mostra salvar para novas gerações, não para histórico */}
+            {(genImg.front || genImg.back) && !isFromHistory ? (
               <div className="flex items-center gap-2">
                 <button onClick={() => { setGenImg({ front: null, back: null }); setViewMode('original'); }} className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-neutral-800 text-red-400 hover:bg-red-500/20' : 'bg-gray-100 text-red-500 hover:bg-red-50'}`}>
                   <i className="fas fa-trash text-sm"></i>
