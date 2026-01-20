@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getUserBilling, createCheckoutSession, buyCredits, changePlan, calculateDaysUntilRenewal, UserSubscription, UserCredits } from '../lib/api/billing';
+
+// ═══════════════════════════════════════════════════════════════
+// TIPOS E CONSTANTES
+// ═══════════════════════════════════════════════════════════════
 
 export interface Plan {
   id: string;
@@ -41,7 +46,7 @@ export const PLANS: Plan[] = [
     priceMonthly: 189.90,
     priceYearly: 159.90,
     creditPrice: 1.99,
-    badge: 'PLANO ATUAL',
+    badge: 'POPULAR',
     badgeColor: 'fuchsia',
     features: [
       'Todas do Starter, mais:',
@@ -68,17 +73,33 @@ export const PLANS: Plan[] = [
   }
 ];
 
+// Plano padrão para usuários não autenticados ou em fallback
+const DEFAULT_PLAN = PLANS[1]; // Pro
+const FREE_PLAN: Plan = {
+  id: 'free',
+  name: 'Free',
+  limit: 0,
+  priceMonthly: 0,
+  priceYearly: 0,
+  creditPrice: 3.99, // Preço mais alto para compras avulsas
+  features: ['Acesso limitado', 'Sem créditos mensais']
+};
+
 export const CREDIT_PACKAGES = [50, 100, 200, 500];
+
+// ═══════════════════════════════════════════════════════════════
+// LOCAL STORAGE (FALLBACK)
+// ═══════════════════════════════════════════════════════════════
 
 const STORAGE_KEY = 'vizzu_credits_data';
 
-interface CreditsData {
+interface LocalCreditsData {
   credits: number;
   planId: string;
   billingPeriod: 'monthly' | 'yearly';
 }
 
-const getStoredData = (): CreditsData => {
+const getStoredData = (): LocalCreditsData => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -87,11 +108,10 @@ const getStoredData = (): CreditsData => {
   } catch (e) {
     console.error('Error reading credits data:', e);
   }
-  // Default: Pro plan with 200 credits
   return { credits: 200, planId: 'pro', billingPeriod: 'monthly' };
 };
 
-const saveData = (data: CreditsData) => {
+const saveLocalData = (data: LocalCreditsData) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
@@ -99,52 +119,315 @@ const saveData = (data: CreditsData) => {
   }
 };
 
-export const useCredits = () => {
-  const [data, setData] = useState<CreditsData>(getStoredData);
+// ═══════════════════════════════════════════════════════════════
+// HOOK PRINCIPAL
+// ═══════════════════════════════════════════════════════════════
 
-  useEffect(() => {
-    saveData(data);
-  }, [data]);
+interface UseCreditsOptions {
+  userId?: string;
+  enableBackend?: boolean; // Se true, sincroniza com backend
+}
 
-  const currentPlan = PLANS.find(p => p.id === data.planId) || PLANS[1]; // Default to Pro
+export const useCredits = (options: UseCreditsOptions = {}) => {
+  const { userId, enableBackend = true } = options;
 
-  const deductCredits = (amount: number, _reason: string): boolean => {
-    if (data.credits < amount) return false;
-    setData(prev => ({ ...prev, credits: prev.credits - amount }));
-    return true;
-  };
+  // Estados
+  const [localData, setLocalData] = useState<LocalCreditsData>(getStoredData);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [creditsData, setCreditsData] = useState<UserCredits | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
-  const addCredits = (amount: number) => {
-    setData(prev => ({ ...prev, credits: prev.credits + amount }));
-  };
+  // Determinar plano atual
+  const currentPlan = subscription
+    ? PLANS.find(p => p.id === subscription.plan_id) || DEFAULT_PLAN
+    : PLANS.find(p => p.id === localData.planId) || DEFAULT_PLAN;
 
-  const upgradePlan = (planId: string) => {
-    const plan = PLANS.find(p => p.id === planId);
-    if (plan) {
-      setData(prev => ({
-        ...prev,
-        planId: plan.id,
-        credits: plan.limit
-      }));
+  // Determinar créditos atuais
+  const userCredits = creditsData?.balance ?? localData.credits;
+
+  // Período de cobrança
+  const billingPeriod = subscription?.billing_period ?? localData.billingPeriod;
+
+  // Dias até renovação
+  const daysUntilRenewal = subscription ? calculateDaysUntilRenewal(subscription) : 30;
+
+  // ═══════════════════════════════════════════════════════════════
+  // CARREGAR DADOS DO BACKEND
+  // ═══════════════════════════════════════════════════════════════
+
+  const loadBillingData = useCallback(async () => {
+    if (!userId || !enableBackend) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await getUserBilling({ userId });
+
+      if (result.success) {
+        if (result.subscription) {
+          setSubscription(result.subscription);
+        }
+        if (result.credits) {
+          setCreditsData(result.credits);
+          // Sincronizar com localStorage
+          setLocalData(prev => ({
+            ...prev,
+            credits: result.credits!.balance,
+            planId: result.subscription?.plan_id || prev.planId,
+          }));
+        }
+      }
+    } catch (e: any) {
+      console.error('Error loading billing data:', e);
+      setError(e.message);
+      // Fallback para dados locais - não falha silenciosamente
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [userId, enableBackend]);
 
-  const setBillingPeriod = (period: 'monthly' | 'yearly') => {
-    setData(prev => ({ ...prev, billingPeriod: period }));
-  };
+  // Carregar dados ao montar ou quando userId mudar
+  useEffect(() => {
+    loadBillingData();
+  }, [loadBillingData]);
 
-  const setCredits = (credits: number) => {
-    setData(prev => ({ ...prev, credits }));
-  };
+  // Salvar dados locais quando mudarem
+  useEffect(() => {
+    saveLocalData(localData);
+  }, [localData]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // COMPRAR CRÉDITOS
+  // ═══════════════════════════════════════════════════════════════
+
+  const purchaseCredits = useCallback(async (amount: number): Promise<{ success: boolean; checkoutUrl?: string; error?: string }> => {
+    if (!userId) {
+      // Modo offline/demo - adiciona localmente
+      setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
+      return { success: true };
+    }
+
+    setIsCheckoutLoading(true);
+
+    try {
+      // Criar sessão de checkout
+      const result = await createCheckoutSession({
+        userId,
+        type: 'credits',
+        creditAmount: amount,
+      });
+
+      if (result.success && result.checkout?.url) {
+        // Redirecionar para checkout ou retornar URL
+        return { success: true, checkoutUrl: result.checkout.url };
+      } else {
+        throw new Error('Não foi possível criar sessão de checkout');
+      }
+    } catch (e: any) {
+      console.error('Error creating checkout:', e);
+      return { success: false, error: e.message };
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  }, [userId]);
+
+  // Versão que adiciona créditos diretamente (após confirmação de pagamento ou modo demo)
+  const addCredits = useCallback(async (amount: number): Promise<boolean> => {
+    if (!userId || !enableBackend) {
+      // Modo offline/demo
+      setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
+      return true;
+    }
+
+    try {
+      const result = await buyCredits({ userId, amount });
+      if (result.success) {
+        setCreditsData(prev => prev ? { ...prev, balance: result.new_balance } : null);
+        setLocalData(prev => ({ ...prev, credits: result.new_balance }));
+        return true;
+      }
+      return false;
+    } catch (e: any) {
+      console.error('Error adding credits:', e);
+      // Fallback local em caso de erro
+      setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
+      return true;
+    }
+  }, [userId, enableBackend]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // UPGRADE DE PLANO
+  // ═══════════════════════════════════════════════════════════════
+
+  const upgradePlan = useCallback(async (planId: string): Promise<{ success: boolean; checkoutUrl?: string; error?: string }> => {
+    const newPlan = PLANS.find(p => p.id === planId);
+    if (!newPlan) {
+      return { success: false, error: 'Plano não encontrado' };
+    }
+
+    if (!userId) {
+      // Modo offline/demo
+      setLocalData(prev => ({
+        ...prev,
+        planId: newPlan.id,
+        credits: newPlan.limit,
+      }));
+      return { success: true };
+    }
+
+    setIsCheckoutLoading(true);
+
+    try {
+      // Criar sessão de checkout para assinatura
+      const result = await createCheckoutSession({
+        userId,
+        type: 'subscription',
+        planId: newPlan.id,
+        billingPeriod: localData.billingPeriod,
+      });
+
+      if (result.success && result.checkout?.url) {
+        return { success: true, checkoutUrl: result.checkout.url };
+      } else {
+        throw new Error('Não foi possível criar sessão de checkout');
+      }
+    } catch (e: any) {
+      console.error('Error creating subscription checkout:', e);
+      return { success: false, error: e.message };
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  }, [userId, localData.billingPeriod]);
+
+  // Versão que altera plano diretamente (após confirmação de pagamento ou modo demo)
+  const applyPlanChange = useCallback(async (planId: string): Promise<boolean> => {
+    const newPlan = PLANS.find(p => p.id === planId);
+    if (!newPlan) return false;
+
+    if (!userId || !enableBackend) {
+      // Modo offline/demo
+      setLocalData(prev => ({
+        ...prev,
+        planId: newPlan.id,
+        credits: newPlan.limit,
+      }));
+      return true;
+    }
+
+    try {
+      const result = await changePlan({
+        userId,
+        newPlanId: planId,
+        billingPeriod: localData.billingPeriod,
+      });
+
+      if (result.success) {
+        if (result.subscription) {
+          setSubscription(result.subscription);
+        }
+        if (result.new_balance !== undefined) {
+          setCreditsData(prev => prev ? { ...prev, balance: result.new_balance! } : null);
+          setLocalData(prev => ({
+            ...prev,
+            planId: planId,
+            credits: result.new_balance!,
+          }));
+        }
+        return true;
+      }
+      return false;
+    } catch (e: any) {
+      console.error('Error applying plan change:', e);
+      // Fallback local
+      setLocalData(prev => ({
+        ...prev,
+        planId: newPlan.id,
+        credits: newPlan.limit,
+      }));
+      return true;
+    }
+  }, [userId, enableBackend, localData.billingPeriod]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEDUZIR CRÉDITOS
+  // ═══════════════════════════════════════════════════════════════
+
+  const deductCredits = useCallback((amount: number, _reason: string): boolean => {
+    const currentBalance = creditsData?.balance ?? localData.credits;
+    if (currentBalance < amount) return false;
+
+    // Atualizar localmente imediatamente
+    setLocalData(prev => ({ ...prev, credits: prev.credits - amount }));
+    if (creditsData) {
+      setCreditsData(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
+    }
+
+    // A dedução no backend é feita pela API de geração de imagens
+    // que já deduz os créditos automaticamente
+
+    return true;
+  }, [creditsData, localData.credits]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // ALTERAR PERÍODO DE COBRANÇA
+  // ═══════════════════════════════════════════════════════════════
+
+  const setBillingPeriod = useCallback((period: 'monthly' | 'yearly') => {
+    setLocalData(prev => ({ ...prev, billingPeriod: period }));
+    // O período só é efetivamente alterado na próxima renovação/checkout
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEFINIR CRÉDITOS MANUALMENTE (ADMIN/DEBUG)
+  // ═══════════════════════════════════════════════════════════════
+
+  const setCredits = useCallback((credits: number) => {
+    setLocalData(prev => ({ ...prev, credits }));
+    if (creditsData) {
+      setCreditsData(prev => prev ? { ...prev, balance: credits } : null);
+    }
+  }, [creditsData]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // REFRESH MANUAL
+  // ═══════════════════════════════════════════════════════════════
+
+  const refresh = useCallback(() => {
+    loadBillingData();
+  }, [loadBillingData]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // RETORNO
+  // ═══════════════════════════════════════════════════════════════
 
   return {
-    userCredits: data.credits,
+    // Dados
+    userCredits,
     currentPlan,
-    billingPeriod: data.billingPeriod,
-    deductCredits,
-    addCredits,
+    billingPeriod,
+    daysUntilRenewal,
+    subscription,
+
+    // Estados
+    isLoading,
+    isCheckoutLoading,
+    error,
+
+    // Ações com checkout (retornam URL para pagamento)
+    purchaseCredits,
     upgradePlan,
+
+    // Ações diretas (após confirmação de pagamento ou modo demo)
+    addCredits,
+    applyPlanChange,
+    deductCredits,
     setBillingPeriod,
-    setCredits
+    setCredits,
+
+    // Utilitários
+    refresh,
   };
 };

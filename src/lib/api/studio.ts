@@ -176,3 +176,108 @@ export async function refineImage(params: RefineParams): Promise<StudioReadyResp
 
   return data;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// DELETAR GERAÇÃO
+// ═══════════════════════════════════════════════════════════════
+
+interface DeleteGenerationParams {
+  generationId: string;
+  userId: string;
+}
+
+interface DeleteGenerationResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Deleta uma imagem gerada do Supabase
+ */
+export async function deleteGeneration(params: DeleteGenerationParams): Promise<DeleteGenerationResponse> {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/delete-generation`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      generation_id: params.generationId,
+      user_id: params.userId,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao deletar geração');
+  }
+
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GERAR LEGENDA IA
+// ═══════════════════════════════════════════════════════════════
+
+export interface GenerateCaptionParams {
+  userId: string;
+  productName: string;
+  productCategory: string;
+  productColor?: string;
+  generationType: 'studio' | 'cenario' | 'lifestyle';
+  scenePrompt?: string;
+  companySettings: {
+    name: string;
+    targetAudience: string;
+    voiceTone: string;
+    voiceExamples?: string;
+    hashtags: string[];
+    emojisEnabled: boolean;
+    captionStyle: string;
+    callToAction?: string;
+  };
+}
+
+export interface GenerateCaptionResponse {
+  success: boolean;
+  caption?: string;
+  hashtags?: string[];
+  error?: string;
+}
+
+/**
+ * Gera uma legenda para Instagram usando IA
+ */
+export async function generateCaption(params: GenerateCaptionParams): Promise<GenerateCaptionResponse> {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/generate-caption`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: params.userId,
+      product_name: params.productName,
+      product_category: params.productCategory,
+      product_color: params.productColor,
+      generation_type: params.generationType,
+      scene_prompt: params.scenePrompt,
+      company_name: params.companySettings.name,
+      target_audience: params.companySettings.targetAudience,
+      voice_tone: params.companySettings.voiceTone,
+      voice_examples: params.companySettings.voiceExamples,
+      hashtags: params.companySettings.hashtags,
+      emojis_enabled: params.companySettings.emojisEnabled,
+      caption_style: params.companySettings.captionStyle,
+      call_to_action: params.companySettings.callToAction,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao gerar legenda');
+  }
+
+  return data;
+}

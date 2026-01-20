@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
 import { AuthPage } from './components/AuthPage';
-import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES } from './types';
+import { CreditExhaustedModal } from './components/CreditExhaustedModal';
+import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario } from './lib/api/studio';
@@ -59,11 +60,30 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  const [filterColor, setFilterColor] = useState('');
+  const [filterCollection, setFilterCollection] = useState('');
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [showDeleteProductsModal, setShowDeleteProductsModal] = useState(false);
+  const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   
   const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
   const [productAttributes, setProductAttributes] = useState<ProductAttributes>({});
   
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients, setClients] = useState<Client[]>(() => {
+    const saved = localStorage.getItem('vizzu_clients');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { }
+    }
+    return [];
+  });
+  const [historyLogs, setHistoryLogs] = useState<HistoryLog[]>(() => {
+    const saved = localStorage.getItem('vizzu_history');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { }
+    }
+    return [];
+  });
   const [showCreateClient, setShowCreateClient] = useState(false);
   const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -90,15 +110,140 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   });
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
-  
+
+  // Credit Exhausted Modal
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [creditModalContext, setCreditModalContext] = useState<{
+    creditsNeeded: number;
+    actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic';
+  }>({ creditsNeeded: 1, actionContext: 'generic' });
+
+  // Company Settings (para geração de legendas IA)
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
+    const saved = localStorage.getItem('vizzu_company_settings');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { }
+    }
+    return {
+      name: '',
+      cnpj: '',
+      instagram: '',
+      targetAudience: '',
+      voiceTone: 'casual' as const,
+      voiceExamples: '',
+      hashtags: [],
+      emojisEnabled: true,
+      captionStyle: 'media' as const,
+      callToAction: '',
+    };
+  });
+
+  // Persistir company settings
+  useEffect(() => {
+    localStorage.setItem('vizzu_company_settings', JSON.stringify(companySettings));
+  }, [companySettings]);
+
+  // Persistir clientes
+  useEffect(() => {
+    localStorage.setItem('vizzu_clients', JSON.stringify(clients));
+  }, [clients]);
+
+  // Persistir histórico
+  useEffect(() => {
+    localStorage.setItem('vizzu_history', JSON.stringify(historyLogs));
+  }, [historyLogs]);
+
   const clientPhotoInputRef = useRef<HTMLInputElement>(null);
   
-  const { userCredits, currentPlan, billingPeriod, deductCredits, upgradePlan, setBillingPeriod, addCredits, setCredits } = useCredits();
+  // Hook de créditos com integração ao backend
+  const {
+    userCredits,
+    currentPlan,
+    billingPeriod,
+    daysUntilRenewal,
+    isCheckoutLoading,
+    deductCredits,
+    purchaseCredits,
+    upgradePlan,
+    addCredits,
+    applyPlanChange,
+    setBillingPeriod,
+    setCredits,
+    refresh: refreshCredits,
+  } = useCredits({ userId: user?.id, enableBackend: true });
+
+  // Função para verificar créditos e mostrar modal se insuficientes
+  const checkCreditsAndShowModal = (
+    creditsNeeded: number,
+    actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic'
+  ): boolean => {
+    if (userCredits >= creditsNeeded) {
+      return true; // Tem créditos suficientes
+    }
+    // Mostrar modal de créditos insuficientes
+    setCreditModalContext({ creditsNeeded, actionContext });
+    setShowCreditModal(true);
+    return false;
+  };
+
+  // Handler para compra de créditos
+  const handleBuyCredits = async (amount: number) => {
+    try {
+      const result = await purchaseCredits(amount);
+
+      if (result.checkoutUrl) {
+        // Redirecionar para checkout (Stripe/Mercado Pago)
+        window.open(result.checkoutUrl, '_blank');
+        setShowCreditModal(false);
+        // Toast informando sobre redirecionamento
+        setToast({ type: 'info', message: 'Redirecionando para pagamento...' });
+      } else if (result.success) {
+        // Modo demo/offline - créditos adicionados localmente
+        setShowCreditModal(false);
+        handleAddHistoryLog('Créditos adicionados', `${amount} créditos foram adicionados à sua conta`, 'success', [], 'system', 0);
+        setToast({ type: 'success', message: `${amount} créditos adicionados!` });
+      } else {
+        setToast({ type: 'error', message: result.error || 'Erro ao processar compra' });
+      }
+    } catch (e: any) {
+      console.error('Error buying credits:', e);
+      setToast({ type: 'error', message: 'Erro ao processar compra' });
+    }
+  };
+
+  // Handler para upgrade de plano
+  const handleUpgradePlanFromModal = async (planId: string) => {
+    try {
+      const result = await upgradePlan(planId);
+      const plan = PLANS.find(p => p.id === planId);
+
+      if (result.checkoutUrl) {
+        // Redirecionar para checkout de assinatura
+        window.open(result.checkoutUrl, '_blank');
+        setShowCreditModal(false);
+        setToast({ type: 'info', message: 'Redirecionando para pagamento...' });
+      } else if (result.success) {
+        // Modo demo/offline - plano alterado localmente
+        setShowCreditModal(false);
+        if (plan) {
+          handleAddHistoryLog('Plano atualizado', `Você fez upgrade para o plano ${plan.name}`, 'success', [], 'system', 0);
+          setToast({ type: 'success', message: `Upgrade para ${plan.name} realizado!` });
+        }
+      } else {
+        setToast({ type: 'error', message: result.error || 'Erro ao processar upgrade' });
+      }
+    } catch (e: any) {
+      console.error('Error upgrading plan:', e);
+      setToast({ type: 'error', message: 'Erro ao processar upgrade' });
+    }
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !filterCategory || product.category === filterCategory;
-    return matchesSearch && matchesCategory;
+    const matchesColor = !filterColor || product.color === filterColor;
+    const matchesCollection = !filterCollection || product.collection === filterCollection;
+    return matchesSearch && matchesCategory && matchesColor && matchesCollection;
   });
   
   const filteredClients = clients.filter(client => {
@@ -277,8 +422,49 @@ const loadUserProducts = async (userId: string) => {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p)); 
   };
   
-  const handleDeductCredits = (amount: number, reason: string): boolean => { 
-    return deductCredits(amount, reason); 
+  const handleDeductCredits = (amount: number, reason: string): boolean => {
+    return deductCredits(amount, reason);
+  };
+
+  // Função para mostrar toast
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Função para toggle seleção de produto
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  // Função para selecionar todos os produtos filtrados
+  const selectAllProducts = () => {
+    if (selectedProducts.length === filteredProducts.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(filteredProducts.map(p => p.id));
+    }
+  };
+
+  // Função para deletar um produto
+  const handleDeleteProduct = (product: Product) => {
+    setProducts(prev => prev.filter(p => p.id !== product.id));
+    setSelectedProducts(prev => prev.filter(id => id !== product.id));
+    showToast(`"${product.name}" foi excluído`, 'success');
+    handleAddHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
+  };
+
+  // Função para deletar produtos selecionados
+  const handleDeleteSelectedProducts = () => {
+    const count = selectedProducts.length;
+    setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
+    setSelectedProducts([]);
+    setShowDeleteProductsModal(false);
+    showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
   };
 
   // Função para gerar imagens com IA via n8n
@@ -315,12 +501,13 @@ const loadUserProducts = async (userId: string) => {
             setCredits(result.credits_remaining);
           }
           loadUserProducts(user.id);
+          handleAddHistoryLog('Imagem gerada', `Studio Ready para "${product.name}"`, 'success', [product], 'ai', 1);
           return {
             image: result.generation.image_url,
             generationId: result.generation.id,
           };
         }
-        
+
         throw new Error(result.message || 'Erro ao gerar imagem');
       }
 
@@ -344,6 +531,7 @@ const loadUserProducts = async (userId: string) => {
             setCredits(result.credits_remaining);
           }
           loadUserProducts(user.id);
+          handleAddHistoryLog('Imagem gerada', `Cenário Criativo para "${product.name}"`, 'success', [product], 'ai', 1);
           return {
             image: result.generation.image_url,
             generationId: result.generation.id,
@@ -448,6 +636,9 @@ const loadUserProducts = async (userId: string) => {
         if (data.product?.id) {
           setLastCreatedProductId(data.product.id);
         }
+
+        // Log no histórico
+        handleAddHistoryLog('Produto criado', `"${newProduct.name}" foi adicionado ao catálogo`, 'success', [], 'manual', 0);
       } else {
         alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
       }
@@ -464,27 +655,30 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const handleCreateClient = () => {
-    if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) { 
-      alert('Preencha nome, sobrenome e WhatsApp'); 
-      return; 
+    if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) {
+      alert('Preencha nome, sobrenome e WhatsApp');
+      return;
     }
-    const client: Client = { 
-      id: 'client-' + Date.now(), 
-      firstName: newClient.firstName, 
-      lastName: newClient.lastName, 
-      whatsapp: newClient.whatsapp.replace(/\D/g, ''), 
-      email: newClient.email || undefined, 
-      photos: newClient.photos.length > 0 ? newClient.photos : undefined, 
-      photo: newClient.photos[0]?.base64, 
-      hasProvadorIA: newClient.photos.length > 0, 
-      notes: newClient.notes || undefined, 
-      status: 'active', 
-      createdAt: new Date().toISOString(), 
-      totalOrders: 0 
+    const client: Client = {
+      id: 'client-' + Date.now(),
+      firstName: newClient.firstName,
+      lastName: newClient.lastName,
+      whatsapp: newClient.whatsapp.replace(/\D/g, ''),
+      email: newClient.email || undefined,
+      photos: newClient.photos.length > 0 ? newClient.photos : undefined,
+      photo: newClient.photos[0]?.base64,
+      hasProvadorIA: newClient.photos.length > 0,
+      notes: newClient.notes || undefined,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      totalOrders: 0
     };
     setClients(prev => [...prev, client]);
     setShowCreateClient(false);
     setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' });
+
+    // Log no histórico
+    handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
 
     // Se veio do Provador, selecionar o cliente e voltar para lá
     if (createClientFromProvador) {
@@ -496,11 +690,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  const handleDeleteClient = (clientId: string) => { 
-    if (confirm('Tem certeza que deseja excluir este cliente?')) { 
-      setClients(prev => prev.filter(c => c.id !== clientId)); 
-      setShowClientDetail(null); 
-    } 
+  const handleDeleteClient = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+      setClients(prev => prev.filter(c => c.id !== clientId));
+      setShowClientDetail(null);
+      if (client) {
+        handleAddHistoryLog('Cliente excluído', `${client.firstName} ${client.lastName} foi removido`, 'success', [], 'manual', 0);
+      }
+    }
   };
 
   const getClientPhoto = (client: Client, type?: ClientPhoto['type']): string | undefined => {
@@ -551,8 +749,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setProvadorLookSearch('');
   };
   const handleAddHistoryLog = (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => {
-    // TODO: implementar histórico
-    console.log('History log:', { action, details, status, items, method, cost });
+    const newLog: HistoryLog = {
+      id: `log-${Date.now()}`,
+      date: new Date().toISOString(),
+      action,
+      details,
+      status,
+      items,
+      method,
+      cost,
+      itemsCount: items.length,
+      createdAt: new Date(),
+    };
+    setHistoryLogs(prev => [newLog, ...prev].slice(0, 100)); // Mantém últimos 100 registros
   };
 
   // Função para processar imagem (converte HEIC se necessário)
@@ -914,17 +1123,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* STUDIO */}
         {currentPage === 'studio' && (
-          <Studio 
-            products={products} 
-            userCredits={userCredits} 
-            onUpdateProduct={handleUpdateProduct} 
-            onDeductCredits={handleDeductCredits} 
-            onAddHistoryLog={handleAddHistoryLog} 
-            onOpenSettings={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} 
-            onImport={() => setShowImport(true)} 
+          <Studio
+            products={products}
+            userCredits={userCredits}
+            onUpdateProduct={handleUpdateProduct}
+            onDeductCredits={handleDeductCredits}
+            onAddHistoryLog={handleAddHistoryLog}
+            onOpenSettings={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+            onImport={() => setShowImport(true)}
             currentPlan={currentPlan}
             theme={theme}
             onGenerateImage={handleGenerateImage}
+            onCheckCredits={checkCreditsAndShowModal}
             userId={user?.id}
           />
         )}
@@ -1249,7 +1459,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
               
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div className="flex flex-wrap gap-2">
                   <div className="flex-shrink-0 w-44">
                     <div className="relative">
                       <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
@@ -1264,19 +1474,70 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </optgroup>
                     ))}
                   </select>
+                  <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
+                    <option value="">Cor</option>
+                    {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+                  </select>
+                  <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
+                    <option value="">Coleção</option>
+                    {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
+                  </select>
+                  {(filterCategory || filterColor || filterCollection) && (
+                    <button onClick={() => { setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-pink-500 hover:bg-pink-500/10 rounded-lg transition-colors">
+                      <i className="fas fa-times mr-1"></i>Limpar
+                    </button>
+                  )}
                 </div>
-                <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px] mt-2'}>{filteredProducts.length} de {products.length} produtos</p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px]'}>{filteredProducts.length} de {products.length} produtos</p>
+                  {filteredProducts.length > 0 && (
+                    <button onClick={selectAllProducts} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] flex items-center gap-1'}>
+                      <i className={`far fa-${selectedProducts.length === filteredProducts.length ? 'check-square' : 'square'} text-xs`}></i>
+                      {selectedProducts.length === filteredProducts.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Barra de ações para produtos selecionados */}
+              {selectedProducts.length > 0 && (
+                <div className={(theme === 'dark' ? 'bg-pink-500/20 border-pink-500/30' : 'bg-pink-50 border-pink-200') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-pink-500 font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
+                    <button onClick={() => setSelectedProducts([])} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs'}>
+                      <i className="fas fa-times mr-1"></i>Cancelar
+                    </button>
+                  </div>
+                  <button onClick={() => setShowDeleteProductsModal(true)} className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors">
+                    <i className="fas fa-trash text-[10px]"></i>Excluir {selectedProducts.length > 1 ? `(${selectedProducts.length})` : ''}
+                  </button>
+                </div>
+              )}
               
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
                 {filteredProducts.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
                     {filteredProducts.map(product => (
-                      <div key={product.id} onClick={() => setShowProductDetail(product)} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group'}>
-                        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
+                      <div key={product.id} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-pink-500' : '')}>
+                        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'} onClick={() => setShowProductDetail(product)}>
                           <img src={product.images[0]?.base64 || product.images[0]?.url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          {/* Checkbox de seleção */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleProductSelection(product.id); }}
+                            className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all ' + (selectedProducts.includes(product.id) ? 'bg-pink-500 text-white' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
+                          >
+                            <i className={`fas fa-${selectedProducts.includes(product.id) ? 'check' : 'square'} text-[8px]`}></i>
+                          </button>
+                          {/* Botão delete individual */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteProductTarget(product); setShowDeleteProductsModal(true); }}
+                            className="absolute top-1.5 right-1.5 w-5 h-5 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                            title="Excluir produto"
+                          >
+                            <i className="fas fa-trash text-[8px]"></i>
+                          </button>
                         </div>
-                        <div className="p-2">
+                        <div className="p-2" onClick={() => setShowProductDetail(product)}>
                           <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
                           <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{product.name}</p>
                         </div>
@@ -1411,22 +1672,95 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         {currentPage === 'history' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto">
-              <div className="flex items-center gap-3 mb-5">
-                <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                  <i className={'fas fa-clock-rotate-left text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+                    <i className={'fas fa-clock-rotate-left text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+                  </div>
+                  <div>
+                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Histórico</h1>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{historyLogs.length} atividades registradas</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Histórico</h1>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Suas atividades</p>
-                </div>
+                {historyLogs.length > 0 && (
+                  <button
+                    onClick={() => { if (confirm('Limpar todo o histórico?')) setHistoryLogs([]); }}
+                    className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs flex items-center gap-1.5'}
+                  >
+                    <i className="fas fa-trash-alt"></i>
+                    Limpar
+                  </button>
+                )}
               </div>
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
-                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-clock-rotate-left text-xl'}></i>
+
+              {historyLogs.length === 0 ? (
+                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-clock-rotate-left text-xl'}></i>
+                  </div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
                 </div>
-                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  {historyLogs.map(log => {
+                    const statusConfig = {
+                      success: { icon: 'fa-check-circle', color: 'text-green-500', bg: theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50' },
+                      error: { icon: 'fa-times-circle', color: 'text-red-500', bg: theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50' },
+                      pending: { icon: 'fa-clock', color: 'text-yellow-500', bg: theme === 'dark' ? 'bg-yellow-500/10' : 'bg-yellow-50' },
+                    };
+                    const methodConfig: Record<string, { icon: string; label: string }> = {
+                      manual: { icon: 'fa-hand', label: 'Manual' },
+                      auto: { icon: 'fa-robot', label: 'Automático' },
+                      api: { icon: 'fa-plug', label: 'API' },
+                      ai: { icon: 'fa-wand-magic-sparkles', label: 'IA' },
+                      bulk: { icon: 'fa-layer-group', label: 'Em massa' },
+                      system: { icon: 'fa-gear', label: 'Sistema' },
+                    };
+                    const status = statusConfig[log.status];
+                    const method = methodConfig[log.method] || methodConfig.system;
+                    const date = log.date ? new Date(log.date) : new Date();
+
+                    return (
+                      <div key={log.id} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm') + ' rounded-xl border p-4 transition-colors'}>
+                        <div className="flex items-start gap-3">
+                          <div className={status.bg + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                            <i className={'fas ' + status.icon + ' ' + status.color}></i>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{log.action}</h4>
+                              <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1'}>
+                                <i className={'fas ' + method.icon + ' text-[8px]'}></i>
+                                {method.label}
+                              </span>
+                            </div>
+                            <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs mb-2'}>{log.details}</p>
+                            <div className="flex items-center gap-3 text-[10px]">
+                              <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
+                                <i className="fas fa-calendar mr-1"></i>
+                                {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {log.cost > 0 && (
+                                <span className="text-pink-500">
+                                  <i className="fas fa-coins mr-1"></i>
+                                  {log.cost} crédito{log.cost !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                              {log.itemsCount && log.itemsCount > 0 && (
+                                <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
+                                  <i className="fas fa-box mr-1"></i>
+                                  {log.itemsCount} item{log.itemsCount !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1702,21 +2036,173 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   )}
                   
                   {settingsTab === 'company' && (
-                    <div>
-                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Empresa</h3>
+                    <div className="space-y-4">
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Empresa</h3>
+
+                      {/* Dados Básicos */}
                       <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
-                        <div className="space-y-3">
+                        <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3 flex items-center gap-2'}>
+                          <i className="fas fa-building text-pink-500 text-xs"></i>
+                          Dados Básicos
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome da Empresa</label>
-                            <input type="text" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Sua Empresa Ltda" />
+                            <input
+                              type="text"
+                              value={companySettings.name}
+                              onChange={(e) => setCompanySettings({ ...companySettings, name: e.target.value })}
+                              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                              placeholder="Sua Loja"
+                            />
                           </div>
                           <div>
-                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>CNPJ</label>
-                            <input type="text" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="00.000.000/0000-00" />
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Instagram</label>
+                            <input
+                              type="text"
+                              value={companySettings.instagram || ''}
+                              onChange={(e) => setCompanySettings({ ...companySettings, instagram: e.target.value })}
+                              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                              placeholder="@sualoja"
+                            />
                           </div>
-                          <button className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">Salvar</button>
                         </div>
                       </div>
+
+                      {/* Configurações de Legenda IA */}
+                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-orange-500/10 border-pink-500/30' : 'bg-gradient-to-r from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl border p-4'}>
+                        <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1 flex items-center gap-2'}>
+                          <i className="fas fa-wand-magic-sparkles text-pink-500 text-xs"></i>
+                          Gerador de Legendas IA
+                        </h4>
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-4'}>Configure como a IA vai gerar legendas para suas postagens</p>
+
+                        <div className="space-y-4">
+                          {/* Público Alvo */}
+                          <div>
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Público Alvo</label>
+                            <input
+                              type="text"
+                              value={companySettings.targetAudience}
+                              onChange={(e) => setCompanySettings({ ...companySettings, targetAudience: e.target.value })}
+                              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                              placeholder="Ex: Mulheres 25-45 anos, classe B/C, que gostam de moda casual"
+                            />
+                          </div>
+
+                          {/* Tom de Voz */}
+                          <div>
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Tom de Voz</label>
+                            <div className="grid grid-cols-5 gap-2">
+                              {[
+                                { id: 'formal', label: 'Formal', icon: '👔' },
+                                { id: 'casual', label: 'Casual', icon: '😊' },
+                                { id: 'divertido', label: 'Divertido', icon: '🎉' },
+                                { id: 'luxo', label: 'Luxo', icon: '✨' },
+                                { id: 'jovem', label: 'Jovem', icon: '🔥' },
+                              ].map(tone => (
+                                <button
+                                  key={tone.id}
+                                  onClick={() => setCompanySettings({ ...companySettings, voiceTone: tone.id as any })}
+                                  className={`p-2 rounded-lg border text-center transition-all ${
+                                    companySettings.voiceTone === tone.id
+                                      ? 'border-pink-500 bg-pink-500/20 text-pink-500'
+                                      : theme === 'dark'
+                                        ? 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
+                                        : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <span className="text-lg block mb-0.5">{tone.icon}</span>
+                                  <span className="text-[10px] font-medium">{tone.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Exemplos de Tom */}
+                          <div>
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
+                              Exemplos de Como Você Fala
+                              <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
+                            </label>
+                            <textarea
+                              value={companySettings.voiceExamples || ''}
+                              onChange={(e) => setCompanySettings({ ...companySettings, voiceExamples: e.target.value })}
+                              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'}
+                              rows={2}
+                              placeholder="Cole aqui algumas legendas que você já usou e gostou..."
+                            />
+                          </div>
+
+                          {/* Hashtags */}
+                          <div>
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Hashtags Favoritas</label>
+                            <input
+                              type="text"
+                              value={companySettings.hashtags.join(' ')}
+                              onChange={(e) => setCompanySettings({ ...companySettings, hashtags: e.target.value.split(' ').filter(h => h.startsWith('#') || h === '') })}
+                              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                              placeholder="#moda #fashion #lookdodia #ootd"
+                            />
+                            <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-1'}>Separe as hashtags por espaço</p>
+                          </div>
+
+                          {/* Tamanho e Emojis */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Tamanho da Legenda</label>
+                              <select
+                                value={companySettings.captionStyle}
+                                onChange={(e) => setCompanySettings({ ...companySettings, captionStyle: e.target.value as any })}
+                                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                              >
+                                <option value="curta">Curta (1-2 linhas)</option>
+                                <option value="media">Média (3-5 linhas)</option>
+                                <option value="longa">Longa (storytelling)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Usar Emojis?</label>
+                              <button
+                                onClick={() => setCompanySettings({ ...companySettings, emojisEnabled: !companySettings.emojisEnabled })}
+                                className={`w-full px-3 py-2 border rounded-lg text-sm font-medium transition-all ${
+                                  companySettings.emojisEnabled
+                                    ? 'border-pink-500 bg-pink-500/20 text-pink-500'
+                                    : theme === 'dark'
+                                      ? 'border-neutral-700 bg-neutral-800 text-neutral-400'
+                                      : 'border-gray-200 bg-white text-gray-500'
+                                }`}
+                              >
+                                {companySettings.emojisEnabled ? '✅ Sim, usar emojis' : '❌ Não usar'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Call to Action */}
+                          <div>
+                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
+                              Call to Action Padrão
+                              <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={companySettings.callToAction || ''}
+                              onChange={(e) => setCompanySettings({ ...companySettings, callToAction: e.target.value })}
+                              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                              placeholder="Ex: Compre pelo link na bio! | Chama no direct 💬"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botão Salvar */}
+                      <button
+                        onClick={() => showToast('Configurações salvas!', 'success')}
+                        className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-check"></i>
+                        Salvar Configurações
+                      </button>
                     </div>
                   )}
                   
@@ -2411,6 +2897,90 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 Importar Produtos
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão de produtos */}
+      {showDeleteProductsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-2xl w-full max-w-sm p-5 shadow-xl'}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <i className="fas fa-trash text-red-500"></i>
+              </div>
+              <div>
+                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>
+                  {deleteProductTarget ? 'Excluir Produto' : `Excluir ${selectedProducts.length} Produto${selectedProducts.length > 1 ? 's' : ''}`}
+                </h4>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Esta ação não pode ser desfeita</p>
+              </div>
+            </div>
+
+            <p className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-sm mb-4'}>
+              {deleteProductTarget
+                ? <>Tem certeza que deseja excluir <strong>"{deleteProductTarget.name}"</strong>?</>
+                : <>Tem certeza que deseja excluir <strong>{selectedProducts.length} produto{selectedProducts.length > 1 ? 's' : ''}</strong> selecionado{selectedProducts.length > 1 ? 's' : ''}?</>
+              }
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}
+                className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteProductTarget) {
+                    handleDeleteProduct(deleteProductTarget);
+                    setShowDeleteProductsModal(false);
+                    setDeleteProductTarget(null);
+                  } else {
+                    handleDeleteSelectedProducts();
+                  }
+                }}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-trash text-xs"></i>
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Créditos Esgotados */}
+      <CreditExhaustedModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        creditsNeeded={creditModalContext.creditsNeeded}
+        currentCredits={userCredits}
+        currentPlan={currentPlan}
+        billingPeriod={billingPeriod}
+        actionContext={creditModalContext.actionContext}
+        daysUntilRenewal={daysUntilRenewal}
+        onBuyCredits={handleBuyCredits}
+        onUpgradePlan={handleUpgradePlanFromModal}
+        onSetBillingPeriod={setBillingPeriod}
+        theme={theme}
+      />
+
+      {/* Toast de notificação */}
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className={`px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${
+            toast.type === 'success' ? 'bg-green-500 text-white' :
+            toast.type === 'error' ? 'bg-red-500 text-white' :
+            'bg-neutral-800 text-white'
+          }`}>
+            <i className={`fas ${
+              toast.type === 'success' ? 'fa-check-circle' :
+              toast.type === 'error' ? 'fa-exclamation-circle' :
+              'fa-info-circle'
+            } text-sm`}></i>
+            <span className="text-sm font-medium">{toast.message}</span>
           </div>
         </div>
       )}

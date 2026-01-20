@@ -10,6 +10,23 @@ export interface User {
   plan: string;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Configurações da Empresa (para geração de legendas IA)
+// ═══════════════════════════════════════════════════════════════
+
+export interface CompanySettings {
+  name: string;
+  cnpj?: string;
+  instagram?: string;
+  targetAudience: string;
+  voiceTone: 'formal' | 'casual' | 'divertido' | 'luxo' | 'jovem';
+  voiceExamples?: string;
+  hashtags: string[];
+  emojisEnabled: boolean;
+  captionStyle: 'curta' | 'media' | 'longa';
+  callToAction?: string;
+}
+
 export interface ProductImage {
   id?: string;
   name: string;

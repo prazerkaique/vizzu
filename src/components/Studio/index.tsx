@@ -16,6 +16,7 @@ interface StudioProps {
   onImport?: () => void;
   currentPlan?: { name: string; limit: number };
   onGenerateImage?: (product: Product, toolType: string, prompt?: string, options?: any) => Promise<{ image: string | null; generationId: string | null }>;
+  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
   theme?: 'dark' | 'light';
   userId?: string;
 }
@@ -35,6 +36,7 @@ export const Studio: React.FC<StudioProps> = ({
   onImport,
   currentPlan,
   onGenerateImage,
+  onCheckCredits,
   theme = 'dark',
   userId
 }) => {
@@ -505,6 +507,7 @@ export const Studio: React.FC<StudioProps> = ({
             const result = await onGenerateImage(p, t, prompt, opts);
             return { image: result.image || '', generationId: result.generationId || '' };
           } : async () => ({ image: '', generationId: '' })}
+          onCheckCredits={onCheckCredits}
           theme={theme}
           userId={userId}
         />
