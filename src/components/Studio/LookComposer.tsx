@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Product, LookComposition } from '../../types';
+import { BaseballCap, TShirt, Pants, Sneaker, Watch, Handbag } from '@phosphor-icons/react';
 
 interface Props {
   products: Product[];
@@ -10,12 +11,12 @@ interface Props {
 }
 
 const SLOTS = [
-  { id: 'head' as const, label: 'Cabeça', icon: 'fa-hat-cowboy' },
-  { id: 'top' as const, label: 'Topo', icon: 'fa-tshirt' },
-  { id: 'bottom' as const, label: 'Baixo', icon: 'fa-person-walking' },
-  { id: 'feet' as const, label: 'Pés', icon: 'fa-shoe-prints' },
-  { id: 'accessory1' as const, label: 'Acess. 1', icon: 'fa-clock' },
-  { id: 'accessory2' as const, label: 'Acess. 2', icon: 'fa-bag-shopping' },
+  { id: 'head' as const, label: 'Cabeça', Icon: BaseballCap },
+  { id: 'top' as const, label: 'Topo', Icon: TShirt },
+  { id: 'bottom' as const, label: 'Baixo', Icon: Pants },
+  { id: 'feet' as const, label: 'Pés', Icon: Sneaker },
+  { id: 'accessory1' as const, label: 'Acess. 1', Icon: Watch },
+  { id: 'accessory2' as const, label: 'Acess. 2', Icon: Handbag },
 ];
 
 export const LookComposer: React.FC<Props> = ({ products, composition, onChange, collections = [], theme = 'dark' }) => {
@@ -94,7 +95,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
                 </>
               ) : (
                 <>
-                  <i className={'fas ' + slot.icon + ' text-sm ' + (expandedSlot === slot.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-600' : 'text-purple-400'))}></i>
+                  <slot.Icon size={18} weight="duotone" className={expandedSlot === slot.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-600' : 'text-purple-400')} />
                   <span className={'text-[8px] font-medium mt-0.5 ' + (expandedSlot === slot.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500'))}>
                     {slot.label}
                   </span>
