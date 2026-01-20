@@ -46,6 +46,7 @@ function App() {
     return (saved as Page) || 'dashboard';
   });
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
@@ -976,17 +977,42 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
-          <button 
-            onClick={() => setCurrentPage('settings')} 
-            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
-              (currentPage === 'settings' 
-                ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-white/25 text-white') 
-                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
-              )
-            }
-          >
-            <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+              className={'w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+                (currentPage === 'settings' || showSettingsDropdown
+                  ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-white/25 text-white')
+                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+                )
+              }
+            >
+              <span className="flex items-center gap-2.5">
+                <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
+              </span>
+              <i className={`fas fa-chevron-down text-[8px] transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`}></i>
+            </button>
+            {showSettingsDropdown && (
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white/95 border-white/20') + ' absolute left-0 right-0 mt-1 rounded-lg border shadow-lg overflow-hidden z-50'}>
+                {[
+                  { id: 'profile', label: 'Perfil', icon: 'fa-user' },
+                  { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
+                  { id: 'company', label: 'Empresa', icon: 'fa-building' },
+                  { id: 'plan', label: 'Plano & Créditos', icon: 'fa-credit-card' },
+                  { id: 'integrations', label: 'Integrações', icon: 'fa-plug' },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
+                    className={(theme === 'dark' ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white' : 'hover:bg-white/20 text-white/80 hover:text-white') + ' w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors'}
+                  >
+                    <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2.5 px-2 py-2">
             <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/20')}>
               {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-xs text-white/70"></i>}
@@ -1010,13 +1036,21 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             </div>
             <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Vizzu</span>
           </div>
-          <button
-            onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-            className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30' : 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200')}
-          >
-            <i className="fas fa-coins text-[10px]"></i>
-            <span>{userCredits}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowImport(true)}
+              className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 text-white flex items-center justify-center shadow-md"
+            >
+              <i className="fas fa-plus text-sm"></i>
+            </button>
+            <button
+              onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+              className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30' : 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200')}
+            >
+              <i className="fas fa-coins text-[10px]"></i>
+              <span>{userCredits}</span>
+            </button>
+          </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -1882,11 +1916,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     onChange={(e) => setSettingsTab(e.target.value as SettingsTab)}
                     className={'w-full appearance-none px-4 py-3 pr-10 rounded-xl text-sm font-medium cursor-pointer transition-colors ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 text-white focus:border-fuchsia-500' : 'bg-white border border-gray-200 text-gray-900 focus:border-fuchsia-400') + ' focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20'}
                   >
-                    <option value="profile">👤 Perfil</option>
-                    <option value="appearance">🎨 Aparência</option>
-                    <option value="company">🏢 Empresa</option>
-                    <option value="plan">💳 Plano & Créditos</option>
-                    <option value="integrations">🔌 Integrações</option>
+                    <option value="profile">Perfil</option>
+                    <option value="appearance">Aparência</option>
+                    <option value="company">Empresa</option>
+                    <option value="plan">Plano & Créditos</option>
+                    <option value="integrations">Integrações</option>
                   </select>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-down text-xs'}></i>
@@ -1896,50 +1930,69 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
               {/* Conteúdo da Seção */}
               <div className="max-w-xl">
-                  {settingsTab === 'plan' && (
+                  {settingsTab === 'plan' && (() => {
+                    // Lista completa de todas as funcionalidades
+                    const ALL_FEATURES = [
+                      { id: 'studio', name: 'Vizzu Studio', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'provador', name: 'Vizzu Provador', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'dashboard', name: 'Dashboard', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'fundo-estudio', name: 'Fundo de Estudio', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'cenario', name: 'Cenario Criativo', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'reels', name: 'Fotos para Reels e Stories', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'modelo-ia', name: 'Modelo IA Feito sob medida', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'legendas', name: 'Gerador de Legendas IA', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'catalogo', name: 'Catalogo Virtual + WhatsApp', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'atendente-receptivo', name: 'Atendente Receptivo WhatsApp', plans: ['starter', 'pro', 'premier'] },
+                      { id: 'videos', name: 'Geracao de Videos para Instagram', plans: ['pro', 'premier'] },
+                      { id: 'agente-whatsapp', name: 'Agente Ativo de WhatsApp', plans: ['pro', 'premier'] },
+                      { id: 'ecommerce', name: 'Integracao com e-commerces', plans: ['premier'] },
+                      { id: 'suporte', name: 'Suporte prioritario', plans: ['premier'] },
+                    ];
+
+                    return (
                     <div className="max-w-4xl">
                       {/* Header */}
                       <div className="text-center mb-6">
-                        <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1'}>Escolha o plano ideal para seu negócio</h2>
+                        <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1'}>Escolha o plano ideal para seu negocio</h2>
                         <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Transforme suas fotos de produtos em imagens profissionais com IA</p>
                       </div>
 
-                      {/* Status atual de créditos */}
-                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-fuchsia-900/30 to-rose-900/30 border-fuchsia-500/30' : 'bg-gradient-to-r from-fuchsia-50 to-rose-50 border-fuchsia-200') + ' border rounded-xl p-4 mb-6'}>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className={(theme === 'dark' ? 'bg-fuchsia-500/20' : 'bg-fuchsia-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
-                              <i className="fas fa-coins text-fuchsia-500"></i>
+                      {/* Status atual de creditos */}
+                      <div className="bg-gradient-to-br from-fuchsia-600/20 via-purple-600/15 to-rose-600/20 border border-fuchsia-500/30 rounded-2xl p-5 mb-6 backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-rose-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/30">
+                              <i className="fas fa-coins text-white text-lg"></i>
                             </div>
                             <div>
-                              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
-                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>{userCredits} <span className="text-sm font-normal text-neutral-500">/ {currentPlan.limit}</span></p>
+                              <p className="text-fuchsia-300 text-[10px] uppercase tracking-wider font-medium">Seus Creditos</p>
+                              <p className="text-white text-3xl font-bold">{userCredits} <span className="text-base font-normal text-neutral-400">/ {currentPlan.limit}</span></p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-fuchsia-500/20 text-fuchsia-400">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow-lg whitespace-nowrap">
                               <i className="fas fa-crown text-[10px]"></i>
-                              Plano {currentPlan.name}
+                              {currentPlan.name}
                             </span>
                           </div>
                         </div>
-                        <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-white/50') + ' h-2 rounded-full overflow-hidden'}>
-                          <div className="h-full bg-gradient-to-r from-fuchsia-500 to-rose-500 rounded-full transition-all" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+                        <div className="bg-neutral-900/50 h-3 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-fuchsia-500 via-purple-500 to-rose-500 rounded-full transition-all shadow-lg shadow-fuchsia-500/50" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
                         </div>
                       </div>
 
                       {/* Toggle Mensal/Anual */}
                       <div className="flex items-center justify-center gap-3 mb-6">
-                        <span className={(billingPeriod === 'monthly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>Mensal</span>
+                        <span className={(billingPeriod === 'monthly' ? 'text-white' : 'text-neutral-500') + ' text-sm font-medium'}>Mensal</span>
                         <button
                           onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
-                          className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-fuchsia-500 to-rose-500' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')) + ' relative w-14 h-7 rounded-full transition-colors'}
+                          className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-fuchsia-500 to-rose-500' : 'bg-neutral-700') + ' relative w-14 h-7 rounded-full transition-colors'}
                         >
                           <div className={'absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (billingPeriod === 'yearly' ? 'translate-x-8' : 'translate-x-1')}></div>
                         </button>
-                        <span className={(billingPeriod === 'yearly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium flex items-center gap-2'}>
+                        <span className={(billingPeriod === 'yearly' ? 'text-white' : 'text-neutral-500') + ' text-sm font-medium flex items-center gap-2'}>
                           Anual
-                          <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">ECONOMIZE 20%</span>
+                          <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">-20%</span>
                         </span>
                       </div>
 
@@ -1948,79 +2001,95 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         {PLANS.map(plan => {
                           const isCurrentPlan = currentPlan.id === plan.id;
                           const price = billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly;
+                          const isPro = plan.id === 'pro';
                           const isPremier = plan.id === 'premier';
 
                           return (
                             <div
                               key={plan.id}
                               className={
-                                'relative rounded-2xl p-4 transition-all cursor-pointer ' +
+                                'relative rounded-2xl p-5 transition-all ' +
                                 (isCurrentPlan
-                                  ? (theme === 'dark' ? 'bg-gradient-to-b from-fuchsia-900/40 to-neutral-900 border-2 border-fuchsia-500 shadow-lg shadow-fuchsia-500/20' : 'bg-gradient-to-b from-fuchsia-50 to-white border-2 border-fuchsia-400 shadow-lg')
-                                  : isPremier
-                                    ? (theme === 'dark' ? 'bg-gradient-to-b from-amber-900/20 to-neutral-900 border-2 border-amber-500/50 hover:border-amber-500' : 'bg-gradient-to-b from-amber-50 to-white border-2 border-amber-300 hover:border-amber-400')
-                                    : (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
+                                  ? 'bg-gradient-to-br from-fuchsia-600/30 via-purple-600/20 to-rose-600/30 border-2 border-fuchsia-500 shadow-xl shadow-fuchsia-500/20'
+                                  : isPro
+                                    ? 'bg-gradient-to-br from-fuchsia-900/30 via-purple-900/20 to-neutral-900 border border-fuchsia-500/30 hover:border-fuchsia-500/60'
+                                    : isPremier
+                                      ? 'bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-neutral-900 border border-amber-500/30 hover:border-amber-500/60'
+                                      : 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 hover:border-neutral-600'
                                 )
                               }
-                              onClick={() => upgradePlan(plan.id)}
                             >
                               {/* Badge */}
                               {isCurrentPlan && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                  <span className="px-3 py-1 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg">
-                                    PLANO ATUAL
+                                  <span className="px-4 py-1.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg whitespace-nowrap">
+                                    ATUAL
+                                  </span>
+                                </div>
+                              )}
+                              {isPro && !isCurrentPlan && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                  <span className="px-4 py-1.5 bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white text-[10px] font-bold rounded-full shadow-lg whitespace-nowrap">
+                                    POPULAR
                                   </span>
                                 </div>
                               )}
                               {isPremier && !isCurrentPlan && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                  <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full shadow-lg flex items-center gap-1">
+                                  <span className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap">
                                     <i className="fas fa-star text-[8px]"></i>
-                                    MELHOR VALOR
+                                    COMPLETO
                                   </span>
                                 </div>
                               )}
 
-                              <div className="pt-2">
-                                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold'}>{plan.name}</h3>
+                              <div className="pt-3">
+                                <h3 className="text-white text-xl font-bold">{plan.name}</h3>
                                 <div className="mt-3 mb-4">
-                                  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>
+                                  <span className="text-white text-3xl font-bold">
                                     R$ {price.toFixed(2).replace('.', ',')}
                                   </span>
-                                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>/mês</span>
+                                  <span className="text-neutral-500 text-sm">/mes</span>
                                 </div>
 
-                                <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100') + ' rounded-lg p-3 mb-4'}>
+                                <div className="bg-neutral-900/50 rounded-xl p-3 mb-4 border border-neutral-800">
                                   <div className="flex items-center gap-2">
-                                    <i className="fas fa-bolt text-amber-400 text-sm"></i>
-                                    <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-lg'}>{plan.limit}</span>
-                                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>créditos/mês</span>
+                                    <i className="fas fa-bolt text-amber-400"></i>
+                                    <span className="text-white font-bold text-xl">{plan.limit}</span>
+                                    <span className="text-neutral-400 text-xs">creditos/mes</span>
                                   </div>
+                                  <p className="text-neutral-500 text-[10px] mt-1">R$ {plan.creditPrice.toFixed(2).replace('.', ',')} por credito extra</p>
                                 </div>
 
-                                <ul className="space-y-2 mb-4">
-                                  {plan.features.slice(0, 4).map((feature, idx) => (
-                                    <li key={idx} className="flex items-start gap-2 text-xs">
-                                      <i className="fas fa-check text-emerald-400 mt-0.5 text-[10px]"></i>
-                                      <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}>{feature}</span>
-                                    </li>
-                                  ))}
-                                  {plan.features.length > 4 && (
-                                    <li className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] pl-4'}>
-                                      +{plan.features.length - 4} funcionalidades
-                                    </li>
-                                  )}
+                                <ul className="space-y-1.5 mb-4 max-h-48 overflow-y-auto pr-1">
+                                  {ALL_FEATURES.map((feature) => {
+                                    const hasFeature = feature.plans.includes(plan.id);
+                                    return (
+                                      <li key={feature.id} className="flex items-start gap-2 text-[11px]">
+                                        {hasFeature ? (
+                                          <i className="fas fa-check text-emerald-400 mt-0.5 text-[9px]"></i>
+                                        ) : (
+                                          <i className="fas fa-times text-red-500 mt-0.5 text-[9px]"></i>
+                                        )}
+                                        <span className={hasFeature ? 'text-neutral-300' : 'text-neutral-600 line-through'}>{feature.name}</span>
+                                      </li>
+                                    );
+                                  })}
                                 </ul>
 
                                 <button
+                                  onClick={() => {
+                                    if (!isCurrentPlan) {
+                                      showToast('Checkout Stripe nao implementado. Configure os webhooks do n8n.', 'info');
+                                    }
+                                  }}
                                   className={
-                                    'w-full py-2.5 rounded-lg font-medium text-sm transition-all ' +
+                                    'w-full py-3 rounded-xl font-semibold text-sm transition-all ' +
                                     (isCurrentPlan
-                                      ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
-                                      : 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white hover:opacity-90'
+                                      ? 'bg-neutral-800 text-neutral-500 cursor-default'
+                                      : 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white hover:shadow-lg hover:shadow-fuchsia-500/30 hover:scale-[1.02]'
                                     )
                                   }
-                                  disabled={isCurrentPlan}
                                 >
                                   {isCurrentPlan ? 'Plano Atual' : 'Escolher Plano'}
                                 </button>
@@ -2030,30 +2099,31 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         })}
                       </div>
 
-                      {/* Seção: Compre Créditos Adicionais */}
-                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mb-6'}>
-                        <div className="flex items-center gap-2 mb-4">
-                          <i className="fas fa-coins text-amber-400"></i>
-                          <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>Compre Créditos Adicionais</h4>
+                      {/* Secao: Compre Creditos Adicionais */}
+                      <div className="bg-gradient-to-br from-amber-900/20 via-orange-900/10 to-neutral-900 border border-amber-500/20 rounded-2xl p-5 mb-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                            <i className="fas fa-coins text-white"></i>
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold">Compre Creditos Adicionais</h4>
+                            <p className="text-neutral-400 text-xs">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por credito no seu plano</p>
+                          </div>
                         </div>
 
-                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-3'}>
-                          Preço por crédito no seu plano: <span className="font-bold text-fuchsia-400">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}</span>
-                        </p>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {CREDIT_PACKAGES.map(amount => (
                             <button
                               key={amount}
-                              onClick={() => addCredits(amount)}
-                              className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 transition-all hover:scale-[1.02]'}
+                              onClick={() => showToast('Checkout Stripe nao implementado. Configure os webhooks do n8n.', 'info')}
+                              className="bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl p-4 transition-all hover:scale-[1.02] group"
                             >
-                              <div className="flex items-center justify-center gap-1.5 mb-1">
-                                <i className="fas fa-bolt text-amber-400 text-xs"></i>
-                                <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-lg'}>{amount}</span>
+                              <div className="flex items-center justify-center gap-2 mb-2">
+                                <i className="fas fa-bolt text-amber-400 group-hover:scale-110 transition-transform"></i>
+                                <span className="text-white font-bold text-2xl">{amount}</span>
                               </div>
-                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>créditos</p>
-                              <p className="text-fuchsia-400 font-semibold text-sm mt-1">
+                              <p className="text-neutral-500 text-[10px] mb-1">creditos</p>
+                              <p className="text-amber-400 font-bold text-sm">
                                 R$ {(amount * currentPlan.creditPrice).toFixed(2).replace('.', ',')}
                               </p>
                             </button>
@@ -2062,38 +2132,39 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
 
                       {/* FAQ */}
-                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+                      <div className="bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 rounded-2xl p-5">
                         <details className="group">
-                          <summary className={(theme === 'dark' ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-700') + ' font-medium text-sm cursor-pointer flex items-center justify-between'}>
+                          <summary className="text-white hover:text-neutral-300 font-medium text-sm cursor-pointer flex items-center justify-between">
                             <span className="flex items-center gap-2">
                               <i className="fas fa-circle-question text-fuchsia-400"></i>
                               Perguntas Frequentes
                             </span>
                             <i className="fas fa-chevron-down text-xs transition-transform group-open:rotate-180"></i>
                           </summary>
-                          <div className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' mt-4 space-y-3 text-xs'}>
+                          <div className="text-neutral-400 mt-4 space-y-3 text-xs">
                             <div>
-                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>O que são créditos?</p>
-                              <p>Créditos são usados para gerar imagens com IA. Cada geração consome de 1 a 3 créditos dependendo da complexidade.</p>
+                              <p className="text-white font-medium mb-1">O que sao creditos?</p>
+                              <p>Creditos sao usados para gerar imagens com IA. Cada geracao consome de 1 a 3 creditos dependendo da complexidade.</p>
                             </div>
                             <div>
-                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Posso mudar de plano?</p>
-                              <p>Sim! Você pode fazer upgrade ou downgrade a qualquer momento. O valor é ajustado proporcionalmente.</p>
+                              <p className="text-white font-medium mb-1">Posso mudar de plano?</p>
+                              <p>Sim! Voce pode fazer upgrade ou downgrade a qualquer momento. O valor e ajustado proporcionalmente.</p>
                             </div>
                             <div>
-                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Os créditos acumulam?</p>
-                              <p>Créditos não utilizados não acumulam para o próximo mês, mas créditos comprados avulso não expiram.</p>
+                              <p className="text-white font-medium mb-1">Os creditos acumulam?</p>
+                              <p>Creditos nao utilizados nao acumulam para o proximo mes, mas creditos comprados avulso nao expiram.</p>
                             </div>
                           </div>
                         </details>
                       </div>
 
                       {/* Footer */}
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-center text-xs mt-6'}>
+                      <p className="text-neutral-500 text-center text-xs mt-6">
                         Precisa de mais? <a href="#" className="text-fuchsia-400 hover:underline">Entre em contato</a> para planos personalizados.
                       </p>
                     </div>
-                  )}
+                  );
+                  })()}
                   
                   {settingsTab === 'profile' && (
                     <div>
@@ -2364,12 +2435,39 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-users text-sm"></i>
             <span className="text-[9px] font-medium">Clientes</span>
           </button>
-          <button onClick={() => setCurrentPage('settings')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
-            <i className="fas fa-cog text-sm"></i>
-            <span className="text-[9px] font-medium">Config</span>
-          </button>
+          <div className="relative">
+            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+              <i className="fas fa-cog text-sm"></i>
+              <span className="text-[9px] font-medium">Config</span>
+            </button>
+            {showSettingsDropdown && (
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' absolute bottom-full right-0 mb-2 w-40 rounded-lg border shadow-lg overflow-hidden z-50'}>
+                {[
+                  { id: 'profile', label: 'Perfil', icon: 'fa-user' },
+                  { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
+                  { id: 'company', label: 'Empresa', icon: 'fa-building' },
+                  { id: 'plan', label: 'Plano & Créditos', icon: 'fa-credit-card' },
+                  { id: 'integrations', label: 'Integrações', icon: 'fa-plug' },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
+                    className={(theme === 'dark' ? 'hover:bg-neutral-800 text-neutral-400 hover:text-white' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900') + ' w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-colors text-left'}
+                  >
+                    <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
+
+      {/* Settings Dropdown Backdrop */}
+      {showSettingsDropdown && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)} />
+      )}
 
       {/* VIDEO TUTORIAL MODAL */}
       {showVideoTutorial && (

@@ -43,7 +43,6 @@ export const Studio: React.FC<StudioProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
   const [activeTab, setActiveTab] = useState<'todos' | 'recentes' | 'editados' | 'modelos'>('todos');
-  const [fabExpanded, setFabExpanded] = useState(false);
   
   // Filtros
   const [showFilters, setShowFilters] = useState(true);
@@ -477,27 +476,6 @@ export const Studio: React.FC<StudioProps> = ({
           </>
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* FAB - Floating Action Button (Mobile) */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {onImport && (
-          <button
-            onClick={() => {
-              setFabExpanded(true);
-              setTimeout(() => {
-                setFabExpanded(false);
-                onImport();
-              }, 300);
-            }}
-            className={`md:hidden fixed bottom-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-full shadow-lg flex items-center justify-center z-30 transition-all duration-300 ease-out ${
-              fabExpanded
-                ? 'w-14 h-14 scale-110'
-                : 'w-10 h-10 scale-100'
-            }`}
-          >
-            <i className={`fas fa-plus transition-transform duration-300 ${fabExpanded ? 'rotate-90 text-lg' : 'text-sm'}`}></i>
-          </button>
-        )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
