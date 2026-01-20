@@ -3058,51 +3058,65 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 )}
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto'}>
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
+          <div
+            className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header fixo */}
+            <div className={'flex items-center justify-between p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Detalhes do Produto</h3>
               <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' w-full md:w-40 h-40 rounded-xl overflow-hidden border flex-shrink-0'}>
-                <img src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url} alt={showProductDetail.name} className="w-full h-full object-cover" />
+
+            {/* Conteúdo com scroll */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {/* Imagem - adaptável à proporção original */}
+              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden mb-4'}>
+                <img
+                  src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url}
+                  alt={showProductDetail.name}
+                  className="w-full h-auto max-h-[50vh] object-contain"
+                />
               </div>
-              <div className="flex-1">
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-0.5'}>{showProductDetail.sku}</p>
-                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mb-3'}>{showProductDetail.name}</h4>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {showProductDetail.brand && (
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Marca</p>
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.brand}</p>
-                    </div>
-                  )}
-                  {showProductDetail.category && (
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Categoria</p>
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.category}</p>
-                    </div>
-                  )}
-                  {showProductDetail.color && (
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Cor</p>
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.color}</p>
-                    </div>
-                  )}
-                  {showProductDetail.fit && (
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Caimento</p>
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.fit}</p>
-                    </div>
-                  )}
-                </div>
+
+              {/* Informações do produto */}
+              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-0.5'}>{showProductDetail.sku}</p>
+              <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mb-3'}>{showProductDetail.name}</h4>
+
+              <div className="grid grid-cols-2 gap-2">
+                {showProductDetail.brand && (
+                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Marca</p>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.brand}</p>
+                  </div>
+                )}
+                {showProductDetail.category && (
+                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Categoria</p>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.category}</p>
+                  </div>
+                )}
+                {showProductDetail.color && (
+                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Cor</p>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.color}</p>
+                  </div>
+                )}
+                {showProductDetail.fit && (
+                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg p-2'}>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px] uppercase tracking-wide mb-0.5'}>Caimento</p>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.fit}</p>
+                  </div>
+                )}
               </div>
             </div>
-            <div className={'flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
-              <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+
+            {/* Footer fixo com botão */}
+            <div className={'p-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')} style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm">
                 <i className="fas fa-wand-magic-sparkles mr-1.5"></i>Abrir no Studio
               </button>
             </div>
