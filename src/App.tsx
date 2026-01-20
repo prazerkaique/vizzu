@@ -7,7 +7,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
-import { generateStudioReady, generateCenario } from './lib/api/studio';
+import { generateStudioReady, generateCenario, generateModeloIA } from './lib/api/studio';
 import heic2any from 'heic2any';
 
 
@@ -372,7 +372,7 @@ const loadUserClients = async (userId: string) => {
         email: c.email || undefined,
         photo: c.photo || undefined,
         photos: c.photos || [],
-        hasProvadorIA: c.has_provador_ia || false,
+        hasProvadorIA: (c.photos && c.photos.length > 0) || false,
         notes: c.notes || undefined,
         tags: c.tags || [],
         createdAt: c.created_at,
@@ -425,7 +425,6 @@ const saveClientToSupabase = async (client: Client, userId: string) => {
         email: client.email || null,
         photo: client.photo || null,
         photos: client.photos || [],
-        has_provador_ia: client.hasProvadorIA,
         notes: client.notes || null,
         tags: client.tags || [],
         created_at: client.createdAt,
@@ -526,7 +525,7 @@ const saveHistoryToSupabase = async (log: HistoryLog, userId: string) => {
         method: log.method,
         cost: log.cost || 0,
         items_count: log.itemsCount || log.items?.length || log.products?.length || 0,
-        created_at: log.createdAt?.toISOString() || new Date().toISOString(),
+        created_at: log.createdAt instanceof Date ? log.createdAt.toISOString() : (log.createdAt || new Date().toISOString()),
       }, { onConflict: 'id' });
 
     if (error) {
@@ -969,7 +968,39 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
         throw new Error(result.message || 'Erro ao gerar cenário');
       }
 
-      // TODO: Implementar outros tipos (lifestyle, provador, refine)
+      // ═══════════════════════════════════════════════════════════
+      // MODELO IA (LIFESTYLE) - Modelo humano usando produto
+      // ═══════════════════════════════════════════════════════════
+      if (toolType === 'lifestyle') {
+        const result = await generateModeloIA({
+          productId: product.id,
+          userId: user.id,
+          imageId: selectedImage.id,
+          modelPrompt: opts?.modelPrompt || prompt || 'Professional model',
+          clothingPrompt: opts?.clothingPrompt,
+          posePrompt: opts?.posePrompt,
+          referenceImage: opts?.referenceImage,
+          productCategory: product.category || 'clothing',
+          productDescription: product.description,
+          lookItems: opts?.lookItems,
+        });
+
+        if (result.success && result.generation) {
+          if (result.credits_remaining !== undefined) {
+            setCredits(result.credits_remaining);
+          }
+          loadUserProducts(user.id);
+          handleAddHistoryLog('Imagem gerada', `Modelo IA para "${product.name}"`, 'success', [product], 'ai', 3);
+          return {
+            image: result.generation.image_url,
+            generationId: result.generation.id,
+          };
+        }
+
+        throw new Error(result.message || 'Erro ao gerar modelo');
+      }
+
+      // TODO: Implementar provador e refine
       throw new Error(`Ferramenta "${toolType}" ainda não implementada no backend`);
 
     } catch (error: any) {
