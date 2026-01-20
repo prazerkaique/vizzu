@@ -1039,7 +1039,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
         >
           <div className="flex items-center">
-            <img src="/logo.png" alt="Vizzu" className="h-8" />
+            <img src={theme === 'dark' ? '/logo.png' : '/logo-light.png'} alt="Vizzu" className="h-8" />
           </div>
           <div className="flex items-center gap-2">
             {currentPage !== 'products' && (
