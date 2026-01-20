@@ -379,9 +379,14 @@ const loadUserProducts = async (userId: string) => {
     localStorage.setItem('vizzu_currentPage', currentPage);
   }, [currentPage]);
 
-  // Persistir tema no localStorage
+  // Persistir tema no localStorage e atualizar theme-color para PWA
   useEffect(() => {
     localStorage.setItem('vizzu_theme', theme);
+    // Atualiza a cor do tema na status bar do PWA/mobile
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]:not([media])') || document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#ffffff');
+    }
   }, [theme]);
 
   // Fechar modais com Esc
@@ -1029,20 +1034,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0 pt-12 md:pt-0">
 
         {/* MOBILE TOP HEADER */}
-        <div className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">V</span>
-            </div>
-            <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Vizzu</span>
+        <div
+          className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}
+          style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
+        >
+          <div className="flex items-center">
+            <img src="/logo.png" alt="Vizzu" className="h-8" />
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowImport(true)}
-              className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 text-white flex items-center justify-center shadow-md"
-            >
-              <i className="fas fa-plus text-sm"></i>
-            </button>
+            {currentPage !== 'products' && (
+              <button
+                onClick={() => setShowImport(true)}
+                className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 text-white flex items-center justify-center shadow-md"
+              >
+                <i className="fas fa-plus text-sm"></i>
+              </button>
+            )}
             <button
               onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
               className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30' : 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200')}
@@ -1418,8 +1425,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </select>
                     <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2 py-1.5 border rounded-lg text-[10px] resize-none mb-3'} placeholder="Mensagem..." />
                     <div className="space-y-2">
-                      <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
-                        {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin text-[10px]"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles text-[10px]"></i>Gerar (3 créd.)</>}
+                      <button
+                        onClick={() => {
+                          if (isGeneratingProvador) {
+                            alert('Aguarde a geração da imagem terminar');
+                            return;
+                          }
+                          handleProvadorGenerate();
+                        }}
+                        disabled={!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3}
+                        className={`w-full py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 ${(!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3) ? 'opacity-50 cursor-not-allowed' : isGeneratingProvador ? 'opacity-75 cursor-wait' : ''}`}
+                      >
+                        {isGeneratingProvador ? (
+                          <><i className="fas fa-spinner fa-spin text-[10px]"></i><span>Gerando imagem...</span></>
+                        ) : (
+                          <><i className="fas fa-wand-magic-sparkles text-[10px]"></i><span>Gerar (3 créd.)</span></>
+                        )}
                       </button>
                       <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-200') + ' w-full py-2 text-green-500 border rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors'}>
                         <i className="fab fa-whatsapp text-[10px]"></i>Enviar WhatsApp
@@ -1541,8 +1562,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </select>
                     <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-xs resize-none mb-3'} placeholder="Mensagem..." />
                     <div className="space-y-2">
-                      <button onClick={handleProvadorGenerate} disabled={!provadorClient || Object.keys(provadorLook).length === 0 || isGeneratingProvador || userCredits < 3} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2">
-                        {isGeneratingProvador ? <><i className="fas fa-spinner fa-spin"></i>Gerando...</> : <><i className="fas fa-wand-magic-sparkles"></i>Gerar (3 créd.)</>}
+                      <button
+                        onClick={() => {
+                          if (isGeneratingProvador) {
+                            alert('Aguarde a geração da imagem terminar');
+                            return;
+                          }
+                          handleProvadorGenerate();
+                        }}
+                        disabled={!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3}
+                        className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 ${(!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3) ? 'opacity-50 cursor-not-allowed' : isGeneratingProvador ? 'opacity-75 cursor-wait' : ''}`}
+                      >
+                        {isGeneratingProvador ? (
+                          <><i className="fas fa-spinner fa-spin"></i><span>Gerando imagem...</span></>
+                        ) : (
+                          <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar (3 créd.)</span></>
+                        )}
                       </button>
                       <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' w-full py-3 text-green-500 border rounded-lg font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2'}>
                         <i className="fab fa-whatsapp"></i>Enviar WhatsApp
@@ -2415,13 +2450,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </main>
 
       {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1.5 z-40 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}>
+      <nav
+        className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1.5 z-40 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
+        style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+      >
         <div className="flex items-center justify-around">
-          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-home text-sm"></i>
             <span className="text-[9px] font-medium">Home</span>
           </button>
-          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-box text-sm"></i>
             <span className="text-[9px] font-medium">Produtos</span>
           </button>
@@ -2431,17 +2469,21 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             </div>
             <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
-          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-users text-sm"></i>
             <span className="text-[9px] font-medium">Clientes</span>
           </button>
+          <button onClick={() => setCurrentPage('history')} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'history' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+            <i className="fas fa-clock-rotate-left text-sm"></i>
+            <span className="text-[9px] font-medium">Histórico</span>
+          </button>
           <div className="relative">
-            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+            <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg ' + (currentPage === 'settings' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
               <i className="fas fa-cog text-sm"></i>
               <span className="text-[9px] font-medium">Config</span>
             </button>
             {showSettingsDropdown && (
-              <div className="absolute bottom-full right-0 mb-2 w-44 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/95 backdrop-blur-md">
+              <div className={'absolute bottom-full right-0 mb-2 w-44 rounded-xl border shadow-xl overflow-hidden z-50 backdrop-blur-md ' + (theme === 'dark' ? 'bg-neutral-900/95 border-neutral-700/50' : 'bg-white/95 border-gray-200')}>
                 {[
                   { id: 'profile', label: 'Perfil', icon: 'fa-user' },
                   { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
@@ -2452,7 +2494,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <button
                     key={item.id}
                     onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-500 hover:text-white hover:bg-neutral-800 text-left"
+                    className={'w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-left ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')}
                   >
                     <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
                     {item.label}
@@ -2466,7 +2508,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* Settings Dropdown Backdrop */}
       {showSettingsDropdown && (
-        <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)} />
+        <div className="fixed inset-0 z-[45]" onClick={() => setShowSettingsDropdown(false)} />
       )}
 
       {/* VIDEO TUTORIAL MODAL */}

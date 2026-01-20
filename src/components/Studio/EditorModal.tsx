@@ -1003,13 +1003,26 @@ const handleSave = async () => {
             ) : (
               <div className="space-y-2">
                 {/* Generate Button */}
-                <button onClick={handleGen} disabled={!tool || isGen} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <button
+                  onClick={() => {
+                    if (isGen) {
+                      alert('Aguarde a geração da imagem terminar');
+                      return;
+                    }
+                    if (!tool) return;
+                    handleGen();
+                  }}
+                  className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 ${!tool ? 'opacity-50 cursor-not-allowed' : isGen ? 'opacity-75 cursor-wait' : 'hover:opacity-90'}`}
+                >
                   {isGen ? (
-                    <><i className="fas fa-spinner fa-spin"></i>Gerando...</>
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      <span>Gerando imagem...</span>
+                    </>
                   ) : (
                     <>
                       <i className="fas fa-wand-magic-sparkles"></i>
-                      Gerar {hasBack ? '(2 imagens)' : ''} • {tool === 'lifestyle' ? lifestyleCredits : tool ? TOOL_CFG[tool].credits : 1} crédito{(tool === 'lifestyle' ? lifestyleCredits : tool ? TOOL_CFG[tool].credits : 1) > 1 ? 's' : ''}
+                      <span>Gerar {hasBack ? '(2)' : ''} • {tool === 'lifestyle' ? lifestyleCredits : tool ? TOOL_CFG[tool].credits : 1} créd.</span>
                     </>
                   )}
                 </button>
