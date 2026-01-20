@@ -304,6 +304,68 @@ export const Studio: React.FC<StudioProps> = ({
         )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SEÇÃO MODELOS - Cards redondos com borda degradê */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeTab !== 'modelos' && (
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
+            <div className="flex items-center justify-between mb-3">
+              <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Meus Modelos</span>
+              {savedModels.length > 0 && (
+                <button
+                  onClick={() => setActiveTab('modelos')}
+                  className="text-[10px] text-pink-500 hover:text-pink-400 font-medium"
+                >
+                  Ver todos
+                </button>
+              )}
+            </div>
+            {savedModels.length > 0 ? (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {savedModels.map(model => (
+                  <div
+                    key={model.id}
+                    onClick={() => setActiveTab('modelos')}
+                    className="flex-shrink-0 cursor-pointer group"
+                  >
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full p-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 transition-transform group-hover:scale-105">
+                      <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' w-full h-full rounded-full p-[2px]'}>
+                        {model.referenceImage ? (
+                          <img
+                            src={model.referenceImage}
+                            alt={model.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
+                            <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user text-lg'}></i>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[9px] text-center mt-1.5 truncate max-w-[64px] md:max-w-[80px]'}>{model.name}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-4">
+                <div className="text-center">
+                  <div className="flex justify-center gap-2 mb-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="w-12 h-12 md:w-14 md:h-14 rounded-full p-[2px] bg-gradient-to-r from-pink-500/30 via-purple-500/30 to-orange-500/30">
+                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
+                          <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user text-sm'}></i>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Aguardando modelos serem criados</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* BANNER - Seus Produtos + Plano */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {activeTab !== 'modelos' && (
