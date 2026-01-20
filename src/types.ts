@@ -742,4 +742,151 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       ]
     }
   ],
+  // Novas categorias - Cabeça
+  'Bonés': [
+    {
+      id: 'modelo',
+      label: 'Modelo',
+      options: [
+        { id: 'dad-hat', label: 'Dad Hat' },
+        { id: 'trucker', label: 'Trucker' },
+        { id: 'snapback', label: 'Snapback' },
+        { id: 'aba-reta', label: 'Aba Reta' },
+        { id: 'five-panel', label: 'Five Panel' },
+      ]
+    }
+  ],
+  'Chapéus': [
+    {
+      id: 'modelo',
+      label: 'Modelo',
+      options: [
+        { id: 'bucket', label: 'Bucket' },
+        { id: 'fedora', label: 'Fedora' },
+        { id: 'panama', label: 'Panamá' },
+        { id: 'palha', label: 'Palha' },
+        { id: 'pescador', label: 'Pescador' },
+      ]
+    }
+  ],
+  'Tiaras': [
+    {
+      id: 'largura',
+      label: 'Largura',
+      options: [
+        { id: 'fina', label: 'Fina' },
+        { id: 'media', label: 'Média' },
+        { id: 'larga', label: 'Larga' },
+      ]
+    }
+  ],
+  'Lenços': [
+    {
+      id: 'tamanho',
+      label: 'Tamanho',
+      options: [
+        { id: 'pequeno', label: 'Pequeno (bandana)' },
+        { id: 'medio', label: 'Médio' },
+        { id: 'grande', label: 'Grande (echarpe)' },
+      ]
+    }
+  ],
+  // Novas categorias - Pés
+  'Tênis': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'casual', label: 'Casual' },
+        { id: 'corrida', label: 'Corrida' },
+        { id: 'skatista', label: 'Skatista' },
+        { id: 'chunky', label: 'Chunky/Dad Sneaker' },
+        { id: 'slip-on', label: 'Slip-on' },
+      ]
+    }
+  ],
+  'Sandálias': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'rasteira', label: 'Rasteira' },
+        { id: 'plataforma', label: 'Plataforma' },
+        { id: 'salto-bloco', label: 'Salto Bloco' },
+        { id: 'salto-fino', label: 'Salto Fino' },
+        { id: 'chinelo', label: 'Chinelo/Slide' },
+      ]
+    }
+  ],
+  'Botas': [
+    {
+      id: 'cano',
+      label: 'Cano',
+      options: [
+        { id: 'curto', label: 'Curto (tornozelo)' },
+        { id: 'medio', label: 'Médio (panturrilha)' },
+        { id: 'alto', label: 'Alto (joelho)' },
+        { id: 'over-knee', label: 'Over the Knee' },
+      ]
+    },
+    {
+      id: 'salto',
+      label: 'Salto',
+      options: [
+        { id: 'rasteiro', label: 'Rasteiro' },
+        { id: 'baixo', label: 'Baixo' },
+        { id: 'medio', label: 'Médio' },
+        { id: 'alto', label: 'Alto' },
+      ]
+    }
+  ],
+  // Novas categorias - Acessórios específicos
+  'Cintos': [
+    {
+      id: 'largura',
+      label: 'Largura',
+      options: [
+        { id: 'fino', label: 'Fino' },
+        { id: 'medio', label: 'Médio' },
+        { id: 'largo', label: 'Largo' },
+      ]
+    }
+  ],
+  'Relógios': [
+    {
+      id: 'tamanho',
+      label: 'Tamanho do Mostrador',
+      options: [
+        { id: 'pequeno', label: 'Pequeno' },
+        { id: 'medio', label: 'Médio' },
+        { id: 'grande', label: 'Grande (oversized)' },
+      ]
+    }
+  ],
+  'Óculos': [
+    {
+      id: 'formato',
+      label: 'Formato',
+      options: [
+        { id: 'aviador', label: 'Aviador' },
+        { id: 'redondo', label: 'Redondo' },
+        { id: 'quadrado', label: 'Quadrado' },
+        { id: 'gatinho', label: 'Gatinho' },
+        { id: 'oversized', label: 'Oversized' },
+      ]
+    }
+  ],
+  'Bijuterias': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'colar', label: 'Colar' },
+        { id: 'brinco', label: 'Brinco' },
+        { id: 'pulseira', label: 'Pulseira' },
+        { id: 'anel', label: 'Anel' },
+        { id: 'conjunto', label: 'Conjunto' },
+      ]
+    }
+  ],
 };

@@ -14,32 +14,14 @@ interface Props {
 
 type Step = 'source' | 'photos' | 'details';
 
-// Lista expandida de categorias
-const CATEGORIES = [
-  'Camisetas',
-  'Blusas',
-  'Regatas',
-  'Tops',
-  'Camisas',
-  'Vestidos',
-  'Saias',
-  'Calças',
-  'Shorts',
-  'Bermudas',
-  'Jaquetas',
-  'Casacos',
-  'Blazers',
-  'Moletons',
-  'Macacões',
-  'Jardineiras',
-  'Bodies',
-  'Biquínis',
-  'Maiôs',
-  'Leggings',
-  'Shorts Fitness',
-  'Calçados',
-  'Bolsas',
-  'Acessórios',
+// Categorias organizadas por grupos
+const CATEGORY_GROUPS = [
+  { label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+  { label: '👕 Topo', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { label: '👖 Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+  { label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { label: '👟 Pés', items: ['Calçados', 'Tênis', 'Sandálias', 'Botas'] },
+  { label: '👜 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Acessórios'] },
 ];
 
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege', 'Laranja', 'Roxo', 'Nude', 'Estampado', 'Multicolor'];
@@ -489,7 +471,11 @@ export const AddProductModal: React.FC<Props> = ({
                     className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
                   >
                     <option value="">Selecione</option>
-                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    {CATEGORY_GROUPS.map(group => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.items.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
 
