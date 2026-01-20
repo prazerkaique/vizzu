@@ -3,7 +3,7 @@ import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
 import { AuthPage } from './components/AuthPage';
 import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES } from './types';
-import { useCredits, PLANS } from './hooks/useCredits';
+import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario } from './lib/api/studio';
 import heic2any from 'heic2any';
@@ -93,7 +93,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   
   const clientPhotoInputRef = useRef<HTMLInputElement>(null);
   
-  const { userCredits, currentPlan, deductCredits, upgradePlan, setCredits } = useCredits();
+  const { userCredits, currentPlan, billingPeriod, deductCredits, upgradePlan, setBillingPeriod, addCredits, setCredits } = useCredits();
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
@@ -1457,37 +1457,201 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className="flex-1 p-4 md:p-6 overflow-y-auto">
                 <div className="max-w-xl">
                   {settingsTab === 'plan' && (
-                    <div>
-                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Plano & Créditos</h3>
-                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-pink-500/30' : 'bg-white border-pink-200 shadow-sm') + ' border rounded-xl p-4 mb-4'}>
+                    <div className="max-w-4xl">
+                      {/* Header */}
+                      <div className="text-center mb-6">
+                        <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1'}>Escolha o plano ideal para seu negócio</h2>
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Transforme suas fotos de produtos em imagens profissionais com IA</p>
+                      </div>
+
+                      {/* Status atual de créditos */}
+                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-fuchsia-900/30 to-rose-900/30 border-fuchsia-500/30' : 'bg-gradient-to-r from-fuchsia-50 to-rose-50 border-fuchsia-200') + ' border rounded-xl p-4 mb-6'}>
                         <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano Atual</p>
-                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{currentPlan.name}</p>
+                          <div className="flex items-center gap-3">
+                            <div className={(theme === 'dark' ? 'bg-fuchsia-500/20' : 'bg-fuchsia-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+                              <i className="fas fa-coins text-fuchsia-500"></i>
+                            </div>
+                            <div>
+                              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
+                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>{userCredits} <span className="text-sm font-normal text-neutral-500">/ {currentPlan.limit}</span></p>
+                            </div>
                           </div>
                           <div className="text-right">
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Créditos</p>
-                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits}</p>
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-fuchsia-500/20 text-fuchsia-400">
+                              <i className="fas fa-crown text-[10px]"></i>
+                              Plano {currentPlan.name}
+                            </span>
                           </div>
                         </div>
-                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-1.5 rounded-full overflow-hidden'}>
-                          <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+                        <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-white/50') + ' h-2 rounded-full overflow-hidden'}>
+                          <div className="h-full bg-gradient-to-r from-fuchsia-500 to-rose-500 rounded-full transition-all" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
                         </div>
                       </div>
-                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
-                        <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>Escolha seu Plano</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {PLANS.map(plan => (
-                            <div key={plan.id} onClick={() => upgradePlan(plan.id)} className={'p-3 rounded-lg border cursor-pointer transition-all ' + (currentPlan.id === plan.id ? 'border-pink-500 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-gray-300'))}>
-                              <h5 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{plan.name}</h5>
-                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold my-1'}>{plan.limit}</p>
-                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>créd./mês</p>
-                              <p className="text-[10px] font-medium text-pink-500 mt-1">{plan.price}</p>
-                              {currentPlan.id === plan.id && <span className="inline-block mt-2 text-[8px] font-medium text-pink-500 bg-pink-500/20 px-1.5 py-0.5 rounded-full uppercase tracking-wide">ATUAL</span>}
+
+                      {/* Toggle Mensal/Anual */}
+                      <div className="flex items-center justify-center gap-3 mb-6">
+                        <span className={(billingPeriod === 'monthly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>Mensal</span>
+                        <button
+                          onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
+                          className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-fuchsia-500 to-rose-500' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')) + ' relative w-14 h-7 rounded-full transition-colors'}
+                        >
+                          <div className={'absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (billingPeriod === 'yearly' ? 'translate-x-8' : 'translate-x-1')}></div>
+                        </button>
+                        <span className={(billingPeriod === 'yearly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium flex items-center gap-2'}>
+                          Anual
+                          <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">ECONOMIZE 20%</span>
+                        </span>
+                      </div>
+
+                      {/* Cards dos Planos */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        {PLANS.map(plan => {
+                          const isCurrentPlan = currentPlan.id === plan.id;
+                          const price = billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly;
+                          const isPremier = plan.id === 'premier';
+
+                          return (
+                            <div
+                              key={plan.id}
+                              className={
+                                'relative rounded-2xl p-4 transition-all cursor-pointer ' +
+                                (isCurrentPlan
+                                  ? (theme === 'dark' ? 'bg-gradient-to-b from-fuchsia-900/40 to-neutral-900 border-2 border-fuchsia-500 shadow-lg shadow-fuchsia-500/20' : 'bg-gradient-to-b from-fuchsia-50 to-white border-2 border-fuchsia-400 shadow-lg')
+                                  : isPremier
+                                    ? (theme === 'dark' ? 'bg-gradient-to-b from-amber-900/20 to-neutral-900 border-2 border-amber-500/50 hover:border-amber-500' : 'bg-gradient-to-b from-amber-50 to-white border-2 border-amber-300 hover:border-amber-400')
+                                    : (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
+                                )
+                              }
+                              onClick={() => upgradePlan(plan.id)}
+                            >
+                              {/* Badge */}
+                              {isCurrentPlan && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                  <span className="px-3 py-1 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg">
+                                    PLANO ATUAL
+                                  </span>
+                                </div>
+                              )}
+                              {isPremier && !isCurrentPlan && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                  <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full shadow-lg flex items-center gap-1">
+                                    <i className="fas fa-star text-[8px]"></i>
+                                    MELHOR VALOR
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="pt-2">
+                                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold'}>{plan.name}</h3>
+                                <div className="mt-3 mb-4">
+                                  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>
+                                    R$ {price.toFixed(2).replace('.', ',')}
+                                  </span>
+                                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>/mês</span>
+                                </div>
+
+                                <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100') + ' rounded-lg p-3 mb-4'}>
+                                  <div className="flex items-center gap-2">
+                                    <i className="fas fa-bolt text-amber-400 text-sm"></i>
+                                    <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-lg'}>{plan.limit}</span>
+                                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>créditos/mês</span>
+                                  </div>
+                                </div>
+
+                                <ul className="space-y-2 mb-4">
+                                  {plan.features.slice(0, 4).map((feature, idx) => (
+                                    <li key={idx} className="flex items-start gap-2 text-xs">
+                                      <i className="fas fa-check text-emerald-400 mt-0.5 text-[10px]"></i>
+                                      <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}>{feature}</span>
+                                    </li>
+                                  ))}
+                                  {plan.features.length > 4 && (
+                                    <li className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] pl-4'}>
+                                      +{plan.features.length - 4} funcionalidades
+                                    </li>
+                                  )}
+                                </ul>
+
+                                <button
+                                  className={
+                                    'w-full py-2.5 rounded-lg font-medium text-sm transition-all ' +
+                                    (isCurrentPlan
+                                      ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
+                                      : 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white hover:opacity-90'
+                                    )
+                                  }
+                                  disabled={isCurrentPlan}
+                                >
+                                  {isCurrentPlan ? 'Plano Atual' : 'Escolher Plano'}
+                                </button>
+                              </div>
                             </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Seção: Compre Créditos Adicionais */}
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mb-6'}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <i className="fas fa-coins text-amber-400"></i>
+                          <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>Compre Créditos Adicionais</h4>
+                        </div>
+
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-3'}>
+                          Preço por crédito no seu plano: <span className="font-bold text-fuchsia-400">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}</span>
+                        </p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {CREDIT_PACKAGES.map(amount => (
+                            <button
+                              key={amount}
+                              onClick={() => addCredits(amount)}
+                              className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 transition-all hover:scale-[1.02]'}
+                            >
+                              <div className="flex items-center justify-center gap-1.5 mb-1">
+                                <i className="fas fa-bolt text-amber-400 text-xs"></i>
+                                <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-lg'}>{amount}</span>
+                              </div>
+                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>créditos</p>
+                              <p className="text-fuchsia-400 font-semibold text-sm mt-1">
+                                R$ {(amount * currentPlan.creditPrice).toFixed(2).replace('.', ',')}
+                              </p>
+                            </button>
                           ))}
                         </div>
                       </div>
+
+                      {/* FAQ */}
+                      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+                        <details className="group">
+                          <summary className={(theme === 'dark' ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-700') + ' font-medium text-sm cursor-pointer flex items-center justify-between'}>
+                            <span className="flex items-center gap-2">
+                              <i className="fas fa-circle-question text-fuchsia-400"></i>
+                              Perguntas Frequentes
+                            </span>
+                            <i className="fas fa-chevron-down text-xs transition-transform group-open:rotate-180"></i>
+                          </summary>
+                          <div className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' mt-4 space-y-3 text-xs'}>
+                            <div>
+                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>O que são créditos?</p>
+                              <p>Créditos são usados para gerar imagens com IA. Cada geração consome de 1 a 3 créditos dependendo da complexidade.</p>
+                            </div>
+                            <div>
+                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Posso mudar de plano?</p>
+                              <p>Sim! Você pode fazer upgrade ou downgrade a qualquer momento. O valor é ajustado proporcionalmente.</p>
+                            </div>
+                            <div>
+                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Os créditos acumulam?</p>
+                              <p>Créditos não utilizados não acumulam para o próximo mês, mas créditos comprados avulso não expiram.</p>
+                            </div>
+                          </div>
+                        </details>
+                      </div>
+
+                      {/* Footer */}
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-center text-xs mt-6'}>
+                        Precisa de mais? <a href="#" className="text-fuchsia-400 hover:underline">Entre em contato</a> para planos personalizados.
+                      </p>
                     </div>
                   )}
                   
