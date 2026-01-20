@@ -71,7 +71,16 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
 
   const selectProduct = (slot: keyof LookComposition, product: Product) => {
     const img = product.images[0]?.base64 || product.images[0]?.url;
-    if (img) onChange({ ...composition, [slot]: { image: img, name: product.name, sku: product.sku } });
+    if (img) onChange({
+      ...composition,
+      [slot]: {
+        image: img,
+        name: product.name,
+        sku: product.sku,
+        productId: product.id,
+        imageId: product.images[0]?.id
+      }
+    });
     setExpandedSlot(null);
     setSearch('');
   };

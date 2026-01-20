@@ -106,7 +106,7 @@ interface ModeloIAParams {
   referenceImage?: string;
   productCategory: string;
   productDescription?: string;
-  lookItems?: Array<{ slot: string; image: string; name: string }>;
+  lookItems?: Array<{ slot: string; image: string; name: string; productId?: string; imageId?: string }>;
 }
 
 /**

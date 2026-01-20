@@ -146,6 +146,8 @@ export interface LookCompositionItem {
   image: string;
   name: string;
   sku?: string;
+  productId?: string;
+  imageId?: string;
 }
 
 export interface LookComposition {

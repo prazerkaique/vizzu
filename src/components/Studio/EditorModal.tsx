@@ -201,7 +201,7 @@ export const EditorModal: React.FC<Props> = ({
     return `${g} model, ${e}, ${b}, ${a}.${modelDetail ? ' Details: ' + modelDetail : ''}`;
   };
 
-  const buildLookItems = () => Object.entries(look).map(([slot, item]) => item ? { slot, image: item.image, name: item.name } : null).filter(Boolean) as any[];
+  const buildLookItems = () => Object.entries(look).map(([slot, item]) => item ? { slot, image: item.image, name: item.name, productId: item.productId, imageId: item.imageId } : null).filter(Boolean) as any[];
 
   // Constrói descrição do look a partir dos campos de texto
   const buildDescribedLookPrompt = () => {
