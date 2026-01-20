@@ -155,7 +155,9 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   }, [historyLogs]);
 
   const clientPhotoInputRef = useRef<HTMLInputElement>(null);
-  
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [longPressProductId, setLongPressProductId] = useState<string | null>(null);
+
   // Hook de créditos com integração ao backend
   const {
     userCredits,
@@ -445,6 +447,46 @@ const loadUserProducts = async (userId: string) => {
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
+  };
+
+  // Funções para long press (seleção estilo iPhone)
+  const handleProductTouchStart = (productId: string) => {
+    setLongPressProductId(productId);
+    longPressTimer.current = setTimeout(() => {
+      // Long press detectado - ativa modo seleção
+      toggleProductSelection(productId);
+      setLongPressProductId(null);
+      // Vibração haptic feedback (se disponível)
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  };
+
+  const handleProductTouchEnd = (productId: string) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    // Se ainda é o mesmo produto (não foi long press)
+    if (longPressProductId === productId) {
+      setLongPressProductId(null);
+      // Se está em modo de seleção, toggle seleção
+      if (selectedProducts.length > 0) {
+        toggleProductSelection(productId);
+      } else {
+        // Se não está em modo de seleção, abre o card
+        const product = products.find(p => p.id === productId);
+        if (product) setShowProductDetail(product);
+      }
+    }
+  };
+
+  const handleProductTouchMove = () => {
+    // Cancelar long press se usuário moveu o dedo
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setLongPressProductId(null);
   };
 
   // Função para selecionar todos os produtos filtrados
@@ -1675,26 +1717,41 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 {filteredProducts.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
                     {filteredProducts.map(product => (
-                      <div key={product.id} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-pink-500' : '')}>
-                        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'} onClick={() => setShowProductDetail(product)}>
-                          <img src={product.images[0]?.base64 || product.images[0]?.url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                          {/* Checkbox de seleção */}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleProductSelection(product.id); }}
-                            className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all ' + (selectedProducts.includes(product.id) ? 'bg-pink-500 text-white' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
+                      <div
+                        key={product.id}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-pink-500' : '')}
+                        onTouchStart={() => handleProductTouchStart(product.id)}
+                        onTouchEnd={() => handleProductTouchEnd(product.id)}
+                        onTouchMove={handleProductTouchMove}
+                        onClick={(e) => {
+                          // Desktop: clique abre card se não está em modo seleção
+                          if (window.matchMedia('(pointer: fine)').matches) {
+                            if (selectedProducts.length > 0) {
+                              toggleProductSelection(product.id);
+                            } else {
+                              setShowProductDetail(product);
+                            }
+                          }
+                        }}
+                      >
+                        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
+                          <img src={product.images[0]?.base64 || product.images[0]?.url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
+                          {/* Checkbox de seleção - visível em modo seleção ou hover no desktop */}
+                          <div
+                            className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-pink-500 text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
                           >
                             <i className={`fas fa-${selectedProducts.includes(product.id) ? 'check' : 'square'} text-[8px]`}></i>
-                          </button>
-                          {/* Botão delete individual */}
+                          </div>
+                          {/* Botão delete individual - apenas desktop hover */}
                           <button
                             onClick={(e) => { e.stopPropagation(); setDeleteProductTarget(product); setShowDeleteProductsModal(true); }}
-                            className="absolute top-1.5 right-1.5 w-5 h-5 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                            className="absolute top-1.5 right-1.5 w-5 h-5 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hidden md:flex"
                             title="Excluir produto"
                           >
                             <i className="fas fa-trash text-[8px]"></i>
                           </button>
                         </div>
-                        <div className="p-2" onClick={() => setShowProductDetail(product)}>
+                        <div className="p-2">
                           <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
                           <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{product.name}</p>
                         </div>
