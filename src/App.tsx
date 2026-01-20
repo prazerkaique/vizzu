@@ -1186,7 +1186,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setShowBulkImport(true)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50') + ' px-3 py-2 border rounded-lg font-medium text-xs'}>
+                  <button onClick={() => setShowBulkImport(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
                     <i className="fas fa-file-import mr-1.5"></i>Importar
                   </button>
                   <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
