@@ -1600,7 +1600,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <span className="text-[9px] font-medium">Produtos</span>
           </button>
           <button onClick={() => setShowStudioPicker(true)} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500/80 to-orange-400/80')}>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
             <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
