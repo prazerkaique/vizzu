@@ -33,7 +33,10 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    const saved = localStorage.getItem('vizzu_currentPage');
+    return (saved as Page) || 'dashboard';
+  });
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
   const [showImport, setShowImport] = useState(false);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
@@ -66,13 +69,17 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [provadorGeneratedImage, setProvadorGeneratedImage] = useState<string | null>(null);
   const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
+  const [createClientFromProvador, setCreateClientFromProvador] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(DEFAULT_WHATSAPP_TEMPLATES[0]);
   const [provadorStep, setProvadorStep] = useState<1 | 2 | 3 | 4>(1);
   const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
   const [showStudioPicker, setShowStudioPicker] = useState(false);
   const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('vizzu_theme');
+    return (saved as 'dark' | 'light') || 'dark';
+  });
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
   
@@ -212,6 +219,34 @@ const loadUserProducts = async (userId: string) => {
     
     return () => subscription.unsubscribe();
   }, []);
+
+  // Persistir página atual no localStorage
+  useEffect(() => {
+    localStorage.setItem('vizzu_currentPage', currentPage);
+  }, [currentPage]);
+
+  // Persistir tema no localStorage
+  useEffect(() => {
+    localStorage.setItem('vizzu_theme', theme);
+  }, [theme]);
+
+  // Fechar modais com Esc
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showBulkImport) setShowBulkImport(false);
+        else if (showCreateProduct) setShowCreateProduct(false);
+        else if (showImport) setShowImport(false);
+        else if (showProductDetail) setShowProductDetail(null);
+        else if (showCreateClient) setShowCreateClient(false);
+        else if (showClientDetail) setShowClientDetail(null);
+        else if (showClientPicker) setShowClientPicker(false);
+        else if (showVideoTutorial) setShowVideoTutorial(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showBulkImport, showCreateProduct, showImport, showProductDetail, showCreateClient, showClientDetail, showClientPicker, showVideoTutorial]);
 
   // Scroll automático para produto recém-criado
   useEffect(() => {
@@ -439,8 +474,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       totalOrders: 0 
     };
     setClients(prev => [...prev, client]);
-    setShowCreateClient(false); 
+    setShowCreateClient(false);
     setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' });
+
+    // Se veio do Provador, selecionar o cliente e voltar para lá
+    if (createClientFromProvador) {
+      setProvadorClient(client);
+      setCurrentPage('provador');
+      setCreateClientFromProvador(false);
+      setSuccessNotification('Cliente cadastrado com sucesso!');
+      setTimeout(() => setSuccessNotification(null), 3000);
+    }
   };
 
   const handleDeleteClient = (clientId: string) => { 
@@ -938,7 +982,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <div className="text-center py-4">
                             <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user-plus text-lg mb-2'}></i>
                             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Nenhum cliente</p>
-                            <button onClick={() => setCurrentPage('clients')} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' mt-2 px-3 py-1 rounded-lg text-[10px] font-medium'}>Cadastrar</button>
+                            <button onClick={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' mt-2 px-3 py-1 rounded-lg text-[10px] font-medium'}>Cadastrar</button>
                           </div>
                         )}
                       </div>
@@ -1079,7 +1123,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <div className="text-center py-6">
                             <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user-plus text-2xl mb-2'}></i>
                             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-2'}>Nenhum cliente com foto</p>
-                            <button onClick={() => setCurrentPage('clients')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium">Cadastrar Cliente</button>
+                            <button onClick={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium">Cadastrar Cliente</button>
                           </div>
                         )}
                       </div>

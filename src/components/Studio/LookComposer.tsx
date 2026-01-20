@@ -12,7 +12,7 @@ interface Props {
 const SLOTS = [
   { id: 'head' as const, label: 'Cabeça', icon: 'fa-hat-cowboy' },
   { id: 'top' as const, label: 'Topo', icon: 'fa-tshirt' },
-  { id: 'bottom' as const, label: 'Baixo', icon: 'fa-socks' },
+  { id: 'bottom' as const, label: 'Baixo', icon: 'fa-person-walking' },
   { id: 'feet' as const, label: 'Pés', icon: 'fa-shoe-prints' },
   { id: 'accessory1' as const, label: 'Acess. 1', icon: 'fa-clock' },
   { id: 'accessory2' as const, label: 'Acess. 2', icon: 'fa-bag-shopping' },
