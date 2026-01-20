@@ -346,9 +346,11 @@ const handleSave = async () => {
           </button>
           
           {/* Product Info */}
-          <div className="absolute top-3 left-14 z-10">
-            <p className={`text-[9px] font-medium uppercase tracking-wide ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{product.sku}</p>
-            <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
+          <div className="absolute top-3 left-14 right-20 z-10">
+            <div className={`inline-flex flex-col px-3 py-1.5 rounded-lg ${isDark ? 'bg-black/50 backdrop-blur-sm' : 'bg-white/80 backdrop-blur-sm shadow-sm'}`}>
+              <p className={`text-[9px] font-medium uppercase tracking-wide ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{product.sku}</p>
+              <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
+            </div>
           </div>
           
           {/* Credits Badge */}
