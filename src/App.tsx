@@ -976,6 +976,7 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
           productId: product.id,
           userId: user.id,
           imageId: selectedImage.id,
+          imageUrl: selectedImage.url || selectedImage.base64,
           modelPrompt: opts?.modelPrompt || prompt || 'Professional model',
           clothingPrompt: opts?.clothingPrompt,
           posePrompt: opts?.posePrompt,

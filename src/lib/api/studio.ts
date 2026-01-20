@@ -99,6 +99,7 @@ interface ModeloIAParams {
   productId: string;
   userId: string;
   imageId: string;
+  imageUrl?: string;
   modelPrompt: string;
   clothingPrompt?: string;
   posePrompt?: string;
@@ -122,6 +123,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       product_id: params.productId,
       user_id: params.userId,
       image_id: params.imageId,
+      image_url: params.imageUrl,
       model_prompt: params.modelPrompt,
       clothing_prompt: params.clothingPrompt,
       pose_prompt: params.posePrompt,
