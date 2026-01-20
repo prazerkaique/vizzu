@@ -135,12 +135,12 @@ export const Studio: React.FC<StudioProps> = ({
               <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
             {onImport && (
-              <button 
+              <button
                 onClick={onImport}
                 className="p-2 md:px-3 md:py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
                 <i className="fas fa-plus md:mr-1.5"></i>
-                <span className="hidden md:inline">Importar</span>
+                <span className="hidden md:inline">Novo</span>
               </button>
             )}
           </div>
@@ -411,6 +411,7 @@ export const Studio: React.FC<StudioProps> = ({
                 {displayProducts.map(product => (
                   <div
                     key={product.id}
+                    data-product-id={product.id}
                     onClick={() => setSelectedProduct(product)}
                     className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                   >

@@ -43,6 +43,9 @@ const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
 const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | null>(null);
+  const [successNotification, setSuccessNotification] = useState<string | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -210,6 +213,23 @@ const loadUserProducts = async (userId: string) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Scroll automático para produto recém-criado
+  useEffect(() => {
+    if (lastCreatedProductId && products.length > 0) {
+      // Ir para o Studio para ver o produto
+      setCurrentPage('studio');
+
+      // Pequeno delay para o DOM renderizar
+      setTimeout(() => {
+        const productElement = document.querySelector(`[data-product-id="${lastCreatedProductId}"]`);
+        if (productElement) {
+          productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        setLastCreatedProductId(null);
+      }, 300);
+    }
+  }, [lastCreatedProductId, products]);
+
   const handleUpdateProduct = (productId: string, updates: Partial<Product>) => { 
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p)); 
   };
@@ -371,9 +391,19 @@ const loadUserProducts = async (userId: string) => {
           await loadUserProducts(user.id);
         }
         setShowCreateProduct(false);
+        setShowImport(false);
         setSelectedFrontImage(null);
         setSelectedBackImage(null);
         setNewProduct({ name: '', brand: '', color: '', fit: '', category: '', collection: '' });
+
+        // Notificação de sucesso
+        setSuccessNotification('Produto criado com sucesso!');
+        setTimeout(() => setSuccessNotification(null), 3000);
+
+        // Guardar ID para scroll (o produto mais recente terá o SKU gerado)
+        if (data.product?.id) {
+          setLastCreatedProductId(data.product.id);
+        }
       } else {
         alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
       }
@@ -1155,9 +1185,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gerencie seu catálogo</p>
                   </div>
                 </div>
-                <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
-                  <i className="fas fa-plus mr-1.5"></i>Novo
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShowBulkImport(true)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50') + ' px-3 py-2 border rounded-lg font-medium text-xs'}>
+                    <i className="fas fa-file-import mr-1.5"></i>Importar
+                  </button>
+                  <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                    <i className="fas fa-plus mr-1.5"></i>Novo
+                  </button>
+                </div>
               </div>
               
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
@@ -2033,6 +2068,101 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <div className={'flex flex-col md:flex-row gap-2 mt-4 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
                 <i className="fas fa-wand-magic-sparkles mr-1.5"></i>Abrir no Studio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* NOTIFICAÇÃO DE SUCESSO */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {successNotification && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] animate-fade-in">
+          <div className="flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-xl shadow-lg">
+            <i className="fas fa-check-circle"></i>
+            <span className="text-sm font-medium">{successNotification}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MODAL: IMPORTAÇÃO EM MASSA (XML Google Shopping) */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {showBulkImport && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-lg overflow-hidden'}>
+            {/* Header */}
+            <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' flex items-center justify-between p-4 border-b'}>
+              <div className="flex items-center gap-3">
+                <div className={(theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100') + ' w-10 h-10 rounded-xl flex items-center justify-center'}>
+                  <i className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-500') + ' fas fa-file-import text-sm'}></i>
+                </div>
+                <div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Importação em Massa</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>XML padrão Google Shopping</p>
+                </div>
+              </div>
+              <button onClick={() => setShowBulkImport(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+                <i className="fas fa-times text-xs"></i>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5">
+              {/* Upload Area */}
+              <div className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all'}>
+                <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-cloud-upload-alt text-xl'}></i>
+                </div>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>Arraste seu arquivo XML aqui</p>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>ou clique para selecionar</p>
+                <input type="file" accept=".xml" className="hidden" />
+                <button className={(theme === 'dark' ? 'bg-neutral-700 text-white hover:bg-neutral-600' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') + ' px-4 py-2 rounded-lg text-xs font-medium'}>
+                  Selecionar Arquivo
+                </button>
+              </div>
+
+              {/* Info */}
+              <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200') + ' rounded-xl p-3 mt-4 border'}>
+                <p className="text-blue-500 text-xs flex items-start gap-2">
+                  <i className="fas fa-info-circle mt-0.5"></i>
+                  <span>
+                    <strong>Formato suportado:</strong> XML padrão Google Shopping com campos: id, title, description, image_link, brand, color, product_type.
+                  </span>
+                </p>
+              </div>
+
+              {/* Exemplo de estrutura */}
+              <details className="mt-4">
+                <summary className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs cursor-pointer'}>
+                  <i className="fas fa-code mr-1.5"></i>Ver exemplo de estrutura XML
+                </summary>
+                <pre className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-100 text-gray-700') + ' mt-2 p-3 rounded-lg text-[10px] overflow-x-auto'}>
+{`<rss>
+  <channel>
+    <item>
+      <g:id>SKU-001</g:id>
+      <g:title>Camiseta Básica</g:title>
+      <g:image_link>https://...</g:image_link>
+      <g:brand>Marca</g:brand>
+      <g:color>Preto</g:color>
+      <g:product_type>Camisetas</g:product_type>
+    </item>
+  </channel>
+</rss>`}
+                </pre>
+              </details>
+            </div>
+
+            {/* Footer */}
+            <div className={(theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-gray-200 bg-gray-50') + ' p-4 border-t flex gap-2'}>
+              <button onClick={() => setShowBulkImport(false)} className={(theme === 'dark' ? 'bg-neutral-700 text-white hover:bg-neutral-600' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') + ' flex-1 py-2.5 rounded-lg font-medium text-sm'}>
+                Cancelar
+              </button>
+              <button disabled className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+                <i className="fas fa-upload"></i>
+                Importar Produtos
               </button>
             </div>
           </div>
