@@ -993,7 +993,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <i className={`fas fa-chevron-down text-[8px] transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`}></i>
             </button>
             {showSettingsDropdown && (
-              <div className="absolute left-0 right-0 bottom-full mb-1 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/90 backdrop-blur-md">
+              <div className="absolute left-0 right-0 bottom-full mb-1 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/95 backdrop-blur-md">
                 {[
                   { id: 'profile', label: 'Perfil', icon: 'fa-user' },
                   { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
@@ -1004,7 +1004,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <button
                     key={item.id}
                     onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-400 hover:text-white hover:bg-fuchsia-500/20 hover:pl-4"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-500 hover:text-white hover:bg-neutral-800"
                   >
                     <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
                     {item.label}
@@ -1929,7 +1929,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
 
               {/* Conteúdo da Seção */}
-              <div className="max-w-xl">
+              <div className={settingsTab === 'plan' ? '' : 'max-w-xl'}>
                   {settingsTab === 'plan' && (() => {
                     // Lista completa de todas as funcionalidades
                     const ALL_FEATURES = [
@@ -1950,7 +1950,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     ];
 
                     return (
-                    <div className="max-w-6xl">
+                    <div>
                       {/* Header */}
                       <div className="text-center mb-6">
                         <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1'}>Escolha o plano ideal para seu negocio</h2>
@@ -2441,7 +2441,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <span className="text-[9px] font-medium">Config</span>
             </button>
             {showSettingsDropdown && (
-              <div className="absolute bottom-full right-0 mb-2 w-44 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/90 backdrop-blur-md">
+              <div className="absolute bottom-full right-0 mb-2 w-44 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/95 backdrop-blur-md">
                 {[
                   { id: 'profile', label: 'Perfil', icon: 'fa-user' },
                   { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
@@ -2452,7 +2452,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <button
                     key={item.id}
                     onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-400 hover:text-white hover:bg-fuchsia-500/20 hover:pl-4 text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-500 hover:text-white hover:bg-neutral-800 text-left"
                   >
                     <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
                     {item.label}
