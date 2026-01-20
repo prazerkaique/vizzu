@@ -42,8 +42,8 @@ export const Studio: React.FC<StudioProps> = ({
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
-  const [activeTab, setActiveTab] = useState<'todos' | 'recentes' | 'editados' | 'modelos'>('todos');
-  
+  const [activeTab, setActiveTab] = useState<'todos' | 'recentes' | 'modelos'>('todos');
+
   // Filtros
   const [showFilters, setShowFilters] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,12 +51,13 @@ export const Studio: React.FC<StudioProps> = ({
   const [filterCollection, setFilterCollection] = useState('');
   const [filterColor, setFilterColor] = useState('');
   const [filterGender, setFilterGender] = useState('');
+  const [sortBy, setSortBy] = useState<'recent' | 'a-z' | 'z-a'>('recent');
 
-  // Filtrar produtos
+  // Filtrar e ordenar produtos
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchesSearch = !searchTerm || 
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    let result = products.filter(product => {
+      const matchesSearch = !searchTerm ||
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !filterCategory || product.category === filterCategory;
       const matchesCollection = !filterCollection || product.collection === filterCollection;
@@ -64,7 +65,18 @@ export const Studio: React.FC<StudioProps> = ({
       const matchesGender = !filterGender || (product as any).gender === filterGender;
       return matchesSearch && matchesCategory && matchesCollection && matchesColor && matchesGender;
     });
-  }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender]);
+
+    // Ordenar
+    if (sortBy === 'a-z') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'z-a') {
+      result = [...result].sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+      result = [...result].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+    }
+
+    return result;
+  }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
 
   // Produtos recentes (últimos 10 atualizados)
   const recentProducts = useMemo(() => {
@@ -72,11 +84,6 @@ export const Studio: React.FC<StudioProps> = ({
       .filter(p => p.updatedAt)
       .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
       .slice(0, 10);
-  }, [products]);
-
-  // Produtos editados (que têm imagens geradas)
-  const editedProducts = useMemo(() => {
-    return products.filter(p => (p as any).generatedImages && (p as any).generatedImages.length > 0);
   }, [products]);
 
   const handleSaveModelProfile = (model: SavedModelProfile) => {
@@ -99,13 +106,13 @@ export const Studio: React.FC<StudioProps> = ({
     setFilterCollection('');
     setFilterColor('');
     setFilterGender('');
+    setSortBy('recent');
   };
 
-  const hasActiveFilters = searchTerm || filterCategory || filterCollection || filterColor || filterGender;
+  const hasActiveFilters = searchTerm || filterCategory || filterCollection || filterColor || filterGender || sortBy !== 'recent';
 
-  const displayProducts = activeTab === 'todos' ? filteredProducts : 
-                          activeTab === 'recentes' ? recentProducts : 
-                          activeTab === 'editados' ? editedProducts : [];
+  const displayProducts = activeTab === 'todos' ? filteredProducts :
+                          activeTab === 'recentes' ? recentProducts : [];
 
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
@@ -178,7 +185,6 @@ export const Studio: React.FC<StudioProps> = ({
             {[
               { id: 'todos' as const, label: 'Todos' },
               { id: 'recentes' as const, label: 'Recentes' },
-              { id: 'editados' as const, label: 'Editados' },
               { id: 'modelos' as const, label: 'Meus Modelos' },
             ].map(tab => (
               <button
@@ -201,32 +207,17 @@ export const Studio: React.FC<StudioProps> = ({
             ))}
           </div>
           
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' +
-              (showFilters || hasActiveFilters
-                ? 'bg-pink-500/20 text-pink-500 border border-pink-500/30'
-                : (theme === 'dark' ? 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white' : 'bg-white text-gray-500 border border-gray-200 hover:text-gray-700 shadow-sm')
-              )
-            }
-          >
-            <i className="fas fa-sliders text-[10px]"></i>
-            Filtros
-            {hasActiveFilters && (
-              <span className="w-1.5 h-1.5 bg-pink-500 rounded-full"></span>
-            )}
-          </button>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* FILTERS - Sempre visíveis quando showFilters = true */}
+        {/* FILTERS - Sempre visíveis */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {showFilters && activeTab !== 'modelos' && (
+        {activeTab !== 'modelos' && (
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
             <div className="flex items-center justify-between mb-3">
-              <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar por</span>
+              <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar e ordenar</span>
               {hasActiveFilters && (
-                <button 
+                <button
                   onClick={clearFilters}
                   className="text-[10px] text-pink-500 hover:text-pink-400 font-medium"
                 >
@@ -234,7 +225,7 @@ export const Studio: React.FC<StudioProps> = ({
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               {/* Categoria */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
@@ -249,7 +240,7 @@ export const Studio: React.FC<StudioProps> = ({
                   ))}
                 </select>
               </div>
-              
+
               {/* Coleção */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
@@ -264,7 +255,7 @@ export const Studio: React.FC<StudioProps> = ({
                   ))}
                 </select>
               </div>
-              
+
               {/* Cor */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
@@ -279,7 +270,7 @@ export const Studio: React.FC<StudioProps> = ({
                   ))}
                 </select>
               </div>
-              
+
               {/* Gênero */}
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
@@ -292,6 +283,20 @@ export const Studio: React.FC<StudioProps> = ({
                   {GENDERS.map(gender => (
                     <option key={gender} value={gender}>{gender}</option>
                   ))}
+                </select>
+              </div>
+
+              {/* Ordenar */}
+              <div>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Ordenar</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'recent' | 'a-z' | 'z-a')}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+                >
+                  <option value="recent">Recentes</option>
+                  <option value="a-z">A → Z</option>
+                  <option value="z-a">Z → A</option>
                 </select>
               </div>
             </div>
