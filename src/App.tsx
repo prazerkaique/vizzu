@@ -1245,7 +1245,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       return;
     }
 
-    const clientId = 'client-' + Date.now();
+    const clientId = crypto.randomUUID();
     const photosToUpload = [...newClient.photos];
 
     const client: Client = {
