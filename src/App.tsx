@@ -1518,11 +1518,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
   // ═══════════════════════════════════════════════════════════════
   // AUTH CHECK - Show AuthPage if not authenticated
   // ═══════════════════════════════════════════════════════════════
