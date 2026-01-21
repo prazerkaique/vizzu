@@ -4,7 +4,7 @@ import { LookComposer } from './components/Studio/LookComposer';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
 import { BulkImportModal } from './components/BulkImportModal';
-import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings } from './types';
+import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario, generateModeloIA, generateProvador } from './lib/api/studio';
@@ -121,6 +121,9 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [provadorStep, setProvadorStep] = useState<1 | 2 | 3 | 4>(1);
   const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
   const [provadorLookSearch, setProvadorLookSearch] = useState('');
+  const [clientLooks, setClientLooks] = useState<ClientLook[]>([]);
+  const [savingLook, setSavingLook] = useState(false);
+  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
   const [showStudioPicker, setShowStudioPicker] = useState(false);
   const [showAddProductHint, setShowAddProductHint] = useState(false);
   const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
@@ -1388,13 +1391,153 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const getClientPhoto = (client: Client, type?: ClientPhoto['type']): string | undefined => {
-    if (type && client.photos) { 
-      const photo = client.photos.find(p => p.type === type); 
-      if (photo) return photo.base64; 
+    if (type && client.photos) {
+      const photo = client.photos.find(p => p.type === type);
+      if (photo) return photo.base64;
     }
     if (client.photos?.length) return client.photos[0].base64;
     return client.photo;
   };
+
+  // ═══════════════════════════════════════════════════════════════
+  // CLIENT LOOKS - Funções para gerenciar looks salvos
+  // ═══════════════════════════════════════════════════════════════
+
+  const loadClientLooks = async (clientId: string) => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('client_looks')
+        .select('*')
+        .eq('client_id', clientId)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const looks: ClientLook[] = (data || []).map(l => ({
+        id: l.id,
+        clientId: l.client_id,
+        userId: l.user_id,
+        imageUrl: l.image_url,
+        storagePath: l.storage_path,
+        lookItems: l.look_items || {},
+        notes: l.notes,
+        createdAt: l.created_at,
+      }));
+
+      setClientLooks(looks);
+    } catch (error) {
+      console.error('Erro ao carregar looks:', error);
+    }
+  };
+
+  const saveClientLook = async (imageUrl: string, lookItems: LookComposition) => {
+    if (!user || !provadorClient) return null;
+
+    setSavingLook(true);
+    try {
+      // Fazer download da imagem e converter para blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      // Gerar nome único para o arquivo
+      const fileName = `${Date.now()}.png`;
+      const storagePath = `${user.id}/${provadorClient.id}/${fileName}`;
+
+      // Upload para o Storage
+      const { error: uploadError } = await supabase.storage
+        .from('client-looks')
+        .upload(storagePath, blob, {
+          contentType: 'image/png',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('client-looks')
+        .getPublicUrl(storagePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Salvar no banco
+      const { data, error } = await supabase
+        .from('client_looks')
+        .insert({
+          client_id: provadorClient.id,
+          user_id: user.id,
+          image_url: publicUrl,
+          storage_path: storagePath,
+          look_items: lookItems,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newLook: ClientLook = {
+        id: data.id,
+        clientId: data.client_id,
+        userId: data.user_id,
+        imageUrl: data.image_url,
+        storagePath: data.storage_path,
+        lookItems: data.look_items || {},
+        createdAt: data.created_at,
+      };
+
+      setClientLooks(prev => [newLook, ...prev]);
+      return newLook;
+    } catch (error) {
+      console.error('Erro ao salvar look:', error);
+      alert('Erro ao salvar look. Tente novamente.');
+      return null;
+    } finally {
+      setSavingLook(false);
+    }
+  };
+
+  const deleteClientLook = async (look: ClientLook) => {
+    if (!user) return;
+
+    try {
+      // Deletar do Storage se tiver path
+      if (look.storagePath) {
+        await supabase.storage
+          .from('client-looks')
+          .remove([look.storagePath]);
+      }
+
+      // Deletar do banco
+      const { error } = await supabase
+        .from('client_looks')
+        .delete()
+        .eq('id', look.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setClientLooks(prev => prev.filter(l => l.id !== look.id));
+
+      if (selectedSavedLook?.id === look.id) {
+        setSelectedSavedLook(null);
+      }
+    } catch (error) {
+      console.error('Erro ao deletar look:', error);
+      alert('Erro ao deletar look.');
+    }
+  };
+
+  // Carregar looks quando cliente é selecionado
+  useEffect(() => {
+    if (provadorClient) {
+      loadClientLooks(provadorClient.id);
+    } else {
+      setClientLooks([]);
+      setSelectedSavedLook(null);
+    }
+  }, [provadorClient?.id]);
 
   const formatWhatsApp = (phone: string) => { 
     const digits = phone.replace(/\D/g, ''); 
@@ -2114,7 +2257,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </h3>
                   </div>
                   <div className="p-3">
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-3 flex items-center justify-center overflow-hidden'}>
+                    {/* Preview/Imagem gerada ou Look selecionado */}
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-2 flex items-center justify-center overflow-hidden relative'}>
                       {isGeneratingProvador ? (
                         <div className="text-center px-4 py-6">
                           <i className={'fas ' + (provadorProgress >= 100 ? 'fa-hourglass-end' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon) + ' text-2xl mb-3 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + (provadorProgress >= 100 ? ' animate-pulse' : '')}></i>
@@ -2124,6 +2268,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           </div>
                           <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium'}>{Math.round(Math.min(provadorProgress, 100))}%</p>
                         </div>
+                      ) : selectedSavedLook ? (
+                        <>
+                          <img src={selectedSavedLook.imageUrl} alt="Look salvo" className="w-full h-full object-cover" />
+                          <button onClick={() => setSelectedSavedLook(null)} className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-black/70 text-white rounded-full text-[9px]"><i className="fas fa-times"></i></button>
+                        </>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
@@ -2132,6 +2281,54 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div className="text-center p-4"><i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-image text-2xl mb-2'}></i><p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Preview</p></div>
                       )}
                     </div>
+
+                    {/* Botão Salvar Look (quando tem imagem gerada) */}
+                    {provadorGeneratedImage && !selectedSavedLook && (
+                      <button
+                        onClick={async () => {
+                          const saved = await saveClientLook(provadorGeneratedImage, provadorLook);
+                          if (saved) {
+                            alert('Look salvo com sucesso!');
+                          }
+                        }}
+                        disabled={savingLook}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700') + ' w-full py-1.5 border rounded-lg font-medium text-[10px] mb-2 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50'}
+                      >
+                        {savingLook ? (
+                          <><i className="fas fa-spinner fa-spin text-[9px]"></i><span>Salvando...</span></>
+                        ) : (
+                          <><i className="fas fa-bookmark text-[9px]"></i><span>Salvar Look</span></>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Galeria de Looks Salvos */}
+                    {provadorClient && clientLooks.length > 0 && (
+                      <div className="mb-2">
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px] mb-1.5 flex items-center gap-1'}>
+                          <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
+                        </p>
+                        <div className="flex gap-1.5 overflow-x-auto pb-1">
+                          {clientLooks.map(look => (
+                            <div key={look.id} className="relative flex-shrink-0 group">
+                              <img
+                                src={look.imageUrl}
+                                alt="Look"
+                                onClick={() => setSelectedSavedLook(look)}
+                                className={'w-12 h-16 object-cover rounded cursor-pointer transition-all ' + (selectedSavedLook?.id === look.id ? 'ring-2 ring-pink-500' : 'hover:ring-2 hover:ring-pink-500/50')}
+                              />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (confirm('Deletar este look?')) deleteClientLook(look); }}
+                                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <i className="fas fa-times"></i>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2 py-1.5 border rounded-lg text-[10px] mb-2'}>
                       {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
@@ -2143,6 +2340,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             alert('Aguarde a geração da imagem terminar');
                             return;
                           }
+                          setSelectedSavedLook(null);
                           handleProvadorGenerate();
                         }}
                         disabled={!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3}
@@ -2154,7 +2352,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <><i className="fas fa-wand-magic-sparkles text-[10px]"></i><span>Gerar (3 créd.)</span></>
                         )}
                       </button>
-                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-200') + ' w-full py-2 text-green-500 border rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors'}>
+                      <button
+                        onClick={handleProvadorSendWhatsApp}
+                        disabled={!provadorClient || (!provadorGeneratedImage && !selectedSavedLook)}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-200') + ' w-full py-2 text-green-500 border rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors'}
+                      >
                         <i className="fab fa-whatsapp text-[10px]"></i>Enviar WhatsApp
                       </button>
                     </div>
@@ -2258,7 +2460,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 {provadorStep === 4 && (
                   <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                     <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>4. Gerar e Enviar</h3>
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-3 flex items-center justify-center overflow-hidden'}>
+
+                    {/* Preview/Imagem gerada ou Look selecionado */}
+                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-2 flex items-center justify-center overflow-hidden relative'}>
                       {isGeneratingProvador ? (
                         <div className="text-center px-6 py-8">
                           <i className={'fas ' + (provadorProgress >= 100 ? 'fa-hourglass-end' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon) + ' text-3xl mb-4 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + (provadorProgress >= 100 ? ' animate-pulse' : '')}></i>
@@ -2268,6 +2472,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           </div>
                           <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-medium'}>{Math.round(Math.min(provadorProgress, 100))}%</p>
                         </div>
+                      ) : selectedSavedLook ? (
+                        <>
+                          <img src={selectedSavedLook.imageUrl} alt="Look salvo" className="w-full h-full object-cover" />
+                          <button onClick={() => setSelectedSavedLook(null)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 text-white rounded-full text-xs"><i className="fas fa-times"></i></button>
+                        </>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
@@ -2276,6 +2485,54 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div className="text-center p-4"><i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-image text-3xl mb-2'}></i><p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-xs'}>Preview</p></div>
                       )}
                     </div>
+
+                    {/* Botão Salvar Look (quando tem imagem gerada) */}
+                    {provadorGeneratedImage && !selectedSavedLook && (
+                      <button
+                        onClick={async () => {
+                          const saved = await saveClientLook(provadorGeneratedImage, provadorLook);
+                          if (saved) {
+                            alert('Look salvo com sucesso!');
+                          }
+                        }}
+                        disabled={savingLook}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700') + ' w-full py-2 border rounded-lg font-medium text-xs mb-2 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50'}
+                      >
+                        {savingLook ? (
+                          <><i className="fas fa-spinner fa-spin text-[10px]"></i><span>Salvando...</span></>
+                        ) : (
+                          <><i className="fas fa-bookmark text-[10px]"></i><span>Salvar Look</span></>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Galeria de Looks Salvos */}
+                    {provadorClient && clientLooks.length > 0 && (
+                      <div className="mb-3">
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-2 flex items-center gap-1'}>
+                          <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
+                        </p>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {clientLooks.map(look => (
+                            <div key={look.id} className="relative flex-shrink-0 group">
+                              <img
+                                src={look.imageUrl}
+                                alt="Look"
+                                onClick={() => setSelectedSavedLook(look)}
+                                className={'w-16 h-20 object-cover rounded-lg cursor-pointer transition-all ' + (selectedSavedLook?.id === look.id ? 'ring-2 ring-pink-500' : 'hover:ring-2 hover:ring-pink-500/50')}
+                              />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); if (confirm('Deletar este look?')) deleteClientLook(look); }}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <i className="fas fa-times"></i>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-xs mb-2'}>
                       {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
@@ -2287,6 +2544,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             alert('Aguarde a geração da imagem terminar');
                             return;
                           }
+                          setSelectedSavedLook(null);
                           handleProvadorGenerate();
                         }}
                         disabled={!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3}
@@ -2298,7 +2556,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar (3 créd.)</span></>
                         )}
                       </button>
-                      <button onClick={handleProvadorSendWhatsApp} disabled={!provadorClient || !provadorGeneratedImage} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' w-full py-3 text-green-500 border rounded-lg font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2'}>
+                      <button
+                        onClick={handleProvadorSendWhatsApp}
+                        disabled={!provadorClient || (!provadorGeneratedImage && !selectedSavedLook)}
+                        className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' w-full py-3 text-green-500 border rounded-lg font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2'}
+                      >
                         <i className="fab fa-whatsapp"></i>Enviar WhatsApp
                       </button>
                       <button onClick={() => setProvadorStep(3)} className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' w-full py-2 text-xs'}><i className="fas fa-arrow-left mr-1"></i> Voltar ao Look</button>

@@ -213,6 +213,22 @@ export interface Client {
   lastContactAt?: string;
   totalOrders?: number;
   status: 'active' | 'inactive' | 'vip';
+  looks?: ClientLook[];       // Looks gerados no Provador IA
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Client Look - Looks salvos do Provador IA
+// ═══════════════════════════════════════════════════════════════
+
+export interface ClientLook {
+  id: string;
+  clientId: string;
+  userId: string;
+  imageUrl: string;
+  storagePath?: string;
+  lookItems: LookComposition;
+  notes?: string;
+  createdAt: string;
 }
 
 // ═══════════════════════════════════════════════════════════════
