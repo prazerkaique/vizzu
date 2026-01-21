@@ -232,6 +232,132 @@ export interface ClientLook {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Saved Model - Modelos IA salvos pelo usuário
+// ═══════════════════════════════════════════════════════════════
+
+export interface SavedModelImages {
+  front?: string;
+  back?: string;
+  face?: string;
+}
+
+export interface SavedModel {
+  id: string;
+  userId: string;
+  name: string;
+  gender: 'woman' | 'man';
+
+  // Características físicas
+  ethnicity: string;
+  skinTone: string;
+  bodyType: string;
+  ageRange: string;
+  height: string;
+
+  // Detalhes
+  hairColor: string;
+  hairStyle: string;
+  eyeColor: string;
+  expression: string;
+
+  // Proporções (opcionais - só para mulher)
+  bustSize?: string;
+  waistType?: string;
+
+  // Imagem de referência (opcional)
+  referenceImageUrl?: string;
+  referenceStoragePath?: string;
+
+  // Imagens geradas pela IA
+  images: SavedModelImages;
+
+  // Status
+  status: 'draft' | 'generating' | 'ready' | 'error';
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Opções para os selects do modelo
+export const MODEL_OPTIONS = {
+  gender: [
+    { id: 'woman', label: 'Feminino' },
+    { id: 'man', label: 'Masculino' },
+  ],
+  ethnicity: [
+    { id: 'caucasian', label: 'Caucasiana' },
+    { id: 'black', label: 'Negra' },
+    { id: 'asian', label: 'Asiática' },
+    { id: 'latin', label: 'Latina' },
+    { id: 'brazilian', label: 'Brasileira' },
+    { id: 'mixed', label: 'Mista' },
+  ],
+  skinTone: [
+    { id: 'light', label: 'Clara' },
+    { id: 'medium', label: 'Média' },
+    { id: 'tan', label: 'Morena' },
+    { id: 'dark', label: 'Escura' },
+  ],
+  bodyType: [
+    { id: 'slim', label: 'Magro' },
+    { id: 'athletic', label: 'Atlético' },
+    { id: 'average', label: 'Médio' },
+    { id: 'curvy', label: 'Curvilíneo' },
+    { id: 'plus', label: 'Plus Size' },
+  ],
+  ageRange: [
+    { id: 'young', label: 'Jovem (20-25)' },
+    { id: 'adult', label: 'Adulto (25-35)' },
+    { id: 'mature', label: 'Maduro (35-50)' },
+  ],
+  height: [
+    { id: 'short', label: 'Baixa' },
+    { id: 'medium', label: 'Média' },
+    { id: 'tall', label: 'Alta' },
+  ],
+  hairColor: [
+    { id: 'black', label: 'Preto' },
+    { id: 'brown', label: 'Castanho' },
+    { id: 'blonde', label: 'Loiro' },
+    { id: 'red', label: 'Ruivo' },
+    { id: 'gray', label: 'Grisalho' },
+    { id: 'white', label: 'Branco' },
+  ],
+  hairStyle: [
+    { id: 'straight-short', label: 'Liso curto' },
+    { id: 'straight-long', label: 'Liso longo' },
+    { id: 'wavy', label: 'Ondulado' },
+    { id: 'curly', label: 'Cacheado' },
+    { id: 'coily', label: 'Crespo' },
+    { id: 'bald', label: 'Careca' },
+  ],
+  eyeColor: [
+    { id: 'brown', label: 'Castanhos' },
+    { id: 'black', label: 'Pretos' },
+    { id: 'blue', label: 'Azuis' },
+    { id: 'green', label: 'Verdes' },
+    { id: 'hazel', label: 'Mel' },
+  ],
+  expression: [
+    { id: 'natural-smile', label: 'Sorriso natural' },
+    { id: 'open-smile', label: 'Sorriso aberto' },
+    { id: 'serious', label: 'Séria' },
+    { id: 'neutral', label: 'Neutra' },
+    { id: 'confident', label: 'Confiante' },
+  ],
+  bustSize: [
+    { id: 'small', label: 'Pequeno' },
+    { id: 'medium', label: 'Médio' },
+    { id: 'large', label: 'Grande' },
+  ],
+  waistType: [
+    { id: 'thin', label: 'Fina' },
+    { id: 'medium', label: 'Média' },
+    { id: 'wide', label: 'Larga' },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════
 // Collection Types
 // ═══════════════════════════════════════════════════════════════
 

@@ -441,3 +441,70 @@ export async function generateProvador(params: ProvadorParams): Promise<Provador
 
   return data;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// GERAR IMAGENS DO MODELO SALVO
+// ═══════════════════════════════════════════════════════════════
+
+interface SavedModelProfile {
+  name: string;
+  gender: 'woman' | 'man';
+  ethnicity: string;
+  skinTone: string;
+  bodyType: string;
+  ageRange: string;
+  height: string;
+  hairColor: string;
+  hairStyle: string;
+  eyeColor: string;
+  expression: string;
+  bustSize?: string;
+  waistType?: string;
+}
+
+interface GenerateModelImagesParams {
+  modelId: string;
+  userId: string;
+  modelProfile: SavedModelProfile;
+}
+
+interface GenerateModelImagesResponse {
+  success: boolean;
+  model?: {
+    id: string;
+    images: {
+      front?: string;
+      back?: string;
+      face?: string;
+    };
+    status: string;
+  };
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Gera as 3 imagens do modelo salvo (frente, costas, rosto)
+ * Custo: 0 créditos (custo é ao usar o modelo no Studio)
+ */
+export async function generateModelImages(params: GenerateModelImagesParams): Promise<GenerateModelImagesResponse> {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/generate-model-images`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      modelId: params.modelId,
+      userId: params.userId,
+      modelProfile: params.modelProfile,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao gerar imagens do modelo');
+  }
+
+  return data;
+}
