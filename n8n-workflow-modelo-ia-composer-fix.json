@@ -1,0 +1,431 @@
+{
+  "name": "Vizzu - Modelo IA (Composer Fix)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/modelo-ia-v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-modelo-ia",
+      "name": "Webhook Modelo IA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-848, 1504],
+      "webhookId": "modelo-ia-composer-v2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst startTime = Date.now();\n\nconst mode = body.mode || 'describe';\nconst creditsRequired = mode === 'composer' ? 2 : 1;\n\nreturn {\n  productId: body.productId || body.product_id,\n  userId: body.userId || body.user_id,\n  imageId: body.imageId || body.image_id,\n  imageUrl: body.imageUrl || body.image_url,\n  mode: mode,\n  creditsRequired: creditsRequired,\n  modelProfile: body.modelProfile || {\n    gender: 'woman',\n    ethnicity: 'mixed',\n    bodyType: 'average',\n    ageRange: 'adult'\n  },\n  sceneDescription: body.sceneDescription || '',\n  orientation: body.orientation || 'vertical',\n  lookComposition: body.lookComposition || null,\n  savedModelId: body.savedModelId || null,\n  startTime: startTime\n};"
+      },
+      "id": "prep-modelo-ia",
+      "name": "Preparar Dados Modelo IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-608, 1504]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $json.userId }}"
+      },
+      "id": "get-user-modelo-ia",
+      "name": "Buscar Usuario Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [-368, 1504],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-credits-modelo",
+              "leftValue": "={{ $json.credits }}",
+              "rightValue": "={{ $('Preparar Dados Modelo IA').item.json.creditsRequired }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-credits-modelo-ia",
+      "name": "Tem Creditos? Modelo IA",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-128, 1504]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'insufficient_credits', message: 'Créditos insuficientes' }) }}",
+        "options": {
+          "responseCode": 402
+        }
+      },
+      "id": "no-credits-modelo-ia",
+      "name": "Erro - Sem Creditos Modelo IA",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [112, 1700]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "product_images",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $('Preparar Dados Modelo IA').item.json.imageId }}"
+      },
+      "id": "get-image-modelo-ia",
+      "name": "Buscar Imagem Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [112, 1376],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $('Preparar Dados Modelo IA').item.json.productId }}"
+      },
+      "id": "get-product-modelo-ia",
+      "name": "Buscar Produto Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [352, 1376],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "generations",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "user_id", "fieldValue": "={{ $('Preparar Dados Modelo IA').item.json.userId }}" },
+            { "fieldId": "product_id", "fieldValue": "={{ $('Preparar Dados Modelo IA').item.json.productId }}" },
+            { "fieldId": "type", "fieldValue": "modelo_ia" },
+            { "fieldId": "input_image_url", "fieldValue": "={{ $('Buscar Imagem Modelo IA').item.json.url || $('Preparar Dados Modelo IA').item.json.imageUrl }}" },
+            { "fieldId": "credits_used", "fieldValue": "={{ $('Preparar Dados Modelo IA').item.json.creditsRequired }}" },
+            { "fieldId": "status", "fieldValue": "processing" },
+            { "fieldId": "started_at", "fieldValue": "={{ new Date().toISOString() }}" }
+          ]
+        }
+      },
+      "id": "create-gen-modelo-ia",
+      "name": "Criar Geracao Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [592, 1376],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Buscar Imagem Modelo IA').item.json.url || $('Preparar Dados Modelo IA').item.json.imageUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "download-img-modelo-ia",
+      "name": "Download Imagem Modelo IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [832, 1376]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepData = $('Preparar Dados Modelo IA').item.json;\nconst mode = prepData.mode;\nconst lookComposition = prepData.lookComposition;\n\nconst mainBinary = $input.first().binary;\nconst mainJson = $input.first().json;\n\nif (mode !== 'composer' || !lookComposition) {\n  return [{\n    json: { ...mainJson, lookImages: [], totalImages: 1, isComposerMode: false },\n    binary: mainBinary\n  }];\n}\n\nconst slots = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'];\nconst lookPieces = [];\n\nfor (const slot of slots) {\n  const piece = lookComposition[slot];\n  if (piece && piece.image) {\n    lookPieces.push({ slot, name: piece.name || slot, sku: piece.sku || '', imageUrl: piece.image });\n  }\n}\n\nif (lookPieces.length === 0) {\n  return [{\n    json: { ...mainJson, lookImages: [], totalImages: 1, isComposerMode: true },\n    binary: mainBinary\n  }];\n}\n\nconst downloadedPieces = [];\nconst newBinary = { ...mainBinary };\n\nfor (const piece of lookPieces) {\n  try {\n    let imageBase64, mimeType = 'image/png';\n    \n    if (piece.imageUrl.startsWith('data:')) {\n      const matches = piece.imageUrl.match(/^data:([^;]+);base64,(.+)$/);\n      if (matches) { mimeType = matches[1]; imageBase64 = matches[2]; }\n    } else {\n      const response = await this.helpers.httpRequest({\n        method: 'GET', url: piece.imageUrl, encoding: 'arraybuffer', returnFullResponse: true\n      });\n      imageBase64 = Buffer.from(response.body).toString('base64');\n      mimeType = response.headers['content-type'] || 'image/png';\n    }\n    \n    if (imageBase64) {\n      const binaryKey = 'look_' + piece.slot;\n      newBinary[binaryKey] = { data: imageBase64, mimeType: mimeType.split(';')[0], fileName: piece.slot + '.png' };\n      downloadedPieces.push({ slot: piece.slot, name: piece.name, binaryKey, mimeType: mimeType.split(';')[0] });\n    }\n  } catch (e) { console.log('Erro: ' + e.message); }\n}\n\nreturn [{\n  json: { ...mainJson, lookImages: downloadedPieces, totalImages: 1 + downloadedPieces.length, isComposerMode: true },\n  binary: newBinary\n}];"
+      },
+      "id": "process-look-images",
+      "name": "Processar Imagens Look",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1032, 1376]
+    },
+    {
+      "parameters": {
+        "jsCode": "const product = $('Buscar Produto Modelo IA').item.json;\nconst prepData = $('Preparar Dados Modelo IA').item.json;\nconst processedData = $input.first().json;\nconst binary = $input.first().binary;\nconst modelProfile = prepData.modelProfile;\nconst isComposerMode = processedData.isComposerMode;\nconst lookImages = processedData.lookImages || [];\nconst orientation = prepData.orientation || 'vertical';\n\nconst genderMap = { 'woman': 'female', 'man': 'male' };\nconst ethnicityMap = { 'caucasian': 'Caucasian', 'black': 'Black/African', 'asian': 'East Asian', 'latino': 'Latino', 'middleeastern': 'Middle Eastern', 'mixed': 'Mixed', 'brazilian': 'Brazilian/Mixed' };\nconst bodyTypeMap = { 'slim': 'slim', 'athletic': 'athletic', 'average': 'average', 'curvy': 'curvy', 'plussize': 'plus size' };\nconst ageRangeMap = { 'young': '18-25', 'adult': '26-35', 'mature': '36-50', 'senior': '50+' };\n\nconst gender = genderMap[modelProfile.gender] || 'female';\nconst ethnicity = ethnicityMap[modelProfile.ethnicity] || 'mixed';\nconst bodyType = bodyTypeMap[modelProfile.bodyType] || 'average';\nconst ageRange = ageRangeMap[modelProfile.ageRange] || '26-35';\n\nlet imageReferences = '';\nlet composerInstructions = '';\n\nif (isComposerMode && lookImages.length > 0) {\n  const pieces = lookImages.map((p, i) => '- IMAGE ' + (i + 2) + ': ' + p.slot.toUpperCase() + ' - \"' + p.name + '\"').join('\\n');\n  imageReferences = '\\n\\nIMAGE REFERENCES:\\n- IMAGE 1: Main product (HERO piece)\\n' + pieces;\n  composerInstructions = '\\n\\nCOMPOSER MODE:\\nYou are receiving ' + (1 + lookImages.length) + ' images. Create a complete outfit using ALL pieces.\\nEach piece must maintain its EXACT original appearance.';\n}\n\nconst prompt = 'Professional fashion editorial photography.' + imageReferences + '\\n\\nMODEL: ' + gender + ', ' + ethnicity + ', ' + bodyType + ' body, ' + ageRange + ' years old.' + composerInstructions + '\\n\\nRULES:\\n- Extract EXACT garments from ALL reference images\\n- Preserve colors, patterns, textures exactly\\n- Full body shot, ' + (orientation === 'horizontal' ? '16:9' : '9:16') + ' format\\n- Clean studio background\\n- Professional lighting\\n- 8K quality\\n\\nOUTPUT: Ultra-realistic fashion photo with model wearing ALL garments.';\n\nconst negativePrompt = 'cartoon, anime, wrong colors, blurry, distorted, missing pieces';\n\n// Montar array de partes para o Gemini (prompt + imagens)\nconst parts = [{ text: prompt }];\n\n// Adicionar imagem principal - usar getBinaryDataBuffer para modo database\nif (binary.data) {\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  const base64 = buffer.toString('base64');\n  parts.push({ inline_data: { mime_type: binary.data.mimeType || 'image/png', data: base64 } });\n}\n\n// Adicionar imagens do look\nfor (const img of lookImages) {\n  const binaryData = binary[img.binaryKey];\n  if (binaryData) {\n    try {\n      const buffer = await this.helpers.getBinaryDataBuffer(0, img.binaryKey);\n      const base64 = buffer.toString('base64');\n      parts.push({ inline_data: { mime_type: binaryData.mimeType || 'image/png', data: base64 } });\n    } catch (e) {\n      console.log('Erro ao obter imagem ' + img.binaryKey + ': ' + e.message);\n    }\n  }\n}\n\nreturn [{\n  json: {\n    prompt,\n    negativePrompt,\n    parts,\n    isComposerMode,\n    totalImages: processedData.totalImages\n  },\n  binary\n}];"
+      },
+      "id": "build-prompt-modelo-ia",
+      "name": "Construir Prompt Modelo IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1232, 1376]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: $json.parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "gemini-http-request",
+      "name": "Gemini API (Multi-Image)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1432, 1376],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "GEMINI_API_KEY_CREDENTIAL_ID",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Processar resposta do Gemini e extrair imagem\nconst response = $input.first().json;\nconst candidates = response.candidates || [];\n\nlet imageBase64 = null;\nlet mimeType = 'image/png';\n\nfor (const candidate of candidates) {\n  const parts = candidate.content?.parts || [];\n  for (const part of parts) {\n    // Verificar ambos os formatos: inline_data e inlineData\n    const inlineData = part.inline_data || part.inlineData;\n    if (inlineData) {\n      imageBase64 = inlineData.data;\n      mimeType = inlineData.mime_type || inlineData.mimeType || 'image/png';\n      break;\n    }\n  }\n  if (imageBase64) break;\n}\n\nif (!imageBase64) {\n  console.log('Resposta Gemini:', JSON.stringify(response, null, 2).substring(0, 1000));\n  throw new Error('Gemini não retornou imagem');\n}\n\nreturn [{\n  json: {\n    success: true,\n    hasImage: true\n  },\n  binary: {\n    edited: {\n      data: imageBase64,\n      mimeType: mimeType,\n      fileName: 'modelo_ia_generated.png'\n    }\n  }\n}];"
+      },
+      "id": "process-gemini-response",
+      "name": "Processar Resposta Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1632, 1376]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "leftValue": "", "caseSensitive": true, "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [{ "id": "check-gemini", "operator": { "type": "boolean", "operation": "true" }, "leftValue": "={{ $binary.edited ? true : false }}", "rightValue": "" }]
+        },
+        "options": {}
+      },
+      "id": "check-gemini-modelo-ia",
+      "name": "Gemini Sucesso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1832, 1376]
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst imageId = generateUUID();\nconst prepData = $('Preparar Dados Modelo IA').item.json;\nconst generationId = $('Criar Geracao Modelo IA').item.json.id;\nconst mode = prepData.mode;\n\nconst storagePath = prepData.userId + '/' + prepData.productId + '/modelo_ia_' + mode + '_' + imageId + '.png';\nconst publicUrl = 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/' + storagePath;\n\nreturn [{\n  json: { newImageId: imageId, generationId, storagePath, publicUrl },\n  binary: $input.first().binary\n}];"
+      },
+      "id": "gen-path-modelo-ia",
+      "name": "Gerar Storage Path Modelo IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2032, 1376]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "products",
+        "fileName": "={{ $json.storagePath }}",
+        "binaryPropertyName": "edited",
+        "additionalFields": {}
+      },
+      "id": "upload-modelo-ia",
+      "name": "Upload Storage Modelo IA",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [2232, 1376],
+      "credentials": {
+        "s3": {
+          "id": "IANNuMl4gOF84BAm",
+          "name": "Vizzu S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "product_images",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "product_id", "fieldValue": "={{ $('Preparar Dados Modelo IA').item.json.productId }}" },
+            { "fieldId": "user_id", "fieldValue": "={{ $('Preparar Dados Modelo IA').item.json.userId }}" },
+            { "fieldId": "type", "fieldValue": "modelo_ia" },
+            { "fieldId": "storage_path", "fieldValue": "={{ $('Gerar Storage Path Modelo IA').item.json.storagePath }}" },
+            { "fieldId": "url", "fieldValue": "={{ $('Gerar Storage Path Modelo IA').item.json.publicUrl }}" },
+            { "fieldId": "generation_id", "fieldValue": "={{ $('Gerar Storage Path Modelo IA').item.json.generationId }}" },
+            { "fieldId": "file_name", "fieldValue": "modelo_ia.png" },
+            { "fieldId": "mime_type", "fieldValue": "image/png" },
+            { "fieldId": "is_primary", "fieldValue": "false" }
+          ]
+        }
+      },
+      "id": "insert-img-modelo-ia",
+      "name": "Inserir Imagem Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2432, 1376],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generations",
+        "filters": { "conditions": [{ "keyName": "id", "condition": "eq", "keyValue": "={{ $('Gerar Storage Path Modelo IA').item.json.generationId }}" }] },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "output_image_url", "fieldValue": "={{ $('Gerar Storage Path Modelo IA').item.json.publicUrl }}" },
+            { "fieldId": "output_storage_path", "fieldValue": "={{ $('Gerar Storage Path Modelo IA').item.json.storagePath }}" },
+            { "fieldId": "status", "fieldValue": "completed" },
+            { "fieldId": "completed_at", "fieldValue": "={{ new Date().toISOString() }}" },
+            { "fieldId": "processing_time_ms", "fieldValue": "={{ Date.now() - $('Preparar Dados Modelo IA').item.json.startTime }}" }
+          ]
+        }
+      },
+      "id": "update-gen-modelo-ia",
+      "name": "Atualizar Geracao Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2632, 1376],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "users",
+        "filters": { "conditions": [{ "keyName": "id", "condition": "eq", "keyValue": "={{ $('Preparar Dados Modelo IA').item.json.userId }}" }] },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "credits", "fieldValue": "={{ $('Buscar Usuario Modelo IA').item.json.credits - $('Preparar Dados Modelo IA').item.json.creditsRequired }}" },
+            { "fieldId": "credits_used_this_month", "fieldValue": "={{ ($('Buscar Usuario Modelo IA').item.json.credits_used_this_month || 0) + $('Preparar Dados Modelo IA').item.json.creditsRequired }}" }
+          ]
+        }
+      },
+      "id": "debit-modelo-ia",
+      "name": "Debitar Credito Modelo IA",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2832, 1376],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, generation: { id: $('Gerar Storage Path Modelo IA').item.json.generationId, image_url: $('Gerar Storage Path Modelo IA').item.json.publicUrl, type: 'modelo_ia', mode: $('Preparar Dados Modelo IA').item.json.mode }, credits_remaining: $('Buscar Usuario Modelo IA').item.json.credits - $('Preparar Dados Modelo IA').item.json.creditsRequired }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "success-modelo-ia",
+      "name": "Sucesso Modelo IA",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [3032, 1376]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generations",
+        "filters": { "conditions": [{ "keyName": "id", "condition": "eq", "keyValue": "={{ $('Criar Geracao Modelo IA').item.json.id }}" }] },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "status", "fieldValue": "failed" },
+            { "fieldId": "completed_at", "fieldValue": "={{ new Date().toISOString() }}" }
+          ]
+        }
+      },
+      "id": "update-gen-failed",
+      "name": "Marcar Geracao Falhou",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2032, 1600],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'generation_failed', message: 'Falha ao gerar imagem' }) }}",
+        "options": { "responseCode": 500 }
+      },
+      "id": "error-gemini-failed",
+      "name": "Erro - Geracao Falhou",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2232, 1600]
+    }
+  ],
+  "connections": {
+    "Webhook Modelo IA": { "main": [[{ "node": "Preparar Dados Modelo IA", "type": "main", "index": 0 }]] },
+    "Preparar Dados Modelo IA": { "main": [[{ "node": "Buscar Usuario Modelo IA", "type": "main", "index": 0 }]] },
+    "Buscar Usuario Modelo IA": { "main": [[{ "node": "Tem Creditos? Modelo IA", "type": "main", "index": 0 }]] },
+    "Tem Creditos? Modelo IA": { "main": [[{ "node": "Buscar Imagem Modelo IA", "type": "main", "index": 0 }], [{ "node": "Erro - Sem Creditos Modelo IA", "type": "main", "index": 0 }]] },
+    "Buscar Imagem Modelo IA": { "main": [[{ "node": "Buscar Produto Modelo IA", "type": "main", "index": 0 }]] },
+    "Buscar Produto Modelo IA": { "main": [[{ "node": "Criar Geracao Modelo IA", "type": "main", "index": 0 }]] },
+    "Criar Geracao Modelo IA": { "main": [[{ "node": "Download Imagem Modelo IA", "type": "main", "index": 0 }]] },
+    "Download Imagem Modelo IA": { "main": [[{ "node": "Processar Imagens Look", "type": "main", "index": 0 }]] },
+    "Processar Imagens Look": { "main": [[{ "node": "Construir Prompt Modelo IA", "type": "main", "index": 0 }]] },
+    "Construir Prompt Modelo IA": { "main": [[{ "node": "Gemini API (Multi-Image)", "type": "main", "index": 0 }]] },
+    "Gemini API (Multi-Image)": { "main": [[{ "node": "Processar Resposta Gemini", "type": "main", "index": 0 }]] },
+    "Processar Resposta Gemini": { "main": [[{ "node": "Gemini Sucesso?", "type": "main", "index": 0 }]] },
+    "Gemini Sucesso?": { "main": [[{ "node": "Gerar Storage Path Modelo IA", "type": "main", "index": 0 }], [{ "node": "Marcar Geracao Falhou", "type": "main", "index": 0 }]] },
+    "Gerar Storage Path Modelo IA": { "main": [[{ "node": "Upload Storage Modelo IA", "type": "main", "index": 0 }]] },
+    "Upload Storage Modelo IA": { "main": [[{ "node": "Inserir Imagem Modelo IA", "type": "main", "index": 0 }]] },
+    "Inserir Imagem Modelo IA": { "main": [[{ "node": "Atualizar Geracao Modelo IA", "type": "main", "index": 0 }]] },
+    "Atualizar Geracao Modelo IA": { "main": [[{ "node": "Debitar Credito Modelo IA", "type": "main", "index": 0 }]] },
+    "Debitar Credito Modelo IA": { "main": [[{ "node": "Sucesso Modelo IA", "type": "main", "index": 0 }]] },
+    "Marcar Geracao Falhou": { "main": [[{ "node": "Erro - Geracao Falhou", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" }
+}
