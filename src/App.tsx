@@ -2274,7 +2274,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <button onClick={() => setSelectedSavedLook(null)} className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-black/70 text-white rounded-full text-[9px]"><i className="fas fa-times"></i></button>
                         </>
                       ) : provadorGeneratedImage ? (
-                        <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
+                        <>
+                          <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
+                          <button onClick={() => { if (confirm('Descartar esta imagem?')) setProvadorGeneratedImage(null); }} className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-red-500 text-white rounded-full text-[9px]"><i className="fas fa-trash"></i></button>
+                        </>
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
                         <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><i className="fas fa-wand-magic-sparkles text-pink-400 text-lg mb-1"></i><p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>Clique em Gerar</p></div></div></div>
                       ) : (
@@ -2478,7 +2481,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <button onClick={() => setSelectedSavedLook(null)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 text-white rounded-full text-xs"><i className="fas fa-times"></i></button>
                         </>
                       ) : provadorGeneratedImage ? (
-                        <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
+                        <>
+                          <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
+                          <button onClick={() => { if (confirm('Descartar esta imagem?')) setProvadorGeneratedImage(null); }} className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-red-500 text-white rounded-full text-xs"><i className="fas fa-trash"></i></button>
+                        </>
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
                         <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><i className="fas fa-wand-magic-sparkles text-pink-400 text-2xl mb-2"></i><p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Toque em Gerar</p></div></div></div>
                       ) : (
@@ -2809,6 +2815,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             )}
                             <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-green-100 hover:bg-green-200') + ' w-8 h-8 rounded-lg text-green-500 flex items-center justify-center transition-colors'} title="WhatsApp">
                               <i className="fab fa-whatsapp text-sm"></i>
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); if (confirm('Excluir cliente ' + client.firstName + ' ' + client.lastName + '?')) handleDeleteClient(client.id); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-red-500/20' : 'bg-gray-100 hover:bg-red-100') + ' w-8 h-8 rounded-lg text-red-500 flex items-center justify-center transition-colors'} title="Excluir">
+                              <i className="fas fa-trash text-xs"></i>
                             </button>
                           </div>
                         </div>
