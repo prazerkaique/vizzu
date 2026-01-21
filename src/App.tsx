@@ -2607,7 +2607,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-2 flex items-center justify-center overflow-hidden relative'}>
                       {isGeneratingProvador ? (
                         <div className="text-center px-4 py-6">
-                          <i className={'fas ' + (provadorProgress >= 100 ? 'fa-hourglass-end' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon) + ' text-2xl mb-3 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + (provadorProgress >= 100 ? ' animate-pulse' : '')}></i>
+                          <div className="w-16 h-16 mx-auto mb-2">
+                            <DotLottieReact
+                              src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                              loop
+                              autoplay
+                              style={{ width: '100%', height: '100%' }}
+                            />
+                          </div>
                           <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-xs font-medium mb-2'}>{provadorProgress >= 100 ? 'Finalizando, aguarde só mais um momento...' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
                           <div className={'w-full h-1.5 rounded-full overflow-hidden mb-1.5 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
                             <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${Math.min(provadorProgress, 100)}%` }}></div>
@@ -2814,7 +2821,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-2 flex items-center justify-center overflow-hidden relative'}>
                       {isGeneratingProvador ? (
                         <div className="text-center px-6 py-8">
-                          <i className={'fas ' + (provadorProgress >= 100 ? 'fa-hourglass-end' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon) + ' text-3xl mb-4 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + (provadorProgress >= 100 ? ' animate-pulse' : '')}></i>
+                          <div className="w-24 h-24 mx-auto mb-3">
+                            <DotLottieReact
+                              src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                              loop
+                              autoplay
+                              style={{ width: '100%', height: '100%' }}
+                            />
+                          </div>
                           <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm font-medium mb-3'}>{provadorProgress >= 100 ? 'Finalizando, aguarde só mais um momento...' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
                           <div className={'w-full h-2 rounded-full overflow-hidden mb-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
                             <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${Math.min(provadorProgress, 100)}%` }}></div>
@@ -2995,7 +3009,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         )}
                         {model.status === 'generating' && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full"></div>
+                            <div className="w-16 h-16">
+                              <DotLottieReact
+                                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                                loop
+                                autoplay
+                                style={{ width: '100%', height: '100%' }}
+                              />
+                            </div>
                           </div>
                         )}
                         {/* Status Badge */}
@@ -3695,7 +3716,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             </p>
                           </div>
                           <div
-                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            onClick={() => {
+                              // Trocar tema
+                              setTheme(theme === 'dark' ? 'light' : 'dark');
+                              // Disparar evento de clique no Lottie para animar
+                              if (dotLottieRef.current) {
+                                // Enviar evento de pointer down para state machine
+                                dotLottieRef.current.postStateMachineEvent('OnPointerDown');
+                              }
+                            }}
                             className="cursor-pointer hover:scale-110 transition-transform"
                             style={{ width: 80, height: 80 }}
                           >
@@ -3705,7 +3734,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               autoplay
                               useFrameInterpolation
                               stateMachineId="StateMachine1"
-                              style={{ width: '100%', height: '100%' }}
+                              style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                             />
                           </div>
                         </div>
@@ -4965,8 +4994,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {/* Estado: Gerando */}
                   {generatingModelImages && (
                     <div className="text-center py-8">
-                      <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
-                        <div className="animate-spin w-10 h-10 border-3 border-pink-500 border-t-transparent rounded-full"></div>
+                      <div className="w-24 h-24 mx-auto mb-4">
+                        <DotLottieReact
+                          src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                          loop
+                          autoplay
+                          style={{ width: '100%', height: '100%' }}
+                        />
                       </div>
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-2'}>Criando seu modelo...</h3>
                       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>A IA está gerando as imagens. Isso pode levar alguns segundos.</p>
