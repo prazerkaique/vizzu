@@ -159,6 +159,42 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [savingModel, setSavingModel] = useState(false);
   const [generatingModelImages, setGeneratingModelImages] = useState(false);
   const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string; face?: string } | null>(null);
+  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+
+  // Minimized Modals System
+  type MinimizedModal = {
+    id: string;
+    title: string;
+    icon: string;
+    type: 'createModel' | 'modelDetail' | 'createProduct' | 'productDetail' | 'createClient' | 'clientDetail';
+    progress?: number; // For showing progress in mini window
+  };
+  const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
+
+  const minimizeModal = (modal: MinimizedModal) => {
+    setMinimizedModals(prev => [...prev.filter(m => m.id !== modal.id), modal]);
+    // Hide the original modal
+    if (modal.type === 'createModel') setShowCreateModel(false);
+    if (modal.type === 'modelDetail') setShowModelDetail(null);
+    if (modal.type === 'createProduct') setShowCreateProduct(false);
+    if (modal.type === 'productDetail') setShowProductDetail(null);
+    if (modal.type === 'createClient') setShowCreateClient(false);
+    if (modal.type === 'clientDetail') setShowClientDetail(null);
+  };
+
+  const restoreModal = (modalId: string) => {
+    const modal = minimizedModals.find(m => m.id === modalId);
+    if (modal) {
+      setMinimizedModals(prev => prev.filter(m => m.id !== modalId));
+      // Restore the original modal
+      if (modal.type === 'createModel') setShowCreateModel(true);
+      // For detail modals, we'd need to store the detail object too
+    }
+  };
+
+  const closeMinimizedModal = (modalId: string) => {
+    setMinimizedModals(prev => prev.filter(m => m.id !== modalId));
+  };
 
   // Credit Exhausted Modal
   const [showCreditModal, setShowCreditModal] = useState(false);
@@ -3959,7 +3995,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* STUDIO PICKER MODAL */}
       {showStudioPicker && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
             <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-5'}></div>
             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold text-center mb-1'}>O que você quer criar?</h3>
@@ -3987,7 +4023,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
             <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
@@ -4075,7 +4111,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CLIENT DETAIL MODAL */}
       {showClientDetail && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
               <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
@@ -4154,7 +4190,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
      {/* IMPORT MODAL */}
 {showImport && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+  <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
@@ -4261,7 +4297,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+  <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
     <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
@@ -4420,7 +4456,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 )}
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
           <div
             className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
             onClick={(e) => e.stopPropagation()}
@@ -4539,7 +4575,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* Modal de confirmação de exclusão de produtos */}
       {showDeleteProductsModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-2xl w-full max-w-sm p-5 shadow-xl'}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -4605,7 +4641,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE MODEL WIZARD MODAL */}
       {showCreateModel && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header com Steps */}
             <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
@@ -4613,9 +4649,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>
                   {editingModel ? 'Editar Modelo' : 'Criar Modelo'}
                 </h2>
-                <button onClick={() => { setShowCreateModel(false); setEditingModel(null); }} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
-                  <i className="fas fa-times"></i>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => minimizeModal({ id: 'createModel', title: newModel.name || 'Novo Modelo', icon: 'fa-user', type: 'createModel', progress: generatingModelImages ? 50 : undefined })}
+                    className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}
+                    title="Minimizar"
+                  >
+                    <i className="fas fa-window-minimize"></i>
+                  </button>
+                  <button onClick={() => { setShowCreateModel(false); setEditingModel(null); }} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
               </div>
               {/* Step Indicators */}
               <div className="flex items-center justify-between gap-2">
@@ -4929,7 +4974,27 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             <div key={type} className="text-center">
                               <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
                                 {imgUrl ? (
-                                  <img src={imgUrl} alt={type} className="w-full h-full object-cover" />
+                                  <img
+                                    src={imgUrl}
+                                    alt={type}
+                                    className="w-full h-full object-contain"
+                                    loading="eager"
+                                    decoding="async"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      const retryCount = parseInt(target.dataset.retry || '0');
+                                      if (retryCount < 3) {
+                                        console.log('Retry imagem:', type, 'tentativa', retryCount + 1);
+                                        target.dataset.retry = String(retryCount + 1);
+                                        setTimeout(() => {
+                                          target.src = imgUrl + '?retry=' + Date.now();
+                                        }, 1000 * (retryCount + 1));
+                                      } else {
+                                        console.error('Falha ao carregar imagem após 3 tentativas:', type);
+                                      }
+                                    }}
+                                    onLoad={() => console.log('Imagem carregada:', type)}
+                                  />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
                                     <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
@@ -5032,21 +5097,90 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </>
                   )}
 
-                  {/* Com preview: Descartar + Gerar Outro + Salvar */}
+                  {/* Com preview: Descartar + Gerar Outro + Criar + Salvar */}
                   {!generatingModelImages && modelPreviewImages && (
                     <>
                       <button
                         onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
-                        className={(theme === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-3 py-2 text-sm font-medium transition-colors'}
+                        className={(theme === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
                       >
-                        <i className="fas fa-trash mr-1"></i>Descartar
+                        <i className="fas fa-trash"></i>
                       </button>
                       <button
                         onClick={() => { setModelPreviewImages(null); generateModelPreview(); }}
-                        className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-3 py-2 border rounded-lg text-sm font-medium transition-colors'}
+                        className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-2 py-2 border rounded-lg text-sm font-medium transition-colors'}
+                        title="Gerar Outro"
                       >
-                        <i className="fas fa-redo mr-1"></i>Gerar Outro
+                        <i className="fas fa-redo"></i>
                       </button>
+
+                      {/* Criar Dropdown */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+                          className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-3 py-2 border rounded-lg text-sm font-medium transition-colors flex items-center gap-1'}
+                        >
+                          <i className="fas fa-plus"></i>
+                          Criar
+                          <i className={'fas fa-chevron-' + (showCreateDropdown ? 'up' : 'down') + ' text-xs ml-1'}></i>
+                        </button>
+                        {showCreateDropdown && (
+                          <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' absolute bottom-full mb-2 right-0 rounded-xl border shadow-lg overflow-hidden min-w-[180px] z-10'}>
+                            <button
+                              onClick={() => {
+                                setShowCreateDropdown(false);
+                                setShowCreateModel(false);
+                                setCurrentPage('studio');
+                                // TODO: Pass model to Studio Ready
+                              }}
+                              className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center">
+                                <i className="fas fa-camera text-white text-xs"></i>
+                              </div>
+                              <div>
+                                <p className="font-medium">Studio Ready</p>
+                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Foto profissional</p>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowCreateDropdown(false);
+                                setShowCreateModel(false);
+                                setCurrentPage('studio');
+                                // TODO: Pass model to Cenário Criativo
+                              }}
+                              className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-400 flex items-center justify-center">
+                                <i className="fas fa-mountain-sun text-white text-xs"></i>
+                              </div>
+                              <div>
+                                <p className="font-medium">Cenário Criativo</p>
+                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Com ambiente</p>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowCreateDropdown(false);
+                                setShowCreateModel(false);
+                                setCurrentPage('studio');
+                                // TODO: Pass model to Look Composer
+                              }}
+                              className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 flex items-center justify-center">
+                                <i className="fas fa-layer-group text-white text-xs"></i>
+                              </div>
+                              <div>
+                                <p className="font-medium">Look Composer</p>
+                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Montar look</p>
+                              </div>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
                       <button
                         onClick={saveModel}
                         disabled={savingModel}
@@ -5075,7 +5209,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* MODEL DETAIL MODAL */}
       {showModelDetail && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
@@ -5218,6 +5352,44 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Minimized Modals Floating Windows */}
+      {minimizedModals.length > 0 && (
+        <div className="fixed bottom-20 right-4 z-50 flex flex-col gap-2">
+          {minimizedModals.map((modal) => (
+            <div
+              key={modal.id}
+              className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-xl border-neutral-700' : 'bg-white/95 backdrop-blur-xl border-gray-200') + ' rounded-xl border shadow-lg p-3 min-w-[200px] cursor-pointer hover:scale-105 transition-all animate-fade-in'}
+              onClick={() => restoreModal(modal.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center">
+                    <i className={'fas ' + modal.icon + ' text-white text-xs'}></i>
+                  </div>
+                  <div>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium truncate max-w-[120px]'}>{modal.title}</p>
+                    {modal.progress !== undefined && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-16 h-1 bg-neutral-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 animate-pulse" style={{ width: '60%' }}></div>
+                        </div>
+                        <span className="text-[10px] text-neutral-500">Gerando...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); closeMinimizedModal(modal.id); }}
+                  className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' p-1 transition-colors'}
+                >
+                  <i className="fas fa-times text-xs"></i>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
