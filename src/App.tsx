@@ -35,6 +35,21 @@ const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
   { id: '3', name: 'Novidades', message: 'Oi {nome}! 👋\n\nTemos novidades que combinam com você! Olha só como ficou:\n\nGostou? Posso separar! 💜', isDefault: false },
 ];
 
+// Frases de loading do Provador - ícones neutros, mensagens engajantes
+const PROVADOR_LOADING_PHRASES = [
+  { text: 'Analisando a foto do cliente...', icon: 'fa-camera' },
+  { text: 'Identificando medidas e proporções...', icon: 'fa-ruler' },
+  { text: 'Preparando as peças selecionadas...', icon: 'fa-shirt' },
+  { text: 'Ajustando caimento e modelagem...', icon: 'fa-scissors' },
+  { text: 'Combinando cores e texturas...', icon: 'fa-palette' },
+  { text: 'Aplicando iluminação natural...', icon: 'fa-sun' },
+  { text: 'Refinando detalhes do look...', icon: 'fa-wand-magic-sparkles' },
+  { text: 'Criando composição final...', icon: 'fa-layer-group' },
+  { text: 'Nossa IA está caprichando...', icon: 'fa-sparkles' },
+  { text: 'Quase pronto, aguarde mais um pouco...', icon: 'fa-hourglass-half' },
+  { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
+];
+
 type Page = 'dashboard' | 'studio' | 'provador' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
@@ -98,6 +113,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [provadorMessage, setProvadorMessage] = useState(DEFAULT_WHATSAPP_TEMPLATES[0].message);
   const [provadorGeneratedImage, setProvadorGeneratedImage] = useState<string | null>(null);
   const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
+  const [provadorLoadingIndex, setProvadorLoadingIndex] = useState(0);
+  const [provadorProgress, setProvadorProgress] = useState(0);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [createClientFromProvador, setCreateClientFromProvador] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(DEFAULT_WHATSAPP_TEMPLATES[0]);
@@ -342,6 +359,7 @@ const loadUserProducts = async (userId: string) => {
           color: p.color,
           fit: p.fit,
           collection: p.collection,
+          attributes: p.attributes || {},
           images: formattedOriginalImages,
           generatedImages: generatedImages
         };
@@ -734,6 +752,35 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     }
   }, [theme]);
 
+  // Controlar frases e progresso do loading do Provador
+  useEffect(() => {
+    if (!isGeneratingProvador) {
+      setProvadorLoadingIndex(0);
+      setProvadorProgress(0);
+      return;
+    }
+
+    // Atualizar frase a cada 3 segundos
+    const phraseInterval = setInterval(() => {
+      setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
+    }, 3000);
+
+    // Atualizar progresso gradualmente (simula progresso até 95%)
+    const progressInterval = setInterval(() => {
+      setProvadorProgress(prev => {
+        if (prev >= 95) return 95; // Não passa de 95% até completar
+        // Progresso mais lento conforme avança
+        const increment = prev < 30 ? 3 : prev < 60 ? 2 : prev < 80 ? 1 : 0.5;
+        return Math.min(95, prev + increment);
+      });
+    }, 500);
+
+    return () => {
+      clearInterval(phraseInterval);
+      clearInterval(progressInterval);
+    };
+  }, [isGeneratingProvador]);
+
   // Fechar modais com Esc
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -1018,6 +1065,7 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
           referenceImage: opts?.referenceImage,
           productCategory: product.category || 'clothing',
           productDescription: product.description,
+          productAttributes: product.attributes,  // Atributos específicos (caimento, tamanho, etc.)
           lookItems: opts?.lookItems,
           productNotes: opts?.productNotes,       // Observações adicionais do produto
           modelDetails: opts?.modelDetails,       // Detalhes do modelo
@@ -1436,18 +1484,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       const base64Clean = clientPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
 
       // Montar lookComposition no formato esperado pelo backend
-      const lookCompositionPayload: Record<string, { productId: string; imageId?: string; imageUrl: string; name: string; category: string }> = {};
+      const lookCompositionPayload: Record<string, { productId: string; imageId?: string; imageUrl: string; name: string; category: string; attributes?: Record<string, string> }> = {};
 
       for (const [slot, item] of Object.entries(provadorLook)) {
         if (item) {
-          // Buscar produto para obter categoria
+          // Buscar produto para obter categoria e attributes
           const product = products.find(p => p.id === item.productId);
           lookCompositionPayload[slot] = {
             productId: item.productId || '',
             imageId: item.imageId,
             imageUrl: item.image,
             name: item.name,
-            category: product?.category || 'roupa'
+            category: product?.category || 'roupa',
+            attributes: product?.attributes || {}
           };
         }
       }
@@ -2034,7 +2083,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="p-3">
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-3 flex items-center justify-center overflow-hidden'}>
                       {isGeneratingProvador ? (
-                        <div className="text-center"><div className={'w-8 h-8 border-2 rounded-full animate-spin mx-auto mb-2 ' + (theme === 'dark' ? 'border-neutral-600 border-t-pink-500' : 'border-gray-300 border-t-pink-500')}></div><p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Gerando...</p></div>
+                        <div className="text-center px-4 py-6">
+                          <i className={'fas ' + PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon + ' text-2xl mb-3 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-xs font-medium mb-2'}>{PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
+                          <div className={'w-full h-1.5 rounded-full overflow-hidden mb-1.5 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
+                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${provadorProgress}%` }}></div>
+                          </div>
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium'}>{Math.round(provadorProgress)}%</p>
+                        </div>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
@@ -2171,7 +2227,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>4. Gerar e Enviar</h3>
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-3 flex items-center justify-center overflow-hidden'}>
                       {isGeneratingProvador ? (
-                        <div className="text-center"><div className={'w-10 h-10 border-2 rounded-full animate-spin mx-auto mb-2 ' + (theme === 'dark' ? 'border-neutral-600 border-t-pink-500' : 'border-gray-300 border-t-pink-500')}></div><p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gerando...</p></div>
+                        <div className="text-center px-6 py-8">
+                          <i className={'fas ' + PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon + ' text-3xl mb-4 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm font-medium mb-3'}>{PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
+                          <div className={'w-full h-2 rounded-full overflow-hidden mb-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
+                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${provadorProgress}%` }}></div>
+                          </div>
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-medium'}>{Math.round(provadorProgress)}%</p>
+                        </div>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
                       ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (

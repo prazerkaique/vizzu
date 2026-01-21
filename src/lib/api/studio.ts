@@ -123,6 +123,7 @@ interface ModeloIAParams {
   referenceImage?: string;
   productCategory: string;
   productDescription?: string;
+  productAttributes?: Record<string, string>;  // Atributos específicos (caimento, tamanho, etc.)
   lookItems?: Array<LookPiece>;
   orientation?: { type: 'vertical' | 'horizontal'; width: number; height: number };
   productNotes?: string;      // Observações adicionais do produto
@@ -169,6 +170,8 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       imageUrl: params.imageUrl,
       mode: mode,
       modelProfile: modelProfile,
+      productCategory: params.productCategory,
+      productAttributes: params.productAttributes || {},  // Atributos específicos (caimento, tamanho, etc.)
       sceneDescription: params.clothingPrompt || params.productDescription || '',
       orientation: params.orientation?.type || 'vertical',
       lookComposition: lookComposition,
@@ -376,6 +379,7 @@ interface ProvadorLookItem {
   imageUrl: string;
   name: string;
   category: string;
+  attributes?: Record<string, string>;  // Atributos específicos (caimento, tamanho, etc.)
 }
 
 interface ProvadorParams {
