@@ -158,6 +158,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   });
   const [savingModel, setSavingModel] = useState(false);
   const [generatingModelImages, setGeneratingModelImages] = useState(false);
+  const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string; face?: string } | null>(null);
 
   // Credit Exhausted Modal
   const [showCreditModal, setShowCreditModal] = useState(false);
@@ -1647,6 +1648,49 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       referenceImage: null,
     });
     setEditingModel(null);
+    setModelPreviewImages(null);
+    setGeneratingModelImages(false);
+  };
+
+  // Gerar preview do modelo (sem salvar no DB ainda)
+  const generateModelPreview = async () => {
+    if (!user || !newModel.name.trim()) return;
+
+    setGeneratingModelImages(true);
+    setModelPreviewImages(null);
+
+    try {
+      const result = await generateModelImages({
+        modelId: 'preview-' + Date.now(), // ID temporário para preview
+        userId: user.id,
+        modelProfile: {
+          name: newModel.name.trim(),
+          gender: newModel.gender,
+          ethnicity: newModel.ethnicity,
+          skinTone: newModel.skinTone,
+          bodyType: newModel.bodyType,
+          ageRange: newModel.ageRange,
+          height: newModel.height,
+          hairColor: newModel.hairColor,
+          hairStyle: newModel.hairStyle,
+          eyeColor: newModel.eyeColor,
+          expression: newModel.expression,
+          bustSize: newModel.gender === 'woman' ? newModel.bustSize : undefined,
+          waistType: newModel.waistType,
+        },
+      });
+
+      if (result.success && result.model?.images) {
+        setModelPreviewImages(result.model.images);
+      } else {
+        throw new Error(result.error || 'Erro ao gerar preview');
+      }
+    } catch (error) {
+      console.error('Erro ao gerar preview:', error);
+      alert('Erro ao gerar preview do modelo. Tente novamente.');
+    } finally {
+      setGeneratingModelImages(false);
+    }
   };
 
   const saveModel = async () => {
@@ -1654,6 +1698,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
     setSavingModel(true);
     try {
+      // Se já tem preview, salva como 'ready' com as imagens
+      const hasPreview = modelPreviewImages && (modelPreviewImages.front || modelPreviewImages.back || modelPreviewImages.face);
+
       const modelData = {
         user_id: user.id,
         name: newModel.name.trim(),
@@ -1670,7 +1717,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         bust_size: newModel.gender === 'woman' ? newModel.bustSize : null,
         waist_type: newModel.gender === 'woman' ? newModel.waistType : null,
         reference_image_url: newModel.referenceImage,
-        status: 'draft',
+        status: hasPreview ? 'ready' : 'draft',
+        images: hasPreview ? modelPreviewImages : {},
       };
 
       let result;
@@ -1698,47 +1746,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         result = data;
       }
 
-      // Atualizar status para 'generating' e iniciar geração de imagens
-      await supabase
-        .from('saved_models')
-        .update({ status: 'generating' })
-        .eq('id', result.id);
-
       await loadSavedModels();
       setShowCreateModel(false);
       resetModelWizard();
-
-      // Chamar webhook para gerar imagens (em background - não espera)
-      generateModelImages({
-        modelId: result.id,
-        userId: user.id,
-        modelProfile: {
-          name: newModel.name.trim(),
-          gender: newModel.gender,
-          ethnicity: newModel.ethnicity,
-          skinTone: newModel.skinTone,
-          bodyType: newModel.bodyType,
-          ageRange: newModel.ageRange,
-          height: newModel.height,
-          hairColor: newModel.hairColor,
-          hairStyle: newModel.hairStyle,
-          eyeColor: newModel.eyeColor,
-          expression: newModel.expression,
-          bustSize: newModel.gender === 'woman' ? newModel.bustSize : undefined,
-          waistType: newModel.waistType,
-        },
-      }).then(() => {
-        // Recarregar modelos quando geração terminar
-        loadSavedModels();
-      }).catch((err) => {
-        console.error('Erro ao gerar imagens do modelo:', err);
-        // Atualizar status para erro
-        supabase
-          .from('saved_models')
-          .update({ status: 'error' })
-          .eq('id', result.id);
-        loadSavedModels();
-      });
 
       return result;
     } catch (error) {
@@ -3949,8 +3959,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* STUDIO PICKER MODAL */}
       {showStudioPicker && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl w-full p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
             <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-5'}></div>
             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold text-center mb-1'}>O que você quer criar?</h3>
             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mb-5'}>Escolha uma das opções</p>
@@ -3977,8 +3987,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
             <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
               <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}>
@@ -4065,7 +4075,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CLIENT DETAIL MODAL */}
       {showClientDetail && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
               <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
@@ -4144,8 +4154,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
      {/* IMPORT MODAL */}
 {showImport && (
-  <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
           Adicionar Foto {uploadTarget === 'front' ? 'de Frente' : 'de Costas'}
@@ -4178,7 +4188,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 {/* PHOTO SOURCE PICKER */}
 {showPhotoSourcePicker && (
   <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
-    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
       <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
         Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : 'de costas'}
@@ -4251,7 +4261,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
     <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
@@ -4410,7 +4420,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 )}
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
           <div
             className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
             onClick={(e) => e.stopPropagation()}
@@ -4595,8 +4605,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE MODEL WIZARD MODAL */}
       {showCreateModel && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header com Steps */}
             <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <div className="flex items-center justify-between mb-3">
@@ -4656,7 +4666,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, gender: opt.id as 'woman' | 'man' })}
                           className={'p-4 rounded-xl border-2 transition-all text-center ' + (
                             newModel.gender === opt.id
-                              ? 'border-pink-500 bg-pink-500/10'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300')
                           )}
                         >
@@ -4681,7 +4691,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, ethnicity: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.ethnicity === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4699,7 +4709,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, skinTone: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.skinTone === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4717,7 +4727,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, bodyType: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.bodyType === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4741,7 +4751,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, ageRange: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.ageRange === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4759,7 +4769,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, height: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.height === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4777,7 +4787,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, hairColor: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.hairColor === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4795,7 +4805,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, hairStyle: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.hairStyle === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4819,7 +4829,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, eyeColor: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.eyeColor === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4837,7 +4847,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, expression: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.expression === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4856,7 +4866,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             onClick={() => setNewModel({ ...newModel, bustSize: opt.id })}
                             className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                               newModel.bustSize === opt.id
-                                ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                                ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                                 : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                             )}
                           >
@@ -4875,7 +4885,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, waistType: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.waistType === opt.id
-                              ? 'border-pink-500 bg-pink-500/10 text-pink-500'
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
                         >
@@ -4887,112 +4897,176 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               )}
 
-              {/* Step 5: Confirmar */}
+              {/* Step 5: Criar e Visualizar */}
               {modelWizardStep === 5 && (
                 <div className="space-y-4">
-                  {/* Avatar Preview */}
-                  <div className="flex justify-center mb-4">
-                    <div className={'w-32 h-32 rounded-2xl flex items-center justify-center ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
-                      <i className="fas fa-user text-5xl text-white"></i>
+                  {/* Estado: Gerando */}
+                  {generatingModelImages && (
+                    <div className="text-center py-8">
+                      <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
+                        <div className="animate-spin w-10 h-10 border-3 border-pink-500 border-t-transparent rounded-full"></div>
+                      </div>
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-2'}>Criando seu modelo...</h3>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>A IA está gerando as imagens. Isso pode levar alguns segundos.</p>
                     </div>
-                  </div>
-                  <div className="text-center mb-4">
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name || 'Sem nome'}</h3>
-                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>{getModelLabel('gender', newModel.gender)}</p>
-                  </div>
-                  {/* Características */}
-                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50') + ' rounded-xl p-4 space-y-3'}>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Etnia:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('ethnicity', newModel.ethnicity)}</span>
+                  )}
+
+                  {/* Estado: Preview pronto */}
+                  {!generatingModelImages && modelPreviewImages && (
+                    <>
+                      <div className="text-center mb-2">
+                        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
+                        <p className={(theme === 'dark' ? 'text-green-400' : 'text-green-600') + ' text-sm'}>
+                          <i className="fas fa-check-circle mr-1"></i>Modelo criado com sucesso!
+                        </p>
                       </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Pele:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('skinTone', newModel.skinTone)}</span>
+                      {/* Grid de imagens geradas */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {['front', 'back', 'face'].map((type) => {
+                          const imgUrl = modelPreviewImages[type as keyof typeof modelPreviewImages];
+                          const labels = { front: 'Frente', back: 'Costas', face: 'Rosto' };
+                          return (
+                            <div key={type} className="text-center">
+                              <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+                                {imgUrl ? (
+                                  <img src={imgUrl} alt={type} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
+                                  </div>
+                                )}
+                              </div>
+                              <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type as keyof typeof labels]}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Corpo:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('bodyType', newModel.bodyType)}</span>
-                      </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Idade:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('ageRange', newModel.ageRange)}</span>
-                      </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Altura:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('height', newModel.height)}</span>
-                      </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Cabelo:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('hairColor', newModel.hairColor)}</span>
-                      </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Estilo:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('hairStyle', newModel.hairStyle)}</span>
-                      </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Olhos:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('eyeColor', newModel.eyeColor)}</span>
-                      </div>
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Expressão:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('expression', newModel.expression)}</span>
-                      </div>
-                      {newModel.gender === 'woman' && (
-                        <div>
-                          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Busto:</span>
-                          <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('bustSize', newModel.bustSize)}</span>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mt-2'}>
+                        Gostou? Salve o modelo ou gere outro com as mesmas características.
+                      </p>
+                    </>
+                  )}
+
+                  {/* Estado: Aguardando criar */}
+                  {!generatingModelImages && !modelPreviewImages && (
+                    <>
+                      {/* Avatar Preview */}
+                      <div className="flex justify-center mb-4">
+                        <div className={'w-32 h-32 rounded-2xl flex items-center justify-center ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+                          <i className="fas fa-user text-5xl text-white"></i>
                         </div>
-                      )}
-                      <div>
-                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Cintura:</span>
-                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' ml-2 font-medium'}>{getModelLabel('waistType', newModel.waistType)}</span>
                       </div>
-                    </div>
-                  </div>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center'}>
-                    <i className="fas fa-info-circle mr-1"></i>
-                    Após salvar, a IA irá gerar 3 imagens do modelo (frente, costas e rosto)
-                  </p>
+                      <div className="text-center mb-4">
+                        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name || 'Sem nome'}</h3>
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>{getModelLabel('gender', newModel.gender)}</p>
+                      </div>
+                      {/* Características resumidas */}
+                      <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50') + ' rounded-xl p-3'}>
+                        <div className="flex flex-wrap gap-1.5 justify-center">
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ethnicity', newModel.ethnicity)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('skinTone', newModel.skinTone)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('bodyType', newModel.bodyType)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ageRange', newModel.ageRange)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('hairColor', newModel.hairColor)} {getModelLabel('hairStyle', newModel.hairStyle)}</span>
+                        </div>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center'}>
+                        <i className="fas fa-magic mr-1"></i>
+                        Clique em "Criar Modelo" para a IA gerar as imagens
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className={'p-4 border-t flex justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
-              <button
-                onClick={() => modelWizardStep > 1 ? setModelWizardStep((modelWizardStep - 1) as 1 | 2 | 3 | 4 | 5) : (setShowCreateModel(false), setEditingModel(null))}
-                className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
-              >
-                {modelWizardStep === 1 ? 'Cancelar' : 'Voltar'}
-              </button>
-              {modelWizardStep < 5 ? (
-                <button
-                  onClick={() => setModelWizardStep((modelWizardStep + 1) as 1 | 2 | 3 | 4 | 5)}
-                  disabled={modelWizardStep === 1 && !newModel.name}
-                  className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium transition-opacity ' + (modelWizardStep === 1 && !newModel.name ? 'opacity-50 cursor-not-allowed' : '')}
-                >
-                  Próximo
-                </button>
-              ) : (
-                <button
-                  onClick={saveModel}
-                  disabled={savingModel}
-                  className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2 ' + (savingModel ? 'opacity-70' : '')}
-                >
-                  {savingModel ? (
+            <div className={'p-4 border-t flex justify-between gap-2 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+              {/* Steps 1-4: Cancelar/Voltar + Próximo */}
+              {modelWizardStep < 5 && (
+                <>
+                  <button
+                    onClick={() => modelWizardStep > 1 ? setModelWizardStep((modelWizardStep - 1) as 1 | 2 | 3 | 4 | 5) : (setShowCreateModel(false), setEditingModel(null))}
+                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+                  >
+                    {modelWizardStep === 1 ? 'Cancelar' : 'Voltar'}
+                  </button>
+                  <button
+                    onClick={() => setModelWizardStep((modelWizardStep + 1) as 1 | 2 | 3 | 4 | 5)}
+                    disabled={modelWizardStep === 1 && !newModel.name}
+                    className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium transition-opacity ' + (modelWizardStep === 1 && !newModel.name ? 'opacity-50 cursor-not-allowed' : '')}
+                  >
+                    Próximo
+                  </button>
+                </>
+              )}
+
+              {/* Step 5: Estados diferentes */}
+              {modelWizardStep === 5 && (
+                <>
+                  {/* Gerando: só mostra loading */}
+                  {generatingModelImages && (
+                    <div className="flex-1 text-center">
+                      <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>Gerando imagens...
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Sem preview: Voltar + Criar Modelo */}
+                  {!generatingModelImages && !modelPreviewImages && (
                     <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-check"></i>
-                      Salvar Modelo
+                      <button
+                        onClick={() => setModelWizardStep(4)}
+                        className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+                      >
+                        Voltar
+                      </button>
+                      <button
+                        onClick={generateModelPreview}
+                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                      >
+                        <i className="fas fa-wand-magic-sparkles"></i>
+                        Criar Modelo
+                      </button>
                     </>
                   )}
-                </button>
+
+                  {/* Com preview: Descartar + Gerar Outro + Salvar */}
+                  {!generatingModelImages && modelPreviewImages && (
+                    <>
+                      <button
+                        onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
+                        className={(theme === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-3 py-2 text-sm font-medium transition-colors'}
+                      >
+                        <i className="fas fa-trash mr-1"></i>Descartar
+                      </button>
+                      <button
+                        onClick={() => { setModelPreviewImages(null); generateModelPreview(); }}
+                        className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-3 py-2 border rounded-lg text-sm font-medium transition-colors'}
+                      >
+                        <i className="fas fa-redo mr-1"></i>Gerar Outro
+                      </button>
+                      <button
+                        onClick={saveModel}
+                        disabled={savingModel}
+                        className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2 ' + (savingModel ? 'opacity-70' : '')}
+                      >
+                        {savingModel ? (
+                          <>
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                            Salvando...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-check"></i>
+                            Salvar
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -5001,8 +5075,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* MODEL DETAIL MODAL */}
       {showModelDetail && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{showModelDetail.name}</h2>
