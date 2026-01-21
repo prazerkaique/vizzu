@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo } from 'react';
-import { Product, SavedModelProfile, HistoryLog } from '../../types';
+import { Product, SavedModelProfile, SavedModel, HistoryLog } from '../../types';
 import { EditorModal } from './EditorModal';
 
 interface StudioProps {
@@ -19,6 +19,7 @@ interface StudioProps {
   onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
   theme?: 'dark' | 'light';
   userId?: string;
+  savedModels?: SavedModel[];
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -38,11 +39,29 @@ export const Studio: React.FC<StudioProps> = ({
   onGenerateImage,
   onCheckCredits,
   theme = 'dark',
-  userId
+  userId,
+  savedModels = []
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [savedModels, setSavedModels] = useState<SavedModelProfile[]>([]);
-  const [showModels, setShowModels] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<SavedModel | null>(null);
+  const [showModels, setShowModels] = useState(true); // Aberto por padrão agora
+
+  // EditorModal internal model profiles (separate from database savedModels)
+  const [editorModelProfiles, setEditorModelProfiles] = useState<SavedModelProfile[]>([]);
+
+  const handleSaveModelProfile = (model: SavedModelProfile) => {
+    setEditorModelProfiles(prev => {
+      const exists = prev.find(m => m.id === model.id);
+      if (exists) {
+        return prev.map(m => m.id === model.id ? model : m);
+      }
+      return [...prev, model];
+    });
+  };
+
+  const handleDeleteModelProfile = (modelId: string) => {
+    setEditorModelProfiles(prev => prev.filter(m => m.id !== modelId));
+  };
 
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
@@ -78,19 +97,8 @@ export const Studio: React.FC<StudioProps> = ({
     return result;
   }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
 
-  const handleSaveModelProfile = (model: SavedModelProfile) => {
-    setSavedModels(prev => {
-      const exists = prev.find(m => m.id === model.id);
-      if (exists) {
-        return prev.map(m => m.id === model.id ? model : m);
-      }
-      return [...prev, model];
-    });
-  };
-
-  const handleDeleteModelProfile = (modelId: string) => {
-    setSavedModels(prev => prev.filter(m => m.id !== modelId));
-  };
+  // Filtrar apenas modelos prontos (com imagens geradas)
+  const readyModels = savedModels.filter(m => m.status === 'ready' && (m.images?.front || m.images?.face));
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -289,8 +297,8 @@ export const Studio: React.FC<StudioProps> = ({
             <div className="flex items-center gap-2">
               <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-user text-xs'}></i>
               <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Meus Modelos</span>
-              {savedModels.length > 0 && (
-                <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[8px] rounded-full">{savedModels.length}</span>
+              {readyModels.length > 0 && (
+                <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[8px] rounded-full">{readyModels.length}</span>
               )}
             </div>
             <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-' + (showModels ? 'up' : 'down') + ' text-xs'}></i>
@@ -298,57 +306,89 @@ export const Studio: React.FC<StudioProps> = ({
 
           {showModels && (
             <div className="px-3 pb-3">
-              {savedModels.length > 0 ? (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {savedModels.map(model => (
-                    <div
-                      key={model.id}
-                      className="flex-shrink-0 group relative"
-                    >
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full p-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 transition-transform group-hover:scale-105">
-                        <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' w-full h-full rounded-full p-[1px]'}>
-                          {model.referenceImage ? (
-                            <img
-                              src={model.referenceImage}
-                              alt={model.name}
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
-                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user text-sm'}></i>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteModelProfile(model.id)}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              {readyModels.length > 0 ? (
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {readyModels.map(model => {
+                    const modelImage = model.images?.face || model.images?.front;
+                    const isSelected = selectedModel?.id === model.id;
+                    return (
+                      <div
+                        key={model.id}
+                        onClick={() => setSelectedModel(isSelected ? null : model)}
+                        className={'flex-shrink-0 group relative cursor-pointer transition-all ' + (isSelected ? 'scale-105' : '')}
                       >
-                        <i className="fas fa-times text-[7px]"></i>
-                      </button>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[8px] text-center mt-1 truncate max-w-[48px] md:max-w-[64px]'}>{model.name}</p>
-                    </div>
-                  ))}
+                        <div className={'w-14 h-14 md:w-18 md:h-18 rounded-full p-[2px] transition-all ' + (isSelected ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 ring-2 ring-pink-500 ring-offset-2 ring-offset-black' : 'bg-gradient-to-r from-pink-500/50 via-purple-500/50 to-orange-500/50 hover:from-pink-500 hover:via-purple-500 hover:to-orange-500')}>
+                          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' w-full h-full rounded-full p-[1px]'}>
+                            {modelImage ? (
+                              <img
+                                src={modelImage}
+                                alt={model.name}
+                                className="w-full h-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
+                                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user text-sm'}></i>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
+                            <i className="fas fa-check-circle text-pink-500 text-xs"></i>
+                          </div>
+                        )}
+                        <p className={(isSelected ? 'text-pink-400' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[9px] text-center mt-1.5 truncate max-w-[56px] md:max-w-[72px] font-medium'}>{model.name}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="flex items-center justify-center py-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
+                <div className="flex items-center justify-center py-3">
+                  <div className="text-center">
+                    <div className="flex justify-center gap-2 mb-2">
                       {[1, 2, 3].map(i => (
-                        <div key={i} className="w-8 h-8 rounded-full p-[1px] bg-gradient-to-r from-pink-500/30 via-purple-500/30 to-orange-500/30">
+                        <div key={i} className="w-10 h-10 rounded-full p-[1px] bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-orange-500/20">
                           <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
-                            <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user text-[8px]'}></i>
+                            <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user text-xs'}></i>
                           </div>
                         </div>
                       ))}
                     </div>
-                    <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>Aguardando modelos</p>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Nenhum modelo salvo</p>
+                    <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-[9px]'}>Crie modelos em "Meus Modelos"</p>
                   </div>
                 </div>
               )}
             </div>
           )}
         </div>
+
+        {/* Modelo selecionado info */}
+        {selectedModel && (
+          <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-purple-500/10 border-pink-500/30' : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200') + ' rounded-xl p-3 border mb-4'}>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl overflow-hidden">
+                <img
+                  src={selectedModel.images?.front || selectedModel.images?.face}
+                  alt={selectedModel.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{selectedModel.name}</p>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>
+                  {selectedModel.gender === 'woman' ? 'Feminino' : 'Masculino'} • {selectedModel.ethnicity}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedModel(null)}
+                className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' p-2 transition-colors'}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* BANNER - Seus Produtos + Plano */}
@@ -461,7 +501,7 @@ export const Studio: React.FC<StudioProps> = ({
           product={selectedProduct}
           products={products}
           userCredits={userCredits}
-          savedModels={savedModels}
+          savedModels={editorModelProfiles}
           onSaveModel={handleSaveModelProfile}
           onDeleteModel={handleDeleteModelProfile}
           onClose={() => setSelectedProduct(null)}

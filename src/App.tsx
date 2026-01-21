@@ -2450,6 +2450,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onGenerateImage={handleGenerateImage}
             onCheckCredits={checkCreditsAndShowModal}
             userId={user?.id}
+            savedModels={savedModels}
           />
         )}
 
