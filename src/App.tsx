@@ -150,14 +150,14 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     }
   }, [companySettings, user?.id]);
 
-  // Persistir clientes (sem fotos base64 para evitar estouro de quota)
+  // Persistir clientes (sem fotos - fotos vêm do Supabase Storage)
   useEffect(() => {
     try {
-      // Salvar clientes sem as fotos base64 (muito grandes para localStorage)
+      // Salvar clientes sem as fotos (fotos são carregadas do Supabase)
       const clientsWithoutPhotos = clients.map(c => ({
         ...c,
-        photo: c.photo ? '[FOTO_LOCAL]' : undefined, // Marcador para indicar que tem foto
-        photos: c.photos?.map(p => ({ ...p, base64: '[FOTO_LOCAL]' })) || []
+        photo: undefined,
+        photos: []
       }));
       localStorage.setItem('vizzu_clients', JSON.stringify(clientsWithoutPhotos));
     } catch (e) {
@@ -419,7 +419,7 @@ const loadUserClients = async (userId: string) => {
 
       // Sincronizar clientes locais que não estão no servidor
       const serverIds = new Set(formattedClients.map(c => c.id));
-      const localOnly = localClients.filter(c => !serverIds.has(c.id) && c.photo !== '[FOTO_LOCAL]');
+      const localOnly = localClients.filter(c => !serverIds.has(c.id));
       localOnly.forEach(localClient => {
         saveClientToSupabase(localClient, userId);
       });
@@ -429,7 +429,7 @@ const loadUserClients = async (userId: string) => {
       console.log(`Clientes: ${formattedClients.length} do servidor + ${localOnly.length} locais sincronizados`);
     } else {
       // Servidor vazio - sincronizar locais para o servidor
-      const validLocalClients = localClients.filter(c => c.photo !== '[FOTO_LOCAL]');
+      const validLocalClients = localClients;
       if (validLocalClients.length > 0) {
         console.log(`Clientes: sincronizando ${validLocalClients.length} clientes locais para o servidor`);
         for (const client of validLocalClients) {
@@ -450,8 +450,7 @@ const loadUserClients = async (userId: string) => {
 // Função para salvar cliente no Supabase
 const saveClientToSupabase = async (client: Client, userId: string) => {
   try {
-    // Nota: fotos são salvas apenas no localStorage por enquanto
-    // A tabela clients não tem colunas photo/photos
+    // Nota: fotos são salvas na tabela client_photos separadamente
     const { error } = await supabase
       .from('clients')
       .upsert({
@@ -463,7 +462,6 @@ const saveClientToSupabase = async (client: Client, userId: string) => {
         email: client.email || null,
         has_provador_ia: client.hasProvadorIA || false,
         notes: client.notes || null,
-        tags: client.tags || [],
         created_at: client.createdAt,
         updated_at: client.updatedAt || null,
         last_contact_at: client.lastContactAt || null,
