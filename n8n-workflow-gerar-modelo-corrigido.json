@@ -1,0 +1,252 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/generate-model-images",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-gerar-modelo",
+      "name": "Webhook Gerar Modelo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        3328
+      ],
+      "webhookId": "ce53f7ff-eb6b-471c-8350-09b5d6e6e696"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst { modelId, userId, modelProfile } = body;\n\nif (!modelId || !userId || !modelProfile) {\n  throw new Error('Campos obrigatorios: modelId, userId, modelProfile');\n}\n\n// Validar se modelId é UUID válido\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nconst isValidUuid = uuidRegex.test(modelId);\n\nconsole.log('=== GERAR MODELO IA ===');\nconsole.log('Model ID:', modelId);\nconsole.log('Is valid UUID:', isValidUuid);\nconsole.log('User ID:', userId);\n\nconst genderMap = { woman: 'female', man: 'male' };\nconst ageMap = { young: 'in their 20s', adult: 'in their 30s', mature: 'in their 40s' };\nconst heightMap = { short: '160cm', medium: '170cm', tall: '180cm' };\nconst bodyMap = { slim: 'slim', athletic: 'athletic', average: 'average', curvy: 'curvy', plus: 'plus-size' };\n\nconst p = modelProfile;\nconst gender = genderMap[p.gender] || p.gender;\nconst age = ageMap[p.ageRange] || p.ageRange;\nconst height = heightMap[p.height] || p.height;\nconst bodyType = bodyMap[p.bodyType] || p.bodyType;\n\nconst baseAttrs = `${gender} model, ${p.ethnicity} ethnicity, ${p.skinTone} skin tone, ${bodyType} body type, ${age}, ${height} tall, ${p.hairColor} ${p.hairStyle} hair, ${p.eyeColor} eyes, ${p.expression} expression`;\nconst bustAttr = p.gender === 'woman' && p.bustSize ? `, ${p.bustSize} bust` : '';\nconst waistAttr = p.waistType ? `, ${p.waistType} waist` : '';\n\nconst prompts = {\n  front: `Professional fashion model photo for e-commerce, full body front view, ${baseAttrs}${bustAttr}${waistAttr}, standing straight pose facing camera, arms relaxed at sides, neutral solid gray background, soft studio lighting, high quality fashion photography, clean and simple composition, the model should be wearing simple neutral underwear or form-fitting neutral clothing to show body shape clearly`,\n  back: `Professional fashion model photo for e-commerce, full body back view, ${baseAttrs}${bustAttr}${waistAttr}, standing straight pose with back turned to camera, arms relaxed at sides, neutral solid gray background, soft studio lighting, high quality fashion photography, clean and simple composition, the model should be wearing simple neutral underwear or form-fitting neutral clothing to show body shape clearly`,\n  face: `Professional headshot portrait for e-commerce, shoulders and face visible, ${gender} model, ${p.ethnicity} ethnicity, ${p.skinTone} skin tone, ${age}, ${p.hairColor} ${p.hairStyle} hair, ${p.eyeColor} eyes, ${p.expression} expression, looking at camera, neutral solid gray background, soft flattering studio lighting, high quality portrait photography`\n};\n\nreturn [{ json: { modelId, userId, modelProfile, prompts, isValidUuid, startTime: Date.now() } }];"
+      },
+      "id": "preparar-modelo",
+      "name": "Preparar Prompts Modelo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        3328
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\nconst { prompts, modelId, userId, isValidUuid } = inputData;\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-3-pro-image-preview';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nconst sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));\n\nasync function generateImage(prompt, angle) {\n  console.log(`Gerando ${angle}...`);\n  const payload = {\n    contents: [{ role: 'user', parts: [{ text: prompt }] }],\n    generationConfig: { responseModalities: ['TEXT', 'IMAGE'], temperature: 1.0 },\n    safetySettings: [\n      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },\n      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },\n      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },\n      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }\n    ]\n  };\n  \n  for (let attempt = 1; attempt <= 3; attempt++) {\n    try {\n      const response = await this.helpers.httpRequest({\n        method: 'POST', url: endpoint,\n        headers: { 'Content-Type': 'application/json' },\n        body: payload, json: true, timeout: 300000, ignoreHttpStatusErrors: true\n      });\n      \n      if (response.error?.code === 503) {\n        if (attempt < 3) await sleep(attempt * 5000);\n        continue;\n      }\n      if (response.error) throw new Error(JSON.stringify(response.error));\n      \n      if (response.candidates?.[0]?.content?.parts) {\n        for (const part of response.candidates[0].content.parts) {\n          if (part.inlineData?.data) return part.inlineData.data;\n        }\n      }\n      throw new Error('Sem imagem');\n    } catch (error) {\n      if (attempt === 3) throw error;\n      await sleep(attempt * 5000);\n    }\n  }\n}\n\nconst images = {};\nimages.front = await generateImage.call(this, prompts.front, 'front');\nawait sleep(2000);\nimages.back = await generateImage.call(this, prompts.back, 'back');\nawait sleep(2000);\nimages.face = await generateImage.call(this, prompts.face, 'face');\n\n// Retorna com binary data para upload via S3\nreturn [{\n  json: { modelId, userId, isValidUuid },\n  binary: {\n    front: { data: images.front, mimeType: 'image/png', fileName: 'front.png' },\n    back: { data: images.back, mimeType: 'image/png', fileName: 'back.png' },\n    face: { data: images.face, mimeType: 'image/png', fileName: 'face.png' }\n  }\n}];"
+      },
+      "id": "gerar-imagens-modelo",
+      "name": "Gerar 3 Imagens Modelo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        3328
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "saved_models",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.modelId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "images",
+              "fieldValue": "={{ JSON.stringify($json.imageUrls) }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "ready"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "atualizar-saved-model",
+      "name": "Atualizar Saved Model",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        3296
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"model\": {\n    \"id\": \"{{ $json.modelId }}\",\n    \"images\": {{ JSON.stringify($json.imageUrls) }},\n    \"status\": \"ready\"\n  }\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "sucesso-gerar-modelo",
+      "name": "Sucesso Gerar Modelo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        3296
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const isValidUuid = $input.first().json.isValidUuid;\nconst supabaseUrl = 'https://dbdqiqehuapcicejnzyd.supabase.co';\nconst supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM';\nconst modelId = $input.first().json.modelId;\nconst userId = $input.first().json.userId;\nconst binary = $input.first().binary;\n\nconst frontImage = binary.front?.data;\nconst backImage = binary.back?.data;\nconst faceImage = binary.face?.data;\n\nif (!frontImage || !backImage || !faceImage) {\n  throw new Error('Imagens nao encontradas no binary data');\n}\n\nasync function uploadImage(base64Data, imageName) {\n  const buffer = Buffer.from(base64Data, 'base64');\n  const path = `${userId}/${modelId}/${imageName}.png`;\n  \n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${supabaseUrl}/storage/v1/object/model-images/${path}`,\n    headers: {\n      'Authorization': `Bearer ${supabaseKey}`,\n      'Content-Type': 'image/png',\n      'x-upsert': 'true'\n    },\n    body: buffer,\n    encoding: 'arraybuffer',\n    returnFullResponse: true,\n    ignoreHttpStatusErrors: true\n  });\n  \n  if (response.statusCode >= 400) {\n    console.log(`Upload ${imageName} error:`, response.body);\n    throw new Error(`Upload failed: ${imageName} - Status ${response.statusCode}`);\n  }\n  \n  return `${supabaseUrl}/storage/v1/object/public/model-images/${path}`;\n}\n\nconst frontUrl = await uploadImage.call(this, frontImage, 'front');\nconst backUrl = await uploadImage.call(this, backImage, 'back');\nconst faceUrl = await uploadImage.call(this, faceImage, 'face');\n\nreturn [{\n  json: {\n    success: true,\n    modelId: modelId,\n    userId: userId,\n    isValidUuid: isValidUuid,\n    imageUrls: {\n      front: frontUrl,\n      back: backUrl,\n      face: faceUrl\n    }\n  }\n}];"
+      },
+      "id": "upload-3-imagens-modelo",
+      "name": "Upload 3 Imagens Modelo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        3328
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "uuid-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.isValidUuid }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "check-uuid-modelo",
+      "name": "UUID Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        3328
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"model\": {\n    \"id\": \"{{ $json.modelId }}\",\n    \"images\": {{ JSON.stringify($json.imageUrls) }},\n    \"status\": \"preview\"\n  }\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        3504
+      ],
+      "id": "resposta-preview",
+      "name": "Resposta Preview"
+    }
+  ],
+  "connections": {
+    "Webhook Gerar Modelo": {
+      "main": [
+        [
+          {
+            "node": "Preparar Prompts Modelo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Prompts Modelo": {
+      "main": [
+        [
+          {
+            "node": "Gerar 3 Imagens Modelo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar 3 Imagens Modelo": {
+      "main": [
+        [
+          {
+            "node": "Upload 3 Imagens Modelo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Saved Model": {
+      "main": [
+        [
+          {
+            "node": "Sucesso Gerar Modelo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload 3 Imagens Modelo": {
+      "main": [
+        [
+          {
+            "node": "UUID Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UUID Valido?": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Saved Model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resposta Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "f5408b2397ec961558c2d1645ab20174aeb712fe37b2f614021d4bd5b8702549"
+  }
+}
