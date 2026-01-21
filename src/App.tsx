@@ -359,6 +359,7 @@ const loadUserProducts = async (userId: string) => {
 // Função para carregar clientes do usuário do Supabase
 const loadUserClients = async (userId: string) => {
   try {
+    // Buscar clientes
     const { data: clientsData, error } = await supabase
       .from('clients')
       .select('*')
@@ -370,31 +371,55 @@ const loadUserClients = async (userId: string) => {
       return;
     }
 
+    // Buscar fotos de todos os clientes
+    const { data: photosData } = await supabase
+      .from('client_photos')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Mapear fotos por client_id
+    const photosByClient: Record<string, ClientPhoto[]> = {};
+    if (photosData) {
+      for (const p of photosData) {
+        if (!photosByClient[p.client_id]) {
+          photosByClient[p.client_id] = [];
+        }
+        photosByClient[p.client_id].push({
+          type: p.type as ClientPhoto['type'],
+          base64: p.url, // Usamos URL em vez de base64
+          createdAt: p.created_at
+        });
+      }
+    }
+
     // Pegar clientes locais para possível sincronização
     const localClients: Client[] = JSON.parse(localStorage.getItem('vizzu_clients') || '[]');
 
     if (clientsData && clientsData.length > 0) {
-      const formattedClients: Client[] = clientsData.map(c => ({
-        id: c.id,
-        firstName: c.first_name,
-        lastName: c.last_name,
-        whatsapp: c.whatsapp,
-        email: c.email || undefined,
-        photo: c.photo || undefined,
-        photos: c.photos || [],
-        hasProvadorIA: (c.photos && c.photos.length > 0) || false,
-        notes: c.notes || undefined,
-        tags: c.tags || [],
-        createdAt: c.created_at,
-        updatedAt: c.updated_at || undefined,
-        lastContactAt: c.last_contact_at || undefined,
-        totalOrders: c.total_orders || 0,
-        status: c.status || 'active',
-      }));
+      const formattedClients: Client[] = clientsData.map(c => {
+        const clientPhotos = photosByClient[c.id] || [];
+        return {
+          id: c.id,
+          firstName: c.first_name,
+          lastName: c.last_name,
+          whatsapp: c.whatsapp,
+          email: c.email || undefined,
+          photo: clientPhotos[0]?.base64 || undefined,
+          photos: clientPhotos,
+          hasProvadorIA: clientPhotos.length > 0 || c.has_provador_ia || false,
+          notes: c.notes || undefined,
+          tags: c.tags || [],
+          createdAt: c.created_at,
+          updatedAt: c.updated_at || undefined,
+          lastContactAt: c.last_contact_at || undefined,
+          totalOrders: c.total_orders || 0,
+          status: c.status || 'active',
+        };
+      });
 
       // Sincronizar clientes locais que não estão no servidor
       const serverIds = new Set(formattedClients.map(c => c.id));
-      const localOnly = localClients.filter(c => !serverIds.has(c.id));
+      const localOnly = localClients.filter(c => !serverIds.has(c.id) && c.photo !== '[FOTO_LOCAL]');
       localOnly.forEach(localClient => {
         saveClientToSupabase(localClient, userId);
       });
@@ -404,9 +429,10 @@ const loadUserClients = async (userId: string) => {
       console.log(`Clientes: ${formattedClients.length} do servidor + ${localOnly.length} locais sincronizados`);
     } else {
       // Servidor vazio - sincronizar locais para o servidor
-      if (localClients.length > 0) {
-        console.log(`Clientes: sincronizando ${localClients.length} clientes locais para o servidor`);
-        for (const client of localClients) {
+      const validLocalClients = localClients.filter(c => c.photo !== '[FOTO_LOCAL]');
+      if (validLocalClients.length > 0) {
+        console.log(`Clientes: sincronizando ${validLocalClients.length} clientes locais para o servidor`);
+        for (const client of validLocalClients) {
           await saveClientToSupabase(client, userId);
         }
         // Manter os clientes locais já que foram sincronizados
@@ -1127,37 +1153,122 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     }
   };
 
-const handleRemoveClientPhoto = (type: ClientPhoto['type']) => { 
-    setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) })); 
+const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
+    setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) }));
   };
 
-  const handleCreateClient = () => {
+  // Upload de foto do cliente para o Storage
+  const uploadClientPhoto = async (userId: string, clientId: string, photo: ClientPhoto): Promise<{ url: string; storagePath: string } | null> => {
+    try {
+      // Converter base64 para blob
+      const base64Data = photo.base64.replace(/^data:image\/\w+;base64,/, '');
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+
+      // Detectar tipo da imagem
+      const mimeType = photo.base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
+      const extension = mimeType.split('/')[1] || 'jpg';
+      const blob = new Blob([byteArray], { type: mimeType });
+
+      // Caminho: userId/clientId/tipo.ext
+      const storagePath = `${userId}/${clientId}/${photo.type}.${extension}`;
+
+      // Upload para o Storage
+      const { error: uploadError } = await supabase.storage
+        .from('client-photos')
+        .upload(storagePath, blob, { upsert: true });
+
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        return null;
+      }
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('client-photos')
+        .getPublicUrl(storagePath);
+
+      return { url: urlData.publicUrl, storagePath };
+    } catch (error) {
+      console.error('Erro ao fazer upload da foto:', error);
+      return null;
+    }
+  };
+
+  // Salvar referência da foto no banco
+  const saveClientPhotoToDb = async (userId: string, clientId: string, photo: ClientPhoto, url: string, storagePath: string) => {
+    try {
+      const { error } = await supabase
+        .from('client_photos')
+        .upsert({
+          client_id: clientId,
+          user_id: userId,
+          type: photo.type,
+          storage_path: storagePath,
+          url: url
+        }, { onConflict: 'client_id,type' });
+
+      if (error) {
+        console.log('Erro ao salvar foto no banco:', error.message);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar foto:', error);
+    }
+  };
+
+  // Carregar fotos do cliente do Storage
+  const loadClientPhotos = async (clientId: string): Promise<ClientPhoto[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('client_photos')
+        .select('*')
+        .eq('client_id', clientId);
+
+      if (error || !data) return [];
+
+      return data.map(p => ({
+        type: p.type as ClientPhoto['type'],
+        base64: p.url, // Usamos a URL em vez de base64
+        createdAt: p.created_at
+      }));
+    } catch (error) {
+      console.error('Erro ao carregar fotos:', error);
+      return [];
+    }
+  };
+
+  const handleCreateClient = async () => {
     if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) {
       alert('Preencha nome, sobrenome e WhatsApp');
       return;
     }
+
+    const clientId = 'client-' + Date.now();
+    const photosToUpload = [...newClient.photos];
+
     const client: Client = {
-      id: 'client-' + Date.now(),
+      id: clientId,
       firstName: newClient.firstName,
       lastName: newClient.lastName,
       whatsapp: newClient.whatsapp.replace(/\D/g, ''),
       email: newClient.email || undefined,
-      photos: newClient.photos.length > 0 ? newClient.photos : undefined,
-      photo: newClient.photos[0]?.base64,
-      hasProvadorIA: newClient.photos.length > 0,
+      photos: photosToUpload.length > 0 ? photosToUpload : undefined,
+      photo: photosToUpload[0]?.base64,
+      hasProvadorIA: photosToUpload.length > 0,
       notes: newClient.notes || undefined,
       status: 'active',
       createdAt: new Date().toISOString(),
       totalOrders: 0
     };
+
+    // Adicionar cliente imediatamente (com fotos locais)
     setClients(prev => [...prev, client]);
     setShowCreateClient(false);
     setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' });
-
-    // Sincronizar com Supabase se usuário estiver logado
-    if (user?.id) {
-      saveClientToSupabase(client, user.id);
-    }
 
     // Log no histórico
     handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
@@ -1169,6 +1280,34 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       setCreateClientFromProvador(false);
       setSuccessNotification('Cliente cadastrado com sucesso!');
       setTimeout(() => setSuccessNotification(null), 3000);
+    }
+
+    // Sincronizar com Supabase em background
+    if (user?.id) {
+      // Salvar cliente no banco
+      await saveClientToSupabase(client, user.id);
+
+      // Upload das fotos para o Storage (em background)
+      if (photosToUpload.length > 0) {
+        const uploadedPhotos: ClientPhoto[] = [];
+
+        for (const photo of photosToUpload) {
+          const result = await uploadClientPhoto(user.id, clientId, photo);
+          if (result) {
+            await saveClientPhotoToDb(user.id, clientId, photo, result.url, result.storagePath);
+            uploadedPhotos.push({ ...photo, base64: result.url });
+          }
+        }
+
+        // Atualizar cliente com URLs das fotos
+        if (uploadedPhotos.length > 0) {
+          setClients(prev => prev.map(c =>
+            c.id === clientId
+              ? { ...c, photos: uploadedPhotos, photo: uploadedPhotos[0]?.base64 }
+              : c
+          ));
+        }
+      }
     }
   };
 
