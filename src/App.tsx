@@ -1636,12 +1636,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         waistType: m.waist_type,
         referenceImageUrl: m.reference_image_url,
         referenceStoragePath: m.reference_storage_path,
-        images: m.images || {},
+        images: typeof m.images === 'string' ? JSON.parse(m.images) : (m.images || {}),
         status: m.status,
         createdAt: m.created_at,
         updatedAt: m.updated_at,
       }));
 
+      console.log('Modelos carregados:', models);
       setSavedModels(models);
     } catch (error) {
       console.error('Erro ao carregar modelos:', error);

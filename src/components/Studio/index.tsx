@@ -97,8 +97,12 @@ export const Studio: React.FC<StudioProps> = ({
     return result;
   }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
 
-  // Filtrar apenas modelos prontos (com imagens geradas)
-  const readyModels = savedModels.filter(m => m.status === 'ready' && (m.images?.front || m.images?.face));
+  // Filtrar modelos prontos (status ready)
+  const readyModels = savedModels.filter(m => m.status === 'ready');
+
+  // Debug: mostrar todos os modelos no console
+  console.log('Studio - savedModels recebidos:', savedModels);
+  console.log('Studio - readyModels filtrados:', readyModels);
 
   const clearFilters = () => {
     setSearchTerm('');
