@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // VIZZU - Studio API
 // Chamadas para os webhooks do n8n
+// v2.1 - Fix: modelo-ia-v2 endpoint
 // ═══════════════════════════════════════════════════════════════
 
 const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
@@ -95,6 +96,22 @@ export async function generateCenario(params: CenarioParams): Promise<StudioRead
 // MODELO IA
 // ═══════════════════════════════════════════════════════════════
 
+interface LookPiece {
+  slot: string;
+  image: string;
+  name: string;
+  sku?: string;
+  productId?: string;
+  imageId?: string;
+}
+
+interface ModelProfile {
+  gender: 'woman' | 'man';
+  ethnicity: string;
+  bodyType: string;
+  ageRange: string;
+}
+
 interface ModeloIAParams {
   productId: string;
   userId: string;
@@ -106,31 +123,54 @@ interface ModeloIAParams {
   referenceImage?: string;
   productCategory: string;
   productDescription?: string;
-  lookItems?: Array<{ slot: string; image: string; name: string; productId?: string; imageId?: string }>;
+  lookItems?: Array<LookPiece>;
+  orientation?: { type: 'vertical' | 'horizontal'; width: number; height: number };
 }
 
 /**
  * Modelo IA - Gera modelo humano usando o produto
- * Custo: 3 créditos
+ * Custo: 1-2 créditos (composer = 2)
  */
 export async function generateModeloIA(params: ModeloIAParams): Promise<StudioReadyResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/modelo-ia`, {
+  // Determinar modo: composer se tem lookItems, senão describe
+  const isComposerMode = params.lookItems && params.lookItems.length > 0;
+  const mode = isComposerMode ? 'composer' : 'describe';
+
+  // Converter lookItems para lookComposition (formato do novo workflow)
+  let lookComposition: Record<string, { name: string; sku: string; image: string; productId?: string; imageId?: string }> | null = null;
+
+  if (isComposerMode && params.lookItems) {
+    lookComposition = {};
+    for (const item of params.lookItems) {
+      lookComposition[item.slot] = {
+        name: item.name,
+        sku: item.sku || '',
+        image: item.image,
+        productId: item.productId,
+        imageId: item.imageId,
+      };
+    }
+  }
+
+  // Extrair perfil do modelo do modelPrompt
+  const modelProfile = parseModelPrompt(params.modelPrompt);
+
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/modelo-ia-v2`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      product_id: params.productId,
-      user_id: params.userId,
-      image_id: params.imageId,
-      image_url: params.imageUrl,
-      model_prompt: params.modelPrompt,
-      clothing_prompt: params.clothingPrompt,
-      pose_prompt: params.posePrompt,
-      reference_image: params.referenceImage,
-      product_category: params.productCategory,
-      product_description: params.productDescription,
-      look_items: params.lookItems,
+      productId: params.productId,
+      userId: params.userId,
+      imageId: params.imageId,
+      imageUrl: params.imageUrl,
+      mode: mode,
+      modelProfile: modelProfile,
+      sceneDescription: params.clothingPrompt || params.productDescription || '',
+      orientation: params.orientation?.type || 'vertical',
+      lookComposition: lookComposition,
+      savedModelId: params.referenceImage ? 'custom' : null,
     }),
   });
 
@@ -141,6 +181,40 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   }
 
   return data;
+}
+
+/**
+ * Converte o modelPrompt para o objeto modelProfile
+ */
+function parseModelPrompt(prompt: string): ModelProfile {
+  const lowerPrompt = prompt.toLowerCase();
+
+  // Detectar gênero
+  const gender: 'woman' | 'man' = lowerPrompt.includes('female') || lowerPrompt.includes('woman') ? 'woman' : 'man';
+
+  // Detectar etnia
+  let ethnicity = 'mixed';
+  if (lowerPrompt.includes('caucasian') || lowerPrompt.includes('white')) ethnicity = 'caucasian';
+  else if (lowerPrompt.includes('black') || lowerPrompt.includes('african')) ethnicity = 'black';
+  else if (lowerPrompt.includes('asian')) ethnicity = 'asian';
+  else if (lowerPrompt.includes('latin') || lowerPrompt.includes('hispanic')) ethnicity = 'latin';
+  else if (lowerPrompt.includes('brazilian')) ethnicity = 'brazilian';
+  else if (lowerPrompt.includes('mixed')) ethnicity = 'mixed';
+
+  // Detectar tipo de corpo
+  let bodyType = 'average';
+  if (lowerPrompt.includes('slim') || lowerPrompt.includes('thin')) bodyType = 'slim';
+  else if (lowerPrompt.includes('athletic') || lowerPrompt.includes('fit')) bodyType = 'athletic';
+  else if (lowerPrompt.includes('curvy') || lowerPrompt.includes('plus')) bodyType = 'curvy';
+  else if (lowerPrompt.includes('average')) bodyType = 'average';
+
+  // Detectar faixa etária
+  let ageRange = 'adult';
+  if (lowerPrompt.includes('young') || lowerPrompt.includes('20')) ageRange = 'young';
+  else if (lowerPrompt.includes('adult') || lowerPrompt.includes('30')) ageRange = 'adult';
+  else if (lowerPrompt.includes('mature') || lowerPrompt.includes('40') || lowerPrompt.includes('50')) ageRange = 'mature';
+
+  return { gender, ethnicity, bodyType, ageRange };
 }
 
 // ═══════════════════════════════════════════════════════════════
