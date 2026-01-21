@@ -753,6 +753,7 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
   }, [theme]);
 
   // Controlar frases e progresso do loading do Provador
+  // Tempo médio de geração: ~75 segundos (1:15)
   useEffect(() => {
     if (!isGeneratingProvador) {
       setProvadorLoadingIndex(0);
@@ -760,18 +761,32 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       return;
     }
 
-    // Atualizar frase a cada 3 segundos
+    // Atualizar frase a cada 7 segundos (11 frases em ~77 segundos)
     const phraseInterval = setInterval(() => {
       setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
-    }, 3000);
+    }, 7000);
 
-    // Atualizar progresso gradualmente (simula progresso até 95%)
+    // Progresso calibrado para ~75 segundos até 100%
+    // 0-50%: rápido (primeiros ~20s)
+    // 50-80%: médio (próximos ~30s)
+    // 80-100%: lento (últimos ~25s)
     const progressInterval = setInterval(() => {
       setProvadorProgress(prev => {
-        if (prev >= 95) return 95; // Não passa de 95% até completar
-        // Progresso mais lento conforme avança
-        const increment = prev < 30 ? 3 : prev < 60 ? 2 : prev < 80 ? 1 : 0.5;
-        return Math.min(95, prev + increment);
+        if (prev >= 100) return 100; // Para em 100%
+
+        let increment: number;
+        if (prev < 50) {
+          // 0-50% em ~20s (40 intervalos de 500ms) = 1.25% por intervalo
+          increment = 1.25;
+        } else if (prev < 80) {
+          // 50-80% em ~30s (60 intervalos) = 0.5% por intervalo
+          increment = 0.5;
+        } else {
+          // 80-100% em ~25s (50 intervalos) = 0.4% por intervalo
+          increment = 0.4;
+        }
+
+        return Math.min(100, prev + increment);
       });
     }, 500);
 
@@ -2084,12 +2099,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-3 flex items-center justify-center overflow-hidden'}>
                       {isGeneratingProvador ? (
                         <div className="text-center px-4 py-6">
-                          <i className={'fas ' + PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon + ' text-2xl mb-3 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-xs font-medium mb-2'}>{PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
+                          <i className={'fas ' + (provadorProgress >= 100 ? 'fa-hourglass-end' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon) + ' text-2xl mb-3 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + (provadorProgress >= 100 ? ' animate-pulse' : '')}></i>
+                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-xs font-medium mb-2'}>{provadorProgress >= 100 ? 'Finalizando, aguarde só mais um momento...' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
                           <div className={'w-full h-1.5 rounded-full overflow-hidden mb-1.5 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
-                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${provadorProgress}%` }}></div>
+                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${Math.min(provadorProgress, 100)}%` }}></div>
                           </div>
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium'}>{Math.round(provadorProgress)}%</p>
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium'}>{Math.round(Math.min(provadorProgress, 100))}%</p>
                         </div>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
@@ -2228,12 +2243,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-3 flex items-center justify-center overflow-hidden'}>
                       {isGeneratingProvador ? (
                         <div className="text-center px-6 py-8">
-                          <i className={'fas ' + PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon + ' text-3xl mb-4 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm font-medium mb-3'}>{PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
+                          <i className={'fas ' + (provadorProgress >= 100 ? 'fa-hourglass-end' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].icon) + ' text-3xl mb-4 ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + (provadorProgress >= 100 ? ' animate-pulse' : '')}></i>
+                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm font-medium mb-3'}>{provadorProgress >= 100 ? 'Finalizando, aguarde só mais um momento...' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
                           <div className={'w-full h-2 rounded-full overflow-hidden mb-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
-                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${provadorProgress}%` }}></div>
+                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${Math.min(provadorProgress, 100)}%` }}></div>
                           </div>
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-medium'}>{Math.round(provadorProgress)}%</p>
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-medium'}>{Math.round(Math.min(provadorProgress, 100))}%</p>
                         </div>
                       ) : provadorGeneratedImage ? (
                         <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
