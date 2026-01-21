@@ -194,42 +194,30 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: $json.parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } }) }}",
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+        },
+        "prompt": "={{ $json.prompt }}",
         "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
+          "binaryPropertyOutput": "edited"
         }
       },
-      "id": "gemini-http-request",
-      "name": "Gemini API (Multi-Image)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "id": "gemini-modelo-ia",
+      "name": "Gemini Generate Image",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
       "position": [1432, 1376],
       "credentials": {
-        "httpQueryAuth": {
-          "id": "GEMINI_API_KEY_CREDENTIAL_ID",
-          "name": "Gemini API Key"
+        "googlePalmApi": {
+          "id": "sqwOB0vrunm2MJ3i",
+          "name": "Vizzu Gemini"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Processar resposta do Gemini e extrair imagem\nconst response = $input.first().json;\nconst candidates = response.candidates || [];\n\nlet imageBase64 = null;\nlet mimeType = 'image/png';\n\nfor (const candidate of candidates) {\n  const parts = candidate.content?.parts || [];\n  for (const part of parts) {\n    // Verificar ambos os formatos: inline_data e inlineData\n    const inlineData = part.inline_data || part.inlineData;\n    if (inlineData) {\n      imageBase64 = inlineData.data;\n      mimeType = inlineData.mime_type || inlineData.mimeType || 'image/png';\n      break;\n    }\n  }\n  if (imageBase64) break;\n}\n\nif (!imageBase64) {\n  console.log('Resposta Gemini:', JSON.stringify(response, null, 2).substring(0, 1000));\n  throw new Error('Gemini não retornou imagem');\n}\n\nreturn [{\n  json: {\n    success: true,\n    hasImage: true\n  },\n  binary: {\n    edited: {\n      data: imageBase64,\n      mimeType: mimeType,\n      fileName: 'modelo_ia_generated.png'\n    }\n  }\n}];"
-      },
-      "id": "process-gemini-response",
-      "name": "Processar Resposta Gemini",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1632, 1376]
     },
     {
       "parameters": {
@@ -415,9 +403,8 @@
     "Criar Geracao Modelo IA": { "main": [[{ "node": "Download Imagem Modelo IA", "type": "main", "index": 0 }]] },
     "Download Imagem Modelo IA": { "main": [[{ "node": "Processar Imagens Look", "type": "main", "index": 0 }]] },
     "Processar Imagens Look": { "main": [[{ "node": "Construir Prompt Modelo IA", "type": "main", "index": 0 }]] },
-    "Construir Prompt Modelo IA": { "main": [[{ "node": "Gemini API (Multi-Image)", "type": "main", "index": 0 }]] },
-    "Gemini API (Multi-Image)": { "main": [[{ "node": "Processar Resposta Gemini", "type": "main", "index": 0 }]] },
-    "Processar Resposta Gemini": { "main": [[{ "node": "Gemini Sucesso?", "type": "main", "index": 0 }]] },
+    "Construir Prompt Modelo IA": { "main": [[{ "node": "Gemini Generate Image", "type": "main", "index": 0 }]] },
+    "Gemini Generate Image": { "main": [[{ "node": "Gemini Sucesso?", "type": "main", "index": 0 }]] },
     "Gemini Sucesso?": { "main": [[{ "node": "Gerar Storage Path Modelo IA", "type": "main", "index": 0 }], [{ "node": "Marcar Geracao Falhou", "type": "main", "index": 0 }]] },
     "Gerar Storage Path Modelo IA": { "main": [[{ "node": "Upload Storage Modelo IA", "type": "main", "index": 0 }]] },
     "Upload Storage Modelo IA": { "main": [[{ "node": "Inserir Imagem Modelo IA", "type": "main", "index": 0 }]] },
