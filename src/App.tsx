@@ -150,9 +150,19 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     }
   }, [companySettings, user?.id]);
 
-  // Persistir clientes
+  // Persistir clientes (sem fotos base64 para evitar estouro de quota)
   useEffect(() => {
-    localStorage.setItem('vizzu_clients', JSON.stringify(clients));
+    try {
+      // Salvar clientes sem as fotos base64 (muito grandes para localStorage)
+      const clientsWithoutPhotos = clients.map(c => ({
+        ...c,
+        photo: c.photo ? '[FOTO_LOCAL]' : undefined, // Marcador para indicar que tem foto
+        photos: c.photos?.map(p => ({ ...p, base64: '[FOTO_LOCAL]' })) || []
+      }));
+      localStorage.setItem('vizzu_clients', JSON.stringify(clientsWithoutPhotos));
+    } catch (e) {
+      console.warn('Não foi possível salvar clientes no localStorage:', e);
+    }
   }, [clients]);
 
   // Persistir histórico
@@ -414,6 +424,8 @@ const loadUserClients = async (userId: string) => {
 // Função para salvar cliente no Supabase
 const saveClientToSupabase = async (client: Client, userId: string) => {
   try {
+    // Nota: fotos são salvas apenas no localStorage por enquanto
+    // A tabela clients não tem colunas photo/photos
     const { error } = await supabase
       .from('clients')
       .upsert({
@@ -423,8 +435,7 @@ const saveClientToSupabase = async (client: Client, userId: string) => {
         last_name: client.lastName,
         whatsapp: client.whatsapp,
         email: client.email || null,
-        photo: client.photo || null,
-        photos: client.photos || [],
+        has_provador_ia: client.hasProvadorIA || false,
         notes: client.notes || null,
         tags: client.tags || [],
         created_at: client.createdAt,
@@ -1336,21 +1347,41 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   const handleClientPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !uploadingPhotoType) return;
+    processClientPhotoFile(file, uploadingPhotoType);
+  };
+
+  // Função compartilhada para processar arquivo de foto
+  const processClientPhotoFile = (file: File, photoType: ClientPhoto['type']) => {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
       const newPhoto: ClientPhoto = {
-        type: uploadingPhotoType,
+        type: photoType,
         base64,
         createdAt: new Date().toISOString()
       };
       setNewClient(prev => ({
         ...prev,
-        photos: [...prev.photos.filter(p => p.type !== uploadingPhotoType), newPhoto]
+        photos: [...prev.photos.filter(p => p.type !== photoType), newPhoto]
       }));
       setUploadingPhotoType(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  // Drag and drop para fotos do cliente
+  const handleClientPhotoDrop = (e: React.DragEvent<HTMLDivElement>, photoType: ClientPhoto['type']) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processClientPhotoFile(file, photoType);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -3067,7 +3098,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     const existingPhoto = newClient.photos.find(p => p.type === photoType.id);
                     return (
                       <div key={photoType.id} className="text-center">
-                        <div onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }} className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}>
+                        <div
+                          onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleClientPhotoDrop(e, photoType.id)}
+                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}
+                        >
                           {existingPhoto ? (
                             <>
                               <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
@@ -3078,6 +3114,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
                               <i className={'fas ' + photoType.icon + ' text-lg mb-1'}></i>
                               <span className="text-[9px] font-medium">{photoType.label}</span>
+                              <span className="text-[7px] opacity-60 mt-0.5">ou arraste</span>
                             </div>
                           )}
                         </div>
