@@ -7,7 +7,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { Product, User, HistoryLog, Client, ClientPhoto, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
-import { generateStudioReady, generateCenario, generateModeloIA } from './lib/api/studio';
+import { generateStudioReady, generateCenario, generateModeloIA, generateProvador } from './lib/api/studio';
 import heic2any from 'heic2any';
 
 
@@ -1269,20 +1269,65 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     });
   };
   const handleProvadorGenerate = async () => {
-    if (!provadorClient || Object.keys(provadorLook).length === 0) return;
-    if (userCredits < 3) {
-      alert('Créditos insuficientes');
+    if (!provadorClient || !user || Object.keys(provadorLook).length === 0) return;
+
+    // Verificar créditos
+    if (!checkCreditsAndShowModal(3, 'provador')) {
       return;
     }
+
     setIsGeneratingProvador(true);
     try {
-      // TODO: integrar com backend
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setProvadorGeneratedImage(getClientPhoto(provadorClient, provadorPhotoType) || '');
-      deductCredits(3, 'Vizzu Provador');
-    } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao gerar imagem');
+      // Obter foto do cliente
+      const clientPhotoBase64 = getClientPhoto(provadorClient, provadorPhotoType) || '';
+      if (!clientPhotoBase64) {
+        throw new Error('Foto do cliente não encontrada');
+      }
+
+      // Remover prefixo data:image/... se existir
+      const base64Clean = clientPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
+
+      // Montar lookComposition no formato esperado pelo backend
+      const lookCompositionPayload: Record<string, { productId: string; imageId?: string; imageUrl: string; name: string; category: string }> = {};
+
+      for (const [slot, item] of Object.entries(provadorLook)) {
+        if (item) {
+          // Buscar produto para obter categoria
+          const product = products.find(p => p.id === item.productId);
+          lookCompositionPayload[slot] = {
+            productId: item.productId || '',
+            imageId: item.imageId,
+            imageUrl: item.image,
+            name: item.name,
+            category: product?.category || 'roupa'
+          };
+        }
+      }
+
+      const result = await generateProvador({
+        userId: user.id,
+        clientId: provadorClient.id,
+        clientName: `${provadorClient.firstName} ${provadorClient.lastName}`,
+        clientPhoto: {
+          type: provadorPhotoType,
+          base64: base64Clean
+        },
+        lookComposition: lookCompositionPayload
+      });
+
+      if (result.success && result.generation) {
+        setProvadorGeneratedImage(result.generation.image_url);
+        if (result.credits_remaining !== undefined) {
+          setCredits(result.credits_remaining);
+        }
+        setProvadorStep(4);
+        handleAddHistoryLog('Provador gerado', `Look para ${provadorClient.firstName}`, 'success', [], 'ai', 3);
+      } else {
+        throw new Error(result.message || 'Erro ao gerar imagem');
+      }
+    } catch (error: any) {
+      console.error('Erro no Provador:', error);
+      alert(error.message || 'Erro ao gerar imagem');
     } finally {
       setIsGeneratingProvador(false);
     }

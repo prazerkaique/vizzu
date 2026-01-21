@@ -365,3 +365,75 @@ export async function generateCaption(params: GenerateCaptionParams): Promise<Ge
 
   return data;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PROVADOR IA
+// ═══════════════════════════════════════════════════════════════
+
+interface ProvadorLookItem {
+  productId: string;
+  imageId?: string;
+  imageUrl: string;
+  name: string;
+  category: string;
+}
+
+interface ProvadorParams {
+  userId: string;
+  clientId: string;
+  clientName: string;
+  clientPhoto: {
+    type: 'frente' | 'costas' | 'rosto';
+    base64: string;
+  };
+  lookComposition: {
+    head?: ProvadorLookItem;
+    top?: ProvadorLookItem;
+    bottom?: ProvadorLookItem;
+    feet?: ProvadorLookItem;
+    accessory1?: ProvadorLookItem;
+    accessory2?: ProvadorLookItem;
+  };
+  notes?: string;
+}
+
+interface ProvadorResponse {
+  success: boolean;
+  generation?: {
+    id: string;
+    image_url: string;
+    type: string;
+  };
+  credits_remaining?: number;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Provador IA - Veste o cliente virtualmente com os produtos
+ * Custo: 3 créditos
+ */
+export async function generateProvador(params: ProvadorParams): Promise<ProvadorResponse> {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/provador`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId: params.userId,
+      clientId: params.clientId,
+      clientName: params.clientName,
+      clientPhoto: params.clientPhoto,
+      lookComposition: params.lookComposition,
+      notes: params.notes || '',
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao gerar provador');
+  }
+
+  return data;
+}
