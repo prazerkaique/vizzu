@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // VIZZU - Studio API
 // Chamadas para os webhooks do n8n
-// v2.1 - Fix: modelo-ia-v2 endpoint
+// v2.2 - Force rebuild 2026-01-21
 // ═══════════════════════════════════════════════════════════════
 
 const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
