@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
 import { AuthPage } from './components/AuthPage';
@@ -9,6 +9,7 @@ import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages } from './lib/api/studio';
 import heic2any from 'heic2any';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 
 const CATEGORY_GROUPS = [
@@ -255,6 +256,12 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const clientPhotoInputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [longPressProductId, setLongPressProductId] = useState<string | null>(null);
+
+  // Lottie Theme Toggle
+  const dotLottieRef = useRef<any>(null);
+  const dotLottieRefCallback = useCallback((dotLottie: any) => {
+    dotLottieRef.current = dotLottie;
+  }, []);
 
   // Hook de créditos com integração ao backend
   const {
@@ -3683,15 +3690,23 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Tema</p>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>Escolha entre tema claro ou escuro</p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>
+                              {theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}
+                            </p>
                           </div>
-                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' flex items-center gap-1 p-1 rounded-lg'}>
-                            <button onClick={() => setTheme('dark')} className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + (theme === 'dark' ? 'bg-white text-neutral-900' : 'text-gray-500 hover:text-gray-700')}>
-                              <i className="fas fa-moon text-[10px]"></i>Escuro
-                            </button>
-                            <button onClick={() => setTheme('light')} className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ' + (theme === 'light' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-gray-500 hover:text-gray-700')}>
-                              <i className="fas fa-sun text-[10px]"></i>Claro
-                            </button>
+                          <div
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                            className="cursor-pointer hover:scale-110 transition-transform"
+                            style={{ width: 80, height: 80 }}
+                          >
+                            <DotLottieReact
+                              dotLottieRefCallback={dotLottieRefCallback}
+                              src="https://lottie.host/97eaa266-6a0b-45c7-917f-97933914029a/GtkUp9Odq8.lottie"
+                              autoplay
+                              useFrameInterpolation
+                              stateMachineId="StateMachine1"
+                              style={{ width: '100%', height: '100%' }}
+                            />
                           </div>
                         </div>
                       </div>
