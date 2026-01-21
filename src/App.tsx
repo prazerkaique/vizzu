@@ -1551,23 +1551,41 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     processClientPhotoFile(file, uploadingPhotoType);
   };
 
-  // Função compartilhada para processar arquivo de foto
-  const processClientPhotoFile = (file: File, photoType: ClientPhoto['type']) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      const newPhoto: ClientPhoto = {
-        type: photoType,
-        base64,
-        createdAt: new Date().toISOString()
+  // Função compartilhada para processar arquivo de foto (com conversão HEIC)
+  const processClientPhotoFile = async (file: File, photoType: ClientPhoto['type']) => {
+    try {
+      let processedFile: File | Blob = file;
+
+      // Converter HEIC/HEIF para PNG
+      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/png',
+          quality: 0.9
+        });
+        processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        const newPhoto: ClientPhoto = {
+          type: photoType,
+          base64,
+          createdAt: new Date().toISOString()
+        };
+        setNewClient(prev => ({
+          ...prev,
+          photos: [...prev.photos.filter(p => p.type !== photoType), newPhoto]
+        }));
+        setUploadingPhotoType(null);
       };
-      setNewClient(prev => ({
-        ...prev,
-        photos: [...prev.photos.filter(p => p.type !== photoType), newPhoto]
-      }));
+      reader.readAsDataURL(processedFile);
+    } catch (error) {
+      console.error('Erro ao processar foto:', error);
+      alert('Erro ao processar a imagem. Tente outro formato.');
       setUploadingPhotoType(null);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   // Drag and drop para fotos do cliente
@@ -1575,7 +1593,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     e.preventDefault();
     e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'))) {
       processClientPhotoFile(file, photoType);
     }
   };
@@ -3332,7 +3350,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     );
                   })}
                 </div>
-                <input ref={clientPhotoInputRef} type="file" accept="image/*" capture="user" onChange={handleClientPhotoUpload} className="hidden" />
+                <input ref={clientPhotoInputRef} type="file" accept="image/*,.heic,.heif" capture="user" onChange={handleClientPhotoUpload} className="hidden" />
                 {newClient.photos.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-pink-500/10 text-pink-500 rounded-lg">
                     <i className="fas fa-check text-[10px]"></i>
