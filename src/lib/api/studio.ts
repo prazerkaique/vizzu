@@ -125,6 +125,8 @@ interface ModeloIAParams {
   productDescription?: string;
   lookItems?: Array<LookPiece>;
   orientation?: { type: 'vertical' | 'horizontal'; width: number; height: number };
+  productNotes?: string;      // Observações adicionais do produto
+  modelDetails?: string;      // Detalhes do modelo (fisionomia, cabelo, altura, etc.)
 }
 
 /**
@@ -171,6 +173,8 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       orientation: params.orientation?.type || 'vertical',
       lookComposition: lookComposition,
       savedModelId: params.referenceImage ? 'custom' : null,
+      productNotes: params.productNotes || '',       // Observações adicionais do produto
+      modelDetails: params.modelDetails || '',       // Detalhes do modelo (fisionomia, cabelo, etc.)
     }),
   });
 

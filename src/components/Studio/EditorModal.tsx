@@ -288,8 +288,8 @@ export const EditorModal: React.FC<Props> = ({
         const lookItems = lookMode === 'composer' ? buildLookItems() : [];
         const clothingPrompt = lookMode === 'describe' ? buildDescribedLookPrompt() : undefined;
         const opts = modelTab === 'saved' && selModel
-          ? { selectedImage: originals.front, imageType: 'front', referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg' }
-          : { selectedImage: originals.front, imageType: 'front', modelPrompt: buildModelPrompt(), clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg' };
+          ? { selectedImage: originals.front, imageType: 'front', referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg', productNotes, modelDetails: modelDetail }
+          : { selectedImage: originals.front, imageType: 'front', modelPrompt: buildModelPrompt(), clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg', productNotes, modelDetails: modelDetail };
         frontResult = await onGenerateImage(product, 'lifestyle', undefined, opts);
       }
 
@@ -305,8 +305,8 @@ export const EditorModal: React.FC<Props> = ({
           const lookItems = lookMode === 'composer' ? buildLookItems() : [];
           const clothingPrompt = lookMode === 'describe' ? buildDescribedLookPrompt() : undefined;
           const opts = modelTab === 'saved' && selModel
-            ? { selectedImage: originals.back, imageType: 'back', referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg' }
-            : { selectedImage: originals.back, imageType: 'back', modelPrompt: buildModelPrompt(), clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg' };
+            ? { selectedImage: originals.back, imageType: 'back', referenceImage: selModel.referenceImage, modelPrompt: selModel.modelPrompt, clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg', productNotes, modelDetails: modelDetail }
+            : { selectedImage: originals.back, imageType: 'back', modelPrompt: buildModelPrompt(), clothingPrompt, lookItems: lookItems.length ? lookItems : undefined, productCategory, productDescription, orientation: orientationData, exportFormat: exportType === 'social' ? 'png' : 'svg', productNotes, modelDetails: modelDetail };
           backResult = await onGenerateImage(product, 'lifestyle', undefined, opts);
         }
       }

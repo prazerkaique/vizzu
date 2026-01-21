@@ -984,6 +984,8 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
           productCategory: product.category || 'clothing',
           productDescription: product.description,
           lookItems: opts?.lookItems,
+          productNotes: opts?.productNotes,       // Observações adicionais do produto
+          modelDetails: opts?.modelDetails,       // Detalhes do modelo
         });
 
         if (result.success && result.generation) {
