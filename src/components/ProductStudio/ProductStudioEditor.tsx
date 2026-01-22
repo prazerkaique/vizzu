@@ -769,6 +769,54 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                 Créditos insuficientes
               </p>
             )}
+
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* FOTOS GERADAS */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {product.generatedImages?.productStudio && product.generatedImages.productStudio.length > 0 && (
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mt-4'}>
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                  <i className="fas fa-images mr-2 text-green-400"></i>Fotos Geradas
+                </h3>
+
+                {product.generatedImages.productStudio.map((session, sessionIdx) => (
+                  <div key={session.id || sessionIdx} className="mb-4 last:mb-0">
+                    {product.generatedImages!.productStudio!.length > 1 && (
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide mb-2'}>
+                        Sessão {sessionIdx + 1}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-3 gap-2">
+                      {session.images.map((img, imgIdx) => (
+                        <div
+                          key={img.id || imgIdx}
+                          className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}
+                        >
+                          <img
+                            src={img.url}
+                            alt={`${img.angle} view`}
+                            className="w-full aspect-square object-cover"
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                            <span className="text-white text-[10px] font-medium capitalize">{img.angle}</span>
+                          </div>
+                          {/* Botão de download */}
+                          <a
+                            href={img.url}
+                            download={`${product.sku}-${img.angle}.png`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute top-2 right-2 w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                          >
+                            <i className="fas fa-download text-[10px]"></i>
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

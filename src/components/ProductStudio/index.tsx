@@ -2,7 +2,7 @@
 // VIZZU - Product Studio (Fotos profissionais de produto)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product, HistoryLog } from '../../types';
 import { ProductStudioEditor } from './ProductStudioEditor';
 
@@ -56,6 +56,16 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   isAnyGenerationRunning = false
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Manter selectedProduct atualizado quando products mudar
+  useEffect(() => {
+    if (selectedProduct) {
+      const updatedProduct = products.find(p => p.id === selectedProduct.id);
+      if (updatedProduct && updatedProduct !== selectedProduct) {
+        setSelectedProduct(updatedProduct);
+      }
+    }
+  }, [products, selectedProduct]);
 
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
