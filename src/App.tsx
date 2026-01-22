@@ -2464,50 +2464,51 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
 
-              {/* DICA DO DIA */}
-              <div className={'rounded-2xl p-5 mb-4 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border border-teal-500/20' : 'bg-gradient-to-r from-teal-50 via-cyan-50 to-emerald-50 border border-teal-200')}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                <div className="relative flex items-start gap-4">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-teal-500/20' : 'bg-teal-100')}>
-                    <i className={'fas fa-lightbulb ' + (theme === 'dark' ? 'text-teal-400' : 'text-teal-600')}></i>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
-                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-3'}>
-                      Você sabia? <strong>Lifestyle Shot</strong> tem 80% mais engajamento no Instagram. Experimente colocar seus produtos em contextos reais!
-                    </p>
-                    <button
-                      onClick={() => setCurrentPage('lifestyle')}
-                      className={'text-sm font-medium flex items-center gap-1 transition-colors ' + (theme === 'dark' ? 'text-teal-400 hover:text-teal-300' : 'text-teal-600 hover:text-teal-700')}
-                    >
-                      Testar agora <i className="fas fa-arrow-right text-xs"></i>
-                    </button>
+              {/* DICA DO DIA + PLANO - Grid 2:1 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Dica do dia - 2 colunas */}
+                <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border border-teal-500/20' : 'bg-gradient-to-r from-teal-50 via-cyan-50 to-emerald-50 border border-teal-200')}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                  <div className="relative flex items-center gap-4 w-full">
+                    <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-teal-500/20' : 'bg-teal-100')}>
+                      <i className={'fas fa-lightbulb text-lg ' + (theme === 'dark' ? 'text-teal-400' : 'text-teal-600')}></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-2'}>
+                        Você sabia? <strong>Lifestyle Shot</strong> tem 80% mais engajamento no Instagram.
+                      </p>
+                      <button
+                        onClick={() => setCurrentPage('lifestyle')}
+                        className={'text-sm font-medium flex items-center gap-1 transition-colors ' + (theme === 'dark' ? 'text-teal-400 hover:text-teal-300' : 'text-teal-600 hover:text-teal-700')}
+                      >
+                        Testar agora <i className="fas fa-arrow-right text-xs"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* CARD PLANO */}
-              <div className={'rounded-2xl p-5 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border border-pink-500/20 backdrop-blur-xl' : 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400')}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-white/5 to-transparent rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                <div className="relative flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white/20 backdrop-blur-sm')}>
-                      <i className="fas fa-crown text-lg text-white"></i>
+                {/* Plano - 1 coluna */}
+                <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-orange-900/40 border border-pink-500/20 backdrop-blur-xl' : 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400')}>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                  <div className="relative flex flex-col w-full">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white/20 backdrop-blur-sm')}>
+                        <i className="fas fa-crown text-white"></i>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-white/70') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
+                        <p className="text-xl font-bold text-white">{currentPlan.name}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className={theme === 'dark' ? 'text-neutral-400 text-xs uppercase tracking-wide' : 'text-white/80 text-xs uppercase tracking-wide'}>Seu plano atual</p>
-                      <p className="text-2xl font-bold text-white">{currentPlan.name}</p>
-                      <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-white/70 text-xs'}>{currentPlan.limit} créditos/mês • {userCredits} disponíveis</p>
-                    </div>
+                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-white/80') + ' text-xs mb-2'}>{userCredits}/{currentPlan.limit} créditos</p>
+                    <button
+                      onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+                      className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-white/20 hover:bg-white/30 text-white')}
+                    >
+                      Upgrade <i className="fas fa-arrow-right text-[10px]"></i>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-                    className={'px-5 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90' : 'bg-white text-purple-600 hover:bg-white/90 shadow-lg')}
-                  >
-                    <i className="fas fa-bolt text-xs"></i>
-                    Fazer Upgrade
-                  </button>
                 </div>
               </div>
             </div>
