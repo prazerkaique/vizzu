@@ -55,6 +55,62 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
 }
 
 // ═══════════════════════════════════════════════════════════════
+// PRODUCT STUDIO v2 - MULTI-ANGLE
+// ═══════════════════════════════════════════════════════════════
+
+interface ProductStudioV2Params {
+  productId: string;
+  userId: string;
+  imageId: string;
+  angles: string[];
+}
+
+interface ProductStudioV2Generation {
+  angle: string;
+  image_url: string;
+  image_id: string;
+  storage_path?: string;
+}
+
+interface ProductStudioV2Response {
+  success: boolean;
+  clean_image_url?: string;
+  generations?: ProductStudioV2Generation[];
+  generation_id?: string;
+  credits_used?: number;
+  credits_remaining?: number;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Product Studio v2 - Gera múltiplos ângulos do produto
+ * Custo: 2 fotos = 1 crédito, cada adicional +1
+ */
+export async function generateProductStudioV2(params: ProductStudioV2Params): Promise<ProductStudioV2Response> {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/product-studio-v2`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      product_id: params.productId,
+      user_id: params.userId,
+      image_id: params.imageId,
+      angles: params.angles,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Erro ao gerar imagens');
+  }
+
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CENÁRIO CRIATIVO
 // ═══════════════════════════════════════════════════════════════
 

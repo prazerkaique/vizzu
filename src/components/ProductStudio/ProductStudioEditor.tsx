@@ -5,6 +5,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
+import { generateProductStudioV2 } from '../../lib/api/studio';
 
 interface ProductStudioEditorProps {
   product: Product;
@@ -271,40 +272,55 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       return;
     }
 
+    // Obter o ID da imagem original
+    const originalImage = product.images?.[0];
+    const imageId = originalImage?.id;
+
+    if (!imageId || !userId) {
+      alert('Erro: Imagem ou usuário não encontrado.');
+      return;
+    }
+
     // Iniciar geração (global ou local)
     const setGenerating = onSetGenerating || setLocalIsGenerating;
     const setProgress = onSetProgress || setLocalProgress;
 
     setGenerating(true);
-    setProgress(0);
+    setProgress(10);
     setPhraseIndex(0);
 
     try {
-      const newImages: ProductStudioImage[] = [];
+      // Simular progresso enquanto a API processa
+      let currentProg = 10;
+      const progressInterval = setInterval(() => {
+        currentProg = Math.min(currentProg + Math.random() * 8, 90);
+        setProgress(Math.round(currentProg));
+      }, 2500);
 
-      for (let i = 0; i < selectedAngles.length; i++) {
-        const angle = selectedAngles[i];
-        const progress = Math.round(((i + 0.5) / selectedAngles.length) * 100);
-        setProgress(progress);
+      // Chamar a API real
+      const response = await generateProductStudioV2({
+        productId: product.id,
+        userId: userId,
+        imageId: imageId,
+        angles: selectedAngles,
+      });
 
-        // Simular geração (substituir pela chamada real da API)
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      clearInterval(progressInterval);
+      setProgress(95);
 
-        newImages.push({
-          id: `${product.id}-${angle}-${Date.now()}-${i}`,
-          url: productImages[0]?.url || '',
-          angle: angle,
-          createdAt: new Date().toISOString()
-        });
-
-        // Atualizar progresso final de cada foto
-        setProgress(Math.round(((i + 1) / selectedAngles.length) * 100));
+      if (!response.success || !response.generations) {
+        throw new Error(response.message || 'Erro ao gerar imagens');
       }
 
-      // Deduzir créditos
-      if (onDeductCredits) {
-        onDeductCredits(creditsNeeded, `Product Studio - ${selectedAngles.length} fotos`);
-      }
+      // Converter resposta da API para ProductStudioImage[]
+      const newImages: ProductStudioImage[] = response.generations.map((gen) => ({
+        id: gen.image_id,
+        url: gen.image_url,
+        angle: gen.angle as ProductStudioAngle,
+        createdAt: new Date().toISOString()
+      }));
+
+      setProgress(100);
 
       // Log de histórico
       if (onAddHistoryLog) {
@@ -314,12 +330,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           'success',
           [product],
           'ai',
-          creditsNeeded
+          response.credits_used || creditsNeeded
         );
       }
 
       // Atualizar produto com as imagens geradas
-      const sessionId = `session-${Date.now()}`;
+      const sessionId = response.generation_id || `session-${Date.now()}`;
       const newSession: ProductStudioSession = {
         id: sessionId,
         productId: product.id,
@@ -347,10 +363,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
     } catch (error) {
       console.error('Erro ao gerar imagens:', error);
+      alert(`Erro ao gerar imagens: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       if (onAddHistoryLog) {
         onAddHistoryLog(
           'Product Studio',
-          `Erro ao gerar fotos de "${product.name}"`,
+          `Erro ao gerar fotos de "${product.name}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
           'error',
           [product],
           'ai',
