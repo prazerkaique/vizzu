@@ -955,7 +955,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
             {/* Botão Criar */}
             <button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               disabled={selectedAngles.length === 0 || isGenerating || userCredits < creditsNeeded || isAnyGenerationRunning}
               className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
                 (isGenerating
