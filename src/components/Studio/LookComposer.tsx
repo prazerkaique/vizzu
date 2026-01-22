@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Product, LookComposition } from '../../types';
 import { BaseballCap, TShirt, Pants, Sneaker, Watch, Handbag } from '@phosphor-icons/react';
+import heic2any from 'heic2any';
 
 interface Props {
   products: Product[];
@@ -10,6 +11,7 @@ interface Props {
   theme?: 'dark' | 'light';
   lockedSlots?: (keyof LookComposition)[];
   lockedMessage?: string;
+  onImageUpload?: (slot: keyof LookComposition, image: string) => void;
 }
 
 // Mapeamento de slots para categorias de produtos
@@ -31,13 +33,23 @@ const SLOTS = [
   { id: 'accessory2' as const, label: 'Acess. 2', Icon: Handbag },
 ];
 
-export const LookComposer: React.FC<Props> = ({ products, composition, onChange, collections = [], theme = 'dark', lockedSlots = [], lockedMessage = 'Peça principal' }) => {
+export const LookComposer: React.FC<Props> = ({ products, composition, onChange, collections = [], theme = 'dark', lockedSlots = [], lockedMessage = 'Peça principal', onImageUpload }) => {
   const [expandedSlot, setExpandedSlot] = useState<keyof LookComposition | null>(null);
   const [search, setSearch] = useState('');
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const [isDragging, setIsDragging] = useState<keyof LookComposition | null>(null);
 
+  // Estados para long press e upload de imagem (mobile)
+  const [showImageOptions, setShowImageOptions] = useState<keyof LookComposition | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const productsWithImages = products.filter(p => p.images?.length > 0 && (p.images[0]?.base64 || p.images[0]?.url));
+
+  // Detectar se é mobile
+  const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
   // Filtra produtos por categoria do slot
   const getFilteredProducts = () => {
@@ -144,6 +156,79 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     }
   }, [composition, onChange]);
 
+  // Long press handlers para mobile
+  const handleTouchStart = useCallback((slot: keyof LookComposition) => {
+    longPressTimer.current = setTimeout(() => {
+      setShowImageOptions(slot);
+    }, 500); // 500ms para ativar long press
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  // Processar imagem com conversao HEIC
+  const processImageFile = async (file: File): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let processedFile: File | Blob = file;
+
+        if (file.type === 'image/heic' || file.type === 'image/heif' ||
+            file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/png',
+            quality: 0.9
+          });
+          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(processedFile);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  // Handler para upload de imagem via galeria/camera
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !showImageOptions) return;
+
+    setIsProcessingImage(true);
+    try {
+      const base64 = await processImageFile(file);
+      onChange({
+        ...composition,
+        [showImageOptions]: {
+          image: base64,
+          name: file.name || 'Imagem do dispositivo',
+          sku: 'external'
+        }
+      });
+
+      // Callback opcional para o parent
+      if (onImageUpload) {
+        onImageUpload(showImageOptions, base64);
+      }
+    } catch (error) {
+      console.error('Erro ao processar imagem:', error);
+      alert('Erro ao processar a imagem. Tente novamente.');
+    } finally {
+      setIsProcessingImage(false);
+      setShowImageOptions(null);
+      // Limpar input para permitir selecionar a mesma imagem novamente
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+    }
+  };
+
   // Paste handler para colar imagens
   const handlePaste = useCallback(async (e: React.ClipboardEvent, slot: keyof LookComposition) => {
     const items = e.clipboardData.items;
@@ -176,10 +261,18 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
         )}
       </div>
 
-      {/* Dica de uso */}
+      {/* Dica de uso - diferente para mobile e desktop */}
       <div className={`mb-2 p-2.5 rounded-lg text-[10px] leading-relaxed ${theme === 'dark' ? 'bg-neutral-700/50 text-neutral-400' : 'bg-purple-50 text-purple-600'}`}>
         <i className="fas fa-lightbulb mr-1.5"></i>
-        <span className="font-medium">Clique no slot</span> para escolher um produto cadastrado, ou <span className="font-medium">arraste imagens</span> do Google / <span className="font-medium">cole (Ctrl+V)</span>
+        {isMobile ? (
+          <>
+            <span className="font-medium">Toque no slot</span> para escolher produto, ou <span className="font-medium">segure</span> para abrir galeria/camera
+          </>
+        ) : (
+          <>
+            <span className="font-medium">Clique no slot</span> para escolher produto, ou <span className="font-medium">arraste imagens</span> / <span className="font-medium">cole (Ctrl+V)</span>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-1.5">
@@ -194,6 +287,9 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
               onDragLeave={handleDragLeave}
               onDrop={(e) => !isLocked && handleDrop(e, slot.id)}
               onPaste={(e) => !isLocked && handlePaste(e, slot.id)}
+              onTouchStart={() => !isLocked && !item && handleTouchStart(slot.id)}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchEnd}
               tabIndex={isLocked ? -1 : 0}
               className={'aspect-square rounded-lg border border-dashed flex flex-col items-center justify-center relative overflow-hidden group transition-all ' +
                 (isLocked
@@ -347,6 +443,115 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
           <i className="fas fa-trash-alt mr-1"></i>Limpar
         </button>
       )}
+
+      {/* Modal de opcoes de imagem (mobile long press) */}
+      {showImageOptions && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowImageOptions(null)}>
+          <div
+            className={`w-full max-w-md rounded-t-2xl overflow-hidden ${theme === 'dark' ? 'bg-neutral-900' : 'bg-white'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+              <div className="flex items-center justify-between">
+                <h4 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-sm`}>
+                  Adicionar Imagem
+                </h4>
+                <button
+                  onClick={() => setShowImageOptions(null)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+                >
+                  <i className="fas fa-times text-sm"></i>
+                </button>
+              </div>
+              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+                Slot: {SLOTS.find(s => s.id === showImageOptions)?.label}
+              </p>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Camera */}
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={isProcessingImage}
+                className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
+                  theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600' : 'bg-gray-50 hover:bg-gray-100 active:bg-gray-200'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center flex-shrink-0">
+                  <i className="fas fa-camera text-white text-lg"></i>
+                </div>
+                <div className="text-left">
+                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+                    Camera
+                  </p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                    Tirar foto agora
+                  </p>
+                </div>
+              </button>
+
+              {/* Galeria */}
+              <button
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={isProcessingImage}
+                className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
+                  theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 active:bg-neutral-600' : 'bg-gray-50 hover:bg-gray-100 active:bg-gray-200'
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'}`}>
+                  <i className={`fas fa-images text-lg ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}></i>
+                </div>
+                <div className="text-left">
+                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+                    Galeria
+                  </p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                    Escolher da galeria
+                  </p>
+                </div>
+              </button>
+
+              {isProcessingImage && (
+                <div className="flex items-center justify-center gap-2 py-3">
+                  <i className="fas fa-spinner fa-spin text-pink-500"></i>
+                  <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
+                    Processando...
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Botao cancelar */}
+            <div className={`p-4 border-t ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+              <button
+                onClick={() => setShowImageOptions(null)}
+                className={`w-full py-3 rounded-xl font-medium text-sm ${
+                  theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inputs de arquivo ocultos */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*,.heic,.heif"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*,.heic,.heif"
+        capture="environment"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
     </div>
   );
 };
