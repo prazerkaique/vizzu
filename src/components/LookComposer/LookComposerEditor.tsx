@@ -977,28 +977,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         </div>
       )}
 
-      {/* BARRA MINIMIZADA */}
-      {isGenerating && isMinimized && (
-        <div className="fixed bottom-6 right-6 z-50 cursor-pointer" onClick={handleMaximize}>
-          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-2xl p-4 shadow-2xl shadow-pink-500/20 flex items-center gap-4 min-w-[280px]">
-            <div className="w-10 h-10 flex-shrink-0">
-              <DotLottieReact src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie" loop autoplay style={{ width: '100%', height: '100%' }} />
-            </div>
-            <div className="flex-1">
-              <p className="text-white text-sm font-medium">Gerando Look</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
-                  <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${currentProgress}%` }}></div>
-                </div>
-                <span className="text-white text-xs font-medium">{currentProgress}%</span>
-              </div>
-            </div>
-            <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
-              <i className="fas fa-expand"></i>
-            </button>
-          </div>
-        </div>
-      )}
+      {/* BARRA MINIMIZADA - Renderizada no App.tsx para aparecer em todas as páginas */}
     </div>
   );
 };

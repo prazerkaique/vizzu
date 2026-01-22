@@ -5877,6 +5877,78 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* BARRAS MINIMIZADAS GLOBAIS - Aparecem em qualquer página */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+
+      {/* Product Studio - Minimizado */}
+      {isGeneratingProductStudio && productStudioMinimized && (
+        <div
+          className="fixed bottom-6 right-6 z-50 cursor-pointer"
+          onClick={() => setProductStudioMinimized(false)}
+        >
+          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-2xl p-4 shadow-2xl shadow-pink-500/20 flex items-center gap-4 min-w-[280px]">
+            <div className="w-10 h-10 flex-shrink-0">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-white text-sm font-medium">Product Studio</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${productStudioProgress}%` }}
+                  ></div>
+                </div>
+                <span className="text-white text-xs font-medium">{productStudioProgress}%</span>
+              </div>
+            </div>
+            <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+              <i className="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Look Composer - Minimizado */}
+      {isGeneratingLookComposer && lookComposerMinimized && (
+        <div
+          className="fixed bottom-6 right-6 z-50 cursor-pointer"
+          onClick={() => setLookComposerMinimized(false)}
+        >
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl p-4 shadow-2xl shadow-blue-500/20 flex items-center gap-4 min-w-[280px]">
+            <div className="w-10 h-10 flex-shrink-0">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-white text-sm font-medium">Look Composer</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${lookComposerProgress}%` }}
+                  ></div>
+                </div>
+                <span className="text-white text-xs font-medium">{lookComposerProgress}%</span>
+              </div>
+            </div>
+            <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+              <i className="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Toast de notificação */}
       {toast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
