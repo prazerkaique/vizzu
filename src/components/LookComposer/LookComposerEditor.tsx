@@ -71,6 +71,49 @@ const STEPS: { id: Step; label: string; icon: string }[] = [
   { id: 'export', label: 'Exportar', icon: 'fa-download' },
 ];
 
+// Mapeamento de categorias para slots que devem ser bloqueados (peça principal)
+const CATEGORY_TO_LOCKED_SLOTS: Record<string, (keyof LookComposition)[]> = {
+  // Cabeça
+  'Bonés': ['head'],
+  'Chapéus': ['head'],
+  'Tiaras': ['head'],
+  'Lenços': ['head'],
+  // Topo
+  'Camisetas': ['top'],
+  'Blusas': ['top'],
+  'Regatas': ['top'],
+  'Tops': ['top'],
+  'Camisas': ['top'],
+  'Jaquetas': ['top'],
+  'Casacos': ['top'],
+  'Blazers': ['top'],
+  'Moletons': ['top'],
+  'Bodies': ['top'],
+  // Baixo
+  'Calças': ['bottom'],
+  'Shorts': ['bottom'],
+  'Bermudas': ['bottom'],
+  'Saias': ['bottom'],
+  'Leggings': ['bottom'],
+  'Shorts Fitness': ['bottom'],
+  // Peças inteiras (bloqueiam top E bottom)
+  'Vestidos': ['top', 'bottom'],
+  'Macacões': ['top', 'bottom'],
+  'Jardineiras': ['top', 'bottom'],
+  // Pés
+  'Tênis': ['feet'],
+  'Sandálias': ['feet'],
+  'Botas': ['feet'],
+  'Calçados': ['feet'],
+  // Acessórios (não bloqueiam nada específico por padrão)
+  'Acessórios': [],
+  'Bolsas': [],
+  'Cintos': [],
+  'Relógios': [],
+  'Óculos': [],
+  'Bijuterias': [],
+};
+
 export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   product,
   products,
@@ -112,6 +155,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     shoes: '',
     accessories: ''
   });
+
+  // Slots bloqueados baseados na categoria do produto principal
+  const lockedSlots = useMemo(() => {
+    return CATEGORY_TO_LOCKED_SLOTS[product.category] || [];
+  }, [product.category]);
 
   // Estado do fundo
   const [backgroundType, setBackgroundType] = useState<BackgroundType>('studio');
@@ -498,6 +546,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                   composition={lookComposition}
                   onChange={setLookComposition}
                   theme={theme}
+                  lockedSlots={lockedSlots}
+                  lockedMessage="Peça principal"
                 />
               </div>
             ) : (

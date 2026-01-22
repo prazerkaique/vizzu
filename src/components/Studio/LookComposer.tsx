@@ -8,6 +8,8 @@ interface Props {
   onChange: (c: LookComposition) => void;
   collections?: string[];
   theme?: 'dark' | 'light';
+  lockedSlots?: (keyof LookComposition)[];
+  lockedMessage?: string;
 }
 
 // Mapeamento de slots para categorias de produtos
@@ -29,7 +31,7 @@ const SLOTS = [
   { id: 'accessory2' as const, label: 'Acess. 2', Icon: Handbag },
 ];
 
-export const LookComposer: React.FC<Props> = ({ products, composition, onChange, collections = [], theme = 'dark' }) => {
+export const LookComposer: React.FC<Props> = ({ products, composition, onChange, collections = [], theme = 'dark', lockedSlots = [], lockedMessage = 'Peça principal' }) => {
   const [expandedSlot, setExpandedSlot] = useState<keyof LookComposition | null>(null);
   const [search, setSearch] = useState('');
   const [selectedCollection, setSelectedCollection] = useState<string>('');
@@ -183,27 +185,38 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
       <div className="grid grid-cols-3 gap-1.5">
         {SLOTS.map(slot => {
           const item = composition[slot.id];
+          const isLocked = lockedSlots.includes(slot.id);
           return (
             <div
               key={slot.id}
-              onClick={() => !item && setExpandedSlot(expandedSlot === slot.id ? null : slot.id)}
-              onDragOver={(e) => handleDragOver(e, slot.id)}
+              onClick={() => !item && !isLocked && setExpandedSlot(expandedSlot === slot.id ? null : slot.id)}
+              onDragOver={(e) => !isLocked && handleDragOver(e, slot.id)}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, slot.id)}
-              onPaste={(e) => handlePaste(e, slot.id)}
-              tabIndex={0}
-              className={'aspect-square rounded-lg border border-dashed cursor-pointer flex flex-col items-center justify-center relative overflow-hidden group transition-all ' +
-                (isDragging === slot.id
-                  ? 'border-pink-500 bg-pink-500/20 scale-105'
-                  : item
-                    ? 'border-pink-500/50 ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-pink-50')
-                    : expandedSlot === slot.id
-                      ? 'border-pink-500 bg-pink-500/10'
-                      : (theme === 'dark' ? 'border-neutral-600 bg-neutral-900/50 hover:border-pink-500/50' : 'border-purple-300 bg-purple-50/50 hover:border-pink-400')
+              onDrop={(e) => !isLocked && handleDrop(e, slot.id)}
+              onPaste={(e) => !isLocked && handlePaste(e, slot.id)}
+              tabIndex={isLocked ? -1 : 0}
+              className={'aspect-square rounded-lg border border-dashed flex flex-col items-center justify-center relative overflow-hidden group transition-all ' +
+                (isLocked
+                  ? 'cursor-not-allowed opacity-60 ' + (theme === 'dark' ? 'border-pink-500/50 bg-pink-500/10' : 'border-pink-300 bg-pink-50')
+                  : isDragging === slot.id
+                    ? 'border-pink-500 bg-pink-500/20 scale-105 cursor-pointer'
+                    : item
+                      ? 'border-pink-500/50 cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-pink-50')
+                      : expandedSlot === slot.id
+                        ? 'border-pink-500 bg-pink-500/10 cursor-pointer'
+                        : 'cursor-pointer ' + (theme === 'dark' ? 'border-neutral-600 bg-neutral-900/50 hover:border-pink-500/50' : 'border-purple-300 bg-purple-50/50 hover:border-pink-400')
                 )
               }
             >
-              {item ? (
+              {isLocked ? (
+                // Slot bloqueado - peça principal
+                <>
+                  <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-lock text-sm mb-0.5'}></i>
+                  <span className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' text-[7px] font-medium text-center px-1'}>
+                    {lockedMessage}
+                  </span>
+                </>
+              ) : item ? (
                 <>
                   <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
                   <button
