@@ -2373,96 +2373,112 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
 
-              {/* STATS GRID - 3 Cards */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* STATS GRID - 4 Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 {/* Créditos */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
-                      <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
+                      <i className={'fas fa-coins text-xs ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
                     </div>
-                    <span className={'text-[9px] font-medium px-1.5 py-0.5 rounded ' + (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500')}>
-                      /{currentPlan.limit}
-                    </span>
                   </div>
-                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits}</p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Créditos</p>
-                  <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all"
-                      style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
-                    />
+                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits}<span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-sm font-normal'}>/{currentPlan.limit}</span></p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Créditos</p>
+                  <div className={'mt-2 h-1 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                    <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500" style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }} />
                   </div>
                 </div>
 
-                {/* Projetos */}
+                {/* Imagens Geradas */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
-                      <i className={'fas fa-images text-sm ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
+                      <i className={'fas fa-wand-magic-sparkles text-xs ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
                     </div>
-                    {historyLogs.length > 0 && (
-                      <span className={'text-[9px] font-medium px-1.5 py-0.5 rounded ' + (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')}>
-                        +{Math.min(historyLogs.length, 3)} esta sem.
-                      </span>
-                    )}
                   </div>
-                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.filter(p => (p as any).generatedImages?.length > 0).length}</p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Projetos ativos</p>
+                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>
+                    {historyLogs.filter(log => log.method === 'ai' && log.status === 'success').length}
+                  </p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
                 </div>
 
                 {/* Clientes */}
                 <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
-                      <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
+                      <i className={'fas fa-users text-xs ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-600')}></i>
                     </div>
-                    {clients.length > 0 && (
-                      <span className={'text-[9px] font-medium px-1.5 py-0.5 rounded ' + (theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600')}>
-                        +{Math.min(clients.length, 2)} este mês
-                      </span>
+                  </div>
+                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes</p>
+                </div>
+
+                {/* Produtos */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
+                      <i className={'fas fa-box text-xs ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
+                    </div>
+                  </div>
+                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos</p>
+                </div>
+              </div>
+
+              {/* USO DE CRÉDITOS - Dados reais */}
+              {(() => {
+                const aiLogs = historyLogs.filter(log => log.method === 'ai' && log.status === 'success');
+                const studioCount = aiLogs.filter(log => log.action.toLowerCase().includes('studio')).reduce((sum, log) => sum + (log.cost || 1), 0);
+                const provadorCount = aiLogs.filter(log => log.action.toLowerCase().includes('provador')).reduce((sum, log) => sum + (log.cost || 1), 0);
+                const lookCount = aiLogs.filter(log => log.action.toLowerCase().includes('look') || log.action.toLowerCase().includes('modelo')).reduce((sum, log) => sum + (log.cost || 1), 0);
+                const totalCredits = studioCount + provadorCount + lookCount;
+                const studioPercent = totalCredits > 0 ? Math.round((studioCount / totalCredits) * 100) : 0;
+                const provadorPercent = totalCredits > 0 ? Math.round((provadorCount / totalCredits) * 100) : 0;
+                const lookPercent = totalCredits > 0 ? Math.round((lookCount / totalCredits) * 100) : 0;
+
+                return (
+                  <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <i className={'fas fa-chart-bar text-sm ' + (theme === 'dark' ? 'text-indigo-400' : 'text-indigo-500')}></i>
+                        <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
+                      </div>
+                      <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>{totalCredits} créditos usados</span>
+                    </div>
+
+                    {totalCredits === 0 ? (
+                      <div className={'text-center py-4 ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}>
+                        <i className="fas fa-chart-pie text-2xl mb-2 opacity-50"></i>
+                        <p className="text-xs">Nenhum crédito usado ainda</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Studio</span>
+                          <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                            <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all" style={{ width: `${studioPercent}%` }} />
+                          </div>
+                          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{studioPercent}%</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Provador</span>
+                          <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                            <div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all" style={{ width: `${provadorPercent}%` }} />
+                          </div>
+                          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{provadorPercent}%</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Look</span>
+                          <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all" style={{ width: `${lookPercent}%` }} />
+                          </div>
+                          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{lookPercent}%</span>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Clientes cadastrados</p>
-                </div>
-              </div>
-
-              {/* USO DE CRÉDITOS - Gráfico simples */}
-              <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <i className={'fas fa-chart-bar text-sm ' + (theme === 'dark' ? 'text-indigo-400' : 'text-indigo-500')}></i>
-                    <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
-                  </div>
-                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Últimos 7 dias</span>
-                </div>
-
-                {/* Barras de uso por feature */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Studio</span>
-                    <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                      <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500" style={{ width: '45%' }} />
-                    </div>
-                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>45%</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Provador</span>
-                    <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                      <div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-rose-500" style={{ width: '35%' }} />
-                    </div>
-                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>35%</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Look</span>
-                    <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500" style={{ width: '20%' }} />
-                    </div>
-                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>20%</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* DICA DO DIA + PLANO - Grid 2:1 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
