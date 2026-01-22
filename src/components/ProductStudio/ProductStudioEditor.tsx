@@ -6,6 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2 } from '../../lib/api/studio';
+import { ProductStudioResult } from './ProductStudioResult';
 
 interface ProductStudioEditorProps {
   product: Product;
@@ -126,6 +127,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const [localProgress, setLocalProgress] = useState(0);
   const [localLoadingText, setLocalLoadingText] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
+
+  // Estado para mostrar página de resultado após geração
+  const [showResult, setShowResult] = useState(false);
+  const [currentSession, setCurrentSession] = useState<ProductStudioSession | null>(null);
 
   // Usar estado global se disponível, senão local
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
@@ -250,6 +255,72 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     }
   };
 
+  // ═══════════════════════════════════════════════════════════════
+  // Callbacks para página de resultado
+  // ═══════════════════════════════════════════════════════════════
+
+  // Salvar sessão (já está salva no produto, só marca como "confirmada")
+  const handleResultSave = () => {
+    // A sessão já foi salva no produto durante a geração
+    // Este callback é para confirmar que o usuário quer manter as imagens
+    console.log('Sessão salva:', currentSession?.id);
+  };
+
+  // Gerar novamente (volta para seleção de ângulos)
+  const handleResultRegenerate = () => {
+    if (currentSession) {
+      // Restaurar os ângulos que foram gerados para facilitar regeneração
+      setSelectedAngles(currentSession.images.map(img => img.angle));
+    }
+    setShowResult(false);
+    setCurrentSession(null);
+  };
+
+  // Excluir sessão
+  const handleResultDelete = () => {
+    if (!currentSession) return;
+
+    // Remover a sessão do produto
+    const currentGenerated = product.generatedImages || {
+      studioReady: [],
+      cenarioCriativo: [],
+      modeloIA: [],
+      productStudio: []
+    };
+
+    const updatedSessions = (currentGenerated.productStudio || []).filter(
+      s => s.id !== currentSession.id
+    );
+
+    onUpdateProduct(product.id, {
+      generatedImages: {
+        ...currentGenerated,
+        productStudio: updatedSessions
+      }
+    });
+
+    // Log de histórico
+    if (onAddHistoryLog) {
+      onAddHistoryLog(
+        'Product Studio',
+        `Excluído ${currentSession.images.length} fotos de "${product.name}"`,
+        'success',
+        [product],
+        'manual',
+        0
+      );
+    }
+
+    setShowResult(false);
+    setCurrentSession(null);
+  };
+
+  // Voltar da página de resultado
+  const handleResultBack = () => {
+    setShowResult(false);
+    setCurrentSession(null);
+  };
+
   // Maximizar modal (voltar do minimizado)
   const handleMaximize = () => {
     if (onSetMinimized) {
@@ -358,6 +429,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         }
       });
 
+      // Mostrar página de resultado
+      setCurrentSession(newSession);
+      setShowResult(true);
+
       // Limpar seleção após sucesso
       setSelectedAngles([]);
 
@@ -382,6 +457,23 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       if (onSetMinimized) onSetMinimized(false);
     }
   };
+
+  // ═══════════════════════════════════════════════════════════════
+  // Se tem resultado para mostrar, renderiza página de resultado
+  // ═══════════════════════════════════════════════════════════════
+  if (showResult && currentSession) {
+    return (
+      <ProductStudioResult
+        product={product}
+        session={currentSession}
+        onSave={handleResultSave}
+        onRegenerate={handleResultRegenerate}
+        onDelete={handleResultDelete}
+        onBack={handleResultBack}
+        theme={theme}
+      />
+    );
+  }
 
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
