@@ -17,6 +17,16 @@ interface ProductStudioProps {
   onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
   theme?: 'dark' | 'light';
   userId?: string;
+  // Estados de geração em background
+  isGenerating?: boolean;
+  isMinimized?: boolean;
+  generationProgress?: number;
+  generationText?: string;
+  onSetGenerating?: (value: boolean) => void;
+  onSetMinimized?: (value: boolean) => void;
+  onSetProgress?: (value: number) => void;
+  onSetLoadingText?: (value: string) => void;
+  isAnyGenerationRunning?: boolean;
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -34,7 +44,16 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   currentPlan,
   onCheckCredits,
   theme = 'dark',
-  userId
+  userId,
+  isGenerating = false,
+  isMinimized = false,
+  generationProgress = 0,
+  generationText = '',
+  onSetGenerating,
+  onSetMinimized,
+  onSetProgress,
+  onSetLoadingText,
+  isAnyGenerationRunning = false
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -117,6 +136,15 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         onCheckCredits={onCheckCredits}
         theme={theme}
         userId={userId}
+        isGenerating={isGenerating}
+        isMinimized={isMinimized}
+        generationProgress={generationProgress}
+        generationText={generationText}
+        onSetGenerating={onSetGenerating}
+        onSetMinimized={onSetMinimized}
+        onSetProgress={onSetProgress}
+        onSetLoadingText={onSetLoadingText}
+        isAnyGenerationRunning={isAnyGenerationRunning}
       />
     );
   }
@@ -129,7 +157,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* HEADER */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
               <i className={'fas fa-cube text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
@@ -160,6 +188,31 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <span>Novo</span>
               </button>
             )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* CARD EXPLICATIVO - Logo abaixo do header */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
+          <div className="flex items-start gap-4">
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-200')}>
+              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' fas fa-camera text-lg'}></i>
+            </div>
+            <div className="flex-1">
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fotos profissionais de produto</h3>
+              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+                Gere fotos do seu produto em múltiplos ângulos com fundo cinza neutro de estúdio. Ideal para e-commerce, catálogos e marketplaces.
+              </p>
+              <div className="flex items-center gap-3 mt-2">
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                  <i className="fas fa-coins text-pink-400 mr-1"></i>2 fotos = 1 crédito
+                </span>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                  <i className="fas fa-plus text-pink-400 mr-1"></i>+1 crédito por foto extra
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -294,31 +347,6 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
               </div>
             </div>
           )}
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* CARD EXPLICATIVO */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
-          <div className="flex items-start gap-4">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-200')}>
-              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' fas fa-camera text-lg'}></i>
-            </div>
-            <div className="flex-1">
-              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fotos profissionais de produto</h3>
-              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
-                Gere até 8 ângulos do seu produto em fundo cinza neutro de estúdio. Ideal para e-commerce, catálogos e marketplaces.
-              </p>
-              <div className="flex items-center gap-3 mt-2">
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
-                  <i className="fas fa-coins text-pink-400 mr-1"></i>1 crédito por ângulo
-                </span>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
-                  <i className="fas fa-images text-pink-400 mr-1"></i>Até 8 ângulos
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}

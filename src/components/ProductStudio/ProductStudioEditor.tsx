@@ -2,7 +2,8 @@
 // VIZZU - Product Studio Editor (Página 2)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 
 interface ProductStudioEditorProps {
@@ -15,7 +16,31 @@ interface ProductStudioEditorProps {
   onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
   theme?: 'dark' | 'light';
   userId?: string;
+  // Props para geração global
+  isGenerating?: boolean;
+  isMinimized?: boolean;
+  generationProgress?: number;
+  generationText?: string;
+  onSetGenerating?: (value: boolean) => void;
+  onSetMinimized?: (value: boolean) => void;
+  onSetProgress?: (value: number) => void;
+  onSetLoadingText?: (value: string) => void;
+  isAnyGenerationRunning?: boolean;
 }
+
+// Frases de loading para Product Studio
+const LOADING_PHRASES = [
+  "Preparando o estúdio fotográfico...",
+  "Ajustando a iluminação perfeita...",
+  "Posicionando o produto...",
+  "Renderizando em alta qualidade...",
+  "Aplicando acabamentos profissionais...",
+  "Criando fundo neutro de estúdio...",
+  "Processando texturas e detalhes...",
+  "Otimizando sombras e reflexos...",
+  "Finalizando a composição...",
+  "Quase pronto! Últimos ajustes..."
+];
 
 // Categorias de roupas
 const CLOTHING_CATEGORIES = [
@@ -66,7 +91,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   onBack,
   onCheckCredits,
   theme = 'dark',
-  userId
+  userId,
+  // Props de geração global
+  isGenerating: globalIsGenerating = false,
+  isMinimized = false,
+  generationProgress = 0,
+  generationText = '',
+  onSetGenerating,
+  onSetMinimized,
+  onSetProgress,
+  onSetLoadingText,
+  isAnyGenerationRunning = false
 }) => {
   // Estados de edição do produto
   const [editMode, setEditMode] = useState(false);
@@ -85,9 +120,35 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   // Estados de seleção de ângulos
   const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>([]);
 
-  // Estado de geração
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingProgress, setGeneratingProgress] = useState(0);
+  // Estado de geração local (fallback se não tiver props globais)
+  const [localIsGenerating, setLocalIsGenerating] = useState(false);
+  const [localProgress, setLocalProgress] = useState(0);
+  const [localLoadingText, setLocalLoadingText] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+
+  // Usar estado global se disponível, senão local
+  const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
+  const currentProgress = onSetProgress ? generationProgress : localProgress;
+  const currentLoadingText = onSetLoadingText ? generationText : localLoadingText;
+
+  // Rotacionar frases de loading
+  useEffect(() => {
+    if (!isGenerating) return;
+
+    const interval = setInterval(() => {
+      setPhraseIndex(prev => (prev + 1) % LOADING_PHRASES.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  // Atualizar texto de loading baseado na frase atual
+  useEffect(() => {
+    if (isGenerating) {
+      const setText = onSetLoadingText || setLocalLoadingText;
+      setText(LOADING_PHRASES[phraseIndex]);
+    }
+  }, [phraseIndex, isGenerating, onSetLoadingText]);
 
   // Determinar tipo de produto baseado na categoria
   const getProductType = (): 'clothing' | 'footwear' | 'accessory' => {
@@ -181,27 +242,53 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     setEditMode(false);
   };
 
+  // Minimizar modal
+  const handleMinimize = () => {
+    if (onSetMinimized) {
+      onSetMinimized(true);
+    }
+  };
+
+  // Maximizar modal (voltar do minimizado)
+  const handleMaximize = () => {
+    if (onSetMinimized) {
+      onSetMinimized(false);
+    }
+  };
+
   // Gerar imagens
   const handleGenerate = async () => {
     if (selectedAngles.length === 0) return;
+
+    // Verificar se há alguma geração rodando
+    if (isAnyGenerationRunning) {
+      alert('Aguarde a geração atual terminar antes de iniciar uma nova.');
+      return;
+    }
 
     // Verificar créditos
     if (onCheckCredits && !onCheckCredits(creditsNeeded, 'studio')) {
       return;
     }
 
-    setIsGenerating(true);
-    setGeneratingProgress(0);
+    // Iniciar geração (global ou local)
+    const setGenerating = onSetGenerating || setLocalIsGenerating;
+    const setProgress = onSetProgress || setLocalProgress;
+
+    setGenerating(true);
+    setProgress(0);
+    setPhraseIndex(0);
 
     try {
       const newImages: ProductStudioImage[] = [];
 
       for (let i = 0; i < selectedAngles.length; i++) {
         const angle = selectedAngles[i];
-        setGeneratingProgress(Math.round(((i + 1) / selectedAngles.length) * 100));
+        const progress = Math.round(((i + 0.5) / selectedAngles.length) * 100);
+        setProgress(progress);
 
         // Simular geração (substituir pela chamada real da API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         newImages.push({
           id: `${product.id}-${angle}-${Date.now()}-${i}`,
@@ -209,6 +296,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           angle: angle,
           createdAt: new Date().toISOString()
         });
+
+        // Atualizar progresso final de cada foto
+        setProgress(Math.round(((i + 1) / selectedAngles.length) * 100));
       }
 
       // Deduzir créditos
@@ -268,8 +358,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         );
       }
     } finally {
-      setIsGenerating(false);
-      setGeneratingProgress(0);
+      const setGenerating = onSetGenerating || setLocalIsGenerating;
+      const setProgress = onSetProgress || setLocalProgress;
+      setGenerating(false);
+      setProgress(0);
+      if (onSetMinimized) onSetMinimized(false);
     }
   };
 
@@ -305,15 +398,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           {/* ═══════════════════════════════════════════════════════════════ */}
           <div className="space-y-4">
 
-            {/* Carrossel de Imagens */}
+            {/* Container de Imagem - Adaptável à proporção */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-              <div className="relative aspect-square">
+              {/* Área principal da imagem - altura flexível */}
+              <div className={'relative flex items-center justify-center p-4 min-h-[300px] max-h-[500px] ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
                 {productImages.length > 0 ? (
                   <>
                     <img
                       src={productImages[currentImageIndex]?.url}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      className="max-w-full max-h-[450px] object-contain rounded-lg"
                     />
                     {/* Badge do tipo da foto */}
                     <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg">
@@ -348,7 +442,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                     )}
                   </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-64 flex items-center justify-center">
                     <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-4xl'}></i>
                   </div>
                 )}
@@ -361,7 +455,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                     <button
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-pink-500' : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}`}
+                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${idx === currentImageIndex ? 'border-pink-500' : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}`}
                     >
                       <img src={img.url} alt="" className="w-full h-full object-cover" />
                     </button>
@@ -623,11 +717,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             {/* Botão Criar */}
             <button
               onClick={handleGenerate}
-              disabled={selectedAngles.length === 0 || isGenerating || userCredits < creditsNeeded}
+              disabled={selectedAngles.length === 0 || isGenerating || userCredits < creditsNeeded || isAnyGenerationRunning}
               className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
                 (isGenerating
                   ? 'bg-pink-600 cursor-wait'
-                  : (selectedAngles.length === 0 || userCredits < creditsNeeded)
+                  : (selectedAngles.length === 0 || userCredits < creditsNeeded || isAnyGenerationRunning)
                     ? (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50'
                     : 'bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 shadow-lg shadow-pink-500/25'
                 )
@@ -636,7 +730,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               {isGenerating ? (
                 <>
                   <i className="fas fa-spinner fa-spin"></i>
-                  <span>Gerando... {generatingProgress}%</span>
+                  <span>Gerando... {currentProgress}%</span>
+                </>
+              ) : isAnyGenerationRunning ? (
+                <>
+                  <i className="fas fa-clock"></i>
+                  <span>Aguardando outra geração...</span>
                 </>
               ) : (
                 <>
@@ -657,6 +756,124 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         </div>
 
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MODAL DE LOADING - Full Screen com Blur */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {isGenerating && !isMinimized && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop com blur */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+
+          {/* Container do conteúdo */}
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
+            {/* Animação Lottie */}
+            <div className="w-64 h-64 mb-6">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+
+            {/* Título */}
+            <h2 className="text-white text-2xl font-bold mb-2 text-center">
+              Criando suas fotos...
+            </h2>
+
+            {/* Frase de loading */}
+            <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px] transition-all duration-300">
+              {currentLoadingText}
+            </p>
+
+            {/* Barra de progresso */}
+            <div className="w-full max-w-xs mb-4">
+              <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500"
+                  style={{ width: `${currentProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-white text-sm font-medium text-center mt-2">
+                {currentProgress}%
+              </p>
+            </div>
+
+            {/* Info do produto sendo gerado */}
+            <div className="bg-neutral-900/80 rounded-xl p-4 border border-neutral-800 mb-6 w-full max-w-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={productImages[0]?.url || ''}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{product.name}</p>
+                  <p className="text-neutral-500 text-xs">
+                    {selectedAngles.length} foto{selectedAngles.length > 1 ? 's' : ''} • {creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Botão Minimizar */}
+            <button
+              onClick={handleMinimize}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-all"
+            >
+              <i className="fas fa-minus"></i>
+              <span>Minimizar e continuar navegando</span>
+            </button>
+
+            <p className="text-neutral-600 text-xs mt-3 text-center">
+              A geração continuará em segundo plano
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* BARRA MINIMIZADA - Aparece quando minimizado */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {isGenerating && isMinimized && (
+        <div
+          className="fixed bottom-6 right-6 z-50 cursor-pointer"
+          onClick={handleMaximize}
+        >
+          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-2xl p-4 shadow-2xl shadow-pink-500/20 flex items-center gap-4 min-w-[280px]">
+            {/* Mini Lottie */}
+            <div className="w-10 h-10 flex-shrink-0">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+
+            <div className="flex-1">
+              <p className="text-white text-sm font-medium">Gerando Product Studio</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${currentProgress}%` }}
+                  ></div>
+                </div>
+                <span className="text-white text-xs font-medium">{currentProgress}%</span>
+              </div>
+            </div>
+
+            {/* Botão expandir */}
+            <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+              <i className="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

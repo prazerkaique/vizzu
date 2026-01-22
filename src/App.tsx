@@ -129,6 +129,12 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [showStudioPicker, setShowStudioPicker] = useState(false);
   const [showAddProductHint, setShowAddProductHint] = useState(false);
   const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
+
+  // Product Studio - estados de geração em background
+  const [isGeneratingProductStudio, setIsGeneratingProductStudio] = useState(false);
+  const [productStudioMinimized, setProductStudioMinimized] = useState(false);
+  const [productStudioProgress, setProductStudioProgress] = useState(0);
+  const [productStudioLoadingText, setProductStudioLoadingText] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('vizzu_theme');
     return (saved as 'dark' | 'light') || 'dark';
@@ -2813,6 +2819,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             theme={theme}
             onCheckCredits={checkCreditsAndShowModal}
             userId={user?.id}
+            isGenerating={isGeneratingProductStudio}
+            isMinimized={productStudioMinimized}
+            generationProgress={productStudioProgress}
+            generationText={productStudioLoadingText}
+            onSetGenerating={setIsGeneratingProductStudio}
+            onSetMinimized={setProductStudioMinimized}
+            onSetProgress={setProductStudioProgress}
+            onSetLoadingText={setProductStudioLoadingText}
+            isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio}
           />
         )}
 
