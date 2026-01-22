@@ -132,6 +132,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const [showResult, setShowResult] = useState(false);
   const [currentSession, setCurrentSession] = useState<ProductStudioSession | null>(null);
 
+  // Estado para modal de aviso de ângulos sem referência
+  const [showNoRefWarning, setShowNoRefWarning] = useState(false);
+  const [anglesWithoutRef, setAnglesWithoutRef] = useState<ProductStudioAngle[]>([]);
+
   // Usar estado global se disponível, senão local
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
   const currentProgress = onSetProgress ? generationProgress : localProgress;
@@ -177,6 +181,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     if (product.originalImages?.back?.url) {
       images.push({ url: product.originalImages.back.url, type: 'Costas' });
     }
+    if (product.originalImages?.['side-left']?.url) {
+      images.push({ url: product.originalImages['side-left'].url, type: 'Lateral Esq.' });
+    }
+    if (product.originalImages?.['side-right']?.url) {
+      images.push({ url: product.originalImages['side-right'].url, type: 'Lateral Dir.' });
+    }
+    if (product.originalImages?.top?.url) {
+      images.push({ url: product.originalImages.top.url, type: 'Cima' });
+    }
+    if (product.originalImages?.detail?.url) {
+      images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
+    }
 
     // Fallback para array de imagens legado
     if (images.length === 0 && product.images) {
@@ -190,6 +206,46 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
     return images;
   }, [product]);
+
+  // Mapear quais imagens de referência estão disponíveis
+  const availableReferences = useMemo(() => {
+    const refs: Record<ProductStudioAngle, boolean> = {
+      'front': false,
+      'back': false,
+      'side-left': false,
+      'side-right': false,
+      '45-left': false,
+      '45-right': false,
+      'top': false,
+      'detail': false,
+    };
+
+    // Verificar originalImages primeiro
+    if (product.originalImages?.front?.id || product.originalImages?.front?.url) refs.front = true;
+    if (product.originalImages?.back?.id || product.originalImages?.back?.url) refs.back = true;
+    if (product.originalImages?.['side-left']?.id || product.originalImages?.['side-left']?.url) refs['side-left'] = true;
+    if (product.originalImages?.['side-right']?.id || product.originalImages?.['side-right']?.url) refs['side-right'] = true;
+    if (product.originalImages?.top?.id || product.originalImages?.top?.url) refs.top = true;
+    if (product.originalImages?.detail?.id || product.originalImages?.detail?.url) refs.detail = true;
+
+    // Fallback: se não tem originalImages mas tem images legado
+    if (!refs.front && product.images?.[0]) refs.front = true;
+    if (!refs.back && product.images?.[1]) refs.back = true;
+
+    return refs;
+  }, [product]);
+
+  // Labels amigáveis para os ângulos
+  const angleLabels: Record<ProductStudioAngle, string> = {
+    'front': 'Frente',
+    'back': 'Costas',
+    'side-left': 'Lateral Esquerda',
+    'side-right': 'Lateral Direita',
+    '45-left': '45° Esquerda',
+    '45-right': '45° Direita',
+    'top': 'Vista de Cima',
+    'detail': 'Detalhe',
+  };
 
   // Calcular créditos: 2 fotos = 1 crédito, cada adicional +1
   const calculateCredits = (numAngles: number): number => {
@@ -328,8 +384,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     }
   };
 
-  // Gerar imagens
-  const handleGenerate = async () => {
+  // Verificar quais ângulos selecionados não têm imagem de referência
+  const checkAnglesWithoutReference = (): ProductStudioAngle[] => {
+    return selectedAngles.filter(angle => {
+      // 'front' sempre tem referência (é obrigatório ter pelo menos a foto frontal)
+      if (angle === 'front') return false;
+      return !availableReferences[angle];
+    });
+  };
+
+  // Gerar imagens (chamado após confirmação ou diretamente se tudo tem referência)
+  const handleGenerate = async (skipWarning = false) => {
     if (selectedAngles.length === 0) return;
 
     // Verificar se há alguma geração rodando
@@ -343,14 +408,47 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       return;
     }
 
-    // Obter o ID da imagem original
-    const originalImage = product.images?.[0];
-    const imageId = originalImage?.id;
+    // Verificar ângulos sem referência (mostrar aviso)
+    if (!skipWarning) {
+      const noRefAngles = checkAnglesWithoutReference();
+      if (noRefAngles.length > 0) {
+        setAnglesWithoutRef(noRefAngles);
+        setShowNoRefWarning(true);
+        return; // Aguardar confirmação do usuário
+      }
+    }
 
-    if (!imageId || !userId) {
-      alert('Erro: Imagem ou usuário não encontrado.');
+    // Obter os IDs das imagens originais para TODOS os ângulos disponíveis
+    const imageIds: Record<string, string | undefined> = {};
+
+    // Front (obrigatório)
+    if (product.originalImages?.front?.id) {
+      imageIds.front = product.originalImages.front.id;
+    } else if (product.images?.[0]?.id) {
+      imageIds.front = product.images[0].id;
+    }
+
+    // Back
+    if (product.originalImages?.back?.id) {
+      imageIds.back = product.originalImages.back.id;
+    } else if (product.images?.[1]?.id) {
+      imageIds.back = product.images[1].id;
+    }
+
+    // Outros ângulos
+    if (product.originalImages?.['side-left']?.id) imageIds['side-left'] = product.originalImages['side-left'].id;
+    if (product.originalImages?.['side-right']?.id) imageIds['side-right'] = product.originalImages['side-right'].id;
+    if (product.originalImages?.top?.id) imageIds.top = product.originalImages.top.id;
+    if (product.originalImages?.detail?.id) imageIds.detail = product.originalImages.detail.id;
+    if (product.originalImages?.['45-left']?.id) imageIds['45-left'] = product.originalImages['45-left'].id;
+    if (product.originalImages?.['45-right']?.id) imageIds['45-right'] = product.originalImages['45-right'].id;
+
+    if (!imageIds.front || !userId) {
+      alert('Erro: Imagem frontal ou usuário não encontrado.');
       return;
     }
+
+    console.log('📸 [ProductStudio] Imagens de referência disponíveis:', imageIds);
 
     // Iniciar geração (global ou local)
     const setGenerating = onSetGenerating || setLocalIsGenerating;
@@ -371,18 +469,30 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         setProgress(Math.round(currentProg));
       }, 1000);
 
+      // Montar objeto de referências (excluindo front que já vai no imageId)
+      const referenceImages: Record<string, string> = {};
+      if (imageIds.back) referenceImages.back = imageIds.back;
+      if (imageIds['side-left']) referenceImages['side-left'] = imageIds['side-left'];
+      if (imageIds['side-right']) referenceImages['side-right'] = imageIds['side-right'];
+      if (imageIds['45-left']) referenceImages['45-left'] = imageIds['45-left'];
+      if (imageIds['45-right']) referenceImages['45-right'] = imageIds['45-right'];
+      if (imageIds.top) referenceImages.top = imageIds.top;
+      if (imageIds.detail) referenceImages.detail = imageIds.detail;
+
       // Chamar a API real
       console.log('🚀 [ProductStudio] Enviando para API:', {
         productId: product.id,
         userId: userId,
-        imageId: imageId,
+        imageId: imageIds.front,
+        referenceImages,
         angles: selectedAngles,
       });
 
       const response = await generateProductStudioV2({
         productId: product.id,
         userId: userId,
-        imageId: imageId,
+        imageId: imageIds.front!,
+        referenceImages: Object.keys(referenceImages).length > 0 ? referenceImages : undefined,
         angles: selectedAngles,
       });
 
@@ -392,18 +502,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       // DEBUG: Log completo da resposta
       console.log('📦 [ProductStudio] Resposta da API:', JSON.stringify(response, null, 2));
       console.log('📊 [ProductStudio] Ângulos solicitados:', selectedAngles.length);
-      console.log('📊 [ProductStudio] Gerações retornadas:', response.generations?.length || 0);
+      console.log('📊 [ProductStudio] Resultados retornados:', response.results?.length || 0);
 
-      if (!response.success || !response.generations) {
+      if (!response.success || !response.results) {
         console.error('❌ [ProductStudio] Erro na resposta:', response);
         throw new Error(response.message || 'Erro ao gerar imagens');
       }
 
       // Converter resposta da API para ProductStudioImage[]
-      const newImages: ProductStudioImage[] = response.generations.map((gen) => ({
-        id: gen.image_id,
-        url: gen.image_url,
-        angle: gen.angle as ProductStudioAngle,
+      const newImages: ProductStudioImage[] = response.results.map((result) => ({
+        id: result.id,
+        url: result.url,
+        angle: result.angle as ProductStudioAngle,
         createdAt: new Date().toISOString()
       }));
 
@@ -933,6 +1043,87 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         </div>
 
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MODAL DE AVISO - Ângulos sem imagem de referência */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {showNoRefWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowNoRefWarning(false)}
+          ></div>
+
+          {/* Modal */}
+          <div className="relative z-10 w-full max-w-md bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden">
+            {/* Header com ícone de aviso */}
+            <div className="p-6 pb-4 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/20 flex items-center justify-center">
+                <i className="fas fa-exclamation-triangle text-orange-400 text-2xl"></i>
+              </div>
+              <h3 className="text-white text-lg font-semibold mb-2">
+                Atenção: Ângulos sem referência
+              </h3>
+              <p className="text-neutral-400 text-sm">
+                Você selecionou ângulos que não possuem foto de referência cadastrada.
+                A IA vai <span className="text-orange-400 font-medium">criar essas imagens</span> baseada na foto frontal,
+                o que pode resultar em diferenças do produto original.
+              </p>
+            </div>
+
+            {/* Lista de ângulos sem referência */}
+            <div className="px-6 pb-4">
+              <div className="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700">
+                <p className="text-neutral-500 text-xs uppercase tracking-wider mb-3 font-medium">
+                  Ângulos que serão criados pela IA:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {anglesWithoutRef.map(angle => (
+                    <span
+                      key={angle}
+                      className="px-3 py-1.5 bg-orange-500/20 text-orange-400 text-sm rounded-lg flex items-center gap-2"
+                    >
+                      <i className="fas fa-wand-magic-sparkles text-xs"></i>
+                      {angleLabels[angle]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Dica */}
+            <div className="px-6 pb-4">
+              <div className="flex items-start gap-3 bg-blue-500/10 rounded-xl p-3 border border-blue-500/20">
+                <i className="fas fa-lightbulb text-blue-400 mt-0.5"></i>
+                <p className="text-blue-400/80 text-xs">
+                  <span className="font-medium">Dica:</span> Para resultados mais precisos,
+                  cadastre fotos de referência para cada ângulo na página de edição do produto.
+                </p>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => setShowNoRefWarning(false)}
+                className="flex-1 px-4 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-medium transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowNoRefWarning(false);
+                  handleGenerate(true); // Skip warning check
+                }}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-xl font-medium transition-all"
+              >
+                Continuar mesmo assim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* MODAL DE LOADING - Full Screen com Blur */}

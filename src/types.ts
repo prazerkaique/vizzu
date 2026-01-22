@@ -36,12 +36,18 @@ export interface ProductImage {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NOVO: Estrutura de Imagens Originais (Frente/Costas)
+// NOVO: Estrutura de Imagens Originais (Múltiplos Ângulos)
 // ═══════════════════════════════════════════════════════════════
 
 export interface ProductOriginalImages {
   front: ProductImage;        // Obrigatório - foto de frente
   back?: ProductImage;        // Opcional - foto de costas
+  'side-left'?: ProductImage; // Opcional - lateral esquerda
+  'side-right'?: ProductImage;// Opcional - lateral direita
+  top?: ProductImage;         // Opcional - vista de cima
+  detail?: ProductImage;      // Opcional - foto de detalhe
+  '45-left'?: ProductImage;   // Opcional - 45 graus esquerda
+  '45-right'?: ProductImage;  // Opcional - 45 graus direita
 }
 
 // ═══════════════════════════════════════════════════════════════

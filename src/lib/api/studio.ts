@@ -61,21 +61,29 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
 interface ProductStudioV2Params {
   productId: string;
   userId: string;
-  imageId: string;
+  imageId: string;  // Imagem frontal (obrigatória)
   angles: string[];
+  // Imagens de referência para cada ângulo (se disponíveis)
+  referenceImages?: {
+    back?: string;
+    'side-left'?: string;
+    'side-right'?: string;
+    '45-left'?: string;
+    '45-right'?: string;
+    top?: string;
+    detail?: string;
+  };
 }
 
-interface ProductStudioV2Generation {
+interface ProductStudioV2Result {
   angle: string;
-  image_url: string;
-  image_id: string;
-  storage_path?: string;
+  url: string;
+  id: string;
 }
 
 interface ProductStudioV2Response {
   success: boolean;
-  clean_image_url?: string;
-  generations?: ProductStudioV2Generation[];
+  results?: ProductStudioV2Result[];
   generation_id?: string;
   credits_used?: number;
   credits_remaining?: number;
@@ -85,11 +93,11 @@ interface ProductStudioV2Response {
 
 /**
  * Product Studio - Gera múltiplos ângulos do produto
- * Endpoint: /vizzu/product-studio
- * Custo: 2 fotos = 1 crédito, cada adicional +1
+ * Endpoint: /vizzu/studio/generate
+ * Custo: 1 crédito por ângulo
  */
 export async function generateProductStudioV2(params: ProductStudioV2Params): Promise<ProductStudioV2Response> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/product-studio`, {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -99,6 +107,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
       user_id: params.userId,
       image_id: params.imageId,
       angles: params.angles,
+      // Enviar todas as imagens de referência disponíveis
+      reference_images: params.referenceImages || {},
     }),
   });
 
