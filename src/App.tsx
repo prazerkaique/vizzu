@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Studio } from './components/Studio';
-import { LookComposer } from './components/Studio/LookComposer';
+import { LookComposer as StudioLookComposer } from './components/Studio/LookComposer';
+import { LookComposer as VizzuLookComposer } from './components/LookComposer';
 import { ProductStudio } from './components/ProductStudio';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
@@ -135,6 +136,13 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [productStudioMinimized, setProductStudioMinimized] = useState(false);
   const [productStudioProgress, setProductStudioProgress] = useState(0);
   const [productStudioLoadingText, setProductStudioLoadingText] = useState('');
+
+  // Look Composer - estados de geração em background
+  const [isGeneratingLookComposer, setIsGeneratingLookComposer] = useState(false);
+  const [lookComposerMinimized, setLookComposerMinimized] = useState(false);
+  const [lookComposerProgress, setLookComposerProgress] = useState(0);
+  const [lookComposerLoadingText, setLookComposerLoadingText] = useState('');
+
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('vizzu_theme');
     return (saved as 'dark' | 'light') || 'dark';
@@ -1812,6 +1820,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
+  // Handler para salvar modelo a partir do LookComposer
+  const handleSaveModel = (model: SavedModel) => {
+    setSavedModels(prev => [...prev, model]);
+  };
+
   const deleteModel = async (model: SavedModel) => {
     if (!user) return;
 
@@ -2827,7 +2840,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onSetMinimized={setProductStudioMinimized}
             onSetProgress={setProductStudioProgress}
             onSetLoadingText={setProductStudioLoadingText}
-            isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio}
+            isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
           />
         )}
 
@@ -2956,7 +2969,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <div className="max-h-[240px] overflow-y-auto">
-                      <LookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
+                      <StudioLookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
                     </div>
                   </div>
                 </div>
@@ -3172,7 +3185,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <div className="max-h-64 overflow-y-auto mb-3">
-                      <LookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
+                      <StudioLookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => setProvadorStep(2)} className={(theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-200 text-gray-700') + ' flex-1 py-2 rounded-lg text-xs font-medium'}><i className="fas fa-arrow-left mr-1"></i> Voltar</button>
@@ -3309,49 +3322,29 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* LOOK COMPOSER */}
         {currentPage === 'look-composer' && (
-          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setCurrentPage('create')}
-                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' p-2 -ml-2 rounded-lg transition-colors'}
-                  >
-                    <i className="fas fa-arrow-left"></i>
-                  </button>
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-amber-500/20 to-orange-400/20 border border-amber-500/30' : 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-lg shadow-amber-500/25')}>
-                    <i className={'fas fa-vest-patches text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-white')}></i>
-                  </div>
-                  <div>
-                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold'}>Look Completo</h1>
-                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Crie looks com modelos virtuais</p>
-                  </div>
-                </div>
-                <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (theme === 'dark' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-600 border border-amber-200')}>
-                  <i className="fas fa-coins text-[10px]"></i>
-                  <span>3 créditos</span>
-                </div>
-              </div>
-
-              {/* Conteúdo em desenvolvimento */}
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border p-8 text-center'}>
-                <div className={'w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
-                  <i className={'fas fa-vest-patches text-3xl ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-500')}></i>
-                </div>
-                <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-2'}>Em desenvolvimento</h2>
-                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
-                  O Look Completo permite criar looks com modelos virtuais em fundo studio ou cenário personalizado.
-                  Esta funcionalidade estará disponível em breve.
-                </p>
-                <button
-                  onClick={() => setCurrentPage('create')}
-                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
-                >
-                  <i className="fas fa-arrow-left mr-2"></i>Voltar
-                </button>
-              </div>
-            </div>
-          </div>
+          <VizzuLookComposer
+            products={products}
+            userCredits={userCredits}
+            onUpdateProduct={handleUpdateProduct}
+            onDeductCredits={handleDeductCredits}
+            onAddHistoryLog={handleAddHistoryLog}
+            onImport={() => setShowImport(true)}
+            currentPlan={currentPlan}
+            theme={theme}
+            onCheckCredits={checkCreditsAndShowModal}
+            userId={user?.id}
+            savedModels={savedModels}
+            onSaveModel={handleSaveModel}
+            isGenerating={isGeneratingLookComposer}
+            isMinimized={lookComposerMinimized}
+            generationProgress={lookComposerProgress}
+            generationText={lookComposerLoadingText}
+            onSetGenerating={setIsGeneratingLookComposer}
+            onSetMinimized={setLookComposerMinimized}
+            onSetProgress={setLookComposerProgress}
+            onSetLoadingText={setLookComposerLoadingText}
+            isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+          />
         )}
 
         {/* LIFESTYLE SHOT */}

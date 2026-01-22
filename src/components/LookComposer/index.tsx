@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - Product Studio (Fotos profissionais de produto)
+// VIZZU - Look Composer (Monte looks completos com IA)
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo } from 'react';
-import { Product, HistoryLog } from '../../types';
-import { ProductStudioEditor } from './ProductStudioEditor';
+import { Product, HistoryLog, SavedModel } from '../../types';
+import { LookComposerEditor } from './LookComposerEditor';
 
-interface ProductStudioProps {
+interface LookComposerProps {
   products: Product[];
   userCredits: number;
   onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
@@ -17,6 +17,8 @@ interface ProductStudioProps {
   onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
   theme?: 'dark' | 'light';
   userId?: string;
+  savedModels: SavedModel[];
+  onSaveModel?: (model: SavedModel) => void;
   // Estados de geração em background
   isGenerating?: boolean;
   isMinimized?: boolean;
@@ -29,12 +31,12 @@ interface ProductStudioProps {
   isAnyGenerationRunning?: boolean;
 }
 
-const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
+const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas', 'Blusas', 'Regatas', 'Tops'];
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const GENDERS = ['Masculino', 'Feminino', 'Unissex'];
 
-export const ProductStudio: React.FC<ProductStudioProps> = ({
+export const LookComposer: React.FC<LookComposerProps> = ({
   products,
   userCredits,
   onUpdateProduct,
@@ -45,6 +47,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   onCheckCredits,
   theme = 'dark',
   userId,
+  savedModels,
+  onSaveModel,
   isGenerating = false,
   isMinimized = false,
   generationProgress = 0,
@@ -109,10 +113,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
     return undefined;
   };
 
-  // Contar fotos geradas no Product Studio
-  const getProductStudioCount = (product: Product): number => {
-    const sessions = product.generatedImages?.productStudio || [];
-    return sessions.reduce((acc, session) => acc + session.images.length, 0);
+  // Contar looks gerados
+  const getLookCount = (product: Product): number => {
+    // TODO: implementar contagem de looks gerados quando tivermos a estrutura
+    return product.generatedImages?.modeloIA?.length || 0;
   };
 
   const handleSelectProduct = (product: Product) => {
@@ -126,8 +130,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   // Se tem produto selecionado, mostra o editor (página 2)
   if (selectedProduct) {
     return (
-      <ProductStudioEditor
+      <LookComposerEditor
         product={selectedProduct}
+        products={products}
         userCredits={userCredits}
         onUpdateProduct={onUpdateProduct}
         onDeductCredits={onDeductCredits}
@@ -136,6 +141,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         onCheckCredits={onCheckCredits}
         theme={theme}
         userId={userId}
+        savedModels={savedModels}
+        onSaveModel={onSaveModel}
         isGenerating={isGenerating}
         isMinimized={isMinimized}
         generationProgress={generationProgress}
@@ -160,18 +167,18 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-              <i className={'fas fa-cube text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+              <i className={'fas fa-layer-group text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Product Studio®</h1>
+                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Look Composer®</h1>
                 {currentPlan && (
                   <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
                     {currentPlan.name}
                   </span>
                 )}
               </div>
-              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Fotos profissionais em fundo studio</p>
+              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Monte looks completos com modelo IA</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -197,19 +204,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
           <div className="flex items-start gap-4">
             <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-200')}>
-              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' fas fa-camera text-lg'}></i>
+              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' fas fa-shirt text-lg'}></i>
             </div>
             <div className="flex-1">
-              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fotos profissionais de produto</h3>
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Monte looks completos com modelo IA</h3>
               <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
-                Gere fotos do seu produto em múltiplos ângulos com fundo cinza neutro de estúdio. Ideal para e-commerce, catálogos e marketplaces.
+                Selecione uma peça principal, escolha um modelo IA, monte o look com suas peças ou descreva, e escolha o fundo perfeito.
               </p>
               <div className="flex items-center gap-3 mt-2">
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
-                  <i className="fas fa-coins text-pink-400 mr-1"></i>2 fotos = 1 crédito
+                  <i className="fas fa-user text-pink-400 mr-1"></i>Modelos salvos ou criar novo
                 </span>
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
-                  <i className="fas fa-plus text-pink-400 mr-1"></i>+1 crédito por foto extra
+                  <i className="fas fa-image text-pink-400 mr-1"></i>Fundo estúdio ou próprio
                 </span>
               </div>
             </div>
@@ -378,7 +385,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         <>
           <div className="flex items-center justify-between mb-3">
             <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
-              Selecione um produto
+              Selecione a peça principal
             </h2>
           </div>
 
@@ -386,7 +393,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {filteredProducts.map(product => {
                 const productImage = getProductImage(product);
-                const studioCount = getProductStudioCount(product);
+                const lookCount = getLookCount(product);
                 return (
                   <div
                     key={product.id}
@@ -406,15 +413,15 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                           <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
                         </div>
                       )}
-                      {studioCount > 0 && (
+                      {lookCount > 0 && (
                         <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
                           <i className="fas fa-check text-[6px]"></i>
-                          {studioCount}
+                          {lookCount}
                         </div>
                       )}
                       <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
-                          <i className="fas fa-wand-magic-sparkles mr-1"></i>Criar
+                          <i className="fas fa-wand-magic-sparkles mr-1"></i>Criar Look
                         </button>
                       </div>
                     </div>
