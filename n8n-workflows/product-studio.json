@@ -1,0 +1,473 @@
+{
+  "name": "Vizzu - Product Studio",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/product-studio",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "vizzu-product-studio"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// PREPARAR DADOS - Product Studio\n// ========================================\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst startTime = Date.now();\n\nconst angles = body.angles || ['front'];\nif (!Array.isArray(angles) || angles.length === 0) {\n  throw new Error('Nenhum ângulo selecionado');\n}\n\n// Calcular créditos: 2 fotos = 1 crédito, cada adicional +1\nconst calculateCredits = (numAngles) => {\n  if (numAngles === 0) return 0;\n  if (numAngles <= 2) return 1;\n  return 1 + (numAngles - 2);\n};\n\nconst creditsNeeded = calculateCredits(angles.length);\n\nreturn {\n  productId: body.product_id,\n  userId: body.user_id,\n  imageId: body.image_id,\n  angles: angles,\n  anglesCount: angles.length,\n  creditsNeeded: creditsNeeded,\n  startTime: startTime\n};"
+      },
+      "id": "prep-001",
+      "name": "Preparar Dados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $json.userId }}"
+      },
+      "id": "get-user-001",
+      "name": "Buscar Usuario",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-credits",
+              "leftValue": "={{ $json.credits }}",
+              "rightValue": "={{ $('Preparar Dados').item.json.creditsNeeded }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-credits-001",
+      "name": "Tem Creditos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'insufficient_credits', message: 'Créditos insuficientes. Necessário: ' + $('Preparar Dados').item.json.creditsNeeded + ', Disponível: ' + $('Buscar Usuario').item.json.credits }) }}",
+        "options": {
+          "responseCode": 402
+        }
+      },
+      "id": "no-credits-001",
+      "name": "Erro - Sem Creditos",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, 120]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "product_images",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $('Preparar Dados').item.json.imageId }}"
+      },
+      "id": "get-image-001",
+      "name": "Buscar Imagem",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [880, -120],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $('Preparar Dados').item.json.productId }}"
+      },
+      "id": "get-product-001",
+      "name": "Buscar Produto",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1100, -120],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "generations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Preparar Dados').item.json.userId }}"
+            },
+            {
+              "fieldId": "product_id",
+              "fieldValue": "={{ $('Preparar Dados').item.json.productId }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "product_studio"
+            },
+            {
+              "fieldId": "input_image_url",
+              "fieldValue": "={{ $('Buscar Imagem').item.json.url }}"
+            },
+            {
+              "fieldId": "credits_used",
+              "fieldValue": "={{ $('Preparar Dados').item.json.creditsNeeded }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "processing"
+            },
+            {
+              "fieldId": "started_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "create-gen-001",
+      "name": "Criar Geracao",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1320, -120],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Buscar Imagem').item.json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "download-001",
+      "name": "Download Imagem",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// ETAPA 1: REMOVER FUNDO\n// ========================================\n\nconst inputData = $input.first().json;\nconst binary = $input.first().binary;\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-2.0-flash-exp';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nconsole.log('=== ETAPA 1: REMOVER FUNDO ===');\n\nlet imageBase64 = null;\nlet imageMimeType = 'image/png';\n\nif (binary && binary.data) {\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  imageBase64 = buffer.toString('base64');\n  imageMimeType = binary.data.mimeType || 'image/png';\n}\n\nif (!imageBase64) {\n  throw new Error('Nenhuma imagem encontrada');\n}\n\nconst prompt = `Remove the background from this product image completely.\n\nRULES:\n- Keep ONLY the product itself\n- Make the background pure white (#FFFFFF)\n- Preserve all product details, colors, textures\n- Clean edges, no artifacts\n- Professional e-commerce quality\n- Do NOT modify the product in any way\n\nOutput: Product on pure white background.`;\n\nconst payload = {\n  contents: [{\n    role: \"user\",\n    parts: [\n      { inline_data: { mime_type: imageMimeType, data: imageBase64 } },\n      { text: prompt }\n    ]\n  }],\n  generationConfig: { responseModalities: [\"TEXT\", \"IMAGE\"], temperature: 0.5 },\n  safetySettings: [\n    { category: \"HARM_CATEGORY_HARASSMENT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_HATE_SPEECH\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_SEXUALLY_EXPLICIT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_DANGEROUS_CONTENT\", threshold: \"BLOCK_NONE\" }\n  ]\n};\n\nlet response;\ntry {\n  response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: endpoint,\n    headers: { 'Content-Type': 'application/json' },\n    body: payload,\n    json: true,\n    timeout: 180000\n  });\n} catch (error) {\n  throw new Error('Erro Gemini (remove bg): ' + error.message);\n}\n\nlet cleanImageBase64 = null;\nif (response.candidates?.[0]?.content?.parts) {\n  for (const part of response.candidates[0].content.parts) {\n    if (part.inlineData?.data) {\n      cleanImageBase64 = part.inlineData.data;\n    }\n  }\n}\n\nif (!cleanImageBase64) {\n  throw new Error('Gemini não retornou imagem limpa');\n}\n\nconsole.log('=== FUNDO REMOVIDO COM SUCESSO ===');\n\nreturn [{\n  json: { ...inputData, step: 'background_removed' },\n  binary: {\n    cleanImage: {\n      data: cleanImageBase64,\n      mimeType: 'image/png',\n      fileName: 'clean_product.png'\n    }\n  }\n}];"
+      },
+      "id": "remove-bg-001",
+      "name": "Remover Fundo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst cleanImageId = generateUUID();\nconst userId = $('Preparar Dados').item.json.userId;\nconst productId = $('Preparar Dados').item.json.productId;\nconst generationId = $('Criar Geracao').item.json.id;\n\nconst storagePath = `${userId}/${productId}/clean_base_${cleanImageId}.png`;\nconst publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${storagePath}`;\n\nreturn [{\n  json: {\n    ...($input.first().json),\n    cleanImageId,\n    cleanStoragePath: storagePath,\n    cleanPublicUrl: publicUrl,\n    generationId\n  },\n  binary: $input.first().binary\n}];"
+      },
+      "id": "gen-clean-path-001",
+      "name": "Path Imagem Limpa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, -120]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "products",
+        "fileName": "={{ $json.cleanStoragePath }}",
+        "binaryPropertyName": "cleanImage",
+        "additionalFields": {}
+      },
+      "id": "upload-clean-001",
+      "name": "Upload Imagem Limpa",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [2200, -120],
+      "credentials": {
+        "s3": {
+          "id": "IANNuMl4gOF84BAm",
+          "name": "Vizzu S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\nconst binary = $input.first().binary;\nconst angles = $('Preparar Dados').item.json.angles;\nconst product = $('Buscar Produto').item.json;\n\nconsole.log('=== PREPARANDO LOOP DE ÂNGULOS ===');\nconsole.log('Ângulos:', angles);\n\nconst items = angles.map((angle, index) => ({\n  json: { ...inputData, currentAngle: angle, angleIndex: index, totalAngles: angles.length, product },\n  binary: binary\n}));\n\nreturn items;"
+      },
+      "id": "prep-loop-001",
+      "name": "Preparar Loop Angulos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2420, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// CONSTRUIR PROMPT POR ÂNGULO\n// ========================================\n\nconst inputData = $input.first().json;\nconst binary = $input.first().binary;\nconst angle = inputData.currentAngle;\nconst product = inputData.product;\n\nconst category = (product.category || 'produto').toLowerCase();\nconst color = product.color || '';\nconst fit = (product.fit || product.attributes?.caimento || '').toLowerCase();\n\nconst isClothing = ['camiseta', 'camisa', 'blusa', 'calça', 'shorts', 'vestido', 'saia', 'jaqueta', 'casaco', 'moletom', 'regata', 'bermuda', 'top', 'body', 'cropped'].some(item => category.includes(item));\nconst isFootwear = ['tenis', 'tênis', 'sapato', 'bota', 'sandalia', 'sandália', 'chinelo', 'calçado'].some(item => category.includes(item));\nconst isAccessory = ['bolsa', 'mochila', 'carteira', 'cinto', 'relogio', 'relógio', 'oculos', 'óculos', 'bijuteria', 'joia', 'colar', 'brinco', 'pulseira', 'bone', 'boné', 'chapéu'].some(item => category.includes(item));\n\nconst anglePrompts = {\n  front: {\n    clothing: `Professional e-commerce photo of this ${category} - FRONT VIEW.\\n\\nVIEW: Straight front facing, centered, symmetrical.\\nPRESENTATION: Ghost mannequin style - as if worn by invisible person.\\n- Shoulders filled out with natural shape\\n- Full front of garment showing\\n- Natural drape and volume\\n\\nBACKGROUND: Solid light gray (#EDEDED), completely flat.\\nLIGHTING: Soft, even, professional studio lighting.\\nPRESERVE: Exact colors, all details, stitching, buttons, prints.`,\n    footwear: `Professional e-commerce photo of this ${category} - FRONT VIEW.\\n\\nVIEW: Front facing, showing toe box and front design.\\nANGLE: Slightly elevated (15-20 degrees).\\n\\nBACKGROUND: Solid light gray (#EDEDED).\\nPRESERVE: Exact colors, materials, textures.`,\n    accessory: `Professional e-commerce photo of this ${category} - FRONT VIEW.\\n\\nVIEW: Straight front facing, centered.\\n\\nBACKGROUND: Solid light gray (#EDEDED).\\nPRESERVE: Exact colors, materials, details.`\n  },\n  back: {\n    clothing: `Professional e-commerce photo of this ${category} - BACK VIEW.\\n\\nVIEW: Straight back facing, centered, symmetrical.\\nPRESENTATION: Ghost mannequin style showing back.\\n- Back details clearly shown\\n\\nBACKGROUND: Solid light gray (#EDEDED).\\nPRESERVE: Exact colors, all back details.`,\n    footwear: `Professional e-commerce photo of this ${category} - BACK/HEEL VIEW.\\n\\nVIEW: Back facing, showing heel design.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    accessory: `Professional e-commerce photo of this ${category} - BACK VIEW.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`\n  },\n  detail: {\n    clothing: `Professional DETAIL/CLOSE-UP photo of this ${category}.\\n\\nFOCUS: Fabric texture, stitching, labels, buttons.\\nSTYLE: Macro-style product photography.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    footwear: `Professional photo of this ${category} - BOTTOM/SOLE VIEW.\\n\\nVIEW: Bottom showing sole design and tread pattern.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    accessory: `Professional DETAIL photo of this ${category}.\\n\\nFOCUS: Craftsmanship, hardware, stitching.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`\n  },\n  'side-left': {\n    clothing: `Professional e-commerce photo of this ${category} - LEFT SIDE VIEW.\\n\\nVIEW: Left side profile, 90 degrees from front.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    footwear: `Professional e-commerce photo of this ${category} - LEFT SIDE VIEW.\\n\\nVIEW: Left side profile, lateral view.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    accessory: `Professional e-commerce photo of this ${category} - LEFT SIDE VIEW.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`\n  },\n  'side-right': {\n    clothing: `Professional e-commerce photo of this ${category} - RIGHT SIDE VIEW.\\n\\nVIEW: Right side profile.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    footwear: `Professional e-commerce photo of this ${category} - RIGHT SIDE VIEW.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    accessory: `Professional e-commerce photo of this ${category} - RIGHT SIDE VIEW.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`\n  },\n  top: {\n    clothing: `Professional e-commerce photo of this ${category} - TOP VIEW.\\n\\nVIEW: Bird's eye view.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    footwear: `Professional e-commerce photo of this ${category} - TOP VIEW.\\n\\nVIEW: Looking down, showing lacing system.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`,\n    accessory: `Professional e-commerce photo of this ${category} - TOP VIEW.\\n\\nBACKGROUND: Solid light gray (#EDEDED).`\n  }\n};\n\nlet productType = isFootwear ? 'footwear' : isAccessory ? 'accessory' : 'clothing';\nconst basePrompt = anglePrompts[angle]?.[productType] || anglePrompts['front'][productType];\n\nconst fullPrompt = `${basePrompt}\\n\\nPRODUCT INFO:\\n- Category: ${category}\\n- Color: ${color || 'as shown'}\\n- Fit: ${fit || 'standard'}\\n\\nCRITICAL:\\n- Generate the ${angle.toUpperCase()} view of this exact product\\n- Use the clean product image as reference\\n- Maintain exact colors and details\\n- Professional e-commerce quality output`;\n\nconsole.log('Prompt para ângulo:', angle);\n\nreturn [{\n  json: { ...inputData, prompt: fullPrompt, productType },\n  binary: binary\n}];"
+      },
+      "id": "build-prompt-001",
+      "name": "Construir Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2640, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// GERAR ÂNGULO COM GEMINI\n// ========================================\n\nconst inputData = $input.first().json;\nconst binary = $input.first().binary;\nconst prompt = inputData.prompt;\nconst angle = inputData.currentAngle;\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-2.0-flash-exp';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nconsole.log('=== GERANDO ÂNGULO:', angle, '===');\n\nlet imageBase64 = binary?.cleanImage?.data;\nif (!imageBase64) throw new Error('Imagem limpa não encontrada');\n\nconst payload = {\n  contents: [{\n    role: \"user\",\n    parts: [\n      { inline_data: { mime_type: 'image/png', data: imageBase64 } },\n      { text: prompt }\n    ]\n  }],\n  generationConfig: { responseModalities: [\"TEXT\", \"IMAGE\"], temperature: 0.8 },\n  safetySettings: [\n    { category: \"HARM_CATEGORY_HARASSMENT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_HATE_SPEECH\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_SEXUALLY_EXPLICIT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_DANGEROUS_CONTENT\", threshold: \"BLOCK_NONE\" }\n  ]\n};\n\nlet response;\ntry {\n  response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: endpoint,\n    headers: { 'Content-Type': 'application/json' },\n    body: payload,\n    json: true,\n    timeout: 180000\n  });\n} catch (error) {\n  throw new Error('Erro Gemini (angle ' + angle + '): ' + error.message);\n}\n\nlet generatedImageBase64 = null;\nif (response.candidates?.[0]?.content?.parts) {\n  for (const part of response.candidates[0].content.parts) {\n    if (part.inlineData?.data) {\n      generatedImageBase64 = part.inlineData.data;\n    }\n  }\n}\n\nif (!generatedImageBase64) throw new Error('Gemini não retornou imagem para: ' + angle);\n\nconsole.log('=== ÂNGULO', angle, 'GERADO ===');\n\nreturn [{\n  json: { ...inputData },\n  binary: {\n    ...binary,\n    generatedAngle: { data: generatedImageBase64, mimeType: 'image/png', fileName: `studio_${angle}.png` }\n  }\n}];"
+      },
+      "id": "gen-angle-001",
+      "name": "Gerar Angulo (Gemini)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst inputData = $input.first().json;\nconst binary = $input.first().binary;\nconst angle = inputData.currentAngle;\n\nconst angleImageId = generateUUID();\nconst userId = $('Preparar Dados').item.json.userId;\nconst productId = $('Preparar Dados').item.json.productId;\n\nconst storagePath = `${userId}/${productId}/studio_${angle}_${angleImageId}.png`;\nconst publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${storagePath}`;\n\nreturn [{\n  json: { ...inputData, angleImageId, angleStoragePath: storagePath, anglePublicUrl: publicUrl },\n  binary: binary\n}];"
+      },
+      "id": "gen-angle-path-001",
+      "name": "Path Angulo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3080, -120]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "products",
+        "fileName": "={{ $json.angleStoragePath }}",
+        "binaryPropertyName": "generatedAngle",
+        "additionalFields": {}
+      },
+      "id": "upload-angle-001",
+      "name": "Upload Angulo",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [3300, -120],
+      "credentials": {
+        "s3": {
+          "id": "IANNuMl4gOF84BAm",
+          "name": "Vizzu S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "product_images",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "product_id", "fieldValue": "={{ $('Preparar Dados').item.json.productId }}" },
+            { "fieldId": "user_id", "fieldValue": "={{ $('Preparar Dados').item.json.userId }}" },
+            { "fieldId": "type", "fieldValue": "product_studio" },
+            { "fieldId": "angle", "fieldValue": "={{ $json.currentAngle }}" },
+            { "fieldId": "storage_path", "fieldValue": "={{ $json.angleStoragePath }}" },
+            { "fieldId": "url", "fieldValue": "={{ $json.anglePublicUrl }}" },
+            { "fieldId": "generation_id", "fieldValue": "={{ $json.generationId }}" },
+            { "fieldId": "file_name", "fieldValue": "={{ 'studio_' + $json.currentAngle + '.png' }}" },
+            { "fieldId": "mime_type", "fieldValue": "image/png" },
+            { "fieldId": "is_primary", "fieldValue": "false" }
+          ]
+        }
+      },
+      "id": "insert-angle-001",
+      "name": "Inserir Imagem",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3520, -120],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconsole.log('=== AGREGANDO RESULTADOS ===');\nconsole.log('Total de ângulos:', items.length);\n\nconst generations = items.map(item => ({\n  angle: item.json.currentAngle,\n  image_url: item.json.anglePublicUrl,\n  image_id: item.json.angleImageId,\n  storage_path: item.json.angleStoragePath\n}));\n\nconst firstItem = items[0].json;\n\nreturn [{\n  json: {\n    generationId: firstItem.generationId,\n    cleanImageUrl: firstItem.cleanPublicUrl,\n    generations,\n    totalAngles: items.length\n  }\n}];"
+      },
+      "id": "aggregate-001",
+      "name": "Agregar Resultados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3740, -120]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generations",
+        "filters": {
+          "conditions": [{ "keyName": "id", "condition": "eq", "keyValue": "={{ $json.generationId }}" }]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "clean_image_url", "fieldValue": "={{ $json.cleanImageUrl }}" },
+            { "fieldId": "output_urls", "fieldValue": "={{ JSON.stringify($json.generations) }}" },
+            { "fieldId": "status", "fieldValue": "completed" },
+            { "fieldId": "completed_at", "fieldValue": "={{ new Date().toISOString() }}" },
+            { "fieldId": "processing_time_ms", "fieldValue": "={{ Date.now() - $('Preparar Dados').item.json.startTime }}" }
+          ]
+        }
+      },
+      "id": "update-gen-001",
+      "name": "Atualizar Geracao",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3960, -120],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "users",
+        "filters": {
+          "conditions": [{ "keyName": "id", "condition": "eq", "keyValue": "={{ $('Preparar Dados').item.json.userId }}" }]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "credits", "fieldValue": "={{ $('Buscar Usuario').item.json.credits - $('Preparar Dados').item.json.creditsNeeded }}" },
+            { "fieldId": "credits_used_this_month", "fieldValue": "={{ ($('Buscar Usuario').item.json.credits_used_this_month || 0) + $('Preparar Dados').item.json.creditsNeeded }}" }
+          ]
+        }
+      },
+      "id": "debit-001",
+      "name": "Debitar Creditos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [4180, -120],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  success: true,\n  clean_image_url: $('Agregar Resultados').item.json.cleanImageUrl,\n  generations: $('Agregar Resultados').item.json.generations,\n  generation_id: $('Agregar Resultados').item.json.generationId,\n  credits_used: $('Preparar Dados').item.json.creditsNeeded,\n  credits_remaining: $('Buscar Usuario').item.json.credits - $('Preparar Dados').item.json.creditsNeeded\n}) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "success-001",
+      "name": "Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [4400, -120]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Preparar Dados", "type": "main", "index": 0 }]]
+    },
+    "Preparar Dados": {
+      "main": [[{ "node": "Buscar Usuario", "type": "main", "index": 0 }]]
+    },
+    "Buscar Usuario": {
+      "main": [[{ "node": "Tem Creditos?", "type": "main", "index": 0 }]]
+    },
+    "Tem Creditos?": {
+      "main": [
+        [{ "node": "Buscar Imagem", "type": "main", "index": 0 }],
+        [{ "node": "Erro - Sem Creditos", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar Imagem": {
+      "main": [[{ "node": "Buscar Produto", "type": "main", "index": 0 }]]
+    },
+    "Buscar Produto": {
+      "main": [[{ "node": "Criar Geracao", "type": "main", "index": 0 }]]
+    },
+    "Criar Geracao": {
+      "main": [[{ "node": "Download Imagem", "type": "main", "index": 0 }]]
+    },
+    "Download Imagem": {
+      "main": [[{ "node": "Remover Fundo", "type": "main", "index": 0 }]]
+    },
+    "Remover Fundo": {
+      "main": [[{ "node": "Path Imagem Limpa", "type": "main", "index": 0 }]]
+    },
+    "Path Imagem Limpa": {
+      "main": [[{ "node": "Upload Imagem Limpa", "type": "main", "index": 0 }]]
+    },
+    "Upload Imagem Limpa": {
+      "main": [[{ "node": "Preparar Loop Angulos", "type": "main", "index": 0 }]]
+    },
+    "Preparar Loop Angulos": {
+      "main": [[{ "node": "Construir Prompt", "type": "main", "index": 0 }]]
+    },
+    "Construir Prompt": {
+      "main": [[{ "node": "Gerar Angulo (Gemini)", "type": "main", "index": 0 }]]
+    },
+    "Gerar Angulo (Gemini)": {
+      "main": [[{ "node": "Path Angulo", "type": "main", "index": 0 }]]
+    },
+    "Path Angulo": {
+      "main": [[{ "node": "Upload Angulo", "type": "main", "index": 0 }]]
+    },
+    "Upload Angulo": {
+      "main": [[{ "node": "Inserir Imagem", "type": "main", "index": 0 }]]
+    },
+    "Inserir Imagem": {
+      "main": [[{ "node": "Agregar Resultados", "type": "main", "index": 0 }]]
+    },
+    "Agregar Resultados": {
+      "main": [[{ "node": "Atualizar Geracao", "type": "main", "index": 0 }]]
+    },
+    "Atualizar Geracao": {
+      "main": [[{ "node": "Debitar Creditos", "type": "main", "index": 0 }]]
+    },
+    "Debitar Creditos": {
+      "main": [[{ "node": "Sucesso", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "f5408b2397ec961558c2d1645ab20174aeb712fe37b2f614021d4bd5b8702549"
+  }
+}
