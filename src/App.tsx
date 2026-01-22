@@ -56,6 +56,82 @@ const PROVADOR_LOADING_PHRASES = [
 type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'product-studio' | 'models' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
+// Componente de carrossel para cards de modelos
+const ModelCardCarousel: React.FC<{
+  images: { key: string; label: string; src: string }[];
+  modelName: string;
+  onCardClick: () => void;
+}> = ({ images, modelName, onCardClick }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const goToImage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex(index);
+  };
+
+  return (
+    <div className="relative w-full h-full" onClick={onCardClick}>
+      {/* Imagem atual */}
+      <img
+        src={images[currentIndex].src}
+        alt={`${modelName} - ${images[currentIndex].label}`}
+        className="w-full h-full object-cover"
+      />
+
+      {/* Setas de navegação */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prevImage}
+            className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
+          >
+            <i className="fas fa-chevron-left text-xs"></i>
+          </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
+          >
+            <i className="fas fa-chevron-right text-xs"></i>
+          </button>
+        </>
+      )}
+
+      {/* Indicadores de navegação */}
+      {images.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+          {images.map((img, index) => (
+            <button
+              key={img.key}
+              onClick={(e) => goToImage(index, e)}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                index === currentIndex
+                  ? 'bg-white w-3'
+                  : 'bg-white/50 hover:bg-white/80'
+              }`}
+              title={img.label}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Label da imagem atual */}
+      <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/40 backdrop-blur-sm text-white text-[9px] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        {images[currentIndex].label}
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -176,6 +252,13 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [generatingModelImages, setGeneratingModelImages] = useState(false);
   const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string; face?: string } | null>(null);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+
+  // Filtros da página de Modelos
+  const [modelFilterGender, setModelFilterGender] = useState<string>('');
+  const [modelFilterSkinTone, setModelFilterSkinTone] = useState<string>('');
+  const [modelFilterAge, setModelFilterAge] = useState<string>('');
+  const [modelFilterBodyType, setModelFilterBodyType] = useState<string>('');
+  const [modelFilterSearch, setModelFilterSearch] = useState<string>('');
 
   // Minimized Modals System
   type MinimizedModal = {
@@ -3405,7 +3488,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         {/* MODELS */}
         {currentPage === 'models' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
@@ -3430,6 +3514,88 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
 
+              {/* Filtros */}
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3 mb-4'}>
+                <div className="flex flex-wrap gap-2">
+                  {/* Busca */}
+                  <div className="flex-shrink-0 w-40">
+                    <div className="relative">
+                      <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
+                      <input
+                        type="text"
+                        placeholder="Buscar..."
+                        value={modelFilterSearch}
+                        onChange={(e) => setModelFilterSearch(e.target.value)}
+                        className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'}
+                      />
+                    </div>
+                  </div>
+                  {/* Gênero */}
+                  <select
+                    value={modelFilterGender}
+                    onChange={(e) => setModelFilterGender(e.target.value)}
+                    className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+                  >
+                    <option value="">Gênero</option>
+                    <option value="woman">Feminino</option>
+                    <option value="man">Masculino</option>
+                  </select>
+                  {/* Tom de Pele */}
+                  <select
+                    value={modelFilterSkinTone}
+                    onChange={(e) => setModelFilterSkinTone(e.target.value)}
+                    className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+                  >
+                    <option value="">Tom de Pele</option>
+                    <option value="very-light">Muito Claro</option>
+                    <option value="light">Claro</option>
+                    <option value="medium">Médio</option>
+                    <option value="tan">Bronzeado</option>
+                    <option value="dark">Escuro</option>
+                    <option value="very-dark">Muito Escuro</option>
+                  </select>
+                  {/* Idade */}
+                  <select
+                    value={modelFilterAge}
+                    onChange={(e) => setModelFilterAge(e.target.value)}
+                    className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+                  >
+                    <option value="">Idade</option>
+                    <option value="young">Jovem (18-25)</option>
+                    <option value="adult">Adulto (25-40)</option>
+                    <option value="mature">Maduro (40+)</option>
+                  </select>
+                  {/* Tipo Físico */}
+                  <select
+                    value={modelFilterBodyType}
+                    onChange={(e) => setModelFilterBodyType(e.target.value)}
+                    className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+                  >
+                    <option value="">Tipo Físico</option>
+                    <option value="slim">Magro</option>
+                    <option value="average">Médio</option>
+                    <option value="athletic">Atlético</option>
+                    <option value="curvy">Curvilíneo</option>
+                    <option value="plus">Plus Size</option>
+                  </select>
+                  {/* Limpar filtros */}
+                  {(modelFilterSearch || modelFilterGender || modelFilterSkinTone || modelFilterAge || modelFilterBodyType) && (
+                    <button
+                      onClick={() => {
+                        setModelFilterSearch('');
+                        setModelFilterGender('');
+                        setModelFilterSkinTone('');
+                        setModelFilterAge('');
+                        setModelFilterBodyType('');
+                      }}
+                      className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-2 py-1.5 text-xs transition-colors'}
+                    >
+                      <i className="fas fa-times mr-1"></i>Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Empty State */}
               {savedModels.length === 0 ? (
                 <div className={'rounded-2xl p-12 text-center ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
@@ -3448,68 +3614,101 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </button>
                 </div>
               ) : (
-                /* Models Grid */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {savedModels.map(model => (
-                    <div
-                      key={model.id}
-                      onClick={() => setShowModelDetail(model)}
-                      className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-100 shadow-sm hover:shadow-lg')}
-                    >
-                      {/* Avatar/Image Preview */}
-                      <div className={'relative h-48 flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-pink-50 to-orange-50')}>
-                        {model.images.front ? (
-                          <img src={model.images.front} alt={model.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="text-center">
-                            {/* Avatar Ilustrado */}
-                            <div className={'w-24 h-24 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
-                              <i className={'fas fa-user text-4xl text-white'}></i>
-                            </div>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
-                              {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Sem imagem'}
-                            </p>
-                          </div>
-                        )}
-                        {model.status === 'generating' && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="w-16 h-16">
-                              <DotLottieReact
-                                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                                loop
-                                autoplay
-                                style={{ width: '100%', height: '100%' }}
+                /* Models Grid - Vertical Cards */
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {savedModels
+                    .filter(model => {
+                      if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
+                      if (modelFilterGender && model.gender !== modelFilterGender) return false;
+                      if (modelFilterSkinTone && model.skinTone !== modelFilterSkinTone) return false;
+                      if (modelFilterAge && model.ageRange !== modelFilterAge) return false;
+                      if (modelFilterBodyType && model.bodyType !== modelFilterBodyType) return false;
+                      return true;
+                    })
+                    .map(model => {
+                      const images = [
+                        { key: 'front', label: 'Frente', src: model.images.front },
+                        { key: 'back', label: 'Costas', src: model.images.back },
+                        { key: 'face', label: 'Rosto', src: model.images.face },
+                      ].filter(img => img.src);
+                      return (
+                        <div
+                          key={model.id}
+                          className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-100 shadow-sm hover:shadow-lg')}
+                        >
+                          {/* Image Carousel */}
+                          <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-pink-50 to-orange-50')}>
+                            {images.length > 0 ? (
+                              <ModelCardCarousel
+                                images={images}
+                                modelName={model.name}
+                                onCardClick={() => setShowModelDetail(model)}
                               />
+                            ) : (
+                              <div className="text-center" onClick={() => setShowModelDetail(model)}>
+                                <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+                                  <i className="fas fa-user text-3xl text-white"></i>
+                                </div>
+                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
+                                  {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Sem imagem'}
+                                </p>
+                              </div>
+                            )}
+                            {model.status === 'generating' && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <div className="w-16 h-16">
+                                  <DotLottieReact
+                                    src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                                    loop
+                                    autoplay
+                                    style={{ width: '100%', height: '100%' }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            {/* Status Badge */}
+                            <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium ' + (
+                              model.status === 'ready' ? 'bg-green-500/20 text-green-400 backdrop-blur-sm' :
+                              model.status === 'generating' ? 'bg-yellow-500/20 text-yellow-400 backdrop-blur-sm' :
+                              model.status === 'error' ? 'bg-red-500/20 text-red-400 backdrop-blur-sm' :
+                              'bg-neutral-500/20 text-neutral-400 backdrop-blur-sm'
+                            )}>
+                              {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
                             </div>
                           </div>
-                        )}
-                        {/* Status Badge */}
-                        <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium ' + (
-                          model.status === 'ready' ? 'bg-green-500/20 text-green-400' :
-                          model.status === 'generating' ? 'bg-yellow-500/20 text-yellow-400' :
-                          model.status === 'error' ? 'bg-red-500/20 text-red-400' :
-                          'bg-neutral-500/20 text-neutral-400'
-                        )}>
-                          {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
+                          {/* Info */}
+                          <div className="p-3" onClick={() => setShowModelDetail(model)}>
+                            <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'}>{model.name}</h3>
+                            <div className="flex flex-wrap gap-1">
+                              <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
+                                {getModelLabel('gender', model.gender)}
+                              </span>
+                              <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
+                                {getModelLabel('skinTone', model.skinTone)}
+                              </span>
+                              <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
+                                {getModelLabel('ageRange', model.ageRange)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      {/* Info */}
-                      <div className="p-4">
-                        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>{model.name}</h3>
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>
-                            {getModelLabel('gender', model.gender)}
-                          </span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>
-                            {getModelLabel('ethnicity', model.ethnicity)}
-                          </span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>
-                            {getModelLabel('ageRange', model.ageRange)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Nenhum resultado com filtros */}
+              {savedModels.length > 0 && savedModels.filter(model => {
+                if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
+                if (modelFilterGender && model.gender !== modelFilterGender) return false;
+                if (modelFilterSkinTone && model.skinTone !== modelFilterSkinTone) return false;
+                if (modelFilterAge && model.ageRange !== modelFilterAge) return false;
+                if (modelFilterBodyType && model.bodyType !== modelFilterBodyType) return false;
+                return true;
+              }).length === 0 && (
+                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
+                  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-filter text-3xl mb-3'}></i>
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Nenhum modelo encontrado com os filtros selecionados</p>
                 </div>
               )}
             </div>
