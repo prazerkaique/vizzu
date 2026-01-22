@@ -322,7 +322,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
                         style={{
                           backgroundImage: `url(${displayImage})`,
                           backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
-                          backgroundSize: '200%'
+                          backgroundSize: '150%'
                         }}
                       />
                     )}

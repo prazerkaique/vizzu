@@ -361,12 +361,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     setPhraseIndex(0);
 
     try {
-      // Simular progresso enquanto a API processa
+      // Simular progresso enquanto a API processa (progressivo e suave)
       let currentProg = 10;
       const progressInterval = setInterval(() => {
-        currentProg = Math.min(currentProg + Math.random() * 8, 90);
+        // Incremento fixo que desacelera conforme se aproxima de 90%
+        const remaining = 90 - currentProg;
+        const increment = Math.max(remaining * 0.08, 0.5);
+        currentProg = Math.min(currentProg + increment, 90);
         setProgress(Math.round(currentProg));
-      }, 2500);
+      }, 1000);
 
       // Chamar a API real
       console.log('🚀 [ProductStudio] Enviando para API:', {
@@ -941,8 +944,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
           {/* Container do conteúdo */}
           <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
-            {/* Animação Lottie */}
-            <div className="w-64 h-64 mb-6">
+            {/* Animação Lottie com cor rosa */}
+            <div className="w-64 h-64 mb-6" style={{ filter: 'hue-rotate(320deg) saturate(1.5)' }}>
               <DotLottieReact
                 src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
                 loop
