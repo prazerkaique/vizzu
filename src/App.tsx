@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Studio } from './components/Studio';
 import { LookComposer } from './components/Studio/LookComposer';
+import { ProductStudio } from './components/ProductStudio';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
 import { BulkImportModal } from './components/BulkImportModal';
@@ -51,7 +52,7 @@ const PROVADOR_LOADING_PHRASES = [
   { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'models' | 'products' | 'clients' | 'history' | 'settings';
+type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'product-studio' | 'models' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
 function App() {
@@ -418,7 +419,8 @@ const loadUserProducts = async (userId: string) => {
             tool: 'lifestyle' as const,
             images: { front: img.url, back: undefined },
             metadata: {}
-          }))
+          })),
+          productStudio: []
         };
         
         return {
@@ -2160,7 +2162,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <button
               onClick={() => setCurrentPage('create')}
               className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
-                (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle'
+                (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio'
                   ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
                   : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
                 )
@@ -2304,74 +2306,114 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </button>
               </div>
 
-              {/* AÇÕES RÁPIDAS - Últimos Projetos */}
-              <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <i className={'fas fa-rocket text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
-                    <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Ações Rápidas</h2>
-                  </div>
-                  <button
-                    onClick={() => setCurrentPage('history')}
-                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
-                  >
-                    Ver histórico <i className="fas fa-arrow-right ml-1"></i>
-                  </button>
-                </div>
+              {/* ÚLTIMAS CRIAÇÕES */}
+              {(() => {
+                // Combinar fontes de imagens geradas
+                const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look'; date: string }[] = [];
 
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-                  {/* Últimos projetos/gerações */}
-                  {historyLogs.slice(0, 4).map((log, idx) => {
-                    const logProduct = log.products?.[0] || log.items?.[0];
-                    const logImage = logProduct?.originalImages?.front?.url || logProduct?.originalImages?.front?.base64 || logProduct?.images?.[0]?.url || logProduct?.images?.[0]?.base64;
-                    const logName = logProduct?.name || log.details?.split(' ').slice(0, 3).join(' ') || log.action;
-                    return (
-                      <div
-                        key={log.id || idx}
-                        onClick={() => {
-                          if (log.action.includes('Studio')) setCurrentPage('studio');
-                          else if (log.action.includes('Provador')) setCurrentPage('provador');
-                          else setCurrentPage('products');
-                        }}
-                        className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
-                      >
-                        <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
-                          {logImage ? (
-                            <img src={logImage} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-2xl'}></i>
+                // Adicionar looks do Provador
+                clientLooks.forEach(look => {
+                  if (look.imageUrl) {
+                    const client = clients.find(c => c.id === look.clientId);
+                    recentCreations.push({
+                      id: look.id,
+                      imageUrl: look.imageUrl,
+                      name: client ? `${client.firstName}` : 'Look',
+                      type: 'provador',
+                      date: look.createdAt
+                    });
+                  }
+                });
+
+                // Adicionar produtos com imagens geradas
+                products.forEach(product => {
+                  const genImages = (product as any).generatedImages;
+                  if (genImages?.studioReady?.[0]?.images?.front) {
+                    recentCreations.push({
+                      id: `studio-${product.id}`,
+                      imageUrl: genImages.studioReady[0].images.front,
+                      name: product.name,
+                      type: 'studio',
+                      date: genImages.studioReady[0].createdAt || new Date().toISOString()
+                    });
+                  }
+                });
+
+                // Ordenar por data (mais recente primeiro) e limitar a 4
+                const sortedCreations = recentCreations
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 4);
+
+                return (
+                  <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                        <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
+                      </div>
+                      {sortedCreations.length > 0 && (
+                        <button
+                          onClick={() => setCurrentPage('history')}
+                          className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
+                        >
+                          Ver todas <i className="fas fa-arrow-right ml-1"></i>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                      {/* Criações recentes */}
+                      {sortedCreations.map((creation) => (
+                        <div
+                          key={creation.id}
+                          onClick={() => {
+                            if (creation.type === 'studio') setCurrentPage('studio');
+                            else if (creation.type === 'provador') setCurrentPage('provador');
+                            else setCurrentPage('look-composer');
+                          }}
+                          className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
+                        >
+                          <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+                            <img src={creation.imageUrl} alt="" className="w-full h-full object-cover" />
+                            <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
+                              (creation.type === 'studio' ? 'bg-purple-500 text-white' :
+                               creation.type === 'provador' ? 'bg-pink-500 text-white' :
+                               'bg-amber-500 text-white')}>
+                              {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : 'Look'}
                             </div>
-                          )}
+                          </div>
+                          <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{creation.name}</p>
                         </div>
-                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{logName}</p>
-                      </div>
-                    );
-                  })}
+                      ))}
 
-                  {/* Card + Novo Projeto */}
-                  <div
-                    onClick={() => setCurrentPage('create')}
-                    className={'flex-shrink-0 w-24 cursor-pointer group'}
-                  >
-                    <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-pink-400 hover:bg-gray-100')}>
-                      <div className="text-center">
-                        <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
-                          <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                      {/* Card + Nova Criação */}
+                      <div
+                        onClick={() => setCurrentPage('create')}
+                        className={'flex-shrink-0 w-24 cursor-pointer group'}
+                      >
+                        <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-pink-400 hover:bg-gray-100')}>
+                          <div className="text-center">
+                            <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
+                              <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                            </div>
+                          </div>
                         </div>
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] text-center mt-2'}>Criar</p>
                       </div>
+
+                      {/* Placeholder se não houver criações */}
+                      {sortedCreations.length === 0 && (
+                        <div className={'flex-1 flex items-center justify-center py-4 ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}>
+                          <div className="text-center">
+                            <i className="fas fa-wand-magic-sparkles text-2xl mb-2 opacity-50"></i>
+                            <p className="text-xs">Suas criações aparecerão aqui</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] text-center mt-2'}>Novo</p>
                   </div>
-
-                  {/* Placeholder se não houver histórico */}
-                  {historyLogs.length === 0 && (
-                    <div className={'flex-1 flex items-center justify-center py-4 ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}>
-                      <p className="text-sm">Seus projetos recentes aparecerão aqui</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+                );
+              })()}
 
               {/* STATS GRID - 4 Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -2491,15 +2533,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-2'}>
-                        Você sabia? <strong>Lifestyle Shot</strong> tem 80% mais engajamento no Instagram.
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>
+                        Use fotos com boa iluminação e fundo neutro para melhores resultados nas gerações de IA. Quanto melhor a foto original, melhor o resultado final!
                       </p>
-                      <button
-                        onClick={() => setCurrentPage('lifestyle')}
-                        className={'text-sm font-medium flex items-center gap-1 transition-colors ' + (theme === 'dark' ? 'text-teal-400 hover:text-teal-300' : 'text-teal-600 hover:text-teal-700')}
-                      >
-                        Testar agora <i className="fas fa-arrow-right text-xs"></i>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -2568,9 +2604,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
               {/* Video Cards Grid - 2x2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Card 1: Vizzu Studio */}
+                {/* Card 1: Vizzu Product Studio */}
                 <div
-                  onClick={() => setShowVideoTutorial('studio')}
+                  onClick={() => setCurrentPage('product-studio')}
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
@@ -2580,17 +2616,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                        <span className="text-white/60 text-xs">1-3 créditos</span>
+                        <span className="text-white/60 text-xs">1-8 créditos</span>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-1">Vizzu Studio®</h3>
-                      <p className="text-white/70 text-sm">4 ângulos profissionais do seu produto em fundo cinza de estúdio</p>
+                      <h3 className="text-xl font-bold text-white mb-1">Vizzu Product Studio®</h3>
+                      <p className="text-white/70 text-sm">Fotos profissionais do produto em múltiplos ângulos com fundo cinza de estúdio</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
-                        <i className="fas fa-play text-white ml-1"></i>
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
+                        <i className="fas fa-cube text-white text-lg"></i>
                       </div>
                       <button
-                        onClick={(e) => { e.stopPropagation(); setCurrentPage('studio'); }}
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('product-studio'); }}
                         className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
                       >
                         Acessar <i className="fas fa-arrow-right text-xs"></i>
@@ -2761,6 +2797,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onCheckCredits={checkCreditsAndShowModal}
             userId={user?.id}
             savedModels={savedModels}
+          />
+        )}
+
+        {/* PRODUCT STUDIO */}
+        {currentPage === 'product-studio' && (
+          <ProductStudio
+            products={products}
+            userCredits={userCredits}
+            onUpdateProduct={handleUpdateProduct}
+            onDeductCredits={handleDeductCredits}
+            onAddHistoryLog={handleAddHistoryLog}
+            onImport={() => setShowImport(true)}
+            currentPlan={currentPlan}
+            theme={theme}
+            onCheckCredits={checkCreditsAndShowModal}
+            userId={user?.id}
           />
         )}
 
@@ -4356,10 +4408,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </button>
           {/* Botão CRIAR - Central destacado */}
           <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
           <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-user-tie text-sm"></i>

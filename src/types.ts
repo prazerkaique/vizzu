@@ -68,6 +68,28 @@ export interface ProductGeneratedImages {
   studioReady: GeneratedImageSet[];
   cenarioCriativo: GeneratedImageSet[];
   modeloIA: GeneratedImageSet[];
+  productStudio: ProductStudioSession[];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Product Studio - Fotos profissionais de produto (sem modelo)
+// ═══════════════════════════════════════════════════════════════
+
+export type ProductStudioAngle = 'front' | 'back' | 'side-left' | 'side-right' | '45-left' | '45-right' | 'top' | 'detail';
+
+export interface ProductStudioImage {
+  id: string;
+  url: string;
+  angle: ProductStudioAngle;
+  createdAt: string;
+}
+
+export interface ProductStudioSession {
+  id: string;
+  productId: string;
+  images: ProductStudioImage[];
+  status: 'generating' | 'ready' | 'error';
+  createdAt: string;
 }
 
 // ═══════════════════════════════════════════════════════════════

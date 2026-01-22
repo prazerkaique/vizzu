@@ -68,7 +68,7 @@ const EXPORT_OPTIONS = [
 const getOrganizedImages = (product: Product) => {
   const frontImage = product.originalImages?.front || product.images.find(img => img.type === 'front') || product.images[0];
   const backImage = product.originalImages?.back || product.images.find(img => img.type === 'back');
-  const generated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [] };
+  const generated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: [] };
   return { originals: { front: frontImage, back: backImage }, generated, hasBack: !!backImage };
 };
 
@@ -354,7 +354,7 @@ const handleSave = async () => {
       metadata: { prompt: tool === 'cenario' ? cenPrompt : undefined, orientation, exportFormat: exportType === 'ecommerce' ? 'jpeg' : 'png' }
     };
 
-    const currentGenerated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [] };
+    const currentGenerated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: [] };
 
     if (tool === 'studio') {
       currentGenerated.studioReady = [...currentGenerated.studioReady, newGeneratedSet];
@@ -417,7 +417,7 @@ const handleSave = async () => {
       });
 
       // Atualiza estado local removendo a imagem
-      const currentGenerated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [] };
+      const currentGenerated = product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: [] };
 
       if (deleteGenTarget.tool === 'studio') {
         currentGenerated.studioReady = currentGenerated.studioReady.filter(g => g.id !== deleteGenTarget.id);
