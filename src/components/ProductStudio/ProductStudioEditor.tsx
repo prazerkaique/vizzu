@@ -466,6 +466,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       <ProductStudioResult
         product={product}
         session={currentSession}
+        creditsUsed={calculateCredits(currentSession.images.length)}
+        userCredits={userCredits}
         onSave={handleResultSave}
         onRegenerate={handleResultRegenerate}
         onDelete={handleResultDelete}
