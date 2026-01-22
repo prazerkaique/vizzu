@@ -12,6 +12,7 @@ import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages } from './lib/api/studio';
 import heic2any from 'heic2any';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
 
 
 const CATEGORY_GROUPS = [
@@ -2015,16 +2016,184 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
   
-  const handleProvadorReset = () => { 
-    setProvadorClient(null); 
-    setProvadorPhotoType('frente'); 
-    setProvadorLook({}); 
-    setProvadorGeneratedImage(null); 
+  const handleProvadorReset = () => {
+    setProvadorClient(null);
+    setProvadorPhotoType('frente');
+    setProvadorLook({});
+    setProvadorGeneratedImage(null);
     setProvadorMessage(DEFAULT_WHATSAPP_TEMPLATES[0].message);
     setProvadorStep(1);
     setProvadorLookFilter('');
     setProvadorLookSearch('');
   };
+
+  // Funcoes auxiliares para o novo VizzuProvadorWizard
+  const handleProvadorGenerateForWizard = async (
+    client: Client,
+    photoType: ClientPhoto['type'],
+    look: LookComposition
+  ): Promise<string | null> => {
+    if (!client || !user || Object.keys(look).length === 0) return null;
+
+    // Verificar creditos
+    if (!checkCreditsAndShowModal(3, 'provador')) {
+      return null;
+    }
+
+    setIsGeneratingProvador(true);
+    setProvadorProgress(0);
+    setProvadorLoadingIndex(0);
+
+    // Animacao de loading
+    const loadingInterval = setInterval(() => {
+      setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
+    }, 3000);
+
+    const progressInterval = setInterval(() => {
+      setProvadorProgress(prev => {
+        if (prev >= 95) return prev;
+        return prev + Math.random() * 5;
+      });
+    }, 500);
+
+    try {
+      // Obter foto do cliente
+      const clientPhotoBase64 = getClientPhoto(client, photoType) || '';
+      if (!clientPhotoBase64) {
+        throw new Error('Foto do cliente nao encontrada');
+      }
+
+      // Remover prefixo data:image/... se existir
+      const base64Clean = clientPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
+
+      // Montar lookComposition no formato esperado pelo backend
+      const lookCompositionPayload: Record<string, { productId: string; imageId?: string; imageUrl: string; name: string; category: string; attributes?: Record<string, string> }> = {};
+
+      for (const [slot, item] of Object.entries(look)) {
+        if (item) {
+          const product = products.find(p => p.id === item.productId);
+          lookCompositionPayload[slot] = {
+            productId: item.productId || '',
+            imageId: item.imageId,
+            imageUrl: item.image,
+            name: item.name,
+            category: product?.category || 'roupa',
+            attributes: product?.attributes || {}
+          };
+        }
+      }
+
+      const result = await generateProvador({
+        userId: user.id,
+        clientId: client.id,
+        clientName: `${client.firstName} ${client.lastName}`,
+        clientPhoto: {
+          type: photoType,
+          base64: base64Clean
+        },
+        lookComposition: lookCompositionPayload
+      });
+
+      clearInterval(loadingInterval);
+      clearInterval(progressInterval);
+      setProvadorProgress(100);
+
+      if (result.success && result.generation) {
+        if (result.credits_remaining !== undefined) {
+          setCredits(result.credits_remaining);
+        }
+        handleAddHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', 3);
+        return result.generation.image_url;
+      } else {
+        throw new Error(result.message || 'Erro ao gerar imagem');
+      }
+    } catch (error: any) {
+      clearInterval(loadingInterval);
+      clearInterval(progressInterval);
+      console.error('Erro no Provador:', error);
+      alert(error.message || 'Erro ao gerar imagem');
+      return null;
+    } finally {
+      setIsGeneratingProvador(false);
+      setProvadorProgress(0);
+    }
+  };
+
+  const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string) => {
+    try {
+      // Baixa a imagem como blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'look.png', { type: 'image/png' });
+
+      // Verifica se o dispositivo suporta compartilhar arquivos
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          text: message
+        });
+        return;
+      }
+    } catch (error) {
+      console.log('Share API nao disponivel ou cancelado, usando fallback');
+    }
+
+    // Fallback: WhatsApp com texto + link da imagem
+    const phone = client.whatsapp?.replace(/\D/g, '') || '';
+    const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
+    const fullMessage = message + '\n\n' + imageUrl;
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+  };
+
+  const handleProvadorDownloadImage = async (imageUrl: string, clientName: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `vizzu_provador_${clientName.replace(/\s+/g, '_')}_${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao baixar imagem:', error);
+      // Fallback: abrir em nova aba
+      window.open(imageUrl, '_blank');
+    }
+  };
+
+  const handleProvadorGenerateAIMessage = async (clientName: string): Promise<string> => {
+    // Gera uma mensagem personalizada simples
+    const messages = [
+      `Ola ${clientName}! Preparei esse visual especial pensando em voce. O que achou? Ficou incrivel!`,
+      `Oi ${clientName}! Olha so como ficou esse look que montei pra voce! Esta perfeito, ne?`,
+      `${clientName}, veja esse look que criei! Combinou demais com voce. Quer que eu reserve?`,
+      `Ola ${clientName}! Montei uma combinacao que vai te deixar ainda mais linda. Gostou?`,
+      `Oi ${clientName}! Esse visual ficou maravilhoso! Posso separar essas pecas pra voce?`,
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
+
+  const handleUpdateClientForProvador = async (client: Client) => {
+    // Atualizar no estado local
+    setClients(prev => prev.map(c => c.id === client.id ? client : c));
+
+    // Salvar no localStorage
+    const updatedClients = clients.map(c => c.id === client.id ? client : c);
+    localStorage.setItem('vizzu_clients', JSON.stringify(updatedClients));
+
+    // Salvar no Supabase se usuario logado
+    if (user?.id) {
+      try {
+        await saveClientToSupabase(client, user.id);
+      } catch (error) {
+        console.error('Erro ao salvar cliente no Supabase:', error);
+      }
+    }
+  };
+
   const handleAddHistoryLog = (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => {
     const newLog: HistoryLog = {
       id: `log-${Date.now()}`,
@@ -2975,482 +3144,29 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           />
         )}
 
-        {/* PROVADOR */}
+        {/* PROVADOR - Novo Wizard Unificado */}
         {currentPage === 'provador' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                    <i className={'fas fa-shirt text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
-                  </div>
-                  <div>
-                    <h1 className={'text-lg font-semibold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Provador®</h1>
-                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs hidden md:block'}>Vista seus clientes virtualmente</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={'px-2 py-1 text-[10px] font-medium rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 text-neutral-400' : 'bg-pink-100 text-pink-600')}>3 créd.</span>
-                  {(provadorClient || Object.keys(provadorLook).length > 0) && (
-                    <button onClick={handleProvadorReset} className={'p-2 rounded-lg text-xs transition-colors ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700')}>
-                      <i className="fas fa-undo"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Desktop Grid */}
-              <div className="hidden lg:grid lg:grid-cols-4 gap-4">
-                {/* Col 1: Cliente */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-                  <div className={'p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs flex items-center gap-2'}>
-                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (provadorClient ? 'bg-green-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
-                        {provadorClient ? <i className="fas fa-check text-[8px]"></i> : '1'}
-                      </span>
-                      Selecionar Cliente
-                    </h3>
-                  </div>
-                  <div className="p-3">
-                    {provadorClient ? (
-                      <div className="text-center">
-                        <div className="relative inline-block mb-2">
-                          <img src={getClientPhoto(provadorClient, provadorPhotoType) || getClientPhoto(provadorClient)} alt={provadorClient.firstName} className="w-16 h-16 rounded-full object-cover border-2 border-pink-500/50" />
-                          <button onClick={() => { setProvadorClient(null); setProvadorStep(1); }} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600">
-                            <i className="fas fa-times"></i>
-                          </button>
-                        </div>
-                        <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{provadorClient.firstName} {provadorClient.lastName}</p>
-                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{formatWhatsApp(provadorClient.whatsapp)}</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                        {clientsWithProvador.length > 0 ? clientsWithProvador.slice(0, 5).map(client => (
-                          <div key={client.id} onClick={() => setProvadorClient(client)} className={'flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ' + (theme === 'dark' ? 'border-neutral-800 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50')}>
-                            <img src={getClientPhoto(client)} alt="" className="w-8 h-8 rounded-full object-cover" />
-                            <div className="flex-1 min-w-0">
-                              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs truncate'}>{client.firstName} {client.lastName}</p>
-                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>{client.photos?.length || 1} foto(s)</p>
-                            </div>
-                          </div>
-                        )) : (
-                          <div className="text-center py-4">
-                            <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user-plus text-lg mb-2'}></i>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Nenhum cliente</p>
-                            <button onClick={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' mt-2 px-3 py-1 rounded-lg text-[10px] font-medium'}>Cadastrar</button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Col 2: Foto */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-                  <div className={'p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs flex items-center gap-2'}>
-                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (provadorClient && provadorPhotoType ? 'bg-green-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
-                        {provadorClient && provadorPhotoType ? <i className="fas fa-check text-[8px]"></i> : '2'}
-                      </span>
-                      Selecionar Foto
-                    </h3>
-                  </div>
-                  <div className="p-3">
-                    {provadorClient ? (
-                      <div className="space-y-1.5">
-                        {PHOTO_TYPES.map(photoType => {
-                          const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
-                          const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
-                          return (
-                            <div key={photoType.id} onClick={() => hasPhoto && setProvadorPhotoType(photoType.id)} 
-                              className={'flex items-center gap-2 p-2 rounded-lg border transition-all ' + (!hasPhoto ? (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' opacity-50 cursor-not-allowed' : provadorPhotoType === photoType.id ? 'border-pink-500 bg-pink-500/10 cursor-pointer' : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300') + ' cursor-pointer')}>
-                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-8 h-8 rounded-lg object-cover" /> : <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-8 h-8 rounded-lg flex items-center justify-center'}><i className={'fas ' + photoType.icon + ' text-[10px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}></i></div>}
-                              <div className="flex-1">
-                                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{photoType.label}</p>
-                                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>{hasPhoto ? 'Disponível' : 'Não cadastrada'}</p>
-                              </div>
-                              {hasPhoto && provadorPhotoType === photoType.id && <i className="fas fa-check text-pink-400 text-xs"></i>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-center py-6'}>
-                        <i className="fas fa-image text-lg mb-2"></i>
-                        <p className="text-[10px]">Selecione um cliente</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Col 3: Look */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-                  <div className={'p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs flex items-center gap-2'}>
-                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (Object.keys(provadorLook).length > 0 ? 'bg-green-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
-                        {Object.keys(provadorLook).length > 0 ? <i className="fas fa-check text-[8px]"></i> : '3'}
-                      </span>
-                      Look
-                      {Object.keys(provadorLook).length > 0 && <span className="ml-auto text-[9px] text-pink-400 bg-pink-500/20 px-1.5 py-0.5 rounded-full">{Object.keys(provadorLook).length}</span>}
-                    </h3>
-                  </div>
-                  <div className="p-2">
-                    <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2 py-1.5 border rounded-lg text-[10px] mb-2'}>
-                      <option value="">Todas coleções</option>
-                      {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <div className="max-h-[240px] overflow-y-auto">
-                      <StudioLookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Col 4: Gerar */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-                  <div className={'p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs flex items-center gap-2'}>
-                      <span className={'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ' + (provadorGeneratedImage ? 'bg-green-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
-                        {provadorGeneratedImage ? <i className="fas fa-check text-[8px]"></i> : '4'}
-                      </span>
-                      Gerar e Enviar
-                    </h3>
-                  </div>
-                  <div className="p-3">
-                    {/* Preview/Imagem gerada ou Look selecionado */}
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-2 flex items-center justify-center overflow-hidden relative'}>
-                      {isGeneratingProvador ? (
-                        <div className="text-center px-4 py-6">
-                          <div className="w-16 h-16 mx-auto mb-2">
-                            <DotLottieReact
-                              src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                              loop
-                              autoplay
-                              style={{ width: '100%', height: '100%' }}
-                            />
-                          </div>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-xs font-medium mb-2'}>{provadorProgress >= 100 ? 'Finalizando, aguarde só mais um momento...' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
-                          <div className={'w-full h-1.5 rounded-full overflow-hidden mb-1.5 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
-                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${Math.min(provadorProgress, 100)}%` }}></div>
-                          </div>
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium'}>{Math.round(Math.min(provadorProgress, 100))}%</p>
-                        </div>
-                      ) : selectedSavedLook ? (
-                        <>
-                          <img src={selectedSavedLook.imageUrl} alt="Look salvo" className="w-full h-full object-cover" />
-                          <button onClick={() => setSelectedSavedLook(null)} className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-black/70 text-white rounded-full text-[9px]"><i className="fas fa-times"></i></button>
-                        </>
-                      ) : provadorGeneratedImage ? (
-                        <>
-                          <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
-                          <button onClick={() => { if (confirm('Descartar esta imagem?')) setProvadorGeneratedImage(null); }} className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-red-500 text-white rounded-full text-[9px]"><i className="fas fa-trash"></i></button>
-                        </>
-                      ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
-                        <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><i className="fas fa-wand-magic-sparkles text-pink-400 text-lg mb-1"></i><p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>Clique em Gerar</p></div></div></div>
-                      ) : (
-                        <div className="text-center p-4"><i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-image text-2xl mb-2'}></i><p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Preview</p></div>
-                      )}
-                    </div>
-
-                    {/* Botão Salvar Look (quando tem imagem gerada) */}
-                    {provadorGeneratedImage && !selectedSavedLook && (
-                      <button
-                        onClick={async () => {
-                          const saved = await saveClientLook(provadorGeneratedImage, provadorLook);
-                          if (saved) {
-                            alert('Look salvo com sucesso!');
-                          }
-                        }}
-                        disabled={savingLook}
-                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700') + ' w-full py-1.5 border rounded-lg font-medium text-[10px] mb-2 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50'}
-                      >
-                        {savingLook ? (
-                          <><i className="fas fa-spinner fa-spin text-[9px]"></i><span>Salvando...</span></>
-                        ) : (
-                          <><i className="fas fa-bookmark text-[9px]"></i><span>Salvar Look</span></>
-                        )}
-                      </button>
-                    )}
-
-                    {/* Galeria de Looks Salvos */}
-                    {provadorClient && clientLooks.length > 0 && (
-                      <div className="mb-2">
-                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px] mb-1.5 flex items-center gap-1'}>
-                          <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
-                        </p>
-                        <div className="flex gap-1.5 overflow-x-auto pb-1">
-                          {clientLooks.map(look => (
-                            <div key={look.id} className="relative flex-shrink-0 group">
-                              <img
-                                src={look.imageUrl}
-                                alt="Look"
-                                onClick={() => setSelectedSavedLook(look)}
-                                className={'w-12 h-16 object-cover rounded cursor-pointer transition-all ' + (selectedSavedLook?.id === look.id ? 'ring-2 ring-pink-500' : 'hover:ring-2 hover:ring-pink-500/50')}
-                              />
-                              <button
-                                onClick={(e) => { e.stopPropagation(); if (confirm('Deletar este look?')) deleteClientLook(look); }}
-                                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <i className="fas fa-times"></i>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2 py-1.5 border rounded-lg text-[10px] mb-2'}>
-                      {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                    </select>
-                    <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2 py-1.5 border rounded-lg text-[10px] resize-none mb-3'} placeholder="Mensagem..." />
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          if (isGeneratingProvador) {
-                            alert('Aguarde a geração da imagem terminar');
-                            return;
-                          }
-                          setSelectedSavedLook(null);
-                          handleProvadorGenerate();
-                        }}
-                        disabled={!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3}
-                        className={`w-full py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 ${(!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3) ? 'opacity-50 cursor-not-allowed' : isGeneratingProvador ? 'opacity-75 cursor-wait' : ''}`}
-                      >
-                        {isGeneratingProvador ? (
-                          <><i className="fas fa-spinner fa-spin text-[10px]"></i><span>Gerando imagem...</span></>
-                        ) : (
-                          <><i className="fas fa-wand-magic-sparkles text-[10px]"></i><span>Gerar (3 créd.)</span></>
-                        )}
-                      </button>
-                      <button
-                        onClick={handleProvadorSendWhatsApp}
-                        disabled={!provadorClient || (!provadorGeneratedImage && !selectedSavedLook)}
-                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 border-gray-200') + ' w-full py-2 text-green-500 border rounded-lg font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-colors'}
-                      >
-                        <i className="fab fa-whatsapp text-[10px]"></i>Enviar WhatsApp
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-         {/* Mobile - Wizard Steps */}
-              <div className="lg:hidden space-y-4">
-                {/* Step indicators */}
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  {[1, 2, 3, 4].map(step => (
-                    <button key={step} onClick={() => setProvadorStep(step as 1 | 2 | 3 | 4)} className={'w-8 h-8 rounded-full text-xs font-bold transition-all ' + (provadorStep === step ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white scale-110' : (step < provadorStep || (step === 1 && provadorClient) || (step === 2 && provadorPhotoType) || (step === 3 && Object.keys(provadorLook).length > 0) || (step === 4 && provadorGeneratedImage)) ? 'bg-green-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-200 text-gray-500'))}>
-                      {(step === 1 && provadorClient) || (step === 2 && provadorPhotoType) || (step === 3 && Object.keys(provadorLook).length > 0) || (step === 4 && provadorGeneratedImage) ? <i className="fas fa-check text-[10px]"></i> : step}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Step 1: Cliente */}
-                {provadorStep === 1 && (
-                  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>1. Selecionar Cliente</h3>
-                    {provadorClient ? (
-                      <div className="text-center">
-                        <div className="relative inline-block mb-2">
-                          <img src={getClientPhoto(provadorClient, provadorPhotoType) || getClientPhoto(provadorClient)} alt={provadorClient.firstName} className="w-20 h-20 rounded-full object-cover border-2 border-pink-500/50" />
-                          <button onClick={() => setProvadorClient(null)} className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs"><i className="fas fa-times"></i></button>
-                        </div>
-                        <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{provadorClient.firstName} {provadorClient.lastName}</p>
-                        <button onClick={() => setProvadorStep(2)} className="mt-3 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium">Próximo <i className="fas fa-arrow-right ml-1"></i></button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {clientsWithProvador.length > 0 ? clientsWithProvador.map(client => (
-                          <div key={client.id} onClick={() => { setProvadorClient(client); setProvadorStep(2); }} className={'flex items-center gap-3 p-3 rounded-lg border cursor-pointer ' + (theme === 'dark' ? 'border-neutral-800 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50')}>
-                            <img src={getClientPhoto(client)} alt="" className="w-10 h-10 rounded-full object-cover" />
-                            <div className="flex-1"><p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{client.firstName} {client.lastName}</p><p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{client.photos?.length || 1} foto(s)</p></div>
-                          </div>
-                        )) : (
-                          <div className="text-center py-6">
-                            <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user-plus text-2xl mb-2'}></i>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-2'}>Nenhum cliente com foto</p>
-                            <button onClick={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium">Cadastrar Cliente</button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Step 2: Foto */}
-                {provadorStep === 2 && (
-                  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>2. Selecionar Foto</h3>
-                    {provadorClient ? (
-                      <div className="space-y-2">
-                        {PHOTO_TYPES.map(photoType => {
-                          const hasPhoto = provadorClient.photos?.some(p => p.type === photoType.id) || (photoType.id === 'frente' && provadorClient.photo);
-                          const photoSrc = provadorClient.photos?.find(p => p.type === photoType.id)?.base64 || (photoType.id === 'frente' ? provadorClient.photo : undefined);
-                          return (
-                            <div key={photoType.id} onClick={() => { if (hasPhoto) { setProvadorPhotoType(photoType.id); setProvadorStep(3); } }} className={'flex items-center gap-3 p-3 rounded-lg border transition-all ' + (!hasPhoto ? (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' opacity-50' : provadorPhotoType === photoType.id ? 'border-pink-500 bg-pink-500/10 cursor-pointer' : (theme === 'dark' ? 'border-neutral-800 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300') + ' cursor-pointer')}>
-                              {hasPhoto && photoSrc ? <img src={photoSrc} alt="" className="w-12 h-12 rounded-lg object-cover" /> : <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-12 h-12 rounded-lg flex items-center justify-center'}><i className={'fas ' + photoType.icon + ' ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}></i></div>}
-                              <div className="flex-1"><p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{photoType.label}</p><p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{hasPhoto ? 'Toque para selecionar' : 'Não cadastrada'}</p></div>
-                              {hasPhoto && provadorPhotoType === photoType.id && <i className="fas fa-check text-pink-500"></i>}
-                            </div>
-                          );
-                        })}
-                        <div className="flex gap-2 mt-3">
-                          <button onClick={() => setProvadorStep(1)} className={(theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-200 text-gray-700') + ' flex-1 py-2 rounded-lg text-xs font-medium'}><i className="fas fa-arrow-left mr-1"></i> Voltar</button>
-                          {provadorPhotoType && <button onClick={() => setProvadorStep(3)} className="flex-1 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium">Próximo <i className="fas fa-arrow-right ml-1"></i></button>}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Selecione um cliente primeiro</p>
-                        <button onClick={() => setProvadorStep(1)} className="mt-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium">Voltar</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Step 3: Look */}
-                {provadorStep === 3 && (
-                  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>3. Montar Look {Object.keys(provadorLook).length > 0 && <span className="ml-2 text-xs text-pink-400 bg-pink-500/20 px-2 py-0.5 rounded-full">{Object.keys(provadorLook).length} peças</span>}</h3>
-                    <select value={provadorLookFilter} onChange={(e) => setProvadorLookFilter(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-xs mb-3'}>
-                      <option value="">Todas coleções</option>
-                      {COLLECTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <div className="max-h-64 overflow-y-auto mb-3">
-                      <StudioLookComposer products={provadorLookFilter ? products.filter(p => p.collection === provadorLookFilter) : products} composition={provadorLook} onChange={setProvadorLook} theme={theme} />
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => setProvadorStep(2)} className={(theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-gray-200 text-gray-700') + ' flex-1 py-2 rounded-lg text-xs font-medium'}><i className="fas fa-arrow-left mr-1"></i> Voltar</button>
-                      <button onClick={() => setProvadorStep(4)} disabled={Object.keys(provadorLook).length === 0} className="flex-1 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium disabled:opacity-50">Próximo <i className="fas fa-arrow-right ml-1"></i></button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Gerar */}
-                {provadorStep === 4 && (
-                  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
-                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>4. Gerar e Enviar</h3>
-
-                    {/* Preview/Imagem gerada ou Look selecionado */}
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] rounded-lg mb-2 flex items-center justify-center overflow-hidden relative'}>
-                      {isGeneratingProvador ? (
-                        <div className="text-center px-6 py-8">
-                          <div className="w-24 h-24 mx-auto mb-3">
-                            <DotLottieReact
-                              src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                              loop
-                              autoplay
-                              style={{ width: '100%', height: '100%' }}
-                            />
-                          </div>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm font-medium mb-3'}>{provadorProgress >= 100 ? 'Finalizando, aguarde só mais um momento...' : PROVADOR_LOADING_PHRASES[provadorLoadingIndex].text}</p>
-                          <div className={'w-full h-2 rounded-full overflow-hidden mb-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}>
-                            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300" style={{ width: `${Math.min(provadorProgress, 100)}%` }}></div>
-                          </div>
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-medium'}>{Math.round(Math.min(provadorProgress, 100))}%</p>
-                        </div>
-                      ) : selectedSavedLook ? (
-                        <>
-                          <img src={selectedSavedLook.imageUrl} alt="Look salvo" className="w-full h-full object-cover" />
-                          <button onClick={() => setSelectedSavedLook(null)} className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 text-white rounded-full text-xs"><i className="fas fa-times"></i></button>
-                        </>
-                      ) : provadorGeneratedImage ? (
-                        <>
-                          <img src={provadorGeneratedImage} alt="Gerado" className="w-full h-full object-cover" />
-                          <button onClick={() => { if (confirm('Descartar esta imagem?')) setProvadorGeneratedImage(null); }} className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-red-500 text-white rounded-full text-xs"><i className="fas fa-trash"></i></button>
-                        </>
-                      ) : provadorClient && getClientPhoto(provadorClient, provadorPhotoType) ? (
-                        <div className="relative w-full h-full"><img src={getClientPhoto(provadorClient, provadorPhotoType)} alt="Preview" className="w-full h-full object-cover opacity-30" /><div className="absolute inset-0 flex items-center justify-center"><div className="text-center"><i className="fas fa-wand-magic-sparkles text-pink-400 text-2xl mb-2"></i><p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Toque em Gerar</p></div></div></div>
-                      ) : (
-                        <div className="text-center p-4"><i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-image text-3xl mb-2'}></i><p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-xs'}>Preview</p></div>
-                      )}
-                    </div>
-
-                    {/* Botão Salvar Look (quando tem imagem gerada) */}
-                    {provadorGeneratedImage && !selectedSavedLook && (
-                      <button
-                        onClick={async () => {
-                          const saved = await saveClientLook(provadorGeneratedImage, provadorLook);
-                          if (saved) {
-                            alert('Look salvo com sucesso!');
-                          }
-                        }}
-                        disabled={savingLook}
-                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700') + ' w-full py-2 border rounded-lg font-medium text-xs mb-2 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50'}
-                      >
-                        {savingLook ? (
-                          <><i className="fas fa-spinner fa-spin text-[10px]"></i><span>Salvando...</span></>
-                        ) : (
-                          <><i className="fas fa-bookmark text-[10px]"></i><span>Salvar Look</span></>
-                        )}
-                      </button>
-                    )}
-
-                    {/* Galeria de Looks Salvos */}
-                    {provadorClient && clientLooks.length > 0 && (
-                      <div className="mb-3">
-                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-2 flex items-center gap-1'}>
-                          <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
-                        </p>
-                        <div className="flex gap-2 overflow-x-auto pb-2">
-                          {clientLooks.map(look => (
-                            <div key={look.id} className="relative flex-shrink-0 group">
-                              <img
-                                src={look.imageUrl}
-                                alt="Look"
-                                onClick={() => setSelectedSavedLook(look)}
-                                className={'w-16 h-20 object-cover rounded-lg cursor-pointer transition-all ' + (selectedSavedLook?.id === look.id ? 'ring-2 ring-pink-500' : 'hover:ring-2 hover:ring-pink-500/50')}
-                              />
-                              <button
-                                onClick={(e) => { e.stopPropagation(); if (confirm('Deletar este look?')) deleteClientLook(look); }}
-                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <i className="fas fa-times"></i>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <select value={selectedTemplate.id} onChange={(e) => { const t = whatsappTemplates.find(x => x.id === e.target.value); if (t) { setSelectedTemplate(t); setProvadorMessage(t.message); } }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-xs mb-2'}>
-                      {whatsappTemplates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                    </select>
-                    <textarea value={provadorMessage} onChange={(e) => setProvadorMessage(e.target.value)} rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-xs resize-none mb-3'} placeholder="Mensagem..." />
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          if (isGeneratingProvador) {
-                            alert('Aguarde a geração da imagem terminar');
-                            return;
-                          }
-                          setSelectedSavedLook(null);
-                          handleProvadorGenerate();
-                        }}
-                        disabled={!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3}
-                        className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm flex items-center justify-center gap-2 ${(!provadorClient || Object.keys(provadorLook).length === 0 || userCredits < 3) ? 'opacity-50 cursor-not-allowed' : isGeneratingProvador ? 'opacity-75 cursor-wait' : ''}`}
-                      >
-                        {isGeneratingProvador ? (
-                          <><i className="fas fa-spinner fa-spin"></i><span>Gerando imagem...</span></>
-                        ) : (
-                          <><i className="fas fa-wand-magic-sparkles"></i><span>Gerar (3 créd.)</span></>
-                        )}
-                      </button>
-                      <button
-                        onClick={handleProvadorSendWhatsApp}
-                        disabled={!provadorClient || (!provadorGeneratedImage && !selectedSavedLook)}
-                        className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' w-full py-3 text-green-500 border rounded-lg font-medium text-sm disabled:opacity-50 flex items-center justify-center gap-2'}
-                      >
-                        <i className="fab fa-whatsapp"></i>Enviar WhatsApp
-                      </button>
-                      <button onClick={() => setProvadorStep(3)} className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' w-full py-2 text-xs'}><i className="fas fa-arrow-left mr-1"></i> Voltar ao Look</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <VizzuProvadorWizard
+            theme={theme}
+            clients={clients}
+            products={products}
+            collections={COLLECTIONS}
+            userCredits={userCredits}
+            whatsappTemplates={whatsappTemplates}
+            onCreateClient={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }}
+            onUpdateClient={handleUpdateClientForProvador}
+            onGenerate={handleProvadorGenerateForWizard}
+            onSendWhatsApp={handleProvadorSendWhatsAppForWizard}
+            onDownloadImage={handleProvadorDownloadImage}
+            onSaveLook={saveClientLook}
+            onDeleteLook={deleteClientLook}
+            onGenerateAIMessage={handleProvadorGenerateAIMessage}
+            clientLooks={clientLooks}
+            isGenerating={isGeneratingProvador}
+            generationProgress={provadorProgress}
+            loadingText={PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...'}
+          />
         )}
-
         {/* LOOK COMPOSER */}
         {currentPage === 'look-composer' && (
           <VizzuLookComposer

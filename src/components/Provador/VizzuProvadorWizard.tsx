@@ -1,0 +1,1267 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import heic2any from 'heic2any';
+import {
+  Client,
+  ClientPhoto,
+  ClientLook,
+  LookComposition,
+  Product,
+  WhatsAppTemplate,
+} from '../../types';
+import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
+
+// ============================================================
+// TIPOS E CONSTANTES
+// ============================================================
+
+interface Props {
+  theme: 'dark' | 'light';
+  clients: Client[];
+  products: Product[];
+  collections: string[];
+  userCredits: number;
+  whatsappTemplates: WhatsAppTemplate[];
+  onCreateClient: () => void;
+  onUpdateClient: (client: Client) => void;
+  onGenerate: (
+    client: Client,
+    photoType: ClientPhoto['type'],
+    look: LookComposition
+  ) => Promise<string | null>;
+  onSendWhatsApp: (
+    client: Client,
+    image: string,
+    message: string
+  ) => void;
+  onDownloadImage: (image: string, clientName: string) => void;
+  onSaveLook: (image: string, look: LookComposition) => Promise<ClientLook | null>;
+  onDeleteLook: (look: ClientLook) => void;
+  onGenerateAIMessage: (clientName: string) => Promise<string>;
+  clientLooks: ClientLook[];
+  isGenerating: boolean;
+  generationProgress: number;
+  loadingText: string;
+}
+
+const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
+  { id: 'frente', label: 'Frente', icon: 'fa-user' },
+  { id: 'costas', label: 'Costas', icon: 'fa-user-slash' },
+  { id: 'rosto', label: 'Rosto', icon: 'fa-face-smile' },
+];
+
+const WIZARD_STEPS = [
+  { id: 1, title: 'Cliente', icon: 'fa-user' },
+  { id: 2, title: 'Foto', icon: 'fa-camera' },
+  { id: 3, title: 'Look', icon: 'fa-shirt' },
+  { id: 4, title: 'Enviar', icon: 'fa-paper-plane' },
+];
+
+// ============================================================
+// COMPONENTE PRINCIPAL
+// ============================================================
+
+export const VizzuProvadorWizard: React.FC<Props> = ({
+  theme,
+  clients,
+  products,
+  collections,
+  userCredits,
+  whatsappTemplates,
+  onCreateClient,
+  onUpdateClient,
+  onGenerate,
+  onSendWhatsApp,
+  onDownloadImage,
+  onSaveLook,
+  onDeleteLook,
+  onGenerateAIMessage,
+  clientLooks,
+  isGenerating,
+  generationProgress,
+  loadingText,
+}) => {
+  // Estados do Wizard
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Estados do Provador
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedPhotoType, setSelectedPhotoType] = useState<ClientPhoto['type']>('frente');
+  const [lookComposition, setLookComposition] = useState<LookComposition>({});
+  const [collectionFilter, setCollectionFilter] = useState<string>('');
+
+  // Estados de Geração
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [showBeforeAfter, setShowBeforeAfter] = useState<'before' | 'after'>('after');
+  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
+  const [savingLook, setSavingLook] = useState(false);
+
+  // Estados de Mensagem
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(whatsappTemplates[0]);
+  const [message, setMessage] = useState(whatsappTemplates[0]?.message || '');
+  const [isGeneratingAIMessage, setIsGeneratingAIMessage] = useState(false);
+
+  // Estados de Upload de Foto
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type']>('frente');
+
+  // Refs
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Clientes com fotos para Provador
+  const clientsWithProvador = clients.filter(
+    (c) => c.hasProvadorIA && (c.photos?.length || c.photo)
+  );
+
+  // ============================================================
+  // FUNÇÕES AUXILIARES
+  // ============================================================
+
+  const getClientPhoto = useCallback(
+    (client: Client, type?: ClientPhoto['type']): string | undefined => {
+      if (type && client.photos) {
+        const photo = client.photos.find((p) => p.type === type);
+        if (photo) return photo.base64;
+      }
+      if (client.photos?.length) return client.photos[0].base64;
+      return client.photo;
+    },
+    []
+  );
+
+  const formatWhatsApp = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 11) {
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+    }
+    return phone;
+  };
+
+  const processImageFile = async (file: File): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let processedFile: File | Blob = file;
+
+        // Converter HEIC/HEIF para PNG
+        if (
+          file.type === 'image/heic' ||
+          file.type === 'image/heif' ||
+          file.name.toLowerCase().endsWith('.heic') ||
+          file.name.toLowerCase().endsWith('.heif')
+        ) {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/png',
+            quality: 0.9,
+          });
+          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(processedFile);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  // ============================================================
+  // HANDLERS
+  // ============================================================
+
+  const handleSelectClient = (client: Client) => {
+    setSelectedClient(client);
+    setSelectedPhotoType('frente');
+    setCurrentStep(2);
+  };
+
+  const handleSelectPhoto = (photoType: ClientPhoto['type']) => {
+    setSelectedPhotoType(photoType);
+    if (selectedClient) {
+      setOriginalImage(getClientPhoto(selectedClient, photoType) || null);
+    }
+    setCurrentStep(3);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, source: 'gallery' | 'camera') => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedClient) return;
+
+    setIsUploadingPhoto(true);
+    setShowPhotoOptions(false);
+
+    try {
+      const base64 = await processImageFile(file);
+
+      // Atualizar fotos do cliente
+      const newPhoto: ClientPhoto = {
+        type: uploadingPhotoType,
+        base64,
+        createdAt: new Date().toISOString(),
+      };
+
+      const existingPhotos = selectedClient.photos || [];
+      const filteredPhotos = existingPhotos.filter((p) => p.type !== uploadingPhotoType);
+      const updatedPhotos = [...filteredPhotos, newPhoto];
+
+      const updatedClient: Client = {
+        ...selectedClient,
+        photos: updatedPhotos,
+        hasProvadorIA: true,
+      };
+
+      // Atualizar cliente no estado e no banco
+      setSelectedClient(updatedClient);
+      onUpdateClient(updatedClient);
+
+      // Selecionar automaticamente a foto recém-adicionada
+      setSelectedPhotoType(uploadingPhotoType);
+      setOriginalImage(base64);
+
+      // Avançar para o próximo step
+      setCurrentStep(3);
+    } catch (error) {
+      console.error('Erro ao processar foto:', error);
+      alert('Erro ao processar a foto. Tente novamente.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleOpenPhotoOptions = (photoType: ClientPhoto['type']) => {
+    setUploadingPhotoType(photoType);
+    setShowPhotoOptions(true);
+  };
+
+  const handleGenerate = async () => {
+    if (!selectedClient || Object.keys(lookComposition).length === 0) return;
+
+    // Guardar imagem original para o antes/depois
+    const origImg = getClientPhoto(selectedClient, selectedPhotoType);
+    if (origImg) {
+      setOriginalImage(origImg);
+    }
+
+    setSelectedSavedLook(null);
+    const result = await onGenerate(selectedClient, selectedPhotoType, lookComposition);
+
+    if (result) {
+      setGeneratedImage(result);
+      setShowBeforeAfter('after');
+    }
+  };
+
+  const handleSaveLook = async () => {
+    if (!generatedImage) return;
+
+    setSavingLook(true);
+    const saved = await onSaveLook(generatedImage, lookComposition);
+    setSavingLook(false);
+
+    if (saved) {
+      alert('Look salvo com sucesso!');
+    }
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!selectedClient) return;
+    const imageToSend = generatedImage || selectedSavedLook?.imageUrl;
+    if (!imageToSend) return;
+
+    const finalMessage = message.replace(/{nome}/gi, selectedClient.firstName);
+    onSendWhatsApp(selectedClient, imageToSend, finalMessage);
+  };
+
+  const handleDownload = () => {
+    if (!selectedClient) return;
+    const imageToDownload = generatedImage || selectedSavedLook?.imageUrl;
+    if (!imageToDownload) return;
+
+    onDownloadImage(imageToDownload, `${selectedClient.firstName}_${selectedClient.lastName}`);
+  };
+
+  const handleGenerateAIMessage = async () => {
+    if (!selectedClient) return;
+
+    setIsGeneratingAIMessage(true);
+    try {
+      const aiMessage = await onGenerateAIMessage(selectedClient.firstName);
+      setMessage(aiMessage);
+    } catch (error) {
+      console.error('Erro ao gerar mensagem IA:', error);
+    } finally {
+      setIsGeneratingAIMessage(false);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedClient(null);
+    setSelectedPhotoType('frente');
+    setLookComposition({});
+    setGeneratedImage(null);
+    setOriginalImage(null);
+    setSelectedSavedLook(null);
+    setCollectionFilter('');
+    setMessage(whatsappTemplates[0]?.message || '');
+    setCurrentStep(1);
+  };
+
+  const canGoToStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return true;
+      case 2:
+        return !!selectedClient;
+      case 3:
+        return !!selectedClient && !!selectedPhotoType;
+      case 4:
+        return !!selectedClient && !!selectedPhotoType && Object.keys(lookComposition).length > 0;
+      default:
+        return false;
+    }
+  };
+
+  const isStepComplete = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return !!selectedClient;
+      case 2:
+        return !!selectedPhotoType && !!getClientPhoto(selectedClient!, selectedPhotoType);
+      case 3:
+        return Object.keys(lookComposition).length > 0;
+      case 4:
+        return !!generatedImage || !!selectedSavedLook;
+      default:
+        return false;
+    }
+  };
+
+  // ============================================================
+  // RENDERIZADORES DE STEP
+  // ============================================================
+
+  const renderStepIndicators = () => (
+    <div className="flex items-center justify-center gap-2 mb-6">
+      {WIZARD_STEPS.map((step) => {
+        const isActive = currentStep === step.id;
+        const isComplete = isStepComplete(step.id);
+        const canNavigate = canGoToStep(step.id);
+
+        return (
+          <button
+            key={step.id}
+            onClick={() => canNavigate && setCurrentStep(step.id as 1 | 2 | 3 | 4)}
+            disabled={!canNavigate}
+            className={`
+              flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all
+              ${isActive
+                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white scale-105 shadow-lg shadow-pink-500/25'
+                : isComplete
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : canNavigate
+                    ? theme === 'dark'
+                      ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    : theme === 'dark'
+                      ? 'bg-neutral-900 text-neutral-600'
+                      : 'bg-gray-50 text-gray-300'
+              }
+              ${!canNavigate ? 'cursor-not-allowed' : 'cursor-pointer'}
+            `}
+          >
+            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${
+              isActive
+                ? 'bg-white/20'
+                : isComplete
+                  ? 'bg-green-500 text-white'
+                  : theme === 'dark'
+                    ? 'bg-neutral-700'
+                    : 'bg-gray-200'
+            }`}>
+              {isComplete && !isActive ? (
+                <i className="fas fa-check"></i>
+              ) : (
+                <i className={`fas ${step.icon}`}></i>
+              )}
+            </span>
+            <span className="hidden sm:inline">{step.title}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderStep1 = () => (
+    <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm'} rounded-2xl border overflow-hidden`}>
+      <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+        <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+          <span className="w-7 h-7 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center text-white text-xs">1</span>
+          Selecionar Cliente
+        </h3>
+        <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+          Escolha um cliente cadastrado ou adicione um novo
+        </p>
+      </div>
+
+      <div className="p-4">
+        {selectedClient ? (
+          <div className="text-center">
+            <div className="relative inline-block mb-3">
+              <img
+                src={getClientPhoto(selectedClient) || ''}
+                alt={selectedClient.firstName}
+                className="w-24 h-24 rounded-full object-cover border-4 border-pink-500/30"
+              />
+              <button
+                onClick={() => setSelectedClient(null)}
+                className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-lg`}>
+              {selectedClient.firstName} {selectedClient.lastName}
+            </p>
+            <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
+              {formatWhatsApp(selectedClient.whatsapp)}
+            </p>
+            <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-xs mt-1`}>
+              {selectedClient.photos?.length || 1} foto(s) cadastrada(s)
+            </p>
+
+            <button
+              onClick={() => setCurrentStep(2)}
+              className="mt-4 px-6 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:shadow-lg hover:shadow-pink-500/25 transition-all"
+            >
+              Continuar <i className="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Buscar clientes */}
+            <div className="mb-4">
+              <div className="relative">
+                <i className={`fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+                <input
+                  type="text"
+                  placeholder="Buscar cliente..."
+                  className={`w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border ${
+                    theme === 'dark'
+                      ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Lista de clientes */}
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {clientsWithProvador.length > 0 ? (
+                clientsWithProvador.map((client) => (
+                  <div
+                    key={client.id}
+                    onClick={() => handleSelectClient(client)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      theme === 'dark'
+                        ? 'border-neutral-800 hover:border-pink-500/50 hover:bg-neutral-800'
+                        : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50'
+                    }`}
+                  >
+                    <img
+                      src={getClientPhoto(client) || ''}
+                      alt={client.firstName}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-pink-500/20"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
+                        {client.firstName} {client.lastName}
+                      </p>
+                      <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                        {client.photos?.length || 1} foto(s)
+                      </p>
+                    </div>
+                    <i className={`fas fa-chevron-right text-xs ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
+                    theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+                  }`}>
+                    <i className={`fas fa-user-plus text-2xl ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                  </div>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm mb-1`}>
+                    Nenhum cliente com foto cadastrada
+                  </p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-xs`}>
+                    Cadastre um cliente para usar o Provador
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Botao de adicionar cliente */}
+            <button
+              onClick={onCreateClient}
+              className={`w-full mt-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+                theme === 'dark'
+                  ? 'bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
+              }`}
+            >
+              <i className="fas fa-plus"></i>
+              Adicionar Novo Cliente
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm'} rounded-2xl border overflow-hidden`}>
+      <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+        <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+          <span className="w-7 h-7 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center text-white text-xs">2</span>
+          Selecionar Foto
+        </h3>
+        <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+          Escolha a foto que sera usada ou adicione uma nova
+        </p>
+      </div>
+
+      {/* Preview do cliente selecionado */}
+      {selectedClient && (
+        <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-gray-100 bg-gray-50'}`}>
+          <div className="flex items-center gap-3">
+            <img
+              src={getClientPhoto(selectedClient) || ''}
+              alt={selectedClient.firstName}
+              className="w-10 h-10 rounded-full object-cover border-2 border-pink-500/30"
+            />
+            <div>
+              <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
+                {selectedClient.firstName} {selectedClient.lastName}
+              </p>
+              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                {selectedClient.photos?.length || 1} foto(s) disponivel(is)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-4">
+        {selectedClient ? (
+          <div className="space-y-3">
+            {/* Tipos de foto disponiveis */}
+            {PHOTO_TYPES.map((photoType) => {
+              const hasPhoto = selectedClient.photos?.some((p) => p.type === photoType.id) ||
+                (photoType.id === 'frente' && selectedClient.photo);
+              const photoSrc = selectedClient.photos?.find((p) => p.type === photoType.id)?.base64 ||
+                (photoType.id === 'frente' ? selectedClient.photo : undefined);
+              const isSelected = selectedPhotoType === photoType.id && hasPhoto;
+
+              return (
+                <div
+                  key={photoType.id}
+                  className={`rounded-xl border overflow-hidden transition-all ${
+                    isSelected
+                      ? 'border-pink-500 ring-2 ring-pink-500/20'
+                      : theme === 'dark'
+                        ? 'border-neutral-800'
+                        : 'border-gray-200'
+                  }`}
+                >
+                  <div
+                    onClick={() => hasPhoto && handleSelectPhoto(photoType.id)}
+                    className={`flex items-center gap-4 p-4 transition-all ${
+                      !hasPhoto
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'cursor-pointer hover:bg-pink-500/5'
+                    }`}
+                  >
+                    {hasPhoto && photoSrc ? (
+                      <img
+                        src={photoSrc}
+                        alt={photoType.label}
+                        className="w-16 h-16 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                        theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+                      }`}>
+                        <i className={`fas ${photoType.icon} text-lg ${
+                          theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'
+                        }`}></i>
+                      </div>
+                    )}
+
+                    <div className="flex-1">
+                      <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+                        {photoType.label}
+                      </p>
+                      <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                        {hasPhoto ? 'Toque para selecionar' : 'Nao cadastrada'}
+                      </p>
+                    </div>
+
+                    {isSelected && (
+                      <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center">
+                        <i className="fas fa-check text-white text-xs"></i>
+                      </div>
+                    )}
+
+                    {hasPhoto && !isSelected && (
+                      <i className={`fas fa-chevron-right ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                    )}
+                  </div>
+
+                  {/* Botao para adicionar/substituir foto */}
+                  {!hasPhoto && (
+                    <div className={`px-4 pb-4 pt-0`}>
+                      <button
+                        onClick={() => handleOpenPhotoOptions(photoType.id)}
+                        className={`w-full py-2.5 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-all ${
+                          theme === 'dark'
+                            ? 'bg-neutral-800 text-pink-400 hover:bg-neutral-700'
+                            : 'bg-pink-50 text-pink-600 hover:bg-pink-100'
+                        }`}
+                      >
+                        <i className="fas fa-camera"></i>
+                        Adicionar foto de {photoType.label.toLowerCase()}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Botao para adicionar nova foto */}
+            <div className={`mt-4 p-4 rounded-xl border border-dashed ${
+              theme === 'dark' ? 'border-neutral-700 bg-neutral-800/30' : 'border-gray-300 bg-gray-50'
+            }`}>
+              <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-600'} text-sm text-center mb-3`}>
+                <i className="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                Cliente na loja? Tire uma foto agora!
+              </p>
+              <button
+                onClick={() => handleOpenPhotoOptions(selectedPhotoType)}
+                className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-camera"></i>
+                Tirar Nova Foto
+              </button>
+            </div>
+
+            {/* Navegacao */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setCurrentStep(1)}
+                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 text-white hover:bg-neutral-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <i className="fas fa-arrow-left mr-2"></i>Voltar
+              </button>
+              {getClientPhoto(selectedClient, selectedPhotoType) && (
+                <button
+                  onClick={() => setCurrentStep(3)}
+                  className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm"
+                >
+                  Continuar<i className="fas fa-arrow-right ml-2"></i>
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
+              Selecione um cliente primeiro
+            </p>
+            <button
+              onClick={() => setCurrentStep(1)}
+              className="mt-3 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium"
+            >
+              Voltar para clientes
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de opcoes de foto (Galeria/Camera) */}
+      {showPhotoOptions && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className={`w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden ${
+            theme === 'dark' ? 'bg-neutral-900' : 'bg-white'
+          }`}>
+            <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+              <div className="flex items-center justify-between">
+                <h4 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold`}>
+                  Adicionar Foto
+                </h4>
+                <button
+                  onClick={() => setShowPhotoOptions(false)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  <i className="fas fa-times text-sm"></i>
+                </button>
+              </div>
+              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+                Foto de {PHOTO_TYPES.find(p => p.id === uploadingPhotoType)?.label.toLowerCase()}
+              </p>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Camera */}
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 hover:bg-neutral-700'
+                    : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center">
+                  <i className="fas fa-camera text-white text-lg"></i>
+                </div>
+                <div className="text-left">
+                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+                    Camera
+                  </p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                    Tirar foto agora
+                  </p>
+                </div>
+              </button>
+
+              {/* Galeria */}
+              <button
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 hover:bg-neutral-700'
+                    : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
+                }`}>
+                  <i className={`fas fa-images text-lg ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}></i>
+                </div>
+                <div className="text-left">
+                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+                    Galeria
+                  </p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                    Escolher da galeria
+                  </p>
+                </div>
+              </button>
+
+              {isUploadingPhoto && (
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <i className="fas fa-spinner fa-spin text-pink-500"></i>
+                  <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
+                    Processando...
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inputs de arquivo ocultos */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*,.heic,.heif"
+        onChange={(e) => handlePhotoUpload(e, 'gallery')}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*,.heic,.heif"
+        capture="environment"
+        onChange={(e) => handlePhotoUpload(e, 'camera')}
+        className="hidden"
+      />
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm'} rounded-2xl border overflow-hidden`}>
+      <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+        <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+          <span className="w-7 h-7 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center text-white text-xs">3</span>
+          Montar Look
+          {Object.keys(lookComposition).length > 0 && (
+            <span className="ml-auto text-xs text-pink-400 bg-pink-500/20 px-2 py-1 rounded-full">
+              {Object.keys(lookComposition).length} peca(s)
+            </span>
+          )}
+        </h3>
+        <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+          Selecione as pecas que compoem o look
+        </p>
+      </div>
+
+      {/* Preview lateral do cliente */}
+      <div className="flex">
+        {/* Preview da foto do cliente (sempre visivel) */}
+        <div className={`w-1/3 p-3 border-r ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-100 bg-gray-50'}`}>
+          <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] font-medium uppercase tracking-wide mb-2`}>
+            Cliente
+          </p>
+          {selectedClient && (
+            <div className="text-center">
+              <img
+                src={getClientPhoto(selectedClient, selectedPhotoType) || getClientPhoto(selectedClient) || ''}
+                alt={selectedClient.firstName}
+                className="w-full aspect-[3/4] object-cover rounded-xl mb-2"
+              />
+              <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-xs truncate`}>
+                {selectedClient.firstName}
+              </p>
+              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] capitalize`}>
+                Foto: {selectedPhotoType}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Composicao do look */}
+        <div className="flex-1 p-3">
+          {/* Filtro de colecao */}
+          <select
+            value={collectionFilter}
+            onChange={(e) => setCollectionFilter(e.target.value)}
+            className={`w-full px-3 py-2 border rounded-xl text-xs mb-3 ${
+              theme === 'dark'
+                ? 'bg-neutral-800 border-neutral-700 text-white'
+                : 'bg-gray-50 border-gray-200 text-gray-900'
+            }`}
+          >
+            <option value="">Todas as colecoes</option>
+            {collections.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+
+          {/* Componente de Look Composer */}
+          <div className="max-h-80 overflow-y-auto">
+            <StudioLookComposer
+              products={collectionFilter ? products.filter((p) => p.collection === collectionFilter) : products}
+              composition={lookComposition}
+              onChange={setLookComposition}
+              theme={theme}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Navegacao */}
+      <div className={`p-4 border-t ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setCurrentStep(2)}
+            className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
+              theme === 'dark'
+                ? 'bg-neutral-800 text-white hover:bg-neutral-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <i className="fas fa-arrow-left mr-2"></i>Voltar
+          </button>
+          <button
+            onClick={() => setCurrentStep(4)}
+            disabled={Object.keys(lookComposition).length === 0}
+            className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Continuar<i className="fas fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep4 = () => (
+    <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm'} rounded-2xl border overflow-hidden`}>
+      <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+        <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+          <span className="w-7 h-7 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center text-white text-xs">4</span>
+          Gerar e Enviar
+        </h3>
+        <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+          Gere a imagem e envie para o cliente
+        </p>
+      </div>
+
+      <div className="p-4">
+        {/* Area de preview/imagem */}
+        <div className={`aspect-[3/4] rounded-xl mb-4 overflow-hidden relative ${
+          theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+        }`}>
+          {isGenerating ? (
+            <div className="flex flex-col items-center justify-center h-full p-6">
+              <div className="w-24 h-24 mb-4">
+                <DotLottieReact
+                  src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                  loop
+                  autoplay
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </div>
+              <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} text-sm font-medium mb-3 text-center`}>
+                {loadingText}
+              </p>
+              <div className={`w-full max-w-xs h-2 rounded-full overflow-hidden ${
+                theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
+              }`}>
+                <div
+                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300"
+                  style={{ width: `${Math.min(generationProgress, 100)}%` }}
+                />
+              </div>
+              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-2`}>
+                {Math.round(Math.min(generationProgress, 100))}%
+              </p>
+            </div>
+          ) : selectedSavedLook ? (
+            <>
+              <img
+                src={selectedSavedLook.imageUrl}
+                alt="Look salvo"
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={() => setSelectedSavedLook(null)}
+                className="absolute top-3 right-3 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full text-sm"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </>
+          ) : generatedImage ? (
+            <>
+              {/* Toggle Antes/Depois */}
+              <div className="absolute top-3 left-3 z-10">
+                <div className={`flex rounded-lg overflow-hidden ${
+                  theme === 'dark' ? 'bg-black/50' : 'bg-white/80'
+                }`}>
+                  <button
+                    onClick={() => setShowBeforeAfter('before')}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      showBeforeAfter === 'before'
+                        ? 'bg-pink-500 text-white'
+                        : theme === 'dark'
+                          ? 'text-white hover:bg-white/10'
+                          : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Antes
+                  </button>
+                  <button
+                    onClick={() => setShowBeforeAfter('after')}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      showBeforeAfter === 'after'
+                        ? 'bg-pink-500 text-white'
+                        : theme === 'dark'
+                          ? 'text-white hover:bg-white/10'
+                          : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Depois
+                  </button>
+                </div>
+              </div>
+
+              <img
+                src={showBeforeAfter === 'after' ? generatedImage : (originalImage || '')}
+                alt={showBeforeAfter === 'after' ? 'Imagem gerada' : 'Imagem original'}
+                className="w-full h-full object-cover"
+              />
+
+              <button
+                onClick={() => {
+                  if (confirm('Descartar esta imagem?')) {
+                    setGeneratedImage(null);
+                    setShowBeforeAfter('after');
+                  }
+                }}
+                className="absolute top-3 right-3 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full text-sm transition-colors"
+              >
+                <i className="fas fa-trash"></i>
+              </button>
+            </>
+          ) : selectedClient && getClientPhoto(selectedClient, selectedPhotoType) ? (
+            <div className="relative w-full h-full">
+              <img
+                src={getClientPhoto(selectedClient, selectedPhotoType)!}
+                alt="Preview"
+                className="w-full h-full object-cover opacity-30"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <i className="fas fa-wand-magic-sparkles text-pink-400 text-3xl mb-2"></i>
+                  <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
+                    Clique em Criar para gerar
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <i className={`fas fa-image text-4xl mb-3 ${theme === 'dark' ? 'text-neutral-700' : 'text-gray-300'}`}></i>
+              <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-sm`}>Preview</p>
+            </div>
+          )}
+        </div>
+
+        {/* Botao de salvar look (quando tem imagem gerada) */}
+        {generatedImage && !selectedSavedLook && (
+          <button
+            onClick={handleSaveLook}
+            disabled={savingLook}
+            className={`w-full py-2.5 mb-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+              theme === 'dark'
+                ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
+            } border`}
+          >
+            {savingLook ? (
+              <><i className="fas fa-spinner fa-spin"></i>Salvando...</>
+            ) : (
+              <><i className="fas fa-bookmark"></i>Salvar Look</>
+            )}
+          </button>
+        )}
+
+        {/* Galeria de looks salvos */}
+        {selectedClient && clientLooks.length > 0 && (
+          <div className="mb-4">
+            <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-xs mb-2 flex items-center gap-1`}>
+              <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {clientLooks.map((look) => (
+                <div key={look.id} className="relative flex-shrink-0 group">
+                  <img
+                    src={look.imageUrl}
+                    alt="Look"
+                    onClick={() => setSelectedSavedLook(look)}
+                    className={`w-16 h-20 object-cover rounded-lg cursor-pointer transition-all ${
+                      selectedSavedLook?.id === look.id
+                        ? 'ring-2 ring-pink-500'
+                        : 'hover:ring-2 hover:ring-pink-500/50'
+                    }`}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Deletar este look?')) onDeleteLook(look);
+                    }}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Template de mensagem */}
+        <div className="mb-3">
+          <select
+            value={selectedTemplate.id}
+            onChange={(e) => {
+              const t = whatsappTemplates.find((x) => x.id === e.target.value);
+              if (t) {
+                setSelectedTemplate(t);
+                setMessage(t.message);
+              }
+            }}
+            className={`w-full px-3 py-2.5 border rounded-xl text-xs ${
+              theme === 'dark'
+                ? 'bg-neutral-800 border-neutral-700 text-white'
+                : 'bg-gray-50 border-gray-200 text-gray-900'
+            }`}
+          >
+            {whatsappTemplates.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Campo de mensagem com botao de IA */}
+        <div className="relative mb-4">
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            placeholder="Escreva uma mensagem personalizada..."
+            className={`w-full px-3 py-2.5 pr-12 border rounded-xl text-xs resize-none ${
+              theme === 'dark'
+                ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500'
+                : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+            }`}
+          />
+          <button
+            onClick={handleGenerateAIMessage}
+            disabled={isGeneratingAIMessage || !selectedClient}
+            title="Gerar mensagem com IA"
+            className={`absolute right-2 top-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+              isGeneratingAIMessage
+                ? 'bg-pink-500/20 text-pink-500'
+                : theme === 'dark'
+                  ? 'bg-neutral-700 text-pink-400 hover:bg-neutral-600'
+                  : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
+            }`}
+          >
+            {isGeneratingAIMessage ? (
+              <i className="fas fa-spinner fa-spin text-sm"></i>
+            ) : (
+              <i className="fas fa-wand-magic-sparkles text-sm"></i>
+            )}
+          </button>
+        </div>
+
+        {/* Botoes de acao */}
+        <div className="space-y-2">
+          {/* Botao Criar */}
+          <button
+            onClick={handleGenerate}
+            disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3 || isGenerating}
+            className={`w-full py-3.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+              (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3)
+                ? 'opacity-50 cursor-not-allowed'
+                : isGenerating
+                  ? 'opacity-75 cursor-wait'
+                  : 'hover:shadow-lg hover:shadow-pink-500/25'
+            }`}
+          >
+            {isGenerating ? (
+              <><i className="fas fa-spinner fa-spin"></i>Gerando imagem...</>
+            ) : (
+              <><i className="fas fa-wand-magic-sparkles"></i>Criar (3 cred.)</>
+            )}
+          </button>
+
+          {/* Botoes WhatsApp e Download */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleSendWhatsApp}
+              disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
+              className={`flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                theme === 'dark'
+                  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-green-400'
+                  : 'bg-white hover:bg-gray-50 border-gray-200 text-green-600'
+              } border`}
+            >
+              <i className="fab fa-whatsapp"></i>WhatsApp
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
+              className={`flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                theme === 'dark'
+                  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                  : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
+              } border`}
+            >
+              <i className="fas fa-download"></i>Download
+            </button>
+          </div>
+
+          {/* Botao voltar */}
+          <button
+            onClick={() => setCurrentStep(3)}
+            className={`w-full py-2.5 text-sm ${
+              theme === 'dark' ? 'text-neutral-500 hover:text-neutral-400' : 'text-gray-500 hover:text-gray-600'
+            }`}
+          >
+            <i className="fas fa-arrow-left mr-2"></i>Voltar para o Look
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ============================================================
+  // RENDER PRINCIPAL
+  // ============================================================
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+              theme === 'dark'
+                ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30'
+                : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25'
+            }`}>
+              <i className={`fas fa-shirt text-lg ${theme === 'dark' ? 'text-pink-400' : 'text-white'}`}></i>
+            </div>
+            <div>
+              <h1 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Vizzu Provador
+              </h1>
+              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
+                Vista seus clientes virtualmente
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
+              theme === 'dark'
+                ? 'bg-neutral-900 border border-neutral-800 text-neutral-400'
+                : 'bg-pink-100 text-pink-600'
+            }`}>
+              3 cred.
+            </span>
+            {(selectedClient || Object.keys(lookComposition).length > 0) && (
+              <button
+                onClick={handleReset}
+                className={`p-2 rounded-lg text-sm transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
+                }`}
+              >
+                <i className="fas fa-undo"></i>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Step Indicators */}
+        {renderStepIndicators()}
+
+        {/* Conteudo do Step */}
+        <div className="transition-all duration-300">
+          {currentStep === 1 && renderStep1()}
+          {currentStep === 2 && renderStep2()}
+          {currentStep === 3 && renderStep3()}
+          {currentStep === 4 && renderStep4()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VizzuProvadorWizard;
