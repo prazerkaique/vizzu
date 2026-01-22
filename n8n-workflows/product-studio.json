@@ -159,17 +159,17 @@
     },
     {
       "parameters": {
-        "jsCode": "// ETAPA 1: REMOVER FUNDO\nconst binary = $input.first().binary;\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-2.0-flash-exp';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nlet imageBase64 = null;\nlet imageMimeType = 'image/png';\n\nif (binary && binary.data) {\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  imageBase64 = buffer.toString('base64');\n  imageMimeType = binary.data.mimeType || 'image/png';\n}\n\nif (!imageBase64) throw new Error('Nenhuma imagem encontrada');\n\nconst prompt = `Remove the background from this product image completely.\nKeep ONLY the product itself.\nMake background pure white (#FFFFFF).\nPreserve all product details, colors, textures.\nClean edges, no artifacts.\nDo NOT modify the product.`;\n\nconst payload = {\n  contents: [{ role: \"user\", parts: [\n    { inline_data: { mime_type: imageMimeType, data: imageBase64 } },\n    { text: prompt }\n  ]}],\n  generationConfig: { responseModalities: [\"TEXT\", \"IMAGE\"], temperature: 0.5 },\n  safetySettings: [\n    { category: \"HARM_CATEGORY_HARASSMENT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_HATE_SPEECH\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_SEXUALLY_EXPLICIT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_DANGEROUS_CONTENT\", threshold: \"BLOCK_NONE\" }\n  ]\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST', url: endpoint,\n  headers: { 'Content-Type': 'application/json' },\n  body: payload, json: true, timeout: 180000\n});\n\nlet cleanImageBase64 = null;\nif (response.candidates?.[0]?.content?.parts) {\n  for (const part of response.candidates[0].content.parts) {\n    if (part.inlineData?.data) cleanImageBase64 = part.inlineData.data;\n  }\n}\n\nif (!cleanImageBase64) throw new Error('Gemini não retornou imagem limpa');\n\n// IMPORTANTE: Salvar base64 no JSON para passar pelo loop\nreturn [{\n  json: {\n    cleanImageBase64: cleanImageBase64,\n    generationId: $('Criar Geracao').item.json.id,\n    product: $('Buscar Produto').item.json\n  },\n  binary: {\n    cleanImage: { data: cleanImageBase64, mimeType: 'image/png', fileName: 'clean.png' }\n  }\n}];"
+        "jsCode": "// ETAPA 1: GERAR FOTO DE ESTÚDIO\n// Transforma a imagem original em foto profissional com fundo cinza\nconst binary = $input.first().binary;\nconst product = $('Buscar Produto').item.json;\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-2.0-flash-exp';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nlet imageBase64 = null;\nlet imageMimeType = 'image/png';\n\nif (binary && binary.data) {\n  const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n  imageBase64 = buffer.toString('base64');\n  imageMimeType = binary.data.mimeType || 'image/png';\n}\n\nif (!imageBase64) throw new Error('Nenhuma imagem encontrada');\n\nconst category = (product.category || 'produto').toLowerCase();\nconst color = product.color || '';\n\nconst prompt = `Transform this product image into a professional e-commerce studio photograph.\n\nPRODUCT: ${category}${color ? ', Color: ' + color : ''}\n\nREQUIREMENTS:\n- Create a professional studio photo with SOLID LIGHT GRAY background (#EDEDED to #F2F2F2)\n- Keep the EXACT same product - do NOT change colors, details, or proportions\n- Preserve ALL product details: stitching, buttons, textures, prints, labels\n- Product should appear as if photographed in a professional studio\n- Soft, even, diffused lighting - no harsh shadows\n- Product centered and well-framed\n- Ghost mannequin style if it's clothing (as if worn by invisible person)\n- Clean, professional e-commerce quality\n\nCRITICAL:\n- Do NOT remove or crop any part of the product\n- Do NOT modify the product itself\n- ONLY change the background and lighting to studio quality\n- Preserve the exact original colors of the product\n\nOutput: Professional studio photo ready for e-commerce.`;\n\nconst payload = {\n  contents: [{ role: \"user\", parts: [\n    { inline_data: { mime_type: imageMimeType, data: imageBase64 } },\n    { text: prompt }\n  ]}],\n  generationConfig: { responseModalities: [\"TEXT\", \"IMAGE\"], temperature: 0.7 },\n  safetySettings: [\n    { category: \"HARM_CATEGORY_HARASSMENT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_HATE_SPEECH\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_SEXUALLY_EXPLICIT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_DANGEROUS_CONTENT\", threshold: \"BLOCK_NONE\" }\n  ]\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST', url: endpoint,\n  headers: { 'Content-Type': 'application/json' },\n  body: payload, json: true, timeout: 180000\n});\n\nlet studioImageBase64 = null;\nif (response.candidates?.[0]?.content?.parts) {\n  for (const part of response.candidates[0].content.parts) {\n    if (part.inlineData?.data) studioImageBase64 = part.inlineData.data;\n  }\n}\n\nif (!studioImageBase64) throw new Error('Gemini não retornou foto de estúdio');\n\n// Salvar base64 no JSON para passar pelo loop\nreturn [{\n  json: {\n    studioImageBase64: studioImageBase64,\n    generationId: $('Criar Geracao').item.json.id,\n    product: product\n  },\n  binary: {\n    studioImage: { data: studioImageBase64, mimeType: 'image/png', fileName: 'studio.png' }\n  }\n}];"
       },
       "id": "remove-bg-001",
-      "name": "Remover Fundo",
+      "name": "Gerar Foto Estudio",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1760, -120]
     },
     {
       "parameters": {
-        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);\n  });\n}\n\nconst input = $input.first();\nconst userId = $('Preparar Dados').item.json.userId;\nconst productId = $('Preparar Dados').item.json.productId;\nconst cleanImageId = generateUUID();\n\nconst storagePath = `${userId}/${productId}/clean_base_${cleanImageId}.png`;\nconst publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${storagePath}`;\n\nreturn [{\n  json: {\n    ...input.json,\n    cleanImageId,\n    cleanStoragePath: storagePath,\n    cleanPublicUrl: publicUrl\n  },\n  binary: input.binary\n}];"
+        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {\n    const r = Math.random() * 16 | 0;\n    return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);\n  });\n}\n\nconst input = $input.first();\nconst userId = $('Preparar Dados').item.json.userId;\nconst productId = $('Preparar Dados').item.json.productId;\nconst studioImageId = generateUUID();\n\nconst storagePath = `${userId}/${productId}/studio_base_${studioImageId}.png`;\nconst publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${storagePath}`;\n\nreturn [{\n  json: {\n    ...input.json,\n    studioImageId,\n    studioStoragePath: storagePath,\n    studioPublicUrl: publicUrl\n  },\n  binary: input.binary\n}];"
       },
       "id": "gen-clean-path-001",
       "name": "Path Imagem Limpa",
@@ -181,8 +181,8 @@
       "parameters": {
         "operation": "upload",
         "bucketName": "products",
-        "fileName": "={{ $json.cleanStoragePath }}",
-        "binaryPropertyName": "cleanImage",
+        "fileName": "={{ $json.studioStoragePath }}",
+        "binaryPropertyName": "studioImage",
         "additionalFields": {}
       },
       "id": "upload-clean-001",
@@ -199,7 +199,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Criar um item para cada ângulo, passando o base64 via JSON\nconst input = $input.first().json;\nconst angles = $('Preparar Dados').item.json.angles;\n\nconst items = angles.map((angle, index) => ({\n  json: {\n    currentAngle: angle,\n    angleIndex: index,\n    totalAngles: angles.length,\n    cleanImageBase64: input.cleanImageBase64,\n    cleanPublicUrl: input.cleanPublicUrl,\n    generationId: input.generationId,\n    product: input.product\n  }\n}));\n\nreturn items;"
+        "jsCode": "// Criar um item para cada ângulo, passando o base64 via JSON\nconst input = $input.first().json;\nconst angles = $('Preparar Dados').item.json.angles;\n\nconst items = angles.map((angle, index) => ({\n  json: {\n    currentAngle: angle,\n    angleIndex: index,\n    totalAngles: angles.length,\n    studioImageBase64: input.studioImageBase64,\n    studioPublicUrl: input.studioPublicUrl,\n    generationId: input.generationId,\n    product: input.product\n  }\n}));\n\nreturn items;"
       },
       "id": "prep-loop-001",
       "name": "Preparar Loop",
@@ -219,7 +219,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// GERAR ÂNGULO - Lê base64 do JSON\nconst input = $input.first().json;\nconst prompt = input.prompt;\nconst angle = input.currentAngle;\nconst imageBase64 = input.cleanImageBase64;\n\nif (!imageBase64) throw new Error('Imagem limpa não encontrada no JSON');\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-2.0-flash-exp';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nconst payload = {\n  contents: [{ role: \"user\", parts: [\n    { inline_data: { mime_type: 'image/png', data: imageBase64 } },\n    { text: prompt }\n  ]}],\n  generationConfig: { responseModalities: [\"TEXT\", \"IMAGE\"], temperature: 0.8 },\n  safetySettings: [\n    { category: \"HARM_CATEGORY_HARASSMENT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_HATE_SPEECH\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_SEXUALLY_EXPLICIT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_DANGEROUS_CONTENT\", threshold: \"BLOCK_NONE\" }\n  ]\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST', url: endpoint,\n  headers: { 'Content-Type': 'application/json' },\n  body: payload, json: true, timeout: 180000\n});\n\nlet generatedBase64 = null;\nif (response.candidates?.[0]?.content?.parts) {\n  for (const part of response.candidates[0].content.parts) {\n    if (part.inlineData?.data) generatedBase64 = part.inlineData.data;\n  }\n}\n\nif (!generatedBase64) throw new Error('Gemini não retornou imagem para: ' + angle);\n\nreturn [{\n  json: { ...input, generatedBase64 },\n  binary: {\n    generatedAngle: { data: generatedBase64, mimeType: 'image/png', fileName: `studio_${angle}.png` }\n  }\n}];"
+        "jsCode": "// GERAR ÂNGULO - Lê base64 do JSON\nconst input = $input.first().json;\nconst prompt = input.prompt;\nconst angle = input.currentAngle;\nconst imageBase64 = input.studioImageBase64;\n\nif (!imageBase64) throw new Error('Imagem limpa não encontrada no JSON');\n\nconst apiKey = 'AIzaSyAjxVPQvFgFqFxmI4_MlHB8jeTAxvuIPNM';\nconst model = 'gemini-2.0-flash-exp';\nconst endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;\n\nconst payload = {\n  contents: [{ role: \"user\", parts: [\n    { inline_data: { mime_type: 'image/png', data: imageBase64 } },\n    { text: prompt }\n  ]}],\n  generationConfig: { responseModalities: [\"TEXT\", \"IMAGE\"], temperature: 0.8 },\n  safetySettings: [\n    { category: \"HARM_CATEGORY_HARASSMENT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_HATE_SPEECH\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_SEXUALLY_EXPLICIT\", threshold: \"BLOCK_NONE\" },\n    { category: \"HARM_CATEGORY_DANGEROUS_CONTENT\", threshold: \"BLOCK_NONE\" }\n  ]\n};\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST', url: endpoint,\n  headers: { 'Content-Type': 'application/json' },\n  body: payload, json: true, timeout: 180000\n});\n\nlet generatedBase64 = null;\nif (response.candidates?.[0]?.content?.parts) {\n  for (const part of response.candidates[0].content.parts) {\n    if (part.inlineData?.data) generatedBase64 = part.inlineData.data;\n  }\n}\n\nif (!generatedBase64) throw new Error('Gemini não retornou imagem para: ' + angle);\n\nreturn [{\n  json: { ...input, generatedBase64 },\n  binary: {\n    generatedAngle: { data: generatedBase64, mimeType: 'image/png', fileName: `studio_${angle}.png` }\n  }\n}];"
       },
       "id": "gen-angle-001",
       "name": "Gerar Angulo",
@@ -289,7 +289,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nconst generations = items.map(item => ({\n  angle: item.json.currentAngle,\n  image_url: item.json.anglePublicUrl,\n  image_id: item.json.angleImageId\n}));\n\nreturn [{\n  json: {\n    generationId: items[0].json.generationId,\n    cleanImageUrl: items[0].json.cleanPublicUrl,\n    generations,\n    totalAngles: items.length\n  }\n}];"
+        "jsCode": "const items = $input.all();\n\nconst generations = items.map(item => ({\n  angle: item.json.currentAngle,\n  image_url: item.json.anglePublicUrl,\n  image_id: item.json.angleImageId\n}));\n\nreturn [{\n  json: {\n    generationId: items[0].json.generationId,\n    studioImageUrl: items[0].json.studioPublicUrl,\n    generations,\n    totalAngles: items.length\n  }\n}];"
       },
       "id": "aggregate-001",
       "name": "Agregar",
@@ -306,7 +306,7 @@
         },
         "fieldsUi": {
           "fieldValues": [
-            { "fieldId": "clean_image_url", "fieldValue": "={{ $json.cleanImageUrl }}" },
+            { "fieldId": "studio_image_url", "fieldValue": "={{ $json.studioImageUrl }}" },
             { "fieldId": "output_urls", "fieldValue": "={{ JSON.stringify($json.generations) }}" },
             { "fieldId": "status", "fieldValue": "completed" },
             { "fieldId": "completed_at", "fieldValue": "={{ new Date().toISOString() }}" },
@@ -355,7 +355,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({\n  success: true,\n  clean_image_url: $('Agregar').item.json.cleanImageUrl,\n  generations: $('Agregar').item.json.generations,\n  generation_id: $('Agregar').item.json.generationId,\n  credits_used: $('Preparar Dados').item.json.creditsNeeded,\n  credits_remaining: $('Buscar Usuario').item.json.credits - $('Preparar Dados').item.json.creditsNeeded\n}) }}",
+        "responseBody": "={{ JSON.stringify({\n  success: true,\n  studio_image_url: $('Agregar').item.json.studioImageUrl,\n  generations: $('Agregar').item.json.generations,\n  generation_id: $('Agregar').item.json.generationId,\n  credits_used: $('Preparar Dados').item.json.creditsNeeded,\n  credits_remaining: $('Buscar Usuario').item.json.credits - $('Preparar Dados').item.json.creditsNeeded\n}) }}",
         "options": { "responseCode": 200 }
       },
       "id": "success-001",
@@ -376,8 +376,8 @@
     "Buscar Imagem": { "main": [[{ "node": "Buscar Produto", "type": "main", "index": 0 }]] },
     "Buscar Produto": { "main": [[{ "node": "Criar Geracao", "type": "main", "index": 0 }]] },
     "Criar Geracao": { "main": [[{ "node": "Download Imagem", "type": "main", "index": 0 }]] },
-    "Download Imagem": { "main": [[{ "node": "Remover Fundo", "type": "main", "index": 0 }]] },
-    "Remover Fundo": { "main": [[{ "node": "Path Imagem Limpa", "type": "main", "index": 0 }]] },
+    "Download Imagem": { "main": [[{ "node": "Gerar Foto Estudio", "type": "main", "index": 0 }]] },
+    "Gerar Foto Estudio": { "main": [[{ "node": "Path Imagem Limpa", "type": "main", "index": 0 }]] },
     "Path Imagem Limpa": { "main": [[{ "node": "Upload Imagem Limpa", "type": "main", "index": 0 }]] },
     "Upload Imagem Limpa": { "main": [[{ "node": "Preparar Loop", "type": "main", "index": 0 }]] },
     "Preparar Loop": { "main": [[{ "node": "Construir Prompt", "type": "main", "index": 0 }]] },
