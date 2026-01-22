@@ -51,7 +51,7 @@ const PROVADOR_LOADING_PHRASES = [
   { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-type Page = 'dashboard' | 'studio' | 'provador' | 'models' | 'products' | 'clients' | 'history' | 'settings';
+type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'models' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
 function App() {
@@ -2128,22 +2128,47 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <img src="/logo.png" alt="Vizzu" className="h-10" />
           <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Estúdio com IA para lojistas</span>
         </div>
-        <nav className="flex-1 p-2 space-y-0.5">
+        <nav className="flex-1 p-2 space-y-1">
+          {/* Dashboard */}
+          <button
+            onClick={() => setCurrentPage('dashboard')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+              (currentPage === 'dashboard'
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+              )
+            }
+          >
+            <i className="fas fa-home w-4 text-[10px]"></i>Dashboard
+          </button>
+
+          {/* Botão CRIAR - Destacado */}
+          <button
+            onClick={() => setCurrentPage('create')}
+            className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
+              (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador'
+                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
+                : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
+              )
+            }
+          >
+            <i className="fas fa-plus text-[10px]"></i>Criar
+          </button>
+
+          <div className="h-2"></div>
+
+          {/* Outros itens de navegação */}
           {[
-            { id: 'dashboard' as Page, icon: 'fa-home', label: 'Dashboard' },
-            { id: 'studio' as Page, icon: 'fa-wand-magic-sparkles', label: 'Vizzu Studio®' },
-            { id: 'provador' as Page, icon: 'fa-shirt', label: 'Vizzu Provador®' },
-            { id: 'models' as Page, icon: 'fa-user-tie', label: 'Modelos' },
             { id: 'products' as Page, icon: 'fa-box', label: 'Produtos' },
-            { id: 'clients' as Page, icon: 'fa-users', label: 'Clientes' },
+            { id: 'models' as Page, icon: 'fa-user-tie', label: 'Modelos' },
             { id: 'history' as Page, icon: 'fa-clock-rotate-left', label: 'Histórico' },
           ].map(item => (
-            <button 
-              key={item.id} 
-              onClick={() => setCurrentPage(item.id)} 
-              className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' + 
-                (currentPage === item.id 
-                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white') 
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id)}
+              className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+                (currentPage === item.id
+                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
                   : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
                 )
               }
@@ -2163,42 +2188,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-              className={'w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
-                (currentPage === 'settings' || showSettingsDropdown
-                  ? (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-white/25 text-white')
-                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
-                )
-              }
-            >
-              <span className="flex items-center gap-2.5">
-                <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
-              </span>
-              <i className={`fas fa-chevron-down text-[8px] transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`}></i>
-            </button>
-            {showSettingsDropdown && (
-              <div className="absolute left-0 right-0 bottom-full mb-1 rounded-xl border border-neutral-700/50 shadow-xl overflow-hidden z-50 bg-neutral-900/95 backdrop-blur-md">
-                {[
-                  { id: 'profile', label: 'Perfil', icon: 'fa-user' },
-                  { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
-                  { id: 'company', label: 'Empresa', icon: 'fa-building' },
-                  { id: 'plan', label: 'Plano & Créditos', icon: 'fa-credit-card' },
-                  { id: 'integrations', label: 'Integrações', icon: 'fa-plug' },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-neutral-500 hover:text-white hover:bg-neutral-800"
-                  >
-                    <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => setCurrentPage('settings')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+              (currentPage === 'settings'
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+              )
+            }
+          >
+            <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
+          </button>
           <div className="flex items-center gap-2.5 px-2 py-2">
             <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/20')}>
               {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-xs text-white/70"></i>}
@@ -2436,6 +2436,119 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   >
                     <i className="fas fa-bolt text-xs"></i>
                     Fazer Upgrade
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PÁGINA CRIAR - Hub de Features */}
+        {currentPage === 'create' && (
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-4xl mx-auto">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                  <i className="fas fa-plus text-white text-2xl"></i>
+                </div>
+                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold mb-2'}>Criar com IA</h1>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Escolha uma ferramenta para começar a criar</p>
+              </div>
+
+              {/* Feature Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Vizzu Studio */}
+                <div
+                  onClick={() => setCurrentPage('studio')}
+                  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-2xl border p-5 cursor-pointer transition-all hover:scale-[1.02]'}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+                      <i className="fas fa-camera text-white text-lg"></i>
+                    </div>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' px-2 py-1 rounded-lg text-[10px] font-medium'}>
+                      <i className="fas fa-coins text-pink-400 mr-1"></i>1 crédito
+                    </div>
+                  </div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold mb-1'}>Vizzu Studio®</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Fotos profissionais de produtos com fundo branco e cenários criativos</p>
+                  <button className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2 rounded-lg text-sm font-medium transition-colors'}>
+                    Acessar <i className="fas fa-arrow-right ml-1 text-xs"></i>
+                  </button>
+                </div>
+
+                {/* Vizzu Provador */}
+                <div
+                  onClick={() => setCurrentPage('provador')}
+                  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-2xl border p-5 cursor-pointer transition-all hover:scale-[1.02] relative'}
+                >
+                  {/* Badge NOVO */}
+                  <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] font-bold rounded-full shadow-lg">
+                    NOVO
+                  </div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-400 flex items-center justify-center">
+                      <i className="fas fa-shirt text-white text-lg"></i>
+                    </div>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' px-2 py-1 rounded-lg text-[10px] font-medium'}>
+                      <i className="fas fa-coins text-pink-400 mr-1"></i>1 crédito
+                    </div>
+                  </div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold mb-1'}>Vizzu Provador®</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Provador virtual com IA - vista roupas em fotos de clientes</p>
+                  <button className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2 rounded-lg text-sm font-medium transition-colors'}>
+                    Acessar <i className="fas fa-arrow-right ml-1 text-xs"></i>
+                  </button>
+                </div>
+
+                {/* Modelo IA */}
+                <div
+                  onClick={() => setCurrentPage('models')}
+                  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-2xl border p-5 cursor-pointer transition-all hover:scale-[1.02]'}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center">
+                      <i className="fas fa-user-tie text-white text-lg"></i>
+                    </div>
+                    <div className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' px-2 py-1 rounded-lg text-[10px] font-medium'}>
+                      <i className="fas fa-coins text-pink-400 mr-1"></i>3 créditos
+                    </div>
+                  </div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold mb-1'}>Modelo IA</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Crie modelos virtuais personalizados para suas fotos de produtos</p>
+                  <button className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2 rounded-lg text-sm font-medium transition-colors'}>
+                    Acessar <i className="fas fa-arrow-right ml-1 text-xs"></i>
+                  </button>
+                </div>
+
+                {/* Em breve - Mais ferramentas */}
+                <div className={(theme === 'dark' ? 'bg-neutral-900/50 border-neutral-800 border-dashed' : 'bg-gray-50 border-gray-200 border-dashed') + ' rounded-2xl border-2 p-5 flex flex-col items-center justify-center text-center'}>
+                  <div className={'w-12 h-12 rounded-xl flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-sparkles text-lg'}></i>
+                  </div>
+                  <h3 className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' font-semibold mb-1'}>Em breve</h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' text-sm'}>Novas ferramentas de IA chegando</p>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border p-4 mt-6'}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
+                      <i className="fas fa-coins text-pink-400"></i>
+                    </div>
+                    <div>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
+                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Comprar mais
                   </button>
                 </div>
               </div>
@@ -3958,15 +4071,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-box text-sm"></i>
             <span className="text-[9px] font-medium">Produtos</span>
           </button>
-          <button onClick={() => setShowStudioPicker(true)} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all ' + ((currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
-              <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
+          {/* Botão CRIAR - Central destacado */}
+          <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
+              <i className="fas fa-plus text-white text-lg"></i>
             </div>
-            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
-          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
-            <i className="fas fa-users text-sm"></i>
-            <span className="text-[9px] font-medium">Clientes</span>
+          <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+            <i className="fas fa-user-tie text-sm"></i>
+            <span className="text-[9px] font-medium">Modelos</span>
           </button>
           <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' || currentPage === 'history' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-ellipsis text-sm"></i>
