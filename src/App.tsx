@@ -2142,40 +2142,59 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-home w-4 text-[10px]"></i>Dashboard
           </button>
 
-          {/* Botão CRIAR - Destacado */}
+          {/* Produtos */}
           <button
-            onClick={() => setCurrentPage('create')}
-            className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
-              (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador'
-                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
-                : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
+            onClick={() => setCurrentPage('products')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+              (currentPage === 'products'
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
           >
-            <i className="fas fa-plus text-[10px]"></i>Criar
+            <i className="fas fa-box w-4 text-[10px]"></i>Produtos
           </button>
 
-          <div className="h-2"></div>
-
-          {/* Outros itens de navegação */}
-          {[
-            { id: 'products' as Page, icon: 'fa-box', label: 'Produtos' },
-            { id: 'models' as Page, icon: 'fa-user-tie', label: 'Modelos' },
-            { id: 'history' as Page, icon: 'fa-clock-rotate-left', label: 'Histórico' },
-          ].map(item => (
+          {/* Botão CRIAR - Destacado no Centro */}
+          <div className="py-2">
             <button
-              key={item.id}
-              onClick={() => setCurrentPage(item.id)}
-              className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
-                (currentPage === item.id
-                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
-                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+              onClick={() => setCurrentPage('create')}
+              className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
+                (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador'
+                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
+                  : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
                 )
               }
             >
-              <i className={'fas ' + item.icon + ' w-4 text-[10px]'}></i>{item.label}
+              <i className="fas fa-wand-magic-sparkles text-[10px]"></i>Criar
             </button>
-          ))}
+          </div>
+
+          {/* Modelos */}
+          <button
+            onClick={() => setCurrentPage('models')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+              (currentPage === 'models'
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+              )
+            }
+          >
+            <i className="fas fa-user-tie w-4 text-[10px]"></i>Modelos
+          </button>
+
+          {/* Histórico */}
+          <button
+            onClick={() => setCurrentPage('history')}
+            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+              (currentPage === 'history'
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+              )
+            }
+          >
+            <i className="fas fa-clock-rotate-left w-4 text-[10px]"></i>Histórico
+          </button>
         </nav>
         <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
           <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/20 backdrop-blur-sm') + ' rounded-xl p-3'}>
@@ -2249,6 +2268,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             >
               <i className="fas fa-coins text-[10px]"></i>
               <span>{userCredits}</span>
+            </button>
+            <button
+              onClick={() => setCurrentPage('settings')}
+              className={'w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')}
+            >
+              <i className="fas fa-cog text-sm"></i>
             </button>
           </div>
         </div>
@@ -2443,97 +2468,154 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </div>
         )}
 
-        {/* PÁGINA CRIAR - Hub de Features */}
+        {/* PÁGINA VIZZU CREATION - Hub de Features */}
         {currentPage === 'create' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               {/* Header */}
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center shadow-lg shadow-pink-500/30">
-                  <i className="fas fa-plus text-white text-2xl"></i>
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+                    <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+                  </div>
+                  <div>
+                    <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Creation</h1>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha uma ferramenta para criar com IA</p>
+                  </div>
                 </div>
-                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold mb-2'}>Criar com IA</h1>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Escolha uma ferramenta para começar a criar</p>
               </div>
 
-              {/* Feature Cards Grid */}
+              {/* Video Cards Grid - 2x2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Vizzu Studio */}
+                {/* Vizzu Studio Card */}
                 <div
-                  onClick={() => setCurrentPage('studio')}
-                  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-2xl border p-5 cursor-pointer transition-all hover:scale-[1.02]'}
+                  onClick={() => setShowVideoTutorial('studio')}
+                  className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-                      <i className="fas fa-camera text-white text-lg"></i>
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                        <span className="text-white/60 text-xs">1-3 créditos</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-1">Vizzu Studio®</h3>
+                      <p className="text-white/70 text-sm">Fotos profissionais de produtos com fundo branco e cenários criativos</p>
                     </div>
-                    <div className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' px-2 py-1 rounded-lg text-[10px] font-medium'}>
-                      <i className="fas fa-coins text-pink-400 mr-1"></i>1 crédito
+                    <div className="flex items-center justify-between">
+                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                        <i className="fas fa-play text-white ml-1"></i>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('studio'); }}
+                        className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                      >
+                        Acessar <i className="fas fa-arrow-right text-xs"></i>
+                      </button>
                     </div>
                   </div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold mb-1'}>Vizzu Studio®</h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Fotos profissionais de produtos com fundo branco e cenários criativos</p>
-                  <button className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2 rounded-lg text-sm font-medium transition-colors'}>
-                    Acessar <i className="fas fa-arrow-right ml-1 text-xs"></i>
-                  </button>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Vizzu Provador */}
+                {/* Vizzu Provador Card */}
                 <div
-                  onClick={() => setCurrentPage('provador')}
-                  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-2xl border p-5 cursor-pointer transition-all hover:scale-[1.02] relative'}
+                  onClick={() => setShowVideoTutorial('provador')}
+                  className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
                 >
-                  {/* Badge NOVO */}
-                  <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[10px] font-bold rounded-full shadow-lg">
-                    NOVO
-                  </div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-400 flex items-center justify-center">
-                      <i className="fas fa-shirt text-white text-lg"></i>
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
+                        <span className="text-white/60 text-xs">3 créditos</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-1">Vizzu Provador®</h3>
+                      <p className="text-white/70 text-sm">Provador virtual com IA - vista roupas em fotos de clientes</p>
                     </div>
-                    <div className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' px-2 py-1 rounded-lg text-[10px] font-medium'}>
-                      <i className="fas fa-coins text-pink-400 mr-1"></i>1 crédito
+                    <div className="flex items-center justify-between">
+                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                        <i className="fas fa-play text-white ml-1"></i>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('provador'); }}
+                        className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                      >
+                        Acessar <i className="fas fa-arrow-right text-xs"></i>
+                      </button>
                     </div>
                   </div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold mb-1'}>Vizzu Provador®</h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Provador virtual com IA - vista roupas em fotos de clientes</p>
-                  <button className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2 rounded-lg text-sm font-medium transition-colors'}>
-                    Acessar <i className="fas fa-arrow-right ml-1 text-xs"></i>
-                  </button>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Modelo IA */}
+                {/* Modelo IA Card */}
                 <div
                   onClick={() => setCurrentPage('models')}
-                  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-2xl border p-5 cursor-pointer transition-all hover:scale-[1.02]'}
+                  className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-yellow-400 flex items-center justify-center">
-                      <i className="fas fa-user-tie text-white text-lg"></i>
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-orange-600 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                        <span className="text-white/60 text-xs">3 créditos</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-1">Modelo IA</h3>
+                      <p className="text-white/70 text-sm">Crie modelos virtuais personalizados para suas fotos de produtos</p>
                     </div>
-                    <div className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' px-2 py-1 rounded-lg text-[10px] font-medium'}>
-                      <i className="fas fa-coins text-pink-400 mr-1"></i>3 créditos
+                    <div className="flex items-center justify-between">
+                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                        <i className="fas fa-user-tie text-white"></i>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('models'); }}
+                        className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                      >
+                        Acessar <i className="fas fa-arrow-right text-xs"></i>
+                      </button>
                     </div>
                   </div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold mb-1'}>Modelo IA</h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Crie modelos virtuais personalizados para suas fotos de produtos</p>
-                  <button className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2 rounded-lg text-sm font-medium transition-colors'}>
-                    Acessar <i className="fas fa-arrow-right ml-1 text-xs"></i>
-                  </button>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Em breve - Mais ferramentas */}
-                <div className={(theme === 'dark' ? 'bg-neutral-900/50 border-neutral-800 border-dashed' : 'bg-gray-50 border-gray-200 border-dashed') + ' rounded-2xl border-2 p-5 flex flex-col items-center justify-center text-center'}>
-                  <div className={'w-12 h-12 rounded-xl flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-sparkles text-lg'}></i>
+                {/* Em breve Card */}
+                <div
+                  className={'video-card group relative overflow-hidden rounded-xl ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800"></div>
+                  <div className="absolute inset-0 bg-black/60"></div>
+                  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-gray-500 text-white text-[9px] font-bold rounded-full uppercase">Em breve</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white/60 mb-1">Novas Ferramentas</h3>
+                      <p className="text-white/40 text-sm">Mais recursos de IA em desenvolvimento</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                        <i className="fas fa-sparkles text-white/40"></i>
+                      </div>
+                      <button
+                        disabled
+                        className="px-4 py-2 bg-gray-600/50 text-white/40 text-sm font-bold rounded-lg flex items-center gap-2 cursor-not-allowed"
+                      >
+                        Aguarde <i className="fas fa-clock text-xs"></i>
+                      </button>
+                    </div>
                   </div>
-                  <h3 className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' font-semibold mb-1'}>Em breve</h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' text-sm'}>Novas ferramentas de IA chegando</p>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border p-4 mt-6'}>
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mt-6'}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
@@ -4074,7 +4156,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           {/* Botão CRIAR - Central destacado */}
           <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
             <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
-              <i className="fas fa-plus text-white text-lg"></i>
+              <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
             <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
@@ -4082,45 +4164,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-user-tie text-sm"></i>
             <span className="text-[9px] font-medium">Modelos</span>
           </button>
-          <button onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'settings' || currentPage === 'history' || showSettingsDropdown ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
-            <i className="fas fa-ellipsis text-sm"></i>
-            <span className="text-[9px] font-medium">Mais</span>
+          <button onClick={() => setCurrentPage('history')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'history' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+            <i className="fas fa-clock-rotate-left text-sm"></i>
+            <span className="text-[9px] font-medium">Histórico</span>
           </button>
         </div>
       </nav>
 
-      {/* Mobile Settings Dropdown - fora do nav para z-index funcionar */}
-      {showSettingsDropdown && (
-        <>
-          <div className="md:hidden fixed inset-0 z-[60]" onClick={() => setShowSettingsDropdown(false)} />
-          <div className={'md:hidden fixed bottom-16 right-2 w-48 rounded-xl border shadow-xl overflow-hidden z-[70] backdrop-blur-md ' + (theme === 'dark' ? 'bg-neutral-900/95 border-neutral-700/50' : 'bg-white/95 border-gray-200')} style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
-            <button
-              onClick={() => { setCurrentPage('history'); setShowSettingsDropdown(false); }}
-              className={'w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-left ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')}
-            >
-              <i className="fas fa-clock-rotate-left w-4 text-[10px]"></i>
-              Histórico
-            </button>
-            <div className={'border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')} />
-            {[
-              { id: 'profile', label: 'Perfil', icon: 'fa-user' },
-              { id: 'appearance', label: 'Aparência', icon: 'fa-palette' },
-              { id: 'company', label: 'Empresa', icon: 'fa-building' },
-              { id: 'plan', label: 'Plano & Créditos', icon: 'fa-credit-card' },
-              { id: 'integrations', label: 'Integrações', icon: 'fa-plug' },
-            ].map(item => (
-              <button
-                key={item.id}
-                onClick={() => { setCurrentPage('settings'); setSettingsTab(item.id as SettingsTab); setShowSettingsDropdown(false); }}
-                className={'w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-all text-left ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100')}
-              >
-                <i className={`fas ${item.icon} w-4 text-[10px]`}></i>
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
 
       {/* VIDEO TUTORIAL MODAL */}
       {showVideoTutorial && (
