@@ -2931,7 +2931,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
                   <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/Banner-Vizzu-Studio.jpg)' }}></div>
-                  <div className="video-overlay absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-pink-600/75 to-pink-600/25"></div>
+                  <div className="video-overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 group-hover:to-black/20 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
