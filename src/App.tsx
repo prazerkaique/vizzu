@@ -193,6 +193,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [provadorMessage, setProvadorMessage] = useState(DEFAULT_WHATSAPP_TEMPLATES[0].message);
   const [provadorGeneratedImage, setProvadorGeneratedImage] = useState<string | null>(null);
   const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
+  const [provadorMinimized, setProvadorMinimized] = useState(false);
   const [provadorLoadingIndex, setProvadorLoadingIndex] = useState(0);
   const [provadorProgress, setProvadorProgress] = useState(0);
   const [showClientPicker, setShowClientPicker] = useState(false);
@@ -3163,8 +3164,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onGenerateAIMessage={handleProvadorGenerateAIMessage}
             clientLooks={clientLooks}
             isGenerating={isGeneratingProvador}
+            isMinimized={provadorMinimized}
             generationProgress={provadorProgress}
             loadingText={PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...'}
+            onSetMinimized={setProvadorMinimized}
           />
         )}
         {/* LOOK COMPOSER */}
@@ -5874,6 +5877,40 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   ></div>
                 </div>
                 <span className="text-white text-xs font-medium">{lookComposerProgress}%</span>
+              </div>
+            </div>
+            <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+              <i className="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Vizzu Provador - Minimizado */}
+      {isGeneratingProvador && provadorMinimized && (
+        <div
+          className="fixed bottom-6 right-6 z-50 cursor-pointer"
+          onClick={() => setProvadorMinimized(false)}
+        >
+          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-2xl p-4 shadow-2xl shadow-pink-500/20 flex items-center gap-4 min-w-[280px]">
+            <div className="w-10 h-10 flex-shrink-0">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-white text-sm font-medium">Vizzu Provador</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${provadorProgress}%` }}
+                  ></div>
+                </div>
+                <span className="text-white text-xs font-medium">{Math.round(provadorProgress)}%</span>
               </div>
             </div>
             <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">

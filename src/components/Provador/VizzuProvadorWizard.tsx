@@ -40,8 +40,10 @@ interface Props {
   onGenerateAIMessage: (clientName: string) => Promise<string>;
   clientLooks: ClientLook[];
   isGenerating: boolean;
+  isMinimized: boolean;
   generationProgress: number;
   loadingText: string;
+  onSetMinimized: (minimized: boolean) => void;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -78,8 +80,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   onGenerateAIMessage,
   clientLooks,
   isGenerating,
+  isMinimized,
   generationProgress,
   loadingText,
+  onSetMinimized,
 }) => {
   // Estados do Wizard
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -1268,6 +1272,84 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
           {currentStep === 4 && renderStep4()}
         </div>
       </div>
+
+      {/* Modal de Loading Fullscreen */}
+      {isGenerating && !isMinimized && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop com blur */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+
+          {/* Container do conteudo */}
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
+            {/* Animacao Lottie */}
+            <div className="w-48 h-48 md:w-64 md:h-64 mb-6">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+
+            {/* Titulo */}
+            <h2 className="text-white text-xl md:text-2xl font-bold mb-2 text-center">
+              Criando seu look...
+            </h2>
+
+            {/* Frase de loading dinamica */}
+            <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px]">
+              {loadingText}
+            </p>
+
+            {/* Barra de progresso */}
+            <div className="w-full max-w-xs mb-4">
+              <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300"
+                  style={{ width: `${Math.min(generationProgress, 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-white text-sm font-medium text-center mt-2">
+                {Math.round(Math.min(generationProgress, 100))}%
+              </p>
+            </div>
+
+            {/* Info do cliente */}
+            {selectedClient && (
+              <div className="bg-neutral-900/80 rounded-xl p-4 border border-neutral-800 mb-6 w-full max-w-xs">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={getClientPhoto(selectedClient) || ''}
+                    alt={selectedClient.firstName}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-pink-500/30"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate">
+                      {selectedClient.firstName} {selectedClient.lastName}
+                    </p>
+                    <p className="text-neutral-500 text-xs">
+                      {Object.keys(lookComposition).length} peca(s) selecionada(s)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Botao Minimizar */}
+            <button
+              onClick={() => onSetMinimized(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors"
+            >
+              <i className="fas fa-minus"></i>
+              <span>Minimizar e continuar navegando</span>
+            </button>
+
+            <p className="text-neutral-600 text-xs mt-3 text-center">
+              A geracao continuara em segundo plano
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
