@@ -21,6 +21,7 @@ interface LookComposerEditorProps {
   savedModels: SavedModel[];
   onSaveModel?: (model: SavedModel) => void;
   onOpenCreateModel?: () => void;
+  modelLimit?: number;
   // Props para geração global
   isGenerating?: boolean;
   isMinimized?: boolean;
@@ -84,6 +85,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   savedModels,
   onSaveModel,
   onOpenCreateModel,
+  modelLimit = 10,
   isGenerating: globalIsGenerating = false,
   isMinimized = false,
   generationProgress = 0,
@@ -421,19 +423,40 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
               </div>
             ) : (
               <div className="space-y-3">
-                <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
-                  Clique no botão abaixo para criar um novo modelo personalizado com a IA.
-                </p>
-                <button
-                  onClick={onOpenCreateModel}
-                  disabled={!onOpenCreateModel}
-                  className={'w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm transition-opacity ' + (onOpenCreateModel ? 'hover:opacity-90' : 'opacity-50 cursor-not-allowed')}
-                >
-                  <i className="fas fa-wand-magic-sparkles mr-2"></i>Criar Novo Modelo
-                </button>
-                <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] text-center'}>
-                  O modelo será salvo e ficará disponível para reutilizar
-                </p>
+                {savedModels.length >= modelLimit ? (
+                  // Limite atingido
+                  <div className={(isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-4 border'}>
+                    <div className="flex items-start gap-3">
+                      <div className={(isDark ? 'bg-amber-500/20' : 'bg-amber-100') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                        <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-exclamation-triangle'}></i>
+                      </div>
+                      <div>
+                        <h4 className={(isDark ? 'text-amber-400' : 'text-amber-700') + ' font-semibold text-sm mb-1'}>Limite de modelos atingido</h4>
+                        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+                          Você já possui {savedModels.length}/{modelLimit} modelo{modelLimit > 1 ? 's' : ''} criado{modelLimit > 1 ? 's' : ''}.
+                          Para criar um novo, acesse a área de <strong>Modelos</strong> e exclua um existente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Pode criar
+                  <>
+                    <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
+                      Clique no botão abaixo para criar um novo modelo personalizado com a IA.
+                    </p>
+                    <button
+                      onClick={onOpenCreateModel}
+                      disabled={!onOpenCreateModel}
+                      className={'w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm transition-opacity ' + (onOpenCreateModel ? 'hover:opacity-90' : 'opacity-50 cursor-not-allowed')}
+                    >
+                      <i className="fas fa-wand-magic-sparkles mr-2"></i>Criar Novo Modelo
+                    </button>
+                    <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] text-center'}>
+                      {savedModels.length}/{modelLimit} modelos criados
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -20,6 +20,7 @@ interface LookComposerProps {
   savedModels: SavedModel[];
   onSaveModel?: (model: SavedModel) => void;
   onOpenCreateModel?: () => void;
+  modelLimit?: number;
   // Estados de geração em background
   isGenerating?: boolean;
   isMinimized?: boolean;
@@ -51,6 +52,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   savedModels,
   onSaveModel,
   onOpenCreateModel,
+  modelLimit = 10,
   isGenerating = false,
   isMinimized = false,
   generationProgress = 0,
@@ -146,6 +148,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         savedModels={savedModels}
         onSaveModel={onSaveModel}
         onOpenCreateModel={onOpenCreateModel}
+        modelLimit={modelLimit}
         isGenerating={isGenerating}
         isMinimized={isMinimized}
         generationProgress={generationProgress}

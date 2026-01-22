@@ -3335,7 +3335,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             userId={user?.id}
             savedModels={savedModels}
             onSaveModel={handleSaveModel}
-            onOpenCreateModel={() => { resetModelWizard(); setShowCreateModel(true); }}
+            onOpenCreateModel={() => {
+              if (!canCreateModel()) {
+                return; // UI já mostra mensagem de limite
+              }
+              resetModelWizard();
+              setShowCreateModel(true);
+            }}
+            modelLimit={getModelLimit()}
             isGenerating={isGeneratingLookComposer}
             isMinimized={lookComposerMinimized}
             generationProgress={lookComposerProgress}
