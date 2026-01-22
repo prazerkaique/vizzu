@@ -2123,7 +2123,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
       {/* DESKTOP SIDEBAR */}
-      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-gradient-to-b from-pink-500 via-fuchsia-500 to-violet-500 border-violet-600')}>
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-gradient-to-b from-pink-500 via-fuchsia-500 to-violet-500 border-violet-600')}>
         <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
           <img src="/logo.png" alt="Vizzu" className="h-10" />
           <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Estúdio com IA para lojistas</span>
@@ -2282,169 +2282,215 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         {/* DASHBOARD */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'dashboard' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
             <div className="max-w-5xl mx-auto">
-              <div className="flex items-center gap-3 mb-6">
-                <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                  <i className={'fas fa-home text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
-                </div>
+              {/* Header com boas-vindas */}
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dashboard</h1>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
                     <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>{currentPlan.name}</span>
                   </div>
-                  <p className={theme === 'dark' ? 'text-neutral-500 text-sm' : 'text-gray-500 text-sm'}>Resumo do seu estúdio de imagens AI</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>
+                    Bem-vindo de volta, <span className="font-medium">{user?.name?.split(' ')[0] || 'usuário'}</span>
+                  </p>
                 </div>
+                <button
+                  onClick={() => setCurrentPage('create')}
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-pink-500/25"
+                >
+                  <i className="fas fa-plus text-xs"></i>
+                  Novo Projeto
+                </button>
               </div>
-              
-              {/* CARD CRIAR */}
-              <style>{`
-                @keyframes gradient-shift {
-                  0% { background-position: 0% 50%; }
-                  50% { background-position: 100% 50%; }
-                  100% { background-position: 0% 50%; }
-                }
-                .animated-gradient-btn {
-                  background-size: 200% 200%;
-                  transition: all 0.3s ease;
-                }
-                .animated-gradient-btn:hover {
-                  animation: gradient-shift 3s ease infinite;
-                  transform: translateY(-2px);
-                  box-shadow: 0 10px 40px -10px rgba(236, 72, 153, 0.5);
-                }
-                .video-card {
-                  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                .video-card:hover {
-                  transform: translateY(-4px);
-                }
-                .video-card:hover .video-overlay {
-                  opacity: 0.4;
-                }
-                .video-card:hover .play-btn {
-                  transform: scale(1.1);
-                  box-shadow: 0 0 30px rgba(255,255,255,0.3);
-                }
-              `}</style>
-              
-              <div className={'rounded-2xl p-5 mb-5 ' + (theme === 'dark' ? 'bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 border border-neutral-800' : 'bg-white shadow-xl shadow-gray-200/50 border border-gray-100')}>
+
+              {/* AÇÕES RÁPIDAS - Últimos Projetos */}
+              <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-400">
-                      <i className="fas fa-wand-magic-sparkles text-white text-xs"></i>
-                    </div>
-                    <h2 className={'text-base font-bold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Criar</h2>
+                    <i className={'fas fa-rocket text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                    <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Ações Rápidas</h2>
                   </div>
-                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>
-                    <i className="fas fa-play-circle mr-1"></i>Clique para ver tutorial
-                  </span>
+                  <button
+                    onClick={() => setCurrentPage('history')}
+                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
+                  >
+                    Ver histórico <i className="fas fa-arrow-right ml-1"></i>
+                  </button>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Vizzu Studio Card */}
-                  <div 
-                    onClick={() => setShowVideoTutorial('studio')}
-                    className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
-                    style={{ aspectRatio: '16/9', minHeight: '180px' }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600"></div>
-                    <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
-                    <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                          <span className="text-white/60 text-xs">1-3 créditos</span>
+
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                  {/* Últimos projetos/gerações */}
+                  {historyLogs.slice(0, 4).map((log, idx) => {
+                    const logProduct = log.products?.[0] || log.items?.[0];
+                    const logImage = logProduct?.originalImages?.front?.url || logProduct?.originalImages?.front?.base64 || logProduct?.images?.[0]?.url || logProduct?.images?.[0]?.base64;
+                    const logName = logProduct?.name || log.details?.split(' ').slice(0, 3).join(' ') || log.action;
+                    return (
+                      <div
+                        key={log.id || idx}
+                        onClick={() => {
+                          if (log.action.includes('Studio')) setCurrentPage('studio');
+                          else if (log.action.includes('Provador')) setCurrentPage('provador');
+                          else setCurrentPage('products');
+                        }}
+                        className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
+                      >
+                        <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+                          {logImage ? (
+                            <img src={logImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-2xl'}></i>
+                            </div>
+                          )}
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-1">Vizzu Studio®</h3>
-                        <p className="text-white/70 text-sm">Gere fotos profissionais com IA</p>
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{logName}</p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
-                          <i className="fas fa-play text-white ml-1"></i>
+                    );
+                  })}
+
+                  {/* Card + Novo Projeto */}
+                  <div
+                    onClick={() => setCurrentPage('create')}
+                    className={'flex-shrink-0 w-24 cursor-pointer group'}
+                  >
+                    <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-pink-400 hover:bg-gray-100')}>
+                      <div className="text-center">
+                        <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
+                          <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
                         </div>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setCurrentPage('studio'); }}
-                          className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg flex items-center gap-2"
-                        >
-                          Acessar <i className="fas fa-arrow-right text-xs"></i>
-                        </button>
                       </div>
                     </div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] text-center mt-2'}>Novo</p>
                   </div>
-                  
-                  {/* Vizzu Provador Card */}
-                  <div 
-                    onClick={() => setShowVideoTutorial('provador')}
-                    className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
-                    style={{ aspectRatio: '16/9', minHeight: '180px' }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500"></div>
-                    <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
-                    <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
-                          <span className="text-white/60 text-xs">3 créditos</span>
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-1">Vizzu Provador®</h3>
-                        <p className="text-white/70 text-sm">Vista seus clientes virtualmente</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
-                          <i className="fas fa-play text-white ml-1"></i>
-                        </div>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setCurrentPage('provador'); }}
-                          className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold rounded-lg flex items-center gap-2"
-                        >
-                          Acessar <i className="fas fa-arrow-right text-xs"></i>
-                        </button>
-                      </div>
+
+                  {/* Placeholder se não houver histórico */}
+                  {historyLogs.length === 0 && (
+                    <div className={'flex-1 flex items-center justify-center py-4 ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}>
+                      <p className="text-sm">Seus projetos recentes aparecerão aqui</p>
                     </div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                  </div>
+                  )}
                 </div>
               </div>
-              
-              {/* STATS GRID */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
-                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
-                    <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
-                  </div>
-                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
-                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Produtos</p>
-                </div>
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
-                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100')}>
-                    <i className={'fas fa-check-circle text-sm ' + (theme === 'dark' ? 'text-green-400' : 'text-green-600')}></i>
-                  </div>
-                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.filter(p => (p as any).generatedImages?.length > 0).length}</p>
-                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Otimizados</p>
-                </div>
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
-                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
-                    <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
-                  </div>
-                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
-                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Clientes</p>
-                </div>
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
-                  <div className={'w-9 h-9 rounded-lg flex items-center justify-center mb-3 ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
-                    <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
+
+              {/* STATS GRID - 3 Cards */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {/* Créditos */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
+                      <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
+                    </div>
+                    <span className={'text-[9px] font-medium px-1.5 py-0.5 rounded ' + (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500')}>
+                      /{currentPlan.limit}
+                    </span>
                   </div>
                   <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits}</p>
-                  <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-gray-500 text-xs'}>Créditos</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Créditos</p>
+                  <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all"
+                      style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Projetos */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
+                      <i className={'fas fa-images text-sm ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
+                    </div>
+                    {historyLogs.length > 0 && (
+                      <span className={'text-[9px] font-medium px-1.5 py-0.5 rounded ' + (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')}>
+                        +{Math.min(historyLogs.length, 3)} esta sem.
+                      </span>
+                    )}
+                  </div>
+                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.filter(p => (p as any).generatedImages?.length > 0).length}</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Projetos ativos</p>
+                </div>
+
+                {/* Clientes */}
+                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
+                      <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
+                    </div>
+                    {clients.length > 0 && (
+                      <span className={'text-[9px] font-medium px-1.5 py-0.5 rounded ' + (theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600')}>
+                        +{Math.min(clients.length, 2)} este mês
+                      </span>
+                    )}
+                  </div>
+                  <p className={'text-2xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Clientes cadastrados</p>
                 </div>
               </div>
-              
+
+              {/* USO DE CRÉDITOS - Gráfico simples */}
+              <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <i className={'fas fa-chart-bar text-sm ' + (theme === 'dark' ? 'text-indigo-400' : 'text-indigo-500')}></i>
+                    <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
+                  </div>
+                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Últimos 7 dias</span>
+                </div>
+
+                {/* Barras de uso por feature */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Studio</span>
+                    <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                      <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500" style={{ width: '45%' }} />
+                    </div>
+                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>45%</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Provador</span>
+                    <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                      <div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-rose-500" style={{ width: '35%' }} />
+                    </div>
+                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>35%</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Look</span>
+                    <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500" style={{ width: '20%' }} />
+                    </div>
+                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>20%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* DICA DO DIA */}
+              <div className={'rounded-2xl p-5 mb-4 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border border-teal-500/20' : 'bg-gradient-to-r from-teal-50 via-cyan-50 to-emerald-50 border border-teal-200')}>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="relative flex items-start gap-4">
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-teal-500/20' : 'bg-teal-100')}>
+                    <i className={'fas fa-lightbulb ' + (theme === 'dark' ? 'text-teal-400' : 'text-teal-600')}></i>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
+                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-3'}>
+                      Você sabia? <strong>Lifestyle Shot</strong> tem 80% mais engajamento no Instagram. Experimente colocar seus produtos em contextos reais!
+                    </p>
+                    <button
+                      onClick={() => setCurrentPage('lifestyle')}
+                      className={'text-sm font-medium flex items-center gap-1 transition-colors ' + (theme === 'dark' ? 'text-teal-400 hover:text-teal-300' : 'text-teal-600 hover:text-teal-700')}
+                    >
+                      Testar agora <i className="fas fa-arrow-right text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* CARD PLANO */}
-              <div className={'rounded-2xl p-5 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border border-pink-500/20' : 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400')}>
+              <div className={'rounded-2xl p-5 relative overflow-hidden ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border border-pink-500/20 backdrop-blur-xl' : 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400')}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-white/5 to-transparent rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                <div className="relative flex items-center justify-between">
+                <div className="relative flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white/20 backdrop-blur-sm')}>
                       <i className="fas fa-crown text-lg text-white"></i>
@@ -2455,7 +2501,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <p className={theme === 'dark' ? 'text-neutral-500 text-xs' : 'text-white/70 text-xs'}>{currentPlan.limit} créditos/mês • {userCredits} disponíveis</p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
                     className={'px-5 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90' : 'bg-white text-purple-600 hover:bg-white/90 shadow-lg')}
                   >
@@ -4343,7 +4389,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* STUDIO PICKER MODAL */}
       {showStudioPicker && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
             <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-5'}></div>
             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold text-center mb-1'}>O que você quer criar?</h3>
@@ -4371,7 +4417,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
             <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
@@ -4459,7 +4505,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CLIENT DETAIL MODAL */}
       {showClientDetail && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
               <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
@@ -4538,7 +4584,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
      {/* IMPORT MODAL */}
 {showImport && (
-  <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
@@ -4645,8 +4691,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
-    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto'}>
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
         <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
@@ -4804,7 +4850,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 )}
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
           <div
             className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
             onClick={(e) => e.stopPropagation()}
@@ -4923,7 +4969,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* Modal de confirmação de exclusão de produtos */}
       {showDeleteProductsModal && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-2xl w-full max-w-sm p-5 shadow-xl'}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -4989,7 +5035,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE MODEL WIZARD MODAL */}
       {showCreateModel && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header com Steps */}
             <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
@@ -5562,7 +5608,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* MODEL DETAIL MODAL */}
       {showModelDetail && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xl flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
