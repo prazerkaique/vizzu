@@ -50,3 +50,8 @@ temp/
 
 # Debug
 debug.log
+
+# n8n workflows com credenciais (NUNCA commitar com chaves!)
+# Se precisar versionar, remova as chaves antes
+# n8n-*.json
+# n8n-*.js
