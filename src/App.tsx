@@ -3335,6 +3335,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             userId={user?.id}
             savedModels={savedModels}
             onSaveModel={handleSaveModel}
+            onOpenCreateModel={() => { resetModelWizard(); setShowCreateModel(true); }}
             isGenerating={isGeneratingLookComposer}
             isMinimized={lookComposerMinimized}
             generationProgress={lookComposerProgress}

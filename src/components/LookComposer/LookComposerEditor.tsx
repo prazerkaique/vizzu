@@ -19,6 +19,7 @@ interface LookComposerEditorProps {
   userId?: string;
   savedModels: SavedModel[];
   onSaveModel?: (model: SavedModel) => void;
+  onOpenCreateModel?: () => void;
   // Props para geração global
   isGenerating?: boolean;
   isMinimized?: boolean;
@@ -81,6 +82,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   userId,
   savedModels,
   onSaveModel,
+  onOpenCreateModel,
   isGenerating: globalIsGenerating = false,
   isMinimized = false,
   generationProgress = 0,
@@ -97,14 +99,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   // Estado do modelo
   const [modelTab, setModelTab] = useState<ModelTab>('saved');
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  const [showCreateModelModal, setShowCreateModelModal] = useState(false);
-  const [modelSettings, setModelSettings] = useState({
-    gender: 'woman' as 'woman' | 'man',
-    ethnicity: 'brazilian',
-    bodyType: 'average',
-    ageRange: 'adult'
-  });
-  const [modelDetail, setModelDetail] = useState('');
 
   // Estado do look
   const [lookMode, setLookMode] = useState<LookMode>('describe');
@@ -311,41 +305,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     }
   };
 
-  // Criar modelo (abre modal)
-  const handleCreateModel = () => {
-    setShowCreateModelModal(true);
-  };
-
-  // Salvar modelo criado
-  const handleSaveCreatedModel = () => {
-    if (!onSaveModel) return;
-
-    const newModel: SavedModel = {
-      id: `model-${Date.now()}`,
-      userId: userId || '',
-      name: `Modelo ${savedModels.length + 1}`,
-      gender: modelSettings.gender,
-      ethnicity: modelSettings.ethnicity,
-      skinTone: 'medium',
-      bodyType: modelSettings.bodyType,
-      ageRange: modelSettings.ageRange,
-      height: 'average',
-      hairColor: 'brown',
-      hairStyle: 'straight',
-      eyeColor: 'brown',
-      expression: 'neutral',
-      referenceImageUrl: '',
-      images: {},
-      status: 'draft',
-      createdAt: new Date().toISOString()
-    };
-
-    onSaveModel(newModel);
-    setSelectedModelId(newModel.id);
-    setShowCreateModelModal(false);
-    setModelTab('saved');
-  };
-
   // Renderizar conteúdo da fase atual
   const renderStepContent = () => {
     switch (currentStep) {
@@ -462,16 +421,17 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
             ) : (
               <div className="space-y-3">
                 <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
-                  Configure as características do modelo e clique em "Criar Modelo" para gerar.
+                  Clique no botão abaixo para criar um novo modelo personalizado com a IA.
                 </p>
                 <button
-                  onClick={handleCreateModel}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
+                  onClick={onOpenCreateModel}
+                  disabled={!onOpenCreateModel}
+                  className={'w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm transition-opacity ' + (onOpenCreateModel ? 'hover:opacity-90' : 'opacity-50 cursor-not-allowed')}
                 >
-                  <i className="fas fa-wand-magic-sparkles mr-2"></i>Criar Modelo
+                  <i className="fas fa-wand-magic-sparkles mr-2"></i>Criar Novo Modelo
                 </button>
                 <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] text-center'}>
-                  O modelo será gerado e você poderá salvá-lo para reutilizar
+                  O modelo será salvo e ficará disponível para reutilizar
                 </p>
               </div>
             )}
@@ -883,98 +843,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         </div>
 
       </div>
-
-      {/* MODAL CRIAR MODELO */}
-      {showCreateModelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowCreateModelModal(false)}></div>
-          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-md rounded-2xl border p-6'}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Criar Modelo IA</h2>
-              <button onClick={() => setShowCreateModelModal(false)} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600')}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
-                  <select
-                    value={modelSettings.gender}
-                    onChange={(e) => setModelSettings(prev => ({ ...prev, gender: e.target.value as 'woman' | 'man' }))}
-                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-                  >
-                    <option value="woman">Feminino</option>
-                    <option value="man">Masculino</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>Etnia</label>
-                  <select
-                    value={modelSettings.ethnicity}
-                    onChange={(e) => setModelSettings(prev => ({ ...prev, ethnicity: e.target.value }))}
-                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-                  >
-                    <option value="brazilian">Brasileira</option>
-                    <option value="caucasian">Caucasiana</option>
-                    <option value="black">Negra</option>
-                    <option value="asian">Asiática</option>
-                    <option value="latina">Latina</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>Biotipo</label>
-                  <select
-                    value={modelSettings.bodyType}
-                    onChange={(e) => setModelSettings(prev => ({ ...prev, bodyType: e.target.value }))}
-                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-                  >
-                    <option value="slim">Magro</option>
-                    <option value="average">Médio</option>
-                    <option value="athletic">Atlético</option>
-                    <option value="curvy">Curvilíneo</option>
-                    <option value="plus">Plus Size</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>Idade</label>
-                  <select
-                    value={modelSettings.ageRange}
-                    onChange={(e) => setModelSettings(prev => ({ ...prev, ageRange: e.target.value }))}
-                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-                  >
-                    <option value="young">Jovem (18-25)</option>
-                    <option value="adult">Adulto (25-40)</option>
-                    <option value="mature">Maduro (40+)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>Detalhes extras (opcional)</label>
-                <textarea
-                  value={modelDetail}
-                  onChange={(e) => setModelDetail(e.target.value)}
-                  rows={2}
-                  placeholder="Ex: cabelo cacheado, alto, tatuagem no braço..."
-                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'}
-                />
-              </div>
-
-              <button
-                onClick={handleSaveCreatedModel}
-                className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity"
-              >
-                <i className="fas fa-wand-magic-sparkles mr-2"></i>Criar e Selecionar Modelo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* MODAL DE LOADING */}
       {isGenerating && !isMinimized && (
