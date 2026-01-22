@@ -2661,7 +2661,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600"></div>
                   <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
@@ -2693,13 +2693,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700"></div>
                   <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                        <span className="text-white/60 text-xs">3 créditos</span>
+                        <span className="px-2 py-0.5 bg-indigo-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                        <span className="text-white/60 text-xs">1-2 créditos</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Look Completo</h3>
                       <p className="text-white/70 text-sm">Crie looks com modelos virtuais em fundo studio ou cenário personalizado</p>

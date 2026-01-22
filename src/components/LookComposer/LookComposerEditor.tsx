@@ -5,6 +5,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
+import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 
 interface LookComposerEditorProps {
   product: Product;
@@ -101,7 +102,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
   // Estado do look
-  const [lookMode, setLookMode] = useState<LookMode>('describe');
+  const [lookMode, setLookMode] = useState<LookMode>('composer');
   const [lookComposition, setLookComposition] = useState<LookComposition>({});
   const [describedLook, setDescribedLook] = useState({
     top: '',
@@ -447,27 +448,36 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
               </div>
               <div>
                 <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Monte o Look</h3>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha as peças ou descreva o look</p>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha suas peças ou descreva genericamente</p>
               </div>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs - Suas Peças primeiro */}
             <div className="flex gap-1">
-              <button
-                onClick={() => setLookMode('describe')}
-                className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
-              >
-                Descrever <span className="opacity-60">(1 crédito)</span>
-              </button>
               <button
                 onClick={() => setLookMode('composer')}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'composer' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
               >
                 Suas Peças <span className="opacity-60">(2 créditos)</span>
               </button>
+              <button
+                onClick={() => setLookMode('describe')}
+                className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+              >
+                Composição Genérica <span className="opacity-60">(1 crédito)</span>
+              </button>
             </div>
 
-            {lookMode === 'describe' ? (
+            {lookMode === 'composer' ? (
+              <div className="space-y-3">
+                <StudioLookComposer
+                  products={products}
+                  composition={lookComposition}
+                  onChange={setLookComposition}
+                  theme={theme}
+                />
+              </div>
+            ) : (
               <div className="space-y-3">
                 <div>
                   <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>Parte de cima</label>
@@ -508,19 +518,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                     placeholder="Ex: relógio prata, óculos escuros"
                     className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
                   />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
-                  Selecione peças do seu catálogo para compor o look.
-                </p>
-                {/* Aqui seria o componente LookComposer que já existe */}
-                <div className={(isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4 text-center'}>
-                  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-layer-group text-2xl mb-2'}></i>
-                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
-                    Compositor de peças disponível em breve
-                  </p>
                 </div>
               </div>
             )}
@@ -763,10 +760,44 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         {/* LAYOUT 2 COLUNAS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* COLUNA ESQUERDA - Imagem */}
+          {/* COLUNA ESQUERDA - Imagem/Preview */}
           <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
             <div className={'relative flex items-center justify-center p-4 min-h-[350px] ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-100')}>
-              {productImages.length > 0 ? (
+              {/* Mostrar fundo quando estiver no passo de fundo */}
+              {currentStep === 'background' || currentStep === 'export' ? (
+                backgroundType === 'studio' ? (
+                  // Fundo Estúdio Cinza
+                  <div className="w-full h-full min-h-[300px] rounded-lg bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center">
+                    <div className="text-center">
+                      <i className="fas fa-camera text-gray-500/50 text-5xl mb-3"></i>
+                      <p className="text-gray-600 text-sm font-medium">Fundo Estúdio Cinza</p>
+                      <p className="text-gray-500 text-xs">Fundo neutro profissional</p>
+                    </div>
+                  </div>
+                ) : customBackground ? (
+                  // Fundo personalizado (upload)
+                  <img
+                    src={customBackground}
+                    alt="Fundo personalizado"
+                    className="w-full h-full min-h-[300px] object-cover rounded-lg"
+                  />
+                ) : selectedPreset ? (
+                  // Fundo pré-setado
+                  <img
+                    src={PRESET_BACKGROUNDS.find(b => b.id === selectedPreset)?.url}
+                    alt="Fundo selecionado"
+                    className="w-full h-full min-h-[300px] object-cover rounded-lg"
+                  />
+                ) : (
+                  // Nenhum fundo selecionado ainda
+                  <div className="w-full h-full min-h-[300px] rounded-lg border-2 border-dashed border-neutral-600 flex items-center justify-center">
+                    <div className="text-center">
+                      <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-4xl mb-2'}></i>
+                      <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Selecione um fundo</p>
+                    </div>
+                  </div>
+                )
+              ) : productImages.length > 0 ? (
                 <>
                   <img
                     src={productImages[currentImageIndex]?.url}
