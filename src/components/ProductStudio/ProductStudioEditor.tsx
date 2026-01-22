@@ -369,6 +369,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       }, 2500);
 
       // Chamar a API real
+      console.log('🚀 [ProductStudio] Enviando para API:', {
+        productId: product.id,
+        userId: userId,
+        imageId: imageId,
+        angles: selectedAngles,
+      });
+
       const response = await generateProductStudioV2({
         productId: product.id,
         userId: userId,
@@ -379,7 +386,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       clearInterval(progressInterval);
       setProgress(95);
 
+      // DEBUG: Log completo da resposta
+      console.log('📦 [ProductStudio] Resposta da API:', JSON.stringify(response, null, 2));
+      console.log('📊 [ProductStudio] Ângulos solicitados:', selectedAngles.length);
+      console.log('📊 [ProductStudio] Gerações retornadas:', response.generations?.length || 0);
+
       if (!response.success || !response.generations) {
+        console.error('❌ [ProductStudio] Erro na resposta:', response);
         throw new Error(response.message || 'Erro ao gerar imagens');
       }
 
@@ -390,6 +403,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         angle: gen.angle as ProductStudioAngle,
         createdAt: new Date().toISOString()
       }));
+
+      console.log('✅ [ProductStudio] Imagens convertidas:', newImages.map(img => img.angle));
 
       setProgress(100);
 
