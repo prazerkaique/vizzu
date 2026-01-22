@@ -53,8 +53,8 @@ const PROVADOR_LOADING_PHRASES = [
   { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'product-studio' | 'models' | 'products' | 'clients' | 'history' | 'settings';
-type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
+type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
+type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations' | 'history';
 
 // Componente de carrossel para cards de modelos
 const ModelCardCarousel: React.FC<{
@@ -2287,17 +2287,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-user-tie w-4 text-[10px]"></i>Modelos
           </button>
 
-          {/* Histórico */}
+          {/* Clientes */}
           <button
-            onClick={() => setCurrentPage('history')}
+            onClick={() => setCurrentPage('clients')}
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
-              (currentPage === 'history'
+              (currentPage === 'clients'
                 ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
                 : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
           >
-            <i className="fas fa-clock-rotate-left w-4 text-[10px]"></i>Histórico
+            <i className="fas fa-users w-4 text-[10px]"></i>Clientes
           </button>
         </nav>
         <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
@@ -2311,17 +2311,65 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
-          <button
-            onClick={() => setCurrentPage('settings')}
-            className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
-              (currentPage === 'settings'
-                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
-                : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
-              )
-            }
-          >
-            <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
-          </button>
+          {/* Configurações com Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+              className={'w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+                (currentPage === 'settings'
+                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                  : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
+                )
+              }
+            >
+              <span className="flex items-center gap-2.5">
+                <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
+              </span>
+              <i className={'fas fa-chevron-' + (showSettingsDropdown ? 'down' : 'up') + ' text-[8px] opacity-60'}></i>
+            </button>
+            {/* Dropdown Up */}
+            {showSettingsDropdown && (
+              <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' absolute bottom-full mb-1 left-0 right-0 rounded-xl border shadow-lg overflow-hidden z-50'}>
+                <button
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
+                </button>
+                <button
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('appearance'); setShowSettingsDropdown(false); }}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-palette w-4 text-[10px] text-center"></i>Aparência
+                </button>
+                <button
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('company'); setShowSettingsDropdown(false); }}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-building w-4 text-[10px] text-center"></i>Empresa
+                </button>
+                <button
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
+                </button>
+                <button
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
+                </button>
+                <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' border-t'}></div>
+                <button
+                  onClick={() => { setCurrentPage('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2.5 px-2 py-2">
             <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/20')}>
               {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className="fas fa-user text-xs text-white/70"></i>}
@@ -2455,7 +2503,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
                       {sortedCreations.length > 0 && (
                         <button
-                          onClick={() => setCurrentPage('history')}
+                          onClick={() => { setCurrentPage('settings'); setSettingsTab('history'); }}
                           className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
                         >
                           Ver todas <i className="fas fa-arrow-right ml-1"></i>
@@ -3967,103 +4015,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </div>
         )}
 
-        {/* HISTORY */}
-        {currentPage === 'history' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="max-w-5xl mx-auto">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                    <i className={'fas fa-clock-rotate-left text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
-                  </div>
-                  <div>
-                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Histórico</h1>
-                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{historyLogs.length} atividades registradas</p>
-                  </div>
-                </div>
-                {historyLogs.length > 0 && (
-                  <button
-                    onClick={() => { if (confirm('Limpar todo o histórico?')) setHistoryLogs([]); }}
-                    className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs flex items-center gap-1.5'}
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                    Limpar
-                  </button>
-                )}
-              </div>
-
-              {historyLogs.length === 0 ? (
-                <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
-                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-clock-rotate-left text-xl'}></i>
-                  </div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {historyLogs.map(log => {
-                    const statusConfig = {
-                      success: { icon: 'fa-check-circle', color: 'text-green-500', bg: theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50' },
-                      error: { icon: 'fa-times-circle', color: 'text-red-500', bg: theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50' },
-                      pending: { icon: 'fa-clock', color: 'text-yellow-500', bg: theme === 'dark' ? 'bg-yellow-500/10' : 'bg-yellow-50' },
-                    };
-                    const methodConfig: Record<string, { icon: string; label: string }> = {
-                      manual: { icon: 'fa-hand', label: 'Manual' },
-                      auto: { icon: 'fa-robot', label: 'Automático' },
-                      api: { icon: 'fa-plug', label: 'API' },
-                      ai: { icon: 'fa-wand-magic-sparkles', label: 'IA' },
-                      bulk: { icon: 'fa-layer-group', label: 'Em massa' },
-                      system: { icon: 'fa-gear', label: 'Sistema' },
-                    };
-                    const status = statusConfig[log.status];
-                    const method = methodConfig[log.method] || methodConfig.system;
-                    const date = log.date ? new Date(log.date) : new Date();
-
-                    return (
-                      <div key={log.id} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm') + ' rounded-xl border p-4 transition-colors'}>
-                        <div className="flex items-start gap-3">
-                          <div className={status.bg + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
-                            <i className={'fas ' + status.icon + ' ' + status.color}></i>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{log.action}</h4>
-                              <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1'}>
-                                <i className={'fas ' + method.icon + ' text-[8px]'}></i>
-                                {method.label}
-                              </span>
-                            </div>
-                            <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs mb-2'}>{log.details}</p>
-                            <div className="flex items-center gap-3 text-[10px]">
-                              <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
-                                <i className="fas fa-calendar mr-1"></i>
-                                {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              {log.cost > 0 && (
-                                <span className="text-pink-500">
-                                  <i className="fas fa-coins mr-1"></i>
-                                  {log.cost} crédito{log.cost !== 1 ? 's' : ''}
-                                </span>
-                              )}
-                              {log.itemsCount && log.itemsCount > 0 && (
-                                <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
-                                  <i className="fas fa-box mr-1"></i>
-                                  {log.itemsCount} item{log.itemsCount !== 1 ? 's' : ''}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* SETTINGS */}
         {currentPage === 'settings' && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -4085,25 +4036,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </button>
               </div>
 
-              {/* Dropdown de Seção */}
-              <div className="mb-6">
-                <div className="relative">
-                  <select
-                    value={settingsTab}
-                    onChange={(e) => setSettingsTab(e.target.value as SettingsTab)}
-                    className={'w-full appearance-none px-4 py-3 pr-10 rounded-xl text-sm font-medium cursor-pointer transition-colors ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 text-white focus:border-fuchsia-500' : 'bg-white border border-gray-200 text-gray-900 focus:border-fuchsia-400') + ' focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20'}
-                  >
-                    <option value="profile">Perfil</option>
-                    <option value="appearance">Aparência</option>
-                    <option value="company">Empresa</option>
-                    <option value="plan">Plano & Créditos</option>
-                    <option value="integrations">Integrações</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-down text-xs'}></i>
-                  </div>
-                </div>
-              </div>
 
               {/* Conteúdo da Seção */}
               <div className={settingsTab === 'plan' ? '' : 'max-w-xl'}>
@@ -4601,6 +4533,93 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
                     </div>
                   )}
+
+                  {settingsTab === 'history' && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Histórico</h3>
+                        {historyLogs.length > 0 && (
+                          <button
+                            onClick={() => { if (confirm('Limpar todo o histórico?')) setHistoryLogs([]); }}
+                            className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs flex items-center gap-1.5'}
+                          >
+                            <i className="fas fa-trash-alt"></i>
+                            Limpar
+                          </button>
+                        )}
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>{historyLogs.length} atividades registradas</p>
+
+                      {historyLogs.length === 0 ? (
+                        <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                            <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-clock-rotate-left text-xl'}></i>
+                          </div>
+                          <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {historyLogs.map(log => {
+                            const statusConfig = {
+                              success: { icon: 'fa-check-circle', color: 'text-green-500', bg: theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50' },
+                              error: { icon: 'fa-times-circle', color: 'text-red-500', bg: theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50' },
+                              pending: { icon: 'fa-clock', color: 'text-yellow-500', bg: theme === 'dark' ? 'bg-yellow-500/10' : 'bg-yellow-50' },
+                            };
+                            const methodConfig: Record<string, { icon: string; label: string }> = {
+                              manual: { icon: 'fa-hand', label: 'Manual' },
+                              auto: { icon: 'fa-robot', label: 'Automático' },
+                              api: { icon: 'fa-plug', label: 'API' },
+                              ai: { icon: 'fa-wand-magic-sparkles', label: 'IA' },
+                              bulk: { icon: 'fa-layer-group', label: 'Em massa' },
+                              system: { icon: 'fa-gear', label: 'Sistema' },
+                            };
+                            const status = statusConfig[log.status];
+                            const method = methodConfig[log.method] || methodConfig.system;
+                            const date = log.date ? new Date(log.date) : new Date();
+
+                            return (
+                              <div key={log.id} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm') + ' rounded-xl border p-4 transition-colors'}>
+                                <div className="flex items-start gap-3">
+                                  <div className={status.bg + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                                    <i className={'fas ' + status.icon + ' ' + status.color}></i>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{log.action}</h4>
+                                      <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1'}>
+                                        <i className={'fas ' + method.icon + ' text-[8px]'}></i>
+                                        {method.label}
+                                      </span>
+                                    </div>
+                                    <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs mb-2'}>{log.details}</p>
+                                    <div className="flex items-center gap-3 text-[10px]">
+                                      <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
+                                        <i className="fas fa-calendar mr-1"></i>
+                                        {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                      {log.cost > 0 && (
+                                        <span className="text-pink-500">
+                                          <i className="fas fa-coins mr-1"></i>
+                                          {log.cost} crédito{log.cost !== 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                      {log.itemsCount && log.itemsCount > 0 && (
+                                        <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
+                                          <i className="fas fa-box mr-1"></i>
+                                          {log.itemsCount} item{log.itemsCount !== 1 ? 's' : ''}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
             </div>
           </div>
@@ -4632,9 +4651,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-user-tie text-sm"></i>
             <span className="text-[9px] font-medium">Modelos</span>
           </button>
-          <button onClick={() => setCurrentPage('history')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'history' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
-            <i className="fas fa-clock-rotate-left text-sm"></i>
-            <span className="text-[9px] font-medium">Histórico</span>
+          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+            <i className="fas fa-users text-sm"></i>
+            <span className="text-[9px] font-medium">Clientes</span>
           </button>
         </div>
       </nav>
