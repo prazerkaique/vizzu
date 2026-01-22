@@ -88,12 +88,13 @@ interface ProductStudioV2Response {
  * Custo: 2 fotos = 1 crédito, cada adicional +1
  */
 export async function generateProductStudioV2(params: ProductStudioV2Params): Promise<ProductStudioV2Response> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/product-studio-v2`, {
+  const response = await fetch(`${N8N_BASE_URL}/vizzu/studio`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
+      type: 'product-studio',
       product_id: params.productId,
       user_id: params.userId,
       image_id: params.imageId,
