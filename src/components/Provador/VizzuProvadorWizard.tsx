@@ -911,277 +911,283 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
         </p>
       </div>
 
-      <div className="p-4">
-        {/* Area de preview/imagem */}
-        <div className={`aspect-[3/4] rounded-xl mb-4 overflow-hidden relative ${
-          theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
-        }`}>
-          {isGenerating ? (
-            <div className="flex flex-col items-center justify-center h-full p-6">
-              <div className="w-24 h-24 mb-4">
-                <DotLottieReact
-                  src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                  loop
-                  autoplay
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </div>
-              <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} text-sm font-medium mb-3 text-center`}>
-                {loadingText}
-              </p>
-              <div className={`w-full max-w-xs h-2 rounded-full overflow-hidden ${
-                theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
-              }`}>
-                <div
-                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300"
-                  style={{ width: `${Math.min(generationProgress, 100)}%` }}
-                />
-              </div>
-              <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-2`}>
-                {Math.round(Math.min(generationProgress, 100))}%
-              </p>
-            </div>
-          ) : selectedSavedLook ? (
-            <>
-              <img
-                src={selectedSavedLook.imageUrl}
-                alt="Look salvo"
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() => setSelectedSavedLook(null)}
-                className="absolute top-3 right-3 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full text-sm"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </>
-          ) : generatedImage ? (
-            <>
-              {/* Toggle Antes/Depois */}
-              <div className="absolute top-3 left-3 z-10">
-                <div className={`flex rounded-lg overflow-hidden ${
-                  theme === 'dark' ? 'bg-black/50' : 'bg-white/80'
-                }`}>
-                  <button
-                    onClick={() => setShowBeforeAfter('before')}
-                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                      showBeforeAfter === 'before'
-                        ? 'bg-pink-500 text-white'
-                        : theme === 'dark'
-                          ? 'text-white hover:bg-white/10'
-                          : 'text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    Antes
-                  </button>
-                  <button
-                    onClick={() => setShowBeforeAfter('after')}
-                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                      showBeforeAfter === 'after'
-                        ? 'bg-pink-500 text-white'
-                        : theme === 'dark'
-                          ? 'text-white hover:bg-white/10'
-                          : 'text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    Depois
-                  </button>
-                </div>
-              </div>
-
-              <img
-                src={showBeforeAfter === 'after' ? generatedImage : (originalImage || '')}
-                alt={showBeforeAfter === 'after' ? 'Imagem gerada' : 'Imagem original'}
-                className="w-full h-full object-cover"
-              />
-
-              <button
-                onClick={() => {
-                  if (confirm('Descartar esta imagem?')) {
-                    setGeneratedImage(null);
-                    setShowBeforeAfter('after');
-                  }
-                }}
-                className="absolute top-3 right-3 w-8 h-8 bg-black/50 hover:bg-red-500 text-white rounded-full text-sm transition-colors"
-              >
-                <i className="fas fa-trash"></i>
-              </button>
-            </>
-          ) : selectedClient && getClientPhoto(selectedClient, selectedPhotoType) ? (
-            <div className="relative w-full h-full">
-              <img
-                src={getClientPhoto(selectedClient, selectedPhotoType)!}
-                alt="Preview"
-                className="w-full h-full object-cover opacity-30"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <i className="fas fa-wand-magic-sparkles text-pink-400 text-3xl mb-2"></i>
-                  <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
-                    Clique em Criar para gerar
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full">
-              <i className={`fas fa-image text-4xl mb-3 ${theme === 'dark' ? 'text-neutral-700' : 'text-gray-300'}`}></i>
-              <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-sm`}>Preview</p>
-            </div>
-          )}
-        </div>
-
-        {/* Botao de salvar look (quando tem imagem gerada) */}
-        {generatedImage && !selectedSavedLook && (
-          <button
-            onClick={handleSaveLook}
-            disabled={savingLook}
-            className={`w-full py-2.5 mb-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
-              theme === 'dark'
-                ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
-                : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
-            } border`}
-          >
-            {savingLook ? (
-              <><i className="fas fa-spinner fa-spin"></i>Salvando...</>
-            ) : (
-              <><i className="fas fa-bookmark"></i>Salvar Look</>
-            )}
-          </button>
-        )}
-
-        {/* Galeria de looks salvos */}
-        {selectedClient && clientLooks.length > 0 && (
-          <div className="mb-4">
-            <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-xs mb-2 flex items-center gap-1`}>
-              <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {clientLooks.map((look) => (
-                <div key={look.id} className="relative flex-shrink-0 group">
-                  <img
-                    src={look.imageUrl}
-                    alt="Look"
-                    onClick={() => setSelectedSavedLook(look)}
-                    className={`w-16 h-20 object-cover rounded-lg cursor-pointer transition-all ${
-                      selectedSavedLook?.id === look.id
-                        ? 'ring-2 ring-pink-500'
-                        : 'hover:ring-2 hover:ring-pink-500/50'
-                    }`}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm('Deletar este look?')) onDeleteLook(look);
-                    }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <i className="fas fa-times"></i>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Template de mensagem */}
-        <div className="mb-3">
-          <select
-            value={selectedTemplate.id}
-            onChange={(e) => {
-              const t = whatsappTemplates.find((x) => x.id === e.target.value);
-              if (t) {
-                setSelectedTemplate(t);
-                setMessage(t.message);
-              }
-            }}
-            className={`w-full px-3 py-2.5 border rounded-xl text-xs ${
-              theme === 'dark'
-                ? 'bg-neutral-800 border-neutral-700 text-white'
-                : 'bg-gray-50 border-gray-200 text-gray-900'
-            }`}
-          >
-            {whatsappTemplates.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Campo de mensagem com botao de IA */}
-        <div className="relative mb-4">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={3}
-            placeholder="Escreva uma mensagem personalizada..."
-            className={`w-full px-3 py-2.5 pr-12 border rounded-xl text-xs resize-none ${
-              theme === 'dark'
-                ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500'
-                : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
-            }`}
-          />
-          <button
-            onClick={handleGenerateAIMessage}
-            disabled={isGeneratingAIMessage || !selectedClient}
-            title="Gerar mensagem com IA"
-            className={`absolute right-2 top-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-              isGeneratingAIMessage
-                ? 'bg-pink-500/20 text-pink-500'
-                : theme === 'dark'
-                  ? 'bg-neutral-700 text-pink-400 hover:bg-neutral-600'
-                  : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
-            }`}
-          >
-            {isGeneratingAIMessage ? (
-              <i className="fas fa-spinner fa-spin text-sm"></i>
-            ) : (
-              <i className="fas fa-wand-magic-sparkles text-sm"></i>
-            )}
-          </button>
-        </div>
-
-        {/* Botoes de acao */}
-        <div className="space-y-2">
-          {/* Botao Criar */}
-          <button
-            onClick={handleGenerate}
-            disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3 || isGenerating}
-            className={`w-full py-3.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
-              (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3)
-                ? 'opacity-50 cursor-not-allowed'
-                : isGenerating
-                  ? 'opacity-75 cursor-wait'
-                  : 'hover:shadow-lg hover:shadow-pink-500/25'
-            }`}
-          >
+      {/* Layout lado a lado: Imagem esquerda, Acoes direita */}
+      <div className="flex flex-col md:flex-row">
+        {/* Coluna Esquerda - Imagem */}
+        <div className="md:w-1/2 p-4">
+          <div className={`aspect-[3/4] rounded-xl overflow-hidden relative ${
+            theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+          }`}>
             {isGenerating ? (
-              <><i className="fas fa-spinner fa-spin"></i>Gerando imagem...</>
-            ) : (
-              <><i className="fas fa-wand-magic-sparkles"></i>Criar (3 cred.)</>
-            )}
-          </button>
+              <div className="flex flex-col items-center justify-center h-full p-6">
+                <div className="w-20 h-20 mb-3">
+                  <DotLottieReact
+                    src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                    loop
+                    autoplay
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </div>
+                <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} text-xs font-medium mb-2 text-center`}>
+                  {loadingText}
+                </p>
+                <div className={`w-full max-w-[150px] h-1.5 rounded-full overflow-hidden ${
+                  theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
+                }`}>
+                  <div
+                    className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300"
+                    style={{ width: `${Math.min(generationProgress, 100)}%` }}
+                  />
+                </div>
+                <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] mt-1`}>
+                  {Math.round(Math.min(generationProgress, 100))}%
+                </p>
+              </div>
+            ) : selectedSavedLook ? (
+              <>
+                <img
+                  src={selectedSavedLook.imageUrl}
+                  alt="Look salvo"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => setSelectedSavedLook(null)}
+                  className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 text-white rounded-full text-xs"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </>
+            ) : generatedImage ? (
+              <>
+                {/* Toggle Antes/Depois */}
+                <div className="absolute top-2 left-2 z-10">
+                  <div className={`flex rounded-lg overflow-hidden text-[10px] ${
+                    theme === 'dark' ? 'bg-black/50' : 'bg-white/80'
+                  }`}>
+                    <button
+                      onClick={() => setShowBeforeAfter('before')}
+                      className={`px-2 py-1 font-medium transition-colors ${
+                        showBeforeAfter === 'before'
+                          ? 'bg-pink-500 text-white'
+                          : theme === 'dark'
+                            ? 'text-white hover:bg-white/10'
+                            : 'text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Antes
+                    </button>
+                    <button
+                      onClick={() => setShowBeforeAfter('after')}
+                      className={`px-2 py-1 font-medium transition-colors ${
+                        showBeforeAfter === 'after'
+                          ? 'bg-pink-500 text-white'
+                          : theme === 'dark'
+                            ? 'text-white hover:bg-white/10'
+                            : 'text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Depois
+                    </button>
+                  </div>
+                </div>
 
-          {/* Botoes WhatsApp e Download */}
-          <div className="flex gap-2">
+                <img
+                  src={showBeforeAfter === 'after' ? generatedImage : (originalImage || '')}
+                  alt={showBeforeAfter === 'after' ? 'Imagem gerada' : 'Imagem original'}
+                  className="w-full h-full object-cover"
+                />
+
+                <button
+                  onClick={() => {
+                    if (confirm('Descartar esta imagem?')) {
+                      setGeneratedImage(null);
+                      setShowBeforeAfter('after');
+                    }
+                  }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-red-500 text-white rounded-full text-xs transition-colors"
+                >
+                  <i className="fas fa-trash"></i>
+                </button>
+              </>
+            ) : selectedClient && getClientPhoto(selectedClient, selectedPhotoType) ? (
+              <div className="relative w-full h-full">
+                <img
+                  src={getClientPhoto(selectedClient, selectedPhotoType)!}
+                  alt="Preview"
+                  className="w-full h-full object-cover opacity-30"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <i className="fas fa-wand-magic-sparkles text-pink-400 text-2xl mb-2"></i>
+                    <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-xs`}>
+                      Clique em Criar
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <i className={`fas fa-image text-3xl mb-2 ${theme === 'dark' ? 'text-neutral-700' : 'text-gray-300'}`}></i>
+                <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-xs`}>Preview</p>
+              </div>
+            )}
+          </div>
+
+          {/* Botao de salvar look (quando tem imagem gerada) */}
+          {generatedImage && !selectedSavedLook && (
             <button
-              onClick={handleSendWhatsApp}
-              disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
-              className={`flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                theme === 'dark'
-                  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-green-400'
-                  : 'bg-white hover:bg-gray-50 border-gray-200 text-green-600'
-              } border`}
-            >
-              <i className="fab fa-whatsapp"></i>WhatsApp
-            </button>
-            <button
-              onClick={handleDownload}
-              disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
-              className={`flex-1 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+              onClick={handleSaveLook}
+              disabled={savingLook}
+              className={`w-full mt-2 py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-all ${
                 theme === 'dark'
                   ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
                   : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
               } border`}
+            >
+              {savingLook ? (
+                <><i className="fas fa-spinner fa-spin"></i>Salvando...</>
+              ) : (
+                <><i className="fas fa-bookmark"></i>Salvar Look</>
+              )}
+            </button>
+          )}
+
+          {/* Galeria de looks salvos */}
+          {selectedClient && clientLooks.length > 0 && (
+            <div className="mt-3">
+              <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-[10px] mb-1.5 flex items-center gap-1`}>
+                <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
+              </p>
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {clientLooks.map((look) => (
+                  <div key={look.id} className="relative flex-shrink-0 group">
+                    <img
+                      src={look.imageUrl}
+                      alt="Look"
+                      onClick={() => setSelectedSavedLook(look)}
+                      className={`w-12 h-16 object-cover rounded-lg cursor-pointer transition-all ${
+                        selectedSavedLook?.id === look.id
+                          ? 'ring-2 ring-pink-500'
+                          : 'hover:ring-2 hover:ring-pink-500/50'
+                      }`}
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Deletar este look?')) onDeleteLook(look);
+                      }}
+                      className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Coluna Direita - Acoes */}
+        <div className={`md:w-1/2 p-4 ${theme === 'dark' ? 'md:border-l md:border-neutral-800' : 'md:border-l md:border-gray-100'}`}>
+          {/* Info do cliente */}
+          {selectedClient && (
+            <div className={`flex items-center gap-3 p-3 rounded-xl mb-4 ${
+              theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50'
+            }`}>
+              <img
+                src={getClientPhoto(selectedClient) || ''}
+                alt={selectedClient.firstName}
+                className="w-10 h-10 rounded-full object-cover border-2 border-pink-500/30"
+              />
+              <div className="flex-1 min-w-0">
+                <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
+                  {selectedClient.firstName} {selectedClient.lastName}
+                </p>
+                <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+                  {formatWhatsApp(selectedClient.whatsapp)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Campo de mensagem com botao de IA */}
+          <div className="relative mb-3">
+            <label className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-[10px] font-medium uppercase tracking-wide mb-1.5 block`}>
+              Mensagem para WhatsApp
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={3}
+              placeholder="Escreva uma mensagem personalizada..."
+              className={`w-full px-3 py-2.5 pr-12 border rounded-xl text-xs resize-none ${
+                theme === 'dark'
+                  ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500'
+                  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+              }`}
+            />
+            <button
+              onClick={handleGenerateAIMessage}
+              disabled={isGeneratingAIMessage || !selectedClient}
+              title="Gerar mensagem com IA"
+              className={`absolute right-2 bottom-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                isGeneratingAIMessage
+                  ? 'bg-pink-500/20 text-pink-500'
+                  : theme === 'dark'
+                    ? 'bg-neutral-700 text-pink-400 hover:bg-neutral-600'
+                    : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
+              }`}
+            >
+              {isGeneratingAIMessage ? (
+                <i className="fas fa-spinner fa-spin text-sm"></i>
+              ) : (
+                <i className="fas fa-wand-magic-sparkles text-sm"></i>
+              )}
+            </button>
+          </div>
+
+          {/* Botoes de acao */}
+          <div className="space-y-2">
+            {/* Botao Criar */}
+            <button
+              onClick={handleGenerate}
+              disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3 || isGenerating}
+              className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+                (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3)
+                  ? 'opacity-50 cursor-not-allowed'
+                  : isGenerating
+                    ? 'opacity-75 cursor-wait'
+                    : 'hover:shadow-lg hover:shadow-pink-500/25'
+              }`}
+            >
+              {isGenerating ? (
+                <><i className="fas fa-spinner fa-spin"></i>Gerando...</>
+              ) : (
+                <><i className="fas fa-wand-magic-sparkles"></i>Criar (3 cred.)</>
+              )}
+            </button>
+
+            {/* Botoes WhatsApp e Download */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSendWhatsApp}
+                disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
+                className={`flex-1 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-green-400'
+                    : 'bg-white hover:bg-gray-50 border-gray-200 text-green-600'
+                } border`}
+              >
+                <i className="fab fa-whatsapp"></i>WhatsApp
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
+                className={`flex-1 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                    : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
+                } border`}
             >
               <i className="fas fa-download"></i>Download
             </button>
@@ -1196,6 +1202,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
           >
             <i className="fas fa-arrow-left mr-2"></i>Voltar para o Look
           </button>
+        </div>
         </div>
       </div>
     </div>
