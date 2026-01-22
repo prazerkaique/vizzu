@@ -2930,8 +2930,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-600 via-rose-500 to-orange-500"></div>
-                  <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
+                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/Banner-Vizzu-Studio.jpg)' }}></div>
+                  <div className="video-overlay absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
