@@ -51,7 +51,7 @@ const PROVADOR_LOADING_PHRASES = [
   { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'models' | 'products' | 'clients' | 'history' | 'settings';
+type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'models' | 'products' | 'clients' | 'history' | 'settings';
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations';
 
 function App() {
@@ -2160,7 +2160,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <button
               onClick={() => setCurrentPage('create')}
               className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
-                (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador'
+                (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle'
                   ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
                   : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
                 )
@@ -2470,7 +2470,25 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* PÁGINA VIZZU CREATION - Hub de Features */}
         {currentPage === 'create' && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
+            <style>{`
+              .creation-card {
+                transition: all 0.3s ease;
+              }
+              .creation-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+              }
+              .creation-card:active {
+                transform: scale(0.98);
+              }
+              @media (max-width: 768px) {
+                .creation-card:hover {
+                  transform: none;
+                  box-shadow: none;
+                }
+              }
+            `}</style>
             <div className="max-w-5xl mx-auto">
               {/* Header */}
               <div className="mb-6">
@@ -2479,7 +2497,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
                   </div>
                   <div>
-                    <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Vizzu Creation</h1>
+                    <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
                     <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha uma ferramenta para criar com IA</p>
                   </div>
                 </div>
@@ -2487,14 +2505,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
               {/* Video Cards Grid - 2x2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Vizzu Studio Card */}
+                {/* Card 1: Vizzu Studio */}
                 <div
                   onClick={() => setShowVideoTutorial('studio')}
-                  className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
-                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
+                  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ minHeight: '240px', height: 'auto' }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600"></div>
-                  <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
@@ -2502,15 +2520,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <span className="text-white/60 text-xs">1-3 créditos</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Vizzu Studio®</h3>
-                      <p className="text-white/70 text-sm">Fotos profissionais de produtos com fundo branco e cenários criativos</p>
+                      <p className="text-white/70 text-sm">4 ângulos profissionais do seu produto em fundo cinza de estúdio</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
                         <i className="fas fa-play text-white ml-1"></i>
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); setCurrentPage('studio'); }}
-                        className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                        className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
                       >
                         Acessar <i className="fas fa-arrow-right text-xs"></i>
                       </button>
@@ -2519,14 +2537,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Vizzu Provador Card */}
+                {/* Card 2: Vizzu Provador */}
                 <div
                   onClick={() => setShowVideoTutorial('provador')}
-                  className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
-                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
+                  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ minHeight: '240px', height: 'auto' }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500"></div>
-                  <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
@@ -2534,15 +2552,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <span className="text-white/60 text-xs">3 créditos</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Vizzu Provador®</h3>
-                      <p className="text-white/70 text-sm">Provador virtual com IA - vista roupas em fotos de clientes</p>
+                      <p className="text-white/70 text-sm">Vista seu cliente com suas roupas. Prova virtual pelo WhatsApp</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
+                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
                         <i className="fas fa-play text-white ml-1"></i>
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); setCurrentPage('provador'); }}
-                        className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                        className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
                       >
                         Acessar <i className="fas fa-arrow-right text-xs"></i>
                       </button>
@@ -2551,30 +2569,30 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Modelo IA Card */}
+                {/* Card 3: Look Completo */}
                 <div
-                  onClick={() => setCurrentPage('models')}
-                  className={'video-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
-                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
+                  onClick={() => setCurrentPage('look-composer')}
+                  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500"></div>
-                  <div className="video-overlay absolute inset-0 bg-black/50 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-orange-600 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                        <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
                         <span className="text-white/60 text-xs">3 créditos</span>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-1">Modelo IA</h3>
-                      <p className="text-white/70 text-sm">Crie modelos virtuais personalizados para suas fotos de produtos</p>
+                      <h3 className="text-xl font-bold text-white mb-1">Look Completo</h3>
+                      <p className="text-white/70 text-sm">Crie looks com modelos virtuais em fundo studio ou cenário personalizado</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="play-btn w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30">
-                        <i className="fas fa-user-tie text-white"></i>
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
+                        <i className="fas fa-vest-patches text-white text-lg"></i>
                       </div>
                       <button
-                        onClick={(e) => { e.stopPropagation(); setCurrentPage('models'); }}
-                        className="animated-gradient-btn px-4 py-2 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white text-sm font-bold rounded-lg flex items-center gap-2"
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('look-composer'); }}
+                        className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
                       >
                         Acessar <i className="fas fa-arrow-right text-xs"></i>
                       </button>
@@ -2583,39 +2601,65 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Em breve Card */}
+                {/* Card 4: Lifestyle Shot */}
                 <div
-                  className={'video-card group relative overflow-hidden rounded-xl ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
-                  style={{ aspectRatio: '16/9', minHeight: '180px' }}
+                  onClick={() => setCurrentPage('lifestyle')}
+                  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+                  style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800"></div>
-                  <div className="absolute inset-0 bg-black/60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-teal-600 via-cyan-600 to-emerald-600"></div>
+                  <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-gray-500 text-white text-[9px] font-bold rounded-full uppercase">Em breve</span>
+                        <span className="px-2 py-0.5 bg-teal-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                        <span className="text-white/60 text-xs">3 créditos</span>
                       </div>
-                      <h3 className="text-xl font-bold text-white/60 mb-1">Novas Ferramentas</h3>
-                      <p className="text-white/40 text-sm">Mais recursos de IA em desenvolvimento</p>
+                      <h3 className="text-xl font-bold text-white mb-1">Lifestyle Shot</h3>
+                      <p className="text-white/70 text-sm">Produto em ação. Tênis no skate, bolsa no café. Fotos que engajam</p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                        <i className="fas fa-sparkles text-white/40"></i>
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
+                        <i className="fas fa-camera-retro text-white text-lg"></i>
                       </div>
                       <button
-                        disabled
-                        className="px-4 py-2 bg-gray-600/50 text-white/40 text-sm font-bold rounded-lg flex items-center gap-2 cursor-not-allowed"
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('lifestyle'); }}
+                        className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
                       >
-                        Aguarde <i className="fas fa-clock text-xs"></i>
+                        Acessar <i className="fas fa-arrow-right text-xs"></i>
                       </button>
                     </div>
                   </div>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                </div>
+              </div>
+
+              {/* Card Em Breve - Compacto */}
+              <div className={'mt-4 rounded-xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800/50 border border-neutral-700' : 'bg-gray-200/50 border border-gray-300')}>
+                <div className="relative px-5 py-4 flex items-center justify-between">
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-700/30 via-gray-600/20 to-gray-700/30"></div>
+                  <div className="relative flex items-center gap-3">
+                    <div className={'w-10 h-10 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')}>
+                      <i className={'fas fa-sparkles ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}></i>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={'px-2 py-0.5 text-[9px] font-bold rounded-full uppercase ' + (theme === 'dark' ? 'bg-neutral-600 text-neutral-300' : 'bg-gray-400 text-white')}>Em breve</span>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mt-0.5'}>Mais ferramentas em desenvolvimento</p>
+                    </div>
+                  </div>
+                  <button
+                    disabled
+                    className={'px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 cursor-not-allowed ' + (theme === 'dark' ? 'bg-neutral-700 text-neutral-500' : 'bg-gray-300 text-gray-500')}
+                  >
+                    Aguarde <i className="fas fa-clock text-xs"></i>
+                  </button>
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mt-6'}>
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mt-4'}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
@@ -3128,6 +3172,100 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LOOK COMPOSER */}
+        {currentPage === 'look-composer' && (
+          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCurrentPage('create')}
+                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' p-2 -ml-2 rounded-lg transition-colors'}
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-amber-500/20 to-orange-400/20 border border-amber-500/30' : 'bg-gradient-to-r from-amber-500 to-orange-400 shadow-lg shadow-amber-500/25')}>
+                    <i className={'fas fa-vest-patches text-sm ' + (theme === 'dark' ? 'text-amber-400' : 'text-white')}></i>
+                  </div>
+                  <div>
+                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold'}>Look Completo</h1>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Crie looks com modelos virtuais</p>
+                  </div>
+                </div>
+                <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (theme === 'dark' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-600 border border-amber-200')}>
+                  <i className="fas fa-coins text-[10px]"></i>
+                  <span>3 créditos</span>
+                </div>
+              </div>
+
+              {/* Conteúdo em desenvolvimento */}
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border p-8 text-center'}>
+                <div className={'w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
+                  <i className={'fas fa-vest-patches text-3xl ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-500')}></i>
+                </div>
+                <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-2'}>Em desenvolvimento</h2>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
+                  O Look Completo permite criar looks com modelos virtuais em fundo studio ou cenário personalizado.
+                  Esta funcionalidade estará disponível em breve.
+                </p>
+                <button
+                  onClick={() => setCurrentPage('create')}
+                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+                >
+                  <i className="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LIFESTYLE SHOT */}
+        {currentPage === 'lifestyle' && (
+          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCurrentPage('create')}
+                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' p-2 -ml-2 rounded-lg transition-colors'}
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-teal-500/20 to-cyan-400/20 border border-teal-500/30' : 'bg-gradient-to-r from-teal-500 to-cyan-500 shadow-lg shadow-teal-500/25')}>
+                    <i className={'fas fa-camera-retro text-sm ' + (theme === 'dark' ? 'text-teal-400' : 'text-white')}></i>
+                  </div>
+                  <div>
+                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold'}>Lifestyle Shot</h1>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Produto em ação, fotos que engajam</p>
+                  </div>
+                </div>
+                <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (theme === 'dark' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-50 text-teal-600 border border-teal-200')}>
+                  <i className="fas fa-coins text-[10px]"></i>
+                  <span>3 créditos</span>
+                </div>
+              </div>
+
+              {/* Conteúdo em desenvolvimento */}
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border p-8 text-center'}>
+                <div className={'w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 ' + (theme === 'dark' ? 'bg-teal-500/20' : 'bg-teal-100')}>
+                  <i className={'fas fa-camera-retro text-3xl ' + (theme === 'dark' ? 'text-teal-400' : 'text-teal-500')}></i>
+                </div>
+                <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-2'}>Em desenvolvimento</h2>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
+                  O Lifestyle Shot coloca seu produto em ação: tênis no skate, bolsa no café, óculos na praia.
+                  Fotos contextuais que geram mais engajamento. Em breve!
+                </p>
+                <button
+                  onClick={() => setCurrentPage('create')}
+                  className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
+                >
+                  <i className="fas fa-arrow-left mr-2"></i>Voltar
+                </button>
               </div>
             </div>
           </div>
@@ -4155,10 +4293,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </button>
           {/* Botão CRIAR - Central destacado */}
           <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
           <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-user-tie text-sm"></i>
