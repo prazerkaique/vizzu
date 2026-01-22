@@ -98,8 +98,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   const [savingLook, setSavingLook] = useState(false);
 
   // Estados de Mensagem
-  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(whatsappTemplates[0]);
-  const [message, setMessage] = useState(whatsappTemplates[0]?.message || '');
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(whatsappTemplates?.[0] || null);
+  const [message, setMessage] = useState(whatsappTemplates?.[0]?.message || '');
   const [isGeneratingAIMessage, setIsGeneratingAIMessage] = useState(false);
 
   // Estados de Upload de Foto
@@ -121,7 +121,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   // ============================================================
 
   const getClientPhoto = useCallback(
-    (client: Client, type?: ClientPhoto['type']): string | undefined => {
+    (client: Client | null, type?: ClientPhoto['type']): string | undefined => {
+      if (!client) return undefined;
       if (type && client.photos) {
         const photo = client.photos.find((p) => p.type === type);
         if (photo) return photo.base64;
@@ -331,7 +332,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
       case 1:
         return !!selectedClient;
       case 2:
-        return !!selectedPhotoType && !!getClientPhoto(selectedClient!, selectedPhotoType);
+        return !!selectedClient && !!selectedPhotoType && !!getClientPhoto(selectedClient, selectedPhotoType);
       case 3:
         return Object.keys(lookComposition).length > 0;
       case 4:
