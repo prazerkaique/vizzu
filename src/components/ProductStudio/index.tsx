@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // VIZZU - Product Studio (Fotos profissionais de produto)
-// Página 1: Seleção de produto
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo } from 'react';
 import { Product, HistoryLog } from '../../types';
+import { ProductStudioEditor } from './ProductStudioEditor';
 
 interface ProductStudioProps {
   products: Product[];
@@ -98,10 +98,30 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
-    // TODO: Navegar para página 2 (editor)
-    console.log('Produto selecionado para Product Studio:', product.name);
   };
 
+  const handleBackToList = () => {
+    setSelectedProduct(null);
+  };
+
+  // Se tem produto selecionado, mostra o editor (página 2)
+  if (selectedProduct) {
+    return (
+      <ProductStudioEditor
+        product={selectedProduct}
+        userCredits={userCredits}
+        onUpdateProduct={onUpdateProduct}
+        onDeductCredits={onDeductCredits}
+        onAddHistoryLog={onAddHistoryLog}
+        onBack={handleBackToList}
+        onCheckCredits={onCheckCredits}
+        theme={theme}
+        userId={userId}
+      />
+    );
+  }
+
+  // Página 1 - Lista de produtos
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       <div className="max-w-7xl mx-auto">
