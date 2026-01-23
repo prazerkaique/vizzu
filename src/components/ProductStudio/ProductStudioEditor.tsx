@@ -132,9 +132,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const [showResult, setShowResult] = useState(false);
   const [currentSession, setCurrentSession] = useState<ProductStudioSession | null>(null);
 
-  // Estado para modal de aviso de ângulos sem referência
-  const [showNoRefWarning, setShowNoRefWarning] = useState(false);
-  const [anglesWithoutRef, setAnglesWithoutRef] = useState<ProductStudioAngle[]>([]);
+  // Estado para modal de ângulo sem referência
+  const [showNoRefModal, setShowNoRefModal] = useState(false);
+  const [angleWithoutRef, setAngleWithoutRef] = useState<ProductStudioAngle | null>(null);
+  const [uploadingRef, setUploadingRef] = useState(false);
 
   // Usar estado global se disponível, senão local
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
@@ -208,6 +209,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   }, [product]);
 
   // Mapear quais imagens de referência estão disponíveis
+  // IMPORTANTE: Só considera disponível se tiver o ID (necessário para a API)
   const availableReferences = useMemo(() => {
     const refs: Record<ProductStudioAngle, boolean> = {
       'front': false,
@@ -220,17 +222,21 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       'detail': false,
     };
 
-    // Verificar originalImages primeiro
-    if (product.originalImages?.front?.id || product.originalImages?.front?.url) refs.front = true;
-    if (product.originalImages?.back?.id || product.originalImages?.back?.url) refs.back = true;
-    if (product.originalImages?.['side-left']?.id || product.originalImages?.['side-left']?.url) refs['side-left'] = true;
-    if (product.originalImages?.['side-right']?.id || product.originalImages?.['side-right']?.url) refs['side-right'] = true;
-    if (product.originalImages?.top?.id || product.originalImages?.top?.url) refs.top = true;
-    if (product.originalImages?.detail?.id || product.originalImages?.detail?.url) refs.detail = true;
+    // Verificar originalImages - PRECISA ter ID para funcionar
+    if (product.originalImages?.front?.id) refs.front = true;
+    if (product.originalImages?.back?.id) refs.back = true;
+    if (product.originalImages?.['side-left']?.id) refs['side-left'] = true;
+    if (product.originalImages?.['side-right']?.id) refs['side-right'] = true;
+    if (product.originalImages?.top?.id) refs.top = true;
+    if (product.originalImages?.detail?.id) refs.detail = true;
+    if (product.originalImages?.['45-left']?.id) refs['45-left'] = true;
+    if (product.originalImages?.['45-right']?.id) refs['45-right'] = true;
 
-    // Fallback: se não tem originalImages mas tem images legado
-    if (!refs.front && product.images?.[0]) refs.front = true;
-    if (!refs.back && product.images?.[1]) refs.back = true;
+    // Fallback: se não tem originalImages mas tem images legado (com ID)
+    if (!refs.front && product.images?.[0]?.id) refs.front = true;
+    if (!refs.back && product.images?.[1]?.id) refs.back = true;
+
+    console.log('🔍 [ProductStudio] Referências disponíveis (com ID):', refs);
 
     return refs;
   }, [product]);
@@ -256,18 +262,38 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
   const creditsNeeded = calculateCredits(selectedAngles.length);
 
-  // Toggle ângulo
+  // Toggle ângulo - verifica se tem referência antes de selecionar
   const toggleAngle = (angle: ProductStudioAngle) => {
-    setSelectedAngles(prev =>
-      prev.includes(angle)
-        ? prev.filter(a => a !== angle)
-        : [...prev, angle]
-    );
+    // Se já está selecionado, apenas remove
+    if (selectedAngles.includes(angle)) {
+      setSelectedAngles(prev => prev.filter(a => a !== angle));
+      return;
+    }
+
+    // Se é front, sempre permite (é obrigatório ter)
+    if (angle === 'front') {
+      setSelectedAngles(prev => [...prev, angle]);
+      return;
+    }
+
+    // Verifica se tem referência
+    if (!availableReferences[angle]) {
+      // Não tem referência - mostra modal de aviso
+      setAngleWithoutRef(angle);
+      setShowNoRefModal(true);
+      return;
+    }
+
+    // Tem referência - adiciona normalmente
+    setSelectedAngles(prev => [...prev, angle]);
   };
 
-  // Selecionar todos os ângulos
+  // Selecionar todos os ângulos (apenas os que têm referência)
   const selectAllAngles = () => {
-    setSelectedAngles(availableAngles.map(a => a.id));
+    const anglesWithRef = availableAngles
+      .filter(a => a.id === 'front' || availableReferences[a.id])
+      .map(a => a.id);
+    setSelectedAngles(anglesWithRef);
   };
 
   // Limpar seleção
@@ -384,17 +410,86 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     }
   };
 
-  // Verificar quais ângulos selecionados não têm imagem de referência
-  const checkAnglesWithoutReference = (): ProductStudioAngle[] => {
-    return selectedAngles.filter(angle => {
-      // 'front' sempre tem referência (é obrigatório ter pelo menos a foto frontal)
-      if (angle === 'front') return false;
-      return !availableReferences[angle];
-    });
+  // Função para adicionar referência a um ângulo (chamada pelo modal)
+  const handleAddReference = async (file: File) => {
+    if (!angleWithoutRef || !userId) return;
+
+    setUploadingRef(true);
+    try {
+      // Criar FormData para upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('product_id', product.id);
+      formData.append('user_id', userId);
+      formData.append('angle', angleWithoutRef);
+
+      // Fazer upload via API (supondo que existe um endpoint para isso)
+      // Por enquanto, vamos usar o supabase client diretamente
+      const fileName = `${userId}/${product.id}/original_${angleWithoutRef}_${Date.now()}.${file.name.split('.').pop()}`;
+
+      // Upload para o storage
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        'https://dbdqiqehuapcicejnzyd.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NjkwNTAsImV4cCI6MjA1MjU0NTA1MH0.gHFzWFLKHrNsRNB-8P8R1WKp_c__-Ft5NfvkwHPF_Ns'
+      );
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${fileName}`;
+
+      // Inserir registro na tabela product_images
+      const { data: imageData, error: insertError } = await supabase
+        .from('product_images')
+        .insert({
+          product_id: product.id,
+          user_id: userId,
+          type: 'original',
+          angle: angleWithoutRef,
+          storage_path: fileName,
+          url: publicUrl,
+          file_name: file.name,
+          mime_type: file.type,
+          is_primary: false
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Atualizar o produto com a nova referência
+      const newOriginalImages = {
+        ...product.originalImages,
+        [angleWithoutRef]: {
+          id: imageData.id,
+          url: publicUrl,
+          storagePath: fileName
+        }
+      };
+
+      onUpdateProduct(product.id, {
+        originalImages: newOriginalImages
+      });
+
+      // Fechar modal e selecionar o ângulo
+      setShowNoRefModal(false);
+      setSelectedAngles(prev => [...prev, angleWithoutRef]);
+      setAngleWithoutRef(null);
+
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro ao adicionar imagem de referência. Tente novamente.');
+    } finally {
+      setUploadingRef(false);
+    }
   };
 
-  // Gerar imagens (chamado após confirmação ou diretamente se tudo tem referência)
-  const handleGenerate = async (skipWarning = false) => {
+  // Gerar imagens
+  const handleGenerate = async () => {
     if (selectedAngles.length === 0) return;
 
     // Verificar se há alguma geração rodando
@@ -408,47 +503,48 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       return;
     }
 
-    // Verificar ângulos sem referência (mostrar aviso)
-    if (!skipWarning) {
-      const noRefAngles = checkAnglesWithoutReference();
-      if (noRefAngles.length > 0) {
-        setAnglesWithoutRef(noRefAngles);
-        setShowNoRefWarning(true);
-        return; // Aguardar confirmação do usuário
-      }
-    }
+    // Debug: mostrar estrutura do produto
+    console.log('🔍 [ProductStudio] Estrutura do produto:', {
+      originalImages: product.originalImages,
+      images: product.images,
+    });
 
     // Obter os IDs das imagens originais para TODOS os ângulos disponíveis
     const imageIds: Record<string, string | undefined> = {};
 
+    // Função auxiliar para obter ID de uma imagem
+    const getImageId = (img: { id?: string; url?: string } | undefined): string | undefined => {
+      if (!img) return undefined;
+      // Prioriza o ID, mas se não tiver, tenta extrair do URL ou usa a URL como fallback
+      if (img.id) return img.id;
+      // Se tem URL mas não tem ID, logamos o aviso
+      if (img.url) {
+        console.warn('⚠️ [ProductStudio] Imagem tem URL mas não tem ID:', img.url);
+      }
+      return undefined;
+    };
+
     // Front (obrigatório)
-    if (product.originalImages?.front?.id) {
-      imageIds.front = product.originalImages.front.id;
-    } else if (product.images?.[0]?.id) {
-      imageIds.front = product.images[0].id;
-    }
+    imageIds.front = getImageId(product.originalImages?.front) || getImageId(product.images?.[0]);
 
     // Back
-    if (product.originalImages?.back?.id) {
-      imageIds.back = product.originalImages.back.id;
-    } else if (product.images?.[1]?.id) {
-      imageIds.back = product.images[1].id;
-    }
+    imageIds.back = getImageId(product.originalImages?.back) || getImageId(product.images?.[1]);
 
     // Outros ângulos
-    if (product.originalImages?.['side-left']?.id) imageIds['side-left'] = product.originalImages['side-left'].id;
-    if (product.originalImages?.['side-right']?.id) imageIds['side-right'] = product.originalImages['side-right'].id;
-    if (product.originalImages?.top?.id) imageIds.top = product.originalImages.top.id;
-    if (product.originalImages?.detail?.id) imageIds.detail = product.originalImages.detail.id;
-    if (product.originalImages?.['45-left']?.id) imageIds['45-left'] = product.originalImages['45-left'].id;
-    if (product.originalImages?.['45-right']?.id) imageIds['45-right'] = product.originalImages['45-right'].id;
+    imageIds['side-left'] = getImageId(product.originalImages?.['side-left']);
+    imageIds['side-right'] = getImageId(product.originalImages?.['side-right']);
+    imageIds.top = getImageId(product.originalImages?.top);
+    imageIds.detail = getImageId(product.originalImages?.detail);
+    imageIds['45-left'] = getImageId(product.originalImages?.['45-left']);
+    imageIds['45-right'] = getImageId(product.originalImages?.['45-right']);
 
     if (!imageIds.front || !userId) {
       alert('Erro: Imagem frontal ou usuário não encontrado.');
       return;
     }
 
-    console.log('📸 [ProductStudio] Imagens de referência disponíveis:', imageIds);
+    console.log('📸 [ProductStudio] IDs de imagens disponíveis:', imageIds);
+    console.log('📸 [ProductStudio] Ângulos selecionados:', selectedAngles);
 
     // Iniciar geração (global ou local)
     const setGenerating = onSetGenerating || setLocalIsGenerating;
@@ -898,11 +994,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {availableAngles.map(angle => {
                   const isSelected = selectedAngles.includes(angle.id);
+                  const hasRef = angle.id === 'front' || availableReferences[angle.id];
                   return (
                     <button
                       key={angle.id}
                       onClick={() => toggleAngle(angle.id)}
-                      className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
+                      className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
                         (isSelected
                           ? 'bg-gradient-to-r from-pink-500/20 to-orange-500/20 border-pink-500 text-pink-400'
                           : (theme === 'dark'
@@ -911,14 +1008,41 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                         )
                       }
                     >
+                      {/* Indicador de referência */}
+                      <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                        hasRef
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-orange-500/20 text-orange-400'
+                      }`}>
+                        <i className={`fas ${hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
+                      </div>
                       <i className={`fas ${angle.icon} text-xl`}></i>
                       <span className="text-xs font-medium">{angle.label}</span>
                       {isSelected && (
                         <i className="fas fa-check-circle text-pink-400 text-sm"></i>
                       )}
+                      {!hasRef && !isSelected && (
+                        <span className={(theme === 'dark' ? 'text-orange-400/70' : 'text-orange-500') + " text-[10px]"}>Sem ref.</span>
+                      )}
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Legenda */}
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-neutral-800/50">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <i className="fas fa-check text-green-400 text-[8px]"></i>
+                  </div>
+                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Com referência</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <i className="fas fa-exclamation text-orange-400 text-[8px]"></i>
+                  </div>
+                  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Sem referência</span>
+                </div>
               </div>
             </div>
 
@@ -1045,81 +1169,99 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MODAL DE AVISO - Ângulos sem imagem de referência */}
+      {/* MODAL - Ângulo sem imagem de referência */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {showNoRefWarning && (
+      {showNoRefModal && angleWithoutRef && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowNoRefWarning(false)}
+            onClick={() => {
+              setShowNoRefModal(false);
+              setAngleWithoutRef(null);
+            }}
           ></div>
 
           {/* Modal */}
-          <div className="relative z-10 w-full max-w-md bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden">
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + " relative z-10 w-full max-w-md rounded-2xl border overflow-hidden"}>
             {/* Header com ícone de aviso */}
             <div className="p-6 pb-4 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <i className="fas fa-exclamation-triangle text-orange-400 text-2xl"></i>
+                <i className="fas fa-image text-orange-400 text-2xl"></i>
               </div>
-              <h3 className="text-white text-lg font-semibold mb-2">
-                Atenção: Ângulos sem referência
+              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-lg font-semibold mb-2"}>
+                Imagem de referência necessária
               </h3>
-              <p className="text-neutral-400 text-sm">
-                Você selecionou ângulos que não possuem foto de referência cadastrada.
-                A IA vai <span className="text-orange-400 font-medium">criar essas imagens</span> baseada na foto frontal,
-                o que pode resultar em diferenças do produto original.
+              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
+                O ângulo <span className="text-orange-400 font-semibold">{angleLabels[angleWithoutRef]}</span> não
+                possui imagem de referência cadastrada. Isso pode comprometer o resultado da criação.
               </p>
             </div>
 
-            {/* Lista de ângulos sem referência */}
+            {/* Pergunta */}
             <div className="px-6 pb-4">
-              <div className="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700">
-                <p className="text-neutral-500 text-xs uppercase tracking-wider mb-3 font-medium">
-                  Ângulos que serão criados pela IA:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {anglesWithoutRef.map(angle => (
-                    <span
-                      key={angle}
-                      className="px-3 py-1.5 bg-orange-500/20 text-orange-400 text-sm rounded-lg flex items-center gap-2"
-                    >
-                      <i className="fas fa-wand-magic-sparkles text-xs"></i>
-                      {angleLabels[angle]}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Dica */}
-            <div className="px-6 pb-4">
-              <div className="flex items-start gap-3 bg-blue-500/10 rounded-xl p-3 border border-blue-500/20">
-                <i className="fas fa-lightbulb text-blue-400 mt-0.5"></i>
-                <p className="text-blue-400/80 text-xs">
-                  <span className="font-medium">Dica:</span> Para resultados mais precisos,
-                  cadastre fotos de referência para cada ângulo na página de edição do produto.
+              <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + " rounded-xl p-4 border"}>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-sm font-medium text-center"}>
+                  Deseja adicionar a imagem de referência agora?
                 </p>
               </div>
             </div>
 
             {/* Botões */}
-            <div className="px-6 pb-6 flex gap-3">
-              <button
-                onClick={() => setShowNoRefWarning(false)}
-                className="flex-1 px-4 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl font-medium transition-all"
-              >
-                Cancelar
-              </button>
+            <div className="px-6 pb-6 space-y-3">
+              {/* Botão de adicionar referência com input de arquivo */}
+              <label className="block">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleAddReference(file);
+                    }
+                  }}
+                  disabled={uploadingRef}
+                />
+                <div className={`w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
+                  {uploadingRef ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      <span>Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-upload"></i>
+                      <span>Sim, adicionar imagem</span>
+                    </>
+                  )}
+                </div>
+              </label>
+
+              {/* Botão de não/desmarcar */}
               <button
                 onClick={() => {
-                  setShowNoRefWarning(false);
-                  handleGenerate(true); // Skip warning check
+                  setShowNoRefModal(false);
+                  setAngleWithoutRef(null);
+                  // Não adiciona o ângulo à seleção (já não foi adicionado)
                 }}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-xl font-medium transition-all"
+                disabled={uploadingRef}
+                className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700') + " w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"}
               >
-                Continuar mesmo assim
+                <i className="fas fa-times"></i>
+                <span>Não, desmarcar este ângulo</span>
               </button>
+            </div>
+
+            {/* Dica */}
+            <div className="px-6 pb-6">
+              <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
+                <i className="fas fa-lightbulb text-blue-400 mt-0.5"></i>
+                <p className={(theme === 'dark' ? 'text-blue-400/80' : 'text-blue-600') + " text-xs"}>
+                  <span className="font-medium">Dica:</span> Para melhores resultados, use uma foto do produto
+                  neste ângulo específico. A IA usará essa imagem como referência.
+                </p>
+              </div>
             </div>
           </div>
         </div>
