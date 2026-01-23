@@ -743,6 +743,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         imageId: imageIds.front!,
         referenceImages: Object.keys(referenceImages).length > 0 ? referenceImages : undefined,
         angles: selectedAngles,
+        // Informações do produto para instruções do prompt
+        productInfo: {
+          name: product.name,
+          category: product.category || editedProduct.category,
+          description: product.description || editedProduct.description,
+        },
       });
 
       clearInterval(progressInterval);
