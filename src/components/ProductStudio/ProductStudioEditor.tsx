@@ -135,7 +135,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
   // Estado do carrossel e toggle de visualização
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'original' | 'otimizada'>('otimizada');
+  const [viewMode, setViewMode] = useState<'original' | 'otimizada'>('original'); // Começa em 'original' por padrão
 
   // Estados de seleção de ângulos
   const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>([]);
@@ -274,6 +274,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
   // Verificar se produto está otimizado
   const isOptimized = generatedImages.length > 0;
+
+  // Ajustar viewMode automaticamente quando o estado de otimização muda
+  useEffect(() => {
+    if (isOptimized) {
+      // Se produto está otimizado, mostrar imagens otimizadas por padrão
+      setViewMode('otimizada');
+    } else {
+      // Se não está otimizado, forçar viewMode para original
+      setViewMode('original');
+    }
+    setCurrentImageIndex(0);
+  }, [isOptimized]);
 
   // Mapear quais imagens de referência estão disponíveis
   // IMPORTANTE: Só considera disponível se tiver o ID (necessário para a API)
@@ -876,42 +888,39 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
             {/* Container de Imagem Principal com Toggle e Carrossel */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-              {/* Toggle Original / Otimizada */}
-              <div className={'flex items-center justify-center gap-1 p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800 bg-neutral-900' : 'border-gray-100 bg-gray-50')}>
-                <button
-                  onClick={() => { setViewMode('original'); setCurrentImageIndex(0); }}
-                  className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
-                    (viewMode === 'original'
-                      ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md'
-                      : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
-                    )
-                  }
-                >
-                  <i className="fas fa-image mr-1.5"></i>
-                  Original
-                  {productImages.length > 0 && (
-                    <span className="ml-1.5 opacity-70">({productImages.length})</span>
-                  )}
-                </button>
-                <button
-                  onClick={() => { setViewMode('otimizada'); setCurrentImageIndex(0); }}
-                  disabled={generatedImages.length === 0}
-                  className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
-                    (viewMode === 'otimizada'
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md'
-                      : generatedImages.length === 0
-                        ? (theme === 'dark' ? 'text-neutral-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed')
+              {/* Toggle Original / Otimizada - só aparece se tiver fotos otimizadas */}
+              {isOptimized && (
+                <div className={'flex items-center justify-center gap-1 p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800 bg-neutral-900' : 'border-gray-100 bg-gray-50')}>
+                  <button
+                    onClick={() => { setViewMode('original'); setCurrentImageIndex(0); }}
+                    className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
+                      (viewMode === 'original'
+                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md'
                         : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
-                    )
-                  }
-                >
-                  <i className="fas fa-sparkles mr-1.5"></i>
-                  Otimizada
-                  {generatedImages.length > 0 && (
+                      )
+                    }
+                  >
+                    <i className="fas fa-image mr-1.5"></i>
+                    Original
+                    {productImages.length > 0 && (
+                      <span className="ml-1.5 opacity-70">({productImages.length})</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => { setViewMode('otimizada'); setCurrentImageIndex(0); }}
+                    className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
+                      (viewMode === 'otimizada'
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md'
+                        : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
+                      )
+                    }
+                  >
+                    <i className="fas fa-sparkles mr-1.5"></i>
+                    Otimizada
                     <span className="ml-1.5 opacity-70">({generatedImages.length})</span>
-                  )}
-                </button>
-              </div>
+                  </button>
+                </div>
+              )}
 
               {/* Área do Carrossel */}
               {(() => {
