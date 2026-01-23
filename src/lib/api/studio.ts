@@ -103,38 +103,6 @@ interface ProductStudioV2Response {
  * Custo: 1 crédito por ângulo
  */
 export async function generateProductStudioV2(params: ProductStudioV2Params): Promise<ProductStudioV2Response> {
-  // Construir instruções de como usar as imagens de referência
-  // CRÍTICO: Para cada ângulo, a imagem de referência daquele ângulo é a fonte PRIMÁRIA
-  // A imagem frontal serve apenas para manter consistência de estilo/iluminação/fundo
-  const angleInstructions = `
-INSTRUÇÕES CRÍTICAS PARA GERAÇÃO DE CADA ÂNGULO:
-
-Para cada ângulo gerado, siga RIGOROSAMENTE estas regras:
-
-1. IMAGEM DE REFERÊNCIA DO ÂNGULO (FONTE PRIMÁRIA):
-   - Todos os DETALHES visuais devem vir 100% da imagem de referência daquele ângulo específico
-   - Estampas, costuras, logos, gráficos, texturas, padrões = COPIAR EXATAMENTE da referência
-   - Cores, tons, gradientes = IDÊNTICOS à referência
-   - Formato, corte, modelagem = EXATAMENTE como na referência
-   - NÃO INVENTAR OU ALUCINAR detalhes que não existem na referência
-
-2. IMAGEM FRONTAL (APENAS PARA CONSISTÊNCIA):
-   - Usar SOMENTE para manter consistência de:
-     * Diagramação/enquadramento
-     * Iluminação (direção e intensidade da luz)
-     * Fundo (cor e estilo)
-     * Qualidade fotográfica
-   - NÃO usar detalhes visuais da frente para outros ângulos
-
-3. EXEMPLO PRÁTICO - CAMISA DE FUTEBOL:
-   - Gerando COSTAS: A estampa das costas, número, nome, costuras = 100% da foto de costas
-   - A foto frontal só define: fundo branco, luz suave, enquadramento centralizado
-   - NUNCA misturar elementos da frente nas costas
-
-PRODUTO: ${params.productInfo?.name || 'Produto'}
-CATEGORIA: ${params.productInfo?.category || 'Vestuário'}
-`.trim();
-
   const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/generate`, {
     method: 'POST',
     headers: {
@@ -147,9 +115,7 @@ CATEGORIA: ${params.productInfo?.category || 'Vestuário'}
       angles: params.angles,
       // Enviar todas as imagens de referência disponíveis
       reference_images: params.referenceImages || {},
-      // Instruções detalhadas de como usar as referências
-      prompt_instructions: angleInstructions,
-      // Informações do produto
+      // Informações do produto (contexto útil para o n8n)
       product_name: params.productInfo?.name,
       product_category: params.productInfo?.category,
       product_description: params.productInfo?.description,
