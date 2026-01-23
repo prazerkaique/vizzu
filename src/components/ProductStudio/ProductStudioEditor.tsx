@@ -133,8 +133,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   });
   const [editedAttributes, setEditedAttributes] = useState<ProductAttributes>(product.attributes || {});
 
-  // Estado do carrossel
+  // Estado do carrossel e toggle de visualização
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<'original' | 'otimizada'>('otimizada');
 
   // Estados de seleção de ângulos
   const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>([]);
@@ -474,12 +475,22 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     setCurrentSession(null);
   };
 
-  // Download da imagem principal gerada
+  // Obter imagem atual do carrossel (para download e navegação)
+  const getCurrentCarouselImage = () => {
+    if (viewMode === 'otimizada' && generatedImages.length > 0) {
+      const safeIndex = Math.min(currentImageIndex, generatedImages.length - 1);
+      return generatedImages[safeIndex];
+    }
+    return null;
+  };
+
+  // Download da imagem gerada atual
   const handleDownloadMainImage = async (format: 'png' | 'jpeg') => {
-    if (!mainImage?.isGenerated) return;
+    const currentImg = getCurrentCarouselImage();
+    if (!currentImg) return;
 
     try {
-      const response = await fetch(mainImage.url);
+      const response = await fetch(currentImg.url);
       const blob = await response.blob();
 
       if (format === 'jpeg') {
@@ -491,7 +502,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         await new Promise((resolve, reject) => {
           img.onload = resolve;
           img.onerror = reject;
-          img.src = mainImage.url;
+          img.src = currentImg.url;
         });
 
         canvas.width = img.width;
@@ -503,7 +514,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             const url = window.URL.createObjectURL(jpegBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${product.sku}_otimizado.jpg`;
+            a.download = `${product.sku}_${currentImg.angle}.jpg`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -514,21 +525,22 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${product.sku}_otimizado.png`;
+        a.download = `${product.sku}_${currentImg.angle}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       }
     } catch {
-      window.open(mainImage.url, '_blank');
+      window.open(currentImg.url, '_blank');
     }
   };
 
   // Navegar para outras ferramentas com o produto
   const handleNavigateToFeature = (destination: 'look-composer' | 'lifestyle' | 'provador') => {
     if (onNavigate) {
-      onNavigate(destination, product.id, mainImage?.url);
+      const currentImg = getCurrentCarouselImage();
+      onNavigate(destination, product.id, currentImg?.url || generatedImages[0]?.url);
     }
   };
 
@@ -862,37 +874,135 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           {/* ═══════════════════════════════════════════════════════════════ */}
           <div className="space-y-4">
 
-            {/* Container de Imagem Principal */}
+            {/* Container de Imagem Principal com Toggle e Carrossel */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-              {/* Área principal da imagem */}
-              <div className={'relative flex items-center justify-center p-4 min-h-[300px] max-h-[500px] ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
-                {mainImage ? (
-                  <>
-                    <img
-                      src={mainImage.url}
-                      alt={product.name}
-                      className="max-w-full max-h-[450px] object-contain rounded-lg"
-                    />
-                    {/* Badge de Otimizado */}
-                    {mainImage.isGenerated && (
-                      <div className="absolute top-3 left-3 px-2.5 py-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg shadow-lg">
-                        <span className="text-white text-xs font-bold flex items-center gap-1.5">
-                          <i className="fas fa-sparkles text-[10px]"></i>
-                          Otimizado
-                        </span>
+              {/* Toggle Original / Otimizada */}
+              <div className={'flex items-center justify-center gap-1 p-3 border-b ' + (theme === 'dark' ? 'border-neutral-800 bg-neutral-900' : 'border-gray-100 bg-gray-50')}>
+                <button
+                  onClick={() => { setViewMode('original'); setCurrentImageIndex(0); }}
+                  className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
+                    (viewMode === 'original'
+                      ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md'
+                      : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
+                    )
+                  }
+                >
+                  <i className="fas fa-image mr-1.5"></i>
+                  Original
+                  {productImages.length > 0 && (
+                    <span className="ml-1.5 opacity-70">({productImages.length})</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setViewMode('otimizada'); setCurrentImageIndex(0); }}
+                  disabled={generatedImages.length === 0}
+                  className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
+                    (viewMode === 'otimizada'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md'
+                      : generatedImages.length === 0
+                        ? (theme === 'dark' ? 'text-neutral-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed')
+                        : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
+                    )
+                  }
+                >
+                  <i className="fas fa-sparkles mr-1.5"></i>
+                  Otimizada
+                  {generatedImages.length > 0 && (
+                    <span className="ml-1.5 opacity-70">({generatedImages.length})</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Área do Carrossel */}
+              {(() => {
+                const currentImages = viewMode === 'otimizada' ? generatedImages : productImages;
+                const safeIndex = Math.min(currentImageIndex, Math.max(0, currentImages.length - 1));
+                const currentImg = currentImages[safeIndex];
+
+                return (
+                  <div className={'relative flex items-center justify-center p-4 min-h-[300px] max-h-[500px] ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
+                    {currentImg ? (
+                      <>
+                        <img
+                          src={viewMode === 'otimizada' ? (currentImg as any).url : (currentImg as any).url}
+                          alt={product.name}
+                          className="max-w-full max-h-[450px] object-contain rounded-lg"
+                        />
+                        {/* Badge do ângulo/tipo */}
+                        <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg">
+                          <span className="text-white text-xs font-medium capitalize">
+                            {viewMode === 'otimizada' ? (currentImg as any).angle : (currentImg as any).type}
+                          </span>
+                        </div>
+                        {/* Navegação do carrossel */}
+                        {currentImages.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => setCurrentImageIndex(prev => prev === 0 ? currentImages.length - 1 : prev - 1)}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                            >
+                              <i className="fas fa-chevron-left"></i>
+                            </button>
+                            <button
+                              onClick={() => setCurrentImageIndex(prev => prev === currentImages.length - 1 ? 0 : prev + 1)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                            >
+                              <i className="fas fa-chevron-right"></i>
+                            </button>
+                            {/* Indicadores */}
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                              {currentImages.map((_, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => setCurrentImageIndex(idx)}
+                                  className={`w-2 h-2 rounded-full transition-all ${idx === safeIndex ? (viewMode === 'otimizada' ? 'bg-green-400 w-4' : 'bg-pink-400 w-4') : 'bg-white/50'}`}
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full h-64 flex flex-col items-center justify-center gap-2">
+                        <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-4xl'}></i>
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-sm'}>
+                          {viewMode === 'otimizada' ? 'Nenhuma foto otimizada ainda' : 'Nenhuma foto original'}
+                        </p>
                       </div>
                     )}
-                    {/* Badge do tipo da foto */}
-                    <div className={'absolute top-3 ' + (mainImage.isGenerated ? 'right-3' : 'left-3') + ' px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg'}>
-                      <span className="text-white text-xs font-medium">{mainImage.type}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full h-64 flex items-center justify-center">
-                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-4xl'}></i>
                   </div>
-                )}
-              </div>
+                );
+              })()}
+
+              {/* Miniaturas */}
+              {(() => {
+                const currentImages = viewMode === 'otimizada' ? generatedImages : productImages;
+                const safeIndex = Math.min(currentImageIndex, Math.max(0, currentImages.length - 1));
+
+                if (currentImages.length <= 1) return null;
+
+                return (
+                  <div className={'flex gap-2 p-3 border-t overflow-x-auto ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+                    {currentImages.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                          idx === safeIndex
+                            ? (viewMode === 'otimizada' ? 'border-green-500' : 'border-pink-500')
+                            : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')
+                        }`}
+                      >
+                        <img
+                          src={(img as any).url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Informações do Produto */}
