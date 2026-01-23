@@ -7,6 +7,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
+import { LookComposerResult } from './LookComposerResult';
 
 interface LookComposerEditorProps {
   product: Product;
@@ -176,6 +177,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [localLoadingText, setLocalLoadingText] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
 
+  // Estado do resultado
+  const [showResult, setShowResult] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generationId, setGenerationId] = useState<string | null>(null);
+
   // Usar estado global se disponível
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
   const currentProgress = onSetProgress ? generationProgress : localProgress;
@@ -292,6 +298,51 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   const handleMaximize = () => {
     if (onSetMinimized) onSetMinimized(false);
+  };
+
+  // Handlers da tela de resultado
+  const handleResultSave = () => {
+    console.log('[LookComposer] Look salvo:', generationId);
+    setShowResult(false);
+    setGeneratedImageUrl(null);
+    setGenerationId(null);
+    // Produto já foi atualizado - apenas fechar
+  };
+
+  const handleResultRegenerate = () => {
+    setShowResult(false);
+    setGeneratedImageUrl(null);
+    setGenerationId(null);
+    // Voltar para a tela de geração
+  };
+
+  const handleResultDelete = () => {
+    // Remover a imagem do produto
+    if (generationId) {
+      const currentGenerated = product.generatedImages || {
+        studioReady: [],
+        cenarioCriativo: [],
+        modeloIA: [],
+        productStudio: []
+      };
+
+      onUpdateProduct(product.id, {
+        generatedImages: {
+          ...currentGenerated,
+          modeloIA: (currentGenerated.modeloIA || []).filter(img => img.id !== generationId)
+        }
+      });
+    }
+
+    setShowResult(false);
+    setGeneratedImageUrl(null);
+    setGenerationId(null);
+  };
+
+  const handleResultBack = () => {
+    setShowResult(false);
+    setGeneratedImageUrl(null);
+    setGenerationId(null);
   };
 
   // Gerar look
@@ -475,10 +526,18 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
         setProgress(100);
 
-        // Mostrar resultado (alerta temporário - pode ser substituído por modal)
+        // Mostrar tela de resultado
+        setGeneratedImageUrl(result.generation.image_url);
+        setGenerationId(result.generation.id);
+
+        // Aguardar um pouco e mostrar o resultado
         setTimeout(() => {
-          alert(`Look gerado com sucesso! A imagem foi salva nas "Fotos Geradas" do produto.`);
+          const setGenerating = onSetGenerating || setLocalIsGenerating;
+          setGenerating(false);
+          setShowResult(true);
         }, 500);
+
+        return; // Não executar o finally ainda
       } else {
         throw new Error(result.error || result.message || 'Erro ao gerar look');
       }
@@ -923,6 +982,31 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         );
     }
   };
+
+  // ═══════════════════════════════════════════════════════════════
+  // Se tem resultado para mostrar, renderiza página de resultado
+  // ═══════════════════════════════════════════════════════════════
+  if (showResult && generatedImageUrl && generationId) {
+    return (
+      <LookComposerResult
+        product={product}
+        generatedImageUrl={generatedImageUrl}
+        generationId={generationId}
+        lookMode={lookMode}
+        lookComposition={lookComposition}
+        describedLook={describedLook}
+        selectedModel={selectedModel}
+        backgroundType={backgroundType}
+        creditsUsed={creditsNeeded}
+        userCredits={userCredits}
+        onSave={handleResultSave}
+        onRegenerate={handleResultRegenerate}
+        onDelete={handleResultDelete}
+        onBack={handleResultBack}
+        theme={theme}
+      />
+    );
+  }
 
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? 'bg-black' : 'bg-gray-50')}>
