@@ -425,7 +425,37 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       setProgress(90);
 
-      if (result.success) {
+      if (result.success && result.generation?.image_url) {
+        console.log('[LookComposer] Imagem gerada com sucesso:', result.generation.image_url);
+
+        // Salvar a imagem gerada no produto (formato GeneratedImageSet)
+        const newModeloIAImage: import('../../types').GeneratedImageSet = {
+          id: result.generation.id,
+          createdAt: new Date().toISOString(),
+          tool: 'lifestyle',
+          images: {
+            front: result.generation.image_url
+          },
+          metadata: {
+            prompt: lookMode === 'describe' ? clothingPrompt : undefined,
+            orientation: 'vertical'
+          }
+        };
+
+        const currentGenerated = product.generatedImages || {
+          studioReady: [],
+          cenarioCriativo: [],
+          modeloIA: [],
+          productStudio: []
+        };
+
+        onUpdateProduct(product.id, {
+          generatedImages: {
+            ...currentGenerated,
+            modeloIA: [...(currentGenerated.modeloIA || []), newModeloIAImage]
+          }
+        });
+
         // Deduzir créditos
         if (onDeductCredits) {
           onDeductCredits(creditsNeeded, `Look Composer - ${lookMode === 'composer' ? 'Com peças' : 'Descrito'}`);
@@ -444,6 +474,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         }
 
         setProgress(100);
+
+        // Mostrar resultado (alerta temporário - pode ser substituído por modal)
+        setTimeout(() => {
+          alert(`Look gerado com sucesso! A imagem foi salva nas "Fotos Geradas" do produto.`);
+        }, 500);
       } else {
         throw new Error(result.error || result.message || 'Erro ao gerar look');
       }
