@@ -79,6 +79,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   const [filterGender, setFilterGender] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'a-z' | 'z-a'>('recent');
 
+  // Estados de colapso das seções
+  const [optimizedCollapsed, setOptimizedCollapsed] = useState(false);
+  const [pendingCollapsed, setPendingCollapsed] = useState(false);
+
   // Filtrar e ordenar produtos
   const filteredProducts = useMemo(() => {
     let result = products.filter(product => {
@@ -448,131 +452,151 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         {filteredProducts.length > 0 ? (
           <>
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {/* SEÇÃO: Pendentes de Otimização */}
+            {/* SEÇÃO: Produtos Otimizados (PRIMEIRO) */}
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {pendingProducts.length > 0 && (
+            {optimizedProducts.length > 0 && (
               <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={(theme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
-                    <i className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-500') + ' fas fa-clock text-[10px]'}></i>
+                <button
+                  onClick={() => setOptimizedCollapsed(!optimizedCollapsed)}
+                  className="w-full flex items-center justify-between mb-3 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={(theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                      <i className={(theme === 'dark' ? 'text-green-400' : 'text-green-500') + ' fas fa-check text-[10px]'}></i>
+                    </div>
+                    <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                      Produtos Otimizados
+                    </h2>
+                    <span className={(theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                      {optimizedProducts.length}
+                    </span>
                   </div>
-                  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
-                    Pendentes de otimização
-                  </h2>
-                  <span className={(theme === 'dark' ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
-                    {pendingProducts.length}
-                  </span>
-                </div>
+                  <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+                    <i className={'fas fa-chevron-' + (optimizedCollapsed ? 'down' : 'up') + ' text-xs'}></i>
+                  </div>
+                </button>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {pendingProducts.map(product => {
-                    const productImage = getProductImage(product);
-                    return (
-                      <div
-                        key={product.id}
-                        data-product-id={product.id}
-                        onClick={() => handleSelectProduct(product)}
-                        className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
-                      >
-                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
-                          {productImage ? (
-                            <img
-                              src={productImage}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                {!optimizedCollapsed && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {optimizedProducts.map(product => {
+                      const productImage = getProductImage(product);
+                      const studioCount = getProductStudioCount(product);
+                      return (
+                        <div
+                          key={product.id}
+                          data-product-id={product.id}
+                          onClick={() => handleSelectProduct(product)}
+                          className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-green-500/50' : 'bg-white border-gray-200 hover:border-green-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                        >
+                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                            {productImage ? (
+                              <img
+                                src={productImage}
+                                alt={product.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                              </div>
+                            )}
+                            {/* Tag Otimizado */}
+                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1 shadow-lg">
+                              <i className="fas fa-sparkles text-[6px]"></i>
+                              Otimizado
                             </div>
-                          )}
-                          <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
-                              <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
-                            </button>
+                            {/* Contador de fotos */}
+                            <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm text-white text-[8px] font-medium rounded-full flex items-center gap-1">
+                              <i className="fas fa-images text-[6px]"></i>
+                              {studioCount}
+                            </div>
+                            <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="w-full py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-[10px]">
+                                <i className="fas fa-eye mr-1"></i>Ver fotos
+                              </button>
+                            </div>
+                          </div>
+                          <div className="p-2.5">
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                            {product.category && (
+                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                            )}
                           </div>
                         </div>
-                        <div className="p-2.5">
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
-                          {product.category && (
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {/* SEÇÃO: Produtos Otimizados */}
+            {/* SEÇÃO: Pendentes de Otimização (SEGUNDO) */}
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {optimizedProducts.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={(theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
-                    <i className={(theme === 'dark' ? 'text-green-400' : 'text-green-500') + ' fas fa-check text-[10px]'}></i>
+            {pendingProducts.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => setPendingCollapsed(!pendingCollapsed)}
+                  className="w-full flex items-center justify-between mb-3 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={(theme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                      <i className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-500') + ' fas fa-clock text-[10px]'}></i>
+                    </div>
+                    <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                      Pendentes de otimização
+                    </h2>
+                    <span className={(theme === 'dark' ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                      {pendingProducts.length}
+                    </span>
                   </div>
-                  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
-                    Produtos Otimizados
-                  </h2>
-                  <span className={(theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
-                    {optimizedProducts.length}
-                  </span>
-                </div>
+                  <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+                    <i className={'fas fa-chevron-' + (pendingCollapsed ? 'down' : 'up') + ' text-xs'}></i>
+                  </div>
+                </button>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {optimizedProducts.map(product => {
-                    const productImage = getProductImage(product);
-                    const studioCount = getProductStudioCount(product);
-                    return (
-                      <div
-                        key={product.id}
-                        data-product-id={product.id}
-                        onClick={() => handleSelectProduct(product)}
-                        className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-green-500/50' : 'bg-white border-gray-200 hover:border-green-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
-                      >
-                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
-                          {productImage ? (
-                            <img
-                              src={productImage}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                {!pendingCollapsed && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {pendingProducts.map(product => {
+                      const productImage = getProductImage(product);
+                      return (
+                        <div
+                          key={product.id}
+                          data-product-id={product.id}
+                          onClick={() => handleSelectProduct(product)}
+                          className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                        >
+                          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                            {productImage ? (
+                              <img
+                                src={productImage}
+                                alt={product.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                              </div>
+                            )}
+                            <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                                <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
+                              </button>
                             </div>
-                          )}
-                          {/* Tag Otimizado */}
-                          <div className="absolute top-2 left-2 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1 shadow-lg">
-                            <i className="fas fa-sparkles text-[6px]"></i>
-                            Otimizado
                           </div>
-                          {/* Contador de fotos */}
-                          <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm text-white text-[8px] font-medium rounded-full flex items-center gap-1">
-                            <i className="fas fa-images text-[6px]"></i>
-                            {studioCount}
-                          </div>
-                          <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="w-full py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-[10px]">
-                              <i className="fas fa-eye mr-1"></i>Ver fotos
-                            </button>
+                          <div className="p-2.5">
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                            {product.category && (
+                              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                            )}
                           </div>
                         </div>
-                        <div className="p-2.5">
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
-                          {product.category && (
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </>
