@@ -3,10 +3,39 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2 } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
+
+// Estilos CSS para o spinner que troca de cor (lilás, laranja, rosa)
+const colorSpinnerStyles = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes colorChange {
+    0%, 100% { border-top-color: #a855f7; border-right-color: #a855f7; } /* Lilás */
+    33% { border-top-color: #f97316; border-right-color: #f97316; } /* Laranja */
+    66% { border-top-color: #ec4899; border-right-color: #ec4899; } /* Rosa */
+  }
+
+  @keyframes glowChange {
+    0%, 100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(168, 85, 247, 0.3); } /* Lilás */
+    33% { box-shadow: 0 0 30px rgba(249, 115, 22, 0.5), 0 0 60px rgba(249, 115, 22, 0.3); } /* Laranja */
+    66% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.5), 0 0 60px rgba(236, 72, 153, 0.3); } /* Rosa */
+  }
+
+  .vizzu-color-spinner {
+    width: 120px;
+    height: 120px;
+    border: 6px solid transparent;
+    border-top-width: 6px;
+    border-right-width: 6px;
+    border-radius: 50%;
+    animation: spin 1s linear infinite, colorChange 3s ease-in-out infinite, glowChange 3s ease-in-out infinite;
+  }
+`;
 
 interface ProductStudioEditorProps {
   product: Product;
@@ -28,6 +57,8 @@ interface ProductStudioEditorProps {
   onSetProgress?: (value: number) => void;
   onSetLoadingText?: (value: string) => void;
   isAnyGenerationRunning?: boolean;
+  // Navegação para outras ferramentas
+  onNavigate?: (page: 'look-composer' | 'lifestyle' | 'provador', productId?: string, imageUrl?: string) => void;
 }
 
 // Frases de loading para Product Studio
@@ -103,7 +134,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   onSetMinimized,
   onSetProgress,
   onSetLoadingText,
-  isAnyGenerationRunning = false
+  isAnyGenerationRunning = false,
+  onNavigate
 }) => {
   // Estados de edição do produto
   const [editMode, setEditMode] = useState(false);
@@ -136,6 +168,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const [showNoRefModal, setShowNoRefModal] = useState(false);
   const [angleWithoutRef, setAngleWithoutRef] = useState<ProductStudioAngle | null>(null);
   const [uploadingRef, setUploadingRef] = useState(false);
+
+  // Estado para galeria de imagens geradas e modal de ações
+  const [showGallery, setShowGallery] = useState(false);
+  const [showImageActionsModal, setShowImageActionsModal] = useState(false);
+  const [selectedImageForAction, setSelectedImageForAction] = useState<{ url: string; angle: string } | null>(null);
+  const [showDownloadOptions, setShowDownloadOptions] = useState(false);
 
   // Usar estado global se disponível, senão local
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
@@ -346,6 +384,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     // A sessão já foi salva no produto durante a geração
     // Este callback é para confirmar que o usuário quer manter as imagens
     console.log('Sessão salva:', currentSession?.id);
+
+    // Após salvar, mostrar galeria de imagens geradas
+    setShowResult(false);
+    setCurrentSession(null);
+    setShowGallery(true);
   };
 
   // Gerar novamente (volta para seleção de ângulos)
@@ -401,6 +444,109 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const handleResultBack = () => {
     setShowResult(false);
     setCurrentSession(null);
+  };
+
+  // Abrir modal de ações para uma imagem
+  const handleImageClick = (imageUrl: string, angle: string) => {
+    setSelectedImageForAction({ url: imageUrl, angle });
+    setShowImageActionsModal(true);
+  };
+
+  // Navegar para outras ferramentas com a imagem selecionada
+  const handleNavigateWithImage = (destination: 'look-composer' | 'lifestyle' | 'provador') => {
+    if (onNavigate && selectedImageForAction) {
+      onNavigate(destination, product.id, selectedImageForAction.url);
+    }
+    setShowImageActionsModal(false);
+    setSelectedImageForAction(null);
+  };
+
+  // Download da imagem
+  const handleDownloadImage = async (format: 'png' | 'jpeg') => {
+    if (!selectedImageForAction) return;
+
+    try {
+      const response = await fetch(selectedImageForAction.url);
+      const blob = await response.blob();
+
+      // Se for JPEG, converter
+      if (format === 'jpeg') {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = selectedImageForAction.url;
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+
+        canvas.toBlob((jpegBlob) => {
+          if (jpegBlob) {
+            const url = window.URL.createObjectURL(jpegBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${product.sku}_${selectedImageForAction.angle}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        }, 'image/jpeg', 0.95);
+      } else {
+        // PNG direto
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${product.sku}_${selectedImageForAction.angle}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch {
+      window.open(selectedImageForAction.url, '_blank');
+    }
+
+    setShowDownloadOptions(false);
+    setShowImageActionsModal(false);
+    setSelectedImageForAction(null);
+  };
+
+  // Fechar modal de ações
+  const handleCloseActionsModal = () => {
+    setShowImageActionsModal(false);
+    setSelectedImageForAction(null);
+    setShowDownloadOptions(false);
+  };
+
+  // Voltar da galeria para o editor
+  const handleBackFromGallery = () => {
+    setShowGallery(false);
+  };
+
+  // Obter todas as imagens geradas do produto
+  const getAllGeneratedImages = () => {
+    const sessions = product.generatedImages?.productStudio || [];
+    const images: { url: string; angle: string; sessionId: string; createdAt: string }[] = [];
+
+    sessions.forEach(session => {
+      session.images.forEach(img => {
+        images.push({
+          url: img.url,
+          angle: img.angle,
+          sessionId: session.id,
+          createdAt: session.createdAt
+        });
+      });
+    });
+
+    return images;
   };
 
   // Maximizar modal (voltar do minimizado)
@@ -698,6 +844,207 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         onBack={handleResultBack}
         theme={theme}
       />
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // Galeria de imagens geradas (após salvar)
+  // ═══════════════════════════════════════════════════════════════
+  const generatedImages = getAllGeneratedImages();
+
+  if (showGallery && generatedImages.length > 0) {
+    return (
+      <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+        <div className="max-w-7xl mx-auto">
+
+          {/* HEADER */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBackFromGallery}
+                className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700' : 'bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-100 shadow-sm') + ' w-10 h-10 rounded-xl flex items-center justify-center transition-all'}
+              >
+                <i className="fas fa-arrow-left"></i>
+              </button>
+              <div>
+                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Imagens Geradas</h1>
+                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{product.name}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowGallery(false)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90"
+            >
+              <i className="fas fa-plus"></i>
+              <span>Gerar Mais</span>
+            </button>
+          </div>
+
+          {/* Info Card */}
+          <div className={(theme === 'dark' ? 'bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20' : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200') + ' rounded-xl p-4 border mb-4'}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <i className="fas fa-check-circle text-green-500"></i>
+              </div>
+              <div>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                  {generatedImages.length} imagem{generatedImages.length > 1 ? 's' : ''} salva{generatedImages.length > 1 ? 's' : ''}
+                </p>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
+                  Clique em uma imagem para usar em outras ferramentas ou fazer download
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid de Imagens */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {generatedImages.map((img, idx) => (
+              <div
+                key={`${img.sessionId}-${idx}`}
+                onClick={() => handleImageClick(img.url, img.angle)}
+                className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+              >
+                <div className="aspect-[3/4] relative overflow-hidden">
+                  <img
+                    src={img.url}
+                    alt={`${product.name} - ${img.angle}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg">
+                    <span className="text-white text-[10px] font-medium capitalize">{img.angle}</span>
+                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                      <i className="fas fa-ellipsis-h text-gray-700"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* MODAL - Ações da Imagem */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {showImageActionsModal && selectedImageForAction && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseActionsModal}></div>
+            <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden'}>
+
+              {/* Preview da Imagem */}
+              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4] max-h-[300px] relative'}>
+                <img
+                  src={selectedImageForAction.url}
+                  alt={`${product.name} - ${selectedImageForAction.angle}`}
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  onClick={handleCloseActionsModal}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
+                >
+                  <i className="fas fa-times text-sm"></i>
+                </button>
+                <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg">
+                  <span className="text-white text-xs font-medium capitalize">{selectedImageForAction.angle}</span>
+                </div>
+              </div>
+
+              {/* Ações */}
+              <div className="p-4">
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide mb-3'}>
+                  O que deseja fazer com esta imagem?
+                </p>
+
+                {!showDownloadOptions ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Montar Look */}
+                    <button
+                      onClick={() => handleNavigateWithImage('look-composer')}
+                      disabled={!onNavigate}
+                      className={(theme === 'dark' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 hover:border-purple-500/50' : 'bg-gradient-to-r from-purple-100 to-pink-100 border-purple-200 hover:border-purple-300') + ' p-4 rounded-xl border transition-all flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                        <i className="fas fa-layer-group text-white"></i>
+                      </div>
+                      <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Montar Look</span>
+                    </button>
+
+                    {/* Cenário Criativo */}
+                    <button
+                      onClick={() => handleNavigateWithImage('lifestyle')}
+                      disabled={!onNavigate}
+                      className={(theme === 'dark' ? 'bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-orange-500/30 hover:border-orange-500/50' : 'bg-gradient-to-r from-orange-100 to-yellow-100 border-orange-200 hover:border-orange-300') + ' p-4 rounded-xl border transition-all flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-500 flex items-center justify-center">
+                        <i className="fas fa-mountain-sun text-white"></i>
+                      </div>
+                      <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</span>
+                    </button>
+
+                    {/* Vestir Cliente */}
+                    <button
+                      onClick={() => handleNavigateWithImage('provador')}
+                      disabled={!onNavigate}
+                      className={(theme === 'dark' ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30 hover:border-blue-500/50' : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-200 hover:border-blue-300') + ' p-4 rounded-xl border transition-all flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <i className="fas fa-user-check text-white"></i>
+                      </div>
+                      <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Vestir Cliente</span>
+                    </button>
+
+                    {/* Download */}
+                    <button
+                      onClick={() => setShowDownloadOptions(true)}
+                      className={(theme === 'dark' ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 hover:border-green-500/50' : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200 hover:border-green-300') + ' p-4 rounded-xl border transition-all flex flex-col items-center gap-2'}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                        <i className="fas fa-download text-white"></i>
+                      </div>
+                      <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Download</span>
+                    </button>
+                  </div>
+                ) : (
+                  /* Opções de formato de download */
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setShowDownloadOptions(false)}
+                      className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium flex items-center gap-1'}
+                    >
+                      <i className="fas fa-arrow-left text-[10px]"></i>
+                      Voltar
+                    </button>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                      Escolha o formato:
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleDownloadImage('png')}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-4 rounded-xl border transition-all flex flex-col items-center gap-2'}
+                      >
+                        <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-file-image text-2xl'}></i>
+                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>PNG</span>
+                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Alta qualidade</span>
+                      </button>
+                      <button
+                        onClick={() => handleDownloadImage('jpeg')}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-4 rounded-xl border transition-all flex flex-col items-center gap-2'}
+                      >
+                        <i className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-500') + ' fas fa-file-image text-2xl'}></i>
+                        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>JPEG</span>
+                        <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Arquivo menor</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -1277,14 +1624,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
           {/* Container do conteúdo */}
           <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
-            {/* Animação Lottie com cor rosa */}
-            <div className="w-64 h-64 mb-6" style={{ filter: 'hue-rotate(320deg) saturate(1.5)' }}>
-              <DotLottieReact
-                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                loop
-                autoplay
-                style={{ width: '100%', height: '100%' }}
-              />
+            {/* Spinner colorido que troca entre lilás, laranja e rosa */}
+            <style>{colorSpinnerStyles}</style>
+            <div className="w-64 h-64 mb-6 flex items-center justify-center">
+              <div className="vizzu-color-spinner"></div>
             </div>
 
             {/* Título */}

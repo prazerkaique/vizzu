@@ -3190,6 +3190,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onSetProgress={setProductStudioProgress}
             onSetLoadingText={setProductStudioLoadingText}
             isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+            onNavigate={(page) => setCurrentPage(page)}
           />
         )}
 

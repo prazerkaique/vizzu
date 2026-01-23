@@ -186,8 +186,8 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
   }
   
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash-exp',
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-3-pro-image-preview',
     safetySettings: [
       { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
       { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },

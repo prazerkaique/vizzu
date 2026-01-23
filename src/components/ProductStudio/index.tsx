@@ -27,6 +27,8 @@ interface ProductStudioProps {
   onSetProgress?: (value: number) => void;
   onSetLoadingText?: (value: string) => void;
   isAnyGenerationRunning?: boolean;
+  // Navegação para outras ferramentas
+  onNavigate?: (page: 'look-composer' | 'lifestyle' | 'provador', productId?: string, imageUrl?: string) => void;
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -53,7 +55,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   onSetMinimized,
   onSetProgress,
   onSetLoadingText,
-  isAnyGenerationRunning = false
+  isAnyGenerationRunning = false,
+  onNavigate
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -112,7 +115,31 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
   const hasActiveFilters = searchTerm || filterCategory || filterCollection || filterColor || filterGender || sortBy !== 'recent';
 
+  // Verificar se o produto está otimizado (tem imagens do Product Studio)
+  const isProductOptimized = (product: Product): boolean => {
+    const sessions = product.generatedImages?.productStudio || [];
+    return sessions.some(session => session.images.length > 0);
+  };
+
+  // Obter a melhor imagem do produto (prioriza: frente gerada > qualquer gerada > original)
   const getProductImage = (product: Product): string | undefined => {
+    const sessions = product.generatedImages?.productStudio || [];
+
+    // Se tem imagens geradas, priorizar
+    if (sessions.length > 0) {
+      // Primeiro, procurar imagem de frente gerada
+      for (const session of sessions) {
+        const frontImage = session.images.find(img => img.angle === 'front');
+        if (frontImage?.url) return frontImage.url;
+      }
+
+      // Se não tem frente, pegar a primeira imagem gerada disponível
+      for (const session of sessions) {
+        if (session.images[0]?.url) return session.images[0].url;
+      }
+    }
+
+    // Fallback para imagem original
     if (product.originalImages?.front?.url) return product.originalImages.front.url;
     if (product.images?.[0]?.url) return product.images[0].url;
     if (product.images?.[0]?.base64) return product.images[0].base64;
@@ -124,6 +151,22 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
     const sessions = product.generatedImages?.productStudio || [];
     return sessions.reduce((acc, session) => acc + session.images.length, 0);
   };
+
+  // Separar produtos otimizados dos não otimizados
+  const { optimizedProducts, pendingProducts } = useMemo(() => {
+    const optimized: Product[] = [];
+    const pending: Product[] = [];
+
+    filteredProducts.forEach(product => {
+      if (isProductOptimized(product)) {
+        optimized.push(product);
+      } else {
+        pending.push(product);
+      }
+    });
+
+    return { optimizedProducts: optimized, pendingProducts: pending };
+  }, [filteredProducts]);
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -155,6 +198,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         onSetProgress={onSetProgress}
         onSetLoadingText={onSetLoadingText}
         isAnyGenerationRunning={isAnyGenerationRunning}
+        onNavigate={onNavigate}
       />
     );
   }
@@ -360,16 +404,32 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* BANNER - Seus Produtos + Plano */}
+        {/* BANNER - Seus Produtos + Status de Otimização */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mb-4'}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus produtos</p>
-              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>{filteredProducts.length}</p>
-              {hasActiveFilters && (
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>de {products.length} no catálogo</p>
-              )}
+            <div className="flex items-center gap-6">
+              {/* Total */}
+              <div>
+                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Total</p>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>{filteredProducts.length}</p>
+              </div>
+              {/* Divider */}
+              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' w-px h-10'}></div>
+              {/* Otimizados */}
+              <div>
+                <p className={(theme === 'dark' ? 'text-green-400' : 'text-green-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
+                  <i className="fas fa-check text-[8px]"></i> Otimizados
+                </p>
+                <p className={(theme === 'dark' ? 'text-green-400' : 'text-green-600') + ' text-2xl font-bold'}>{optimizedProducts.length}</p>
+              </div>
+              {/* Pendentes */}
+              <div>
+                <p className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
+                  <i className="fas fa-clock text-[8px]"></i> Pendentes
+                </p>
+                <p className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-600') + ' text-2xl font-bold'}>{pendingProducts.length}</p>
+              </div>
             </div>
             {currentPlan && (
               <div className="text-right">
@@ -383,91 +443,167 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* PRODUCTS GRID */}
+        {/* PRODUCTS GRID - Separado por status de otimização */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
-              Selecione um produto
-            </h2>
-          </div>
-
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {filteredProducts.map(product => {
-                const productImage = getProductImage(product);
-                const studioCount = getProductStudioCount(product);
-                return (
-                  <div
-                    key={product.id}
-                    data-product-id={product.id}
-                    onClick={() => handleSelectProduct(product)}
-                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
-                  >
-                    <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
-                      {productImage ? (
-                        <img
-                          src={productImage}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
-                        </div>
-                      )}
-                      {studioCount > 0 && (
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
-                          <i className="fas fa-check text-[6px]"></i>
-                          {studioCount}
-                        </div>
-                      )}
-                      <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
-                          <i className="fas fa-wand-magic-sparkles mr-1"></i>Criar
-                        </button>
-                      </div>
-                    </div>
-                    <div className="p-2.5">
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
-                      {product.category && (
-                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
-                      )}
-                    </div>
+        {filteredProducts.length > 0 ? (
+          <>
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* SEÇÃO: Pendentes de Otimização */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {pendingProducts.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={(theme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                    <i className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-500') + ' fas fa-clock text-[10px]'}></i>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
-              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-pink-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-pink-400') + ' fas fa-search text-xl'}></i>
+                  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                    Pendentes de otimização
+                  </h2>
+                  <span className={(theme === 'dark' ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                    {pendingProducts.length}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {pendingProducts.map(product => {
+                    const productImage = getProductImage(product);
+                    return (
+                      <div
+                        key={product.id}
+                        data-product-id={product.id}
+                        onClick={() => handleSelectProduct(product)}
+                        className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                      >
+                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                          {productImage ? (
+                            <img
+                              src={productImage}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                            </div>
+                          )}
+                          <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                              <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
+                            </button>
+                          </div>
+                        </div>
+                        <div className="p-2.5">
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                          {product.category && (
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
-                {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
-              </h3>
-              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
-                {hasActiveFilters ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
-              </p>
-              {hasActiveFilters ? (
-                <button
-                  onClick={clearFilters}
-                  className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
-                >
-                  Limpar filtros
-                </button>
-              ) : onImport && (
-                <button
-                  onClick={onImport}
-                  className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
-                >
-                  <i className="fas fa-plus mr-1.5"></i>Importar produto
-                </button>
-              )}
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* SEÇÃO: Produtos Otimizados */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {optimizedProducts.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={(theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                    <i className={(theme === 'dark' ? 'text-green-400' : 'text-green-500') + ' fas fa-check text-[10px]'}></i>
+                  </div>
+                  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                    Produtos Otimizados
+                  </h2>
+                  <span className={(theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                    {optimizedProducts.length}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {optimizedProducts.map(product => {
+                    const productImage = getProductImage(product);
+                    const studioCount = getProductStudioCount(product);
+                    return (
+                      <div
+                        key={product.id}
+                        data-product-id={product.id}
+                        onClick={() => handleSelectProduct(product)}
+                        className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-green-500/50' : 'bg-white border-gray-200 hover:border-green-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                      >
+                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                          {productImage ? (
+                            <img
+                              src={productImage}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                            </div>
+                          )}
+                          {/* Tag Otimizado */}
+                          <div className="absolute top-2 left-2 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1 shadow-lg">
+                            <i className="fas fa-sparkles text-[6px]"></i>
+                            Otimizado
+                          </div>
+                          {/* Contador de fotos */}
+                          <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm text-white text-[8px] font-medium rounded-full flex items-center gap-1">
+                            <i className="fas fa-images text-[6px]"></i>
+                            {studioCount}
+                          </div>
+                          <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button className="w-full py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-[10px]">
+                              <i className="fas fa-eye mr-1"></i>Ver fotos
+                            </button>
+                          </div>
+                        </div>
+                        <div className="p-2.5">
+                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                          {product.category && (
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
+            <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-pink-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-pink-400') + ' fas fa-search text-xl'}></i>
             </div>
-          )}
-        </>
+            <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
+              {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
+            </h3>
+            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+              {hasActiveFilters ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
+            </p>
+            {hasActiveFilters ? (
+              <button
+                onClick={clearFilters}
+                className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
+              >
+                Limpar filtros
+              </button>
+            ) : onImport && (
+              <button
+                onClick={onImport}
+                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+              >
+                <i className="fas fa-plus mr-1.5"></i>Importar produto
+              </button>
+            )}
+          </div>
+        )}
 
       </div>
     </div>
