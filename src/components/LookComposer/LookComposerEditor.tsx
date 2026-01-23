@@ -6,6 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
+import { generateModeloIA } from '../../lib/api/studio';
 
 interface LookComposerEditorProps {
   product: Product;
@@ -295,12 +296,29 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   // Gerar look
   const handleGenerate = async () => {
+    console.log('[LookComposer] handleGenerate chamado');
+    console.log('[LookComposer] userId:', userId);
+    console.log('[LookComposer] selectedModel:', selectedModel);
+    console.log('[LookComposer] isAnyGenerationRunning:', isAnyGenerationRunning);
+
     if (isAnyGenerationRunning) {
       alert('Aguarde a geração atual terminar.');
       return;
     }
 
     if (onCheckCredits && !onCheckCredits(creditsNeeded, 'lifestyle')) {
+      console.log('[LookComposer] onCheckCredits retornou false');
+      return;
+    }
+
+    // Validações
+    if (!selectedModel && modelTab === 'saved') {
+      alert('Selecione um modelo para continuar.');
+      return;
+    }
+
+    if (!userId) {
+      alert('Usuário não identificado.');
       return;
     }
 
@@ -312,27 +330,122 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     setPhraseIndex(0);
 
     try {
-      // Simular geração
-      for (let i = 0; i <= 100; i += 10) {
-        setProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Construir prompt do modelo a partir do selectedModel
+      const modelPromptParts: string[] = [];
+      if (selectedModel) {
+        modelPromptParts.push(selectedModel.gender === 'woman' ? 'female' : 'male');
+        if (selectedModel.ethnicity) modelPromptParts.push(selectedModel.ethnicity);
+        if (selectedModel.bodyType) modelPromptParts.push(selectedModel.bodyType);
+        if (selectedModel.ageRange) modelPromptParts.push(selectedModel.ageRange);
+      }
+      const modelPrompt = modelPromptParts.join(' ') || 'female brazilian average adult';
+
+      // Construir lookItems para modo composer
+      let lookItems: Array<{
+        slot: string;
+        image: string;
+        name: string;
+        sku?: string;
+        productId?: string;
+        imageId?: string;
+      }> | undefined;
+
+      if (lookMode === 'composer' && Object.keys(lookComposition).length > 0) {
+        lookItems = Object.entries(lookComposition).map(([slot, item]) => ({
+          slot,
+          image: item.image || '',
+          name: item.name || '',
+          sku: item.sku || '',
+          productId: item.productId,
+          imageId: item.imageId,
+        }));
       }
 
-      // Deduzir créditos
-      if (onDeductCredits) {
-        onDeductCredits(creditsNeeded, `Look Composer - ${lookMode === 'composer' ? 'Com peças' : 'Descrito'}`);
+      // Construir clothingPrompt para modo describe
+      let clothingPrompt: string | undefined;
+      if (lookMode === 'describe') {
+        const parts: string[] = [];
+        if (describedLook.top) parts.push(`top: ${describedLook.top}`);
+        if (describedLook.bottom) parts.push(`bottom: ${describedLook.bottom}`);
+        if (describedLook.shoes) parts.push(`shoes: ${describedLook.shoes}`);
+        if (describedLook.accessories) parts.push(`accessories: ${describedLook.accessories}`);
+        clothingPrompt = parts.join(', ');
       }
 
-      // Log
-      if (onAddHistoryLog) {
-        onAddHistoryLog(
-          'Look Composer',
-          `Look gerado para "${product.name}"`,
-          'success',
-          [product],
-          'ai',
-          creditsNeeded
-        );
+      // Obter imagem principal do produto
+      const mainImage = productImages[0];
+      const imageUrl = mainImage?.url || '';
+      const imageId = product.originalImages?.front?.id || product.images?.[0]?.id || '';
+
+      // Determinar fundo
+      let customBackgroundUrl: string | undefined;
+      let customBackgroundBase64: string | undefined;
+
+      if (backgroundType === 'custom') {
+        if (customBackground) {
+          // Upload base64
+          customBackgroundBase64 = customBackground;
+        } else if (selectedPreset) {
+          // Preset URL
+          const preset = PRESET_BACKGROUNDS.find(b => b.id === selectedPreset);
+          customBackgroundUrl = preset?.url;
+        }
+      }
+
+      setProgress(10);
+
+      console.log('[LookComposer] Chamando API generateModeloIA...');
+      console.log('[LookComposer] Params:', {
+        productId: product.id,
+        userId,
+        imageId,
+        imageUrl,
+        backgroundType,
+        lookMode,
+        lookItems: lookItems?.length
+      });
+
+      // Chamar a API
+      const result = await generateModeloIA({
+        productId: product.id,
+        userId: userId,
+        imageId: imageId,
+        imageUrl: imageUrl,
+        modelPrompt: modelPrompt,
+        clothingPrompt: clothingPrompt,
+        referenceImage: selectedModel?.images?.front || selectedModel?.referenceImageUrl,
+        productCategory: product.category || 'Roupas',
+        productDescription: product.description || product.name,
+        lookItems: lookItems,
+        backgroundType: backgroundType,
+        customBackgroundUrl: customBackgroundUrl,
+        customBackgroundBase64: customBackgroundBase64,
+        modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
+      });
+
+      setProgress(90);
+
+      if (result.success) {
+        // Deduzir créditos
+        if (onDeductCredits) {
+          onDeductCredits(creditsNeeded, `Look Composer - ${lookMode === 'composer' ? 'Com peças' : 'Descrito'}`);
+        }
+
+        // Log de sucesso
+        if (onAddHistoryLog) {
+          onAddHistoryLog(
+            'Look Composer',
+            `Look gerado para "${product.name}"`,
+            'success',
+            [product],
+            'ai',
+            creditsNeeded
+          );
+        }
+
+        setProgress(100);
+      } else {
+        throw new Error(result.error || result.message || 'Erro ao gerar look');
       }
 
     } catch (error) {
@@ -340,13 +453,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       if (onAddHistoryLog) {
         onAddHistoryLog(
           'Look Composer',
-          `Erro ao gerar look para "${product.name}"`,
+          `Erro ao gerar look para "${product.name}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
           'error',
           [product],
           'ai',
           0
         );
       }
+      alert(`Erro ao gerar look: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       const setGenerating = onSetGenerating || setLocalIsGenerating;
       const setProgress = onSetProgress || setLocalProgress;

@@ -195,6 +195,10 @@ interface ModeloIAParams {
   orientation?: { type: 'vertical' | 'horizontal'; width: number; height: number };
   productNotes?: string;      // Observações adicionais do produto
   modelDetails?: string;      // Detalhes do modelo (fisionomia, cabelo, altura, etc.)
+  // Parâmetros de fundo
+  backgroundType?: 'studio' | 'custom';
+  customBackgroundUrl?: string;      // URL do fundo customizado (upload ou preset)
+  customBackgroundBase64?: string;   // Base64 do fundo customizado (upload)
 }
 
 /**
@@ -202,6 +206,9 @@ interface ModeloIAParams {
  * Custo: 1-2 créditos (composer = 2)
  */
 export async function generateModeloIA(params: ModeloIAParams): Promise<StudioReadyResponse> {
+  console.log('[generateModeloIA] Iniciando...');
+  console.log('[generateModeloIA] N8N_BASE_URL:', N8N_BASE_URL);
+
   // Determinar modo: composer se tem lookItems, senão describe
   const isComposerMode = params.lookItems && params.lookItems.length > 0;
   const mode = isComposerMode ? 'composer' : 'describe';
@@ -225,7 +232,10 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   // Extrair perfil do modelo do modelPrompt
   const modelProfile = parseModelPrompt(params.modelPrompt);
 
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/modelo-ia-v2`, {
+  const fullUrl = `${N8N_BASE_URL}/vizzu/modelo-ia-v2`;
+  console.log('[generateModeloIA] Chamando URL:', fullUrl);
+
+  const response = await fetch(fullUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -245,10 +255,16 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       savedModelId: params.referenceImage ? 'custom' : null,
       productNotes: params.productNotes || '',       // Observações adicionais do produto
       modelDetails: params.modelDetails || '',       // Detalhes do modelo (fisionomia, cabelo, etc.)
+      // Parâmetros de fundo
+      backgroundType: params.backgroundType || 'studio',
+      customBackgroundUrl: params.customBackgroundUrl || null,
+      customBackgroundBase64: params.customBackgroundBase64 || null,
     }),
   });
 
   const data = await response.json();
+  console.log('[generateModeloIA] Response status:', response.status);
+  console.log('[generateModeloIA] Response data:', data);
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar modelo');
