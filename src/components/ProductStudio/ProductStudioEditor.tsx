@@ -225,6 +225,55 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     return images;
   }, [product]);
 
+  // Obter imagens geradas do Product Studio
+  const generatedImages = useMemo(() => {
+    const images: { url: string; angle: string; sessionId: string }[] = [];
+    const sessions = product.generatedImages?.productStudio || [];
+
+    sessions.forEach(session => {
+      session.images.forEach(img => {
+        images.push({
+          url: img.url,
+          angle: img.angle,
+          sessionId: session.id
+        });
+      });
+    });
+
+    return images;
+  }, [product]);
+
+  // Imagem principal: prioriza gerada (frente) > gerada (qualquer) > original
+  const mainImage = useMemo(() => {
+    // Primeiro, procurar imagem de frente gerada
+    const frontGenerated = generatedImages.find(img => img.angle === 'front');
+    if (frontGenerated) return { url: frontGenerated.url, type: 'Gerada - Frente', isGenerated: true };
+
+    // Se não tem frente gerada, pegar primeira gerada
+    if (generatedImages.length > 0) {
+      const angleLabels: Record<string, string> = {
+        'front': 'Frente', 'back': 'Costas', 'side-left': 'Lateral Esq.',
+        'side-right': 'Lateral Dir.', '45-left': '45° Esq.', '45-right': '45° Dir.',
+        'top': 'Cima', 'detail': 'Detalhe'
+      };
+      return {
+        url: generatedImages[0].url,
+        type: `Gerada - ${angleLabels[generatedImages[0].angle] || generatedImages[0].angle}`,
+        isGenerated: true
+      };
+    }
+
+    // Fallback para imagem original
+    if (productImages.length > 0) {
+      return { url: productImages[0].url, type: productImages[0].type, isGenerated: false };
+    }
+
+    return null;
+  }, [generatedImages, productImages]);
+
+  // Verificar se produto está otimizado
+  const isOptimized = generatedImages.length > 0;
+
   // Mapear quais imagens de referência estão disponíveis
   // IMPORTANTE: Só considera disponível se tiver o ID (necessário para a API)
   const availableReferences = useMemo(() => {
@@ -364,10 +413,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     // Este callback é para confirmar que o usuário quer manter as imagens
     console.log('Sessão salva:', currentSession?.id);
 
-    // Após salvar, volta para a lista de produtos
+    // Após salvar, fica na página do produto (não volta para lista)
     setShowResult(false);
     setCurrentSession(null);
-    onBack();
+    // Produto já está atualizado com as imagens geradas
   };
 
   // Gerar novamente (volta para seleção de ângulos)
@@ -423,6 +472,64 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const handleResultBack = () => {
     setShowResult(false);
     setCurrentSession(null);
+  };
+
+  // Download da imagem principal gerada
+  const handleDownloadMainImage = async (format: 'png' | 'jpeg') => {
+    if (!mainImage?.isGenerated) return;
+
+    try {
+      const response = await fetch(mainImage.url);
+      const blob = await response.blob();
+
+      if (format === 'jpeg') {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = mainImage.url;
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+
+        canvas.toBlob((jpegBlob) => {
+          if (jpegBlob) {
+            const url = window.URL.createObjectURL(jpegBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${product.sku}_otimizado.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        }, 'image/jpeg', 0.95);
+      } else {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${product.sku}_otimizado.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch {
+      window.open(mainImage.url, '_blank');
+    }
+  };
+
+  // Navegar para outras ferramentas com o produto
+  const handleNavigateToFeature = (destination: 'look-composer' | 'lifestyle' | 'provador') => {
+    if (onNavigate) {
+      onNavigate(destination, product.id, mainImage?.url);
+    }
   };
 
   // Maximizar modal (voltar do minimizado)
@@ -755,48 +862,30 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           {/* ═══════════════════════════════════════════════════════════════ */}
           <div className="space-y-4">
 
-            {/* Container de Imagem - Adaptável à proporção */}
+            {/* Container de Imagem Principal */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
-              {/* Área principal da imagem - altura flexível */}
+              {/* Área principal da imagem */}
               <div className={'relative flex items-center justify-center p-4 min-h-[300px] max-h-[500px] ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
-                {productImages.length > 0 ? (
+                {mainImage ? (
                   <>
                     <img
-                      src={productImages[currentImageIndex]?.url}
+                      src={mainImage.url}
                       alt={product.name}
                       className="max-w-full max-h-[450px] object-contain rounded-lg"
                     />
-                    {/* Badge do tipo da foto */}
-                    <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg">
-                      <span className="text-white text-xs font-medium">{productImages[currentImageIndex]?.type}</span>
-                    </div>
-                    {/* Navegação do carrossel */}
-                    {productImages.length > 1 && (
-                      <>
-                        <button
-                          onClick={() => setCurrentImageIndex(prev => prev === 0 ? productImages.length - 1 : prev - 1)}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
-                        >
-                          <i className="fas fa-chevron-left"></i>
-                        </button>
-                        <button
-                          onClick={() => setCurrentImageIndex(prev => prev === productImages.length - 1 ? 0 : prev + 1)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
-                        >
-                          <i className="fas fa-chevron-right"></i>
-                        </button>
-                        {/* Indicadores */}
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                          {productImages.map((_, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setCurrentImageIndex(idx)}
-                              className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'}`}
-                            />
-                          ))}
-                        </div>
-                      </>
+                    {/* Badge de Otimizado */}
+                    {mainImage.isGenerated && (
+                      <div className="absolute top-3 left-3 px-2.5 py-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg shadow-lg">
+                        <span className="text-white text-xs font-bold flex items-center gap-1.5">
+                          <i className="fas fa-sparkles text-[10px]"></i>
+                          Otimizado
+                        </span>
+                      </div>
                     )}
+                    {/* Badge do tipo da foto */}
+                    <div className={'absolute top-3 ' + (mainImage.isGenerated ? 'right-3' : 'left-3') + ' px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg'}>
+                      <span className="text-white text-xs font-medium">{mainImage.type}</span>
+                    </div>
                   </>
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center">
@@ -804,21 +893,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   </div>
                 )}
               </div>
-
-              {/* Miniaturas */}
-              {productImages.length > 1 && (
-                <div className={'flex gap-2 p-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
-                  {productImages.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentImageIndex(idx)}
-                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${idx === currentImageIndex ? 'border-pink-500' : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}`}
-                    >
-                      <img src={img.url} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Informações do Produto */}
@@ -962,6 +1036,125 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                       rows={2}
                       className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'}
                     />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Botões de Ação (só aparecem se o produto foi otimizado) */}
+            {isOptimized && (
+              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                  <i className="fas fa-magic mr-2 text-pink-400"></i>Usar Imagem Otimizada
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Montar Look */}
+                  <button
+                    onClick={() => handleNavigateToFeature('look-composer')}
+                    disabled={!onNavigate}
+                    className={(theme === 'dark' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 hover:border-purple-500/50' : 'bg-gradient-to-r from-purple-100 to-pink-100 border-purple-200 hover:border-purple-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-layer-group text-white text-xs"></i>
+                    </div>
+                    <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Montar Look</span>
+                  </button>
+
+                  {/* Cenário Criativo */}
+                  <button
+                    onClick={() => handleNavigateToFeature('lifestyle')}
+                    disabled={!onNavigate}
+                    className={(theme === 'dark' ? 'bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-orange-500/30 hover:border-orange-500/50' : 'bg-gradient-to-r from-orange-100 to-yellow-100 border-orange-200 hover:border-orange-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-500 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-mountain-sun text-white text-xs"></i>
+                    </div>
+                    <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</span>
+                  </button>
+
+                  {/* Vestir Cliente */}
+                  <button
+                    onClick={() => handleNavigateToFeature('provador')}
+                    disabled={!onNavigate}
+                    className={(theme === 'dark' ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30 hover:border-blue-500/50' : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-200 hover:border-blue-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-user-check text-white text-xs"></i>
+                    </div>
+                    <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Vestir Cliente</span>
+                  </button>
+
+                  {/* Download */}
+                  <div className="relative group">
+                    <button
+                      className={(theme === 'dark' ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 hover:border-green-500/50' : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200 hover:border-green-300') + ' w-full p-3 rounded-xl border transition-all flex items-center gap-2'}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-download text-white text-xs"></i>
+                      </div>
+                      <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Download</span>
+                      <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-down text-[8px] ml-auto'}></i>
+                    </button>
+                    {/* Dropdown de formatos */}
+                    <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200 shadow-lg') + ' absolute bottom-full left-0 right-0 mb-1 rounded-lg border overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10'}>
+                      <button
+                        onClick={() => handleDownloadMainImage('png')}
+                        className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-3 py-2 text-xs text-left flex items-center gap-2'}
+                      >
+                        <i className="fas fa-file-image text-pink-400"></i>
+                        PNG (Alta qualidade)
+                      </button>
+                      <button
+                        onClick={() => handleDownloadMainImage('jpeg')}
+                        className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white border-t border-neutral-700' : 'hover:bg-gray-50 text-gray-900 border-t border-gray-100') + ' w-full px-3 py-2 text-xs text-left flex items-center gap-2'}
+                      >
+                        <i className="fas fa-file-image text-orange-400"></i>
+                        JPEG (Arquivo menor)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Galeria de Imagens */}
+            <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+              {/* Imagens Geradas */}
+              {generatedImages.length > 0 && (
+                <div className="mb-4">
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                    <i className="fas fa-sparkles mr-2 text-green-400"></i>Imagens Geradas
+                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-normal ml-2'}>({generatedImages.length})</span>
+                  </h3>
+                  <div className="grid grid-cols-4 gap-2">
+                    {generatedImages.map((img, idx) => (
+                      <div
+                        key={`gen-${idx}`}
+                        className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50' : 'border-gray-200 hover:border-green-300') + ' aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer'}
+                      >
+                        <img src={img.url} alt={`Gerada ${img.angle}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Imagens Originais */}
+              {productImages.length > 0 && (
+                <div>
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                    <i className="fas fa-image mr-2 text-neutral-400"></i>Imagens Originais
+                    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-normal ml-2'}>({productImages.length})</span>
+                  </h3>
+                  <div className="grid grid-cols-4 gap-2">
+                    {productImages.map((img, idx) => (
+                      <div
+                        key={`orig-${idx}`}
+                        className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300') + ' aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer'}
+                      >
+                        <img src={img.url} alt={img.type} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
