@@ -3,37 +3,22 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2 } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 
-// Estilos CSS para o spinner que troca de cor (lilás, laranja, rosa)
-const colorSpinnerStyles = `
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+// Estilos CSS para animação de cor no Lottie (lilás → laranja → rosa)
+const lottieColorStyles = `
+  @keyframes hueRotateGradient {
+    0% { filter: hue-rotate(270deg) saturate(1.5) brightness(1.1); }      /* Lilás */
+    33% { filter: hue-rotate(30deg) saturate(1.5) brightness(1.1); }      /* Laranja */
+    66% { filter: hue-rotate(320deg) saturate(1.5) brightness(1.1); }     /* Rosa */
+    100% { filter: hue-rotate(270deg) saturate(1.5) brightness(1.1); }    /* Lilás */
   }
 
-  @keyframes colorChange {
-    0%, 100% { border-top-color: #a855f7; border-right-color: #a855f7; } /* Lilás */
-    33% { border-top-color: #f97316; border-right-color: #f97316; } /* Laranja */
-    66% { border-top-color: #ec4899; border-right-color: #ec4899; } /* Rosa */
-  }
-
-  @keyframes glowChange {
-    0%, 100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(168, 85, 247, 0.3); } /* Lilás */
-    33% { box-shadow: 0 0 30px rgba(249, 115, 22, 0.5), 0 0 60px rgba(249, 115, 22, 0.3); } /* Laranja */
-    66% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.5), 0 0 60px rgba(236, 72, 153, 0.3); } /* Rosa */
-  }
-
-  .vizzu-color-spinner {
-    width: 120px;
-    height: 120px;
-    border: 6px solid transparent;
-    border-top-width: 6px;
-    border-right-width: 6px;
-    border-radius: 50%;
-    animation: spin 1s linear infinite, colorChange 3s ease-in-out infinite, glowChange 3s ease-in-out infinite;
+  .vizzu-lottie-gradient {
+    animation: hueRotateGradient 4s ease-in-out infinite;
   }
 `;
 
@@ -1624,10 +1609,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
           {/* Container do conteúdo */}
           <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
-            {/* Spinner colorido que troca entre lilás, laranja e rosa */}
-            <style>{colorSpinnerStyles}</style>
-            <div className="w-64 h-64 mb-6 flex items-center justify-center">
-              <div className="vizzu-color-spinner"></div>
+            {/* Animação Lottie com degradê de cores (lilás → laranja → rosa) */}
+            <style>{lottieColorStyles}</style>
+            <div className="w-64 h-64 mb-6 vizzu-lottie-gradient">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
             </div>
 
             {/* Título */}
