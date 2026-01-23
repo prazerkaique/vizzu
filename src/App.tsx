@@ -486,7 +486,8 @@ const loadUserProducts = async (userId: string) => {
         const generatedStudio = allImages.filter((img: any) => img.type === 'studio_ready');
         const generatedCenario = allImages.filter((img: any) => img.type === 'cenario_criativo');
         const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
-        
+        const generatedProductStudio = allImages.filter((img: any) => img.type === 'product_studio');
+
         // Formatar imagens originais para o array images
         const formattedOriginalImages = originalImages.map((img: any) => ({
           id: img.id,
@@ -495,7 +496,52 @@ const loadUserProducts = async (userId: string) => {
           base64: img.url,
           type: img.type === 'original' ? 'front' : img.type
         }));
-        
+
+        // Construir objeto originalImages por ângulo (para ProductStudio)
+        const originalImagesObj: any = {};
+        originalImages.forEach((img: any) => {
+          const angle = img.angle || (img.type === 'original' ? 'front' : img.type);
+          if (angle && !originalImagesObj[angle]) {
+            originalImagesObj[angle] = {
+              id: img.id,
+              url: img.url,
+              storagePath: img.storage_path
+            };
+          }
+        });
+
+        // Se não tiver front, usar a primeira imagem do array
+        if (!originalImagesObj.front && formattedOriginalImages.length > 0) {
+          originalImagesObj.front = {
+            id: formattedOriginalImages[0].id,
+            url: formattedOriginalImages[0].url
+          };
+        }
+
+        // Agrupar imagens do Product Studio por generation_id para criar sessões
+        const productStudioSessions: Record<string, any[]> = {};
+        generatedProductStudio.forEach((img: any) => {
+          const sessionId = img.generation_id || `session-${img.created_at?.split('T')[0] || 'unknown'}`;
+          if (!productStudioSessions[sessionId]) {
+            productStudioSessions[sessionId] = [];
+          }
+          productStudioSessions[sessionId].push(img);
+        });
+
+        // Formatar sessões do Product Studio
+        const formattedProductStudio = Object.entries(productStudioSessions).map(([sessionId, images]) => ({
+          id: sessionId,
+          productId: p.id,
+          images: images.map((img: any) => ({
+            id: img.id,
+            url: img.url,
+            angle: img.angle || 'front',
+            createdAt: img.created_at
+          })),
+          status: 'ready' as const,
+          createdAt: images[0]?.created_at || new Date().toISOString()
+        }));
+
         // Formatar imagens geradas para generatedImages
         const generatedImages = {
           studioReady: generatedStudio.map((img: any) => ({
@@ -519,7 +565,7 @@ const loadUserProducts = async (userId: string) => {
             images: { front: img.url, back: undefined },
             metadata: {}
           })),
-          productStudio: []
+          productStudio: formattedProductStudio
         };
         
         return {
@@ -534,6 +580,7 @@ const loadUserProducts = async (userId: string) => {
           collection: p.collection,
           attributes: p.attributes || {},
           images: formattedOriginalImages,
+          originalImages: originalImagesObj,
           generatedImages: generatedImages
         };
       });
