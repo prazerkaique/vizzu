@@ -1,0 +1,1072 @@
+{
+  "name": "Vizzu - Modelo IA v2 (Look Composer com Fundo)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/modelo-ia-v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-modelo-ia",
+      "name": "Webhook Modelo IA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        1504
+      ],
+      "webhookId": "9dabc075-b233-4322-8094-a4f5210dc4f3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst startTime = Date.now();\n\n// Extrair dados do payload (compat\u00edvel com novo frontend)\nconst lookComposition = body.lookComposition || {};\nconst lookItems = body.look_items || body.lookItems || [];\n\n// Se tiver lookComposition (novo formato), converter para lookItems\nlet finalLookItems = lookItems;\nif (Object.keys(lookComposition).length > 0 && lookItems.length === 0) {\n  finalLookItems = Object.entries(lookComposition).map(([slot, item]) => ({\n    slot: slot,\n    name: item.name || '',\n    image: item.image || '',\n    sku: item.sku || '',\n    productId: item.productId,\n    imageId: item.imageId\n  }));\n}\n\nconst isComposerMode = body.mode === 'composer' || finalLookItems.length > 0;\n\n// Par\u00e2metros de \u00e2ngulos (frente/costas)\nconst viewsMode = body.viewsMode || 'front';\nconst isFrontBack = viewsMode === 'front-back';\n\n// Calcular cr\u00e9ditos: base * 2 se for frente+costas\nconst baseCredits = isComposerMode ? 2 : 1;\nconst creditsRequired = isFrontBack ? baseCredits * 2 : baseCredits;\n\n// Separar imagens do look em URLs e Base64 (FRENTE)\nconst lookImageUrls = finalLookItems.map(item => ({\n  slot: item.slot,\n  name: item.name,\n  url: item.image,\n  isBase64: item.image && item.image.startsWith('data:'),\n  productId: item.productId || item.product_id,\n  imageId: item.imageId || item.image_id\n})).filter(item => item.url);\n\n// Imagens de COSTAS do look (se viewsMode === 'front-back')\nconst lookItemsBack = body.lookItemsBack || [];\nconst lookImageUrlsBack = lookItemsBack.map(item => ({\n  slot: item.slot,\n  name: item.name,\n  url: item.image,\n  isBase64: item.image && item.image.startsWith('data:'),\n  productId: item.productId || item.product_id,\n  imageId: item.imageId || item.image_id\n})).filter(item => item.url);\n\nconsole.log('Look images (frente):', lookImageUrls.length);\nconsole.log('Look images (costas):', lookImageUrlsBack.length);\nconsole.log('Views mode:', viewsMode);\n\n// Extrair perfil do modelo (novo formato)\nconst modelProfile = body.modelProfile || {};\nconst modelPromptFromProfile = [\n  modelProfile.gender === 'woman' ? 'female' : 'male',\n  modelProfile.ethnicity || 'brazilian',\n  modelProfile.bodyType || 'average',\n  modelProfile.ageRange || 'adult'\n].filter(Boolean).join(' ');\n\n// Extrair par\u00e2metros de fundo\nconst backgroundType = body.backgroundType || 'studio';\nconst customBackgroundUrl = body.customBackgroundUrl || null;\nconst customBackgroundBase64 = body.customBackgroundBase64 || null;\n\n// Par\u00e2metros para indicar se \u00e9 imagem de costas (UPDATE ao inv\u00e9s de INSERT)\nconst isBackView = body.isBackView === true;\nconst frontGenerationId = body.frontGenerationId || null;\n\n// Se for imagem de costas, n\u00e3o cobra cr\u00e9ditos (j\u00e1 foi cobrado na frente)\nconst finalCreditsRequired = isBackView ? 0 : creditsRequired;\n\nconsole.log('isBackView:', isBackView);\nconsole.log('frontGenerationId:', frontGenerationId);\n\nreturn {\n  productId: body.productId || body.product_id,\n  userId: body.userId || body.user_id,\n  imageId: body.imageId || body.image_id,\n  imageUrl: body.imageUrl || body.image_url,\n  // Imagens de costas do produto principal\n  backImageId: body.backImageId || null,\n  backImageUrl: body.backImageUrl || null,\n  isComposerMode: isComposerMode,\n  mode: body.mode || (isComposerMode ? 'composer' : 'describe'),\n  creditsRequired: finalCreditsRequired,\n  // \u00c2ngulos\n  viewsMode: viewsMode,\n  isFrontBack: isFrontBack,\n  // Look items (frente)\n  lookItems: finalLookItems,\n  lookImageUrls: lookImageUrls,\n  // Look items (costas)\n  lookItemsBack: lookItemsBack,\n  lookImageUrlsBack: lookImageUrlsBack,\n  // Modelo\n  modelProfile: modelProfile,\n  modelPrompt: body.modelPrompt || modelPromptFromProfile || 'female brazilian average adult',\n  modelDetails: body.modelDetails || '',\n  savedModelId: body.savedModelId || null,\n  // Produto\n  productCategory: body.product_category || body.productCategory || 'clothing',\n  productDescription: body.sceneDescription || body.product_description || body.productDescription || '',\n  productAttributes: body.productAttributes || {},\n  productNotes: body.productNotes || '',\n  // Fundo\n  backgroundType: backgroundType,\n  customBackgroundUrl: customBackgroundUrl,\n  customBackgroundBase64: customBackgroundBase64,\n  hasCustomBackground: backgroundType === 'custom' && (customBackgroundUrl || customBackgroundBase64),\n  // Outros\n  clothingPrompt: body.clothing_prompt || body.clothingPrompt || '',\n  posePrompt: body.pose_prompt || body.posePrompt || '',\n  referenceImage: body.reference_image || body.referenceImage || '',\n  orientation: body.orientation || 'vertical',\n  startTime: startTime,\n  // Par\u00e2metros para imagem de costas\n  isBackView: isBackView,\n  frontGenerationId: frontGenerationId\n};"
+      },
+      "id": "prep-modelo-ia",
+      "name": "Preparar Dados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $json.userId }}"
+      },
+      "id": "get-user-modelo-ia",
+      "name": "Buscar Usuario",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        1504
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-credits-modelo",
+              "leftValue": "={{ $json.credits }}",
+              "rightValue": "={{ $('Preparar Dados').item.json.creditsRequired }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-credits-modelo-ia",
+      "name": "Tem Creditos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        1504
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'insufficient_credits', message: 'Cr\u00e9ditos insuficientes' }) }}",
+        "options": {
+          "responseCode": 402
+        }
+      },
+      "id": "no-credits-modelo-ia",
+      "name": "Erro - Sem Creditos",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        1700
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "product_images",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $('Preparar Dados').item.json.imageId }}"
+      },
+      "id": "get-image-modelo-ia",
+      "name": "Buscar Imagem Principal",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        112,
+        1376
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verificar se encontrou a imagem pelo ID ou se tem URL direta\nconst imageFromDb = $input.first().json;\nconst prepData = $('Preparar Dados').item.json;\n\nconst imageUrl = imageFromDb?.url || prepData.imageUrl;\n\nif (!imageUrl) {\n  throw new Error('Imagem n\u00e3o encontrada');\n}\n\nreturn {\n  imageUrl: imageUrl,\n  imageId: imageFromDb?.id || prepData.imageId,\n  hasImage: true\n};"
+      },
+      "id": "validate-image",
+      "name": "Validar Imagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'id=eq.' + $('Preparar Dados').item.json.productId }}"
+      },
+      "id": "get-product-modelo-ia",
+      "name": "Buscar Produto",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        432,
+        1376
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-prod",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "check-product-modelo-ia",
+      "name": "Produto Encontrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        592,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'product_not_found', message: 'Produto n\u00e3o encontrado' }) }}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "id": "error-prod-not-found",
+      "name": "Erro - Produto Nao Encontrado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "generations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Preparar Dados').item.json.userId }}"
+            },
+            {
+              "fieldId": "product_id",
+              "fieldValue": "={{ $('Preparar Dados').item.json.productId }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "modelo_ia"
+            },
+            {
+              "fieldId": "input_image_url",
+              "fieldValue": "={{ $('Validar Imagem').item.json.imageUrl }}"
+            },
+            {
+              "fieldId": "credits_used",
+              "fieldValue": "={{ $('Preparar Dados').item.json.creditsRequired }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "processing"
+            },
+            {
+              "fieldId": "started_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "create-gen-modelo-ia",
+      "name": "Criar Geracao",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        752,
+        1376
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Validar Imagem').item.json.imageUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "download-img-principal",
+      "name": "Download Imagem Principal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Baixar imagens das pe\u00e7as do look e fundo customizado (se houver)\nconst prepData = $('Preparar Dados').item.json;\nconst lookImageUrls = prepData.lookImageUrls || [];\nconst principalBinary = $input.first().binary;\n\nconsole.log('Processando', lookImageUrls.length, 'imagens do look');\n\n// Armazenar imagem principal\nconst images = {\n  principal: principalBinary\n};\n\n// Processar cada imagem do look (URL ou Base64)\nfor (let i = 0; i < lookImageUrls.length && i < 6; i++) {\n  const item = lookImageUrls[i];\n  \n  if (item.isBase64 && item.url) {\n    // Imagem \u00e9 base64 - converter diretamente\n    try {\n      console.log(`Processando base64 do slot ${item.slot}`);\n      const base64Data = item.url.replace(/^data:image\\/\\w+;base64,/, '');\n      const buffer = Buffer.from(base64Data, 'base64');\n      \n      const binaryData = await this.helpers.prepareBinaryData(\n        buffer,\n        `look_${item.slot}.png`,\n        'image/png'\n      );\n      \n      images[`look_${item.slot}`] = { data: binaryData };\n      console.log(`Base64 do slot ${item.slot} processado com sucesso`);\n    } catch (e) {\n      console.log(`Erro ao processar base64 do slot ${item.slot}:`, e.message);\n    }\n  } else if (item.url && item.url.startsWith('http')) {\n    // Imagem \u00e9 URL - baixar\n    try {\n      console.log(`Baixando URL do slot ${item.slot}: ${item.url.substring(0, 50)}...`);\n      const response = await this.helpers.httpRequest({\n        method: 'GET',\n        url: item.url,\n        encoding: 'arraybuffer',\n        returnFullResponse: true\n      });\n      \n      const binaryData = await this.helpers.prepareBinaryData(\n        Buffer.from(response.body),\n        `look_${item.slot}.png`,\n        response.headers['content-type'] || 'image/png'\n      );\n      \n      images[`look_${item.slot}`] = { data: binaryData };\n      console.log(`URL do slot ${item.slot} baixado com sucesso`);\n    } catch (e) {\n      console.log(`Erro ao baixar imagem do slot ${item.slot}:`, e.message);\n    }\n  }\n}\n\n// Baixar fundo customizado se for URL\nlet backgroundImageData = null;\nif (prepData.backgroundType === 'custom' && prepData.customBackgroundUrl) {\n  try {\n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url: prepData.customBackgroundUrl,\n      encoding: 'arraybuffer',\n      returnFullResponse: true\n    });\n    \n    backgroundImageData = await this.helpers.prepareBinaryData(\n      Buffer.from(response.body),\n      'background.png',\n      response.headers['content-type'] || 'image/png'\n    );\n    \n    images['background'] = { data: backgroundImageData };\n  } catch (e) {\n    console.log('Erro ao baixar fundo customizado:', e.message);\n  }\n}\n\n// Se o fundo for base64, converter\nif (prepData.backgroundType === 'custom' && prepData.customBackgroundBase64) {\n  try {\n    const base64Data = prepData.customBackgroundBase64.replace(/^data:image\\/\\w+;base64,/, '');\n    const buffer = Buffer.from(base64Data, 'base64');\n    \n    backgroundImageData = await this.helpers.prepareBinaryData(\n      buffer,\n      'background.png',\n      'image/png'\n    );\n    \n    images['background'] = { data: backgroundImageData };\n  } catch (e) {\n    console.log('Erro ao processar fundo base64:', e.message);\n  }\n}\n\n// Montar lista de slots com imagens\nconst slotsWithImages = Object.keys(images).filter(k => k !== 'principal' && k !== 'background');\nconsole.log('Slots com imagens processados:', slotsWithImages);\n\nreturn [{\n  json: {\n    ...prepData,\n    slotsWithImages: slotsWithImages,\n    totalLookImages: slotsWithImages.length,\n    hasBackgroundImage: !!images['background']\n  },\n  binary: {\n    ...principalBinary,\n    ...Object.fromEntries(\n      Object.entries(images)\n        .filter(([k]) => k !== 'principal')\n        .map(([k, v]) => [k, v.data])\n    )\n  }\n}];"
+      },
+      "id": "download-look-images",
+      "name": "Download Imagens Look",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const product = $('Buscar Produto').item.json;\nconst prepData = $('Preparar Dados').item.json;\nconst downloadData = $input.first().json;\nconst orientation = prepData.orientation || 'vertical';\nconst binaryData = $input.first().binary;\n\n// Informa\u00e7\u00f5es do modelo\nconst modelPrompt = prepData.modelPrompt || 'female brazilian average adult';\nconst modelDetails = prepData.modelDetails || '';\nconst modelProfile = prepData.modelProfile || {};\n\n// Construir descri\u00e7\u00e3o do modelo\nlet modelDescription = 'Professional fashion model';\nif (modelProfile.gender || modelPrompt) {\n  const gender = modelProfile.gender === 'woman' ? 'Female' : modelProfile.gender === 'man' ? 'Male' : '';\n  const ethnicity = modelProfile.ethnicity || '';\n  const bodyType = modelProfile.bodyType || '';\n  const ageRange = modelProfile.ageRange || 'adult';\n  modelDescription = `${gender} ${ethnicity} fashion model, ${bodyType} build, ${ageRange}`;\n  if (modelDetails) {\n    modelDescription += `. ${modelDetails}`;\n  }\n}\n\n// Mapear slots para nomes leg\u00edveis\nconst slotLabels = {\n  'head': 'HEAD (hat/cap/accessory)',\n  'top': 'TOP (shirt/blouse/jacket)',\n  'bottom': 'BOTTOM (pants/shorts/skirt)',\n  'feet': 'FEET (shoes/sneakers/boots)',\n  'accessory1': 'ACCESSORY 1',\n  'accessory2': 'ACCESSORY 2'\n};\n\n// Verificar quais imagens de look realmente existem no binary\nconst availableLookBinaries = Object.keys(binaryData || {}).filter(k => k.startsWith('look_'));\nconst totalImages = 1 + availableLookBinaries.length; // 1 = main product\nconsole.log('Total images:', totalImages);\nconsole.log('Look binaries:', availableLookBinaries);\n\n// Formato\nconst formatSpec = orientation === 'horizontal' ? '16:9 HORIZONTAL' : '9:16 VERTICAL';\n\n// Background\nlet backgroundSpec = 'Clean studio, neutral gray or white gradient';\nif (prepData.backgroundType === 'custom' && downloadData.hasBackgroundImage) {\n  backgroundSpec = 'Use the PROVIDED BACKGROUND IMAGE';\n} else if (prepData.backgroundType === 'custom') {\n  backgroundSpec = 'Lifestyle/editorial environment';\n}\n\n// Construir se\u00e7\u00f5es de cada pe\u00e7a do look\nconst lookItems = prepData.lookItems || [];\nlet composerPiecesSection = '';\nlet checklistItems = [`- [ ] Garment #1 (Main Product): Colors exact? Pattern exact? Fit exact? \u2713`];\n\nif (availableLookBinaries.length > 0) {\n  lookItems.forEach((item, idx) => {\n    const binaryName = `look_${item.slot}`;\n    const hasImage = availableLookBinaries.includes(binaryName);\n    if (!hasImage) return;\n    \n    const garmentNum = idx + 2;\n    const slotLabel = slotLabels[item.slot] || item.slot.toUpperCase();\n    \n    composerPiecesSection += `\n\n---\n\n## \ud83d\udce6 GARMENT #${garmentNum}: ${slotLabel} - \"${item.name}\"\n\n\u26a0\ufe0f THIS PIECE IS EQUALLY IMPORTANT AS ALL OTHER GARMENTS \u26a0\ufe0f\n\nStudy this image with the SAME attention as the main product.\nThis is NOT optional. This is NOT secondary. This MUST be perfect.\n\nMemorize from this image:\n- EXACT colors (if it's blue, what EXACT blue?)\n- EXACT patterns (stripes? what width? what spacing?)\n- EXACT structure (what cut? what length? what style?)\n- EXACT fit (loose? fitted? oversized?)\n- EXACT details (buttons? zippers? logos? prints?)\n\nTHE MODEL MUST WEAR THIS EXACT ${item.slot.toUpperCase()}.\nNOT a similar one. THIS EXACT ONE.`;\n    \n    checklistItems.push(`- [ ] Garment #${garmentNum} (${item.slot}): Colors exact? Pattern exact? Fit exact? \u2713`);\n  });\n}\n\n// Modo describe (sem imagens de refer\u00eancia)\nlet describeSection = '';\nif (prepData.mode === 'describe' && prepData.clothingPrompt) {\n  describeSection = `\n\n---\n\n## \ud83d\udcdd ADDITIONAL CLOTHING (Text Description)\n\nDress the model with these additional items (generic, no reference image):\n${prepData.clothingPrompt}\n\nFor these items without reference images, use appropriate generic pieces that complement the main product.`;\n}\n\nconst prompt = `# VIRTUAL TRY-ON TASK: COPY GARMENTS ONTO A MODEL\n\nYOU ARE A PHOTOCOPIER FOR CLOTHES. YOUR JOB:\n1. Look at each reference image provided\n2. COPY that EXACT garment onto the model\n3. Change NOTHING - not color, not pattern, not fit, not structure\n\nTOTAL IMAGES PROVIDED: ${totalImages}\nMODE: COMPOSER - Model must wear ALL ${totalImages} pieces together\n\n\u26a0\ufe0f CRITICAL: EVERY IMAGE HAS EQUAL IMPORTANCE \u26a0\ufe0f\nThe main product and ALL composer pieces must be preserved with 100% fidelity.\nThere is NO \"hero\" product - ALL pieces are heroes. ALL must be perfect copies.\n\n---\n\n## \ud83d\udc64 MODEL APPEARANCE\n\n${modelDescription}\n\n---\n\n## \ud83d\udce6 GARMENT #1: MAIN PRODUCT\n\n**Category:** ${product.category || 'Clothing'}\n**Name:** ${product.name}\n**Description:** ${prepData.productDescription || 'Fashion garment'}\n\nStudy this image. Memorize:\n- EXACT colors (every shade, every tone)\n- EXACT patterns/prints (size, spacing, orientation)\n- EXACT structure (neckline, sleeves, length, fit)\n- EXACT texture (fabric type, surface quality)\n- EXACT details (logos, buttons, zippers, seams)\n${prepData.productNotes ? `\n\u26a0\ufe0f IMPORTANT NOTES ABOUT THIS PRODUCT:\n${prepData.productNotes}` : ''}\n\nTHE MODEL MUST WEAR THIS EXACT GARMENT.\nNOT a similar one. THIS EXACT ONE.${composerPiecesSection}${describeSection}\n\n---\n\n## \ud83d\udd12 FINAL VERIFICATION CHECKLIST\n\nBefore generating, confirm ALL ${totalImages} garments will be:\n\n${checklistItems.join('\\n')}\n\n---\n\n## \u274c FORBIDDEN - INSTANT FAILURE\n\nFOR ANY GARMENT (main OR composer pieces):\n\n\u274c Different color (even slightly warmer/cooler)\n\u274c Different pattern (even slightly bigger/smaller)\n\u274c Different fit (even slightly tighter/looser)\n\u274c Different length (even slightly longer/shorter)\n\u274c Different neckline/sleeves/structure\n\u274c Missing or modified logos/prints/graphics\n\u274c Different fabric texture appearance\n\u274c Substituting a \"similar looking\" item\n\u274c Artistic interpretation\n\u274c \"Improving\" the design\n\n**IF ANY SINGLE PIECE IS WRONG, THE ENTIRE OUTPUT IS FAILED.**\n\n---\n\n## \ud83d\udcf8 PHOTOGRAPHY SPECIFICATIONS\n\n- **Full body shot:** ALL ${totalImages} garments completely visible\n- **Format:** ${formatSpec}\n- **Background:** ${backgroundSpec}\n- **Lighting:** Professional, even illumination on ALL garments\n- **Focus:** Sharp on ALL garments (not just the main one)\n- **Pose:** Shows ALL pieces clearly, nothing obscured\n- **Quality:** 8K photorealistic, magazine-cover worthy\n\n---\n\n## \u2705 SUCCESS CRITERIA\n\nSomeone comparing your output to the ${totalImages} reference images should say:\n**\"Every single piece is IDENTICAL to the reference - the main product AND all the other pieces.\"**\n\nALL ${totalImages} garments must be PERFECT COPIES.\nNot \"close enough.\" Not \"similar.\" IDENTICAL.\n\nGenerate the image now.`;\n\nconst negativePrompt = 'different color, wrong color, color shifted, warmer, cooler, different pattern, wrong pattern, pattern scaled, pattern rotated, different fit, wrong fit, too tight, too loose, different length, wrong length, different neckline, different sleeves, modified design, redesigned, interpreted, artistic, enhanced, improved, different garment, similar garment, substitute garment, wrong garment, added details, missing details, missing piece, incomplete outfit, only main product, ignoring secondary pieces, cartoon, anime, illustration, blurry, low quality, distorted, deformed, covered product, mannequin';\n\nconsole.log('Prompt gerado - Total garments:', totalImages);\n\nreturn [{\n  json: {\n    prompt: prompt,\n    negativePrompt: negativePrompt,\n    isComposerMode: prepData.isComposerMode,\n    totalImages: totalImages,\n    backgroundType: prepData.backgroundType,\n    hasBackgroundImage: downloadData.hasBackgroundImage,\n    availableBinaries: Object.keys(binaryData || {})\n  },\n  binary: binaryData\n}];"
+      },
+      "id": "build-prompt-modelo-ia",
+      "name": "Construir Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construir payload do Gemini com m\u00faltiplas imagens inline\nconst binaryData = $input.first().binary || {};\nconst prepData = $('Preparar Dados').item.json;\nconst product = $('Buscar Produto').item.json;\n\nconsole.log('Binary keys available:', Object.keys(binaryData));\n\n// Fun\u00e7\u00e3o helper para converter binary para base64\nasync function getBinaryAsBase64(binaryKey) {\n  try {\n    const buffer = await this.helpers.getBinaryDataBuffer(0, binaryKey);\n    return buffer.toString('base64');\n  } catch (e) {\n    console.log('Error getting binary for key', binaryKey, ':', e.message);\n    return null;\n  }\n}\n\n// Array de parts para enviar ao Gemini (texto + imagens)\nconst parts = [];\n\n// 1. Prompt de introdu\u00e7\u00e3o\nparts.push({\n  text: `You are a professional fashion photographer AI. Your task is to create a photorealistic image of a model wearing EXACTLY the garments shown in the reference images.\\n\\n\u26a0\ufe0f CRITICAL: You will receive multiple reference images. EACH image shows a specific garment that the model MUST wear. Do NOT invent, substitute, or modify ANY garment. Copy them EXACTLY as shown.\\n\\n`\n});\n\n// 2. Imagem principal do produto (a key \u00e9 'data' do download HTTP)\nconst mainBinaryKey = Object.keys(binaryData).find(k => !k.startsWith('look_') && k !== 'background') || 'data';\nconst mainBinary = binaryData[mainBinaryKey];\n\nif (mainBinary) {\n  const mainBase64 = await getBinaryAsBase64.call(this, mainBinaryKey);\n  if (mainBase64) {\n    console.log('Main product image found, key:', mainBinaryKey);\n    parts.push({\n      text: `\\n\\n## \ud83d\udce6 MAIN PRODUCT IMAGE\\n\\nThis is the MAIN product. Study it carefully and memorize EVERY detail:\\n`\n    });\n    parts.push({\n      inline_data: {\n        mime_type: mainBinary.mimeType || 'image/png',\n        data: mainBase64\n      }\n    });\n    parts.push({\n      text: `\\nProduct: ${product.name || 'Fashion garment'}\\nCategory: ${product.category || 'Clothing'}\\n${prepData.productDescription ? 'Description: ' + prepData.productDescription : ''}\\n\\nCopy this garment EXACTLY - same colors, patterns, fit, and all details.\\n`\n    });\n  }\n} else {\n  console.log('WARNING: Main product binary not found!');\n}\n\n// 3. Imagens das pe\u00e7as do look (composer)\nconst lookItems = prepData.lookItems || [];\nconst availableLookBinaries = Object.keys(binaryData).filter(k => k.startsWith('look_'));\n\nconsole.log('Building Gemini payload with', availableLookBinaries.length, 'look images');\nconsole.log('Look items from prep:', lookItems.length);\n\nfor (const binaryKey of availableLookBinaries) {\n  const slotName = binaryKey.replace('look_', '');\n  const lookItem = lookItems.find(item => item.slot === slotName);\n  const itemName = lookItem?.name || slotName;\n  \n  const lookBinary = binaryData[binaryKey];\n  if (lookBinary) {\n    const lookBase64 = await getBinaryAsBase64.call(this, binaryKey);\n    if (lookBase64) {\n      console.log('Adding look piece:', slotName, '- name:', itemName);\n      \n      parts.push({\n        text: `\\n\\n---\\n\\n## \ud83d\udce6 LOOK PIECE: ${slotName.toUpperCase()} - \\\"${itemName}\\\"\\n\\n\u26a0\ufe0f THIS IS EQUALLY IMPORTANT AS THE MAIN PRODUCT \u26a0\ufe0f\\n\\nStudy this image and memorize EVERY detail:\\n`\n      });\n      parts.push({\n        inline_data: {\n          mime_type: lookBinary.mimeType || 'image/png',\n          data: lookBase64\n        }\n      });\n      parts.push({\n        text: `\\nThe model MUST wear this EXACT ${slotName}. Not similar - THIS EXACT ONE.\\nCopy: colors, patterns, fit, structure, all details.\\n`\n      });\n    }\n  }\n}\n\n// 4. Imagem de fundo customizado (se houver)\nconst bgBinary = binaryData.background;\nif (bgBinary) {\n  const bgBase64 = await getBinaryAsBase64.call(this, 'background');\n  if (bgBase64) {\n    console.log('Adding custom background image');\n    parts.push({\n      text: `\\n\\n---\\n\\n## \ud83d\uddbc\ufe0f BACKGROUND IMAGE\\n\\nUse this as the background for the photo:\\n`\n    });\n    parts.push({\n      inline_data: {\n        mime_type: bgBinary.mimeType || 'image/png',\n        data: bgBase64\n      }\n    });\n  }\n}\n\n// 5. Prompt final com especifica\u00e7\u00f5es\nconst modelProfile = prepData.modelProfile || {};\nconst modelDescription = [\n  modelProfile.gender === 'woman' ? 'Female' : modelProfile.gender === 'man' ? 'Male' : 'Female',\n  modelProfile.ethnicity || 'brazilian',\n  'fashion model,',\n  modelProfile.bodyType || 'average',\n  'build,',\n  modelProfile.ageRange || 'adult'\n].join(' ');\n\nconst orientation = prepData.orientation || 'vertical';\nconst formatSpec = orientation === 'horizontal' ? '16:9 landscape' : '9:16 portrait';\nconst bgSpec = prepData.backgroundType === 'custom' && bgBinary \n  ? 'Use the provided background image' \n  : 'Clean studio with neutral gray or white gradient';\n\nconst totalImages = 1 + availableLookBinaries.length;\n\nparts.push({\n  text: `\\n\\n---\\n\\n## \ud83d\udc64 MODEL SPECIFICATIONS\\n\\n${modelDescription}${prepData.modelDetails ? '\\nAdditional details: ' + prepData.modelDetails : ''}\\n\\n## \ud83d\udcf8 PHOTOGRAPHY SPECIFICATIONS\\n\\n- Full body shot showing ALL ${totalImages} garments completely visible\\n- Format: ${formatSpec}\\n- Background: ${bgSpec}\\n- Lighting: Professional studio lighting\\n- Quality: 8K photorealistic, magazine-quality\\n\\n## \u274c FORBIDDEN\\n\\n- Different colors (even slightly different shades)\\n- Different patterns (even slightly modified)\\n- Different fit or structure\\n- Substituting with \\\"similar\\\" items\\n- Missing any of the ${totalImages} garments\\n- Artistic interpretation or modifications\\n\\n## \u2705 SUCCESS CRITERIA\\n\\nThe output must show the model wearing ALL ${totalImages} garments as PERFECT COPIES of the reference images. Every piece must be identical - not \\\"close enough\\\", IDENTICAL.\\n\\nGenerate the image now.`\n});\n\n// Construir payload completo\nconst payload = {\n  contents: [{\n    role: 'user',\n    parts: parts\n  }],\n  generationConfig: {\n    responseModalities: ['TEXT', 'IMAGE'],\n    temperature: 0.4\n  },\n  safetySettings: [\n    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },\n    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },\n    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },\n    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }\n  ]\n};\n\nconsole.log('Gemini payload built with', parts.length, 'parts and', totalImages, 'garment images');\n\nreturn [{\n  json: {\n    payload: payload,\n    totalImages: totalImages,\n    partsCount: parts.length\n  }\n}];"
+      },
+      "id": "build-gemini-payload",
+      "name": "Construir Payload Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "gemini-api-call",
+      "name": "Chamar API Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        1376
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "vizzu-gemini-key",
+          "name": "Vizzu Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Processar resposta do Gemini e extrair imagem\nconst response = $input.first().json;\n\nconsole.log('Gemini response received');\n\n// Verificar se h\u00e1 erro\nif (response.error) {\n  console.log('Gemini error:', response.error.message);\n  return [{ json: { success: false, error: response.error.message } }];\n}\n\n// Extrair imagem da resposta\nlet imageBase64 = null;\nlet textResponse = '';\n\nif (response.candidates && response.candidates[0] && response.candidates[0].content) {\n  const parts = response.candidates[0].content.parts || [];\n  \n  for (const part of parts) {\n    if (part.inlineData && part.inlineData.data) {\n      imageBase64 = part.inlineData.data;\n      console.log('Image extracted from Gemini response');\n    }\n    if (part.text) {\n      textResponse += part.text;\n    }\n  }\n}\n\nif (!imageBase64) {\n  console.log('No image in Gemini response. Text:', textResponse.substring(0, 200));\n  return [{ json: { success: false, error: 'No image generated', textResponse: textResponse } }];\n}\n\n// Converter base64 para binary\nconst buffer = Buffer.from(imageBase64, 'base64');\nconst binaryData = await this.helpers.prepareBinaryData(\n  buffer,\n  'generated.png',\n  'image/png'\n);\n\nconsole.log('Image converted to binary successfully');\n\nreturn [{\n  json: {\n    success: true,\n    textResponse: textResponse\n  },\n  binary: {\n    edited: binaryData\n  }\n}];"
+      },
+      "id": "process-gemini-response",
+      "name": "Processar Resposta Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-gemini",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "check-gemini-modelo-ia",
+      "name": "Gemini Sucesso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Criar Geracao').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            },
+            {
+              "fieldId": "completed_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "update-gen-failed",
+      "name": "Marcar Falhou",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        1552
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'generation_failed', message: 'Falha ao gerar imagem' }) }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "error-gemini-failed",
+      "name": "Erro - Geracao Falhou",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2192,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nconst imageId = generateUUID();\nconst prepData = $('Preparar Dados').item.json;\nconst generationId = $('Criar Geracao').item.json.id;\nconst mode = prepData.isComposerMode ? 'composer' : 'describe';\nconst bgType = prepData.backgroundType || 'studio';\n\nconst storagePath = `${prepData.userId}/${prepData.productId}/modelo_ia_${mode}_${bgType}_${imageId}.png`;\nconst publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${storagePath}`;\n\nreturn [{\n  json: {\n    newImageId: imageId,\n    generationId: generationId,\n    storagePath: storagePath,\n    publicUrl: publicUrl,\n    mode: mode,\n    backgroundType: bgType\n  },\n  binary: $input.first().binary\n}];"
+      },
+      "id": "gen-path-modelo-ia",
+      "name": "Gerar Storage Path",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "products",
+        "fileName": "={{ $json.storagePath }}",
+        "binaryPropertyName": "edited",
+        "additionalFields": {}
+      },
+      "id": "upload-modelo-ia",
+      "name": "Upload Storage",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        1376
+      ],
+      "credentials": {
+        "s3": {
+          "id": "IANNuMl4gOF84BAm",
+          "name": "Vizzu S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "product_images",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "product_id",
+              "fieldValue": "={{ $('Preparar Dados').item.json.productId }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Preparar Dados').item.json.userId }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "modelo_ia"
+            },
+            {
+              "fieldId": "storage_path",
+              "fieldValue": "={{ $('Gerar Storage Path').item.json.storagePath }}"
+            },
+            {
+              "fieldId": "url",
+              "fieldValue": "={{ $('Gerar Storage Path').item.json.publicUrl }}"
+            },
+            {
+              "fieldId": "generation_id",
+              "fieldValue": "={{ $('Gerar Storage Path').item.json.generationId }}"
+            },
+            {
+              "fieldId": "file_name",
+              "fieldValue": "modelo_ia.png"
+            },
+            {
+              "fieldId": "mime_type",
+              "fieldValue": "image/png"
+            },
+            {
+              "fieldId": "is_primary",
+              "fieldValue": "false"
+            },
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ JSON.stringify({ lookItems: $('Preparar Dados').item.json.lookItems || [], mode: $('Preparar Dados').item.json.mode, backgroundType: $('Preparar Dados').item.json.backgroundType }) }}"
+            }
+          ]
+        }
+      },
+      "id": "insert-img-modelo-ia",
+      "name": "Inserir Imagem",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        1376
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "generations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Gerar Storage Path').item.json.generationId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "output_image_url",
+              "fieldValue": "={{ $('Gerar Storage Path').item.json.publicUrl }}"
+            },
+            {
+              "fieldId": "output_storage_path",
+              "fieldValue": "={{ $('Gerar Storage Path').item.json.storagePath }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "completed"
+            },
+            {
+              "fieldId": "completed_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            },
+            {
+              "fieldId": "processing_time_ms",
+              "fieldValue": "={{ Date.now() - $('Preparar Dados').item.json.startTime }}"
+            }
+          ]
+        }
+      },
+      "id": "update-gen-modelo-ia",
+      "name": "Atualizar Geracao",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        1376
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Preparar Dados').item.json.userId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "credits",
+              "fieldValue": "={{ $('Buscar Usuario').item.json.credits - $('Preparar Dados').item.json.creditsRequired }}"
+            },
+            {
+              "fieldId": "credits_used_this_month",
+              "fieldValue": "={{ ($('Buscar Usuario').item.json.credits_used_this_month || 0) + $('Preparar Dados').item.json.creditsRequired }}"
+            }
+          ]
+        }
+      },
+      "id": "debit-modelo-ia",
+      "name": "Debitar Creditos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2672,
+        1376
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  success: true,\n  generation: {\n    id: $('Gerar Storage Path').item.json.generationId,\n    image_url: $('Gerar Storage Path').item.json.publicUrl,\n    type: 'modelo_ia',\n    mode: $('Gerar Storage Path').item.json.mode,\n    backgroundType: $('Gerar Storage Path').item.json.backgroundType\n  },\n  credits_remaining: $('Buscar Usuario').item.json.credits - $('Preparar Dados').item.json.creditsRequired\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "success-modelo-ia",
+      "name": "Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2832,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-is-back-view",
+              "leftValue": "={{ $('Preparar Dados').item.json.isBackView }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-is-back-view",
+      "name": "\u00c9 Imagem de Costas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        1376
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "product_images",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "={{ 'generation_id=eq.' + $('Preparar Dados').item.json.frontGenerationId }}"
+      },
+      "id": "fetch-existing-img",
+      "name": "Buscar Imagem Existente",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        1576
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "product_images",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "generation_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Preparar Dados').item.json.frontGenerationId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "metadata",
+              "fieldValue": "={{ JSON.stringify({ ...(JSON.parse($('Buscar Imagem Existente').item.json.metadata || '{}') || {}), backImageUrl: $('Gerar Storage Path').item.json.publicUrl, lookItems: $('Preparar Dados').item.json.lookItems || [], mode: $('Preparar Dados').item.json.mode, backgroundType: $('Preparar Dados').item.json.backgroundType }) }}"
+            }
+          ]
+        }
+      },
+      "id": "update-img-back",
+      "name": "Atualizar Imagem com Costas",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        1576
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "qCwUIY0hdZVCpomG",
+          "name": "Vizzu - Supabase"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Modelo IA": {
+      "main": [
+        [
+          {
+            "node": "Preparar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Dados": {
+      "main": [
+        [
+          {
+            "node": "Buscar Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Usuario": {
+      "main": [
+        [
+          {
+            "node": "Tem Creditos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Creditos?": {
+      "main": [
+        [
+          {
+            "node": "Buscar Imagem Principal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erro - Sem Creditos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Imagem Principal": {
+      "main": [
+        [
+          {
+            "node": "Validar Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Imagem": {
+      "main": [
+        [
+          {
+            "node": "Buscar Produto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Produto": {
+      "main": [
+        [
+          {
+            "node": "Produto Encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Produto Encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Criar Geracao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erro - Produto Nao Encontrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Geracao": {
+      "main": [
+        [
+          {
+            "node": "Download Imagem Principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Imagem Principal": {
+      "main": [
+        [
+          {
+            "node": "Download Imagens Look",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Imagens Look": {
+      "main": [
+        [
+          {
+            "node": "Construir Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Prompt": {
+      "main": [
+        [
+          {
+            "node": "Construir Payload Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Payload Gemini": {
+      "main": [
+        [
+          {
+            "node": "Chamar API Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar API Gemini": {
+      "main": [
+        [
+          {
+            "node": "Processar Resposta Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar Resposta Gemini": {
+      "main": [
+        [
+          {
+            "node": "Gemini Sucesso?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Sucesso?": {
+      "main": [
+        [
+          {
+            "node": "Gerar Storage Path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar Falhou",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Falhou": {
+      "main": [
+        [
+          {
+            "node": "Erro - Geracao Falhou",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Storage Path": {
+      "main": [
+        [
+          {
+            "node": "Upload Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Storage": {
+      "main": [
+        [
+          {
+            "node": "\u00c9 Imagem de Costas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir Imagem": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Geracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Geracao": {
+      "main": [
+        [
+          {
+            "node": "Debitar Creditos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debitar Creditos": {
+      "main": [
+        [
+          {
+            "node": "Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\u00c9 Imagem de Costas?": {
+      "main": [
+        [
+          {
+            "node": "Buscar Imagem Existente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inserir Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Imagem Existente": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Imagem com Costas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Imagem com Costas": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Geracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "f5408b2397ec961558c2d1645ab20174aeb712fe37b2f614021d4bd5b8702549"
+  }
+}
