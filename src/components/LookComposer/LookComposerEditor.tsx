@@ -795,6 +795,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       setProgress(90);
 
+      // Debug: verificar URLs antes de salvar
+      console.log('[LookComposer] Salvando imagens no produto:');
+      console.log('[LookComposer] - frontImageUrl:', frontImageUrl);
+      console.log('[LookComposer] - backImageUrlResult:', backImageUrlResult);
+      console.log('[LookComposer] - viewsMode:', viewsMode);
+
       // Salvar a imagem gerada no produto (formato GeneratedImageSet)
       const newModeloIAImage: import('../../types').GeneratedImageSet = {
         id: frontGenerationId,

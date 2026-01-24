@@ -293,10 +293,8 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       // Parâmetros para indicar que é imagem de costas
       isBackView: params.isBackView || false,
       frontGenerationId: params.frontGenerationId || null,
-      // Se for back view, usar o frontGenerationId como base para criar ID vinculado
-      linkedGenerationId: params.isBackView && params.frontGenerationId
-        ? `${params.frontGenerationId}-back`
-        : null,
+      // Se for back view, vincular à geração de frente via campo linked_to
+      linkedTo: params.isBackView ? params.frontGenerationId : null,
     }),
   });
 

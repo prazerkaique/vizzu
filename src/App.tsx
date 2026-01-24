@@ -468,7 +468,13 @@ const loadUserProducts = async (userId: string) => {
       .from('products')
       .select(`
         *,
-        product_images (*)
+        product_images (
+          *,
+          generations:generation_id (
+            id,
+            linked_to
+          )
+        )
       `)
       .eq('user_id', userId);
     
@@ -569,15 +575,17 @@ const loadUserProducts = async (userId: string) => {
             metadata: img.metadata || {}
           })),
           modeloIA: (() => {
-            // Agrupar imagens por generation_id base (remove sufixo -back)
+            // Agrupar imagens: usa linked_to para detectar imagens de costas
             const grouped: Record<string, { front?: any; back?: any }> = {};
 
             generatedModelo.forEach((img: any) => {
               const genId = img.generation_id || img.id;
-              const isBack = genId?.endsWith('-back');
-              const baseId = isBack ? genId.replace(/-back$/, '') : genId;
+              // Se tem linked_to (via join com generations), é imagem de costas
+              const linkedTo = img.generations?.linked_to;
+              const isBack = !!linkedTo;
+              const baseId = isBack ? linkedTo : genId;
 
-              console.log('[Debug] Grouping image:', { genId, isBack, baseId });
+              console.log('[Debug] Grouping image:', { genId, isBack, baseId, linkedTo, generations: img.generations });
 
               if (!grouped[baseId]) {
                 grouped[baseId] = {};
