@@ -49,30 +49,43 @@ const LOADING_PHRASES = [
   "Quase pronto! Últimos ajustes..."
 ];
 
-// Fundos pré-setados
+// Fundos pré-setados (novos)
 const PRESET_BACKGROUNDS = [
-  { id: 'urban', name: 'Urbano', url: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800', category: 'cidade' },
-  { id: 'nature', name: 'Natureza', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800', category: 'natureza' },
-  { id: 'beach', name: 'Praia', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', category: 'praia' },
-  { id: 'studio-white', name: 'Estúdio Branco', url: 'https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=800', category: 'estudio' },
-  { id: 'cafe', name: 'Café', url: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800', category: 'lifestyle' },
-  { id: 'minimal', name: 'Minimalista', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', category: 'minimalista' },
+  { id: 'solid-color', name: 'Cor Sólida', url: '', category: 'solid', icon: 'fa-palette' },
+  { id: 'photo-studio', name: 'Estúdio Fotográfico', url: 'https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=800', category: 'estudio', icon: 'fa-camera' },
+  { id: 'green-garden', name: 'Jardim Verde', url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800', category: 'natureza', icon: 'fa-leaf' },
+  { id: 'minimalist-room', name: 'Sala Minimalista', url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800', category: 'interior', icon: 'fa-couch' },
+  { id: 'mountain-top', name: 'Topo de Montanha', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800', category: 'natureza', icon: 'fa-mountain' },
+  { id: 'graffiti-street', name: 'Rua com Grafite', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', category: 'urbano', icon: 'fa-spray-can' },
+  { id: 'ny-metro', name: 'Metrô de NY', url: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=800', category: 'urbano', icon: 'fa-train-subway' },
 ];
 
-type Step = 'product' | 'model' | 'look' | 'background' | 'views' | 'export';
+// Tipo para fundo salvo
+interface SavedBackground {
+  id: string;
+  name: string;
+  url?: string;
+  base64?: string;
+  color?: string;
+  prompt?: string;
+  createdAt: string;
+}
+
+type Step = 'product' | 'model' | 'look' | 'pose' | 'background' | 'views';
 type ModelTab = 'create' | 'saved';
 type LookMode = 'composer' | 'describe';
-type BackgroundType = 'studio' | 'custom';
-type ExportQuality = 'high' | 'performance';
+type BackgroundType = 'studio' | 'custom' | 'prompt';
+type BackgroundMode = 'preset' | 'upload' | 'prompt' | 'saved';
+type PoseMode = 'default' | 'custom';
 type ViewsMode = 'front' | 'front-back';
 
 const STEPS: { id: Step; label: string; icon: string }[] = [
   { id: 'product', label: 'Produto', icon: 'fa-shirt' },
   { id: 'model', label: 'Modelo', icon: 'fa-user' },
   { id: 'look', label: 'Look', icon: 'fa-layer-group' },
+  { id: 'pose', label: 'Pose', icon: 'fa-person-walking' },
   { id: 'background', label: 'Fundo', icon: 'fa-image' },
-  { id: 'views', label: 'Ângulos', icon: 'fa-clone' },
-  { id: 'export', label: 'Exportar', icon: 'fa-download' },
+  { id: 'views', label: 'Gerar', icon: 'fa-wand-magic-sparkles' },
 ];
 
 // Mapeamento de categorias para slots que devem ser bloqueados (peça principal)
@@ -165,16 +178,23 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     return CATEGORY_TO_LOCKED_SLOTS[product.category] || [];
   }, [product.category]);
 
+  // Estado da pose
+  const [poseMode, setPoseMode] = useState<PoseMode>('default');
+  const [customPosePrompt, setCustomPosePrompt] = useState('');
+
   // Estado do fundo
   const [backgroundType, setBackgroundType] = useState<BackgroundType>('studio');
+  const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('preset');
   const [customBackground, setCustomBackground] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [solidColor, setSolidColor] = useState('#ffffff');
+  const [backgroundPrompt, setBackgroundPrompt] = useState('');
+  const [savedBackgrounds, setSavedBackgrounds] = useState<SavedBackground[]>([]);
+  const [showSaveBackgroundModal, setShowSaveBackgroundModal] = useState(false);
+  const [newBackgroundName, setNewBackgroundName] = useState('');
 
   // Estado dos ângulos (views)
   const [viewsMode, setViewsMode] = useState<ViewsMode>('front');
-
-  // Estado do export
-  const [exportQuality, setExportQuality] = useState<ExportQuality>('high');
 
   // Estado de geração
   const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -194,6 +214,18 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const currentLoadingText = onSetLoadingText ? generationText : localLoadingText;
 
   const isDark = theme === 'dark';
+
+  // Carregar fundos salvos do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(`vizzu-saved-backgrounds-${userId}`);
+    if (saved) {
+      try {
+        setSavedBackgrounds(JSON.parse(saved));
+      } catch (e) {
+        console.error('Erro ao carregar fundos salvos:', e);
+      }
+    }
+  }, [userId]);
 
   // Rotacionar frases de loading
   useEffect(() => {
@@ -307,18 +339,60 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           return describedLook.top !== '' || describedLook.bottom !== '' || describedLook.shoes !== '';
         }
         return Object.keys(lookComposition).length > 0;
+      case 'pose':
+        // Pose padrão sempre OK, custom precisa de prompt
+        return poseMode === 'default' || customPosePrompt.trim().length > 0;
       case 'background':
         if (backgroundType === 'studio') return true;
+        if (backgroundMode === 'prompt') return backgroundPrompt.trim().length > 0;
+        if (backgroundMode === 'preset' && selectedPreset === 'solid-color') return true;
+        if (backgroundMode === 'saved') return !!selectedPreset;
         return !!customBackground || !!selectedPreset;
       case 'views':
         // Se for só frente, pode avançar
         if (viewsMode === 'front') return true;
         // Se for frente e costas, só pode avançar se todos produtos tiverem foto de costas
         return productsWithoutBackImage.length === 0;
-      case 'export':
-        return true;
       default:
         return false;
+    }
+  };
+
+  // Salvar fundo
+  const handleSaveBackground = () => {
+    if (!newBackgroundName.trim()) return;
+
+    const newBackground: SavedBackground = {
+      id: `bg-${Date.now()}`,
+      name: newBackgroundName.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    if (backgroundMode === 'preset' && selectedPreset === 'solid-color') {
+      newBackground.color = solidColor;
+    } else if (backgroundMode === 'prompt') {
+      newBackground.prompt = backgroundPrompt;
+    } else if (customBackground) {
+      newBackground.base64 = customBackground;
+    } else if (selectedPreset) {
+      const preset = PRESET_BACKGROUNDS.find(b => b.id === selectedPreset);
+      newBackground.url = preset?.url;
+    }
+
+    const updated = [...savedBackgrounds, newBackground];
+    setSavedBackgrounds(updated);
+    localStorage.setItem(`vizzu-saved-backgrounds-${userId}`, JSON.stringify(updated));
+    setShowSaveBackgroundModal(false);
+    setNewBackgroundName('');
+  };
+
+  // Deletar fundo salvo
+  const handleDeleteSavedBackground = (bgId: string) => {
+    const updated = savedBackgrounds.filter(bg => bg.id !== bgId);
+    setSavedBackgrounds(updated);
+    localStorage.setItem(`vizzu-saved-backgrounds-${userId}`, JSON.stringify(updated));
+    if (selectedPreset === bgId) {
+      setSelectedPreset(null);
     }
   };
 
@@ -410,6 +484,26 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     setGeneratedImageUrl(null);
     setGeneratedBackImageUrl(null);
     setGenerationId(null);
+  };
+
+  // Criar novo look (reseta configurações mas mantém produto)
+  const handleNewLook = () => {
+    setShowResult(false);
+    setGeneratedImageUrl(null);
+    setGeneratedBackImageUrl(null);
+    setGenerationId(null);
+    // Resetar configurações para criar novo look
+    setCurrentStep('model');
+    setLookComposition({});
+    setDescribedLook({ top: '', bottom: '', shoes: '', accessories: '' });
+    setPoseMode('default');
+    setCustomPosePrompt('');
+    setBackgroundType('studio');
+    setBackgroundMode('preset');
+    setCustomBackground(null);
+    setSelectedPreset(null);
+    setBackgroundPrompt('');
+    setViewsMode('front');
   };
 
   // Gerar look
@@ -545,12 +639,35 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         }).filter(item => item.image); // Só incluir se tiver imagem
       }
 
+      // Construir pose prompt
+      let posePromptFinal: string | undefined;
+      if (poseMode === 'custom' && customPosePrompt.trim()) {
+        posePromptFinal = customPosePrompt.trim();
+      }
+
       // Determinar fundo
       let customBackgroundUrl: string | undefined;
       let customBackgroundBase64: string | undefined;
+      let backgroundPromptFinal: string | undefined;
+      let solidColorFinal: string | undefined;
 
       if (backgroundType === 'custom') {
-        if (customBackground) {
+        if (backgroundMode === 'prompt' && backgroundPrompt.trim()) {
+          // Fundo por prompt
+          backgroundPromptFinal = backgroundPrompt.trim();
+        } else if (backgroundMode === 'preset' && selectedPreset === 'solid-color') {
+          // Cor sólida
+          solidColorFinal = solidColor;
+        } else if (backgroundMode === 'saved' && selectedPreset) {
+          // Fundo salvo
+          const savedBg = savedBackgrounds.find(b => b.id === selectedPreset);
+          if (savedBg) {
+            if (savedBg.color) solidColorFinal = savedBg.color;
+            else if (savedBg.prompt) backgroundPromptFinal = savedBg.prompt;
+            else if (savedBg.base64) customBackgroundBase64 = savedBg.base64;
+            else if (savedBg.url) customBackgroundUrl = savedBg.url;
+          }
+        } else if (customBackground) {
           // Upload base64
           customBackgroundBase64 = customBackground;
         } else if (selectedPreset) {
@@ -569,7 +686,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         imageId,
         imageUrl,
         backgroundType,
+        backgroundMode,
         lookMode,
+        poseMode,
         lookItems: lookItems?.length,
         viewsMode
       });
@@ -585,6 +704,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         imageUrl: imageUrl,
         modelPrompt: modelPrompt,
         clothingPrompt: clothingPrompt,
+        posePrompt: posePromptFinal,
         referenceImage: selectedModel?.images?.front || selectedModel?.referenceImageUrl,
         productCategory: product.category || 'Roupas',
         productDescription: product.description || product.name,
@@ -592,6 +712,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         backgroundType: backgroundType,
         customBackgroundUrl: customBackgroundUrl,
         customBackgroundBase64: customBackgroundBase64,
+        backgroundPrompt: backgroundPromptFinal,
+        solidColor: solidColorFinal,
         modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
         viewsMode: 'front', // Sempre 'front' na primeira chamada
       });
@@ -625,6 +747,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           imageUrl: backImageUrl,
           modelPrompt: modelPrompt,
           clothingPrompt: clothingPrompt ? clothingPrompt + ' (back view, from behind)' : undefined,
+          posePrompt: posePromptFinal ? posePromptFinal + ', back view, from behind' : undefined,
           referenceImage: modelBackReference, // Usar imagem de COSTAS do modelo
           productCategory: product.category || 'Roupas',
           productDescription: (product.description || product.name) + ' - vista de costas',
@@ -632,6 +755,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           backgroundType: backgroundType,
           customBackgroundUrl: customBackgroundUrl,
           customBackgroundBase64: customBackgroundBase64,
+          backgroundPrompt: backgroundPromptFinal,
+          solidColor: solidColorFinal,
           modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind` : 'back view, from behind',
           viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
           // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
@@ -979,6 +1104,103 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           </div>
         );
 
+      case 'pose':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className={(isDark ? 'bg-pink-500/20' : 'bg-pink-100') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+                <i className={(isDark ? 'text-pink-400' : 'text-pink-600') + ' fas fa-person-walking text-sm'}></i>
+              </div>
+              <div>
+                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Pose do Modelo</h3>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha pose padrão ou descreva a pose desejada</p>
+              </div>
+            </div>
+
+            {/* Opções de Pose */}
+            <div className="space-y-3">
+              {/* Pose Padrão */}
+              <div
+                onClick={() => setPoseMode('default')}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${poseMode === 'default' ? 'border-pink-500 ' + (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={(poseMode === 'default' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+                    <i className="fas fa-person"></i>
+                  </div>
+                  <div className="flex-1">
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Pose Padrão</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Pose natural de catálogo, em pé de frente</p>
+                  </div>
+                  {poseMode === 'default' && (
+                    <i className="fas fa-check-circle text-pink-500"></i>
+                  )}
+                </div>
+              </div>
+
+              {/* Pose Personalizada */}
+              <div
+                onClick={() => setPoseMode('custom')}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${poseMode === 'custom' ? 'border-pink-500 ' + (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={(poseMode === 'custom' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+                    <i className="fas fa-pen-fancy"></i>
+                  </div>
+                  <div className="flex-1">
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Descrever Pose</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escreva um prompt descrevendo a pose desejada</p>
+                  </div>
+                  {poseMode === 'custom' && (
+                    <i className="fas fa-check-circle text-pink-500"></i>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Campo de prompt customizado */}
+            {poseMode === 'custom' && (
+              <div className="space-y-3">
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>
+                    Descreva a pose
+                  </label>
+                  <textarea
+                    value={customPosePrompt}
+                    onChange={(e) => setCustomPosePrompt(e.target.value)}
+                    placeholder="Ex: modelo sentada em uma cadeira com as pernas cruzadas, olhando para o lado"
+                    maxLength={200}
+                    rows={3}
+                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'}
+                  />
+                  <div className="flex justify-between mt-1">
+                    <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>
+                      {customPosePrompt.length}/200 caracteres
+                    </span>
+                  </div>
+                </div>
+
+                {/* Boas práticas */}
+                <div className={(isDark ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + ' rounded-xl p-3 border'}>
+                  <div className="flex items-start gap-2">
+                    <i className={(isDark ? 'text-blue-400' : 'text-blue-600') + ' fas fa-lightbulb text-sm mt-0.5'}></i>
+                    <div>
+                      <p className={(isDark ? 'text-blue-400' : 'text-blue-700') + ' font-medium text-xs mb-1'}>Boas práticas</p>
+                      <ul className={(isDark ? 'text-blue-300/80' : 'text-blue-600') + ' text-[10px] space-y-1'}>
+                        <li>• Seja objetivo e direto na descrição</li>
+                        <li>• Evite prompts muito longos ou complexos</li>
+                        <li>• Descreva uma única pose clara</li>
+                        <li>• Evite poses muito elaboradas ou impossíveis</li>
+                        <li>• Use referências simples (sentada, andando, apoiada)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
       case 'background':
         return (
           <div className="space-y-4">
@@ -988,23 +1210,23 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
               </div>
               <div>
                 <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Escolha o Fundo</h3>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Fundo estúdio ou personalizado</p>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Estúdio, preset, upload ou descreva</p>
               </div>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs - Estúdio / Personalizado */}
             <div className="flex gap-1">
               <button
                 onClick={() => setBackgroundType('studio')}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${backgroundType === 'studio' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
               >
-                <i className="fas fa-store mr-1"></i>Fundo Estúdio
+                <i className="fas fa-store mr-1"></i>Estúdio
               </button>
               <button
                 onClick={() => setBackgroundType('custom')}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${backgroundType === 'custom' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
               >
-                <i className="fas fa-image mr-1"></i>Fundo Próprio
+                <i className="fas fa-image mr-1"></i>Personalizado
               </button>
             </div>
 
@@ -1022,47 +1244,218 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Upload */}
-                <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-2'}>Enviar imagem</label>
-                  <label className={`block w-full py-4 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-300 hover:border-pink-400'}`}>
-                    <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-cloud-upload-alt text-2xl mb-1'}></i>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Clique para enviar</p>
-                    <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Imagem sem pessoas</p>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundUpload} />
-                  </label>
+                {/* Sub-tabs para modo de fundo personalizado */}
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setBackgroundMode('preset')}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'preset' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+                  >
+                    <i className="fas fa-images mr-1"></i>Presets
+                  </button>
+                  <button
+                    onClick={() => setBackgroundMode('upload')}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'upload' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+                  >
+                    <i className="fas fa-upload mr-1"></i>Upload
+                  </button>
+                  <button
+                    onClick={() => setBackgroundMode('prompt')}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'prompt' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+                  >
+                    <i className="fas fa-pen mr-1"></i>Prompt
+                  </button>
+                  <button
+                    onClick={() => setBackgroundMode('saved')}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'saved' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+                  >
+                    <i className="fas fa-bookmark mr-1"></i>Salvos
+                  </button>
                 </div>
 
-                {customBackground && (
-                  <div className="relative rounded-xl overflow-hidden border-2 border-pink-500">
-                    <img src={customBackground} alt="Fundo personalizado" className="w-full h-32 object-cover" />
-                    <button
-                      onClick={() => setCustomBackground(null)}
-                      className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70"
-                    >
-                      <i className="fas fa-times text-xs"></i>
-                    </button>
+                {/* Conteúdo baseado no modo */}
+                {backgroundMode === 'preset' && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      {PRESET_BACKGROUNDS.map(bg => (
+                        <div
+                          key={bg.id}
+                          onClick={() => { setSelectedPreset(bg.id); setCustomBackground(null); }}
+                          className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedPreset === bg.id ? 'border-pink-500 ring-2 ring-pink-500/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+                        >
+                          {bg.id === 'solid-color' ? (
+                            <div
+                              className="w-full h-20 flex items-center justify-center"
+                              style={{ backgroundColor: solidColor }}
+                            >
+                              <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-palette text-2xl'} style={{ color: solidColor === '#ffffff' ? '#9ca3af' : '#ffffff' }}></i>
+                            </div>
+                          ) : (
+                            <img src={bg.url} alt={bg.name} className="w-full h-20 object-cover" />
+                          )}
+                          <div className={(isDark ? 'bg-black/70' : 'bg-white/90') + ' absolute inset-x-0 bottom-0 py-1.5 px-2 flex items-center gap-1.5'}>
+                            <i className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' fas ' + (bg.icon || 'fa-image') + ' text-[10px]'}></i>
+                            <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{bg.name}</p>
+                          </div>
+                          {selectedPreset === bg.id && (
+                            <div className="absolute top-2 right-2 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center">
+                              <i className="fas fa-check text-white text-[8px]"></i>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Color picker quando Cor Sólida selecionada */}
+                    {selectedPreset === 'solid-color' && (
+                      <div className={(isDark ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-3'}>
+                        <label className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' block text-[10px] font-medium uppercase tracking-wide mb-2'}>
+                          Escolha a cor
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={solidColor}
+                            onChange={(e) => setSolidColor(e.target.value)}
+                            className="w-12 h-10 rounded-lg border-0 cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={solidColor}
+                            onChange={(e) => setSolidColor(e.target.value)}
+                            placeholder="#ffffff"
+                            className={(isDark ? 'bg-neutral-700 border-neutral-600 text-white' : 'bg-white border-gray-300 text-gray-900') + ' flex-1 px-3 py-2 border rounded-lg text-sm font-mono uppercase'}
+                          />
+                        </div>
+                        {/* Cores rápidas */}
+                        <div className="flex gap-1.5 mt-2">
+                          {['#ffffff', '#f3f4f6', '#e5e7eb', '#fce7f3', '#fee2e2', '#fef3c7', '#d1fae5', '#dbeafe', '#1f2937', '#000000'].map(color => (
+                            <button
+                              key={color}
+                              onClick={() => setSolidColor(color)}
+                              className={'w-6 h-6 rounded-full border-2 transition-all ' + (solidColor === color ? 'border-pink-500 scale-110' : isDark ? 'border-neutral-600' : 'border-gray-300')}
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Fundos pré-setados */}
-                <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-2'}>Ou escolha um fundo</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {PRESET_BACKGROUNDS.map(bg => (
-                      <div
-                        key={bg.id}
-                        onClick={() => { setSelectedPreset(bg.id); setCustomBackground(null); }}
-                        className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${selectedPreset === bg.id ? 'border-pink-500 ring-2 ring-pink-500/30' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}
-                      >
-                        <img src={bg.url} alt={bg.name} className="w-full h-16 object-cover" />
-                        <div className={(isDark ? 'bg-black/60' : 'bg-white/80') + ' absolute inset-x-0 bottom-0 py-1 px-2'}>
-                          <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[9px] font-medium'}>{bg.name}</p>
-                        </div>
+                {backgroundMode === 'upload' && (
+                  <div className="space-y-3">
+                    <label className={`block w-full py-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-300 hover:border-pink-400'}`}>
+                      <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-cloud-upload-alt text-3xl mb-2'}></i>
+                      <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm font-medium'}>Clique para enviar</p>
+                      <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-1'}>Imagem de fundo sem pessoas</p>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundUpload} />
+                    </label>
+
+                    {customBackground && (
+                      <div className="relative rounded-xl overflow-hidden border-2 border-pink-500">
+                        <img src={customBackground} alt="Fundo personalizado" className="w-full h-32 object-cover" />
+                        <button
+                          onClick={() => setCustomBackground(null)}
+                          className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70"
+                        >
+                          <i className="fas fa-times text-sm"></i>
+                        </button>
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
+                )}
+
+                {backgroundMode === 'prompt' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1'}>
+                        Descreva o fundo desejado
+                      </label>
+                      <textarea
+                        value={backgroundPrompt}
+                        onChange={(e) => setBackgroundPrompt(e.target.value)}
+                        placeholder="Ex: praia tropical com palmeiras ao pôr do sol, areia branca..."
+                        maxLength={300}
+                        rows={3}
+                        className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'}
+                      />
+                      <div className="flex justify-between mt-1">
+                        <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>
+                          {backgroundPrompt.length}/300 caracteres
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={(isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-3 border'}>
+                      <div className="flex items-start gap-2">
+                        <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-info-circle text-sm mt-0.5'}></i>
+                        <p className={(isDark ? 'text-amber-300/80' : 'text-amber-700') + ' text-[10px]'}>
+                          Descreva um cenário simples e claro. A IA irá gerar o fundo baseado na descrição.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {backgroundMode === 'saved' && (
+                  <div className="space-y-3">
+                    {savedBackgrounds.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {savedBackgrounds.map(bg => (
+                          <div
+                            key={bg.id}
+                            onClick={() => { setSelectedPreset(bg.id); setCustomBackground(null); }}
+                            className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all group ${selectedPreset === bg.id ? 'border-pink-500 ring-2 ring-pink-500/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+                          >
+                            {bg.color ? (
+                              <div className="w-full h-20" style={{ backgroundColor: bg.color }}></div>
+                            ) : bg.base64 ? (
+                              <img src={bg.base64} alt={bg.name} className="w-full h-20 object-cover" />
+                            ) : bg.url ? (
+                              <img src={bg.url} alt={bg.name} className="w-full h-20 object-cover" />
+                            ) : (
+                              <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-20 flex items-center justify-center'}>
+                                <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-pen text-xl'}></i>
+                              </div>
+                            )}
+                            <div className={(isDark ? 'bg-black/70' : 'bg-white/90') + ' absolute inset-x-0 bottom-0 py-1.5 px-2'}>
+                              <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{bg.name}</p>
+                            </div>
+                            {selectedPreset === bg.id && (
+                              <div className="absolute top-2 right-2 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center">
+                                <i className="fas fa-check text-white text-[8px]"></i>
+                              </div>
+                            )}
+                            {/* Botão de deletar */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteSavedBackground(bg.id); }}
+                              className="absolute top-2 left-2 w-5 h-5 bg-red-500/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            >
+                              <i className="fas fa-times text-[8px]"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-6 text-center'}>
+                        <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-bookmark text-3xl mb-3'}></i>
+                        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-1'}>Nenhum fundo salvo</p>
+                        <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Salve seus fundos favoritos para reutilizar</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Botão Salvar Fundo (aparece quando tem algo selecionado) */}
+                {(customBackground || selectedPreset || backgroundPrompt) && backgroundMode !== 'saved' && (
+                  <button
+                    onClick={() => setShowSaveBackgroundModal(true)}
+                    className={(isDark ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200') + ' w-full py-2 rounded-xl text-xs font-medium border transition-colors flex items-center justify-center gap-2'}
+                  >
+                    <i className="fas fa-bookmark"></i>
+                    Salvar este fundo
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1200,69 +1593,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                 </p>
               </div>
             )}
-          </div>
-        );
-
-      case 'export':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className={(isDark ? 'bg-pink-500/20' : 'bg-pink-100') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
-                <i className={(isDark ? 'text-pink-400' : 'text-pink-600') + ' fas fa-download text-sm'}></i>
-              </div>
-              <div>
-                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Qualidade de Exportação</h3>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha o formato ideal</p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {/* Alta Qualidade */}
-              <div
-                onClick={() => setExportQuality('high')}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${exportQuality === 'high' ? 'border-pink-500 ' + (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={(exportQuality === 'high' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
-                    <i className="fas fa-gem"></i>
-                  </div>
-                  <div className="flex-1">
-                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Alta Qualidade</p>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>PNG 2048px - Redes sociais, prints, materiais impressos</p>
-                  </div>
-                  {exportQuality === 'high' && (
-                    <i className="fas fa-check-circle text-pink-500"></i>
-                  )}
-                </div>
-              </div>
-
-              {/* Performance */}
-              <div
-                onClick={() => setExportQuality('performance')}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${exportQuality === 'performance' ? 'border-pink-500 ' + (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={(exportQuality === 'performance' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
-                    <i className="fas fa-bolt"></i>
-                  </div>
-                  <div className="flex-1">
-                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Performance</p>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>JPEG 1024px - E-commerces, marketplaces, carregamento rápido</p>
-                  </div>
-                  {exportQuality === 'performance' && (
-                    <i className="fas fa-check-circle text-pink-500"></i>
-                  )}
-                </div>
-              </div>
-            </div>
 
             {/* Resumo */}
             <div className={(isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border mt-4'}>
-              <h4 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>Resumo</h4>
+              <h4 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>Resumo da Geração</h4>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Produto</span>
-                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>{product.name}</span>
+                  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' truncate max-w-[140px]'}>{product.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Modelo</span>
@@ -1273,16 +1611,22 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                   <span className={(isDark ? 'text-white' : 'text-gray-900')}>{lookMode === 'describe' ? 'Descrito' : 'Com suas peças'}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Pose</span>
+                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>{poseMode === 'default' ? 'Padrão' : 'Personalizada'}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Fundo</span>
-                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>{backgroundType === 'studio' ? 'Estúdio Cinza' : selectedPreset ? PRESET_BACKGROUNDS.find(b => b.id === selectedPreset)?.name : 'Personalizado'}</span>
+                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>
+                    {backgroundType === 'studio' ? 'Estúdio Cinza' :
+                     backgroundMode === 'prompt' ? 'Por prompt' :
+                     selectedPreset === 'solid-color' ? `Cor ${solidColor}` :
+                     selectedPreset ? (PRESET_BACKGROUNDS.find(b => b.id === selectedPreset)?.name || savedBackgrounds.find(b => b.id === selectedPreset)?.name) :
+                     'Personalizado'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Ângulos</span>
                   <span className={(isDark ? 'text-white' : 'text-gray-900')}>{viewsMode === 'front' ? 'Só Frente' : 'Frente e Costas'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Qualidade</span>
-                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>{exportQuality === 'high' ? 'Alta' : 'Performance'}</span>
                 </div>
                 <div className={'h-px my-2 ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}></div>
                 <div className="flex justify-between font-medium">
@@ -1317,6 +1661,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         onRegenerate={handleResultRegenerate}
         onDelete={handleResultDelete}
         onBack={handleResultBack}
+        onNewLook={handleNewLook}
         theme={theme}
       />
     );
@@ -1383,8 +1728,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           {/* COLUNA ESQUERDA - Imagem/Preview */}
           <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
             <div className={'relative flex items-center justify-center p-4 min-h-[350px] ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-100')}>
-              {/* Mostrar fundo quando estiver no passo de fundo */}
-              {currentStep === 'background' || currentStep === 'export' ? (
+              {/* Mostrar fundo quando estiver no passo de fundo ou geração */}
+              {currentStep === 'background' || currentStep === 'views' ? (
                 backgroundType === 'studio' ? (
                   // Fundo Estúdio Cinza
                   <div className="w-full h-full min-h-[300px] rounded-lg bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center">
@@ -1466,7 +1811,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                 </button>
               )}
 
-              {currentStep !== 'export' ? (
+              {currentStep !== 'views' ? (
                 <button
                   onClick={nextStep}
                   disabled={!canProceed(currentStep)}
@@ -1477,8 +1822,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
               ) : (
                 <button
                   onClick={handleGenerate}
-                  disabled={isGenerating || isAnyGenerationRunning || userCredits < creditsNeeded}
-                  className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-pink-600 cursor-wait' : userCredits < creditsNeeded ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 shadow-lg shadow-pink-500/25') + ' text-white'}
+                  disabled={isGenerating || isAnyGenerationRunning || userCredits < creditsNeeded || !canProceed('views')}
+                  className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-pink-600 cursor-wait' : (userCredits < creditsNeeded || !canProceed('views')) ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 shadow-lg shadow-pink-500/25') + ' text-white'}
                 >
                   {isGenerating ? (
                     <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando{viewsMode === 'front-back' ? ' 2 imagens' : ''}...</>
@@ -1525,6 +1870,50 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       )}
 
       {/* BARRA MINIMIZADA - Renderizada no App.tsx para aparecer em todas as páginas */}
+
+      {/* MODAL - Salvar Fundo */}
+      {showSaveBackgroundModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowSaveBackgroundModal(false)}></div>
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 shadow-2xl'}>
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto mb-3">
+                <i className="fas fa-bookmark text-pink-500 text-xl"></i>
+              </div>
+              <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-base font-bold'}>Salvar Fundo</h3>
+              <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-1'}>Dê um nome para este fundo</p>
+            </div>
+
+            <div className="mb-4">
+              <input
+                type="text"
+                value={newBackgroundName}
+                onChange={(e) => setNewBackgroundName(e.target.value)}
+                placeholder="Ex: Meu jardim favorito"
+                maxLength={30}
+                className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-4 py-3 border rounded-xl text-sm'}
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowSaveBackgroundModal(false); setNewBackgroundName(''); }}
+                className={(isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl font-semibold text-sm'}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveBackground}
+                disabled={!newBackgroundName.trim()}
+                className={'flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all ' + (newBackgroundName.trim() ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90' : (isDark ? 'bg-neutral-700 text-neutral-500' : 'bg-gray-200 text-gray-400') + ' cursor-not-allowed')}
+              >
+                <i className="fas fa-save mr-2"></i>Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

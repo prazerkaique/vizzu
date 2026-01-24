@@ -5,6 +5,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, LookComposition, SavedModel } from '../../types';
 
+type ExportQuality = 'high' | 'performance';
+
 interface LookComposerResultProps {
   product: Product;
   generatedImageUrl: string;
@@ -19,13 +21,14 @@ interface LookComposerResultProps {
     accessories: string;
   };
   selectedModel?: SavedModel | null;
-  backgroundType: 'studio' | 'custom';
+  backgroundType: 'studio' | 'custom' | 'prompt';
   creditsUsed: number;
   userCredits: number;
   onSave: () => void;
   onRegenerate: () => void;
   onDelete: () => void;
   onBack: () => void;
+  onNewLook?: () => void;  // Criar novo look com o mesmo produto
   theme?: 'dark' | 'light';
 }
 
@@ -65,6 +68,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   onRegenerate,
   onDelete,
   onBack,
+  onNewLook,
   theme = 'dark'
 }) => {
   const [isSaved, setIsSaved] = useState(false);
@@ -74,6 +78,8 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   const [showOriginal, setShowOriginal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'back' | null>(null);
   const [timeAgo, setTimeAgo] = useState('agora');
+  const [exportQuality, setExportQuality] = useState<ExportQuality>('high');
+  const [showDownloadOptions, setShowDownloadOptions] = useState(false);
 
   // Estado para alternar entre frente e costas
   const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
@@ -532,35 +538,101 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
               <span>{isSaved ? 'Look Salvo!' : 'Salvar Look'}</span>
             </button>
 
-            {/* Ações Rápidas - Grid compacto */}
-            <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
-                Ações Rápidas
-              </p>
+            {/* Botão Novo Look */}
+            {onNewLook && (
+              <button
+                onClick={onNewLook}
+                className={(isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700 border-neutral-700' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200') + ' w-full py-3 rounded-xl font-semibold text-sm border transition-all flex items-center justify-center gap-2'}
+              >
+                <i className="fas fa-plus"></i>
+                <span>Criar Novo Look</span>
+              </button>
+            )}
 
-              <div className={'grid gap-2 ' + (hasBackImage ? 'grid-cols-5' : 'grid-cols-4')}>
+            {/* Opções de Download */}
+            <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
+              <div className="flex items-center justify-between mb-2">
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide'}>
+                  Baixar Imagem
+                </p>
+                <button
+                  onClick={() => setShowDownloadOptions(!showDownloadOptions)}
+                  className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] flex items-center gap-1'}
+                >
+                  <i className="fas fa-gear"></i>
+                  {exportQuality === 'high' ? 'Alta Qualidade' : 'Performance'}
+                </button>
+              </div>
+
+              {/* Opções de qualidade (expansível) */}
+              {showDownloadOptions && (
+                <div className={'mb-3 p-2 rounded-lg space-y-1.5 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-50')}>
+                  <button
+                    onClick={() => setExportQuality('high')}
+                    className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
+                      (exportQuality === 'high'
+                        ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
+                        : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
+                    }
+                  >
+                    <i className="fas fa-gem w-4"></i>
+                    <div>
+                      <span className="font-medium">Alta Qualidade</span>
+                      <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>PNG 2048px</span>
+                    </div>
+                    {exportQuality === 'high' && <i className="fas fa-check ml-auto text-pink-400"></i>}
+                  </button>
+                  <button
+                    onClick={() => setExportQuality('performance')}
+                    className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
+                      (exportQuality === 'performance'
+                        ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
+                        : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
+                    }
+                  >
+                    <i className="fas fa-bolt w-4"></i>
+                    <div>
+                      <span className="font-medium">Performance</span>
+                      <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>JPEG 1024px</span>
+                    </div>
+                    {exportQuality === 'performance' && <i className="fas fa-check ml-auto text-pink-400"></i>}
+                  </button>
+                </div>
+              )}
+
+              <div className={'grid gap-2 ' + (hasBackImage ? 'grid-cols-2' : 'grid-cols-1')}>
                 {/* Baixar atual */}
                 <button
                   onClick={handleDownload}
-                  className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+                  className={'py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ' +
+                    (isDark ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700') + ' border'}
                   title={hasBackImage ? `Baixar imagem ${currentView === 'front' ? 'de frente' : 'de costas'}` : 'Baixar imagem'}
                 >
-                  <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-download text-sm'}></i>
-                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Baixar</span>
+                  <i className="fas fa-download text-sm"></i>
+                  <span className="text-xs font-medium">{hasBackImage ? (currentView === 'front' ? 'Frente' : 'Costas') : 'Baixar'}</span>
                 </button>
 
                 {/* Baixar todas (só aparece se tem costas) */}
                 {hasBackImage && (
                   <button
                     onClick={handleDownloadAll}
-                    className={(isDark ? 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 border-purple-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+                    className={(isDark ? 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 border-purple-200') + ' py-2.5 px-4 rounded-lg border transition-all flex items-center justify-center gap-2'}
                     title="Baixar frente e costas"
                   >
                     <i className="fas fa-images text-purple-400 text-sm"></i>
-                    <span className="text-purple-400 text-[9px]">Todas</span>
+                    <span className="text-purple-400 text-xs font-medium">Baixar Todas</span>
                   </button>
                 )}
+              </div>
+            </div>
 
+            {/* Ações Rápidas - Grid compacto */}
+            <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
+                Ações
+              </p>
+
+              <div className="grid grid-cols-3 gap-2">
                 {/* Gerar Novamente */}
                 <button
                   onClick={onRegenerate}

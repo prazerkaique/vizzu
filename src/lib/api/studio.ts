@@ -206,9 +206,11 @@ interface ModeloIAParams {
   productNotes?: string;      // Observações adicionais do produto
   modelDetails?: string;      // Detalhes do modelo (fisionomia, cabelo, altura, etc.)
   // Parâmetros de fundo
-  backgroundType?: 'studio' | 'custom';
+  backgroundType?: 'studio' | 'custom' | 'prompt';
   customBackgroundUrl?: string;      // URL do fundo customizado (upload ou preset)
   customBackgroundBase64?: string;   // Base64 do fundo customizado (upload)
+  backgroundPrompt?: string;         // Prompt para gerar fundo por IA
+  solidColor?: string;               // Cor sólida (hex) para fundo
   // Parâmetros de ângulos (frente/costas)
   viewsMode?: 'front' | 'front-back';
   backImageId?: string;              // ID da imagem de costas do produto principal
@@ -277,6 +279,10 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       backgroundType: params.backgroundType || 'studio',
       customBackgroundUrl: params.customBackgroundUrl || null,
       customBackgroundBase64: params.customBackgroundBase64 || null,
+      backgroundPrompt: params.backgroundPrompt || null,
+      solidColor: params.solidColor || null,
+      // Prompt de pose personalizada
+      posePrompt: params.posePrompt || null,
       // Parâmetros de ângulos (frente/costas)
       viewsMode: params.viewsMode || 'front',
       backImageId: params.backImageId || null,
