@@ -8,6 +8,7 @@ import { Product, LookComposition, SavedModel } from '../../types';
 interface LookComposerResultProps {
   product: Product;
   generatedImageUrl: string;
+  generatedBackImageUrl?: string;  // Imagem de costas (opcional)
   generationId: string;
   lookMode: 'composer' | 'describe';
   lookComposition?: LookComposition;
@@ -51,6 +52,7 @@ const SLOT_ICONS: Record<string, string> = {
 export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   product,
   generatedImageUrl,
+  generatedBackImageUrl,
   generationId,
   lookMode,
   lookComposition,
@@ -72,6 +74,11 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   const [showOriginal, setShowOriginal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'back' | null>(null);
   const [timeAgo, setTimeAgo] = useState('agora');
+
+  // Estado para alternar entre frente e costas
+  const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
+  const hasBackImage = !!generatedBackImageUrl;
+  const totalImages = hasBackImage ? 2 : 1;
 
   // Zoom com hover
   const [isHovering, setIsHovering] = useState(false);
@@ -101,7 +108,24 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   };
 
   const originalImage = getOriginalImage();
-  const displayImage = showOriginal ? originalImage : generatedImageUrl;
+  const originalBackImage = product.originalImages?.back?.url || '';
+
+  // Determinar qual imagem mostrar
+  const getCurrentGeneratedImage = () => {
+    if (currentView === 'back' && generatedBackImageUrl) {
+      return generatedBackImageUrl;
+    }
+    return generatedImageUrl;
+  };
+
+  const getCurrentOriginalImage = () => {
+    if (currentView === 'back' && originalBackImage) {
+      return originalBackImage;
+    }
+    return originalImage;
+  };
+
+  const displayImage = showOriginal ? getCurrentOriginalImage() : getCurrentGeneratedImage();
 
   // Zoom com hover - mouse move
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -118,22 +142,63 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
     onSave();
   };
 
-  // Download
+  // Download da imagem atual
   const handleDownload = async () => {
-    if (!generatedImageUrl) return;
+    const imageToDownload = getCurrentGeneratedImage();
+    if (!imageToDownload) return;
     try {
-      const response = await fetch(generatedImageUrl);
+      const response = await fetch(imageToDownload);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${product.sku}-look-composer.png`;
+      const viewSuffix = hasBackImage ? `-${currentView}` : '';
+      a.download = `${product.sku}-look-composer${viewSuffix}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch {
-      window.open(generatedImageUrl, '_blank');
+      window.open(imageToDownload, '_blank');
+    }
+  };
+
+  // Download de todas as imagens (frente e costas)
+  const handleDownloadAll = async () => {
+    // Baixar frente
+    if (generatedImageUrl) {
+      try {
+        const response = await fetch(generatedImageUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${product.sku}-look-composer-frente.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch {
+        window.open(generatedImageUrl, '_blank');
+      }
+    }
+    // Baixar costas (com delay para não sobrescrever)
+    if (generatedBackImageUrl) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      try {
+        const response = await fetch(generatedBackImageUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${product.sku}-look-composer-costas.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch {
+        window.open(generatedBackImageUrl, '_blank');
+      }
     }
   };
 
@@ -212,9 +277,38 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
             >
               {/* Switch Original/Gerada */}
               <div className={'flex items-center justify-between px-4 py-2 border-b ' + (isDark ? 'border-neutral-800' : 'border-gray-100')}>
-                <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>
-                  {showOriginal ? 'Produto Original' : 'Look Gerado'}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>
+                    {showOriginal ? 'Produto Original' : 'Look Gerado'}
+                  </span>
+
+                  {/* Toggle Frente/Costas - só aparece se tem imagem de costas */}
+                  {hasBackImage && (
+                    <div className={'flex items-center gap-1 p-0.5 rounded-lg ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                      <button
+                        onClick={() => setCurrentView('front')}
+                        className={'px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ' +
+                          (currentView === 'front'
+                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                        }
+                      >
+                        <i className="fas fa-eye mr-1"></i>Frente
+                      </button>
+                      <button
+                        onClick={() => setCurrentView('back')}
+                        className={'px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ' +
+                          (currentView === 'back'
+                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                        }
+                      >
+                        <i className="fas fa-eye mr-1"></i>Costas
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => setShowOriginal(!showOriginal)}
                   className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' +
@@ -271,10 +365,26 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                       <i className="fas fa-search-plus text-sm"></i>
                     </div>
 
-                    {/* Badge indicando tipo */}
-                    <div className={'absolute top-3 left-3 px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>
-                      {showOriginal ? 'Original' : 'Look Gerado'}
+                    {/* Badge indicando tipo e view */}
+                    <div className="absolute top-3 left-3 flex flex-col gap-1">
+                      <div className={'px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>
+                        {showOriginal ? 'Original' : 'Look Gerado'}
+                      </div>
+                      {hasBackImage && (
+                        <div className={'px-2 py-1 rounded-lg text-[10px] font-medium ' + (isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
+                          <i className={'fas fa-eye mr-1 text-[8px]'}></i>
+                          {currentView === 'front' ? 'Frente' : 'Costas'}
+                        </div>
+                      )}
                     </div>
+
+                    {/* Badge de quantidade de imagens */}
+                    {hasBackImage && (
+                      <div className={'absolute top-3 right-3 px-2 py-1 rounded-lg text-[10px] font-bold ' + (isDark ? 'bg-purple-500/80 text-white' : 'bg-purple-500 text-white')}>
+                        <i className="fas fa-images mr-1 text-[8px]"></i>
+                        {totalImages} fotos
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
@@ -422,21 +532,34 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
               <span>{isSaved ? 'Look Salvo!' : 'Salvar Look'}</span>
             </button>
 
-            {/* Ações Rápidas - Grid 2x2 compacto */}
+            {/* Ações Rápidas - Grid compacto */}
             <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
                 Ações Rápidas
               </p>
 
-              <div className="grid grid-cols-4 gap-2">
-                {/* Baixar */}
+              <div className={'grid gap-2 ' + (hasBackImage ? 'grid-cols-5' : 'grid-cols-4')}>
+                {/* Baixar atual */}
                 <button
                   onClick={handleDownload}
                   className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+                  title={hasBackImage ? `Baixar imagem ${currentView === 'front' ? 'de frente' : 'de costas'}` : 'Baixar imagem'}
                 >
                   <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-download text-sm'}></i>
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Baixar</span>
                 </button>
+
+                {/* Baixar todas (só aparece se tem costas) */}
+                {hasBackImage && (
+                  <button
+                    onClick={handleDownloadAll}
+                    className={(isDark ? 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 border-purple-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+                    title="Baixar frente e costas"
+                  >
+                    <i className="fas fa-images text-purple-400 text-sm"></i>
+                    <span className="text-purple-400 text-[9px]">Todas</span>
+                  </button>
+                )}
 
                 {/* Gerar Novamente */}
                 <button
@@ -478,24 +601,48 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
         <div className="fixed inset-0 z-50 flex flex-col bg-black/95" onClick={() => setShowZoomModal(false)}>
           {/* Header do Modal */}
           <div className="flex items-center justify-between p-4 flex-shrink-0" onClick={e => e.stopPropagation()}>
-            {/* Switch Original/Gerada */}
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
-              <button
-                onClick={() => setShowOriginal(false)}
-                className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
-                  (!showOriginal ? 'bg-white text-black' : 'text-white/70 hover:text-white')
-                }
-              >
-                Look
-              </button>
-              <button
-                onClick={() => setShowOriginal(true)}
-                className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
-                  (showOriginal ? 'bg-white text-black' : 'text-white/70 hover:text-white')
-                }
-              >
-                Original
-              </button>
+            <div className="flex items-center gap-3">
+              {/* Switch Original/Gerada */}
+              <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
+                <button
+                  onClick={() => setShowOriginal(false)}
+                  className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                    (!showOriginal ? 'bg-white text-black' : 'text-white/70 hover:text-white')
+                  }
+                >
+                  Look
+                </button>
+                <button
+                  onClick={() => setShowOriginal(true)}
+                  className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                    (showOriginal ? 'bg-white text-black' : 'text-white/70 hover:text-white')
+                  }
+                >
+                  Original
+                </button>
+              </div>
+
+              {/* Switch Frente/Costas - só aparece se tem imagem de costas */}
+              {hasBackImage && (
+                <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
+                  <button
+                    onClick={() => setCurrentView('front')}
+                    className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                      (currentView === 'front' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-white/70 hover:text-white')
+                    }
+                  >
+                    <i className="fas fa-eye mr-1"></i>Frente
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('back')}
+                    className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                      (currentView === 'back' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-white/70 hover:text-white')
+                    }
+                  >
+                    <i className="fas fa-eye mr-1"></i>Costas
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Botão Fechar */}
@@ -510,12 +657,26 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
           {/* Imagem */}
           <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
             <img
-              src={showOriginal ? originalImage : generatedImageUrl}
+              src={displayImage}
               alt={product.name}
               className="max-w-full max-h-full object-contain"
               onClick={e => e.stopPropagation()}
             />
           </div>
+
+          {/* Indicador de navegação para mobile */}
+          {hasBackImage && (
+            <div className="flex items-center justify-center gap-2 pb-4" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setCurrentView('front')}
+                className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'front' ? 'bg-pink-500 scale-125' : 'bg-white/30 hover:bg-white/50')}
+              />
+              <button
+                onClick={() => setCurrentView('back')}
+                className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'back' ? 'bg-pink-500 scale-125' : 'bg-white/30 hover:bg-white/50')}
+              />
+            </div>
+          )}
         </div>
       )}
 

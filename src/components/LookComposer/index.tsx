@@ -39,6 +39,8 @@ interface GeneratedLook {
   productSku: string;
   productCategory?: string;
   imageUrl: string;
+  backImageUrl?: string;  // Imagem de costas (opcional)
+  imageCount: number;     // Quantidade de imagens (1 ou 2)
   createdAt: string;
   metadata?: {
     lookItems?: Array<{
@@ -48,6 +50,7 @@ interface GeneratedLook {
       sku?: string;
     }>;
     prompt?: string;
+    viewsMode?: 'front' | 'front-back';
   };
 }
 
@@ -55,6 +58,7 @@ interface ProductWithLooks {
   product: Product;
   lookCount: number;
   looks: GeneratedLook[];
+  totalImageCount: number;  // Total de imagens (frente + costas)
   participations?: number; // Quantas vezes participou como item (não principal)
 }
 
@@ -91,9 +95,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedLook, setSelectedLook] = useState<GeneratedLook | null>(null);
+  const [selectedLookView, setSelectedLookView] = useState<'front' | 'back'>('front');
   const [showAllLooks, setShowAllLooks] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<ProductWithLooks | null>(null);
   const [modalSelectedLook, setModalSelectedLook] = useState<GeneratedLook | null>(null);
+  const [modalSelectedView, setModalSelectedView] = useState<'front' | 'back'>('front');
 
   // Filtros para modal de produtos
   const [productSearchTerm, setProductSearchTerm] = useState('');
@@ -107,6 +113,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
       if (product.generatedImages?.modeloIA) {
         product.generatedImages.modeloIA.forEach((look: any, index: number) => {
           const imageUrl = look.images?.front || look.imageUrl || look.url;
+          const backImageUrl = look.images?.back || undefined;
+          const imageCount = backImageUrl ? 2 : 1;
+
           if (imageUrl) {
             looks.push({
               id: look.id || `${product.id}-${index}`,
@@ -115,6 +124,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
               productSku: product.sku,
               productCategory: product.category,
               imageUrl,
+              backImageUrl,
+              imageCount,
               createdAt: look.createdAt || new Date().toISOString(),
               metadata: look.metadata
             });
@@ -162,10 +173,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         const allLooksSet = new Set([...data.asMain, ...data.asItem]);
         const allLooks = Array.from(allLooksSet);
 
+        // Calcular total de imagens (frente + costas)
+        const totalImageCount = data.asMain.reduce((sum, look) => sum + look.imageCount, 0);
+
         result.push({
           product,
           lookCount: allLooks.length,
           looks: data.asMain, // Looks onde é o produto principal
+          totalImageCount,
           participations: data.asItem.length // Quantas vezes participou como item
         });
       }
@@ -464,6 +479,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                         alt={look.productName}
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                       />
+                      {/* Badge de quantidade de imagens */}
+                      {look.imageCount > 1 && (
+                        <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full flex items-center gap-0.5">
+                          <i className="fas fa-images text-[7px]"></i>
+                          {look.imageCount}
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <p className="text-white text-[9px] font-medium truncate">{look.productName}</p>
@@ -529,16 +551,25 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
                           </div>
                         )}
-                        {/* Badge de quantidade de looks */}
+                        {/* Badges */}
                         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                          {/* Badge de quantidade de looks */}
                           {pwl.looks.length > 0 && (
-                            <div className="px-2 py-1 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                            <div className="px-2 py-1 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.looks.length} look${pwl.looks.length > 1 ? 's' : ''} criado${pwl.looks.length > 1 ? 's' : ''}`}>
                               <i className="fas fa-layer-group text-[8px]"></i>
                               {pwl.looks.length}
                             </div>
                           )}
+                          {/* Badge de total de imagens (se diferente do número de looks = tem costas) */}
+                          {pwl.totalImageCount > pwl.looks.length && (
+                            <div className="px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.totalImageCount} imagens (frente + costas)`}>
+                              <i className="fas fa-images text-[8px]"></i>
+                              {pwl.totalImageCount}
+                            </div>
+                          )}
+                          {/* Badge de participações */}
                           {pwl.participations && pwl.participations > 0 && (
-                            <div className="px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title="Participou em looks">
+                            <div className="px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title="Participou em looks">
                               <i className="fas fa-plus text-[8px]"></i>
                               {pwl.participations}
                             </div>
@@ -678,12 +709,21 @@ export const LookComposer: React.FC<LookComposerProps> = ({
           <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-3xl max-h-[90vh] overflow-hidden'}>
             {/* Header */}
             <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
-              <div>
-                <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{selectedLook.productName}</h2>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{selectedLook.productSku} • {new Date(selectedLook.createdAt).toLocaleDateString('pt-BR')}</p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{selectedLook.productName}</h2>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{selectedLook.productSku} • {new Date(selectedLook.createdAt).toLocaleDateString('pt-BR')}</p>
+                </div>
+                {/* Badge de quantidade de imagens */}
+                {selectedLook.imageCount > 1 && (
+                  <div className="px-2.5 py-1 bg-purple-500 text-white text-xs font-bold rounded-full flex items-center gap-1.5">
+                    <i className="fas fa-images text-[10px]"></i>
+                    {selectedLook.imageCount} fotos
+                  </div>
+                )}
               </div>
               <button
-                onClick={() => setSelectedLook(null)}
+                onClick={() => { setSelectedLook(null); setSelectedLookView('front'); }}
                 className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
               >
                 <i className="fas fa-times"></i>
@@ -693,32 +733,83 @@ export const LookComposer: React.FC<LookComposerProps> = ({
             <div className="p-4 flex flex-col md:flex-row gap-4 overflow-y-auto max-h-[calc(90vh-80px)]">
               {/* Imagem */}
               <div className="md:w-2/3">
-                <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden'}>
+                <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden relative'}>
                   <img
-                    src={selectedLook.imageUrl}
+                    src={selectedLookView === 'back' && selectedLook.backImageUrl ? selectedLook.backImageUrl : selectedLook.imageUrl}
                     alt={selectedLook.productName}
                     className="w-full h-auto max-h-[60vh] object-contain"
                   />
+                  {/* Badge de view atual */}
+                  {selectedLook.imageCount > 1 && (
+                    <div className={'absolute top-3 left-3 px-2 py-1 rounded-lg text-[10px] font-medium ' + (isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
+                      <i className="fas fa-eye mr-1 text-[8px]"></i>
+                      {selectedLookView === 'front' ? 'Frente' : 'Costas'}
+                    </div>
+                  )}
                 </div>
+
+                {/* Toggle Frente/Costas */}
+                {selectedLook.imageCount > 1 && selectedLook.backImageUrl && (
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <div className={'flex items-center gap-1 p-1 rounded-lg ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                      <button
+                        onClick={() => setSelectedLookView('front')}
+                        className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                          (selectedLookView === 'front'
+                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                        }
+                      >
+                        <i className="fas fa-eye mr-1.5"></i>Frente
+                      </button>
+                      <button
+                        onClick={() => setSelectedLookView('back')}
+                        className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                          (selectedLookView === 'back'
+                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                        }
+                      >
+                        <i className="fas fa-eye mr-1.5"></i>Costas
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Ações */}
               <div className="md:w-1/3 flex flex-col gap-3">
                 <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
                   <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Download</h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDownloadLook(selectedLook.imageUrl, selectedLook.productName, 'png')}
-                      className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
-                    >
-                      PNG
-                    </button>
-                    <button
-                      onClick={() => handleDownloadLook(selectedLook.imageUrl, selectedLook.productName, 'svg')}
-                      className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
-                    >
-                      SVG
-                    </button>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleDownloadLook(
+                          selectedLookView === 'back' && selectedLook.backImageUrl ? selectedLook.backImageUrl : selectedLook.imageUrl,
+                          `${selectedLook.productName}${selectedLook.imageCount > 1 ? `-${selectedLookView}` : ''}`,
+                          'png'
+                        )}
+                        className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
+                      >
+                        PNG {selectedLook.imageCount > 1 && (selectedLookView === 'front' ? '(Frente)' : '(Costas)')}
+                      </button>
+                    </div>
+                    {/* Botão para baixar todas */}
+                    {selectedLook.imageCount > 1 && selectedLook.backImageUrl && (
+                      <button
+                        onClick={async () => {
+                          await handleDownloadLook(selectedLook.imageUrl, `${selectedLook.productName}-frente`, 'png');
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          if (selectedLook.backImageUrl) {
+                            await handleDownloadLook(selectedLook.backImageUrl, `${selectedLook.productName}-costas`, 'png');
+                          }
+                        }}
+                        className="w-full py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-images"></i>
+                        Baixar Todas ({selectedLook.imageCount})
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -727,6 +818,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                     const product = products.find(p => p.id === selectedLook.productId);
                     if (product) {
                       setSelectedLook(null);
+                      setSelectedLookView('front');
                       setSelectedProduct(product);
                     }
                   }}
@@ -788,30 +880,67 @@ export const LookComposer: React.FC<LookComposerProps> = ({
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Imagem principal */}
                 <div className="lg:w-1/2">
-                  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden aspect-[3/4]'}>
+                  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden aspect-[3/4] relative'}>
                     <img
-                      src={modalSelectedLook?.imageUrl || getProductImage(selectedProductForModal.product)}
+                      src={
+                        modalSelectedLook
+                          ? (modalSelectedView === 'back' && modalSelectedLook.backImageUrl
+                              ? modalSelectedLook.backImageUrl
+                              : modalSelectedLook.imageUrl)
+                          : getProductImage(selectedProductForModal.product)
+                      }
                       alt={selectedProductForModal.product.name}
                       className="w-full h-full object-contain"
                     />
+                    {/* Badge de view atual */}
+                    {modalSelectedLook && modalSelectedLook.imageCount > 1 && (
+                      <div className={'absolute top-3 left-3 px-2 py-1 rounded-lg text-[10px] font-medium ' + (isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
+                        <i className="fas fa-eye mr-1 text-[8px]"></i>
+                        {modalSelectedView === 'front' ? 'Frente' : 'Costas'}
+                      </div>
+                    )}
+                    {/* Badge de quantidade */}
+                    {modalSelectedLook && modalSelectedLook.imageCount > 1 && (
+                      <div className="absolute top-3 right-3 px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded-lg flex items-center gap-1">
+                        <i className="fas fa-images text-[8px]"></i>
+                        {modalSelectedLook.imageCount} fotos
+                      </div>
+                    )}
                   </div>
 
                   {modalSelectedLook && (
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        onClick={() => handleDownloadLook(modalSelectedLook.imageUrl, modalSelectedLook.productName, 'png')}
-                        className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                      >
-                        <i className="fas fa-download"></i>
-                        Download PNG
-                      </button>
-                      <button
-                        onClick={() => handleDownloadLook(modalSelectedLook.imageUrl, modalSelectedLook.productName, 'svg')}
-                        className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2'}
-                      >
-                        <i className="fas fa-download"></i>
-                        Download SVG
-                      </button>
+                    <div className="mt-3 flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleDownloadLook(
+                            modalSelectedView === 'back' && modalSelectedLook.backImageUrl
+                              ? modalSelectedLook.backImageUrl
+                              : modalSelectedLook.imageUrl,
+                            `${modalSelectedLook.productName}${modalSelectedLook.imageCount > 1 ? `-${modalSelectedView}` : ''}`,
+                            'png'
+                          )}
+                          className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                        >
+                          <i className="fas fa-download"></i>
+                          Download {modalSelectedLook.imageCount > 1 && (modalSelectedView === 'front' ? '(Frente)' : '(Costas)')}
+                        </button>
+                      </div>
+                      {/* Botão para baixar todas */}
+                      {modalSelectedLook.imageCount > 1 && modalSelectedLook.backImageUrl && (
+                        <button
+                          onClick={async () => {
+                            await handleDownloadLook(modalSelectedLook.imageUrl, `${modalSelectedLook.productName}-frente`, 'png');
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            if (modalSelectedLook.backImageUrl) {
+                              await handleDownloadLook(modalSelectedLook.backImageUrl, `${modalSelectedLook.productName}-costas`, 'png');
+                            }
+                          }}
+                          className="w-full py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2"
+                        >
+                          <i className="fas fa-images"></i>
+                          Baixar Todas ({modalSelectedLook.imageCount})
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -838,18 +967,56 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                       {selectedProductForModal.looks.map((look) => (
                         <div
                           key={look.id}
-                          onClick={() => setModalSelectedLook(look)}
-                          className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-pink-500 ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4]'}
+                          onClick={() => { setModalSelectedLook(look); setModalSelectedView('front'); }}
+                          className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-pink-500 ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative'}
                         >
                           <img
                             src={look.imageUrl}
                             alt={look.productName}
                             className="w-full h-full object-contain"
                           />
+                          {/* Badge de quantidade de imagens */}
+                          {look.imageCount > 1 && (
+                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-500 text-white text-[8px] font-bold rounded-full flex items-center gap-0.5">
+                              <i className="fas fa-images text-[6px]"></i>
+                              {look.imageCount}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
+
+                  {/* Toggle Frente/Costas do look selecionado */}
+                  {modalSelectedLook && modalSelectedLook.imageCount > 1 && modalSelectedLook.backImageUrl && (
+                    <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                      <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Visualização</h3>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className={'flex items-center gap-1 p-1 rounded-lg ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}>
+                          <button
+                            onClick={() => setModalSelectedView('front')}
+                            className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                              (modalSelectedView === 'front'
+                                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                                : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                            }
+                          >
+                            <i className="fas fa-eye mr-1.5"></i>Frente
+                          </button>
+                          <button
+                            onClick={() => setModalSelectedView('back')}
+                            className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                              (modalSelectedView === 'back'
+                                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                                : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
+                            }
+                          >
+                            <i className="fas fa-eye mr-1.5"></i>Costas
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Produtos frequentemente combinados */}
                   {(() => {

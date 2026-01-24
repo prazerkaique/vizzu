@@ -185,6 +185,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   // Estado do resultado
   const [showResult, setShowResult] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedBackImageUrl, setGeneratedBackImageUrl] = useState<string | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
 
   // Usar estado global se disponível
@@ -367,6 +368,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     console.log('[LookComposer] Look salvo:', generationId);
     setShowResult(false);
     setGeneratedImageUrl(null);
+    setGeneratedBackImageUrl(null);
     setGenerationId(null);
     // Produto já foi atualizado - apenas fechar
   };
@@ -374,6 +376,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const handleResultRegenerate = () => {
     setShowResult(false);
     setGeneratedImageUrl(null);
+    setGeneratedBackImageUrl(null);
     setGenerationId(null);
     // Voltar para a tela de geração
   };
@@ -398,12 +401,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
     setShowResult(false);
     setGeneratedImageUrl(null);
+    setGeneratedBackImageUrl(null);
     setGenerationId(null);
   };
 
   const handleResultBack = () => {
     setShowResult(false);
     setGeneratedImageUrl(null);
+    setGeneratedBackImageUrl(null);
     setGenerationId(null);
   };
 
@@ -678,6 +683,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       // Mostrar tela de resultado
       setGeneratedImageUrl(frontImageUrl);
+      setGeneratedBackImageUrl(backImageUrlResult || null);
       setGenerationId(frontGenerationId);
 
       // Aguardar um pouco e mostrar o resultado
@@ -1277,6 +1283,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       <LookComposerResult
         product={product}
         generatedImageUrl={generatedImageUrl}
+        generatedBackImageUrl={generatedBackImageUrl || undefined}
         generationId={generationId}
         lookMode={lookMode}
         lookComposition={lookComposition}
