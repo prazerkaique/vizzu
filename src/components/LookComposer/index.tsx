@@ -55,6 +55,7 @@ interface ProductWithLooks {
   product: Product;
   lookCount: number;
   looks: GeneratedLook[];
+  participations?: number; // Quantas vezes participou como item (não principal)
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas', 'Blusas', 'Regatas', 'Tops'];
@@ -125,17 +126,47 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     return looks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [products]);
 
-  // Produtos com looks
+  // Produtos com looks (inclui produtos que participaram como principal OU como item do look)
   const productsWithLooks = useMemo(() => {
-    const result: ProductWithLooks[] = [];
+    const productLookMap: Record<string, {
+      asMain: GeneratedLook[];
+      asItem: GeneratedLook[];
+    }> = {};
 
+    // Primeiro, mapeia todos os looks por produto principal
+    allGeneratedLooks.forEach(look => {
+      if (!productLookMap[look.productId]) {
+        productLookMap[look.productId] = { asMain: [], asItem: [] };
+      }
+      productLookMap[look.productId].asMain.push(look);
+
+      // Também mapeia produtos que participaram como item do look
+      if (look.metadata?.lookItems) {
+        look.metadata.lookItems.forEach(item => {
+          if (item.productId && item.productId !== look.productId) {
+            if (!productLookMap[item.productId]) {
+              productLookMap[item.productId] = { asMain: [], asItem: [] };
+            }
+            productLookMap[item.productId].asItem.push(look);
+          }
+        });
+      }
+    });
+
+    // Agora cria a lista de produtos com looks
+    const result: ProductWithLooks[] = [];
     products.forEach(product => {
-      const productLooks = allGeneratedLooks.filter(l => l.productId === product.id);
-      if (productLooks.length > 0) {
+      const data = productLookMap[product.id];
+      if (data && (data.asMain.length > 0 || data.asItem.length > 0)) {
+        // Combina looks únicos (como principal ou como item)
+        const allLooksSet = new Set([...data.asMain, ...data.asItem]);
+        const allLooks = Array.from(allLooksSet);
+
         result.push({
           product,
-          lookCount: productLooks.length,
-          looks: productLooks
+          lookCount: allLooks.length,
+          looks: data.asMain, // Looks onde é o produto principal
+          participations: data.asItem.length // Quantas vezes participou como item
         });
       }
     });
@@ -183,10 +214,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
       product.generatedImages.productStudio.some(s => s.images?.length > 0));
   };
 
-  // Calcular produtos frequentemente combinados
-  const getFrequentlyPaired = (productId: string): Product[] => {
+  // Calcular produtos frequentemente combinados (com contagem)
+  const getFrequentlyPaired = (productId: string): Array<{ product: Product; count: number }> => {
     const pairedCounts: Record<string, number> = {};
 
+    // Verifica looks onde este produto é o principal
     allGeneratedLooks
       .filter(look => look.productId === productId && look.metadata?.lookItems)
       .forEach(look => {
@@ -197,17 +229,37 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         });
       });
 
+    // Também verifica looks onde este produto participou como item
+    allGeneratedLooks
+      .filter(look => look.metadata?.lookItems?.some(item => item.productId === productId))
+      .forEach(look => {
+        // Conta o produto principal
+        if (look.productId !== productId) {
+          pairedCounts[look.productId] = (pairedCounts[look.productId] || 0) + 1;
+        }
+        // Conta outros itens
+        look.metadata?.lookItems?.forEach(item => {
+          if (item.productId && item.productId !== productId) {
+            pairedCounts[item.productId] = (pairedCounts[item.productId] || 0) + 1;
+          }
+        });
+      });
+
     return Object.entries(pairedCounts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .map(([id]) => products.find(p => p.id === id))
-      .filter(Boolean) as Product[];
+      .slice(0, 6)
+      .map(([id, count]) => {
+        const product = products.find(p => p.id === id);
+        return product ? { product, count } : null;
+      })
+      .filter(Boolean) as Array<{ product: Product; count: number }>;
   };
 
-  // Calcular cores frequentemente usadas
-  const getFrequentColors = (productId: string): string[] => {
+  // Calcular cores frequentemente usadas (com contagem)
+  const getFrequentColors = (productId: string): Array<{ color: string; count: number }> => {
     const colorCounts: Record<string, number> = {};
 
+    // Verifica looks onde este produto é o principal
     allGeneratedLooks
       .filter(look => look.productId === productId && look.metadata?.lookItems)
       .forEach(look => {
@@ -221,10 +273,30 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         });
       });
 
+    // Também verifica looks onde este produto participou como item
+    allGeneratedLooks
+      .filter(look => look.metadata?.lookItems?.some(item => item.productId === productId))
+      .forEach(look => {
+        // Conta a cor do produto principal
+        const mainProduct = products.find(p => p.id === look.productId);
+        if (mainProduct?.color) {
+          colorCounts[mainProduct.color] = (colorCounts[mainProduct.color] || 0) + 1;
+        }
+        // Conta cores de outros itens
+        look.metadata?.lookItems?.forEach(item => {
+          if (item.productId && item.productId !== productId) {
+            const pairedProduct = products.find(p => p.id === item.productId);
+            if (pairedProduct?.color) {
+              colorCounts[pairedProduct.color] = (colorCounts[pairedProduct.color] || 0) + 1;
+            }
+          }
+        });
+      });
+
     return Object.entries(colorCounts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([color]) => color);
+      .slice(0, 6)
+      .map(([color, count]) => ({ color, count }));
   };
 
   const handleNewLook = () => {
@@ -458,14 +530,24 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                           </div>
                         )}
                         {/* Badge de quantidade de looks */}
-                        <div className="absolute top-2 right-2 px-2 py-1 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
-                          <i className="fas fa-layer-group text-[8px]"></i>
-                          {pwl.lookCount}
+                        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                          {pwl.looks.length > 0 && (
+                            <div className="px-2 py-1 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                              <i className="fas fa-layer-group text-[8px]"></i>
+                              {pwl.looks.length}
+                            </div>
+                          )}
+                          {pwl.participations && pwl.participations > 0 && (
+                            <div className="px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title="Participou em looks">
+                              <i className="fas fa-plus text-[8px]"></i>
+                              {pwl.participations}
+                            </div>
+                          )}
                         </div>
-                        {/* Badge de otimizado */}
+                        {/* Badge de otimizado (Product Studio) */}
                         {isOptimized && (
-                          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
-                            <i className="fas fa-sparkles"></i>
+                          <div className="absolute top-2 left-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center" title="Otimizado no Product Studio">
+                            <i className="fas fa-cube text-[10px]"></i>
                           </div>
                         )}
                       </div>
@@ -554,9 +636,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             </div>
                           )}
                           {isOptimized && (
-                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
-                              <i className="fas fa-sparkles text-[6px]"></i>
-                              Otimizado
+                            <div className="absolute top-2 left-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center" title="Otimizado no Product Studio">
+                              <i className="fas fa-cube text-[10px]"></i>
                             </div>
                           )}
                           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -776,20 +857,28 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                     if (frequentlyPaired.length === 0) return null;
                     return (
                       <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
-                        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Frequentemente combinado com</h3>
-                        <div className="flex gap-2 flex-wrap">
-                          {frequentlyPaired.map((p) => (
-                            <div key={p.id} className="flex items-center gap-2">
-                              <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-8 h-8 rounded-lg overflow-hidden'}>
+                        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Muito usado com</h3>
+                        <div className="space-y-2">
+                          {frequentlyPaired.map(({ product: p, count }) => (
+                            <div key={p.id} className={(isDark ? 'bg-neutral-700/50' : 'bg-gray-100') + ' rounded-lg p-2 flex items-center gap-3'}>
+                              <div className={(isDark ? 'bg-neutral-600' : 'bg-gray-200') + ' w-10 h-10 rounded-lg overflow-hidden flex-shrink-0'}>
                                 {getProductImage(p) ? (
                                   <img src={getProductImage(p)} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">
-                                    <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-xs'}></i>
+                                    <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-image text-xs'}></i>
                                   </div>
                                 )}
                               </div>
-                              <span className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>{p.name}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{p.name}</p>
+                                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                                  Usado {count}x juntos
+                                </p>
+                              </div>
+                              <div className="px-2 py-1 bg-purple-500/20 text-purple-400 text-[10px] font-bold rounded-full">
+                                {count}x
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -803,14 +892,17 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                     if (frequentColors.length === 0) return null;
                     return (
                       <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
-                        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Cores frequentemente usadas</h3>
+                        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Cores mais usadas com este produto</h3>
                         <div className="flex gap-2 flex-wrap">
-                          {frequentColors.map((color) => (
+                          {frequentColors.map(({ color, count }) => (
                             <span
                               key={color}
-                              className={(isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-700') + ' px-3 py-1.5 rounded-full text-xs font-medium'}
+                              className={(isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-700') + ' px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5'}
                             >
                               {color}
+                              <span className={(isDark ? 'bg-neutral-600 text-neutral-400' : 'bg-gray-300 text-gray-600') + ' px-1.5 py-0.5 rounded-full text-[9px]'}>
+                                {count}x
+                              </span>
                             </span>
                           ))}
                         </div>
