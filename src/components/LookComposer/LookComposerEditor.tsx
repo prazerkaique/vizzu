@@ -235,12 +235,28 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   // Modelo selecionado
   const selectedModel = savedModels.find(m => m.id === selectedModelId);
 
+  // Categorias que NÃO precisam de foto de costas (acessórios exceto cabeça)
+  const categoriesWithoutBackRequired = [
+    'Tênis', 'Sapatos', 'Sandálias', 'Calçados', 'Botas',
+    'Meias', 'Relógios', 'Bolsas', 'Cintos', 'Bijuterias',
+    'Óculos', 'Pulseiras', 'Colares', 'Brincos', 'Anéis',
+    'Carteiras', 'Mochilas', 'Acessórios'
+  ];
+
+  // Verificar se um produto precisa de foto de costas
+  const needsBackImage = (productCategory: string | undefined): boolean => {
+    if (!productCategory) return true; // Se não tem categoria, assume que precisa
+    return !categoriesWithoutBackRequired.some(
+      cat => productCategory.toLowerCase().includes(cat.toLowerCase())
+    );
+  };
+
   // Verificar quais produtos do look não têm foto de costas
   const productsWithoutBackImage = useMemo(() => {
     const missing: Array<{ name: string; sku: string; id: string }> = [];
 
-    // Verificar produto principal
-    if (!product.originalImages?.back?.url) {
+    // Verificar produto principal (só se a categoria precisa de costas)
+    if (needsBackImage(product.category) && !product.originalImages?.back?.url) {
       missing.push({ name: product.name, sku: product.sku, id: product.id });
     }
 
@@ -249,7 +265,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       Object.entries(lookComposition).forEach(([slot, item]) => {
         if (item.productId) {
           const lookProduct = products.find(p => p.id === item.productId);
-          if (lookProduct && !lookProduct.originalImages?.back?.url) {
+          // Só verificar se a categoria precisa de costas
+          if (lookProduct && needsBackImage(lookProduct.category) && !lookProduct.originalImages?.back?.url) {
             // Evitar duplicatas
             if (!missing.find(m => m.id === lookProduct.id)) {
               missing.push({ name: lookProduct.name, sku: lookProduct.sku, id: lookProduct.id });
