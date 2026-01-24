@@ -496,8 +496,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       const imageId = product.originalImages?.front?.id || product.images?.[0]?.id || '';
 
       // Obter imagem de costas do produto principal (se viewsMode === 'front-back')
-      const backImageUrl = product.originalImages?.back?.url || '';
-      const backImageId = product.originalImages?.back?.id || '';
+      // Se o produto não precisa de costas (acessório), usa a imagem de frente
+      const productNeedsBack = needsBackImage(product.category);
+      const backImageUrl = product.originalImages?.back?.url ||
+        (!productNeedsBack ? imageUrl : ''); // Acessórios usam imagem de frente
+      const backImageId = product.originalImages?.back?.id ||
+        (!productNeedsBack ? imageId : '');
 
       // Construir lookItemsBack para modo composer com frente e costas
       let lookItemsBack: Array<{
@@ -513,8 +517,22 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         lookItemsBack = Object.entries(lookComposition).map(([slot, item]) => {
           // Buscar o produto do look para pegar a imagem de costas
           const lookProduct = item.productId ? products.find(p => p.id === item.productId) : null;
-          const backImage = lookProduct?.originalImages?.back?.url || '';
-          const backImgId = lookProduct?.originalImages?.back?.id || '';
+
+          // Verificar se este produto precisa de foto de costas
+          const itemNeedsBack = needsBackImage(lookProduct?.category);
+
+          // Se não precisa de costas (acessório), usa a imagem de frente
+          const frontImage = lookProduct?.originalImages?.front?.url ||
+            lookProduct?.images?.[0]?.url ||
+            lookProduct?.images?.[0]?.base64 ||
+            item.image || '';
+          const frontImgId = lookProduct?.originalImages?.front?.id ||
+            lookProduct?.images?.[0]?.id || '';
+
+          const backImage = lookProduct?.originalImages?.back?.url ||
+            (!itemNeedsBack ? frontImage : ''); // Acessórios usam imagem de frente
+          const backImgId = lookProduct?.originalImages?.back?.id ||
+            (!itemNeedsBack ? frontImgId : '');
 
           return {
             slot,
@@ -524,7 +542,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
             productId: item.productId,
             imageId: backImgId,
           };
-        }).filter(item => item.image); // Só incluir se tiver imagem de costas
+        }).filter(item => item.image); // Só incluir se tiver imagem
       }
 
       // Determinar fundo
