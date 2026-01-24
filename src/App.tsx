@@ -488,11 +488,12 @@ const loadUserProducts = async (userId: string) => {
         const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
         const generatedProductStudio = allImages.filter((img: any) => img.type === 'product_studio');
 
-        // Debug: verificar se metadata está vindo do Supabase
+        // Debug: verificar generation_id das imagens do Supabase
         if (generatedModelo.length > 0) {
           console.log('[Debug] Modelo IA images from Supabase:', generatedModelo.map((img: any) => ({
             id: img.id,
-            hasMetadata: !!img.metadata,
+            generation_id: img.generation_id,
+            url: img.url?.substring(0, 50) + '...',
             metadata: img.metadata
           })));
         }
@@ -576,6 +577,8 @@ const loadUserProducts = async (userId: string) => {
               const isBack = genId?.endsWith('-back');
               const baseId = isBack ? genId.replace(/-back$/, '') : genId;
 
+              console.log('[Debug] Grouping image:', { genId, isBack, baseId });
+
               if (!grouped[baseId]) {
                 grouped[baseId] = {};
               }
@@ -586,6 +589,12 @@ const loadUserProducts = async (userId: string) => {
                 grouped[baseId].front = img;
               }
             });
+
+            console.log('[Debug] Grouped result:', Object.entries(grouped).map(([id, data]) => ({
+              baseId: id,
+              hasFront: !!data.front,
+              hasBack: !!data.back
+            })));
 
             // Converter para array de GeneratedImageSet
             return Object.entries(grouped)
