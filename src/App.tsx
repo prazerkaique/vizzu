@@ -568,16 +568,22 @@ const loadUserProducts = async (userId: string) => {
             images: { front: img.url, back: undefined },
             metadata: img.metadata || {}
           })),
-          modeloIA: generatedModelo.map((img: any) => ({
-            id: img.id,
-            createdAt: img.created_at,
-            tool: 'lifestyle' as const,
-            images: {
-              front: img.url,
-              back: img.metadata?.backImageUrl || undefined
-            },
-            metadata: img.metadata || {}
-          })),
+          modeloIA: generatedModelo.map((img: any) => {
+            // Parse metadata se for string (vem do Supabase como JSON stringificado)
+            const metadata = typeof img.metadata === 'string'
+              ? JSON.parse(img.metadata)
+              : (img.metadata || {});
+            return {
+              id: img.id,
+              createdAt: img.created_at,
+              tool: 'lifestyle' as const,
+              images: {
+                front: img.url,
+                back: metadata?.backImageUrl || undefined
+              },
+              metadata: metadata
+            };
+          }),
           productStudio: formattedProductStudio
         };
         
