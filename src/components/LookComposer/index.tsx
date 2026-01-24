@@ -65,6 +65,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Seção de looks gerados
+  const [showGeneratedLooks, setShowGeneratedLooks] = useState(true);
+
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,9 +122,41 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
   // Contar looks gerados
   const getLookCount = (product: Product): number => {
-    // TODO: implementar contagem de looks gerados quando tivermos a estrutura
     return product.generatedImages?.modeloIA?.length || 0;
   };
+
+  // Coletar todos os looks gerados de todos os produtos
+  const allGeneratedLooks = useMemo(() => {
+    const looks: Array<{
+      id: string;
+      productId: string;
+      productName: string;
+      productSku: string;
+      imageUrl: string;
+      createdAt: string;
+    }> = [];
+
+    products.forEach(product => {
+      if (product.generatedImages?.modeloIA) {
+        product.generatedImages.modeloIA.forEach((look: any) => {
+          const imageUrl = look.images?.front || look.imageUrl || look.url;
+          if (imageUrl) {
+            looks.push({
+              id: look.id || `${product.id}-${looks.length}`,
+              productId: product.id,
+              productName: product.name,
+              productSku: product.sku,
+              imageUrl,
+              createdAt: look.createdAt || new Date().toISOString()
+            });
+          }
+        });
+      }
+    });
+
+    // Ordenar por data de criação (mais recente primeiro)
+    return looks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [products]);
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -384,6 +419,65 @@ export const LookComposer: React.FC<LookComposerProps> = ({
             )}
           </div>
         </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* LOOKS GERADOS - Seção Colapsável */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {allGeneratedLooks.length > 0 && (
+          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border mb-4 overflow-hidden'}>
+            <button
+              onClick={() => setShowGeneratedLooks(!showGeneratedLooks)}
+              className="w-full p-4 flex items-center justify-between hover:bg-opacity-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-green-500/20 to-emerald-400/20 border border-green-500/30' : 'bg-gradient-to-r from-green-500 to-emerald-400')}>
+                  <i className={'fas fa-images text-sm ' + (theme === 'dark' ? 'text-green-400' : 'text-white')}></i>
+                </div>
+                <div className="text-left">
+                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold flex items-center gap-2'}>
+                    Looks Gerados
+                    <span className={(theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-bold rounded-full'}>
+                      {allGeneratedLooks.length}
+                    </span>
+                  </h3>
+                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                    Seus looks criados com IA
+                  </p>
+                </div>
+              </div>
+              <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-' + (showGeneratedLooks ? 'up' : 'down') + ' text-sm'}></i>
+            </button>
+
+            {showGeneratedLooks && (
+              <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-4'}>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                  {allGeneratedLooks.map((look) => (
+                    <div
+                      key={look.id}
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-green-500/50' : 'bg-gray-50 border-gray-200 hover:border-green-400') + ' rounded-lg border overflow-hidden cursor-pointer transition-all group'}
+                      onClick={() => {
+                        const product = products.find(p => p.id === look.productId);
+                        if (product) handleSelectProduct(product);
+                      }}
+                    >
+                      <div className="aspect-[3/4] relative overflow-hidden">
+                        <img
+                          src={look.imageUrl}
+                          alt={look.productName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute bottom-1.5 left-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-white text-[8px] font-medium truncate">{look.productName}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* PRODUCTS GRID */}
