@@ -468,13 +468,7 @@ const loadUserProducts = async (userId: string) => {
       .from('products')
       .select(`
         *,
-        product_images (
-          *,
-          generations:generation_id (
-            id,
-            linked_to
-          )
-        )
+        product_images (*)
       `)
       .eq('user_id', userId);
     
@@ -574,50 +568,16 @@ const loadUserProducts = async (userId: string) => {
             images: { front: img.url, back: undefined },
             metadata: img.metadata || {}
           })),
-          modeloIA: (() => {
-            // Agrupar imagens: usa linked_to para detectar imagens de costas
-            const grouped: Record<string, { front?: any; back?: any }> = {};
-
-            generatedModelo.forEach((img: any) => {
-              const genId = img.generation_id || img.id;
-              // Se tem linked_to (via join com generations), é imagem de costas
-              const linkedTo = img.generations?.linked_to;
-              const isBack = !!linkedTo;
-              const baseId = isBack ? linkedTo : genId;
-
-              console.log('[Debug] Grouping image:', { genId, isBack, baseId, linkedTo, generations: img.generations });
-
-              if (!grouped[baseId]) {
-                grouped[baseId] = {};
-              }
-
-              if (isBack) {
-                grouped[baseId].back = img;
-              } else {
-                grouped[baseId].front = img;
-              }
-            });
-
-            console.log('[Debug] Grouped result:', Object.entries(grouped).map(([id, data]) => ({
-              baseId: id,
-              hasFront: !!data.front,
-              hasBack: !!data.back
-            })));
-
-            // Converter para array de GeneratedImageSet
-            return Object.entries(grouped)
-              .filter(([_, data]) => data.front) // Só inclui se tiver frente
-              .map(([baseId, data]) => ({
-                id: data.front.id,
-                createdAt: data.front.created_at,
-                tool: 'lifestyle' as const,
-                images: {
-                  front: data.front.url,
-                  back: data.back?.url || data.front.metadata?.backImageUrl || undefined
-                },
-                metadata: data.front.metadata || {}
-              }));
-          })(),
+          modeloIA: generatedModelo.map((img: any) => ({
+            id: img.id,
+            createdAt: img.created_at,
+            tool: 'lifestyle' as const,
+            images: {
+              front: img.url,
+              back: img.metadata?.backImageUrl || undefined
+            },
+            metadata: img.metadata || {}
+          })),
           productStudio: formattedProductStudio
         };
         
