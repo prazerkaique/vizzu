@@ -101,6 +101,32 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   const [modalSelectedLook, setModalSelectedLook] = useState<GeneratedLook | null>(null);
   const [modalSelectedView, setModalSelectedView] = useState<'front' | 'back'>('front');
 
+  // Estado para controlar qual imagem cada card está mostrando (carrossel)
+  const [cardViewStates, setCardViewStates] = useState<Record<string, 'front' | 'back'>>({});
+
+  // Função para alternar a view de um card específico
+  const toggleCardView = (lookId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita abrir o modal
+    setCardViewStates(prev => ({
+      ...prev,
+      [lookId]: prev[lookId] === 'back' ? 'front' : 'back'
+    }));
+  };
+
+  // Função para definir a view de um card
+  const setCardView = (lookId: string, view: 'front' | 'back', e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCardViewStates(prev => ({
+      ...prev,
+      [lookId]: view
+    }));
+  };
+
+  // Obter a view atual de um card
+  const getCardView = (lookId: string): 'front' | 'back' => {
+    return cardViewStates[lookId] || 'front';
+  };
+
   // Filtros para modal de produtos
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productFilterCategory, setProductFilterCategory] = useState('');
@@ -467,32 +493,92 @@ export const LookComposer: React.FC<LookComposerProps> = ({
           {allGeneratedLooks.length > 0 ? (
             <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-4'}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                {(showAllLooks ? allGeneratedLooks : recentLooks).map((look) => (
-                  <div
-                    key={look.id}
-                    onClick={() => setSelectedLook(look)}
-                    className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
-                  >
-                    <div className="aspect-[3/4] relative overflow-hidden bg-neutral-900">
-                      <img
-                        src={look.imageUrl}
-                        alt={look.productName}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                      />
-                      {/* Badge de quantidade de imagens */}
-                      {look.imageCount > 1 && (
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full flex items-center gap-0.5">
-                          <i className="fas fa-images text-[7px]"></i>
-                          {look.imageCount}
+                {(showAllLooks ? allGeneratedLooks : recentLooks).map((look) => {
+                  const currentView = getCardView(look.id);
+                  const displayImage = currentView === 'back' && look.backImageUrl ? look.backImageUrl : look.imageUrl;
+
+                  return (
+                    <div
+                      key={look.id}
+                      onClick={() => { setSelectedLook(look); setSelectedLookView('front'); }}
+                      className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                    >
+                      <div className="aspect-[3/4] relative overflow-hidden bg-neutral-900">
+                        <img
+                          src={displayImage}
+                          alt={look.productName}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                        />
+
+                        {/* Badge de quantidade de imagens */}
+                        {look.imageCount > 1 && (
+                          <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-purple-500 text-white text-[9px] font-bold rounded-full flex items-center gap-0.5">
+                            <i className="fas fa-images text-[7px]"></i>
+                            {look.imageCount}
+                          </div>
+                        )}
+
+                        {/* Setas de navegação do carrossel (só aparece se tem mais de 1 imagem) */}
+                        {look.imageCount > 1 && look.backImageUrl && (
+                          <>
+                            {/* Seta esquerda */}
+                            <button
+                              onClick={(e) => setCardView(look.id, 'front', e)}
+                              className={'absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
+                                (currentView === 'front'
+                                  ? 'bg-pink-500 text-white'
+                                  : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
+                              }
+                            >
+                              <i className="fas fa-chevron-left text-[8px]"></i>
+                            </button>
+                            {/* Seta direita */}
+                            <button
+                              onClick={(e) => setCardView(look.id, 'back', e)}
+                              className={'absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
+                                (currentView === 'back'
+                                  ? 'bg-pink-500 text-white'
+                                  : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
+                              }
+                            >
+                              <i className="fas fa-chevron-right text-[8px]"></i>
+                            </button>
+                          </>
+                        )}
+
+                        {/* Indicadores de navegação (dots) */}
+                        {look.imageCount > 1 && look.backImageUrl && (
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+                            <button
+                              onClick={(e) => setCardView(look.id, 'front', e)}
+                              className={'w-1.5 h-1.5 rounded-full transition-all ' +
+                                (currentView === 'front' ? 'bg-pink-500 scale-125' : 'bg-white/50 hover:bg-white/80')
+                              }
+                            />
+                            <button
+                              onClick={(e) => setCardView(look.id, 'back', e)}
+                              className={'w-1.5 h-1.5 rounded-full transition-all ' +
+                                (currentView === 'back' ? 'bg-pink-500 scale-125' : 'bg-white/50 hover:bg-white/80')
+                              }
+                            />
+                          </div>
+                        )}
+
+                        {/* Indicador de view atual */}
+                        {look.imageCount > 1 && (
+                          <div className={'absolute top-2 left-2 px-1.5 py-0.5 rounded text-[8px] font-medium ' + (isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
+                            {currentView === 'front' ? 'Frente' : 'Costas'}
+                          </div>
+                        )}
+
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        <div className="absolute bottom-6 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <p className="text-white text-[9px] font-medium truncate">{look.productName}</p>
                         </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <p className="text-white text-[9px] font-medium truncate">{look.productName}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -964,26 +1050,54 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                   <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
                     <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Looks criados ({selectedProductForModal.lookCount})</h3>
                     <div className="grid grid-cols-4 gap-2">
-                      {selectedProductForModal.looks.map((look) => (
-                        <div
-                          key={look.id}
-                          onClick={() => { setModalSelectedLook(look); setModalSelectedView('front'); }}
-                          className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-pink-500 ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative'}
-                        >
-                          <img
-                            src={look.imageUrl}
-                            alt={look.productName}
-                            className="w-full h-full object-contain"
-                          />
-                          {/* Badge de quantidade de imagens */}
-                          {look.imageCount > 1 && (
-                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-500 text-white text-[8px] font-bold rounded-full flex items-center gap-0.5">
-                              <i className="fas fa-images text-[6px]"></i>
-                              {look.imageCount}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      {selectedProductForModal.looks.map((look) => {
+                        const thumbView = getCardView(`modal-${look.id}`);
+                        const thumbImage = thumbView === 'back' && look.backImageUrl ? look.backImageUrl : look.imageUrl;
+
+                        return (
+                          <div
+                            key={look.id}
+                            onClick={() => { setModalSelectedLook(look); setModalSelectedView('front'); }}
+                            className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-pink-500 ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative group/thumb'}
+                          >
+                            <img
+                              src={thumbImage}
+                              alt={look.productName}
+                              className="w-full h-full object-contain"
+                            />
+                            {/* Badge de quantidade de imagens */}
+                            {look.imageCount > 1 && (
+                              <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-500 text-white text-[8px] font-bold rounded-full flex items-center gap-0.5">
+                                <i className="fas fa-images text-[6px]"></i>
+                                {look.imageCount}
+                              </div>
+                            )}
+                            {/* Indicador de view */}
+                            {look.imageCount > 1 && (
+                              <div className={'absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-medium ' + (isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
+                                {thumbView === 'front' ? 'F' : 'C'}
+                              </div>
+                            )}
+                            {/* Dots de navegação */}
+                            {look.imageCount > 1 && look.backImageUrl && (
+                              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10">
+                                <button
+                                  onClick={(e) => setCardView(`modal-${look.id}`, 'front', e)}
+                                  className={'w-1.5 h-1.5 rounded-full transition-all ' +
+                                    (thumbView === 'front' ? 'bg-pink-500' : 'bg-white/50 hover:bg-white/80')
+                                  }
+                                />
+                                <button
+                                  onClick={(e) => setCardView(`modal-${look.id}`, 'back', e)}
+                                  className={'w-1.5 h-1.5 rounded-full transition-all ' +
+                                    (thumbView === 'back' ? 'bg-pink-500' : 'bg-white/50 hover:bg-white/80')
+                                  }
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
