@@ -211,6 +211,7 @@ interface ModeloIAParams {
   customBackgroundBase64?: string;   // Base64 do fundo customizado (upload)
   backgroundPrompt?: string;         // Prompt para gerar fundo por IA
   solidColor?: string;               // Cor sólida (hex) para fundo
+  sceneHint?: string;                // Dica de cena para melhorar o prompt (ex: "model standing on grass")
   // Parâmetros de ângulos (frente/costas)
   viewsMode?: 'front' | 'front-back';
   backImageId?: string;              // ID da imagem de costas do produto principal
@@ -281,6 +282,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       customBackgroundBase64: params.customBackgroundBase64 || null,
       backgroundPrompt: params.backgroundPrompt || null,
       solidColor: params.solidColor || null,
+      sceneHint: params.sceneHint || null,
       // Prompt de pose personalizada
       posePrompt: params.posePrompt || null,
       // Parâmetros de ângulos (frente/costas)

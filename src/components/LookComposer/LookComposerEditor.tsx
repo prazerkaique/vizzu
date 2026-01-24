@@ -49,15 +49,22 @@ const LOADING_PHRASES = [
   "Quase pronto! Últimos ajustes..."
 ];
 
-// Fundos pré-setados (novos)
-const PRESET_BACKGROUNDS = [
-  { id: 'solid-color', name: 'Cor Sólida', url: '', category: 'solid', icon: 'fa-palette' },
-  { id: 'photo-studio', name: 'Estúdio Fotográfico', url: 'https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=800', category: 'estudio', icon: 'fa-camera' },
-  { id: 'green-garden', name: 'Jardim Verde', url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800', category: 'natureza', icon: 'fa-leaf' },
-  { id: 'minimalist-room', name: 'Sala Minimalista', url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800', category: 'interior', icon: 'fa-couch' },
-  { id: 'mountain-top', name: 'Topo de Montanha', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800', category: 'natureza', icon: 'fa-mountain' },
-  { id: 'graffiti-street', name: 'Rua com Grafite', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', category: 'urbano', icon: 'fa-spray-can' },
-  { id: 'ny-metro', name: 'Metrô de NY', url: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=800', category: 'urbano', icon: 'fa-train-subway' },
+// Fundos pré-setados - com imagens de cenário completo e sceneHint para o prompt
+const PRESET_BACKGROUNDS: Array<{
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+  icon: string;
+  sceneHint: string;
+}> = [
+  { id: 'solid-color', name: 'Cor Sólida', url: '', category: 'solid', icon: 'fa-palette', sceneHint: 'solid colored background, studio lighting, model standing on matching colored floor' },
+  { id: 'photo-studio', name: 'Estúdio Fotográfico', url: 'https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1200', category: 'estudio', icon: 'fa-camera', sceneHint: 'professional photo studio with white seamless backdrop and floor, soft studio lighting' },
+  { id: 'green-garden', name: 'Jardim Verde', url: 'https://images.unsplash.com/photo-1558293842-c0fd3db86157?w=1200', category: 'natureza', icon: 'fa-leaf', sceneHint: 'lush green garden with grass, model standing naturally on the grass, natural daylight, outdoor setting' },
+  { id: 'minimalist-room', name: 'Sala Minimalista', url: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200', category: 'interior', icon: 'fa-couch', sceneHint: 'modern minimalist room interior, model standing on wooden floor, natural light from large windows' },
+  { id: 'mountain-trail', name: 'Trilha na Montanha', url: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=1200', category: 'natureza', icon: 'fa-mountain', sceneHint: 'scenic mountain hiking trail, model standing on rocky trail path, mountains in background, outdoor adventure setting' },
+  { id: 'urban-street', name: 'Rua Urbana', url: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1200', category: 'urbano', icon: 'fa-city', sceneHint: 'urban city street with graffiti walls, model standing on concrete sidewalk, street photography style' },
+  { id: 'subway-station', name: 'Estação de Metrô', url: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=1200', category: 'urbano', icon: 'fa-train-subway', sceneHint: 'subway station platform, model standing on tiled platform floor, urban underground setting with dramatic lighting' },
 ];
 
 // Tipo para fundo salvo
@@ -650,30 +657,41 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       let customBackgroundBase64: string | undefined;
       let backgroundPromptFinal: string | undefined;
       let solidColorFinal: string | undefined;
+      let sceneHintFinal: string | undefined;
 
       if (backgroundType === 'custom') {
         if (backgroundMode === 'prompt' && backgroundPrompt.trim()) {
-          // Fundo por prompt
+          // Fundo por prompt - usar o prompt como sceneHint
           backgroundPromptFinal = backgroundPrompt.trim();
+          sceneHintFinal = `scene: ${backgroundPrompt.trim()}, model standing naturally on the ground`;
         } else if (backgroundMode === 'preset' && selectedPreset === 'solid-color') {
           // Cor sólida
           solidColorFinal = solidColor;
+          sceneHintFinal = `solid ${solidColor} colored background, professional studio lighting, model standing on matching colored floor`;
         } else if (backgroundMode === 'saved' && selectedPreset) {
           // Fundo salvo
           const savedBg = savedBackgrounds.find(b => b.id === selectedPreset);
           if (savedBg) {
-            if (savedBg.color) solidColorFinal = savedBg.color;
-            else if (savedBg.prompt) backgroundPromptFinal = savedBg.prompt;
-            else if (savedBg.base64) customBackgroundBase64 = savedBg.base64;
-            else if (savedBg.url) customBackgroundUrl = savedBg.url;
+            if (savedBg.color) {
+              solidColorFinal = savedBg.color;
+              sceneHintFinal = `solid ${savedBg.color} colored background, model standing on floor`;
+            } else if (savedBg.prompt) {
+              backgroundPromptFinal = savedBg.prompt;
+              sceneHintFinal = `scene: ${savedBg.prompt}, model standing naturally on the ground`;
+            } else if (savedBg.base64) {
+              customBackgroundBase64 = savedBg.base64;
+            } else if (savedBg.url) {
+              customBackgroundUrl = savedBg.url;
+            }
           }
         } else if (customBackground) {
           // Upload base64
           customBackgroundBase64 = customBackground;
         } else if (selectedPreset) {
-          // Preset URL
+          // Preset URL - pegar sceneHint do preset
           const preset = PRESET_BACKGROUNDS.find(b => b.id === selectedPreset);
           customBackgroundUrl = preset?.url;
+          sceneHintFinal = preset?.sceneHint;
         }
       }
 
@@ -714,6 +732,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         customBackgroundBase64: customBackgroundBase64,
         backgroundPrompt: backgroundPromptFinal,
         solidColor: solidColorFinal,
+        sceneHint: sceneHintFinal,
         modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
         viewsMode: 'front', // Sempre 'front' na primeira chamada
       });
@@ -757,6 +776,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           customBackgroundBase64: customBackgroundBase64,
           backgroundPrompt: backgroundPromptFinal,
           solidColor: solidColorFinal,
+          sceneHint: sceneHintFinal,
           modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind` : 'back view, from behind',
           viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
           // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
