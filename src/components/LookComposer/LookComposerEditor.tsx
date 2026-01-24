@@ -634,6 +634,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           customBackgroundBase64: customBackgroundBase64,
           modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind` : 'back view, from behind',
           viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
+          // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
+          isBackView: true,
+          frontGenerationId: frontGenerationId,
         });
 
         if (resultBack.success && resultBack.generation?.image_url) {

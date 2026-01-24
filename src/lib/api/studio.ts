@@ -214,6 +214,9 @@ interface ModeloIAParams {
   backImageId?: string;              // ID da imagem de costas do produto principal
   backImageUrl?: string;             // URL da imagem de costas do produto principal
   lookItemsBack?: Array<LookPiece>;  // Itens do look com imagens de costas
+  // Parâmetros para indicar que é imagem de costas (UPDATE ao invés de INSERT)
+  isBackView?: boolean;              // Se true, é geração de imagem de costas
+  frontGenerationId?: string;        // ID da geração de frente (para fazer UPDATE)
 }
 
 /**
@@ -279,6 +282,9 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       backImageId: params.backImageId || null,
       backImageUrl: params.backImageUrl || null,
       lookItemsBack: params.lookItemsBack || null,
+      // Parâmetros para indicar que é imagem de costas
+      isBackView: params.isBackView || false,
+      frontGenerationId: params.frontGenerationId || null,
     }),
   });
 
