@@ -571,7 +571,10 @@ const loadUserProducts = async (userId: string) => {
             id: img.id,
             createdAt: img.created_at,
             tool: 'lifestyle' as const,
-            images: { front: img.url, back: undefined },
+            images: {
+              front: img.url,
+              back: img.metadata?.backImageUrl || undefined
+            },
             metadata: img.metadata || {}
           })),
           productStudio: formattedProductStudio
