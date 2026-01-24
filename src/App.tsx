@@ -9,7 +9,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
-import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages } from './lib/api/studio';
+import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages, sendWhatsAppMessage } from './lib/api/studio';
 import heic2any from 'heic2any';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
@@ -2187,28 +2187,48 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string) => {
+    const finalMessage = message.replace('{nome}', client.firstName);
+
     try {
-      // Baixa a imagem como blob
+      // Tenta enviar via Evolution API (envia imagem diretamente no WhatsApp)
+      const result = await sendWhatsAppMessage({
+        phone: client.whatsapp || '',
+        message: finalMessage,
+        imageUrl: imageUrl,
+        clientName: `${client.firstName} ${client.lastName}`,
+      });
+
+      if (result.success) {
+        alert('WhatsApp enviado com sucesso!');
+        return;
+      }
+
+      console.log('Evolution API falhou, tentando fallback:', result.error);
+    } catch (error) {
+      console.log('Erro Evolution API, usando fallback:', error);
+    }
+
+    // Fallback: Web Share API (mobile) ou wa.me (desktop)
+    try {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const file = new File([blob], 'look.png', { type: 'image/png' });
 
-      // Verifica se o dispositivo suporta compartilhar arquivos
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
-          text: message
+          text: finalMessage
         });
         return;
       }
     } catch (error) {
-      console.log('Share API nao disponivel ou cancelado, usando fallback');
+      console.log('Share API falhou, usando wa.me');
     }
 
-    // Fallback: WhatsApp com texto + link da imagem
+    // Fallback final: WhatsApp com texto + link da imagem
     const phone = client.whatsapp?.replace(/\D/g, '') || '';
     const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
-    const fullMessage = message + '\n\n' + imageUrl;
+    const fullMessage = finalMessage + '\n\n' + imageUrl;
     window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
   };
 

@@ -633,3 +633,55 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
 
   return data;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// WHATSAPP - ENVIO VIA EVOLUTION API
+// ═══════════════════════════════════════════════════════════════
+
+interface SendWhatsAppParams {
+  phone: string;
+  message: string;
+  imageUrl?: string;
+  clientName?: string;
+}
+
+interface SendWhatsAppResponse {
+  success: boolean;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Envia mensagem WhatsApp via Evolution API
+ * Suporta envio de imagem + texto
+ */
+export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<SendWhatsAppResponse> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/send-whatsapp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phone: params.phone,
+        message: params.message,
+        imageUrl: params.imageUrl || null,
+        clientName: params.clientName || 'Cliente',
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Erro ao enviar WhatsApp');
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Erro ao enviar WhatsApp:', error);
+    return {
+      success: false,
+      error: error.message || 'Erro ao enviar WhatsApp',
+    };
+  }
+}
