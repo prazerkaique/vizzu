@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo } from 'react';
-import { Product, HistoryLog, SavedModel } from '../../types';
+import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
 
 interface LookComposerProps {
@@ -21,7 +21,6 @@ interface LookComposerProps {
   onSaveModel?: (model: SavedModel) => void;
   onOpenCreateModel?: () => void;
   modelLimit?: number;
-  // Estados de geração em background
   isGenerating?: boolean;
   isMinimized?: boolean;
   generationProgress?: number;
@@ -33,7 +32,6 @@ interface LookComposerProps {
   isAnyGenerationRunning?: boolean;
 }
 
-// Interface para look gerado
 interface GeneratedLook {
   id: string;
   productId: string;
@@ -42,8 +40,24 @@ interface GeneratedLook {
   productCategory?: string;
   imageUrl: string;
   createdAt: string;
-  metadata?: any;
+  metadata?: {
+    lookItems?: Array<{
+      slot: string;
+      productId?: string;
+      name?: string;
+      sku?: string;
+    }>;
+    prompt?: string;
+  };
 }
+
+interface ProductWithLooks {
+  product: Product;
+  lookCount: number;
+  looks: GeneratedLook[];
+}
+
+const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas', 'Blusas', 'Regatas', 'Tops'];
 
 export const LookComposer: React.FC<LookComposerProps> = ({
   products,
@@ -70,20 +84,21 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   onSetLoadingText,
   isAnyGenerationRunning = false
 }) => {
+  const isDark = theme === 'dark';
+
   // Estados principais
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedLook, setSelectedLook] = useState<GeneratedLook | null>(null);
-
-  // Filtros para looks
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterProductId, setFilterProductId] = useState('');
-  const [sortBy, setSortBy] = useState<'recent' | 'a-z' | 'z-a'>('recent');
+  const [showAllLooks, setShowAllLooks] = useState(false);
+  const [selectedProductForModal, setSelectedProductForModal] = useState<ProductWithLooks | null>(null);
+  const [modalSelectedLook, setModalSelectedLook] = useState<GeneratedLook | null>(null);
 
   // Filtros para modal de produtos
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [productFilterCategory, setProductFilterCategory] = useState('');
 
-  // Coletar todos os looks gerados de todos os produtos
+  // Coletar todos os looks gerados
   const allGeneratedLooks = useMemo(() => {
     const looks: GeneratedLook[] = [];
 
@@ -107,64 +122,115 @@ export const LookComposer: React.FC<LookComposerProps> = ({
       }
     });
 
-    return looks;
+    return looks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [products]);
 
-  // Produtos que têm looks (para o filtro)
+  // Produtos com looks
   const productsWithLooks = useMemo(() => {
-    const productIds = new Set(allGeneratedLooks.map(l => l.productId));
-    return products.filter(p => productIds.has(p.id));
-  }, [products, allGeneratedLooks]);
+    const result: ProductWithLooks[] = [];
 
-  // Filtrar e ordenar looks
-  const filteredLooks = useMemo(() => {
-    let result = allGeneratedLooks.filter(look => {
-      const matchesSearch = !searchTerm ||
-        look.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        look.productSku.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesProduct = !filterProductId || look.productId === filterProductId;
-      return matchesSearch && matchesProduct;
+    products.forEach(product => {
+      const productLooks = allGeneratedLooks.filter(l => l.productId === product.id);
+      if (productLooks.length > 0) {
+        result.push({
+          product,
+          lookCount: productLooks.length,
+          looks: productLooks
+        });
+      }
     });
 
-    // Ordenar
-    if (sortBy === 'a-z') {
-      result = [...result].sort((a, b) => a.productName.localeCompare(b.productName));
-    } else if (sortBy === 'z-a') {
-      result = [...result].sort((a, b) => b.productName.localeCompare(a.productName));
-    } else {
-      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
+    return result.sort((a, b) => b.lookCount - a.lookCount);
+  }, [products, allGeneratedLooks]);
 
-    return result;
-  }, [allGeneratedLooks, searchTerm, filterProductId, sortBy]);
+  // Últimos 6 looks
+  const recentLooks = useMemo(() => {
+    return allGeneratedLooks.slice(0, 6);
+  }, [allGeneratedLooks]);
 
   // Filtrar produtos no modal
   const filteredProducts = useMemo(() => {
-    if (!productSearchTerm) return products;
-    return products.filter(product =>
-      product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(productSearchTerm.toLowerCase())
-    );
-  }, [products, productSearchTerm]);
+    return products.filter(product => {
+      const matchesSearch = !productSearchTerm ||
+        product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+        product.sku.toLowerCase().includes(productSearchTerm.toLowerCase());
+      const matchesCategory = !productFilterCategory || product.category === productFilterCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, productSearchTerm, productFilterCategory]);
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setFilterProductId('');
-    setSortBy('recent');
-  };
-
-  const hasActiveFilters = searchTerm || filterProductId || sortBy !== 'recent';
-
+  // Obter imagem do produto (prioriza otimizada)
   const getProductImage = (product: Product): string | undefined => {
+    // Primeiro tenta imagem otimizada do Product Studio
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.length) {
+        const frontImage = lastSession.images.find(img => img.angle === 'front');
+        if (frontImage?.url) return frontImage.url;
+        if (lastSession.images[0]?.url) return lastSession.images[0].url;
+      }
+    }
+    // Fallback para imagem original
     if (product.originalImages?.front?.url) return product.originalImages.front.url;
     if (product.images?.[0]?.url) return product.images[0].url;
     if (product.images?.[0]?.base64) return product.images[0].base64;
     return undefined;
   };
 
+  // Verificar se produto tem imagem otimizada
+  const hasOptimizedImage = (product: Product): boolean => {
+    return !!(product.generatedImages?.productStudio?.length &&
+      product.generatedImages.productStudio.some(s => s.images?.length > 0));
+  };
+
+  // Calcular produtos frequentemente combinados
+  const getFrequentlyPaired = (productId: string): Product[] => {
+    const pairedCounts: Record<string, number> = {};
+
+    allGeneratedLooks
+      .filter(look => look.productId === productId && look.metadata?.lookItems)
+      .forEach(look => {
+        look.metadata?.lookItems?.forEach(item => {
+          if (item.productId && item.productId !== productId) {
+            pairedCounts[item.productId] = (pairedCounts[item.productId] || 0) + 1;
+          }
+        });
+      });
+
+    return Object.entries(pairedCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([id]) => products.find(p => p.id === id))
+      .filter(Boolean) as Product[];
+  };
+
+  // Calcular cores frequentemente usadas
+  const getFrequentColors = (productId: string): string[] => {
+    const colorCounts: Record<string, number> = {};
+
+    allGeneratedLooks
+      .filter(look => look.productId === productId && look.metadata?.lookItems)
+      .forEach(look => {
+        look.metadata?.lookItems?.forEach(item => {
+          if (item.productId) {
+            const pairedProduct = products.find(p => p.id === item.productId);
+            if (pairedProduct?.color) {
+              colorCounts[pairedProduct.color] = (colorCounts[pairedProduct.color] || 0) + 1;
+            }
+          }
+        });
+      });
+
+    return Object.entries(colorCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([color]) => color);
+  };
+
   const handleNewLook = () => {
     setShowProductModal(true);
     setProductSearchTerm('');
+    setProductFilterCategory('');
   };
 
   const handleSelectProductForNewLook = (product: Product) => {
@@ -176,22 +242,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     setSelectedProduct(null);
   };
 
-  const handleLookClick = (look: GeneratedLook) => {
-    setSelectedLook(look);
-  };
-
-  const handleCloseLookModal = () => {
-    setSelectedLook(null);
-  };
-
-  const handleDownloadLook = async (imageUrl: string, productName: string) => {
+  const handleDownloadLook = async (imageUrl: string, productName: string, format: 'png' | 'svg' = 'png') => {
     try {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `look-${productName.replace(/\s+/g, '-').toLowerCase()}.png`;
+      a.download = `look-${productName.replace(/\s+/g, '-').toLowerCase()}.${format}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -205,7 +263,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     const product = products.find(p => p.id === look.productId);
     if (product && product.generatedImages?.modeloIA) {
       const updatedModeloIA = product.generatedImages.modeloIA.filter(
-        (l: any) => (l.id || `${product.id}-${product.generatedImages!.modeloIA!.indexOf(l)}`) !== look.id
+        (l: any, idx: number) => (l.id || `${product.id}-${idx}`) !== look.id
       );
       onUpdateProduct(product.id, {
         generatedImages: {
@@ -214,15 +272,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         }
       });
       setSelectedLook(null);
+      setModalSelectedLook(null);
     }
   };
 
-  const handleEditLook = (look: GeneratedLook) => {
-    const product = products.find(p => p.id === look.productId);
-    if (product) {
-      setSelectedLook(null);
-      setSelectedProduct(product);
-    }
+  const handleOpenProductModal = (pwl: ProductWithLooks) => {
+    setSelectedProductForModal(pwl);
+    setModalSelectedLook(null);
   };
 
   // Se tem produto selecionado, mostra o editor
@@ -256,39 +312,39 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     );
   }
 
-  // Página principal - Galeria de Looks
+  // Página principal
   return (
-    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? 'bg-black' : 'bg-gray-50')}>
       <div className="max-w-7xl mx-auto">
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* HEADER */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-              <i className={'fas fa-layer-group text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
+              <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-pink-400' : 'text-white')}></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Look Composer®</h1>
+                <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Look Composer®</h1>
                 {currentPlan && (
-                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+                  <span className={(isDark ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
                     {currentPlan.name}
                   </span>
                 )}
               </div>
-              <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Seus looks criados com modelo IA</p>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Seus looks criados com modelo IA</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
+            <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
               <i className="fas fa-coins text-pink-400 text-xs"></i>
-              <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
+              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
             <button
               onClick={handleNewLook}
-              className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity shadow-lg shadow-pink-500/25"
             >
               <i className="fas fa-plus"></i>
               <span>Novo Look</span>
@@ -297,154 +353,131 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* BANNER - Total de Looks */}
+        {/* ÚLTIMOS LOOKS */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mb-4'}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Looks criados</p>
-              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>{filteredLooks.length}</p>
-              {hasActiveFilters && (
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>de {allGeneratedLooks.length} no total</p>
-              )}
-            </div>
-            {currentPlan && (
-              <div className="text-right">
-                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
-                <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
-                  {currentPlan.name}
-                </span>
+        <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border mb-6 overflow-hidden'}>
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-pink-500/20' : 'bg-pink-100')}>
+                <i className={(isDark ? 'text-pink-400' : 'text-pink-500') + ' fas fa-clock text-sm'}></i>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* FILTROS */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mb-4'}>
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Busca */}
-            <div className="flex-1 relative">
-              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
-              <input
-                type="text"
-                placeholder="Buscar por produto..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500 focus:border-pink-500/50' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-pink-400') + ' w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none'}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' absolute right-3 top-1/2 -translate-y-1/2'}
-                >
-                  <i className="fas fa-times text-xs"></i>
-                </button>
-              )}
+              <div>
+                <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Últimos Looks</h2>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{allGeneratedLooks.length} looks criados</p>
+              </div>
             </div>
-
-            {/* Filtro por produto */}
-            <div className="md:w-48">
-              <select
-                value={filterProductId}
-                onChange={(e) => setFilterProductId(e.target.value)}
-                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-              >
-                <option value="">Todos os produtos</option>
-                {productsWithLooks.map(product => (
-                  <option key={product.id} value={product.id}>{product.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Ordenar */}
-            <div className="md:w-36">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'recent' | 'a-z' | 'z-a')}
-                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-              >
-                <option value="recent">Recentes</option>
-                <option value="a-z">A → Z</option>
-                <option value="z-a">Z → A</option>
-              </select>
-            </div>
-
-            {/* Limpar filtros */}
-            {hasActiveFilters && (
+            {allGeneratedLooks.length > 6 && (
               <button
-                onClick={clearFilters}
-                className={(theme === 'dark' ? 'text-pink-400 hover:text-pink-300' : 'text-pink-500 hover:text-pink-600') + ' text-xs font-medium whitespace-nowrap'}
+                onClick={() => setShowAllLooks(!showAllLooks)}
+                className={(isDark ? 'text-pink-400 hover:text-pink-300' : 'text-pink-500 hover:text-pink-600') + ' text-xs font-medium flex items-center gap-1'}
               >
-                Limpar filtros
+                {showAllLooks ? 'Mostrar menos' : 'Ver todos'}
+                <i className={'fas fa-chevron-' + (showAllLooks ? 'up' : 'down') + ' text-[10px]'}></i>
               </button>
             )}
           </div>
-        </div>
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* GALERIA DE LOOKS */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {filteredLooks.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {filteredLooks.map((look) => (
-              <div
-                key={look.id}
-                onClick={() => handleLookClick(look)}
-                className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
-              >
-                <div className="aspect-[3/4] relative overflow-hidden">
-                  <img
-                    src={look.imageUrl}
-                    alt={look.productName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="w-full py-1.5 bg-white/90 text-gray-900 rounded-lg font-medium text-[10px]">
-                      <i className="fas fa-eye mr-1"></i>Ver detalhes
-                    </button>
+          {allGeneratedLooks.length > 0 ? (
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-4'}>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                {(showAllLooks ? allGeneratedLooks : recentLooks).map((look) => (
+                  <div
+                    key={look.id}
+                    onClick={() => setSelectedLook(look)}
+                    className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                  >
+                    <div className="aspect-[3/4] relative overflow-hidden bg-neutral-900">
+                      <img
+                        src={look.imageUrl}
+                        alt={look.productName}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-white text-[9px] font-medium truncate">{look.productName}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="p-2.5">
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{look.productSku}</p>
-                  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{look.productName}</p>
-                  {look.productCategory && (
-                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{look.productCategory}</p>
-                  )}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-12 text-center'}>
-            <div className={'w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20' : 'bg-gradient-to-r from-pink-100 to-orange-100')}>
-              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-layer-group text-2xl'}></i>
             </div>
-            <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mb-2'}>
-              {hasActiveFilters ? 'Nenhum look encontrado' : 'Nenhum look criado ainda'}
-            </h3>
-            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
-              {hasActiveFilters
-                ? 'Tente ajustar os filtros para encontrar seus looks.'
-                : 'Crie looks incríveis com seus produtos usando modelos IA. Clique no botão abaixo para começar!'}
-            </p>
-            {hasActiveFilters ? (
-              <button
-                onClick={clearFilters}
-                className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-5 py-2.5 rounded-lg font-medium text-sm transition-colors'}
-              >
-                Limpar filtros
-              </button>
-            ) : (
+          ) : (
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-8 text-center'}>
+              <div className={'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-layer-group text-xl'}></i>
+              </div>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Nenhum look criado ainda</p>
               <button
                 onClick={handleNewLook}
-                className="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
+                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
-                <i className="fas fa-plus mr-2"></i>Criar primeiro look
+                <i className="fas fa-plus mr-1.5"></i>Criar primeiro look
               </button>
-            )}
+            </div>
+          )}
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* EXPLORAR POR PRODUTO */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {productsWithLooks.length > 0 && (
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border overflow-hidden'}>
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-purple-500/20' : 'bg-purple-100')}>
+                  <i className={(isDark ? 'text-purple-400' : 'text-purple-500') + ' fas fa-shirt text-sm'}></i>
+                </div>
+                <div>
+                  <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Explorar por Produto</h2>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{productsWithLooks.length} produtos com looks</p>
+                </div>
+              </div>
+            </div>
+
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-4'}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                {productsWithLooks.map((pwl) => {
+                  const productImage = getProductImage(pwl.product);
+                  const isOptimized = hasOptimizedImage(pwl.product);
+                  return (
+                    <div
+                      key={pwl.product.id}
+                      onClick={() => handleOpenProductModal(pwl)}
+                      className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-purple-500/50' : 'bg-gray-50 border-gray-200 hover:border-purple-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                    >
+                      <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                        {productImage ? (
+                          <img
+                            src={productImage}
+                            alt={pwl.product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                          </div>
+                        )}
+                        {/* Badge de quantidade de looks */}
+                        <div className="absolute top-2 right-2 px-2 py-1 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
+                          <i className="fas fa-layer-group text-[8px]"></i>
+                          {pwl.lookCount}
+                        </div>
+                        {/* Badge de otimizado */}
+                        {isOptimized && (
+                          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
+                            <i className="fas fa-sparkles"></i>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{pwl.product.sku}</p>
+                        <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{pwl.product.name}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
@@ -455,34 +488,44 @@ export const LookComposer: React.FC<LookComposerProps> = ({
       {/* ═══════════════════════════════════════════════════════════════ */}
       {showProductModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'}>
-            {/* Header do Modal */}
-            <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'}>
+            {/* Header */}
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
               <div>
-                <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Selecione o produto principal</h2>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha a peça base para criar o look</p>
+                <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Selecione o produto principal</h2>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha a peça base para criar o look</p>
               </div>
               <button
                 onClick={() => setShowProductModal(false)}
-                className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
+                className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            {/* Busca */}
-            <div className="p-4">
-              <div className="relative">
-                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
+            {/* Filtros */}
+            <div className="p-4 flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
                 <input
                   type="text"
                   placeholder="Buscar produto..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
-                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500 focus:border-pink-500/50' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-pink-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
+                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-pink-500/50'}
                   autoFocus
                 />
               </div>
+              <select
+                value={productFilterCategory}
+                onChange={(e) => setProductFilterCategory(e.target.value)}
+                className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-48'}
+              >
+                <option value="">Todas categorias</option>
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
 
             {/* Grid de Produtos */}
@@ -491,13 +534,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {filteredProducts.map(product => {
                     const productImage = getProductImage(product);
+                    const isOptimized = hasOptimizedImage(product);
                     return (
                       <div
                         key={product.id}
                         onClick={() => handleSelectProductForNewLook(product)}
-                        className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                        className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                       >
-                        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                        <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                           {productImage ? (
                             <img
                               src={productImage}
@@ -506,7 +550,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                              <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                            </div>
+                          )}
+                          {isOptimized && (
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
+                              <i className="fas fa-sparkles text-[6px]"></i>
+                              Otimizado
                             </div>
                           )}
                           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -516,10 +566,10 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                           </div>
                         </div>
                         <div className="p-2.5">
-                          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                          <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                          <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
                           {product.category && (
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                            <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
                           )}
                         </div>
                       </div>
@@ -528,15 +578,10 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-                    <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search text-xl'}></i>
+                  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                    <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search text-xl'}></i>
                   </div>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
-                    {productSearchTerm ? 'Nenhum produto encontrado' : 'Nenhum produto'}
-                  </h3>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
-                    {productSearchTerm ? 'Tente outro termo de busca' : 'Importe produtos para criar looks'}
-                  </p>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Nenhum produto encontrado</p>
                 </div>
               )}
             </div>
@@ -545,30 +590,29 @@ export const LookComposer: React.FC<LookComposerProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MODAL - Detalhes do Look */}
+      {/* MODAL - Detalhes do Look (clique na galeria) */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       {selectedLook && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-3xl max-h-[90vh] overflow-hidden'}>
-            {/* Header do Modal */}
-            <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-3xl max-h-[90vh] overflow-hidden'}>
+            {/* Header */}
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
               <div>
-                <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{selectedLook.productName}</h2>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{selectedLook.productSku} • {new Date(selectedLook.createdAt).toLocaleDateString('pt-BR')}</p>
+                <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{selectedLook.productName}</h2>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{selectedLook.productSku} • {new Date(selectedLook.createdAt).toLocaleDateString('pt-BR')}</p>
               </div>
               <button
-                onClick={handleCloseLookModal}
-                className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
+                onClick={() => setSelectedLook(null)}
+                className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            {/* Conteúdo */}
-            <div className="p-4 flex flex-col md:flex-row gap-4">
+            <div className="p-4 flex flex-col md:flex-row gap-4 overflow-y-auto max-h-[calc(90vh-80px)]">
               {/* Imagem */}
               <div className="md:w-2/3">
-                <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden'}>
+                <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden'}>
                   <img
                     src={selectedLook.imageUrl}
                     alt={selectedLook.productName}
@@ -579,63 +623,200 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
               {/* Ações */}
               <div className="md:w-1/3 flex flex-col gap-3">
-                <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Ações</h3>
-                  <div className="flex flex-col gap-2">
+                <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Download</h3>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => handleDownloadLook(selectedLook.imageUrl, selectedLook.productName)}
-                      className={(theme === 'dark' ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' w-full py-2.5 rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+                      onClick={() => handleDownloadLook(selectedLook.imageUrl, selectedLook.productName, 'png')}
+                      className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
                     >
-                      <i className="fas fa-download"></i>
-                      Baixar imagem
+                      PNG
                     </button>
                     <button
-                      onClick={() => handleEditLook(selectedLook)}
-                      className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                      onClick={() => handleDownloadLook(selectedLook.imageUrl, selectedLook.productName, 'svg')}
+                      className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
                     >
-                      <i className="fas fa-wand-magic-sparkles"></i>
-                      Criar novo look
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Tem certeza que deseja excluir este look?')) {
-                          handleDeleteLook(selectedLook);
-                        }
-                      }}
-                      className={(theme === 'dark' ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600') + ' w-full py-2.5 rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2'}
-                    >
-                      <i className="fas fa-trash"></i>
-                      Excluir look
+                      SVG
                     </button>
                   </div>
                 </div>
 
-                {/* Info do Produto */}
-                <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
-                  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Produto base</h3>
-                  <div className="flex items-center gap-3">
-                    {(() => {
-                      const product = products.find(p => p.id === selectedLook.productId);
-                      const productImage = product ? getProductImage(product) : undefined;
-                      return (
-                        <>
-                          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-100') + ' w-12 h-12 rounded-lg overflow-hidden flex-shrink-0'}>
-                            {productImage ? (
-                              <img src={productImage} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-sm'}></i>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{selectedLook.productName}</p>
-                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{selectedLook.productSku}</p>
-                          </div>
-                        </>
-                      );
-                    })()}
+                <button
+                  onClick={() => {
+                    const product = products.find(p => p.id === selectedLook.productId);
+                    if (product) {
+                      setSelectedLook(null);
+                      setSelectedProduct(product);
+                    }
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                >
+                  <i className="fas fa-wand-magic-sparkles"></i>
+                  Criar novo look
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (confirm('Tem certeza que deseja excluir este look?')) {
+                      handleDeleteLook(selectedLook);
+                    }
+                  }}
+                  className={(isDark ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600') + ' w-full py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+                >
+                  <i className="fas fa-trash"></i>
+                  Excluir look
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* MODAL - Detalhes do Produto (Explorar por Produto) */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {selectedProductForModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col'}>
+            {/* Header */}
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
+              <div className="flex items-center gap-3">
+                <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-12 h-12 rounded-lg overflow-hidden'}>
+                  {getProductImage(selectedProductForModal.product) ? (
+                    <img src={getProductImage(selectedProductForModal.product)} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image'}></i>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{selectedProductForModal.product.name}</h2>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{selectedProductForModal.product.sku} • {selectedProductForModal.lookCount} looks</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setSelectedProductForModal(null); setModalSelectedLook(null); }}
+                className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Imagem principal */}
+                <div className="lg:w-1/2">
+                  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden aspect-[3/4]'}>
+                    <img
+                      src={modalSelectedLook?.imageUrl || getProductImage(selectedProductForModal.product)}
+                      alt={selectedProductForModal.product.name}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
+
+                  {modalSelectedLook && (
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        onClick={() => handleDownloadLook(modalSelectedLook.imageUrl, modalSelectedLook.productName, 'png')}
+                        className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-download"></i>
+                        Download PNG
+                      </button>
+                      <button
+                        onClick={() => handleDownloadLook(modalSelectedLook.imageUrl, modalSelectedLook.productName, 'svg')}
+                        className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+                      >
+                        <i className="fas fa-download"></i>
+                        Download SVG
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Conteúdo direito */}
+                <div className="lg:w-1/2 space-y-4">
+                  {/* Botão criar novo look */}
+                  <button
+                    onClick={() => {
+                      setSelectedProductForModal(null);
+                      setModalSelectedLook(null);
+                      setSelectedProduct(selectedProductForModal.product);
+                    }}
+                    className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  >
+                    <i className="fas fa-wand-magic-sparkles"></i>
+                    Gerar novo look com este produto
+                  </button>
+
+                  {/* Looks deste produto */}
+                  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Looks criados ({selectedProductForModal.lookCount})</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                      {selectedProductForModal.looks.map((look) => (
+                        <div
+                          key={look.id}
+                          onClick={() => setModalSelectedLook(look)}
+                          className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-pink-500 ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4]'}
+                        >
+                          <img
+                            src={look.imageUrl}
+                            alt={look.productName}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Produtos frequentemente combinados */}
+                  {(() => {
+                    const frequentlyPaired = getFrequentlyPaired(selectedProductForModal.product.id);
+                    if (frequentlyPaired.length === 0) return null;
+                    return (
+                      <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Frequentemente combinado com</h3>
+                        <div className="flex gap-2 flex-wrap">
+                          {frequentlyPaired.map((p) => (
+                            <div key={p.id} className="flex items-center gap-2">
+                              <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-8 h-8 rounded-lg overflow-hidden'}>
+                                {getProductImage(p) ? (
+                                  <img src={getProductImage(p)} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-xs'}></i>
+                                  </div>
+                                )}
+                              </div>
+                              <span className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>{p.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Cores frequentemente usadas */}
+                  {(() => {
+                    const frequentColors = getFrequentColors(selectedProductForModal.product.id);
+                    if (frequentColors.length === 0) return null;
+                    return (
+                      <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Cores frequentemente usadas</h3>
+                        <div className="flex gap-2 flex-wrap">
+                          {frequentColors.map((color) => (
+                            <span
+                              key={color}
+                              className={(isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-700') + ' px-3 py-1.5 rounded-full text-xs font-medium'}
+                            >
+                              {color}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

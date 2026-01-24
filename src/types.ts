@@ -67,6 +67,14 @@ export interface GeneratedImageSet {
     orientation?: string;
     modelProfileId?: string;
     exportFormat?: string;
+    lookItems?: Array<{       // Itens do look (para análise de combinações)
+      slot: string;
+      image?: string;
+      name?: string;
+      sku?: string;
+      productId?: string;
+      imageId?: string;
+    }>;
   };
 }
 

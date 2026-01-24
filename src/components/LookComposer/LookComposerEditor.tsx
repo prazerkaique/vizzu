@@ -489,7 +489,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           },
           metadata: {
             prompt: lookMode === 'describe' ? clothingPrompt : undefined,
-            orientation: 'vertical'
+            orientation: 'vertical',
+            lookItems: lookItems // Salvar os itens do look para análises futuras
           }
         };
 
