@@ -742,6 +742,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       }
 
       console.log('[LookComposer] Imagem de FRENTE gerada:', resultFront.generation.image_url);
+      console.log('[LookComposer] frontGenerationId:', resultFront.generation.id);
+      console.log('[LookComposer] resultFront.generation COMPLETO:', JSON.stringify(resultFront.generation));
       let frontImageUrl = resultFront.generation.image_url;
       let frontGenerationId = resultFront.generation.id;
       let backImageUrlResult: string | undefined;
@@ -758,6 +760,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         const modelBackReference = selectedModel?.images?.back || selectedModel?.images?.front || selectedModel?.referenceImageUrl;
         console.log('[LookComposer] Gerando imagem de COSTAS...');
         console.log('[LookComposer] Referência do modelo (costas):', modelBackReference ? 'disponível' : 'não disponível');
+        console.log('[LookComposer] frontGenerationId para COSTAS:', frontGenerationId);
 
         const resultBack = await generateModeloIA({
           productId: product.id,

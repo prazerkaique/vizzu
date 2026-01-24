@@ -256,6 +256,12 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   const fullUrl = `${N8N_BASE_URL}/vizzu/modelo-ia-v2`;
   console.log('[generateModeloIA] Chamando URL:', fullUrl);
 
+  // Debug para rastrear linkedTo
+  const linkedToValue = params.isBackView ? params.frontGenerationId : null;
+  console.log('[generateModeloIA] isBackView:', params.isBackView);
+  console.log('[generateModeloIA] frontGenerationId:', params.frontGenerationId);
+  console.log('[generateModeloIA] linkedTo sendo enviado:', linkedToValue);
+
   const response = await fetch(fullUrl, {
     method: 'POST',
     headers: {
