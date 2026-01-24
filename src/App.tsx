@@ -567,16 +567,40 @@ const loadUserProducts = async (userId: string) => {
             images: { front: img.url, back: undefined },
             metadata: img.metadata || {}
           })),
-          modeloIA: generatedModelo.map((img: any) => ({
-            id: img.id,
-            createdAt: img.created_at,
-            tool: 'lifestyle' as const,
-            images: {
-              front: img.url,
-              back: img.metadata?.backImageUrl || undefined
-            },
-            metadata: img.metadata || {}
-          })),
+          modeloIA: (() => {
+            // Agrupar imagens por generation_id base (remove sufixo -back)
+            const grouped: Record<string, { front?: any; back?: any }> = {};
+
+            generatedModelo.forEach((img: any) => {
+              const genId = img.generation_id || img.id;
+              const isBack = genId?.endsWith('-back');
+              const baseId = isBack ? genId.replace(/-back$/, '') : genId;
+
+              if (!grouped[baseId]) {
+                grouped[baseId] = {};
+              }
+
+              if (isBack) {
+                grouped[baseId].back = img;
+              } else {
+                grouped[baseId].front = img;
+              }
+            });
+
+            // Converter para array de GeneratedImageSet
+            return Object.entries(grouped)
+              .filter(([_, data]) => data.front) // Só inclui se tiver frente
+              .map(([baseId, data]) => ({
+                id: data.front.id,
+                createdAt: data.front.created_at,
+                tool: 'lifestyle' as const,
+                images: {
+                  front: data.front.url,
+                  back: data.back?.url || data.front.metadata?.backImageUrl || undefined
+                },
+                metadata: data.front.metadata || {}
+              }));
+          })(),
           productStudio: formattedProductStudio
         };
         
