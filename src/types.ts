@@ -67,6 +67,7 @@ export interface GeneratedImageSet {
     orientation?: string;
     modelProfileId?: string;
     exportFormat?: string;
+    viewsMode?: 'front' | 'front-back';  // Modo de ângulos (só frente ou frente+costas)
     lookItems?: Array<{       // Itens do look (para análise de combinações)
       slot: string;
       image?: string;

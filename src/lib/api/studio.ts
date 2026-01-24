@@ -209,6 +209,11 @@ interface ModeloIAParams {
   backgroundType?: 'studio' | 'custom';
   customBackgroundUrl?: string;      // URL do fundo customizado (upload ou preset)
   customBackgroundBase64?: string;   // Base64 do fundo customizado (upload)
+  // Parâmetros de ângulos (frente/costas)
+  viewsMode?: 'front' | 'front-back';
+  backImageId?: string;              // ID da imagem de costas do produto principal
+  backImageUrl?: string;             // URL da imagem de costas do produto principal
+  lookItemsBack?: Array<LookPiece>;  // Itens do look com imagens de costas
 }
 
 /**
@@ -269,6 +274,11 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       backgroundType: params.backgroundType || 'studio',
       customBackgroundUrl: params.customBackgroundUrl || null,
       customBackgroundBase64: params.customBackgroundBase64 || null,
+      // Parâmetros de ângulos (frente/costas)
+      viewsMode: params.viewsMode || 'front',
+      backImageId: params.backImageId || null,
+      backImageUrl: params.backImageUrl || null,
+      lookItemsBack: params.lookItemsBack || null,
     }),
   });
 

@@ -59,17 +59,19 @@ const PRESET_BACKGROUNDS = [
   { id: 'minimal', name: 'Minimalista', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', category: 'minimalista' },
 ];
 
-type Step = 'product' | 'model' | 'look' | 'background' | 'export';
+type Step = 'product' | 'model' | 'look' | 'background' | 'views' | 'export';
 type ModelTab = 'create' | 'saved';
 type LookMode = 'composer' | 'describe';
 type BackgroundType = 'studio' | 'custom';
 type ExportQuality = 'high' | 'performance';
+type ViewsMode = 'front' | 'front-back';
 
 const STEPS: { id: Step; label: string; icon: string }[] = [
   { id: 'product', label: 'Produto', icon: 'fa-shirt' },
   { id: 'model', label: 'Modelo', icon: 'fa-user' },
   { id: 'look', label: 'Look', icon: 'fa-layer-group' },
   { id: 'background', label: 'Fundo', icon: 'fa-image' },
+  { id: 'views', label: 'Ângulos', icon: 'fa-clone' },
   { id: 'export', label: 'Exportar', icon: 'fa-download' },
 ];
 
@@ -168,6 +170,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [customBackground, setCustomBackground] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
+  // Estado dos ângulos (views)
+  const [viewsMode, setViewsMode] = useState<ViewsMode>('front');
+
   // Estado do export
   const [exportQuality, setExportQuality] = useState<ExportQuality>('high');
 
@@ -230,9 +235,44 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   // Modelo selecionado
   const selectedModel = savedModels.find(m => m.id === selectedModelId);
 
+  // Verificar quais produtos do look não têm foto de costas
+  const productsWithoutBackImage = useMemo(() => {
+    const missing: Array<{ name: string; sku: string; id: string }> = [];
+
+    // Verificar produto principal
+    if (!product.originalImages?.back?.url) {
+      missing.push({ name: product.name, sku: product.sku, id: product.id });
+    }
+
+    // Verificar produtos do look composition (modo composer)
+    if (lookMode === 'composer') {
+      Object.entries(lookComposition).forEach(([slot, item]) => {
+        if (item.productId) {
+          const lookProduct = products.find(p => p.id === item.productId);
+          if (lookProduct && !lookProduct.originalImages?.back?.url) {
+            // Evitar duplicatas
+            if (!missing.find(m => m.id === lookProduct.id)) {
+              missing.push({ name: lookProduct.name, sku: lookProduct.sku, id: lookProduct.id });
+            }
+          }
+        }
+      });
+    }
+
+    return missing;
+  }, [product, lookComposition, lookMode, products]);
+
+  // Verificar se o modelo selecionado tem imagem de costas
+  const modelHasBackImage = useMemo(() => {
+    if (!selectedModel) return false;
+    return !!(selectedModel.images?.back);
+  }, [selectedModel]);
+
   // Calcular créditos
   const calculateCredits = (): number => {
-    return lookMode === 'composer' ? 2 : 1;
+    const baseCredits = lookMode === 'composer' ? 2 : 1;
+    // Se for frente e costas, dobra os créditos
+    return viewsMode === 'front-back' ? baseCredits * 2 : baseCredits;
   };
 
   const creditsNeeded = calculateCredits();
@@ -252,6 +292,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       case 'background':
         if (backgroundType === 'studio') return true;
         return !!customBackground || !!selectedPreset;
+      case 'views':
+        // Se for só frente, pode avançar
+        if (viewsMode === 'front') return true;
+        // Se for frente e costas, só pode avançar se todos produtos tiverem foto de costas
+        return productsWithoutBackImage.length === 0;
       case 'export':
         return true;
       default:
@@ -423,10 +468,42 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         clothingPrompt = parts.join(', ');
       }
 
-      // Obter imagem principal do produto
+      // Obter imagem principal do produto (frente)
       const mainImage = productImages[0];
       const imageUrl = mainImage?.url || '';
       const imageId = product.originalImages?.front?.id || product.images?.[0]?.id || '';
+
+      // Obter imagem de costas do produto principal (se viewsMode === 'front-back')
+      const backImageUrl = product.originalImages?.back?.url || '';
+      const backImageId = product.originalImages?.back?.id || '';
+
+      // Construir lookItemsBack para modo composer com frente e costas
+      let lookItemsBack: Array<{
+        slot: string;
+        image: string;
+        name: string;
+        sku?: string;
+        productId?: string;
+        imageId?: string;
+      }> | undefined;
+
+      if (viewsMode === 'front-back' && lookMode === 'composer' && Object.keys(lookComposition).length > 0) {
+        lookItemsBack = Object.entries(lookComposition).map(([slot, item]) => {
+          // Buscar o produto do look para pegar a imagem de costas
+          const lookProduct = item.productId ? products.find(p => p.id === item.productId) : null;
+          const backImage = lookProduct?.originalImages?.back?.url || '';
+          const backImgId = lookProduct?.originalImages?.back?.id || '';
+
+          return {
+            slot,
+            image: backImage,
+            name: item.name || '',
+            sku: item.sku || '',
+            productId: item.productId,
+            imageId: backImgId,
+          };
+        }).filter(item => item.image); // Só incluir se tiver imagem de costas
+      }
 
       // Determinar fundo
       let customBackgroundUrl: string | undefined;
@@ -453,11 +530,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         imageUrl,
         backgroundType,
         lookMode,
-        lookItems: lookItems?.length
+        lookItems: lookItems?.length,
+        viewsMode
       });
 
-      // Chamar a API
-      const result = await generateModeloIA({
+      // ═══════════════════════════════════════════════════════════════
+      // GERAÇÃO DE IMAGEM DE FRENTE
+      // ═══════════════════════════════════════════════════════════════
+      console.log('[LookComposer] Gerando imagem de FRENTE...');
+      const resultFront = await generateModeloIA({
         productId: product.id,
         userId: userId,
         imageId: imageId,
@@ -472,76 +553,124 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         customBackgroundUrl: customBackgroundUrl,
         customBackgroundBase64: customBackgroundBase64,
         modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
+        viewsMode: 'front', // Sempre 'front' na primeira chamada
       });
+
+      if (!resultFront.success || !resultFront.generation?.image_url) {
+        throw new Error(resultFront.error || resultFront.message || 'Erro ao gerar imagem de frente');
+      }
+
+      console.log('[LookComposer] Imagem de FRENTE gerada:', resultFront.generation.image_url);
+      let frontImageUrl = resultFront.generation.image_url;
+      let frontGenerationId = resultFront.generation.id;
+      let backImageUrlResult: string | undefined;
+
+      // ═══════════════════════════════════════════════════════════════
+      // GERAÇÃO DE IMAGEM DE COSTAS (se viewsMode === 'front-back')
+      // ═══════════════════════════════════════════════════════════════
+      if (viewsMode === 'front-back') {
+        setProgress(50);
+        const setText = onSetLoadingText || setLocalLoadingText;
+        setText('Agora gerando a imagem de costas...');
+
+        // Usar imagem de costas do modelo como referência (se existir)
+        const modelBackReference = selectedModel?.images?.back || selectedModel?.images?.front || selectedModel?.referenceImageUrl;
+        console.log('[LookComposer] Gerando imagem de COSTAS...');
+        console.log('[LookComposer] Referência do modelo (costas):', modelBackReference ? 'disponível' : 'não disponível');
+
+        const resultBack = await generateModeloIA({
+          productId: product.id,
+          userId: userId,
+          imageId: backImageId, // Usar imagem de costas do produto principal
+          imageUrl: backImageUrl,
+          modelPrompt: modelPrompt,
+          clothingPrompt: clothingPrompt ? clothingPrompt + ' (back view, from behind)' : undefined,
+          referenceImage: modelBackReference, // Usar imagem de COSTAS do modelo
+          productCategory: product.category || 'Roupas',
+          productDescription: (product.description || product.name) + ' - vista de costas',
+          lookItems: lookItemsBack, // Usar imagens de costas do look
+          backgroundType: backgroundType,
+          customBackgroundUrl: customBackgroundUrl,
+          customBackgroundBase64: customBackgroundBase64,
+          modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind` : 'back view, from behind',
+          viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
+        });
+
+        if (resultBack.success && resultBack.generation?.image_url) {
+          console.log('[LookComposer] Imagem de COSTAS gerada:', resultBack.generation.image_url);
+          backImageUrlResult = resultBack.generation.image_url;
+        } else {
+          console.warn('[LookComposer] Falha ao gerar imagem de costas:', resultBack.error);
+          // Não falhar completamente, apenas avisar
+        }
+      }
 
       setProgress(90);
 
-      if (result.success && result.generation?.image_url) {
-        console.log('[LookComposer] Imagem gerada com sucesso:', result.generation.image_url);
-
-        // Salvar a imagem gerada no produto (formato GeneratedImageSet)
-        const newModeloIAImage: import('../../types').GeneratedImageSet = {
-          id: result.generation.id,
-          createdAt: new Date().toISOString(),
-          tool: 'lifestyle',
-          images: {
-            front: result.generation.image_url
-          },
-          metadata: {
-            prompt: lookMode === 'describe' ? clothingPrompt : undefined,
-            orientation: 'vertical',
-            lookItems: lookItems // Salvar os itens do look para análises futuras
-          }
-        };
-
-        const currentGenerated = product.generatedImages || {
-          studioReady: [],
-          cenarioCriativo: [],
-          modeloIA: [],
-          productStudio: []
-        };
-
-        onUpdateProduct(product.id, {
-          generatedImages: {
-            ...currentGenerated,
-            modeloIA: [...(currentGenerated.modeloIA || []), newModeloIAImage]
-          }
-        });
-
-        // Deduzir créditos
-        if (onDeductCredits) {
-          onDeductCredits(creditsNeeded, `Look Composer - ${lookMode === 'composer' ? 'Com peças' : 'Descrito'}`);
+      // Salvar a imagem gerada no produto (formato GeneratedImageSet)
+      const newModeloIAImage: import('../../types').GeneratedImageSet = {
+        id: frontGenerationId,
+        createdAt: new Date().toISOString(),
+        tool: 'lifestyle',
+        images: {
+          front: frontImageUrl,
+          back: backImageUrlResult
+        },
+        metadata: {
+          prompt: lookMode === 'describe' ? clothingPrompt : undefined,
+          orientation: 'vertical',
+          lookItems: lookItems, // Salvar os itens do look para análises futuras
+          viewsMode: viewsMode // Salvar o modo de ângulos
         }
+      };
 
-        // Log de sucesso
-        if (onAddHistoryLog) {
-          onAddHistoryLog(
-            'Look Composer',
-            `Look gerado para "${product.name}"`,
-            'success',
-            [product],
-            'ai',
-            creditsNeeded
-          );
+      const currentGenerated = product.generatedImages || {
+        studioReady: [],
+        cenarioCriativo: [],
+        modeloIA: [],
+        productStudio: []
+      };
+
+      onUpdateProduct(product.id, {
+        generatedImages: {
+          ...currentGenerated,
+          modeloIA: [...(currentGenerated.modeloIA || []), newModeloIAImage]
         }
+      });
 
-        setProgress(100);
-
-        // Mostrar tela de resultado
-        setGeneratedImageUrl(result.generation.image_url);
-        setGenerationId(result.generation.id);
-
-        // Aguardar um pouco e mostrar o resultado
-        setTimeout(() => {
-          const setGenerating = onSetGenerating || setLocalIsGenerating;
-          setGenerating(false);
-          setShowResult(true);
-        }, 500);
-
-        return; // Não executar o finally ainda
-      } else {
-        throw new Error(result.error || result.message || 'Erro ao gerar look');
+      // Deduzir créditos
+      if (onDeductCredits) {
+        const viewsLabel = viewsMode === 'front-back' ? 'Frente e Costas' : 'Frente';
+        onDeductCredits(creditsNeeded, `Look Composer - ${lookMode === 'composer' ? 'Com peças' : 'Descrito'} (${viewsLabel})`);
       }
+
+      // Log de sucesso
+      if (onAddHistoryLog) {
+        const viewsLabel = viewsMode === 'front-back' ? ' (frente e costas)' : '';
+        onAddHistoryLog(
+          'Look Composer',
+          `Look gerado para "${product.name}"${viewsLabel}`,
+          'success',
+          [product],
+          'ai',
+          creditsNeeded
+        );
+      }
+
+      setProgress(100);
+
+      // Mostrar tela de resultado
+      setGeneratedImageUrl(frontImageUrl);
+      setGenerationId(frontGenerationId);
+
+      // Aguardar um pouco e mostrar o resultado
+      setTimeout(() => {
+        const setGenerating = onSetGenerating || setLocalIsGenerating;
+        setGenerating(false);
+        setShowResult(true);
+      }, 500);
+
+      return; // Não executar o finally ainda
 
     } catch (error) {
       console.error('Erro ao gerar:', error);
@@ -895,6 +1024,141 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           </div>
         );
 
+      case 'views':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className={(isDark ? 'bg-pink-500/20' : 'bg-pink-100') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+                <i className={(isDark ? 'text-pink-400' : 'text-pink-600') + ' fas fa-clone text-sm'}></i>
+              </div>
+              <div>
+                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Ângulos do Look</h3>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha se quer gerar só frente ou frente e costas</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {/* Só Frente */}
+              <div
+                onClick={() => setViewsMode('front')}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${viewsMode === 'front' ? 'border-pink-500 ' + (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={(viewsMode === 'front' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+                    <i className="fas fa-image"></i>
+                  </div>
+                  <div className="flex-1">
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Só Frente</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera uma imagem frontal do look</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-pink-400 font-semibold text-sm">{lookMode === 'composer' ? 2 : 1} crédito{(lookMode === 'composer' ? 2 : 1) > 1 ? 's' : ''}</span>
+                  </div>
+                  {viewsMode === 'front' && (
+                    <i className="fas fa-check-circle text-pink-500"></i>
+                  )}
+                </div>
+              </div>
+
+              {/* Frente e Costas */}
+              <div
+                onClick={() => setViewsMode('front-back')}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${viewsMode === 'front-back' ? 'border-pink-500 ' + (isDark ? 'bg-pink-500/10' : 'bg-pink-50') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={(viewsMode === 'front-back' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+                    <i className="fas fa-clone"></i>
+                  </div>
+                  <div className="flex-1">
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Frente e Costas</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera duas imagens: vista frontal e traseira</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-pink-400 font-semibold text-sm">{(lookMode === 'composer' ? 2 : 1) * 2} créditos</span>
+                  </div>
+                  {viewsMode === 'front-back' && (
+                    <i className="fas fa-check-circle text-pink-500"></i>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Aviso se o modelo não tem foto de costas */}
+            {viewsMode === 'front-back' && !modelHasBackImage && selectedModel && (
+              <div className={(isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-4 border'}>
+                <div className="flex items-start gap-3">
+                  <div className={(isDark ? 'bg-amber-500/20' : 'bg-amber-100') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                    <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-user-slash'}></i>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className={(isDark ? 'text-amber-400' : 'text-amber-700') + ' font-semibold text-sm mb-1'}>
+                      Modelo sem foto de costas
+                    </h4>
+                    <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+                      O modelo <strong>{selectedModel.name}</strong> não possui imagem de referência de costas.
+                      A imagem de costas será gerada usando a referência frontal do modelo, o que pode afetar a consistência.
+                    </p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
+                      Para melhores resultados, recrie o modelo para gerar a imagem de costas.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Aviso se produtos não têm foto de costas */}
+            {viewsMode === 'front-back' && productsWithoutBackImage.length > 0 && (
+              <div className={(isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-4 border'}>
+                <div className="flex items-start gap-3">
+                  <div className={(isDark ? 'bg-amber-500/20' : 'bg-amber-100') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                    <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-exclamation-triangle'}></i>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className={(isDark ? 'text-amber-400' : 'text-amber-700') + ' font-semibold text-sm mb-1'}>
+                      {productsWithoutBackImage.length === 1 ? 'Produto sem foto de costas' : 'Produtos sem foto de costas'}
+                    </h4>
+                    <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed mb-2'}>
+                      Para gerar a imagem de costas, você precisa cadastrar a foto de costas dos seguintes produtos:
+                    </p>
+                    <ul className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs space-y-1'}>
+                      {productsWithoutBackImage.map((p) => (
+                        <li key={p.id} className="flex items-center gap-2">
+                          <i className="fas fa-times-circle text-red-400 text-[10px]"></i>
+                          <span className="font-medium">{p.name}</span>
+                          <span className={(isDark ? 'text-neutral-500' : 'text-gray-400')}>({p.sku})</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
+                      Acesse o Product Studio para adicionar as fotos de costas.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sucesso se todos têm foto de costas */}
+            {viewsMode === 'front-back' && productsWithoutBackImage.length === 0 && modelHasBackImage && (
+              <div className={(isDark ? 'bg-green-500/10 border-green-500/20' : 'bg-green-50 border-green-200') + ' rounded-xl p-3 border'}>
+                <p className={(isDark ? 'text-green-400' : 'text-green-600') + ' text-xs'}>
+                  <i className="fas fa-check-circle mr-2"></i>
+                  Todos os produtos e o modelo têm foto de costas. Você pode gerar frente e costas!
+                </p>
+              </div>
+            )}
+
+            {/* Sucesso parcial - produtos ok mas modelo sem costas */}
+            {viewsMode === 'front-back' && productsWithoutBackImage.length === 0 && !modelHasBackImage && selectedModel && (
+              <div className={(isDark ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + ' rounded-xl p-3 border'}>
+                <p className={(isDark ? 'text-blue-400' : 'text-blue-600') + ' text-xs'}>
+                  <i className="fas fa-info-circle mr-2"></i>
+                  Produtos OK. A imagem de costas usará a referência frontal do modelo.
+                </p>
+              </div>
+            )}
+          </div>
+        );
+
       case 'export':
         return (
           <div className="space-y-4">
@@ -967,6 +1231,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                 <div className="flex justify-between">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Fundo</span>
                   <span className={(isDark ? 'text-white' : 'text-gray-900')}>{backgroundType === 'studio' ? 'Estúdio Cinza' : selectedPreset ? PRESET_BACKGROUNDS.find(b => b.id === selectedPreset)?.name : 'Personalizado'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Ângulos</span>
+                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>{viewsMode === 'front' ? 'Só Frente' : 'Frente e Costas'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Qualidade</span>
@@ -1168,11 +1436,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                   className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-pink-600 cursor-wait' : userCredits < creditsNeeded ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 shadow-lg shadow-pink-500/25') + ' text-white'}
                 >
                   {isGenerating ? (
-                    <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando...</>
+                    <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando{viewsMode === 'front-back' ? ' 2 imagens' : ''}...</>
                   ) : isAnyGenerationRunning ? (
                     <><i className="fas fa-clock mr-2"></i>Aguardando...</>
                   ) : (
-                    <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar Look ({creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''})</>
+                    <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'} ({creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''})</>
                   )}
                 </button>
               )}

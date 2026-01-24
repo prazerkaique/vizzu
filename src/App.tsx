@@ -488,6 +488,15 @@ const loadUserProducts = async (userId: string) => {
         const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
         const generatedProductStudio = allImages.filter((img: any) => img.type === 'product_studio');
 
+        // Debug: verificar se metadata está vindo do Supabase
+        if (generatedModelo.length > 0) {
+          console.log('[Debug] Modelo IA images from Supabase:', generatedModelo.map((img: any) => ({
+            id: img.id,
+            hasMetadata: !!img.metadata,
+            metadata: img.metadata
+          })));
+        }
+
         // Formatar imagens originais para o array images
         const formattedOriginalImages = originalImages.map((img: any) => ({
           id: img.id,
@@ -549,21 +558,21 @@ const loadUserProducts = async (userId: string) => {
             createdAt: img.created_at,
             tool: 'studio' as const,
             images: { front: img.url, back: undefined },
-            metadata: {}
+            metadata: img.metadata || {}
           })),
           cenarioCriativo: generatedCenario.map((img: any) => ({
             id: img.id,
             createdAt: img.created_at,
             tool: 'cenario' as const,
             images: { front: img.url, back: undefined },
-            metadata: {}
+            metadata: img.metadata || {}
           })),
           modeloIA: generatedModelo.map((img: any) => ({
             id: img.id,
             createdAt: img.created_at,
             tool: 'lifestyle' as const,
             images: { front: img.url, back: undefined },
-            metadata: {}
+            metadata: img.metadata || {}
           })),
           productStudio: formattedProductStudio
         };
