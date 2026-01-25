@@ -1761,17 +1761,28 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const saveClientLook = async (client: Client, imageUrl: string, lookItems: LookComposition) => {
-    if (!user || !client) return null;
+    if (!user || !client) {
+      console.log('❌ saveClientLook: user ou client é null', { user: !!user, client: !!client });
+      return null;
+    }
+
+    console.log('💾 Salvando look...', { clientId: client.id, imageUrl: imageUrl.substring(0, 100) });
 
     setSavingLook(true);
     try {
       // Fazer download da imagem e converter para blob
+      console.log('📥 Baixando imagem...');
       const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Erro ao baixar imagem: ${response.status} ${response.statusText}`);
+      }
       const blob = await response.blob();
+      console.log('✅ Imagem baixada:', blob.size, 'bytes');
 
       // Gerar nome único para o arquivo
       const fileName = `${Date.now()}.png`;
       const storagePath = `${user.id}/${client.id}/${fileName}`;
+      console.log('📤 Uploading para:', storagePath);
 
       // Upload para o Storage
       const { error: uploadError } = await supabase.storage
@@ -1781,7 +1792,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Erro no upload:', uploadError);
+        throw uploadError;
+      }
+      console.log('✅ Upload concluído');
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
@@ -1803,7 +1818,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao inserir no banco:', error);
+        throw error;
+      }
+
+      console.log('✅ Look salvo no banco:', data);
 
       const newLook: ClientLook = {
         id: data.id,
@@ -1816,9 +1836,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       };
 
       setClientLooks(prev => [newLook, ...prev]);
+      console.log('✅ Look adicionado à lista local');
       return newLook;
     } catch (error) {
-      console.error('Erro ao salvar look:', error);
+      console.error('❌ Erro ao salvar look:', error);
       alert('Erro ao salvar look. Tente novamente.');
       return null;
     } finally {
