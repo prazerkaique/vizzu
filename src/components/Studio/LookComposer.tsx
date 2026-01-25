@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Product, LookComposition } from '../../types';
 import { BaseballCap, TShirt, Pants, Sneaker, Watch, Handbag } from '@phosphor-icons/react';
 import heic2any from 'heic2any';
@@ -45,11 +45,19 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const productsGridRef = useRef<HTMLDivElement>(null);
 
   const productsWithImages = products.filter(p => p.images?.length > 0 && (p.images[0]?.base64 || p.images[0]?.url));
 
   // Detectar se é mobile
   const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+  // Auto-scroll para o topo quando abre o modal
+  useEffect(() => {
+    if (expandedSlot && productsGridRef.current) {
+      productsGridRef.current.scrollTop = 0;
+    }
+  }, [expandedSlot]);
 
   // Filtra produtos por categoria do slot
   const getFilteredProducts = () => {
@@ -144,7 +152,6 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     const imgSrcMatch = html.match(/<img[^>]+src="([^">]+)"/);
     if (imgSrcMatch && imgSrcMatch[1]) {
       const imageUrl = imgSrcMatch[1];
-      // Para imagens externas, usamos a URL diretamente
       onChange({ ...composition, [slot]: { image: imageUrl, name: 'Imagem externa', sku: 'external' } });
       return;
     }
@@ -160,7 +167,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
   const handleTouchStart = useCallback((slot: keyof LookComposition) => {
     longPressTimer.current = setTimeout(() => {
       setShowImageOptions(slot);
-    }, 500); // 500ms para ativar long press
+    }, 500);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
@@ -213,7 +220,6 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
         }
       });
 
-      // Callback opcional para o parent
       if (onImageUpload) {
         onImageUpload(showImageOptions, base64);
       }
@@ -223,7 +229,6 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     } finally {
       setIsProcessingImage(false);
       setShowImageOptions(null);
-      // Limpar input para permitir selecionar a mesma imagem novamente
       if (galleryInputRef.current) galleryInputRef.current.value = '';
       if (cameraInputRef.current) cameraInputRef.current.value = '';
     }
@@ -248,6 +253,16 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     }
   }, [composition, onChange]);
 
+  const handleSlotClick = (slot: typeof SLOTS[0], item: any, isLocked: boolean) => {
+    if (isLocked) return;
+    if (item) {
+      // Se já tem item, abre para trocar
+      setExpandedSlot(expandedSlot === slot.id ? null : slot.id);
+    } else {
+      setExpandedSlot(expandedSlot === slot.id ? null : slot.id);
+    }
+  };
+
   return (
     <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-purple-200 shadow-sm') + ' rounded-lg border p-3'}>
       <div className="flex items-center justify-between mb-2">
@@ -261,28 +276,17 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
         )}
       </div>
 
-      {/* Dica de uso - diferente para mobile e desktop */}
-      <div className={`mb-2 p-2.5 rounded-lg text-[10px] leading-relaxed ${theme === 'dark' ? 'bg-neutral-700/50 text-neutral-400' : 'bg-purple-50 text-purple-600'}`}>
-        <i className="fas fa-lightbulb mr-1.5"></i>
-        {isMobile ? (
-          <>
-            <span className="font-medium">Toque no slot</span> para escolher produto, ou <span className="font-medium">segure</span> para abrir galeria/camera
-          </>
-        ) : (
-          <>
-            <span className="font-medium">Clique no slot</span> para escolher produto, ou <span className="font-medium">arraste imagens</span> / <span className="font-medium">cole (Ctrl+V)</span>
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-3 gap-1.5">
+      {/* Slots compactos em linha */}
+      <div className="flex gap-1.5 overflow-x-auto pb-2">
         {SLOTS.map(slot => {
           const item = composition[slot.id];
           const isLocked = lockedSlots.includes(slot.id);
+          const isExpanded = expandedSlot === slot.id;
+
           return (
             <div
               key={slot.id}
-              onClick={() => !item && !isLocked && setExpandedSlot(expandedSlot === slot.id ? null : slot.id)}
+              onClick={() => handleSlotClick(slot, item, isLocked)}
               onDragOver={(e) => !isLocked && handleDragOver(e, slot.id)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => !isLocked && handleDrop(e, slot.id)}
@@ -291,54 +295,47 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchEnd}
               tabIndex={isLocked ? -1 : 0}
-              className={'aspect-square rounded-lg border border-dashed flex flex-col items-center justify-center relative overflow-hidden group transition-all ' +
-                (isLocked
-                  ? 'cursor-not-allowed opacity-60 ' + (theme === 'dark' ? 'border-pink-500/50 bg-pink-500/10' : 'border-pink-300 bg-pink-50')
+              className={`flex-shrink-0 w-14 h-16 rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-200 ${
+                isLocked
+                  ? 'cursor-not-allowed opacity-60 border-pink-500/50 ' + (theme === 'dark' ? 'bg-pink-500/10' : 'bg-pink-50')
                   : isDragging === slot.id
-                    ? 'border-pink-500 bg-pink-500/20 scale-105 cursor-pointer'
+                    ? 'border-pink-500 bg-pink-500/20 scale-110 cursor-pointer'
                     : item
-                      ? 'border-pink-500/50 cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-pink-50')
-                      : expandedSlot === slot.id
-                        ? 'border-pink-500 bg-pink-500/10 cursor-pointer'
-                        : 'cursor-pointer ' + (theme === 'dark' ? 'border-neutral-600 bg-neutral-900/50 hover:border-pink-500/50' : 'border-purple-300 bg-purple-50/50 hover:border-pink-400')
-                )
-              }
+                      ? 'border-pink-500 cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-pink-50')
+                      : isExpanded
+                        ? 'border-pink-500 bg-pink-500/20 scale-105 cursor-pointer ring-2 ring-pink-500/50'
+                        : 'cursor-pointer border-dashed ' + (theme === 'dark' ? 'border-neutral-600 bg-neutral-900/50 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 bg-purple-50/50 hover:border-pink-400')
+              }`}
             >
               {isLocked ? (
-                // Slot bloqueado - peça principal
                 <>
-                  <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-lock text-sm mb-0.5'}></i>
-                  <span className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' text-[7px] font-medium text-center px-1'}>
+                  <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-lock text-xs'}></i>
+                  <span className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' text-[6px] font-medium text-center px-0.5 mt-0.5'}>
                     {lockedMessage}
                   </span>
                 </>
               ) : item ? (
                 <>
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-1" />
+                  <img src={item.image} alt={item.name} className="w-full h-full object-contain p-0.5" />
                   <button
                     onClick={(e) => removeSlot(slot.id, e)}
-                    className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 text-[7px] transition-opacity"
+                    className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white rounded-bl-lg flex items-center justify-center text-[8px]"
                   >
                     <i className="fas fa-times"></i>
                   </button>
-                  <div className="absolute top-0.5 left-0.5 bg-pink-500 text-white text-[6px] font-medium px-1 rounded">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-[6px] font-medium px-1 py-0.5 text-center truncate">
                     {slot.label}
                   </div>
-                  {item.sku === 'external' && (
-                    <div className="absolute bottom-0.5 right-0.5 bg-purple-500 text-white text-[6px] font-medium px-1 rounded">
-                      <i className="fas fa-external-link-alt"></i>
-                    </div>
-                  )}
                 </>
               ) : (
                 <>
                   {isDragging === slot.id ? (
-                    <i className="fas fa-download text-pink-500 text-lg animate-bounce"></i>
+                    <i className="fas fa-download text-pink-500 text-sm animate-bounce"></i>
                   ) : (
-                    <slot.Icon size={18} weight="duotone" className={expandedSlot === slot.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-600' : 'text-purple-400')} />
+                    <slot.Icon size={16} weight="duotone" className={isExpanded ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-purple-400')} />
                   )}
-                  <span className={'text-[8px] font-medium mt-0.5 ' + (isDragging === slot.id ? 'text-pink-500' : expandedSlot === slot.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500'))}>
-                    {isDragging === slot.id ? 'Soltar aqui' : slot.label}
+                  <span className={'text-[7px] font-medium mt-0.5 ' + (isDragging === slot.id || isExpanded ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500'))}>
+                    {isDragging === slot.id ? 'Soltar' : slot.label}
                   </span>
                 </>
               )}
@@ -347,100 +344,121 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
         })}
       </div>
 
+      {/* Modal expandido para selecionar produto */}
       {expandedSlot && (
-        <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700' : 'bg-gray-50 border-purple-200') + ' mt-2 rounded-lg border overflow-hidden'}>
-          <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-purple-100') + ' p-2 border-b space-y-1.5'}>
-            {/* Header com categoria */}
-            <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-pink-400' : 'text-pink-600'}`}>
-                <i className="fas fa-filter mr-1"></i>
-                {SLOTS.find(s => s.id === expandedSlot)?.label}: {SLOT_CATEGORY_MAP[expandedSlot]?.slice(0, 3).join(', ')}...
-              </span>
-              <span className={`text-[9px] ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
-                {filtered.length} produtos
-              </span>
+        <div className={`mt-2 rounded-xl border overflow-hidden transition-all duration-300 animate-in slide-in-from-top-2 ${
+          theme === 'dark' ? 'bg-neutral-900 border-pink-500/30' : 'bg-white border-pink-200 shadow-lg'
+        }`}>
+          {/* Header do modal */}
+          <div className={`p-3 border-b ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-pink-100 bg-pink-50'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const SlotIcon = SLOTS.find(s => s.id === expandedSlot)?.Icon || TShirt;
+                  return <SlotIcon size={20} weight="duotone" className="text-pink-500" />;
+                })()}
+                <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  {SLOTS.find(s => s.id === expandedSlot)?.label}
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-pink-100 text-pink-600'}`}>
+                  {filtered.length} produtos
+                </span>
+              </div>
+              <button
+                onClick={() => setExpandedSlot(null)}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                  theme === 'dark' ? 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600 hover:text-white' : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
+                }`}
+              >
+                <i className="fas fa-times text-xs"></i>
+              </button>
             </div>
 
-            {/* Filtro de Coleção */}
-            {availableCollections.length > 0 && (
-              <div className="flex gap-1 overflow-x-auto pb-1">
-                <button
-                  onClick={() => setSelectedCollection('')}
-                  className={'px-2 py-1 text-[9px] font-medium rounded-full whitespace-nowrap transition-all ' +
-                    (!selectedCollection
-                      ? 'bg-pink-500 text-white'
-                      : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' : 'bg-purple-100 text-purple-600 hover:bg-purple-200')
-                    )
-                  }
-                >
-                  Todos
-                </button>
-                {availableCollections.map(col => (
-                  <button
-                    key={col}
-                    onClick={() => setSelectedCollection(col)}
-                    className={'px-2 py-1 text-[9px] font-medium rounded-full whitespace-nowrap transition-all ' +
-                      (selectedCollection === col
-                        ? 'bg-pink-500 text-white'
-                        : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' : 'bg-purple-100 text-purple-600 hover:bg-purple-200')
-                      )
-                    }
-                  >
-                    {col}
-                  </button>
-                ))}
+            {/* Filtros */}
+            <div className="flex gap-2">
+              {/* Busca */}
+              <div className="flex-1 relative">
+                <i className={`fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar..."
+                  className={`w-full pl-7 pr-3 py-2 text-xs border rounded-lg ${
+                    theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-pink-200 text-gray-900 placeholder-gray-400'
+                  }`}
+                  autoFocus
+                />
               </div>
-            )}
-            {/* Busca */}
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar produto..."
-              className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-purple-200 text-gray-900 placeholder-gray-400') + ' w-full px-2 py-1.5 text-[10px] border rounded-lg'}
-              autoFocus
-            />
+
+              {/* Filtro de coleção */}
+              {availableCollections.length > 0 && (
+                <select
+                  value={selectedCollection}
+                  onChange={(e) => setSelectedCollection(e.target.value)}
+                  className={`px-2 py-2 text-xs border rounded-lg ${
+                    theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-pink-200 text-gray-900'
+                  }`}
+                >
+                  <option value="">Todas</option>
+                  {availableCollections.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
-          <div className="p-2 max-h-32 overflow-y-auto">
+
+          {/* Grid de produtos */}
+          <div ref={productsGridRef} className="p-3 max-h-64 overflow-y-auto">
             {filtered.length > 0 ? (
-              <div className="grid grid-cols-4 gap-1">
-                {filtered.slice(0, 20).map(p => (
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                {filtered.slice(0, 30).map(p => (
                   <div
                     key={p.id}
                     onClick={() => selectProduct(expandedSlot, p)}
-                    className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500' : 'border-purple-200 hover:border-pink-400 bg-white') + ' aspect-square rounded-lg border overflow-hidden cursor-pointer relative group transition-colors'}
+                    className={`aspect-square rounded-lg border overflow-hidden cursor-pointer relative group transition-all hover:scale-105 hover:shadow-lg ${
+                      theme === 'dark' ? 'border-neutral-700 hover:border-pink-500 bg-neutral-800' : 'border-gray-200 hover:border-pink-400 bg-white'
+                    }`}
                   >
-                    <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-full h-full object-contain p-0.5" />
-                    <div className="absolute inset-x-0 bottom-0 bg-black/80 text-white text-[6px] p-0.5 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                    <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-full h-full object-contain p-1" />
+                    <div className={`absolute inset-x-0 bottom-0 text-white text-[8px] p-1 truncate transition-opacity ${
+                      theme === 'dark' ? 'bg-gradient-to-t from-black/90 to-transparent' : 'bg-gradient-to-t from-black/80 to-transparent'
+                    }`}>
                       {p.name}
+                    </div>
+                    <div className="absolute inset-0 bg-pink-500/0 group-hover:bg-pink-500/10 transition-colors flex items-center justify-center">
+                      <i className="fas fa-plus text-pink-500 opacity-0 group-hover:opacity-100 transition-opacity text-lg"></i>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-center py-4'}>
-                <i className="fas fa-search text-sm mb-1"></i>
-                <p className="text-[10px]">Nenhum produto encontrado para esta categoria</p>
-                <p className={`text-[9px] mt-1 ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
-                  Tente arrastar uma imagem do Google
+              <div className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-center py-8'}>
+                <i className="fas fa-search text-2xl mb-2 opacity-50"></i>
+                <p className="text-sm font-medium">Nenhum produto encontrado</p>
+                <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-500'}`}>
+                  Tente arrastar uma imagem do Google ou da galeria
                 </p>
               </div>
             )}
           </div>
-          {filtered.length > 20 && (
-            <div className={(theme === 'dark' ? 'border-neutral-800 text-neutral-500' : 'border-purple-100 text-gray-500') + ' px-2 py-1 border-t text-center'}>
-              <span className="text-[9px]">Mostrando 20 de {filtered.length} produtos</span>
+
+          {filtered.length > 30 && (
+            <div className={`px-3 py-2 border-t text-center ${theme === 'dark' ? 'border-neutral-800 text-neutral-500' : 'border-pink-100 text-gray-500'}`}>
+              <span className="text-[10px]">Mostrando 30 de {filtered.length} produtos</span>
             </div>
           )}
         </div>
       )}
 
-      {Object.keys(composition).length > 0 && (
+      {/* Botão limpar */}
+      {Object.keys(composition).length > 0 && !expandedSlot && (
         <button
           onClick={() => onChange({})}
           className="mt-2 text-[9px] text-red-500 hover:text-red-400 font-medium w-full text-right transition-colors"
         >
-          <i className="fas fa-trash-alt mr-1"></i>Limpar
+          <i className="fas fa-trash-alt mr-1"></i>Limpar tudo
         </button>
       )}
 
@@ -469,7 +487,6 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
             </div>
 
             <div className="p-4 space-y-3">
-              {/* Camera */}
               <button
                 onClick={() => cameraInputRef.current?.click()}
                 disabled={isProcessingImage}
@@ -481,16 +498,11 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
                   <i className="fas fa-camera text-white text-lg"></i>
                 </div>
                 <div className="text-left">
-                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
-                    Camera
-                  </p>
-                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
-                    Tirar foto agora
-                  </p>
+                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>Camera</p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>Tirar foto agora</p>
                 </div>
               </button>
 
-              {/* Galeria */}
               <button
                 onClick={() => galleryInputRef.current?.click()}
                 disabled={isProcessingImage}
@@ -502,26 +514,19 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
                   <i className={`fas fa-images text-lg ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}></i>
                 </div>
                 <div className="text-left">
-                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
-                    Galeria
-                  </p>
-                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
-                    Escolher da galeria
-                  </p>
+                  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>Galeria</p>
+                  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>Escolher da galeria</p>
                 </div>
               </button>
 
               {isProcessingImage && (
                 <div className="flex items-center justify-center gap-2 py-3">
                   <i className="fas fa-spinner fa-spin text-pink-500"></i>
-                  <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
-                    Processando...
-                  </span>
+                  <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>Processando...</span>
                 </div>
               )}
             </div>
 
-            {/* Botao cancelar */}
             <div className={`p-4 border-t ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
               <button
                 onClick={() => setShowImageOptions(null)}
