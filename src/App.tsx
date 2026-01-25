@@ -251,12 +251,16 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     ageRange: 'adult',
     height: 'medium',
     hairColor: 'brown',
-    hairStyle: 'straight-long',
+    hairStyle: 'straight',
+    hairLength: 'medium',
     eyeColor: 'brown',
     expression: 'natural-smile',
     bustSize: 'medium',
     waistType: 'medium',
     referenceImage: null as string | null,
+    physicalNotes: '',
+    hairNotes: '',
+    skinNotes: '',
   });
   const [savingModel, setSavingModel] = useState(false);
   const [generatingModelImages, setGeneratingModelImages] = useState(false);
@@ -1983,12 +1987,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       ageRange: 'adult',
       height: 'medium',
       hairColor: 'brown',
-      hairStyle: 'straight-long',
+      hairStyle: 'straight',
+      hairLength: 'medium',
       eyeColor: 'brown',
       expression: 'natural-smile',
       bustSize: 'medium',
       waistType: 'medium',
       referenceImage: null,
+      physicalNotes: '',
+      hairNotes: '',
+      skinNotes: '',
     });
     setEditingModel(null);
     setModelPreviewImages(null);
@@ -2152,6 +2160,46 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   const getModelLabel = (field: keyof typeof MODEL_OPTIONS, id: string) => {
     const options = MODEL_OPTIONS[field] as { id: string; label: string }[];
     return options?.find(o => o.id === id)?.label || id;
+  };
+
+  // Função para gerar o prompt do modelo para o Gemini
+  const generateModelPrompt = () => {
+    const gender = newModel.gender === 'woman' ? 'mulher' : 'homem';
+    const ethnicity = getModelLabel('ethnicity', newModel.ethnicity).toLowerCase();
+    const skinTone = getModelLabel('skinTone', newModel.skinTone).toLowerCase();
+    const bodyType = getModelLabel('bodyType', newModel.bodyType).toLowerCase();
+    const ageRange = getModelLabel('ageRange', newModel.ageRange);
+    const height = getModelLabel('height', newModel.height).toLowerCase();
+    const hairColor = getModelLabel('hairColor', newModel.hairColor).toLowerCase();
+    const hairStyle = getModelLabel('hairStyle', newModel.hairStyle).toLowerCase();
+    const hairLength = getModelLabel('hairLength', newModel.hairLength).toLowerCase();
+    const eyeColor = getModelLabel('eyeColor', newModel.eyeColor).toLowerCase();
+    const expression = getModelLabel('expression', newModel.expression).toLowerCase();
+
+    let prompt = `Modelo ${gender} de etnia ${ethnicity}, pele ${skinTone}, corpo ${bodyType}, ${ageRange}, altura ${height}. `;
+    prompt += `Cabelo ${hairColor}, ${hairStyle}, ${hairLength}. `;
+    prompt += `Olhos ${eyeColor}. Expressão ${expression}. `;
+
+    if (newModel.gender === 'woman') {
+      const bustSize = getModelLabel('bustSize', newModel.bustSize).toLowerCase();
+      prompt += `Busto ${bustSize}. `;
+    }
+
+    const waistType = getModelLabel('waistType', newModel.waistType).toLowerCase();
+    prompt += `Cintura ${waistType}. `;
+
+    // Observações personalizadas
+    if (newModel.physicalNotes) {
+      prompt += `\n\nObservações físicas: ${newModel.physicalNotes}`;
+    }
+    if (newModel.hairNotes) {
+      prompt += `\n\nObservações do cabelo: ${newModel.hairNotes}`;
+    }
+    if (newModel.skinNotes) {
+      prompt += `\n\nObservações da pele: ${newModel.skinNotes}`;
+    }
+
+    return prompt;
   };
 
   const formatWhatsApp = (phone: string) => { 
@@ -5764,11 +5812,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Step Indicators */}
               <div className="flex items-center justify-between gap-2">
                 {[
-                  { step: 1, label: 'Básico' },
+                  { step: 1, label: 'Gênero' },
                   { step: 2, label: 'Físico' },
-                  { step: 3, label: 'Detalhes' },
+                  { step: 3, label: 'Aparência' },
                   { step: 4, label: 'Proporções' },
-                  { step: 5, label: 'Confirmar' },
+                  { step: 5, label: 'Finalizar' },
                 ].map(({ step, label }) => (
                   <div key={step} className="flex-1 text-center">
                     <div className={'mx-auto w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium mb-1 transition-all ' + (
@@ -5788,37 +5836,28 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4">
-              {/* Step 1: Básico */}
+              {/* Step 1: Gênero */}
               {modelWizardStep === 1 && (
                 <div className="space-y-4">
-                  <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
-                    <input
-                      type="text"
-                      value={newModel.name}
-                      onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
-                      placeholder="Ex: Modelo Feminino Casual"
-                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
-                    />
+                  <div className="text-center mb-4">
+                    <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1'}>Selecione o Gênero</h3>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Escolha o gênero do modelo que você deseja criar</p>
                   </div>
-                  <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Gênero</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {MODEL_OPTIONS.gender.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, gender: opt.id as 'woman' | 'man' })}
-                          className={'p-4 rounded-xl border-2 transition-all text-center ' + (
-                            newModel.gender === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300')
-                          )}
-                        >
-                          <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-2xl mb-2 ' + (newModel.gender === opt.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
-                          <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{opt.label}</p>
-                        </button>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {MODEL_OPTIONS.gender.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setNewModel({ ...newModel, gender: opt.id as 'woman' | 'man' })}
+                        className={'p-6 rounded-xl border-2 transition-all text-center ' + (
+                          newModel.gender === opt.id
+                            ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20'
+                            : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300')
+                        )}
+                      >
+                        <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                        <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>{opt.label}</p>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -5826,6 +5865,24 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Step 2: Físico */}
               {modelWizardStep === 2 && (
                 <div className="space-y-4">
+                  <div>
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Faixa Etária</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {MODEL_OPTIONS.ageRange.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setNewModel({ ...newModel, ageRange: opt.id })}
+                          className={'px-2 py-2 rounded-lg border transition-all text-[10px] font-medium ' + (
+                            newModel.ageRange === opt.id
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
+                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Etnia</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -5864,37 +5921,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Corpo</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {MODEL_OPTIONS.bodyType.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, bodyType: opt.id })}
                           className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
                             newModel.bodyType === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Detalhes */}
-              {modelWizardStep === 3 && (
-                <div className="space-y-4">
-                  <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Faixa Etária</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MODEL_OPTIONS.ageRange.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, ageRange: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
-                            newModel.ageRange === opt.id
                               ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
                           )}
@@ -5923,8 +5956,24 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                   </div>
                   <div>
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Físicas <span className="text-neutral-500">(opcional)</span></label>
+                    <textarea
+                      value={newModel.physicalNotes}
+                      onChange={(e) => setNewModel({ ...newModel, physicalNotes: e.target.value })}
+                      placeholder="Ex: Ombros largos, pernas longas, tatuagens visíveis..."
+                      rows={2}
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs resize-none'}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Aparência */}
+              {modelWizardStep === 3 && (
+                <div className="space-y-4">
+                  <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor do Cabelo</label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {MODEL_OPTIONS.hairColor.map(opt => (
                         <button
                           key={opt.id}
@@ -5941,8 +5990,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                   </div>
                   <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Estilo do Cabelo</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cabelo</label>
+                    <div className="grid grid-cols-3 gap-2">
                       {MODEL_OPTIONS.hairStyle.map(opt => (
                         <button
                           key={opt.id}
@@ -5958,12 +6007,34 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Step 4: Proporções */}
-              {modelWizardStep === 4 && (
-                <div className="space-y-4">
+                  <div>
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tamanho do Cabelo</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {MODEL_OPTIONS.hairLength.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setNewModel({ ...newModel, hairLength: opt.id })}
+                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                            newModel.hairLength === opt.id
+                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
+                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações do Cabelo <span className="text-neutral-500">(opcional)</span></label>
+                    <input
+                      type="text"
+                      value={newModel.hairNotes}
+                      onChange={(e) => setNewModel({ ...newModel, hairNotes: e.target.value })}
+                      placeholder="Ex: Franja, mechas coloridas, raspado nas laterais..."
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
+                    />
+                  </div>
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor dos Olhos</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -5984,12 +6055,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Expressão</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {MODEL_OPTIONS.expression.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, expression: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                          className={'px-2 py-2 rounded-lg border transition-all text-[10px] font-medium ' + (
                             newModel.expression === opt.id
                               ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
                               : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
@@ -6000,10 +6071,26 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+                  <div>
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações da Pele <span className="text-neutral-500">(opcional)</span></label>
+                    <input
+                      type="text"
+                      value={newModel.skinNotes}
+                      onChange={(e) => setNewModel({ ...newModel, skinNotes: e.target.value })}
+                      placeholder="Ex: Sardas, manchas, vitiligo, cicatrizes..."
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Proporções */}
+              {modelWizardStep === 4 && (
+                <div className="space-y-4">
                   {newModel.gender === 'woman' && (
                     <div>
                       <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tamanho do Busto</label>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         {MODEL_OPTIONS.bustSize.map(opt => (
                           <button
                             key={opt.id}
@@ -6036,6 +6123,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           {opt.label}
                         </button>
                       ))}
+                    </div>
+                  </div>
+                  {/* Preview rápido das características até agora */}
+                  <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-3 mt-4'}>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Resumo do Modelo</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('gender', newModel.gender)}</span>
+                      <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ageRange', newModel.ageRange)}</span>
+                      <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ethnicity', newModel.ethnicity)}</span>
+                      <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('skinTone', newModel.skinTone)}</span>
+                      <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('bodyType', newModel.bodyType)}</span>
+                      <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('hairColor', newModel.hairColor)} {getModelLabel('hairLength', newModel.hairLength)}</span>
                     </div>
                   </div>
                 </div>
@@ -6119,30 +6218,52 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {/* Estado: Aguardando criar */}
                   {!generatingModelImages && !modelPreviewImages && (
                     <>
-                      {/* Avatar Preview */}
-                      <div className="flex justify-center mb-4">
-                        <div className={'w-32 h-32 rounded-2xl flex items-center justify-center ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
-                          <i className="fas fa-user text-5xl text-white"></i>
+                      {/* Nome do modelo */}
+                      <div>
+                        <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
+                        <input
+                          type="text"
+                          value={newModel.name}
+                          onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
+                          placeholder="Ex: Modelo Feminino Casual"
+                          className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
+                        />
+                      </div>
+
+                      {/* Prompt que será enviado */}
+                      <div>
+                        <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+                          <i className="fas fa-wand-magic-sparkles text-pink-500 mr-1"></i>
+                          Prompt para a IA (Gemini)
+                        </label>
+                        <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-lg border text-xs leading-relaxed ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}>
+                          {generateModelPrompt()}
+                        </div>
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
+                          Este prompt será usado para gerar imagens de rosto, frente e costas
+                        </p>
+                      </div>
+
+                      {/* Preview das características */}
+                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-orange-400/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl p-3 border'}>
+                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>
+                          <i className="fas fa-check-circle text-green-500 mr-1"></i>
+                          Resumo do Modelo
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('gender', newModel.gender)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ageRange', newModel.ageRange)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ethnicity', newModel.ethnicity)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('skinTone', newModel.skinTone)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('bodyType', newModel.bodyType)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('height', newModel.height)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('hairColor', newModel.hairColor)} {getModelLabel('hairLength', newModel.hairLength)}</span>
+                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('eyeColor', newModel.eyeColor)}</span>
+                          {newModel.gender === 'woman' && (
+                            <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>Busto {getModelLabel('bustSize', newModel.bustSize)}</span>
+                          )}
                         </div>
                       </div>
-                      <div className="text-center mb-4">
-                        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name || 'Sem nome'}</h3>
-                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>{getModelLabel('gender', newModel.gender)}</p>
-                      </div>
-                      {/* Características resumidas */}
-                      <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50') + ' rounded-xl p-3'}>
-                        <div className="flex flex-wrap gap-1.5 justify-center">
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ethnicity', newModel.ethnicity)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('skinTone', newModel.skinTone)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('bodyType', newModel.bodyType)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ageRange', newModel.ageRange)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('hairColor', newModel.hairColor)} {getModelLabel('hairStyle', newModel.hairStyle)}</span>
-                        </div>
-                      </div>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center'}>
-                        <i className="fas fa-magic mr-1"></i>
-                        Clique em "Criar Modelo" para a IA gerar as imagens
-                      </p>
                     </>
                   )}
                 </div>
@@ -6162,8 +6283,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </button>
                   <button
                     onClick={() => setModelWizardStep((modelWizardStep + 1) as 1 | 2 | 3 | 4 | 5)}
-                    disabled={modelWizardStep === 1 && !newModel.name}
-                    className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium transition-opacity ' + (modelWizardStep === 1 && !newModel.name ? 'opacity-50 cursor-not-allowed' : '')}
+                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium"
                   >
                     Próximo
                   </button>
@@ -6193,7 +6313,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </button>
                       <button
                         onClick={generateModelPreview}
-                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                        disabled={!newModel.name.trim()}
+                        className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (!newModel.name.trim() ? 'opacity-50 cursor-not-allowed' : '')}
                       >
                         <i className="fas fa-wand-magic-sparkles"></i>
                         Criar Modelo
@@ -6433,11 +6554,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     height: showModelDetail.height,
                     hairColor: showModelDetail.hairColor,
                     hairStyle: showModelDetail.hairStyle,
+                    hairLength: (showModelDetail as any).hairLength || 'medium',
                     eyeColor: showModelDetail.eyeColor,
                     expression: showModelDetail.expression,
                     bustSize: showModelDetail.bustSize || 'medium',
                     waistType: showModelDetail.waistType || 'medium',
                     referenceImage: showModelDetail.referenceImageUrl || null,
+                    physicalNotes: (showModelDetail as any).physicalNotes || '',
+                    hairNotes: (showModelDetail as any).hairNotes || '',
+                    skinNotes: (showModelDetail as any).skinNotes || '',
                   });
                   setEditingModel(showModelDetail);
                   setModelWizardStep(1);

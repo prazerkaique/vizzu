@@ -344,9 +344,14 @@ export const MODEL_OPTIONS = {
     { id: 'plus', label: 'Plus Size' },
   ],
   ageRange: [
+    { id: 'baby', label: 'Bebê (0-2)' },
+    { id: 'child', label: 'Infantil (3-12)' },
+    { id: 'teen', label: 'Adolescente (13-19)' },
     { id: 'young', label: 'Jovem (20-25)' },
     { id: 'adult', label: 'Adulto (25-35)' },
     { id: 'mature', label: 'Maduro (35-50)' },
+    { id: 'senior', label: 'Sênior (50-60)' },
+    { id: 'elderly', label: '+60' },
   ],
   height: [
     { id: 'short', label: 'Baixa' },
@@ -362,12 +367,19 @@ export const MODEL_OPTIONS = {
     { id: 'white', label: 'Branco' },
   ],
   hairStyle: [
-    { id: 'straight-short', label: 'Liso curto' },
-    { id: 'straight-long', label: 'Liso longo' },
+    { id: 'straight', label: 'Liso' },
     { id: 'wavy', label: 'Ondulado' },
     { id: 'curly', label: 'Cacheado' },
     { id: 'coily', label: 'Crespo' },
     { id: 'bald', label: 'Careca' },
+  ],
+  hairLength: [
+    { id: 'bald', label: 'Careca' },
+    { id: 'very-short', label: 'Muito curto' },
+    { id: 'short', label: 'Curto' },
+    { id: 'medium', label: 'Médio' },
+    { id: 'long', label: 'Longo' },
+    { id: 'very-long', label: 'Muito longo' },
   ],
   eyeColor: [
     { id: 'brown', label: 'Castanhos' },
