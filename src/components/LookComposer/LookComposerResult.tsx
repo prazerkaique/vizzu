@@ -648,7 +648,11 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
       {showZoomModal && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/95" onClick={() => setShowZoomModal(false)}>
           {/* Header do Modal */}
-          <div className="flex items-center justify-between p-4 flex-shrink-0" onClick={e => e.stopPropagation()}>
+          <div
+            className="flex items-center justify-between p-4 flex-shrink-0"
+            style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
+            onClick={e => e.stopPropagation()}
+          >
             <div className="flex items-center gap-3">
               {/* Switch Original/Gerada */}
               <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
