@@ -242,6 +242,22 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     return (saved as 'dark' | 'light') || 'dark';
   });
 
+  // Detecta se está rodando como PWA standalone (sem UI do browser)
+  const [isPWA, setIsPWA] = useState(false);
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || (window.navigator as any).standalone === true  // iOS Safari
+        || document.referrer.includes('android-app://');  // Android TWA
+      setIsPWA(isStandalone);
+    };
+    checkPWA();
+    // Listener para mudanças (raro, mas possível)
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    mediaQuery.addEventListener('change', checkPWA);
+    return () => mediaQuery.removeEventListener('change', checkPWA);
+  }, []);
+
   // Swipe navigation - estados para navegação por gestos
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
@@ -5080,8 +5096,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* MOBILE BOTTOM NAVIGATION - Esconde quando está dentro das features de criação */}
       {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
       <nav
-        className={'md:hidden flex-shrink-0 border-t px-2 pt-1.5 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
-        style={{ paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, 0px))' }}
+        className={'md:hidden flex-shrink-0 border-t px-2 pt-1 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
+        style={{
+          paddingBottom: isPWA
+            ? 'max(0.25rem, env(safe-area-inset-bottom, 0.25rem))'  // PWA: só safe-area (home indicator)
+            : 'calc(0.375rem + env(safe-area-inset-bottom, 0px))'   // Browser: padding extra
+        }}
       >
         <div className="flex items-center justify-around">
           <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
