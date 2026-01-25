@@ -4941,9 +4941,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* VIDEO TUTORIAL MODAL */}
       {showVideoTutorial && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowVideoTutorial(null)}>
-          <div className={'relative w-full max-w-4xl rounded-2xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowVideoTutorial(null)} className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors">
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowVideoTutorial(null)}>
+          <div className={'relative w-full max-w-4xl rounded-t-2xl md:rounded-2xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 z-30">
+              <div className="bg-white/30 w-10 h-1 rounded-full"></div>
+            </div>
+            <button onClick={() => setShowVideoTutorial(null)} className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 text-white hidden md:flex items-center justify-center hover:bg-black/70 transition-colors">
               <i className="fas fa-times"></i>
             </button>
             <div className="relative aspect-video bg-black">
@@ -4972,11 +4976,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+            </div>
             <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
-              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}>
+              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' hidden md:flex w-7 h-7 rounded-full items-center justify-center transition-colors'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
@@ -5067,9 +5075,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Observações (opcional)</label>
                 <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'} />
               </div>
-              <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                <i className="fas fa-user-plus mr-2"></i>Cadastrar Cliente
-              </button>
+              {/* Botões de ação */}
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-3 rounded-xl font-medium text-sm transition-colors md:hidden'}>
+                  Cancelar
+                </button>
+                <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp} className="flex-1 md:w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i className="fas fa-user-plus mr-2"></i>Cadastrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -5077,10 +5091,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CLIENT DETAIL MODAL */}
       {showClientDetail && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowClientDetail(null)}>
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
+            </div>
             <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
-              <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+              <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
                 <i className="fas fa-times text-xs"></i>
               </button>
               <div className="relative inline-block">
@@ -5183,14 +5201,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* WHATSAPP LOOK MODAL */}
       {showWhatsAppLookModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowWhatsAppLookModal(null); setSelectedLookForWhatsApp(null); setWhatsAppLookMessage(''); }}>
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
+            </div>
             <div className="sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 bg-neutral-900 border-neutral-800">
               <h3 className="text-white text-sm font-medium flex items-center gap-2">
                 <i className="fab fa-whatsapp text-green-500"></i>
                 Enviar Look via WhatsApp
               </h3>
-              <button onClick={() => { setShowWhatsAppLookModal(null); setSelectedLookForWhatsApp(null); setWhatsAppLookMessage(''); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+              <button onClick={() => { setShowWhatsAppLookModal(null); setSelectedLookForWhatsApp(null); setWhatsAppLookMessage(''); }} className="w-7 h-7 rounded-full bg-neutral-800 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
@@ -5297,11 +5319,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* EDIT CLIENT MODAL */}
       {editingClient && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setEditingClient(null); setEditClientPhotos([]); }}>
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
+            </div>
             <div className="sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 bg-neutral-900 border-neutral-800">
               <h3 className="text-white text-sm font-medium">Editar Cliente</h3>
-              <button onClick={() => { setEditingClient(null); setEditClientPhotos([]); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+              <button onClick={() => { setEditingClient(null); setEditClientPhotos([]); }} className="w-7 h-7 rounded-full bg-neutral-800 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
@@ -5529,11 +5555,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'}>
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'} onClick={(e) => e.stopPropagation()}>
+      {/* Drag handle - mobile */}
+      <div className="md:hidden pb-2 flex justify-center -mt-1">
+        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+      </div>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
-        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
+        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
           <i className="fas fa-times text-xs"></i>
         </button>
       </div>
@@ -5732,15 +5762,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowProductDetail(null)}>
           <div
             className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+            </div>
             {/* Header fixo */}
             <div className={'flex items-center justify-between p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Detalhes do Produto</h3>
-              <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
+              <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
@@ -5918,8 +5952,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* Modal de confirmação de exclusão de produtos */}
       {showDeleteProductsModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-2xl w-full max-w-sm p-5 shadow-xl'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 shadow-xl'} onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pb-3 flex justify-center -mt-1">
+              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+            </div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
                 <i className="fas fa-trash text-red-500"></i>
@@ -5984,15 +6022,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* CREATE MODEL WIZARD MODAL */}
       {showCreateModel && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateModel(false); setEditingModel(null); }}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'} onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+            </div>
             {/* Header com Steps */}
             <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>
                   {editingModel ? 'Editar Modelo' : 'Criar Modelo'}
                 </h2>
-                <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2">
                   <button
                     onClick={() => minimizeModal({ id: 'createModel', title: newModel.name || 'Novo Modelo', icon: 'fa-user', type: 'createModel', progress: generatingModelImages ? 50 : undefined })}
                     className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}
@@ -6630,12 +6672,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       {/* MODEL DETAIL MODAL */}
       {showModelDetail && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'}>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowModelDetail(null)}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'} onClick={(e) => e.stopPropagation()}>
+            {/* Drag handle - mobile */}
+            <div className="md:hidden pt-3 pb-1 flex justify-center">
+              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+            </div>
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>{showModelDetail.name}</h2>
-              <button onClick={() => setShowModelDetail(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+              <button onClick={() => setShowModelDetail(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' hidden md:block transition-colors'}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
