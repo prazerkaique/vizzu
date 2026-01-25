@@ -4821,7 +4821,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         )}
       </main>
 
-      {/* MOBILE BOTTOM NAVIGATION */}
+      {/* MOBILE BOTTOM NAVIGATION - Esconde quando está dentro das features de criação */}
+      {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
       <nav
         className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1.5 z-40 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
         style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
@@ -4852,6 +4853,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </button>
         </div>
       </nav>
+      )}
 
 
       {/* VIDEO TUTORIAL MODAL */}
