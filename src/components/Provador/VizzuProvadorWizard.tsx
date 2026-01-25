@@ -140,6 +140,41 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     []
   );
 
+  // Emojis para cada tipo de peça do look
+  const lookEmojis: Record<string, string> = {
+    head: '🧢',
+    top: '👕',
+    bottom: '👖',
+    feet: '👟',
+    accessory1: '💼',
+    accessory2: '⌚',
+  };
+
+  // Formatar os itens do look para preview
+  const formatLookItemsPreview = useCallback(() => {
+    const currentLook = selectedSavedLook?.lookItems || lookComposition;
+    const items: string[] = [];
+    const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
+
+    lookKeys.forEach(key => {
+      const item = currentLook[key];
+      if (item && item.name) {
+        const emoji = lookEmojis[key] || '👔';
+        items.push(`${emoji} ${item.name} — Consulte`);
+      }
+    });
+
+    return items.join('\n');
+  }, [lookComposition, selectedSavedLook]);
+
+  // Mensagem completa formatada para preview
+  const getFormattedMessagePreview = useCallback(() => {
+    if (!selectedClient) return message;
+    const baseMessage = message.replace(/{nome}/gi, selectedClient.firstName);
+    const lookItems = formatLookItemsPreview();
+    return lookItems ? `${baseMessage}\n\n${lookItems}` : baseMessage;
+  }, [message, selectedClient, formatLookItemsPreview]);
+
   const formatWhatsApp = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.length === 11) {
@@ -1156,6 +1191,21 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
               )}
             </button>
           </div>
+
+          {/* Preview da mensagem completa */}
+          {(generatedImage || selectedSavedLook) && Object.keys(selectedSavedLook?.lookItems || lookComposition).length > 0 && (
+            <div className={`mb-3 p-3 rounded-xl border ${theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <i className={`fab fa-whatsapp text-green-500 text-xs`}></i>
+                <span className={`text-[10px] font-medium uppercase tracking-wide ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
+                  Preview da mensagem
+                </span>
+              </div>
+              <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-700'}`}>
+                {getFormattedMessagePreview()}
+              </div>
+            </div>
+          )}
 
           {/* Botoes de acao */}
           <div className="space-y-2">
