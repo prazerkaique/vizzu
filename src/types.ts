@@ -240,6 +240,7 @@ export interface Client {
   lastName: string;
   whatsapp: string;
   email?: string;
+  gender?: 'male' | 'female';  // Gênero do cliente
   photo?: string;             // Foto principal (compatibilidade) - usar photos preferencialmente
   photos?: ClientPhoto[];     // NOVO: Array de fotos (frente, costas, rosto)
   hasProvadorIA: boolean;     // true se tiver pelo menos 1 foto

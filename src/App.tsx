@@ -186,7 +186,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
-  const [newClient, setNewClient] = useState({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [] as ClientPhoto[], notes: '' });
+  const [newClient, setNewClient] = useState({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '' as 'male' | 'female' | '', photos: [] as ClientPhoto[], notes: '' });
   const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type'] | null>(null);
   const [processingClientPhoto, setProcessingClientPhoto] = useState(false);
   
@@ -664,6 +664,7 @@ const loadUserClients = async (userId: string) => {
           lastName: c.last_name,
           whatsapp: c.whatsapp,
           email: c.email || undefined,
+          gender: c.gender || undefined,
           photo: clientPhotos[0]?.base64 || undefined,
           photos: clientPhotos,
           hasProvadorIA: clientPhotos.length > 0 || c.has_provador_ia || false,
@@ -720,6 +721,7 @@ const saveClientToSupabase = async (client: Client, userId: string) => {
         last_name: client.lastName,
         whatsapp: client.whatsapp,
         email: client.email || null,
+        gender: client.gender || null,
         has_provador_ia: client.hasProvadorIA || false,
         notes: client.notes || null,
         created_at: client.createdAt,
@@ -1561,6 +1563,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       lastName: newClient.lastName,
       whatsapp: newClient.whatsapp.replace(/\D/g, ''),
       email: newClient.email || undefined,
+      gender: newClient.gender || undefined,
       photos: photosToUpload.length > 0 ? photosToUpload : undefined,
       photo: photosToUpload[0]?.base64,
       hasProvadorIA: photosToUpload.length > 0,
@@ -1573,7 +1576,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     // Adicionar cliente imediatamente (com fotos locais)
     setClients(prev => [...prev, client]);
     setShowCreateClient(false);
-    setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' });
+    setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' });
 
     // Log no histórico
     handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
@@ -4701,7 +4704,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'}>
             <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
-              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}>
+              <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}>
                 <i className="fas fa-times text-xs"></i>
               </button>
             </div>
@@ -4761,6 +4764,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Sobrenome *</label>
                   <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+                </div>
+              </div>
+              <div>
+                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Gênero *</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-pink-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-pink-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-pink-400')}`}>
+                    <i className="fas fa-venus mr-1.5"></i>Feminino
+                  </button>
+                  <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'male' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'male' ? 'bg-blue-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-blue-400')}`}>
+                    <i className="fas fa-mars mr-1.5"></i>Masculino
+                  </button>
                 </div>
               </div>
               <div>
@@ -4927,6 +4941,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <div>
                   <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Sobrenome *</label>
                   <input type="text" value={editingClient.lastName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, lastName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+                </div>
+              </div>
+              {/* Gênero */}
+              <div>
+                <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Gênero</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'female' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'female' ? 'bg-pink-500 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-pink-500/50'}`}>
+                    <i className="fas fa-venus mr-1.5"></i>Feminino
+                  </button>
+                  <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'male' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'male' ? 'bg-blue-500 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50'}`}>
+                    <i className="fas fa-mars mr-1.5"></i>Masculino
+                  </button>
                 </div>
               </div>
               {/* WhatsApp */}
