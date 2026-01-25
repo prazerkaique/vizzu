@@ -5380,6 +5380,166 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   </div>
 )}
 
+{/* CREATE PRODUCT MODAL */}
+{showCreateProduct && (
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
+        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
+          <i className="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      {/* Fotos Frente/Costas */}
+      <div className="mb-4">
+        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
+        <div className="grid grid-cols-2 gap-3">
+          {/* FRENTE */}
+          <div className="flex flex-col">
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+              <i className="fas fa-image text-pink-500 text-[8px]"></i>
+              Frente <span className="text-pink-500">*</span>
+            </label>
+            {selectedFrontImage ? (
+              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-pink-500">
+                <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
+                <div className="absolute top-1 right-1 flex gap-1">
+                  <button onClick={() => setShowPhotoSourcePicker('front')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[8px]"></i>
+                  </button>
+                  <button onClick={() => setSelectedFrontImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[8px]"></i>
+                  </button>
+                </div>
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full">
+                  <i className="fas fa-check mr-0.5"></i>OK
+                </div>
+              </div>
+            ) : (
+              <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
+              </div>
+            )}
+          </div>
+
+          {/* COSTAS */}
+          <div className="flex flex-col">
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+              <i className="fas fa-image text-neutral-400 text-[8px]"></i>
+              Costas <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[8px]'}>(opcional)</span>
+            </label>
+            {selectedBackImage ? (
+              <div className={(theme === 'dark' ? 'border-green-500' : 'border-green-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
+                <img src={selectedBackImage} alt="Costas" className="w-full h-full object-cover" />
+                <div className="absolute top-1 right-1 flex gap-1">
+                  <button onClick={() => setShowPhotoSourcePicker('back')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[8px]"></i>
+                  </button>
+                  <button onClick={() => setSelectedBackImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[8px]"></i>
+                  </button>
+                </div>
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
+                  <i className="fas fa-check mr-0.5"></i>OK
+                </div>
+              </div>
+            ) : (
+              <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Dica */}
+        <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-lg p-2 mt-3 border'}>
+          <p className="text-amber-500 text-[10px] flex items-start gap-1.5">
+            <i className="fas fa-lightbulb mt-0.5"></i>
+            <span><strong>Dica:</strong> Adicionar foto de costas permite que a IA gere imagens de ambos os ângulos.</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Form Fields */}
+      <div className="space-y-3">
+        <div>
+          <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
+          <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
+            <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
+          </div>
+          <div>
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+            <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+              <option value="">Selecione</option>
+              {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
+          <select value={newProduct.category} onChange={(e) => { setNewProduct({...newProduct, category: e.target.value}); setProductAttributes({}); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+            <option value="">Selecione</option>
+            {CATEGORY_GROUPS.map(group => (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        {/* Atributos condicionais por categoria */}
+        {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
+          <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-purple-200') + ' p-3 rounded-xl border'}>
+            <div className="flex items-center gap-2 mb-2">
+              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-sliders text-xs'}></i>
+              <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
+            </div>
+            <div className={`grid gap-3 ${CATEGORY_ATTRIBUTES[newProduct.category].length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              {CATEGORY_ATTRIBUTES[newProduct.category].map(attr => (
+                <div key={attr.id}>
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>{attr.label}</label>
+                  <select
+                    value={productAttributes[attr.id] || ''}
+                    onChange={(e) => setProductAttributes(prev => ({ ...prev, [attr.id]: e.target.value }))}
+                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                  >
+                    <option value="">Selecione</option>
+                    {attr.options.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-2'}>
+              <i className="fas fa-info-circle mr-1"></i>
+              Esses atributos ajudam a IA a gerar imagens mais precisas
+            </p>
+          </div>
+        )}
+
+        <button onClick={handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          {isCreatingProduct ? (
+            <>
+              <i className="fas fa-spinner fa-spin text-xs"></i>
+              Salvando...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-check mr-1.5"></i>Criar Produto
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
