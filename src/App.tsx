@@ -162,6 +162,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showDeleteProductsModal, setShowDeleteProductsModal] = useState(false);
   const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
+  const [productForCreation, setProductForCreation] = useState<Product | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   
   const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
@@ -3603,6 +3604,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onSetLoadingText={setProductStudioLoadingText}
             isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
             onNavigate={(page) => setCurrentPage(page)}
+            initialProduct={productForCreation}
+            onClearInitialProduct={() => setProductForCreation(null)}
           />
         )}
 
@@ -3637,6 +3640,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             generationProgress={provadorProgress}
             loadingText={PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...'}
             onSetMinimized={setProvadorMinimized}
+            initialProduct={productForCreation}
+            onClearInitialProduct={() => setProductForCreation(null)}
           />
         )}
         {/* LOOK COMPOSER */}
@@ -3671,6 +3676,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onSetProgress={setLookComposerProgress}
             onSetLoadingText={setLookComposerLoadingText}
             isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+            initialProduct={productForCreation}
+            onClearInitialProduct={() => setProductForCreation(null)}
           />
         )}
 
@@ -4108,7 +4115,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                 </div>
                 <button onClick={() => setShowCreateClient(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
-                  <i className="fas fa-plus mr-1.5"></i>Novo
+                  <i className="fas fa-plus mr-1.5"></i>Novo Cliente
                 </button>
               </div>
               
@@ -5595,6 +5602,79 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{showProductDetail.fit}</p>
                   </div>
                 )}
+              </div>
+
+              {/* Seção "Deseja criar?" */}
+              <div className={'mt-5 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+                <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                  <i className="fas fa-wand-magic-sparkles text-pink-500 mr-2"></i>
+                  Deseja criar?
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Product Studio */}
+                  <button
+                    onClick={() => {
+                      setProductForCreation(showProductDetail);
+                      setShowProductDetail(null);
+                      setCurrentPage('product-studio');
+                    }}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center mb-2">
+                      <i className="fas fa-camera text-white text-xs"></i>
+                    </div>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Product Studio</p>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Foto profissional</p>
+                  </button>
+
+                  {/* Provador */}
+                  <button
+                    onClick={() => {
+                      setProductForCreation(showProductDetail);
+                      setShowProductDetail(null);
+                      setCurrentPage('provador');
+                    }}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-rose-400 flex items-center justify-center mb-2">
+                      <i className="fas fa-shirt text-white text-xs"></i>
+                    </div>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Provador</p>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Vista seus clientes</p>
+                  </button>
+
+                  {/* Look Completo */}
+                  <button
+                    onClick={() => {
+                      setProductForCreation(showProductDetail);
+                      setShowProductDetail(null);
+                      setCurrentPage('look-composer');
+                    }}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 flex items-center justify-center mb-2">
+                      <i className="fas fa-layer-group text-white text-xs"></i>
+                    </div>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Look Completo</p>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Monte combinações</p>
+                  </button>
+
+                  {/* Cenário Criativo */}
+                  <button
+                    onClick={() => {
+                      setProductForCreation(showProductDetail);
+                      setShowProductDetail(null);
+                      setCurrentPage('lifestyle');
+                    }}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-400 flex items-center justify-center mb-2">
+                      <i className="fas fa-mountain-sun text-white text-xs"></i>
+                    </div>
+                    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</p>
+                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Com ambiente</p>
+                  </button>
+                </div>
               </div>
             </div>
 

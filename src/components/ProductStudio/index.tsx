@@ -29,6 +29,9 @@ interface ProductStudioProps {
   isAnyGenerationRunning?: boolean;
   // Navegação para outras ferramentas
   onNavigate?: (page: 'look-composer' | 'lifestyle' | 'provador', productId?: string, imageUrl?: string) => void;
+  // Produto pré-selecionado (vindo do modal de detalhes)
+  initialProduct?: Product | null;
+  onClearInitialProduct?: () => void;
 }
 
 const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
@@ -56,9 +59,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   onSetProgress,
   onSetLoadingText,
   isAnyGenerationRunning = false,
-  onNavigate
+  onNavigate,
+  initialProduct,
+  onClearInitialProduct
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Pré-selecionar produto quando vier do modal de detalhes
+  useEffect(() => {
+    if (initialProduct) {
+      setSelectedProduct(initialProduct);
+      onClearInitialProduct?.();
+    }
+  }, [initialProduct, onClearInitialProduct]);
 
   // Manter selectedProduct atualizado quando products mudar
   useEffect(() => {

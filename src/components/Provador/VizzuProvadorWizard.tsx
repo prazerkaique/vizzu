@@ -46,6 +46,9 @@ interface Props {
   generationProgress: number;
   loadingText: string;
   onSetMinimized: (minimized: boolean) => void;
+  // Produto pré-selecionado (vindo do modal de detalhes)
+  initialProduct?: Product | null;
+  onClearInitialProduct?: () => void;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -87,6 +90,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   generationProgress,
   loadingText,
   onSetMinimized,
+  initialProduct,
+  onClearInitialProduct,
 }) => {
   // Estados do Wizard
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -124,6 +129,43 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   const clientsWithProvador = clients.filter(
     (c) => c.hasProvadorIA && (c.photos?.length || c.photo)
   );
+
+  // Pré-selecionar produto quando vier do modal de detalhes
+  useEffect(() => {
+    if (initialProduct) {
+      // Determinar slot baseado na categoria do produto
+      const categoryToSlot: Record<string, keyof LookComposition> = {
+        'Chapéu': 'head', 'Boné': 'head', 'Gorro': 'head', 'Touca': 'head', 'Boina': 'head', 'Turbante': 'head',
+        'Camiseta': 'top', 'Camisa': 'top', 'Blusa': 'top', 'Top': 'top', 'Cropped': 'top', 'Regata': 'top',
+        'Moletom': 'top', 'Suéter': 'top', 'Cardigan': 'top', 'Jaqueta': 'top', 'Blazer': 'top', 'Colete': 'top',
+        'Calça': 'bottom', 'Shorts': 'bottom', 'Bermuda': 'bottom', 'Saia': 'bottom', 'Legging': 'bottom',
+        'Tênis': 'feet', 'Sapato': 'feet', 'Sandália': 'feet', 'Chinelo': 'feet', 'Bota': 'feet', 'Sapatilha': 'feet',
+        'Bolsa': 'accessory1', 'Mochila': 'accessory1', 'Carteira': 'accessory1', 'Cinto': 'accessory1',
+        'Óculos': 'accessory2', 'Relógio': 'accessory2', 'Colar': 'accessory2', 'Brinco': 'accessory2', 'Pulseira': 'accessory2',
+      };
+
+      const slot = categoryToSlot[initialProduct.category || ''] || 'top';
+      const imageUrl = initialProduct.images?.[0]?.url || initialProduct.images?.[0]?.base64 || '';
+
+      if (imageUrl) {
+        setLookComposition(prev => ({
+          ...prev,
+          [slot]: {
+            image: imageUrl,
+            name: initialProduct.name,
+            sku: initialProduct.sku,
+            productId: initialProduct.id,
+          }
+        }));
+        // Ir para o step 3 (Look) se já tiver cliente selecionado, senão vai para step 1
+        if (selectedClient) {
+          setCurrentStep(3);
+        }
+      }
+
+      onClearInitialProduct?.();
+    }
+  }, [initialProduct, onClearInitialProduct, selectedClient]);
 
   // ============================================================
   // FUNÇÕES AUXILIARES

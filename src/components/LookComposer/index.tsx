@@ -2,7 +2,7 @@
 // VIZZU - Look Composer (Monte looks completos com IA)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
 
@@ -30,6 +30,9 @@ interface LookComposerProps {
   onSetProgress?: (value: number) => void;
   onSetLoadingText?: (value: string) => void;
   isAnyGenerationRunning?: boolean;
+  // Produto pré-selecionado (vindo do modal de detalhes)
+  initialProduct?: Product | null;
+  onClearInitialProduct?: () => void;
 }
 
 interface GeneratedLook {
@@ -87,7 +90,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   onSetMinimized,
   onSetProgress,
   onSetLoadingText,
-  isAnyGenerationRunning = false
+  isAnyGenerationRunning = false,
+  initialProduct,
+  onClearInitialProduct
 }) => {
   const isDark = theme === 'dark';
 
@@ -103,6 +108,15 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
   // Estado para controlar qual imagem cada card está mostrando (carrossel)
   const [cardViewStates, setCardViewStates] = useState<Record<string, 'front' | 'back'>>({});
+
+  // Pré-selecionar produto quando vier do modal de detalhes
+  useEffect(() => {
+    if (initialProduct) {
+      setSelectedProduct(initialProduct);
+      setShowProductModal(true);
+      onClearInitialProduct?.();
+    }
+  }, [initialProduct, onClearInitialProduct]);
 
   // Função para alternar a view de um card específico
   const toggleCardView = (lookId: string, e: React.MouseEvent) => {
