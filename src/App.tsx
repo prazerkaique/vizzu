@@ -3581,8 +3581,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </div>
         )}
 
-        {/* PRODUCT STUDIO */}
-        {currentPage === 'product-studio' && (
+        {/* PRODUCT STUDIO - Mantém montado para preservar estado */}
+        <div style={{ display: currentPage === 'product-studio' ? 'contents' : 'none' }}>
           <ProductStudio
             products={products}
             userCredits={userCredits}
@@ -3607,10 +3607,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             initialProduct={productForCreation}
             onClearInitialProduct={() => setProductForCreation(null)}
           />
-        )}
+        </div>
 
-        {/* PROVADOR - Novo Wizard Unificado */}
-        {currentPage === 'provador' && (
+        {/* PROVADOR - Mantém montado para preservar estado */}
+        <div style={{ display: currentPage === 'provador' ? 'contents' : 'none' }}>
           <VizzuProvadorWizard
             theme={theme}
             clients={clients}
@@ -3643,9 +3643,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             initialProduct={productForCreation}
             onClearInitialProduct={() => setProductForCreation(null)}
           />
-        )}
-        {/* LOOK COMPOSER */}
-        {currentPage === 'look-composer' && (
+        </div>
+
+        {/* LOOK COMPOSER - Mantém montado para preservar estado */}
+        <div style={{ display: currentPage === 'look-composer' ? 'contents' : 'none' }}>
           <VizzuLookComposer
             products={products}
             userCredits={userCredits}
@@ -3679,10 +3680,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             initialProduct={productForCreation}
             onClearInitialProduct={() => setProductForCreation(null)}
           />
-        )}
+        </div>
 
-        {/* LIFESTYLE SHOT */}
-        {currentPage === 'lifestyle' && (
+        {/* LIFESTYLE SHOT - Mantém montado para preservar estado */}
+        <div style={{ display: currentPage === 'lifestyle' ? 'contents' : 'none' }}>
           <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-6">
@@ -3726,7 +3727,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* MODELS */}
         {currentPage === 'models' && (
