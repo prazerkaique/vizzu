@@ -1,0 +1,226 @@
+{
+  "name": "Vizzu - Generate Model Images",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/generate-model-images",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "generate-model-images"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrair dados do webhook\nconst { modelId, userId, modelProfile, prompt } = $input.first().json.body;\n\n// Criar prompts específicos para cada tipo de imagem\nconst basePrompt = prompt || `Modelo ${modelProfile.gender === 'woman' ? 'feminino' : 'masculino'}`;\n\nconst prompts = {\n  face: `Fotografia profissional de rosto, retrato close-up, fundo neutro cinza claro, iluminação de estúdio suave. ${basePrompt}. Olhando diretamente para a câmera, expressão natural. Alta qualidade, 4K, fotorrealista.`,\n  \n  front: `Fotografia profissional de corpo inteiro, vista frontal, pose natural de pé, fundo neutro cinza claro, iluminação de estúdio. ${basePrompt}. Vestindo roupas básicas neutras (camiseta branca e calça jeans). Alta qualidade, 4K, fotorrealista.`,\n  \n  back: `Fotografia profissional de corpo inteiro, vista de costas, pose natural de pé, fundo neutro cinza claro, iluminação de estúdio. ${basePrompt}. Vestindo roupas básicas neutras (camiseta branca e calça jeans). Alta qualidade, 4K, fotorrealista.`\n};\n\nreturn {\n  modelId,\n  userId,\n  modelProfile,\n  prompts,\n  originalPrompt: prompt\n};"
+      },
+      "id": "prepare-prompts",
+      "name": "Prepare Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.0-flash-exp",
+        "prompt": "={{ $json.prompts.face }}",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "gemini-face",
+      "name": "Gemini - Face",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [700, 100],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.0-flash-exp",
+        "prompt": "={{ $json.prompts.front }}",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "gemini-front",
+      "name": "Gemini - Front",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [700, 300],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.0-flash-exp",
+        "prompt": "={{ $json.prompts.back }}",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "gemini-back",
+      "name": "Gemini - Back",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [700, 500],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Coletar resultados das 3 gerações\nconst prepareData = $('Prepare Prompts').first().json;\nconst faceResult = $('Gemini - Face').first();\nconst frontResult = $('Gemini - Front').first();\nconst backResult = $('Gemini - Back').first();\n\n// TODO: Extrair URLs das imagens geradas pelo Gemini\n// O formato depende de como o Gemini retorna as imagens\n\nreturn {\n  modelId: prepareData.modelId,\n  userId: prepareData.userId,\n  images: {\n    face: faceResult?.json?.imageUrl || null,\n    front: frontResult?.json?.imageUrl || null,\n    back: backResult?.json?.imageUrl || null\n  },\n  status: 'generated'\n};"
+      },
+      "id": "collect-results",
+      "name": "Collect Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, model: { id: $json.modelId, images: $json.images, status: $json.status } }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.error || 'Erro ao gerar imagens do modelo' }) }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "respond-error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompts": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Face",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini - Front",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini - Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Face": {
+      "main": [
+        [
+          {
+            "node": "Collect Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Front": {
+      "main": [
+        [
+          {
+            "node": "Collect Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Back": {
+      "main": [
+        [
+          {
+            "node": "Collect Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Results": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Vizzu",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1"
+}

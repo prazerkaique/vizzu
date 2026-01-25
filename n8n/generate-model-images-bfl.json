@@ -1,0 +1,377 @@
+{
+  "name": "Vizzu Generate Model Images BFL",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/generate-model-images",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "generate-model-images"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst { modelId, userId, modelProfile, prompt } = body;\n\nconst translations = {\n  gender: { 'woman': 'woman', 'man': 'man' },\n  ethnicity: {\n    'caucasian': 'Caucasian', 'latino': 'Latino/Hispanic', 'black': 'Black/African',\n    'asian': 'East Asian', 'indian': 'South Asian/Indian', 'middle-eastern': 'Middle Eastern', 'mixed': 'Mixed race', 'brazilian': 'Brazilian'\n  },\n  skinTone: {\n    'very-light': 'very fair/porcelain', 'light': 'fair', 'medium-light': 'light olive',\n    'medium': 'medium/olive', 'medium-dark': 'tan', 'tan': 'tan', 'dark': 'brown', 'very-dark': 'deep brown/ebony'\n  },\n  bodyType: { 'slim': 'slim/slender', 'athletic': 'athletic/toned', 'average': 'average', 'curvy': 'curvy', 'plus': 'plus size' },\n  ageRange: {\n    'baby': '0-2 years old baby', 'child': '3-12 years old child', 'teen': '13-19 years old teenager',\n    'young': '20-25 years old young adult', 'adult': '25-35 years old adult', 'mature': '35-50 years old mature adult',\n    'senior': '50-60 years old senior', 'elderly': '60+ years old elderly'\n  },\n  height: { 'very-short': 'petite/short stature', 'short': 'below average height', 'medium': 'average height', 'tall': 'tall', 'very-tall': 'very tall/model height' },\n  hairColor: {\n    'black': 'jet black', 'dark-brown': 'dark brown', 'brown': 'brown', 'light-brown': 'light brown/chestnut',\n    'blonde': 'blonde', 'platinum': 'platinum blonde', 'red': 'red/auburn', 'gray': 'gray/silver', 'white': 'white'\n  },\n  hairStyle: { 'straight': 'straight', 'wavy': 'wavy', 'curly': 'curly', 'coily': 'coily/kinky', 'braided': 'braided' },\n  hairLength: { 'bald': 'bald/shaved', 'very-short': 'buzz cut/very short', 'short': 'short', 'medium': 'medium length', 'long': 'long', 'very-long': 'very long' },\n  eyeColor: { 'black': 'dark brown/black', 'dark-brown': 'dark brown', 'brown': 'brown', 'hazel': 'hazel', 'green': 'green', 'blue': 'blue', 'gray': 'gray' },\n  expression: { 'neutral': 'neutral/relaxed', 'smile': 'gentle smile', 'serious': 'serious/confident', 'happy': 'happy/joyful', 'professional': 'professional/poised' },\n  bustSize: { 'small': 'small bust', 'medium': 'medium bust', 'large': 'large bust' },\n  waistType: { 'defined': 'defined waist', 'straight': 'straight torso', 'hourglass': 'hourglass figure', 'thin': 'thin waist' }\n};\n\nconst t = (category, value) => translations[category]?.[value] || value;\n\nconst subject = `${t('ageRange', modelProfile.ageRange)} ${t('ethnicity', modelProfile.ethnicity)} ${t('gender', modelProfile.gender)}, ${t('skinTone', modelProfile.skinTone)} skin, ${t('bodyType', modelProfile.bodyType)} body type, ${t('height', modelProfile.height)}`;\n\nconst hairLength = modelProfile.hairLength || 'medium';\nconst hair = hairLength === 'bald' ? 'bald/shaved head' : `${t('hairColor', modelProfile.hairColor)} ${t('hairLength', hairLength)} ${t('hairStyle', modelProfile.hairStyle)} hair`;\n\nconst face = `${t('eyeColor', modelProfile.eyeColor)} eyes, ${t('expression', modelProfile.expression)} expression`;\n\nlet bodySpecifics = '';\nif (modelProfile.gender === 'woman') {\n  const parts = [];\n  if (modelProfile.bustSize) parts.push(t('bustSize', modelProfile.bustSize));\n  if (modelProfile.waistType) parts.push(t('waistType', modelProfile.waistType));\n  bodySpecifics = parts.join(', ');\n}\n\nconst notes = [];\nif (modelProfile.physicalNotes) notes.push(`Physical: ${modelProfile.physicalNotes}`);\nif (modelProfile.hairNotes) notes.push(`Hair: ${modelProfile.hairNotes}`);\nif (modelProfile.skinNotes) notes.push(`Skin: ${modelProfile.skinNotes}`);\n\nconst vizzuLogo = 'stylized Vizzu logo text in pink-magenta to purple gradient on left chest';\nconst clothing = `wearing plain white fitted t-shirt with small ${vizzuLogo}, white pants`;\nconst modelPose = 'professional model pose, arms straight down relaxed at sides, standing upright';\nconst cameraSpecs = 'shot with Canon EOS R5, 85mm f/1.4 lens';\nconst lightingSpecs = 'professional studio lighting, soft key light with fill, subtle rim light';\nconst backgroundSpec = 'clean seamless neutral gray studio backdrop';\nconst qualityMods = '2K resolution, ultra high definition, photorealistic, professional fashion photography, sharp crisp details, natural skin texture';\n\nconst fullSubject = [subject, hair, face, bodySpecifics, notes.join('. ')].filter(Boolean).join('. ');\n\nconst prompts = {\n  face: `2K professional fashion portrait headshot of ${fullSubject}. POSE: facing camera directly frontal view, head straight not tilted, looking directly at camera with confident neutral gaze, shoulders visible. ${cameraSpecs}, portrait orientation. ${backgroundSpec}, ${lightingSpecs}. ${qualityMods}, beauty photography, natural skin, catchlight in eyes`,\n  front: `2K full body fashion photograph of the exact same person from the reference image. ${fullSubject}. ${clothing}. POSE: ${modelPose}, facing camera directly frontal view, feet slightly apart. ${cameraSpecs.replace('85mm', '50mm')}, full body framing with space above head and below feet. ${backgroundSpec}, ${lightingSpecs}. ${qualityMods}. CRITICAL: Must be identical person as reference image, same face same features.`,\n  back: `2K full body fashion photograph from behind of the exact same person from the reference image. ${fullSubject}. ${clothing}. POSE: ${modelPose}, back facing camera, head looking straight ahead not turned. ${cameraSpecs.replace('85mm', '50mm')}, full body framing with space above head and below feet. ${backgroundSpec}, ${lightingSpecs}. ${qualityMods}. CRITICAL: Must be identical person as reference image.`\n};\n\nconst seed = modelId ? Math.abs(modelId.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) % 999999 : Math.floor(Math.random() * 999999);\n\nreturn { modelId, userId, modelProfile, prompts, metadata: { subject: fullSubject, clothing, background: backgroundSpec }, seed, images: {} };"
+      },
+      "id": "prepare-prompts",
+      "name": "PromptOptimizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-2-pro",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.prompts.face }}\",\n  \"width\": 2048,\n  \"height\": 2048,\n  \"seed\": {{ $json.seed }},\n  \"safety_tolerance\": 2,\n  \"output_format\": \"jpeg\"\n}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "gen-face",
+      "name": "GenFace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('PromptOptimizer').first().json;\nconst task = $input.first().json;\nreturn { ...prev, faceTaskId: task.id };" },
+      "id": "save-face-task",
+      "name": "SaveFaceTask",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    { "parameters": { "amount": 30, "unit": "seconds" }, "id": "wait-face-1", "name": "WaitFace1", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [1050, 300] },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.faceTaskId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 60000 }
+      },
+      "id": "poll-face-1",
+      "name": "PollFace1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('SaveFaceTask').first().json;\nconst result = $input.first().json;\nlet faceUrl = null;\nif (result.status === 'Ready' && result.result?.sample) faceUrl = result.result.sample;\nelse if (result.sample) faceUrl = result.sample;\nconst needsRetry = (result.status === 'Pending' || result.status === 'Processing') && !faceUrl;\nreturn { ...prev, images: { face: faceUrl }, faceStatus: result.status, faceNeedsRetry: needsRetry };" },
+      "id": "check-face-1",
+      "name": "CheckFace1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "id": "c1", "leftValue": "={{ $json.faceNeedsRetry }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }], "combinator": "and" }, "options": {} },
+      "id": "if-face-retry",
+      "name": "IfFaceRetry",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1650, 300]
+    },
+    { "parameters": { "amount": 20, "unit": "seconds" }, "id": "wait-face-2", "name": "WaitFace2", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [1850, 150] },
+    {
+      "parameters": { "method": "GET", "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.faceTaskId }}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": { "timeout": 60000 } },
+      "id": "poll-face-2",
+      "name": "PollFace2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2050, 150]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('CheckFace1').first().json;\nconst result = $input.first().json;\nlet faceUrl = null;\nif (result.status === 'Ready' && result.result?.sample) faceUrl = result.result.sample;\nelse if (result.sample) faceUrl = result.sample;\nconst needsRetry = (result.status === 'Pending' || result.status === 'Processing') && !faceUrl;\nreturn { ...prev, images: { face: faceUrl }, faceStatus: result.status, faceNeedsRetry: needsRetry };" },
+      "id": "check-face-2",
+      "name": "CheckFace2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2250, 150]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "id": "c2", "leftValue": "={{ $json.faceNeedsRetry }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }], "combinator": "and" }, "options": {} },
+      "id": "if-face-retry-2",
+      "name": "IfFaceRetry2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2450, 150]
+    },
+    { "parameters": { "amount": 20, "unit": "seconds" }, "id": "wait-face-3", "name": "WaitFace3", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [2650, 50] },
+    {
+      "parameters": { "method": "GET", "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.faceTaskId }}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": { "timeout": 60000 } },
+      "id": "poll-face-3",
+      "name": "PollFace3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2850, 50]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('CheckFace2').first().json;\nconst result = $input.first().json;\nlet faceUrl = null;\nif (result.status === 'Ready' && result.result?.sample) faceUrl = result.result.sample;\nelse if (result.sample) faceUrl = result.sample;\nreturn { ...prev, images: { face: faceUrl }, faceStatus: result.status };" },
+      "id": "check-face-3",
+      "name": "CheckFace3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3050, 50]
+    },
+    {
+      "parameters": { "jsCode": "const data = $input.first().json;\nconst body = { prompt: data.prompts.front, width: 1152, height: 2048, seed: data.seed, safety_tolerance: 2, output_format: 'jpeg' };\nif (data.images.face) body.image_prompt = data.images.face;\nreturn { ...data, frontRequestBody: body };" },
+      "id": "prepare-front-request",
+      "name": "PrepareFrontRequest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-2-pro",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.frontRequestBody) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "gen-front",
+      "name": "GenFront",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3450, 300]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('PrepareFrontRequest').first().json;\nconst task = $input.first().json;\nreturn { ...prev, frontTaskId: task.id };" },
+      "id": "save-front-task",
+      "name": "SaveFrontTask",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3650, 300]
+    },
+    { "parameters": { "amount": 30, "unit": "seconds" }, "id": "wait-front-1", "name": "WaitFront1", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [3850, 300] },
+    {
+      "parameters": { "method": "GET", "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.frontTaskId }}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": { "timeout": 60000 } },
+      "id": "poll-front-1",
+      "name": "PollFront1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4050, 300]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('SaveFrontTask').first().json;\nconst result = $input.first().json;\nlet frontUrl = null;\nif (result.status === 'Ready' && result.result?.sample) frontUrl = result.result.sample;\nelse if (result.sample) frontUrl = result.sample;\nconst needsRetry = (result.status === 'Pending' || result.status === 'Processing') && !frontUrl;\nreturn { ...prev, images: { ...prev.images, front: frontUrl }, frontStatus: result.status, frontNeedsRetry: needsRetry };" },
+      "id": "check-front-1",
+      "name": "CheckFront1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4250, 300]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "id": "c3", "leftValue": "={{ $json.frontNeedsRetry }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }], "combinator": "and" }, "options": {} },
+      "id": "if-front-retry",
+      "name": "IfFrontRetry",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [4450, 300]
+    },
+    { "parameters": { "amount": 20, "unit": "seconds" }, "id": "wait-front-2", "name": "WaitFront2", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [4650, 150] },
+    {
+      "parameters": { "method": "GET", "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.frontTaskId }}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": { "timeout": 60000 } },
+      "id": "poll-front-2",
+      "name": "PollFront2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4850, 150]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('CheckFront1').first().json;\nconst result = $input.first().json;\nlet frontUrl = null;\nif (result.status === 'Ready' && result.result?.sample) frontUrl = result.result.sample;\nelse if (result.sample) frontUrl = result.sample;\nreturn { ...prev, images: { ...prev.images, front: frontUrl }, frontStatus: result.status };" },
+      "id": "check-front-2",
+      "name": "CheckFront2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5050, 150]
+    },
+    {
+      "parameters": { "jsCode": "const data = $input.first().json;\nconst body = { prompt: data.prompts.back, width: 1152, height: 2048, seed: data.seed, safety_tolerance: 2, output_format: 'jpeg' };\nif (data.images.front) body.image_prompt = data.images.front;\nreturn { ...data, backRequestBody: body };" },
+      "id": "prepare-back-request",
+      "name": "PrepareBackRequest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bfl.ai/v1/flux-2-pro",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.backRequestBody) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "gen-back",
+      "name": "GenBack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [5450, 300]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('PrepareBackRequest').first().json;\nconst task = $input.first().json;\nif (!task.id) {\n  return { ...prev, backTaskId: null, backUrl: null, backGenSuccess: false };\n}\nreturn { ...prev, backTaskId: task.id, backGenSuccess: true };" },
+      "id": "save-back-task",
+      "name": "SaveBackTask",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5650, 300]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "id": "backGenCond", "leftValue": "={{ $json.backGenSuccess }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }], "combinator": "and" }, "options": {} },
+      "id": "if-back-gen-success",
+      "name": "IfBackGenSuccess",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [5850, 300]
+    },
+    { "parameters": { "amount": 30, "unit": "seconds" }, "id": "wait-back-1", "name": "WaitBack1", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [6050, 200] },
+    {
+      "parameters": { "method": "GET", "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.backTaskId }}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": { "timeout": 60000 } },
+      "id": "poll-back-1",
+      "name": "PollBack1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [6050, 300]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('SaveBackTask').first().json;\n// If backTaskId is null, generation failed - skip to final\nif (!prev.backTaskId) {\n  return { ...prev, backUrl: null, backStatus: 'Failed', backNeedsRetry: false };\n}\nconst result = $input.first().json;\nlet backUrl = null;\nif (result.status === 'Ready' && result.result?.sample) backUrl = result.result.sample;\nelse if (result.sample) backUrl = result.sample;\nconst needsRetry = (result.status === 'Pending' || result.status === 'Processing') && !backUrl;\nreturn { ...prev, backUrl, backStatus: result.status, backNeedsRetry: needsRetry };" },
+      "id": "check-back-1",
+      "name": "CheckBack1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [6250, 300]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "id": "c4", "leftValue": "={{ $json.backNeedsRetry }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }], "combinator": "and" }, "options": {} },
+      "id": "if-back-retry",
+      "name": "IfBackRetry",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [6450, 300]
+    },
+    { "parameters": { "amount": 20, "unit": "seconds" }, "id": "wait-back-2", "name": "WaitBack2", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [6650, 150] },
+    {
+      "parameters": { "method": "GET", "url": "=https://api.bfl.ai/v1/get_result?id={{ $json.backTaskId }}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": { "timeout": 60000 } },
+      "id": "poll-back-2",
+      "name": "PollBack2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [6850, 150]
+    },
+    {
+      "parameters": { "jsCode": "const prev = $('CheckBack1').first().json;\nconst result = $input.first().json;\nlet backUrl = null;\nif (result.status === 'Ready' && result.result?.sample) backUrl = result.result.sample;\nelse if (result.sample) backUrl = result.sample;\nreturn { ...prev, backUrl, backStatus: result.status };" },
+      "id": "check-back-2",
+      "name": "CheckBack2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [7050, 150]
+    },
+    {
+      "parameters": { "jsCode": "const data = $input.first().json;\nconst images = { face: data.images.face, front: data.images.front, back: data.backUrl };\nconst errors = [];\nif (!images.face) errors.push('Face failed');\nif (!images.front) errors.push('Front failed');\nif (!images.back) errors.push('Back failed');\nreturn { modelId: data.modelId, userId: data.userId, images, tempImages: images, status: errors.length === 0 ? 'generated' : 'partial', errors: errors.length > 0 ? errors : undefined, metadata: data.metadata };" },
+      "id": "final-result",
+      "name": "FinalResult",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [7250, 300]
+    },
+    {
+      "parameters": { "jsCode": "const data = $input.first().json;\nconst supabaseUrl = 'https://dbdqiqehuapcicejnzyd.supabase.co';\nconst supabaseKey = $env.SUPABASE_SERVICE_KEY;\nconst modelId = data.modelId;\nconst userId = data.userId;\n\nasync function downloadAndUpload(imageUrl, imageName) {\n  if (!imageUrl) return null;\n  try {\n    const imageResponse = await this.helpers.httpRequest({ method: 'GET', url: imageUrl, encoding: 'arraybuffer', returnFullResponse: true });\n    const buffer = imageResponse.body;\n    const contentType = imageResponse.headers['content-type'] || 'image/jpeg';\n    const ext = contentType.includes('png') ? '.png' : contentType.includes('webp') ? '.webp' : '.jpg';\n    const path = userId + '/' + modelId + '/' + imageName + ext;\n    const uploadResponse = await this.helpers.httpRequest({ method: 'POST', url: supabaseUrl + '/storage/v1/object/model-images/' + path, headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': contentType, 'x-upsert': 'true' }, body: buffer, encoding: 'arraybuffer', returnFullResponse: true, ignoreHttpStatusErrors: true });\n    if (uploadResponse.statusCode >= 400) { console.log('Upload ' + imageName + ' error:', uploadResponse.statusCode); return imageUrl; }\n    return supabaseUrl + '/storage/v1/object/public/model-images/' + path;\n  } catch (e) { console.log('Error uploading ' + imageName + ':', e.message); return imageUrl; }\n}\n\nconst faceUrl = await downloadAndUpload.call(this, data.tempImages.face, 'face');\nconst frontUrl = await downloadAndUpload.call(this, data.tempImages.front, 'front');\nconst backUrl = await downloadAndUpload.call(this, data.tempImages.back, 'back');\n\nreturn { ...data, images: { face: faceUrl, front: frontUrl, back: backUrl } };" },
+      "id": "upload-to-storage",
+      "name": "UploadToStorage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [7450, 300]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" }, "conditions": [{ "id": "c5", "leftValue": "={{ $json.status }}", "rightValue": "generated", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "options": {} },
+      "id": "check-status",
+      "name": "CheckStatus",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [7650, 300]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ success: true, model: { id: $json.modelId, images: $json.images, status: $json.status, metadata: $json.metadata } }) }}", "options": { "responseCode": 200, "responseHeaders": { "entries": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Access-Control-Allow-Origin", "value": "*" }] } } },
+      "id": "respond-success",
+      "name": "RespondSuccess",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [7850, 200]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ success: false, error: 'Failed to generate', details: $json.errors, partialImages: $json.images }) }}", "options": { "responseCode": 500, "responseHeaders": { "entries": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Access-Control-Allow-Origin", "value": "*" }] } } },
+      "id": "respond-error",
+      "name": "RespondError",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [7850, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "PromptOptimizer", "type": "main", "index": 0 }]] },
+    "PromptOptimizer": { "main": [[{ "node": "GenFace", "type": "main", "index": 0 }]] },
+    "GenFace": { "main": [[{ "node": "SaveFaceTask", "type": "main", "index": 0 }]] },
+    "SaveFaceTask": { "main": [[{ "node": "WaitFace1", "type": "main", "index": 0 }]] },
+    "WaitFace1": { "main": [[{ "node": "PollFace1", "type": "main", "index": 0 }]] },
+    "PollFace1": { "main": [[{ "node": "CheckFace1", "type": "main", "index": 0 }]] },
+    "CheckFace1": { "main": [[{ "node": "IfFaceRetry", "type": "main", "index": 0 }]] },
+    "IfFaceRetry": { "main": [[{ "node": "WaitFace2", "type": "main", "index": 0 }], [{ "node": "PrepareFrontRequest", "type": "main", "index": 0 }]] },
+    "WaitFace2": { "main": [[{ "node": "PollFace2", "type": "main", "index": 0 }]] },
+    "PollFace2": { "main": [[{ "node": "CheckFace2", "type": "main", "index": 0 }]] },
+    "CheckFace2": { "main": [[{ "node": "IfFaceRetry2", "type": "main", "index": 0 }]] },
+    "IfFaceRetry2": { "main": [[{ "node": "WaitFace3", "type": "main", "index": 0 }], [{ "node": "PrepareFrontRequest", "type": "main", "index": 0 }]] },
+    "WaitFace3": { "main": [[{ "node": "PollFace3", "type": "main", "index": 0 }]] },
+    "PollFace3": { "main": [[{ "node": "CheckFace3", "type": "main", "index": 0 }]] },
+    "CheckFace3": { "main": [[{ "node": "PrepareFrontRequest", "type": "main", "index": 0 }]] },
+    "PrepareFrontRequest": { "main": [[{ "node": "GenFront", "type": "main", "index": 0 }]] },
+    "GenFront": { "main": [[{ "node": "SaveFrontTask", "type": "main", "index": 0 }]] },
+    "SaveFrontTask": { "main": [[{ "node": "WaitFront1", "type": "main", "index": 0 }]] },
+    "WaitFront1": { "main": [[{ "node": "PollFront1", "type": "main", "index": 0 }]] },
+    "PollFront1": { "main": [[{ "node": "CheckFront1", "type": "main", "index": 0 }]] },
+    "CheckFront1": { "main": [[{ "node": "IfFrontRetry", "type": "main", "index": 0 }]] },
+    "IfFrontRetry": { "main": [[{ "node": "WaitFront2", "type": "main", "index": 0 }], [{ "node": "PrepareBackRequest", "type": "main", "index": 0 }]] },
+    "WaitFront2": { "main": [[{ "node": "PollFront2", "type": "main", "index": 0 }]] },
+    "PollFront2": { "main": [[{ "node": "CheckFront2", "type": "main", "index": 0 }]] },
+    "CheckFront2": { "main": [[{ "node": "PrepareBackRequest", "type": "main", "index": 0 }]] },
+    "PrepareBackRequest": { "main": [[{ "node": "GenBack", "type": "main", "index": 0 }]] },
+    "GenBack": { "main": [[{ "node": "SaveBackTask", "type": "main", "index": 0 }]] },
+    "SaveBackTask": { "main": [[{ "node": "IfBackGenSuccess", "type": "main", "index": 0 }]] },
+    "IfBackGenSuccess": { "main": [[{ "node": "WaitBack1", "type": "main", "index": 0 }], [{ "node": "FinalResult", "type": "main", "index": 0 }]] },
+    "WaitBack1": { "main": [[{ "node": "PollBack1", "type": "main", "index": 0 }]] },
+    "PollBack1": { "main": [[{ "node": "CheckBack1", "type": "main", "index": 0 }]] },
+    "CheckBack1": { "main": [[{ "node": "IfBackRetry", "type": "main", "index": 0 }]] },
+    "IfBackRetry": { "main": [[{ "node": "WaitBack2", "type": "main", "index": 0 }], [{ "node": "FinalResult", "type": "main", "index": 0 }]] },
+    "WaitBack2": { "main": [[{ "node": "PollBack2", "type": "main", "index": 0 }]] },
+    "PollBack2": { "main": [[{ "node": "CheckBack2", "type": "main", "index": 0 }]] },
+    "CheckBack2": { "main": [[{ "node": "FinalResult", "type": "main", "index": 0 }]] },
+    "FinalResult": { "main": [[{ "node": "UploadToStorage", "type": "main", "index": 0 }]] },
+    "UploadToStorage": { "main": [[{ "node": "CheckStatus", "type": "main", "index": 0 }]] },
+    "CheckStatus": { "main": [[{ "node": "RespondSuccess", "type": "main", "index": 0 }], [{ "node": "RespondError", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [],
+  "pinData": {},
+  "versionId": "10"
+}

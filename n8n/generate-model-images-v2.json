@@ -1,0 +1,400 @@
+{
+  "name": "Vizzu - Generate Model Images (Imagen/Replicate)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/generate-model-images",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrair dados do webhook\nconst body = $input.first().json.body;\nconst { modelId, userId, modelProfile, prompt } = body;\n\n// Criar prompts específicos para cada tipo de imagem\nconst basePrompt = prompt || `${modelProfile.gender === 'woman' ? 'Woman' : 'Man'} model`;\n\n// Traduzir para inglês (melhor resultado nas IAs)\nconst genderEN = modelProfile.gender === 'woman' ? 'woman' : 'man';\nconst bodyTypeEN = {\n  'slim': 'slim', 'athletic': 'athletic', 'average': 'average',\n  'curvy': 'curvy', 'plus': 'plus size'\n}[modelProfile.bodyType] || 'average';\n\nconst ageEN = {\n  'baby': 'baby (0-2 years)', 'child': 'child (3-12 years)', \n  'teen': 'teenager (13-19 years)', 'young': 'young adult (20-25 years)',\n  'adult': 'adult (25-35 years)', 'mature': 'mature adult (35-50 years)',\n  'senior': 'senior (50-60 years)', 'elderly': 'elderly (60+ years)'\n}[modelProfile.ageRange] || 'adult';\n\n// Construir prompt em inglês\nlet enhancedPrompt = `Professional fashion photography of a ${genderEN}, ${ageEN}, ${bodyTypeEN} body type. `;\nenhancedPrompt += `${modelProfile.hairColor} ${modelProfile.hairStyle} ${modelProfile.hairLength || 'medium length'} hair. `;\nenhancedPrompt += `${modelProfile.eyeColor} eyes. ${modelProfile.expression} expression. `;\nenhancedPrompt += `${modelProfile.skinTone} skin tone, ${modelProfile.ethnicity} ethnicity. `;\n\nif (modelProfile.physicalNotes) enhancedPrompt += `Physical details: ${modelProfile.physicalNotes}. `;\nif (modelProfile.hairNotes) enhancedPrompt += `Hair details: ${modelProfile.hairNotes}. `;\nif (modelProfile.skinNotes) enhancedPrompt += `Skin details: ${modelProfile.skinNotes}. `;\n\nconst prompts = {\n  face: `${enhancedPrompt} Close-up portrait headshot, looking directly at camera, neutral gray studio background, soft professional lighting, high quality, 4K, photorealistic, fashion photography style.`,\n  \n  front: `${enhancedPrompt} Full body shot, front view, standing pose, wearing simple white t-shirt and blue jeans, neutral gray studio background, full body visible from head to feet, professional fashion photography lighting, high quality, 4K, photorealistic.`,\n  \n  back: `${enhancedPrompt} Full body shot, back view, standing pose, wearing simple white t-shirt and blue jeans, neutral gray studio background, full body visible from head to feet, professional fashion photography lighting, high quality, 4K, photorealistic.`\n};\n\nreturn {\n  modelId,\n  userId,\n  modelProfile,\n  prompts,\n  originalPrompt: prompt,\n  enhancedPrompt\n};"
+      },
+      "id": "prepare-prompts",
+      "name": "Prepare Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"version\": \"black-forest-labs/flux-1.1-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.face }}\",\n    \"aspect_ratio\": \"1:1\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 90,\n    \"safety_tolerance\": 2,\n    \"prompt_upsampling\": true\n  }\n}",
+        "options": {}
+      },
+      "id": "replicate-face",
+      "name": "Replicate - Face",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 100],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"version\": \"black-forest-labs/flux-1.1-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.front }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 90,\n    \"safety_tolerance\": 2,\n    \"prompt_upsampling\": true\n  }\n}",
+        "options": {}
+      },
+      "id": "replicate-front",
+      "name": "Replicate - Front",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"version\": \"black-forest-labs/flux-1.1-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.back }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 90,\n    \"safety_tolerance\": 2,\n    \"prompt_upsampling\": true\n  }\n}",
+        "options": {}
+      },
+      "id": "replicate-back",
+      "name": "Replicate - Back",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 500],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-face",
+      "name": "Wait Face",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [900, 100]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-front",
+      "name": "Wait Front",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-back",
+      "name": "Wait Back",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [900, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Replicate - Face').item.json.urls.get }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "poll-face",
+      "name": "Poll Face",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 100],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Replicate - Front').item.json.urls.get }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "poll-front",
+      "name": "Poll Front",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Replicate - Back').item.json.urls.get }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "poll-back",
+      "name": "Poll Back",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 500],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Coletar resultados\nconst prepareData = $('Prepare Prompts').first().json;\nconst faceResult = $('Poll Face').first()?.json;\nconst frontResult = $('Poll Front').first()?.json;\nconst backResult = $('Poll Back').first()?.json;\n\n// Verificar se todas as imagens foram geradas\nconst faceUrl = faceResult?.output?.[0] || faceResult?.output || null;\nconst frontUrl = frontResult?.output?.[0] || frontResult?.output || null;\nconst backUrl = backResult?.output?.[0] || backResult?.output || null;\n\nif (!faceUrl || !frontUrl || !backUrl) {\n  throw new Error('Falha ao gerar uma ou mais imagens');\n}\n\nreturn {\n  modelId: prepareData.modelId,\n  userId: prepareData.userId,\n  images: {\n    face: faceUrl,\n    front: frontUrl,\n    back: backUrl\n  },\n  status: 'generated'\n};"
+      },
+      "id": "collect-results",
+      "name": "Collect Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1350, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, model: { id: $json.modelId, images: $json.images, status: $json.status } }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompts": {
+      "main": [
+        [
+          {
+            "node": "Replicate - Face",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Replicate - Front",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Replicate - Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replicate - Face": {
+      "main": [
+        [
+          {
+            "node": "Wait Face",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replicate - Front": {
+      "main": [
+        [
+          {
+            "node": "Wait Front",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replicate - Back": {
+      "main": [
+        [
+          {
+            "node": "Wait Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Face": {
+      "main": [
+        [
+          {
+            "node": "Poll Face",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Front": {
+      "main": [
+        [
+          {
+            "node": "Poll Front",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Back": {
+      "main": [
+        [
+          {
+            "node": "Poll Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Face": {
+      "main": [
+        [
+          {
+            "node": "Collect Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Front": {
+      "main": [
+        [
+          {
+            "node": "Collect Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Back": {
+      "main": [
+        [
+          {
+            "node": "Collect Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Results": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

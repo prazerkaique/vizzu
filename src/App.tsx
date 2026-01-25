@@ -2033,7 +2033,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           hairNotes: newModel.hairNotes || undefined,
           skinNotes: newModel.skinNotes || undefined,
         },
-        prompt: generateModelPrompt(), // Prompt gerado para o Gemini
+        prompt: generateModelPrompt(), // Prompt otimizado para Flux 2.0
       });
 
       if (result.success && result.model?.images) {
@@ -2167,42 +2167,74 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     return options?.find(o => o.id === id)?.label || id;
   };
 
-  // Função para gerar o prompt do modelo para o Gemini
+  // Função para gerar o prompt do modelo para Flux 2.0
+  // Otimizado seguindo documentação: Subject + Action + Style + Context
   const generateModelPrompt = () => {
-    const gender = newModel.gender === 'woman' ? 'mulher' : 'homem';
-    const ethnicity = getModelLabel('ethnicity', newModel.ethnicity).toLowerCase();
-    const skinTone = getModelLabel('skinTone', newModel.skinTone).toLowerCase();
-    const bodyType = getModelLabel('bodyType', newModel.bodyType).toLowerCase();
-    const ageRange = getModelLabel('ageRange', newModel.ageRange);
-    const height = getModelLabel('height', newModel.height).toLowerCase();
-    const hairColor = getModelLabel('hairColor', newModel.hairColor).toLowerCase();
-    const hairStyle = getModelLabel('hairStyle', newModel.hairStyle).toLowerCase();
-    const hairLength = getModelLabel('hairLength', newModel.hairLength).toLowerCase();
-    const eyeColor = getModelLabel('eyeColor', newModel.eyeColor).toLowerCase();
-    const expression = getModelLabel('expression', newModel.expression).toLowerCase();
+    // Traduções para inglês (melhor resultado no Flux)
+    const translations: Record<string, Record<string, string>> = {
+      gender: { 'woman': 'woman', 'man': 'man' },
+      ethnicity: {
+        'caucasian': 'Caucasian', 'latino': 'Latino/Hispanic', 'black': 'Black/African',
+        'asian': 'East Asian', 'indian': 'South Asian/Indian', 'middle-eastern': 'Middle Eastern', 'mixed': 'Mixed race'
+      },
+      skinTone: {
+        'very-light': 'very fair/porcelain', 'light': 'fair', 'medium-light': 'light olive',
+        'medium': 'medium/olive', 'medium-dark': 'tan', 'dark': 'brown', 'very-dark': 'deep brown/ebony'
+      },
+      bodyType: { 'slim': 'slim/slender', 'athletic': 'athletic/toned', 'average': 'average', 'curvy': 'curvy', 'plus': 'plus size' },
+      ageRange: {
+        'baby': '0-2 years old baby', 'child': '3-12 years old child', 'teen': '13-19 years old teenager',
+        'young': '20-25 years old young adult', 'adult': '25-35 years old adult', 'mature': '35-50 years old mature adult',
+        'senior': '50-60 years old senior', 'elderly': '60+ years old elderly'
+      },
+      height: { 'very-short': 'petite', 'short': 'below average height', 'medium': 'average height', 'tall': 'tall', 'very-tall': 'very tall' },
+      hairColor: {
+        'black': 'jet black', 'dark-brown': 'dark brown', 'brown': 'brown', 'light-brown': 'light brown/chestnut',
+        'blonde': 'blonde', 'platinum': 'platinum blonde', 'red': 'red/auburn', 'gray': 'gray/silver', 'white': 'white'
+      },
+      hairStyle: { 'straight': 'straight', 'wavy': 'wavy', 'curly': 'curly', 'coily': 'coily/kinky', 'braided': 'braided' },
+      hairLength: { 'bald': 'bald/shaved', 'very-short': 'buzz cut', 'short': 'short', 'medium': 'medium length', 'long': 'long', 'very-long': 'very long' },
+      eyeColor: { 'black': 'dark brown/black', 'dark-brown': 'dark brown', 'brown': 'brown', 'hazel': 'hazel', 'green': 'green', 'blue': 'blue', 'gray': 'gray' },
+      expression: { 'neutral': 'neutral/relaxed', 'smile': 'gentle smile', 'serious': 'serious/confident', 'happy': 'happy/joyful', 'professional': 'professional/poised' },
+      bustSize: { 'small': 'small bust', 'medium': 'medium bust', 'large': 'large bust' },
+      waistType: { 'defined': 'defined waist', 'straight': 'straight torso', 'hourglass': 'hourglass figure' }
+    };
 
-    let prompt = `Modelo ${gender} de etnia ${ethnicity}, pele ${skinTone}, corpo ${bodyType}, ${ageRange}, altura ${height}. `;
-    prompt += `Cabelo ${hairColor}, ${hairStyle}, ${hairLength}. `;
-    prompt += `Olhos ${eyeColor}. Expressão ${expression}. `;
+    const t = (cat: string, val: string) => translations[cat]?.[val] || val;
 
-    if (newModel.gender === 'woman') {
-      const bustSize = getModelLabel('bustSize', newModel.bustSize).toLowerCase();
-      prompt += `Busto ${bustSize}. `;
-    }
+    // Subject (quem é o modelo)
+    const subject = `${t('ageRange', newModel.ageRange)} ${t('ethnicity', newModel.ethnicity)} ${t('gender', newModel.gender)}, ${t('skinTone', newModel.skinTone)} skin, ${t('bodyType', newModel.bodyType)} body type, ${t('height', newModel.height)}`;
 
-    const waistType = getModelLabel('waistType', newModel.waistType).toLowerCase();
-    prompt += `Cintura ${waistType}. `;
+    // Hair
+    const hairLen = newModel.hairLength || 'medium';
+    const hair = hairLen === 'bald' ? 'bald/shaved head' : `${t('hairColor', newModel.hairColor)} ${t('hairLength', hairLen)} ${t('hairStyle', newModel.hairStyle)} hair`;
 
-    // Observações personalizadas
-    if (newModel.physicalNotes) {
-      prompt += `\n\nObservações físicas: ${newModel.physicalNotes}`;
-    }
-    if (newModel.hairNotes) {
-      prompt += `\n\nObservações do cabelo: ${newModel.hairNotes}`;
-    }
-    if (newModel.skinNotes) {
-      prompt += `\n\nObservações da pele: ${newModel.skinNotes}`;
-    }
+    // Face
+    const face = `${t('eyeColor', newModel.eyeColor)} eyes, ${t('expression', newModel.expression)} expression`;
+
+    // Body specifics (women only)
+    const bodyParts = [];
+    if (newModel.gender === 'woman' && newModel.bustSize) bodyParts.push(t('bustSize', newModel.bustSize));
+    if (newModel.waistType) bodyParts.push(t('waistType', newModel.waistType));
+    const bodySpecifics = bodyParts.join(', ');
+
+    // Build full prompt
+    let prompt = `${subject}. ${hair}. ${face}`;
+    if (bodySpecifics) prompt += `. ${bodySpecifics}`;
+
+    // Custom notes
+    const notes = [];
+    if (newModel.physicalNotes) notes.push(`Physical: ${newModel.physicalNotes}`);
+    if (newModel.hairNotes) notes.push(`Hair: ${newModel.hairNotes}`);
+    if (newModel.skinNotes) notes.push(`Skin: ${newModel.skinNotes}`);
+    if (notes.length > 0) prompt += `\n\n${notes.join('. ')}`;
+
+    // Style/Context - sempre inclusos
+    prompt += '\n\n📸 Configurações fixas:\n';
+    prompt += '• Fundo: cinza neutro (#B0B0B0)\n';
+    prompt += '• Roupa: camiseta branca com logo Vizzu + jeans azul\n';
+    prompt += '• Iluminação: estúdio profissional\n';
+    prompt += '• Câmera: Canon EOS R5, 85mm f/1.4';
 
     return prompt;
   };
@@ -6239,7 +6271,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <div>
                         <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
                           <i className="fas fa-wand-magic-sparkles text-pink-500 mr-1"></i>
-                          Prompt para a IA (Gemini)
+                          Prompt para a IA (Flux 2.0)
                         </label>
                         <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-lg border text-xs leading-relaxed ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}>
                           {generateModelPrompt()}

@@ -1,0 +1,340 @@
+{
+  "name": "Vizzu Generate Model Images Flux",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/generate-model-images",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "generate-model-images"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// VIZZU MODEL PROMPT OPTIMIZER FOR FLUX 2.0\n// ============================================================\n\nconst body = $input.first().json.body;\nconst { modelId, userId, modelProfile, prompt } = body;\n\nconst translations = {\n  gender: { 'woman': 'woman', 'man': 'man' },\n  ethnicity: {\n    'caucasian': 'Caucasian', 'latino': 'Latino/Hispanic', 'black': 'Black/African',\n    'asian': 'East Asian', 'indian': 'South Asian/Indian', 'middle-eastern': 'Middle Eastern', 'mixed': 'Mixed race'\n  },\n  skinTone: {\n    'very-light': 'very fair/porcelain', 'light': 'fair', 'medium-light': 'light olive',\n    'medium': 'medium/olive', 'medium-dark': 'tan', 'dark': 'brown', 'very-dark': 'deep brown/ebony'\n  },\n  bodyType: { 'slim': 'slim/slender', 'athletic': 'athletic/toned', 'average': 'average', 'curvy': 'curvy', 'plus': 'plus size' },\n  ageRange: {\n    'baby': '0-2 years old baby', 'child': '3-12 years old child', 'teen': '13-19 years old teenager',\n    'young': '20-25 years old young adult', 'adult': '25-35 years old adult', 'mature': '35-50 years old mature adult',\n    'senior': '50-60 years old senior', 'elderly': '60+ years old elderly'\n  },\n  height: { 'very-short': 'petite/short stature', 'short': 'below average height', 'medium': 'average height', 'tall': 'tall', 'very-tall': 'very tall/model height' },\n  hairColor: {\n    'black': 'jet black', 'dark-brown': 'dark brown', 'brown': 'brown', 'light-brown': 'light brown/chestnut',\n    'blonde': 'blonde', 'platinum': 'platinum blonde', 'red': 'red/auburn', 'gray': 'gray/silver', 'white': 'white'\n  },\n  hairStyle: { 'straight': 'straight', 'wavy': 'wavy', 'curly': 'curly', 'coily': 'coily/kinky', 'braided': 'braided' },\n  hairLength: { 'bald': 'bald/shaved', 'very-short': 'buzz cut/very short', 'short': 'short', 'medium': 'medium length', 'long': 'long', 'very-long': 'very long' },\n  eyeColor: { 'black': 'dark brown/black', 'dark-brown': 'dark brown', 'brown': 'brown', 'hazel': 'hazel', 'green': 'green', 'blue': 'blue', 'gray': 'gray' },\n  expression: { 'neutral': 'neutral/relaxed', 'smile': 'gentle smile', 'serious': 'serious/confident', 'happy': 'happy/joyful', 'professional': 'professional/poised' },\n  bustSize: { 'small': 'small bust', 'medium': 'medium bust', 'large': 'large bust' },\n  waistType: { 'defined': 'defined waist', 'straight': 'straight torso', 'hourglass': 'hourglass figure' }\n};\n\nconst t = (category, value) => translations[category]?.[value] || value;\n\nconst subject = `${t('ageRange', modelProfile.ageRange)} ${t('ethnicity', modelProfile.ethnicity)} ${t('gender', modelProfile.gender)}, ${t('skinTone', modelProfile.skinTone)} skin, ${t('bodyType', modelProfile.bodyType)} body type, ${t('height', modelProfile.height)}`;\n\nconst hairLength = modelProfile.hairLength || 'medium';\nconst hair = hairLength === 'bald' ? 'bald/shaved head' : `${t('hairColor', modelProfile.hairColor)} ${t('hairLength', hairLength)} ${t('hairStyle', modelProfile.hairStyle)} hair`;\n\nconst face = `${t('eyeColor', modelProfile.eyeColor)} eyes, ${t('expression', modelProfile.expression)} expression`;\n\nlet bodySpecifics = '';\nif (modelProfile.gender === 'woman') {\n  const parts = [];\n  if (modelProfile.bustSize) parts.push(t('bustSize', modelProfile.bustSize));\n  if (modelProfile.waistType) parts.push(t('waistType', modelProfile.waistType));\n  bodySpecifics = parts.join(', ');\n}\n\nconst notes = [];\nif (modelProfile.physicalNotes) notes.push(`Physical: ${modelProfile.physicalNotes}`);\nif (modelProfile.hairNotes) notes.push(`Hair: ${modelProfile.hairNotes}`);\nif (modelProfile.skinNotes) notes.push(`Skin: ${modelProfile.skinNotes}`);\n\nconst cameraSpecs = 'shot with Canon EOS R5, 85mm f/1.4 lens, shallow depth of field';\nconst lightingSpecs = 'professional studio lighting, soft key light with fill, subtle rim light';\nconst backgroundSpec = 'seamless neutral gray backdrop';\nconst clothing = modelProfile.gender === 'woman' \n  ? 'wearing clean white fitted t-shirt with small Vizzu logo on left chest, fitted dark blue jeans'\n  : 'wearing clean white crew-neck t-shirt with small Vizzu logo on left chest, fitted dark blue jeans';\nconst qualityMods = 'ultra high resolution, 8K quality, photorealistic, professional fashion photography, crisp details, natural skin texture';\n\nconst fullSubject = [subject, hair, face, bodySpecifics, notes.join('. ')].filter(Boolean).join('. ');\n\nconst prompts = {\n  face: `Professional fashion portrait headshot of ${fullSubject}. looking directly at camera with confident gaze, head slightly tilted. ${cameraSpecs}, portrait orientation. ${backgroundSpec}, ${lightingSpecs}. ${qualityMods}, beauty photography, skin retouching, catchlight in eyes`,\n  \n  front: `Full body fashion photograph of ${fullSubject}. ${clothing}. standing in natural relaxed pose, weight slightly on one leg, arms relaxed at sides, facing camera directly. ${cameraSpecs.replace('85mm', '50mm')}, full body framing with space above head and below feet. ${backgroundSpec}, ${lightingSpecs}. ${qualityMods}`,\n  \n  back: `Full body fashion photograph from behind of ${fullSubject}. ${clothing}. standing with back to camera, natural relaxed pose, head slightly turned to show profile. ${cameraSpecs.replace('85mm', '50mm')}, full body framing with space above head and below feet. ${backgroundSpec}, ${lightingSpecs}. ${qualityMods}`\n};\n\nconsole.log('Prompts:', JSON.stringify(prompts, null, 2));\n\nreturn { modelId, userId, modelProfile, prompts, metadata: { subject: fullSubject, clothing, background: backgroundSpec } };"
+      },
+      "id": "prepare-prompts",
+      "name": "PromptOptimizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.face }}\",\n    \"aspect_ratio\": \"1:1\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 95,\n    \"safety_tolerance\": 2,\n    \"raw\": false\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "flux-face",
+      "name": "FluxFace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.front }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 95,\n    \"safety_tolerance\": 2,\n    \"raw\": false\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "flux-front",
+      "name": "FluxFront",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.back }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 95,\n    \"safety_tolerance\": 2,\n    \"raw\": false\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "flux-back",
+      "name": "FluxBack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepareData = $('PromptOptimizer').first().json;\nconst faceResult = $('FluxFace').first()?.json;\nconst frontResult = $('FluxFront').first()?.json;\nconst backResult = $('FluxBack').first()?.json;\n\nconst extractUrl = (result) => {\n  if (!result) return null;\n  if (typeof result.output === 'string') return result.output;\n  if (Array.isArray(result.output) && result.output.length > 0) return result.output[0];\n  if (result.urls?.get) return result.urls.get;\n  return null;\n};\n\nconst faceUrl = extractUrl(faceResult);\nconst frontUrl = extractUrl(frontResult);\nconst backUrl = extractUrl(backResult);\n\nconst errors = [];\nif (!faceUrl) errors.push('Face failed');\nif (!frontUrl) errors.push('Front failed');\nif (!backUrl) errors.push('Back failed');\n\nreturn {\n  modelId: prepareData.modelId,\n  userId: prepareData.userId,\n  images: { face: faceUrl, front: frontUrl, back: backUrl },\n  tempImages: { face: faceUrl, front: frontUrl, back: backUrl },\n  status: errors.length === 0 ? 'generated' : 'partial',\n  errors: errors.length > 0 ? errors : undefined,\n  metadata: prepareData.metadata\n};"
+      },
+      "id": "collect-results",
+      "name": "CollectResults",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst supabaseUrl = 'https://dbdqiqehuapcicejnzyd.supabase.co';\nconst supabaseKey = $env.SUPABASE_SERVICE_KEY;\nconst modelId = data.modelId;\nconst userId = data.userId;\n\nasync function downloadAndUpload(imageUrl, imageName) {\n  if (!imageUrl) return null;\n  try {\n    const imageResponse = await this.helpers.httpRequest({ method: 'GET', url: imageUrl, encoding: 'arraybuffer', returnFullResponse: true });\n    const buffer = imageResponse.body;\n    const contentType = imageResponse.headers['content-type'] || 'image/jpeg';\n    const ext = contentType.includes('png') ? '.png' : contentType.includes('webp') ? '.webp' : '.jpg';\n    const path = userId + '/' + modelId + '/' + imageName + ext;\n    const uploadResponse = await this.helpers.httpRequest({ method: 'POST', url: supabaseUrl + '/storage/v1/object/model-images/' + path, headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': contentType, 'x-upsert': 'true' }, body: buffer, encoding: 'arraybuffer', returnFullResponse: true, ignoreHttpStatusErrors: true });\n    if (uploadResponse.statusCode >= 400) { console.log('Upload ' + imageName + ' error:', uploadResponse.statusCode); return imageUrl; }\n    return supabaseUrl + '/storage/v1/object/public/model-images/' + path;\n  } catch (e) { console.log('Error uploading ' + imageName + ':', e.message); return imageUrl; }\n}\n\nconst faceUrl = await downloadAndUpload.call(this, data.tempImages.face, 'face');\nconst frontUrl = await downloadAndUpload.call(this, data.tempImages.front, 'front');\nconst backUrl = await downloadAndUpload.call(this, data.tempImages.back, 'back');\n\nreturn { ...data, images: { face: faceUrl, front: frontUrl, back: backUrl } };"
+      },
+      "id": "upload-to-storage",
+      "name": "UploadToStorage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1150, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "generated",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-status",
+      "name": "CheckStatus",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1350, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, model: { id: $json.modelId, images: $json.images, status: $json.status, metadata: $json.metadata } }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-success",
+      "name": "RespondSuccess",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'Failed to generate', details: $json.errors, partialImages: $json.images }) }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-error",
+      "name": "RespondError",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "PromptOptimizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PromptOptimizer": {
+      "main": [
+        [
+          {
+            "node": "FluxFace",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FluxFront",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FluxBack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FluxFace": {
+      "main": [
+        [
+          {
+            "node": "CollectResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FluxFront": {
+      "main": [
+        [
+          {
+            "node": "CollectResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FluxBack": {
+      "main": [
+        [
+          {
+            "node": "CollectResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CollectResults": {
+      "main": [
+        [
+          {
+            "node": "UploadToStorage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UploadToStorage": {
+      "main": [
+        [
+          {
+            "node": "CheckStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckStatus": {
+      "main": [
+        [
+          {
+            "node": "RespondSuccess",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RespondError",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "pinData": {},
+  "versionId": "2"
+}

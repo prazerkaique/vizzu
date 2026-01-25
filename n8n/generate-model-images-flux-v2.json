@@ -1,0 +1,337 @@
+{
+  "name": "Vizzu Generate Model Images Flux",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/generate-model-images",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "generate-model-images"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// VIZZU MODEL PROMPT OPTIMIZER FOR FLUX 2.0\n// Based on Flux documentation best practices:\n// Structure: Subject + Action + Style + Context\n// ============================================================\n\nconst body = $input.first().json.body;\nconst { modelId, userId, modelProfile, prompt } = body;\n\n// Translation maps for English prompts (better AI results)\nconst translations = {\n  gender: { 'woman': 'woman', 'man': 'man' },\n  ethnicity: {\n    'caucasian': 'Caucasian', 'latino': 'Latino/Hispanic', 'black': 'Black/African',\n    'asian': 'East Asian', 'indian': 'South Asian/Indian', 'middle-eastern': 'Middle Eastern', 'mixed': 'Mixed race'\n  },\n  skinTone: {\n    'very-light': 'very fair/porcelain', 'light': 'fair', 'medium-light': 'light olive',\n    'medium': 'medium/olive', 'medium-dark': 'tan', 'dark': 'brown', 'very-dark': 'deep brown/ebony'\n  },\n  bodyType: { 'slim': 'slim/slender', 'athletic': 'athletic/toned', 'average': 'average', 'curvy': 'curvy', 'plus': 'plus size' },\n  ageRange: {\n    'baby': '0-2 years old baby', 'child': '3-12 years old child', 'teen': '13-19 years old teenager',\n    'young': '20-25 years old young adult', 'adult': '25-35 years old adult', 'mature': '35-50 years old mature adult',\n    'senior': '50-60 years old senior', 'elderly': '60+ years old elderly'\n  },\n  height: { 'very-short': 'petite/short stature', 'short': 'below average height', 'medium': 'average height', 'tall': 'tall', 'very-tall': 'very tall/model height' },\n  hairColor: {\n    'black': 'jet black', 'dark-brown': 'dark brown', 'brown': 'brown', 'light-brown': 'light brown/chestnut',\n    'blonde': 'blonde', 'platinum': 'platinum blonde', 'red': 'red/auburn', 'gray': 'gray/silver', 'white': 'white'\n  },\n  hairStyle: { 'straight': 'straight', 'wavy': 'wavy', 'curly': 'curly', 'coily': 'coily/kinky', 'braided': 'braided' },\n  hairLength: { 'bald': 'bald/shaved', 'very-short': 'buzz cut/very short', 'short': 'short', 'medium': 'medium length', 'long': 'long', 'very-long': 'very long' },\n  eyeColor: { 'black': 'dark brown/black', 'dark-brown': 'dark brown', 'brown': 'brown', 'hazel': 'hazel', 'green': 'green', 'blue': 'blue', 'gray': 'gray' },\n  expression: { 'neutral': 'neutral/relaxed', 'smile': 'gentle smile', 'serious': 'serious/confident', 'happy': 'happy/joyful', 'professional': 'professional/poised' },\n  bustSize: { 'small': 'small bust', 'medium': 'medium bust', 'large': 'large bust' },\n  waistType: { 'defined': 'defined waist', 'straight': 'straight torso', 'hourglass': 'hourglass figure' }\n};\n\nconst t = (category, value) => translations[category]?.[value] || value;\n\nconst buildSubject = () => {\n  const gender = t('gender', modelProfile.gender);\n  const ethnicity = t('ethnicity', modelProfile.ethnicity);\n  const skin = t('skinTone', modelProfile.skinTone);\n  const body = t('bodyType', modelProfile.bodyType);\n  const age = t('ageRange', modelProfile.ageRange);\n  const height = t('height', modelProfile.height);\n  return `${age} ${ethnicity} ${gender}, ${skin} skin, ${body} body type, ${height}`;\n};\n\nconst buildHair = () => {\n  const color = t('hairColor', modelProfile.hairColor);\n  const style = t('hairStyle', modelProfile.hairStyle);\n  const length = t('hairLength', modelProfile.hairLength || 'medium');\n  if (length === 'bald/shaved') return 'bald/shaved head';\n  return `${color} ${length} ${style} hair`;\n};\n\nconst buildFace = () => {\n  const eyes = t('eyeColor', modelProfile.eyeColor);\n  const expression = t('expression', modelProfile.expression);\n  return `${eyes} eyes, ${expression} expression`;\n};\n\nconst buildBodySpecifics = () => {\n  if (modelProfile.gender !== 'woman') return '';\n  const parts = [];\n  if (modelProfile.bustSize) parts.push(t('bustSize', modelProfile.bustSize));\n  if (modelProfile.waistType) parts.push(t('waistType', modelProfile.waistType));\n  return parts.length > 0 ? parts.join(', ') : '';\n};\n\nconst buildNotes = () => {\n  const notes = [];\n  if (modelProfile.physicalNotes) notes.push(`Physical details: ${modelProfile.physicalNotes}`);\n  if (modelProfile.hairNotes) notes.push(`Hair details: ${modelProfile.hairNotes}`);\n  if (modelProfile.skinNotes) notes.push(`Skin details: ${modelProfile.skinNotes}`);\n  return notes.join('. ');\n};\n\nconst subject = buildSubject();\nconst hair = buildHair();\nconst face = buildFace();\nconst bodySpecifics = buildBodySpecifics();\nconst notes = buildNotes();\n\nconst cameraSpecs = 'shot with Canon EOS R5, 85mm f/1.4 lens, shallow depth of field';\nconst lightingSpecs = 'professional studio lighting, soft key light with fill, subtle rim light';\nconst backgroundSpec = 'seamless neutral gray backdrop';\n\nconst clothingMale = 'wearing clean white crew-neck t-shirt with small Vizzu logo on left chest, fitted dark blue jeans';\nconst clothingFemale = 'wearing clean white fitted t-shirt with small Vizzu logo on left chest, fitted dark blue jeans';\nconst clothing = modelProfile.gender === 'woman' ? clothingFemale : clothingMale;\n\nconst qualityMods = 'ultra high resolution, 8K quality, photorealistic, professional fashion photography, crisp details, natural skin texture';\n\nconst fullSubject = [subject, hair, face, bodySpecifics, notes].filter(Boolean).join('. ');\n\nconst prompts = {\n  face: [\n    `Professional fashion portrait headshot of ${fullSubject}`,\n    'looking directly at camera with confident gaze, head slightly tilted',\n    `${cameraSpecs}, portrait orientation`,\n    `${backgroundSpec}, ${lightingSpecs}`,\n    `${qualityMods}, beauty photography, skin retouching, catchlight in eyes`\n  ].join('. '),\n  \n  front: [\n    `Full body fashion photograph of ${fullSubject}`,\n    clothing,\n    'standing in natural relaxed pose, weight slightly on one leg, arms relaxed at sides, facing camera directly',\n    `${cameraSpecs.replace('85mm', '50mm')}, full body framing with space above head and below feet`,\n    `${backgroundSpec}, ${lightingSpecs}`,\n    qualityMods\n  ].join('. '),\n  \n  back: [\n    `Full body fashion photograph from behind of ${fullSubject}`,\n    clothing,\n    'standing with back to camera, natural relaxed pose, head slightly turned to show profile',\n    `${cameraSpecs.replace('85mm', '50mm')}, full body framing with space above head and below feet`,\n    `${backgroundSpec}, ${lightingSpecs}`,\n    qualityMods\n  ].join('. ')\n};\n\nconsole.log('Generated Prompts:', JSON.stringify(prompts, null, 2));\n\nreturn {\n  modelId,\n  userId,\n  modelProfile,\n  prompts,\n  originalPrompt: prompt,\n  metadata: { subject: fullSubject, clothing, background: backgroundSpec }\n};"
+      },
+      "id": "prepare-prompts",
+      "name": "Prompt Optimizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.face }}\",\n    \"aspect_ratio\": \"1:1\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 95,\n    \"safety_tolerance\": 2,\n    \"raw\": false\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "flux-face",
+      "name": "FluxFace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 100],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.front }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 95,\n    \"safety_tolerance\": 2,\n    \"raw\": false\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "flux-front",
+      "name": "FluxFront",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro-ultra/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompts.back }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"webp\",\n    \"output_quality\": 95,\n    \"safety_tolerance\": 2,\n    \"raw\": false\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "flux-back",
+      "name": "FluxBack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 500],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLICATE_CREDENTIAL_ID",
+          "name": "Replicate"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepareData = $('Prompt Optimizer').first().json;\nconst faceResult = $('FluxFace').first()?.json;\nconst frontResult = $('FluxFront').first()?.json;\nconst backResult = $('FluxBack').first()?.json;\n\nconsole.log('Face result:', JSON.stringify(faceResult, null, 2));\nconsole.log('Front result:', JSON.stringify(frontResult, null, 2));\nconsole.log('Back result:', JSON.stringify(backResult, null, 2));\n\nconst extractUrl = (result) => {\n  if (!result) return null;\n  if (typeof result.output === 'string') return result.output;\n  if (Array.isArray(result.output) && result.output.length > 0) return result.output[0];\n  if (result.urls?.get) return result.urls.get;\n  return null;\n};\n\nconst faceUrl = extractUrl(faceResult);\nconst frontUrl = extractUrl(frontResult);\nconst backUrl = extractUrl(backResult);\n\nconst errors = [];\nif (!faceUrl) errors.push('Face image failed');\nif (!frontUrl) errors.push('Front image failed');\nif (!backUrl) errors.push('Back image failed');\n\nif (errors.length > 0) console.error('Generation errors:', errors);\n\nreturn {\n  modelId: prepareData.modelId,\n  userId: prepareData.userId,\n  images: { face: faceUrl, front: frontUrl, back: backUrl },\n  status: errors.length === 0 ? 'generated' : 'partial',\n  errors: errors.length > 0 ? errors : undefined,\n  metadata: prepareData.metadata\n};"
+      },
+      "id": "collect-results",
+      "name": "CollectResults",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-success",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "generated",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-status",
+      "name": "CheckStatus",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1150, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, model: { id: $json.modelId, images: $json.images, status: $json.status, metadata: $json.metadata } }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-success",
+      "name": "RespondSuccess",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'Failed to generate model images', details: $json.errors, partialImages: $json.images }) }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-error",
+      "name": "RespondError",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prompt Optimizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt Optimizer": {
+      "main": [
+        [
+          {
+            "node": "FluxFace",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FluxFront",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "FluxBack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FluxFace": {
+      "main": [
+        [
+          {
+            "node": "CollectResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FluxFront": {
+      "main": [
+        [
+          {
+            "node": "CollectResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FluxBack": {
+      "main": [
+        [
+          {
+            "node": "CollectResults",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CollectResults": {
+      "main": [
+        [
+          {
+            "node": "CheckStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckStatus": {
+      "main": [
+        [
+          {
+            "node": "RespondSuccess",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RespondError",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "pinData": {},
+  "versionId": "1"
+}
