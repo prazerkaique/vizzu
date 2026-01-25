@@ -34,9 +34,9 @@ const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = 
 ];
 
 const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
-  { id: '1', name: 'Provador Virtual', message: 'Olá {nome}! 🛍️\n\nPreparei um visual especial para você! Veja como ficou.\n\nO que achou? 😍', isDefault: true },
-  { id: '2', name: 'Look Completo', message: 'Oi {nome}! ✨\n\nMontei um look completo pensando em você!\n\nPosso reservar para você?', isDefault: false },
-  { id: '3', name: 'Novidades', message: 'Oi {nome}! 👋\n\nTemos novidades que combinam com você! Olha só como ficou:\n\nGostou? Posso separar! 💜', isDefault: false },
+  { id: '1', name: 'Provador Virtual', message: 'Oi {nome}! 😍\n\nMontei esse look especial pra você:', isDefault: true },
+  { id: '2', name: 'Look Completo', message: 'Oi {nome}! ✨\n\nOlha só o que separei pra você:', isDefault: false },
+  { id: '3', name: 'Novidades', message: 'Oi {nome}! 👋\n\nChegou novidade que combina com você:', isDefault: false },
 ];
 
 // Frases de loading do Provador - ícones neutros, mensagens engajantes
@@ -2420,13 +2420,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const handleProvadorGenerateAIMessage = async (clientName: string): Promise<string> => {
-    // Gera uma mensagem personalizada simples
+    // Gera uma mensagem personalizada que funciona bem com os itens do look abaixo
     const messages = [
-      `Ola ${clientName}! Preparei esse visual especial pensando em voce. O que achou? Ficou incrivel!`,
-      `Oi ${clientName}! Olha so como ficou esse look que montei pra voce! Esta perfeito, ne?`,
-      `${clientName}, veja esse look que criei! Combinou demais com voce. Quer que eu reserve?`,
-      `Ola ${clientName}! Montei uma combinacao que vai te deixar ainda mais linda. Gostou?`,
-      `Oi ${clientName}! Esse visual ficou maravilhoso! Posso separar essas pecas pra voce?`,
+      `Oi ${clientName}! 😍\n\nMontei esse look especial pra você:`,
+      `Oi ${clientName}! ✨\n\nOlha só o que separei pra você:`,
+      `${clientName}! 💜\n\nPrepara o coração pra esse look:`,
+      `Oi ${clientName}! 🛍️\n\nVeja esse visual que criei pra você:`,
+      `${clientName}! 🔥\n\nTem que ver esse look que montei:`,
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   };
