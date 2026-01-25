@@ -1072,8 +1072,8 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
   // Scroll automático para produto recém-criado
   useEffect(() => {
     if (lastCreatedProductId && products.length > 0) {
-      // Ir para o Studio para ver o produto
-      setCurrentPage('studio');
+      // Ir para Produtos para ver o produto
+      setCurrentPage('products');
 
       // Pequeno delay para o DOM renderizar
       setTimeout(() => {
@@ -2033,7 +2033,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           hairNotes: newModel.hairNotes || undefined,
           skinNotes: newModel.skinNotes || undefined,
         },
-        prompt: generateModelPrompt(), // Prompt gerado para o Gemini
+        prompt: generateModelPrompt(), // Prompt otimizado para Flux 2.0
       });
 
       if (result.success && result.model?.images) {
@@ -2167,42 +2167,74 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     return options?.find(o => o.id === id)?.label || id;
   };
 
-  // Função para gerar o prompt do modelo para o Gemini
+  // Função para gerar o prompt do modelo para Flux 2.0
+  // Otimizado seguindo documentação: Subject + Action + Style + Context
   const generateModelPrompt = () => {
-    const gender = newModel.gender === 'woman' ? 'mulher' : 'homem';
-    const ethnicity = getModelLabel('ethnicity', newModel.ethnicity).toLowerCase();
-    const skinTone = getModelLabel('skinTone', newModel.skinTone).toLowerCase();
-    const bodyType = getModelLabel('bodyType', newModel.bodyType).toLowerCase();
-    const ageRange = getModelLabel('ageRange', newModel.ageRange);
-    const height = getModelLabel('height', newModel.height).toLowerCase();
-    const hairColor = getModelLabel('hairColor', newModel.hairColor).toLowerCase();
-    const hairStyle = getModelLabel('hairStyle', newModel.hairStyle).toLowerCase();
-    const hairLength = getModelLabel('hairLength', newModel.hairLength).toLowerCase();
-    const eyeColor = getModelLabel('eyeColor', newModel.eyeColor).toLowerCase();
-    const expression = getModelLabel('expression', newModel.expression).toLowerCase();
+    // Traduções para inglês (melhor resultado no Flux)
+    const translations: Record<string, Record<string, string>> = {
+      gender: { 'woman': 'woman', 'man': 'man' },
+      ethnicity: {
+        'caucasian': 'Caucasian', 'latino': 'Latino/Hispanic', 'black': 'Black/African',
+        'asian': 'East Asian', 'indian': 'South Asian/Indian', 'middle-eastern': 'Middle Eastern', 'mixed': 'Mixed race'
+      },
+      skinTone: {
+        'very-light': 'very fair/porcelain', 'light': 'fair', 'medium-light': 'light olive',
+        'medium': 'medium/olive', 'medium-dark': 'tan', 'dark': 'brown', 'very-dark': 'deep brown/ebony'
+      },
+      bodyType: { 'slim': 'slim/slender', 'athletic': 'athletic/toned', 'average': 'average', 'curvy': 'curvy', 'plus': 'plus size' },
+      ageRange: {
+        'baby': '0-2 years old baby', 'child': '3-12 years old child', 'teen': '13-19 years old teenager',
+        'young': '20-25 years old young adult', 'adult': '25-35 years old adult', 'mature': '35-50 years old mature adult',
+        'senior': '50-60 years old senior', 'elderly': '60+ years old elderly'
+      },
+      height: { 'very-short': 'petite', 'short': 'below average height', 'medium': 'average height', 'tall': 'tall', 'very-tall': 'very tall' },
+      hairColor: {
+        'black': 'jet black', 'dark-brown': 'dark brown', 'brown': 'brown', 'light-brown': 'light brown/chestnut',
+        'blonde': 'blonde', 'platinum': 'platinum blonde', 'red': 'red/auburn', 'gray': 'gray/silver', 'white': 'white'
+      },
+      hairStyle: { 'straight': 'straight', 'wavy': 'wavy', 'curly': 'curly', 'coily': 'coily/kinky', 'braided': 'braided' },
+      hairLength: { 'bald': 'bald/shaved', 'very-short': 'buzz cut', 'short': 'short', 'medium': 'medium length', 'long': 'long', 'very-long': 'very long' },
+      eyeColor: { 'black': 'dark brown/black', 'dark-brown': 'dark brown', 'brown': 'brown', 'hazel': 'hazel', 'green': 'green', 'blue': 'blue', 'gray': 'gray' },
+      expression: { 'neutral': 'neutral/relaxed', 'smile': 'gentle smile', 'serious': 'serious/confident', 'happy': 'happy/joyful', 'professional': 'professional/poised' },
+      bustSize: { 'small': 'small bust', 'medium': 'medium bust', 'large': 'large bust' },
+      waistType: { 'defined': 'defined waist', 'straight': 'straight torso', 'hourglass': 'hourglass figure' }
+    };
 
-    let prompt = `Modelo ${gender} de etnia ${ethnicity}, pele ${skinTone}, corpo ${bodyType}, ${ageRange}, altura ${height}. `;
-    prompt += `Cabelo ${hairColor}, ${hairStyle}, ${hairLength}. `;
-    prompt += `Olhos ${eyeColor}. Expressão ${expression}. `;
+    const t = (cat: string, val: string) => translations[cat]?.[val] || val;
 
-    if (newModel.gender === 'woman') {
-      const bustSize = getModelLabel('bustSize', newModel.bustSize).toLowerCase();
-      prompt += `Busto ${bustSize}. `;
-    }
+    // Subject (quem é o modelo)
+    const subject = `${t('ageRange', newModel.ageRange)} ${t('ethnicity', newModel.ethnicity)} ${t('gender', newModel.gender)}, ${t('skinTone', newModel.skinTone)} skin, ${t('bodyType', newModel.bodyType)} body type, ${t('height', newModel.height)}`;
 
-    const waistType = getModelLabel('waistType', newModel.waistType).toLowerCase();
-    prompt += `Cintura ${waistType}. `;
+    // Hair
+    const hairLen = newModel.hairLength || 'medium';
+    const hair = hairLen === 'bald' ? 'bald/shaved head' : `${t('hairColor', newModel.hairColor)} ${t('hairLength', hairLen)} ${t('hairStyle', newModel.hairStyle)} hair`;
 
-    // Observações personalizadas
-    if (newModel.physicalNotes) {
-      prompt += `\n\nObservações físicas: ${newModel.physicalNotes}`;
-    }
-    if (newModel.hairNotes) {
-      prompt += `\n\nObservações do cabelo: ${newModel.hairNotes}`;
-    }
-    if (newModel.skinNotes) {
-      prompt += `\n\nObservações da pele: ${newModel.skinNotes}`;
-    }
+    // Face
+    const face = `${t('eyeColor', newModel.eyeColor)} eyes, ${t('expression', newModel.expression)} expression`;
+
+    // Body specifics (women only)
+    const bodyParts = [];
+    if (newModel.gender === 'woman' && newModel.bustSize) bodyParts.push(t('bustSize', newModel.bustSize));
+    if (newModel.waistType) bodyParts.push(t('waistType', newModel.waistType));
+    const bodySpecifics = bodyParts.join(', ');
+
+    // Build full prompt
+    let prompt = `${subject}. ${hair}. ${face}`;
+    if (bodySpecifics) prompt += `. ${bodySpecifics}`;
+
+    // Custom notes
+    const notes = [];
+    if (newModel.physicalNotes) notes.push(`Physical: ${newModel.physicalNotes}`);
+    if (newModel.hairNotes) notes.push(`Hair: ${newModel.hairNotes}`);
+    if (newModel.skinNotes) notes.push(`Skin: ${newModel.skinNotes}`);
+    if (notes.length > 0) prompt += `\n\n${notes.join('. ')}`;
+
+    // Style/Context - sempre inclusos
+    prompt += '\n\n📸 Configurações fixas:\n';
+    prompt += '• Fundo: cinza neutro (#B0B0B0)\n';
+    prompt += '• Roupa: camiseta branca com logo Vizzu + jeans azul\n';
+    prompt += '• Iluminação: estúdio profissional\n';
+    prompt += '• Câmera: Canon EOS R5, 85mm f/1.4';
 
     return prompt;
   };
@@ -2900,7 +2932,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <button
               onClick={() => setCurrentPage('create')}
               className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
-                (currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio'
+                (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio'
                   ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
                   : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
                 )
@@ -3030,26 +3062,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <img src={theme === 'dark' ? '/logo.png' : '/logo-light.png'} alt="Vizzu" className="h-8" />
           </div>
           <div className="flex items-center gap-2">
-            {currentPage !== 'products' && (
-              <div className="relative">
-                <button
-                  onClick={() => { setShowImport(true); setShowAddProductHint(false); }}
-                  className={`w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 text-white flex items-center justify-center shadow-md transition-all ${showAddProductHint ? 'animate-pulse ring-2 ring-pink-400 ring-offset-2 ring-offset-neutral-950' : ''}`}
-                >
-                  <i className="fas fa-plus text-sm"></i>
-                </button>
-                {/* Tooltip de dica */}
-                {showAddProductHint && (
-                  <div className="absolute top-full right-0 mt-2 w-48 animate-fade-in">
-                    <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200 shadow-lg') + ' rounded-lg border p-2.5 relative'}>
-                      <div className={'absolute -top-1.5 right-4 w-3 h-3 rotate-45 ' + (theme === 'dark' ? 'bg-neutral-800 border-l border-t border-neutral-700' : 'bg-white border-l border-t border-gray-200')}></div>
-                      <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium mb-0.5'}>Adicionar produto</p>
-                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Toque aqui para adicionar um novo produto</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
             <button
               onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
               className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30' : 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200')}
@@ -3153,7 +3165,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div
                           key={creation.id}
                           onClick={() => {
-                            if (creation.type === 'studio') setCurrentPage('studio');
+                            if (creation.type === 'studio') setCurrentPage('product-studio');
                             else if (creation.type === 'provador') setCurrentPage('provador');
                             else setCurrentPage('look-composer');
                           }}
@@ -3566,25 +3578,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
             </div>
           </div>
-        )}
-
-        {/* STUDIO */}
-        {currentPage === 'studio' && (
-          <Studio
-            products={products}
-            userCredits={userCredits}
-            onUpdateProduct={handleUpdateProduct}
-            onDeductCredits={handleDeductCredits}
-            onAddHistoryLog={handleAddHistoryLog}
-            onOpenSettings={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-            onImport={() => setShowImport(true)}
-            currentPlan={currentPlan}
-            theme={theme}
-            onGenerateImage={handleGenerateImage}
-            onCheckCredits={checkCreditsAndShowModal}
-            userId={user?.id}
-            savedModels={savedModels}
-          />
         )}
 
         {/* PRODUCT STUDIO */}
@@ -4837,10 +4830,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </button>
           {/* Botão CRIAR - Central destacado */}
           <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'studio' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
           <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-user-tie text-sm"></i>
@@ -4881,34 +4874,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* STUDIO PICKER MODAL */}
-      {showStudioPicker && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end justify-center" onClick={() => setShowStudioPicker(false)}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
-            <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-5'}></div>
-            <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold text-center mb-1'}>O que você quer criar?</h3>
-            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mb-5'}>Escolha uma das opções</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setShowStudioPicker(false); setCurrentPage('studio'); setShowAddProductHint(true); setTimeout(() => setShowAddProductHint(false), 4000); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 border-gray-200 hover:border-purple-300 hover:bg-purple-50') + ' border rounded-xl p-4 text-left transition-all group'}>
-                <div className={(theme === 'dark' ? 'bg-neutral-700 group-hover:bg-neutral-600' : 'bg-purple-100 group-hover:bg-purple-200') + ' w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors'}>
-                  <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-purple-600') + ' fas fa-wand-magic-sparkles text-sm'}></i>
-                </div>
-                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-0.5'}>Vizzu Studio®</h4>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>Gere fotos profissionais com IA</p>
-              </button>
-              <button onClick={() => { setShowStudioPicker(false); setCurrentPage('provador'); }} className={(theme === 'dark' ? 'bg-neutral-800 border-pink-500/30 hover:border-pink-500/50' : 'bg-pink-50 border-pink-200 hover:border-pink-400 hover:bg-pink-100') + ' border rounded-xl p-4 text-left transition-all group'}>
-                <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 group-hover:from-pink-500/30 group-hover:to-orange-400/30' : 'bg-gradient-to-r from-pink-100 to-orange-100 group-hover:from-pink-200 group-hover:to-orange-200') + ' w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-colors'}>
-                  <i className="fas fa-shirt text-pink-500 text-sm"></i>
-                </div>
-                <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-0.5'}>Vizzu Provador®</h4>
-                <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>Vista seus clientes virtualmente</p>
-              </button>
-            </div>
-            <button onClick={() => setShowStudioPicker(false)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-700') + ' w-full mt-5 py-2.5 font-medium text-xs transition-colors'}>Cancelar</button>
           </div>
         </div>
       )}
@@ -5340,38 +5305,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         </div>
       )}
 
-     {/* IMPORT MODAL */}
-{showImport && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-sm p-5 max-h-[85vh] overflow-y-auto'}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
-          Adicionar Foto {uploadTarget === 'front' ? 'de Frente' : 'de Costas'}
-        </h3>
-        <button onClick={() => setShowImport(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
-          <i className="fas fa-times text-xs"></i>
-        </button>
-      </div>
-      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Escolha como adicionar a imagem:</p>
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files, uploadTarget)} />
-          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
-            <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-images text-sm'}></i>
-          </div>
-          <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Galeria</span>
-        </label>
-        <label className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50') + ' flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl transition-all cursor-pointer'}>
-          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files && handleFileSelect(e.target.files, uploadTarget)} />
-          <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
-            <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' fas fa-camera text-sm'}></i>
-          </div>
-          <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] font-medium'}>Câmera</span>
-        </label>
-      </div>
-    </div>
-  </div>
-)}
 
 {/* PHOTO SOURCE PICKER */}
 {showPhotoSourcePicker && (
@@ -5447,165 +5380,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   </div>
 )}
 
-{/* CREATE PRODUCT MODAL */}
-{showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
-        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
-          <i className="fas fa-times text-xs"></i>
-        </button>
-      </div>
-      
- {/* Fotos Frente/Costas */}
-      <div className="mb-4">
-        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
-        <div className="grid grid-cols-2 gap-3">
-          {/* FRENTE */}
-          <div className="flex flex-col">
-            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
-              <i className="fas fa-image text-pink-500 text-[8px]"></i>
-              Frente <span className="text-pink-500">*</span>
-            </label>
-            {selectedFrontImage ? (
-              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-pink-500">
-                <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
-                <div className="absolute top-1 right-1 flex gap-1">
-                  <button onClick={() => setShowPhotoSourcePicker('front')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-sync text-[8px]"></i>
-                  </button>
-                  <button onClick={() => setSelectedFrontImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-times text-[8px]"></i>
-                  </button>
-                </div>
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full">
-                  <i className="fas fa-check mr-0.5"></i>OK
-                </div>
-              </div>
-            ) : (
-              <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
-                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
-              </div>
-            )}
-          </div>
-          
-          {/* COSTAS */}
-          <div className="flex flex-col">
-            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
-              <i className="fas fa-image text-neutral-400 text-[8px]"></i>
-              Costas <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[8px]'}>(opcional)</span>
-            </label>
-            {selectedBackImage ? (
-              <div className={(theme === 'dark' ? 'border-green-500' : 'border-green-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
-                <img src={selectedBackImage} alt="Costas" className="w-full h-full object-cover" />
-                <div className="absolute top-1 right-1 flex gap-1">
-                  <button onClick={() => setShowPhotoSourcePicker('back')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-sync text-[8px]"></i>
-                  </button>
-                  <button onClick={() => setSelectedBackImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-times text-[8px]"></i>
-                  </button>
-                </div>
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
-                  <i className="fas fa-check mr-0.5"></i>OK
-                </div>
-              </div>
-            ) : (
-              <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
-                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Dica */}
-        <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-lg p-2 mt-3 border'}>
-          <p className="text-amber-500 text-[10px] flex items-start gap-1.5">
-            <i className="fas fa-lightbulb mt-0.5"></i>
-            <span><strong>Dica:</strong> Adicionar foto de costas permite que a IA gere imagens de ambos os ângulos.</span>
-          </p>
-        </div>
-      </div>
-      
-      {/* Form Fields */}
-      <div className="space-y-3">
-        <div>
-          <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
-          <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
-            <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
-          </div>
-          <div>
-            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
-            <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-              <option value="">Selecione</option>
-              {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
-            </select>
-          </div>
-        </div>
-        <div>
-          <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
-          <select value={newProduct.category} onChange={(e) => { setNewProduct({...newProduct, category: e.target.value}); setProductAttributes({}); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
-            <option value="">Selecione</option>
-            {CATEGORY_GROUPS.map(group => (
-              <optgroup key={group.label} label={group.label}>
-                {group.items.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </optgroup>
-            ))}
-          </select>
-        </div>
-
-        {/* Atributos condicionais por categoria */}
-        {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
-          <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-purple-200') + ' p-3 rounded-xl border'}>
-            <div className="flex items-center gap-2 mb-2">
-              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-sliders text-xs'}></i>
-              <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
-            </div>
-            <div className={`grid gap-3 ${CATEGORY_ATTRIBUTES[newProduct.category].length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-              {CATEGORY_ATTRIBUTES[newProduct.category].map(attr => (
-                <div key={attr.id}>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>{attr.label}</label>
-                  <select
-                    value={productAttributes[attr.id] || ''}
-                    onChange={(e) => setProductAttributes(prev => ({ ...prev, [attr.id]: e.target.value }))}
-                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
-                  >
-                    <option value="">Selecione</option>
-                    {attr.options.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
-                  </select>
-                </div>
-              ))}
-            </div>
-            <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-2'}>
-              <i className="fas fa-info-circle mr-1"></i>
-              Esses atributos ajudam a IA a gerar imagens mais precisas
-            </p>
-          </div>
-        )}
-
-        <button onClick={handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-          {isCreatingProduct ? (
-            <>
-              <i className="fas fa-spinner fa-spin text-xs"></i>
-              Salvando...
-            </>
-          ) : (
-            <>
-              <i className="fas fa-check mr-1.5"></i>Criar Produto
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
       {/* PRODUCT DETAIL MODAL */}
       {showProductDetail && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center" onClick={() => setShowProductDetail(null)}>
@@ -5664,12 +5438,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
             </div>
 
-            {/* Footer fixo com botão */}
-            <div className={'p-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')} style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
-              <button onClick={() => { setShowProductDetail(null); setCurrentPage('studio'); }} className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm">
-                <i className="fas fa-wand-magic-sparkles mr-1.5"></i>Abrir no Studio
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -6239,7 +6007,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <div>
                         <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
                           <i className="fas fa-wand-magic-sparkles text-pink-500 mr-1"></i>
-                          Prompt para a IA (Gemini)
+                          Prompt para a IA (Flux 2.0)
                         </label>
                         <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-lg border text-xs leading-relaxed ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}>
                           {generateModelPrompt()}
@@ -6360,7 +6128,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               onClick={() => {
                                 setShowCreateDropdown(false);
                                 setShowCreateModel(false);
-                                setCurrentPage('studio');
+                                setCurrentPage('product-studio');
                                 // TODO: Pass model to Studio Ready
                               }}
                               className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
@@ -6377,7 +6145,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               onClick={() => {
                                 setShowCreateDropdown(false);
                                 setShowCreateModel(false);
-                                setCurrentPage('studio');
+                                setCurrentPage('lifestyle');
                                 // TODO: Pass model to Cenário Criativo
                               }}
                               className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
@@ -6394,7 +6162,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               onClick={() => {
                                 setShowCreateDropdown(false);
                                 setShowCreateModel(false);
-                                setCurrentPage('studio');
+                                setCurrentPage('look-composer');
                                 // TODO: Pass model to Look Composer
                               }}
                               className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}

@@ -52,6 +52,7 @@ temp/
 debug.log
 
 # n8n workflows (contém credenciais - NUNCA commitar!)
+n8n/
 n8n-*.json
 n8n-*.js
 n8n-workflows/

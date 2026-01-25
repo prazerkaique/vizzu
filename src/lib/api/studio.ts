@@ -595,7 +595,7 @@ interface GenerateModelImagesParams {
   modelId: string;
   userId: string;
   modelProfile: SavedModelProfile;
-  prompt?: string; // Prompt gerado para o Gemini
+  prompt?: string; // Prompt otimizado para Flux 2.0
 }
 
 interface GenerateModelImagesResponse {
@@ -627,7 +627,7 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
       modelId: params.modelId,
       userId: params.userId,
       modelProfile: params.modelProfile,
-      prompt: params.prompt, // Prompt gerado para o Gemini
+      prompt: params.prompt, // Prompt otimizado para Flux 2.0
     }),
   });
 
