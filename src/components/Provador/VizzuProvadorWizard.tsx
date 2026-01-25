@@ -108,6 +108,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(whatsappTemplates?.[0] || null);
   const [message, setMessage] = useState(whatsappTemplates?.[0]?.message || '');
   const [isGeneratingAIMessage, setIsGeneratingAIMessage] = useState(false);
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
 
   // Estados de Upload de Foto
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -1156,7 +1157,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
             </div>
           )}
 
-          {/* Mensagem WhatsApp editável */}
+          {/* Mensagem WhatsApp - Preview ou Edição */}
           <div className={`mb-3 p-3 rounded-xl border ${theme === 'dark' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'}`}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
@@ -1165,45 +1166,66 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
                   Mensagem que será enviada
                 </span>
               </div>
-              <button
-                onClick={handleGenerateAIMessage}
-                disabled={isGeneratingAIMessage || !selectedClient}
-                title="Gerar mensagem com IA"
-                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                  isGeneratingAIMessage
-                    ? 'bg-pink-500/20 text-pink-500'
-                    : theme === 'dark'
-                      ? 'bg-neutral-700 text-pink-400 hover:bg-neutral-600'
-                      : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
-                }`}
-              >
-                {isGeneratingAIMessage ? (
-                  <i className="fas fa-spinner fa-spin text-[10px]"></i>
-                ) : (
-                  <i className="fas fa-wand-magic-sparkles text-[10px]"></i>
-                )}
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleGenerateAIMessage}
+                  disabled={isGeneratingAIMessage || !selectedClient}
+                  title="Gerar mensagem com IA"
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                    isGeneratingAIMessage
+                      ? 'bg-pink-500/20 text-pink-500'
+                      : theme === 'dark'
+                        ? 'bg-neutral-700 text-pink-400 hover:bg-neutral-600'
+                        : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
+                  }`}
+                >
+                  {isGeneratingAIMessage ? (
+                    <i className="fas fa-spinner fa-spin text-[10px]"></i>
+                  ) : (
+                    <i className="fas fa-wand-magic-sparkles text-[10px]"></i>
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsEditingMessage(!isEditingMessage)}
+                  title={isEditingMessage ? "Fechar edição" : "Editar mensagem"}
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                    isEditingMessage
+                      ? theme === 'dark'
+                        ? 'bg-green-500/30 text-green-400'
+                        : 'bg-green-200 text-green-700'
+                      : theme === 'dark'
+                        ? 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <i className={`fas ${isEditingMessage ? 'fa-check' : 'fa-pen'} text-[10px]`}></i>
+                </button>
+              </div>
             </div>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-              placeholder="Escreva sua mensagem... Use {nome} para incluir o nome do cliente"
-              className={`w-full px-3 py-2 border rounded-lg text-xs resize-none mb-2 ${
-                theme === 'dark'
-                  ? 'bg-neutral-800/50 border-green-500/20 text-white placeholder-neutral-500'
-                  : 'bg-white/50 border-green-200 text-gray-900 placeholder-gray-400'
-              }`}
-            />
-            {/* Preview dos itens do look */}
-            {Object.keys(selectedSavedLook?.lookItems || lookComposition).length > 0 && (
-              <div className={`pt-2 border-t ${theme === 'dark' ? 'border-green-500/20' : 'border-green-200'}`}>
-                <p className={`text-[9px] font-medium mb-1 ${theme === 'dark' ? 'text-green-400/70' : 'text-green-600/70'}`}>
-                  + Itens do look (automático):
+
+            {isEditingMessage ? (
+              /* Modo edição - textarea */
+              <div>
+                <p className={`text-[9px] mb-1.5 ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
+                  Use {'{nome}'} para incluir o nome do cliente automaticamente
                 </p>
-                <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
-                  {formatLookItemsPreview()}
-                </div>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Escreva sua mensagem personalizada..."
+                  className={`w-full px-3 py-2 border rounded-lg text-xs resize-none ${
+                    theme === 'dark'
+                      ? 'bg-neutral-800/50 border-green-500/20 text-white placeholder-neutral-500'
+                      : 'bg-white/50 border-green-200 text-gray-900 placeholder-gray-400'
+                  }`}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              /* Modo preview - mensagem completa */
+              <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-200' : 'text-gray-700'}`}>
+                {getFormattedMessagePreview()}
               </div>
             )}
           </div>
