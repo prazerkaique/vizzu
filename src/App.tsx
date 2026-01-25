@@ -2443,19 +2443,32 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     try {
       let processedFile: File | Blob = file;
 
+      // Detectar HEIC por extensão ou tipo MIME (iOS às vezes não reporta MIME correto)
+      const fileName = file.name.toLowerCase();
+      const isHeic = file.type === 'image/heic' ||
+                     file.type === 'image/heif' ||
+                     fileName.endsWith('.heic') ||
+                     fileName.endsWith('.heif') ||
+                     (file.type === '' && (fileName.endsWith('.heic') || fileName.endsWith('.heif')));
+
+      console.log('[processClientPhotoFile] Arquivo:', file.name, 'Tipo:', file.type, 'É HEIC:', isHeic);
+
       // Converter HEIC/HEIF para PNG
-      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+      if (isHeic) {
+        console.log('[processClientPhotoFile] Convertendo HEIC para PNG...');
         const convertedBlob = await heic2any({
           blob: file,
           toType: 'image/png',
           quality: 0.9
         });
         processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        console.log('[processClientPhotoFile] Conversão concluída!');
       }
 
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
+        console.log('[processClientPhotoFile] Base64 gerado, tamanho:', base64.length);
         const newPhoto: ClientPhoto = {
           type: photoType,
           base64,
@@ -2467,10 +2480,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         }));
         setUploadingPhotoType(null);
       };
+      reader.onerror = (error) => {
+        console.error('[processClientPhotoFile] Erro ao ler arquivo:', error);
+        alert('Erro ao ler a imagem. Tente novamente.');
+        setUploadingPhotoType(null);
+      };
       reader.readAsDataURL(processedFile);
     } catch (error) {
-      console.error('Erro ao processar foto:', error);
-      alert('Erro ao processar a imagem. Tente outro formato.');
+      console.error('[processClientPhotoFile] Erro ao processar foto:', error);
+      alert('Erro ao processar a imagem. Tente outro formato (JPG ou PNG).');
       setUploadingPhotoType(null);
     }
   };
