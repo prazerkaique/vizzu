@@ -63,9 +63,16 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex">
+    <div
+      className="bg-[#0a0a0f] flex overflow-auto"
+      style={{
+        minHeight: '100dvh',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+      }}
+    >
       {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 py-8">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
