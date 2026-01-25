@@ -199,6 +199,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [savedBackgrounds, setSavedBackgrounds] = useState<SavedBackground[]>([]);
   const [showSaveBackgroundModal, setShowSaveBackgroundModal] = useState(false);
   const [newBackgroundName, setNewBackgroundName] = useState('');
+  const [showBackgroundSourcePicker, setShowBackgroundSourcePicker] = useState(false);
 
   // Estado dos ângulos (views)
   const [viewsMode, setViewsMode] = useState<ViewsMode>('front');
@@ -422,17 +423,38 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     }
   };
 
+  // Processar arquivo de fundo (usado por upload e drag & drop)
+  const processBackgroundFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCustomBackground(ev.target?.result as string);
+      setSelectedPreset(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Upload de fundo personalizado
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setCustomBackground(ev.target?.result as string);
-        setSelectedPreset(null);
-      };
-      reader.readAsDataURL(file);
+      processBackgroundFile(file);
     }
+  };
+
+  // Drag & drop para fundo personalizado
+  const handleBackgroundDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processBackgroundFile(file);
+    }
+  };
+
+  const handleBackgroundDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   // Minimizar/Maximizar
@@ -1373,12 +1395,17 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
                 {backgroundMode === 'upload' && (
                   <div className="space-y-3">
-                    <label className={`block w-full py-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-300 hover:border-pink-400'}`}>
+                    <div
+                      onClick={() => setShowBackgroundSourcePicker(true)}
+                      onDragOver={handleBackgroundDragOver}
+                      onDrop={handleBackgroundDrop}
+                      className={`block w-full py-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-300 hover:border-pink-400'}`}
+                    >
                       <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-cloud-upload-alt text-3xl mb-2'}></i>
                       <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm font-medium'}>Clique para enviar</p>
                       <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-1'}>Imagem de fundo sem pessoas</p>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundUpload} />
-                    </label>
+                      <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-1 opacity-60'}>ou arraste aqui</p>
+                    </div>
 
                     {customBackground && (
                       <div className="relative rounded-xl overflow-hidden border-2 border-pink-500">
@@ -1940,6 +1967,58 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                 <i className="fas fa-save mr-2"></i>Salvar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* BACKGROUND SOURCE PICKER MODAL */}
+      {showBackgroundSourcePicker && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowBackgroundSourcePicker(false)}>
+          <div className={(isDark ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+            <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+            <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+              Adicionar fundo personalizado
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <label className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+                <div className={(isDark ? 'bg-neutral-700' : 'bg-pink-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+                  <i className="fas fa-images text-pink-500"></i>
+                </div>
+                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      processBackgroundFile(e.target.files[0]);
+                      setShowBackgroundSourcePicker(false);
+                    }
+                  }}
+                />
+              </label>
+              <label className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+                <div className={(isDark ? 'bg-neutral-700' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+                  <i className="fas fa-camera text-orange-500"></i>
+                </div>
+                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      processBackgroundFile(e.target.files[0]);
+                      setShowBackgroundSourcePicker(false);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            <button onClick={() => setShowBackgroundSourcePicker(false)} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+              Cancelar
+            </button>
           </div>
         </div>
       )}

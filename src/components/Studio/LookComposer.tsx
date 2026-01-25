@@ -36,8 +36,10 @@ const SLOTS = [
 export const LookComposer: React.FC<Props> = ({ products, composition, onChange, collections = [], theme = 'dark', lockedSlots = [], lockedMessage = 'Peça principal', onImageUpload }) => {
   const [expandedSlot, setExpandedSlot] = useState<keyof LookComposition | null>(null);
   const [search, setSearch] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const [isDragging, setIsDragging] = useState<keyof LookComposition | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Estados para long press e upload de imagem (mobile)
   const [showImageOptions, setShowImageOptions] = useState<keyof LookComposition | null>(null);
@@ -105,6 +107,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     });
     setExpandedSlot(null);
     setSearch('');
+    setIsSearchOpen(false);
   };
 
   const removeSlot = (slot: keyof LookComposition, e: React.MouseEvent) => {
@@ -377,19 +380,39 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
             {/* Filtros */}
             <div className="flex gap-2">
               {/* Busca */}
-              <div className="flex-1 relative">
-                <i className={`fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar..."
-                  className={`w-full pl-7 pr-3 py-2 text-xs border rounded-lg ${
-                    theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-pink-200 text-gray-900 placeholder-gray-400'
+              {isSearchOpen ? (
+                <div className="flex-1 relative">
+                  <i className={`fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className={`w-full pl-7 pr-8 py-2 text-xs border rounded-lg ${
+                      theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-pink-200 text-gray-900 placeholder-gray-400'
+                    }`}
+                  />
+                  <button
+                    onClick={() => { setSearch(''); setIsSearchOpen(false); }}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center ${
+                      theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    <i className="fas fa-times text-[9px]"></i>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setIsSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
+                  className={`px-3 py-2 rounded-lg border flex items-center gap-2 ${
+                    theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-pink-500/50' : 'bg-white border-pink-200 text-gray-500 hover:border-pink-400'
                   }`}
-                  autoFocus
-                />
-              </div>
+                >
+                  <i className="fas fa-search text-[10px]"></i>
+                  <span className="text-xs">Buscar</span>
+                </button>
+              )}
 
               {/* Filtro de coleção */}
               {availableCollections.length > 0 && (

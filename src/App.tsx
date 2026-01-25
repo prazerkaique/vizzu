@@ -200,7 +200,9 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [newClient, setNewClient] = useState({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '' as 'male' | 'female' | '', photos: [] as ClientPhoto[], notes: '' });
   const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type'] | null>(null);
   const [processingClientPhoto, setProcessingClientPhoto] = useState(false);
-  
+  const [showClientPhotoSourcePicker, setShowClientPhotoSourcePicker] = useState<{ photoType: ClientPhoto['type']; mode: 'create' | 'edit' } | null>(null);
+  const [isSavingClient, setIsSavingClient] = useState(false);
+
   const [provadorClient, setProvadorClient] = useState<Client | null>(null);
   const [provadorPhotoType, setProvadorPhotoType] = useState<ClientPhoto['type']>('frente');
   const [provadorLook, setProvadorLook] = useState<LookComposition>({});
@@ -1646,68 +1648,86 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       return;
     }
 
-    const clientId = crypto.randomUUID();
-    const photosToUpload = [...newClient.photos];
+    // Bloquear botão para evitar múltiplos cliques
+    setIsSavingClient(true);
 
-    const client: Client = {
-      id: clientId,
-      firstName: newClient.firstName,
-      lastName: newClient.lastName,
-      whatsapp: newClient.whatsapp.replace(/\D/g, ''),
-      email: newClient.email || undefined,
-      gender: newClient.gender || undefined,
-      photos: photosToUpload.length > 0 ? photosToUpload : undefined,
-      photo: photosToUpload[0]?.base64,
-      hasProvadorIA: photosToUpload.length > 0,
-      notes: newClient.notes || undefined,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      totalOrders: 0
-    };
+    try {
+      const clientId = crypto.randomUUID();
+      const photosToUpload = [...newClient.photos];
 
-    // Adicionar cliente imediatamente (com fotos locais)
-    setClients(prev => [...prev, client]);
-    setShowCreateClient(false);
-    setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' });
+      const client: Client = {
+        id: clientId,
+        firstName: newClient.firstName,
+        lastName: newClient.lastName,
+        whatsapp: newClient.whatsapp.replace(/\D/g, ''),
+        email: newClient.email || undefined,
+        gender: newClient.gender || undefined,
+        photos: photosToUpload.length > 0 ? photosToUpload : undefined,
+        photo: photosToUpload[0]?.base64,
+        hasProvadorIA: photosToUpload.length > 0,
+        notes: newClient.notes || undefined,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        totalOrders: 0
+      };
 
-    // Log no histórico
-    handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
+      // Adicionar cliente ao estado
+      setClients(prev => [...prev, client]);
 
-    // Se veio do Provador, selecionar o cliente e voltar para lá
-    if (createClientFromProvador) {
-      setProvadorClient(client);
-      setCurrentPage('provador');
-      setCreateClientFromProvador(false);
-      setSuccessNotification('Cliente cadastrado com sucesso!');
-      setTimeout(() => setSuccessNotification(null), 3000);
-    }
+      // Sincronizar com Supabase
+      if (user?.id) {
+        // Salvar cliente no banco
+        await saveClientToSupabase(client, user.id);
 
-    // Sincronizar com Supabase em background
-    if (user?.id) {
-      // Salvar cliente no banco
-      await saveClientToSupabase(client, user.id);
+        // Upload das fotos para o Storage
+        if (photosToUpload.length > 0) {
+          const uploadedPhotos: ClientPhoto[] = [];
 
-      // Upload das fotos para o Storage (em background)
-      if (photosToUpload.length > 0) {
-        const uploadedPhotos: ClientPhoto[] = [];
+          for (const photo of photosToUpload) {
+            const result = await uploadClientPhoto(user.id, clientId, photo);
+            if (result) {
+              await saveClientPhotoToDb(user.id, clientId, photo, result.url, result.storagePath);
+              uploadedPhotos.push({ ...photo, base64: result.url });
+            }
+          }
 
-        for (const photo of photosToUpload) {
-          const result = await uploadClientPhoto(user.id, clientId, photo);
-          if (result) {
-            await saveClientPhotoToDb(user.id, clientId, photo, result.url, result.storagePath);
-            uploadedPhotos.push({ ...photo, base64: result.url });
+          // Atualizar cliente com URLs das fotos
+          if (uploadedPhotos.length > 0) {
+            setClients(prev => prev.map(c =>
+              c.id === clientId
+                ? { ...c, photos: uploadedPhotos, photo: uploadedPhotos[0]?.base64 }
+                : c
+            ));
           }
         }
-
-        // Atualizar cliente com URLs das fotos
-        if (uploadedPhotos.length > 0) {
-          setClients(prev => prev.map(c =>
-            c.id === clientId
-              ? { ...c, photos: uploadedPhotos, photo: uploadedPhotos[0]?.base64 }
-              : c
-          ));
-        }
       }
+
+      // Log no histórico
+      handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
+
+      // Fechar modal e limpar formulário
+      setShowCreateClient(false);
+      setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' });
+
+      // Mostrar notificação de sucesso
+      setSuccessNotification('Cliente cadastrado com sucesso!');
+      setTimeout(() => setSuccessNotification(null), 3000);
+
+      // Navegação baseada na origem
+      if (createClientFromProvador) {
+        // Se veio do Provador, selecionar o cliente e voltar para lá
+        setProvadorClient(client);
+        setCurrentPage('provador');
+        setCreateClientFromProvador(false);
+      } else {
+        // Se não veio do Provador, ir para lista de clientes
+        setCurrentPage('clients');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
+      alert('Erro ao salvar cliente. Tente novamente.');
+    } finally {
+      setIsSavingClient(false);
     }
   };
 
@@ -2937,6 +2957,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     const file = e.dataTransfer.files?.[0];
     if (file && (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'))) {
       processClientPhotoFile(file, photoType);
+    }
+  };
+
+  // Drag and drop para fotos do cliente no modo de edição
+  const handleEditClientPhotoDrop = (e: React.DragEvent<HTMLDivElement>, photoType: ClientPhoto['type']) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'))) {
+      processEditClientPhoto(file, photoType);
     }
   };
 
@@ -4314,6 +4344,32 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </button>
               </div>
 
+              {/* Tabs de navegação - Mobile */}
+              <div className="flex gap-1 overflow-x-auto pb-4 -mx-4 px-4 md:hidden scrollbar-hide">
+                {[
+                  { id: 'profile' as SettingsTab, label: 'Perfil', icon: 'fa-user' },
+                  { id: 'appearance' as SettingsTab, label: 'Aparência', icon: 'fa-palette' },
+                  { id: 'company' as SettingsTab, label: 'Empresa', icon: 'fa-building' },
+                  { id: 'plan' as SettingsTab, label: 'Planos', icon: 'fa-credit-card' },
+                  { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
+                  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSettingsTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                      settingsTab === tab.id
+                        ? 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow-lg shadow-fuchsia-500/30'
+                        : theme === 'dark'
+                          ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <i className={`fas ${tab.icon} text-[10px]`}></i>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
               {/* Conteúdo da Seção */}
               <div className={settingsTab === 'plan' ? '' : 'max-w-xl'}>
@@ -4999,7 +5055,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     return (
                       <div key={photoType.id} className="text-center">
                         <div
-                          onClick={() => { if (existingPhoto) return; setUploadingPhotoType(photoType.id); clientPhotoInputRef.current?.click(); }}
+                          onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'create' }); }}
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleClientPhotoDrop(e, photoType.id)}
                           className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}
@@ -5022,7 +5078,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     );
                   })}
                 </div>
-                <input ref={clientPhotoInputRef} type="file" accept="image/*,.heic,.heif" capture="user" onChange={handleClientPhotoUpload} className="hidden" />
                 {processingClientPhoto && (
                   <div className="flex items-center gap-2 mt-2 px-2.5 py-2 bg-blue-500/10 text-blue-400 rounded-lg">
                     <i className="fas fa-spinner fa-spin text-sm"></i>
@@ -5080,8 +5135,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-3 rounded-xl font-medium text-sm transition-colors md:hidden'}>
                   Cancelar
                 </button>
-                <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp} className="flex-1 md:w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                  <i className="fas fa-user-plus mr-2"></i>Cadastrar
+                <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp || isSavingClient || processingClientPhoto} className="flex-1 md:w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSavingClient ? (
+                    <><i className="fas fa-spinner fa-spin mr-2"></i>Salvando...</>
+                  ) : (
+                    <><i className="fas fa-user-plus mr-2"></i>Cadastrar</>
+                  )}
                 </button>
               </div>
             </div>
@@ -5342,19 +5401,24 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     const existingPhoto = editClientPhotos.find(p => p.type === photoType.id);
                     return (
                       <div key={photoType.id} className="text-center">
-                        <div className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800 cursor-pointer')}>
+                        <div
+                          onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'edit' }); }}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleEditClientPhotoDrop(e, photoType.id)}
+                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800')}
+                        >
                           {existingPhoto ? (
                             <>
                               <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
-                              <button onClick={() => setEditClientPhotos(prev => prev.filter(p => p.type !== photoType.id))} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
+                              <button onClick={(e) => { e.stopPropagation(); setEditClientPhotos(prev => prev.filter(p => p.type !== photoType.id)); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
                               <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium text-center"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
                             </>
                           ) : (
-                            <label className="flex flex-col items-center justify-center h-full text-neutral-600 cursor-pointer">
-                              <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={(e) => e.target.files?.[0] && processEditClientPhoto(e.target.files[0], photoType.id)} />
+                            <div className="flex flex-col items-center justify-center h-full text-neutral-600">
                               <i className={'fas ' + photoType.icon + ' text-lg mb-1'}></i>
                               <span className="text-[9px] font-medium">{photoType.label}</span>
-                            </label>
+                              <span className="text-[7px] opacity-60 mt-0.5">ou arraste</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -5496,6 +5560,68 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         </label>
       </div>
       <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+        Cancelar
+      </button>
+    </div>
+  </div>
+)}
+
+{/* CLIENT PHOTO SOURCE PICKER */}
+{showClientPhotoSourcePicker && (
+  <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowClientPhotoSourcePicker(null)}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+      <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+        Adicionar foto - {PHOTO_TYPES.find(p => p.id === showClientPhotoSourcePicker.photoType)?.label}
+      </h3>
+      <div className="grid grid-cols-2 gap-3">
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-pink-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-images text-pink-500"></i>
+          </div>
+          <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+          <input
+            type="file"
+            accept="image/*,.heic,.heif"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file && showClientPhotoSourcePicker) {
+                if (showClientPhotoSourcePicker.mode === 'create') {
+                  processClientPhotoFile(file, showClientPhotoSourcePicker.photoType);
+                } else {
+                  processEditClientPhoto(file, showClientPhotoSourcePicker.photoType);
+                }
+                setShowClientPhotoSourcePicker(null);
+              }
+            }}
+          />
+        </label>
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-camera text-orange-500"></i>
+          </div>
+          <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+          <input
+            type="file"
+            accept="image/*,.heic,.heif"
+            capture="user"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file && showClientPhotoSourcePicker) {
+                if (showClientPhotoSourcePicker.mode === 'create') {
+                  processClientPhotoFile(file, showClientPhotoSourcePicker.photoType);
+                } else {
+                  processEditClientPhoto(file, showClientPhotoSourcePicker.photoType);
+                }
+                setShowClientPhotoSourcePicker(null);
+              }
+            }}
+          />
+        </label>
+      </div>
+      <button onClick={() => setShowClientPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
         Cancelar
       </button>
     </div>
