@@ -184,6 +184,9 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [showCreateClient, setShowCreateClient] = useState(false);
   const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
   const [clientDetailLooks, setClientDetailLooks] = useState<ClientLook[]>([]);
+  const [showWhatsAppLookModal, setShowWhatsAppLookModal] = useState<Client | null>(null);
+  const [selectedLookForWhatsApp, setSelectedLookForWhatsApp] = useState<ClientLook | null>(null);
+  const [whatsAppLookMessage, setWhatsAppLookMessage] = useState('');
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -2429,6 +2432,73 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       `${clientName}! 🔥\n\nTem que ver esse look que montei:`,
     ];
     return messages[Math.floor(Math.random() * messages.length)];
+  };
+
+  // Função para formatar itens do look com emojis
+  const formatLookItemsForMessage = (lookItems: LookComposition): string => {
+    const lookEmojis: Record<string, string> = {
+      head: '🧢',
+      top: '👕',
+      bottom: '👖',
+      feet: '👟',
+      accessory1: '💼',
+      accessory2: '⌚',
+    };
+    const items: string[] = [];
+    const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
+    lookKeys.forEach(key => {
+      const item = lookItems[key];
+      if (item && item.name) {
+        const emoji = lookEmojis[key] || '👔';
+        items.push(`${emoji} ${item.name} — Consulte`);
+      }
+    });
+    return items.join('\n');
+  };
+
+  // Função para gerar mensagem completa para WhatsApp com look
+  const generateWhatsAppLookMessage = (client: Client, look: ClientLook): string => {
+    const baseMessage = `Oi ${client.firstName}! 😍\n\nMontei esse look especial pra você:`;
+    const lookItems = formatLookItemsForMessage(look.lookItems);
+    return lookItems ? `${baseMessage}\n\n${lookItems}` : baseMessage;
+  };
+
+  // Função para abrir modal de WhatsApp com looks
+  const openWhatsAppLookModal = (client: Client) => {
+    setShowWhatsAppLookModal(client);
+    // Se tiver apenas 1 look, seleciona automaticamente
+    if (clientDetailLooks.length === 1) {
+      const look = clientDetailLooks[0];
+      setSelectedLookForWhatsApp(look);
+      setWhatsAppLookMessage(generateWhatsAppLookMessage(client, look));
+    } else if (clientDetailLooks.length > 1) {
+      setSelectedLookForWhatsApp(null);
+      setWhatsAppLookMessage('');
+    } else {
+      // Sem looks, mensagem simples
+      setWhatsAppLookMessage(`Oi ${client.firstName}! 😍`);
+    }
+  };
+
+  // Função para enviar WhatsApp com look selecionado
+  const sendWhatsAppWithLook = () => {
+    if (!showWhatsAppLookModal) return;
+    const client = showWhatsAppLookModal;
+    const imageUrl = selectedLookForWhatsApp?.imageUrl;
+
+    const phone = client.whatsapp?.replace(/\D/g, '') || '';
+    const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
+
+    if (imageUrl) {
+      const fullMessage = whatsAppLookMessage + '\n\n' + imageUrl;
+      window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+    } else {
+      window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(whatsAppLookMessage)}`, '_blank');
+    }
+
+    setShowWhatsAppLookModal(null);
+    setSelectedLookForWhatsApp(null);
+    setWhatsAppLookMessage('');
   };
 
   const handleUpdateClientForProvador = async (client: Client) => {
@@ -4943,13 +5013,124 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <button onClick={() => startEditingClient(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fas fa-pen text-[10px]"></i>Editar
                 </button>
-                <button onClick={() => handleSendWhatsApp(showClientDetail, 'Olá ' + showClientDetail.firstName + '!')} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                <button onClick={() => openWhatsAppLookModal(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fab fa-whatsapp text-sm"></i>WhatsApp
                 </button>
                 <button onClick={() => handleDeleteClient(showClientDetail.id)} className="col-span-2 py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fas fa-trash text-[10px]"></i>Excluir
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP LOOK MODAL */}
+      {showWhatsAppLookModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 bg-neutral-900 border-neutral-800">
+              <h3 className="text-white text-sm font-medium flex items-center gap-2">
+                <i className="fab fa-whatsapp text-green-500"></i>
+                Enviar Look via WhatsApp
+              </h3>
+              <button onClick={() => { setShowWhatsAppLookModal(null); setSelectedLookForWhatsApp(null); setWhatsAppLookMessage(''); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+                <i className="fas fa-times text-xs"></i>
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Info do cliente */}
+              <div className="flex items-center gap-3">
+                {getClientPhoto(showWhatsAppLookModal) ? (
+                  <img src={getClientPhoto(showWhatsAppLookModal)} alt="" className="w-10 h-10 rounded-full object-cover border border-neutral-700" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                    <span className="text-sm text-neutral-400">{showWhatsAppLookModal.firstName[0]}</span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-white text-sm font-medium">{showWhatsAppLookModal.firstName} {showWhatsAppLookModal.lastName}</p>
+                  <p className="text-neutral-400 text-xs">{formatWhatsApp(showWhatsAppLookModal.whatsapp)}</p>
+                </div>
+              </div>
+
+              {/* Seleção de Look */}
+              {clientDetailLooks.length > 0 ? (
+                <div>
+                  <p className="text-[10px] font-medium text-neutral-500 uppercase tracking-wide mb-2">
+                    {clientDetailLooks.length === 1 ? 'Look que será enviado' : 'Selecione o look para enviar'}
+                  </p>
+                  <div className={`grid gap-2 ${clientDetailLooks.length === 1 ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                    {clientDetailLooks.map(look => (
+                      <div
+                        key={look.id}
+                        onClick={() => {
+                          setSelectedLookForWhatsApp(look);
+                          setWhatsAppLookMessage(generateWhatsAppLookMessage(showWhatsAppLookModal, look));
+                        }}
+                        className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedLookForWhatsApp?.id === look.id
+                            ? 'border-green-500 ring-2 ring-green-500/30'
+                            : 'border-neutral-700 hover:border-neutral-600'
+                        }`}
+                      >
+                        <img
+                          src={look.imageUrl}
+                          alt="Look"
+                          className={`w-full object-cover ${clientDetailLooks.length === 1 ? 'aspect-[4/3] max-h-48' : 'aspect-[3/4]'}`}
+                        />
+                        {selectedLookForWhatsApp?.id === look.id && (
+                          <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                            <i className="fas fa-check text-white text-[8px]"></i>
+                          </div>
+                        )}
+                        <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center">
+                          {new Date(look.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <i className="fas fa-images text-neutral-600 text-2xl mb-2"></i>
+                  <p className="text-neutral-400 text-xs">Nenhum look gerado ainda</p>
+                  <p className="text-neutral-500 text-[10px]">Gere looks no Vizzu Provador®</p>
+                </div>
+              )}
+
+              {/* Mensagem */}
+              {(selectedLookForWhatsApp || clientDetailLooks.length === 0) && (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-medium text-green-400 uppercase tracking-wide flex items-center gap-1">
+                      <i className="fab fa-whatsapp text-green-500"></i>
+                      Mensagem
+                    </p>
+                  </div>
+                  <textarea
+                    value={whatsAppLookMessage}
+                    onChange={(e) => setWhatsAppLookMessage(e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 bg-neutral-800/50 border border-green-500/20 rounded-lg text-xs text-white placeholder-neutral-500 resize-none"
+                    placeholder="Digite sua mensagem..."
+                  />
+                </div>
+              )}
+
+              {/* Botão de enviar */}
+              <button
+                onClick={sendWhatsAppWithLook}
+                disabled={clientDetailLooks.length > 0 && !selectedLookForWhatsApp}
+                className={`w-full py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+                  clientDetailLooks.length > 0 && !selectedLookForWhatsApp
+                    ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                <i className="fab fa-whatsapp"></i>
+                Enviar pelo WhatsApp
+              </button>
             </div>
           </div>
         </div>
