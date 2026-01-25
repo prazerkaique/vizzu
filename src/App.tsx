@@ -2975,7 +2975,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   // MAIN LAYOUT - SUNO STYLE
   // ═══════════════════════════════════════════════════════════════
   return (
-    <div className={'h-screen flex flex-col md:flex-row ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+    <div className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
       
       {/* DESKTOP SIDEBAR */}
       <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-gradient-to-b from-pink-500 via-fuchsia-500 to-violet-500 border-violet-600')}>
@@ -3134,7 +3134,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0 pt-12 md:pt-0">
+      <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0 pt-12 md:pt-0" style={{ overscrollBehavior: 'contain' }}>
 
         {/* MOBILE TOP HEADER */}
         <div

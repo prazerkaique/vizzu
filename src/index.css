@@ -99,3 +99,63 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* MOBILE SCROLL FIXES */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Previne overscroll bounce (área branca) */
+html, body {
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
+  height: 100dvh; /* Dynamic viewport height - considera barra do navegador */
+}
+
+/* Container principal do app */
+#root {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scroll suave e fluido em áreas de scroll */
+.overflow-y-auto,
+.overflow-auto,
+[class*="overflow-y-auto"],
+[class*="overflow-auto"] {
+  -webkit-overflow-scrolling: touch; /* Scroll fluido no iOS */
+  overscroll-behavior: contain; /* Previne propagação do scroll */
+  scroll-behavior: smooth;
+}
+
+/* Previne scroll do body quando modal está aberto */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Melhora performance de scroll */
+.scroll-container {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Touch action para scroll mais responsivo */
+@media (max-width: 768px) {
+  .overflow-y-auto,
+  .overflow-auto {
+    touch-action: pan-y;
+  }
+
+  /* Esconde scrollbar no mobile mas mantém funcionalidade */
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-auto::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
+}
