@@ -2186,11 +2186,44 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string) => {
-    const finalMessage = message.replace('{nome}', client.firstName);
+  const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string, look: LookComposition) => {
+    // Emojis para cada tipo de peça
+    const lookEmojis: Record<string, string> = {
+      head: '🧢',
+      top: '👕',
+      bottom: '👖',
+      feet: '👟',
+      accessory1: '💼',
+      accessory2: '⌚',
+    };
+
+    // Formatar os itens do look
+    const formatLookItems = () => {
+      const items: string[] = [];
+      const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
+
+      lookKeys.forEach(key => {
+        const item = look[key];
+        if (item && item.name) {
+          const emoji = lookEmojis[key] || '👔';
+          // Por enquanto preço fictício - no futuro virá do produto
+          const price = 'Consulte';
+          items.push(`${emoji} ${item.name} — ${price}`);
+        }
+      });
+
+      return items.join('\n');
+    };
+
+    // Monta a mensagem final com os produtos
+    const baseMessage = message.replace('{nome}', client.firstName);
+    const lookItemsFormatted = formatLookItems();
+    const finalMessage = lookItemsFormatted
+      ? `${baseMessage}\n\n${lookItemsFormatted}`
+      : baseMessage;
 
     // Confirmação antes de enviar
-    const confirmMessage = `Deseja enviar um WhatsApp para ${client.firstName} ${client.lastName}?\n\nMensagem:\n"${finalMessage.substring(0, 100)}${finalMessage.length > 100 ? '...' : ''}"`;
+    const confirmMessage = `Deseja enviar um WhatsApp para ${client.firstName} ${client.lastName}?\n\nMensagem:\n"${finalMessage.substring(0, 200)}${finalMessage.length > 200 ? '...' : ''}"`;
 
     if (!window.confirm(confirmMessage)) {
       return;

@@ -32,7 +32,8 @@ interface Props {
   onSendWhatsApp: (
     client: Client,
     image: string,
-    message: string
+    message: string,
+    look: LookComposition
   ) => void;
   onDownloadImage: (image: string, clientName: string) => void;
   onSaveLook: (image: string, look: LookComposition) => Promise<ClientLook | null>;
@@ -279,7 +280,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     if (!imageToSend) return;
 
     const finalMessage = message.replace(/{nome}/gi, selectedClient.firstName);
-    onSendWhatsApp(selectedClient, imageToSend, finalMessage);
+    // Usa o look atual ou o look salvo selecionado
+    const lookToSend = selectedSavedLook?.lookItems || lookComposition;
+    onSendWhatsApp(selectedClient, imageToSend, finalMessage, lookToSend);
   };
 
   const handleDownload = () => {
