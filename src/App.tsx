@@ -183,6 +183,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   });
   const [showCreateClient, setShowCreateClient] = useState(false);
   const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [newClient, setNewClient] = useState({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [] as ClientPhoto[], notes: '' });
   const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type'] | null>(null);
@@ -1636,6 +1638,90 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
     if (client.photos?.length) return client.photos[0].base64;
     return client.photo;
+  };
+
+  // Função para iniciar edição de cliente
+  const startEditingClient = (client: Client) => {
+    setEditingClient({ ...client });
+    setEditClientPhotos(client.photos ? [...client.photos] : []);
+    setShowClientDetail(null);
+  };
+
+  // Função para processar foto no modo de edição
+  const processEditClientPhoto = async (file: File, photoType: ClientPhoto['type']) => {
+    setProcessingClientPhoto(true);
+    try {
+      let processedFile: File | Blob = file;
+      const fileName = file.name.toLowerCase();
+      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
+                     fileName.endsWith('.heic') || fileName.endsWith('.heif') ||
+                     (file.type === '' && (fileName.endsWith('.heic') || fileName.endsWith('.heif')));
+
+      if (isHeic) {
+        try {
+          const convertedBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        } catch (heicError: any) {
+          if (!heicError.message?.includes('already')) throw heicError;
+        }
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        if (!base64 || base64.length < 100) {
+          alert('Erro ao processar a imagem.');
+          setProcessingClientPhoto(false);
+          return;
+        }
+        const newPhoto: ClientPhoto = { type: photoType, base64, createdAt: new Date().toISOString() };
+        setEditClientPhotos(prev => [...prev.filter(p => p.type !== photoType), newPhoto]);
+        setProcessingClientPhoto(false);
+      };
+      reader.onerror = () => {
+        alert('Erro ao ler a imagem.');
+        setProcessingClientPhoto(false);
+      };
+      reader.readAsDataURL(processedFile);
+    } catch (error: any) {
+      alert(error.message || 'Erro ao processar a imagem.');
+      setProcessingClientPhoto(false);
+    }
+  };
+
+  // Função para salvar edição do cliente
+  const saveEditingClient = async () => {
+    if (!editingClient) return;
+
+    const updatedClient: Client = {
+      ...editingClient,
+      photos: editClientPhotos.length > 0 ? editClientPhotos : undefined,
+      photo: editClientPhotos[0]?.base64,
+      hasProvadorIA: editClientPhotos.length > 0
+    };
+
+    // Atualizar no estado local
+    setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
+
+    // Salvar no Supabase
+    if (user?.id) {
+      await saveClientToSupabase(updatedClient, user.id);
+
+      // Upload das novas fotos
+      for (const photo of editClientPhotos) {
+        if (photo.base64.startsWith('data:')) {
+          const result = await uploadClientPhoto(user.id, updatedClient.id, photo);
+          if (result) {
+            await saveClientPhotoToDb(user.id, updatedClient.id, photo, result.url, result.storagePath);
+          }
+        }
+      }
+    }
+
+    setEditingClient(null);
+    setEditClientPhotos([]);
+    setSuccessNotification('Cliente atualizado com sucesso!');
+    setTimeout(() => setSuccessNotification(null), 3000);
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -4770,11 +4856,104 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <i className="fas fa-wand-magic-sparkles text-[10px]"></i>Vizzu Provador®
                   </button>
                 )}
+                <button onClick={() => startEditingClient(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                  <i className="fas fa-pen text-[10px]"></i>Editar
+                </button>
                 <button onClick={() => handleSendWhatsApp(showClientDetail, 'Olá ' + showClientDetail.firstName + '!')} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fab fa-whatsapp text-sm"></i>WhatsApp
                 </button>
-                <button onClick={() => handleDeleteClient(showClientDetail.id)} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                <button onClick={() => handleDeleteClient(showClientDetail.id)} className="col-span-2 py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fas fa-trash text-[10px]"></i>Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT CLIENT MODAL */}
+      {editingClient && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 bg-neutral-900 border-neutral-800">
+              <h3 className="text-white text-sm font-medium">Editar Cliente</h3>
+              <button onClick={() => { setEditingClient(null); setEditClientPhotos([]); }} className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+                <i className="fas fa-times text-xs"></i>
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Fotos */}
+              <div>
+                <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-2 block">
+                  <i className="fas fa-camera text-pink-400 mr-1"></i>Fotos para Provador IA
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {PHOTO_TYPES.map(photoType => {
+                    const existingPhoto = editClientPhotos.find(p => p.type === photoType.id);
+                    return (
+                      <div key={photoType.id} className="text-center">
+                        <div className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800 cursor-pointer')}>
+                          {existingPhoto ? (
+                            <>
+                              <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
+                              <button onClick={() => setEditClientPhotos(prev => prev.filter(p => p.type !== photoType.id))} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium text-center"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
+                            </>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center h-full text-neutral-600 cursor-pointer">
+                              <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={(e) => e.target.files?.[0] && processEditClientPhoto(e.target.files[0], photoType.id)} />
+                              <i className={'fas ' + photoType.icon + ' text-lg mb-1'}></i>
+                              <span className="text-[9px] font-medium">{photoType.label}</span>
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {processingClientPhoto && (
+                  <div className="flex items-center gap-2 mt-2 px-2.5 py-2 bg-blue-500/10 text-blue-400 rounded-lg">
+                    <i className="fas fa-spinner fa-spin text-sm"></i>
+                    <span className="text-[10px] font-medium">Processando imagem...</span>
+                  </div>
+                )}
+              </div>
+              {/* Nome */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Nome *</label>
+                  <input type="text" value={editingClient.firstName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, firstName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Sobrenome *</label>
+                  <input type="text" value={editingClient.lastName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, lastName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+                </div>
+              </div>
+              {/* WhatsApp */}
+              <div>
+                <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">WhatsApp *</label>
+                <div className="relative">
+                  <i className="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm"></i>
+                  <input type="tel" value={editingClient.whatsapp} onChange={(e) => setEditingClient(prev => prev ? { ...prev, whatsapp: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
+                </div>
+              </div>
+              {/* Email */}
+              <div>
+                <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">E-mail (opcional)</label>
+                <input type="email" value={editingClient.email || ''} onChange={(e) => setEditingClient(prev => prev ? { ...prev, email: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+              </div>
+              {/* Observações */}
+              <div>
+                <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Observações</label>
+                <textarea value={editingClient.notes || ''} onChange={(e) => setEditingClient(prev => prev ? { ...prev, notes: e.target.value } : null)} rows={2} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm resize-none" />
+              </div>
+              {/* Botões */}
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => { setEditingClient(null); setEditClientPhotos([]); }} className="flex-1 py-3 bg-neutral-800 text-neutral-300 rounded-xl font-medium text-sm">
+                  Cancelar
+                </button>
+                <button onClick={saveEditingClient} disabled={!editingClient.firstName || !editingClient.lastName || !editingClient.whatsapp || processingClientPhoto} className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                  <i className="fas fa-check mr-2"></i>Salvar
                 </button>
               </div>
             </div>
