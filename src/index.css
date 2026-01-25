@@ -202,3 +202,58 @@ body.modal-open {
 .safe-area-mt {
   margin-top: env(safe-area-inset-top, 0px) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* PWA STANDALONE MODE SPECIFIC FIXES */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Quando em modo PWA standalone (adicionado na tela inicial) */
+@media all and (display-mode: standalone) {
+  /* Root container no PWA precisa considerar safe areas */
+  #root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+
+  /* Body no PWA */
+  body {
+    background-color: #0a0a0a;
+  }
+
+  /* Bottom nav precisa de safe-area extra no PWA */
+  .pwa-bottom-nav {
+    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: 0 !important;
+  }
+
+  /* Modais fullscreen precisam respeitar safe-area no PWA */
+  .fixed.inset-0 {
+    top: 0 !important;
+    bottom: 0 !important;
+  }
+
+  /* Headers de modais no PWA */
+  .safe-area-top {
+    padding-top: max(1rem, calc(0.5rem + env(safe-area-inset-top, 0px))) !important;
+  }
+
+  /* Safe area bottom no PWA */
+  .safe-area-bottom {
+    padding-bottom: max(0.5rem, calc(0.25rem + env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  /* Bottom sheets no PWA */
+  .safe-area-bottom-sheet {
+    padding-bottom: max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px))) !important;
+  }
+}
+
+/* iOS Safari standalone mode detection adicional */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    .pwa-bottom-nav {
+      padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 20px)) !important;
+    }
+  }
+}

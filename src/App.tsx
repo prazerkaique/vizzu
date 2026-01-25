@@ -5086,8 +5086,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* MOBILE BOTTOM NAVIGATION - Esconde quando está dentro das features de criação */}
       {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
       <nav
-        className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 pt-1 z-40 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
-        style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom, 0.25rem))' }}
+        className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 pt-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
+        style={{ paddingBottom: 'calc(0.25rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <div className="flex items-center justify-around pb-1">
           <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
@@ -6013,16 +6013,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {showProductDetail && (
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4"
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+          style={{
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+          }}
           onClick={() => setShowProductDetail(null)}
         >
           <div
-            className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg overflow-hidden flex flex-col'}
+            style={{
+              maxHeight: 'calc(92vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+              marginBottom: 'env(safe-area-inset-bottom, 0px)'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header fixo com botão fechar visível no mobile */}
-            <div className={'flex items-center justify-between p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+            <div className={'flex items-center justify-between p-4 border-b safe-area-top md:pt-4 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Detalhes do Produto</h3>
               <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-full flex items-center justify-center'}>
                 <i className="fas fa-times text-sm"></i>
