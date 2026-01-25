@@ -1442,7 +1442,7 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
   };
 
   // Função para aplicar produto detectado nos campos do formulário
-  const applyDetectedProduct = (product: { type: string; color: string; pattern?: string; material?: string; gender?: string; suggestedName?: string }) => {
+  const applyDetectedProduct = (product: { type: string; color: string; pattern?: string; material?: string; gender?: string; brand?: string; fit?: string; suggestedName?: string }) => {
     // Mapear tipo detectado para categoria do sistema
     const categoryMap: Record<string, string> = {
       'Camiseta': 'Camiseta', 'Camisa': 'Camisa', 'Blusa': 'Blusa', 'Top': 'Top',
@@ -1466,8 +1466,17 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       ...prev,
       name: product.suggestedName || prev.name,
       color: product.color || prev.color,
-      category: matchedCategory || prev.category
+      category: matchedCategory || prev.category,
+      brand: product.brand || prev.brand
     }));
+
+    // Se detectou caimento e a categoria suporta, aplicar nos atributos
+    if (product.fit) {
+      setProductAttributes(prev => ({
+        ...prev,
+        fit: product.fit
+      }));
+    }
 
     setShowProductSelector(false);
     setDetectedProducts([]);
@@ -5521,7 +5530,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
   <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4">
-    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
         <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
@@ -5600,20 +5609,49 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </p>
         </div>
 
-        {/* Indicador de análise IA */}
-        {isAnalyzingImage && (
-          <div className={(theme === 'dark' ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') + ' rounded-lg p-3 mt-3 border flex items-center gap-3'}>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <i className="fas fa-wand-magic-sparkles text-white text-xs animate-pulse"></i>
-            </div>
-            <div className="flex-1">
-              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Analisando imagem com IA...</p>
-              <p className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-600') + ' text-[10px]'}>Detectando tipo, cor e categoria do produto</p>
-            </div>
-            <i className="fas fa-spinner fa-spin text-purple-500"></i>
-          </div>
-        )}
       </div>
+
+      {/* OVERLAY DE ANÁLISE IA - Tela imersiva de loading */}
+      {isAnalyzingImage && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl">
+          {/* Animação central */}
+          <div className="relative mb-6">
+            {/* Círculo externo pulsante */}
+            <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 animate-ping"></div>
+            {/* Círculo principal */}
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50">
+              <i className="fas fa-wand-magic-sparkles text-white text-3xl animate-pulse"></i>
+            </div>
+          </div>
+
+          {/* Texto */}
+          <h3 className="text-white text-lg font-semibold mb-2">Analisando imagem...</h3>
+          <p className="text-purple-300 text-sm text-center px-8 mb-4">
+            Nossa IA está identificando o produto, cor, marca e categoria
+          </p>
+
+          {/* Barra de progresso animada */}
+          <div className="w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div className="h-full w-1/2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-loading"></div>
+          </div>
+
+          {/* Lista de detecções */}
+          <div className="mt-6 space-y-2 text-center">
+            <div className="flex items-center gap-2 text-purple-300 text-xs">
+              <i className="fas fa-check-circle text-green-400"></i>
+              <span>Tipo de produto</span>
+            </div>
+            <div className="flex items-center gap-2 text-purple-300 text-xs">
+              <i className="fas fa-spinner fa-spin text-purple-400"></i>
+              <span>Cor e padrão</span>
+            </div>
+            <div className="flex items-center gap-2 text-purple-300/50 text-xs">
+              <i className="fas fa-circle text-purple-400/30"></i>
+              <span>Marca e caimento</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form Fields */}
       <div className="space-y-3">

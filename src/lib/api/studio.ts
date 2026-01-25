@@ -671,9 +671,13 @@ interface DetectedProduct {
   pattern: string;        // Ex: "Liso", "Listrado", "Estampado"
   material?: string;      // Ex: "Algodão", "Jeans", "Couro"
   gender?: string;        // Ex: "Masculino", "Feminino", "Unissex"
+  brand?: string;         // Ex: "Nike", "Adidas", "Zara" (se identificável)
+  fit?: string;           // Ex: "Slim", "Regular", "Oversized", "Skinny"
   suggestedName?: string; // Ex: "Camiseta Básica Branca"
   confidence: number;     // 0-1
 }
+
+export type { DetectedProduct };
 
 interface AnalyzeProductImageParams {
   imageBase64: string;
