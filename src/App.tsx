@@ -187,6 +187,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [showWhatsAppLookModal, setShowWhatsAppLookModal] = useState<Client | null>(null);
   const [selectedLookForWhatsApp, setSelectedLookForWhatsApp] = useState<ClientLook | null>(null);
   const [whatsAppLookMessage, setWhatsAppLookMessage] = useState('');
+  const [isSendingWhatsAppLook, setIsSendingWhatsAppLook] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -2480,25 +2481,70 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  // Função para enviar WhatsApp com look selecionado
-  const sendWhatsAppWithLook = () => {
+  // Função para enviar WhatsApp com look selecionado (via Evolution API / n8n)
+  const sendWhatsAppWithLook = async () => {
     if (!showWhatsAppLookModal) return;
     const client = showWhatsAppLookModal;
     const imageUrl = selectedLookForWhatsApp?.imageUrl;
 
+    setIsSendingWhatsAppLook(true);
+
+    try {
+      // Tenta enviar via Evolution API (envia imagem diretamente no WhatsApp)
+      const result = await sendWhatsAppMessage({
+        phone: client.whatsapp || '',
+        message: whatsAppLookMessage,
+        imageUrl: imageUrl,
+        clientName: `${client.firstName} ${client.lastName}`,
+      });
+
+      if (result.success) {
+        alert('WhatsApp enviado com sucesso!');
+        setShowWhatsAppLookModal(null);
+        setSelectedLookForWhatsApp(null);
+        setWhatsAppLookMessage('');
+        setIsSendingWhatsAppLook(false);
+        return;
+      }
+
+      console.log('Evolution API falhou, tentando fallback:', result.error);
+    } catch (error) {
+      console.log('Erro Evolution API, usando fallback:', error);
+    }
+
+    // Fallback: Web Share API (mobile) ou wa.me (desktop)
+    if (imageUrl) {
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'look.png', { type: 'image/png' });
+
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            text: whatsAppLookMessage
+          });
+          setShowWhatsAppLookModal(null);
+          setSelectedLookForWhatsApp(null);
+          setWhatsAppLookMessage('');
+          setIsSendingWhatsAppLook(false);
+          return;
+        }
+      } catch (error) {
+        console.log('Share API falhou, usando wa.me');
+      }
+    }
+
+    // Fallback final: WhatsApp com texto + link da imagem
     const phone = client.whatsapp?.replace(/\D/g, '') || '';
     const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
-
-    if (imageUrl) {
-      const fullMessage = whatsAppLookMessage + '\n\n' + imageUrl;
-      window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
-    } else {
-      window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(whatsAppLookMessage)}`, '_blank');
-    }
+    const fullMessage = imageUrl ? whatsAppLookMessage + '\n\n' + imageUrl : whatsAppLookMessage;
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
 
     setShowWhatsAppLookModal(null);
     setSelectedLookForWhatsApp(null);
     setWhatsAppLookMessage('');
+    setIsSendingWhatsAppLook(false);
   };
 
   const handleUpdateClientForProvador = async (client: Client) => {
@@ -5077,7 +5123,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <img
                           src={look.imageUrl}
                           alt="Look"
-                          className={`w-full object-cover ${clientDetailLooks.length === 1 ? 'aspect-[4/3] max-h-48' : 'aspect-[3/4]'}`}
+                          className={`w-full ${clientDetailLooks.length === 1 ? 'object-contain max-h-[300px] bg-neutral-800' : 'object-cover aspect-[3/4]'}`}
                         />
                         {selectedLookForWhatsApp?.id === look.id && (
                           <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -5121,15 +5167,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Botão de enviar */}
               <button
                 onClick={sendWhatsAppWithLook}
-                disabled={clientDetailLooks.length > 0 && !selectedLookForWhatsApp}
+                disabled={(clientDetailLooks.length > 0 && !selectedLookForWhatsApp) || isSendingWhatsAppLook}
                 className={`w-full py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
-                  clientDetailLooks.length > 0 && !selectedLookForWhatsApp
+                  (clientDetailLooks.length > 0 && !selectedLookForWhatsApp) || isSendingWhatsAppLook
                     ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
                     : 'bg-green-500 hover:bg-green-600 text-white'
                 }`}
               >
-                <i className="fab fa-whatsapp"></i>
-                Enviar pelo WhatsApp
+                {isSendingWhatsAppLook ? (
+                  <><i className="fas fa-spinner fa-spin"></i>Enviando...</>
+                ) : (
+                  <><i className="fab fa-whatsapp"></i>Enviar pelo WhatsApp</>
+                )}
               </button>
             </div>
           </div>
