@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, ProductStudioSession, ProductStudioAngle } from '../../types';
+import { smartDownload } from '../../utils/downloadHelper';
 
 interface ProductStudioResultProps {
   product: Product;
@@ -175,20 +176,11 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
   // Download
   const handleDownload = async () => {
     if (!currentImage?.url) return;
-    try {
-      const response = await fetch(currentImage.url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${product.sku}-${currentImage.angle}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch {
-      window.open(currentImage.url, '_blank');
-    }
+    await smartDownload(currentImage.url, {
+      filename: `${product.sku}-${currentImage.angle}`,
+      shareTitle: 'Vizzu Product Studio',
+      shareText: `${product.name} - ${ANGLE_LABELS[currentImage.angle]}`
+    });
   };
 
   // Verificar ao sair

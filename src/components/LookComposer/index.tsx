@@ -5,6 +5,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
+import { smartDownload } from '../../utils/downloadHelper';
 
 interface LookComposerProps {
   products: Product[];
@@ -373,20 +374,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   };
 
   const handleDownloadLook = async (imageUrl: string, productName: string, format: 'png' | 'svg' = 'png') => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `look-${productName.replace(/\s+/g, '-').toLowerCase()}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Erro ao baixar:', error);
-    }
+    await smartDownload(imageUrl, {
+      filename: `look-${productName.replace(/\s+/g, '-').toLowerCase()}.${format}`,
+      shareTitle: 'Vizzu Look Composer',
+      shareText: `Look: ${productName}`
+    });
   };
 
   const handleDeleteLook = (look: GeneratedLook) => {

@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import { VisualStudioGeneration } from '../../types';
+import { smartDownload } from '../../utils/downloadHelper';
 
 interface Props {
   generations: VisualStudioGeneration[];
@@ -32,11 +33,12 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
     }
   };
 
-  const handleDownload = (imageData: string, productName?: string) => {
-    const link = document.createElement('a');
-    link.href = imageData;
-    link.download = `vizzu-${productName || 'image'}-${Date.now()}.png`;
-    link.click();
+  const handleDownload = async (imageData: string, productName?: string) => {
+    await smartDownload(imageData, {
+      filename: `vizzu-${productName || 'image'}-${Date.now()}.png`,
+      shareTitle: 'Vizzu Studio',
+      shareText: productName ? `${productName}` : 'Imagem gerada'
+    });
   };
 
   if (generations.length === 0) return null;

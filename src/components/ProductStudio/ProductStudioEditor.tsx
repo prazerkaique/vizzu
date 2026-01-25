@@ -7,6 +7,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2 } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
+import { smartDownload } from '../../utils/downloadHelper';
 
 // Estilos CSS para animação de cor no Lottie (lilás → rosa → laranja)
 // Usa steps discretos para evitar passar pelo verde
@@ -502,10 +503,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     if (!currentImg) return;
 
     try {
-      const response = await fetch(currentImg.url);
-      const blob = await response.blob();
-
       if (format === 'jpeg') {
+        // Converte para JPEG via canvas antes de fazer download
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
@@ -521,27 +520,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         canvas.height = img.height;
         ctx?.drawImage(img, 0, 0);
 
-        canvas.toBlob((jpegBlob) => {
-          if (jpegBlob) {
-            const url = window.URL.createObjectURL(jpegBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${product.sku}_${currentImg.angle}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-          }
-        }, 'image/jpeg', 0.95);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        await smartDownload(dataUrl, {
+          filename: `${product.sku}_${currentImg.angle}.jpg`,
+          shareTitle: 'Vizzu Product Studio',
+          shareText: `${product.name}`
+        });
       } else {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${product.sku}_${currentImg.angle}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        await smartDownload(currentImg.url, {
+          filename: `${product.sku}_${currentImg.angle}.png`,
+          shareTitle: 'Vizzu Product Studio',
+          shareText: `${product.name}`
+        });
       }
     } catch {
       window.open(currentImg.url, '_blank');

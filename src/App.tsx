@@ -13,6 +13,7 @@ import { generateStudioReady, generateCenario, generateModeloIA, generateProvado
 import heic2any from 'heic2any';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
+import { smartDownload } from './utils/downloadHelper';
 
 
 const CATEGORY_GROUPS = [
@@ -2711,22 +2712,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const handleProvadorDownloadImage = async (imageUrl: string, clientName: string) => {
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `vizzu_provador_${clientName.replace(/\s+/g, '_')}_${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Erro ao baixar imagem:', error);
-      // Fallback: abrir em nova aba
-      window.open(imageUrl, '_blank');
-    }
+    await smartDownload(imageUrl, {
+      filename: `vizzu_provador_${clientName.replace(/\s+/g, '_')}_${Date.now()}`,
+      shareTitle: 'Vizzu Provador',
+      shareText: `Look para ${clientName}`
+    });
   };
 
   const handleProvadorGenerateAIMessage = async (clientName: string): Promise<string> => {

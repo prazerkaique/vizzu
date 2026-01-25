@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, LookComposition, SavedModel } from '../../types';
+import { smartDownload, smartDownloadMultiple } from '../../utils/downloadHelper';
 
 type ExportQuality = 'high' | 'performance';
 
@@ -152,59 +153,34 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   const handleDownload = async () => {
     const imageToDownload = getCurrentGeneratedImage();
     if (!imageToDownload) return;
-    try {
-      const response = await fetch(imageToDownload);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const viewSuffix = hasBackImage ? `-${currentView}` : '';
-      a.download = `${product.sku}-look-composer${viewSuffix}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch {
-      window.open(imageToDownload, '_blank');
-    }
+    const viewSuffix = hasBackImage ? `-${currentView}` : '';
+    await smartDownload(imageToDownload, {
+      filename: `${product.sku}-look-composer${viewSuffix}.png`,
+      shareTitle: 'Vizzu Look Composer',
+      shareText: `${product.name} - ${currentView === 'front' ? 'Frente' : 'Costas'}`
+    });
   };
 
   // Download de todas as imagens (frente e costas)
   const handleDownloadAll = async () => {
-    // Baixar frente
+    const images: Array<{ source: string; filename: string }> = [];
+
     if (generatedImageUrl) {
-      try {
-        const response = await fetch(generatedImageUrl);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${product.sku}-look-composer-frente.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      } catch {
-        window.open(generatedImageUrl, '_blank');
-      }
+      images.push({
+        source: generatedImageUrl,
+        filename: `${product.sku}-look-composer-frente.png`
+      });
     }
-    // Baixar costas (com delay para não sobrescrever)
+
     if (generatedBackImageUrl) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      try {
-        const response = await fetch(generatedBackImageUrl);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${product.sku}-look-composer-costas.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      } catch {
-        window.open(generatedBackImageUrl, '_blank');
-      }
+      images.push({
+        source: generatedBackImageUrl,
+        filename: `${product.sku}-look-composer-costas.png`
+      });
+    }
+
+    if (images.length > 0) {
+      await smartDownloadMultiple(images, 'Vizzu Look Composer');
     }
   };
 
