@@ -51,44 +51,72 @@
         height: 100dvh;
         overflow: hidden;
       }
+
+      /* PWA Standalone Mode - Estilos inline para garantir funcionamento */
+      @media all and (display-mode: standalone) {
+        #root {
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+        /* Bottom nav compacto no PWA */
+        .pwa-bottom-nav {
+          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Service Worker Registration with update handling -->
+    <!-- Service Worker with aggressive cache clearing -->
     <script>
+      const APP_VERSION = 'v6';
+      const STORED_VERSION = localStorage.getItem('vizzu_version');
+
+      // Se a versão mudou, limpa tudo
+      if (STORED_VERSION !== APP_VERSION) {
+        console.log('Nova versão detectada, limpando cache...');
+
+        // Limpa todos os caches
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name);
+              console.log('Cache deletado:', name);
+            });
+          });
+        }
+
+        // Desregistra todos os Service Workers
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(reg => {
+              reg.unregister();
+              console.log('SW desregistrado');
+            });
+          });
+        }
+
+        // Salva nova versão
+        localStorage.setItem('vizzu_version', APP_VERSION);
+
+        // Reload após limpeza (só se não for primeiro acesso)
+        if (STORED_VERSION) {
+          setTimeout(() => window.location.reload(true), 500);
+        }
+      }
+
+      // Registra SW após garantir que está limpo
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
               console.log('SW registered:', registration.scope);
-              // Check for updates immediately
               registration.update();
-              // Listen for new service worker
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New version available - reload to get latest
-                    console.log('New version available, reloading...');
-                    window.location.reload();
-                  }
-                });
-              });
             })
             .catch((error) => {
               console.log('SW registration failed:', error);
             });
-        });
-        // Force update check when app becomes visible (for PWA)
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            navigator.serviceWorker.getRegistration().then((reg) => {
-              if (reg) reg.update();
-            });
-          }
         });
       }
     </script>
