@@ -909,7 +909,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
           </select>
 
           {/* Componente de Look Composer */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[500px] overflow-y-auto">
             <StudioLookComposer
               products={collectionFilter ? products.filter((p) => p.collection === collectionFilter) : products}
               composition={lookComposition}
@@ -1192,16 +1192,16 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
             </button>
           </div>
 
-          {/* Preview da mensagem completa */}
-          {(generatedImage || selectedSavedLook) && Object.keys(selectedSavedLook?.lookItems || lookComposition).length > 0 && (
-            <div className={`mb-3 p-3 rounded-xl border ${theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200'}`}>
+          {/* Preview da mensagem completa - sempre mostra quando tem itens no look */}
+          {Object.keys(selectedSavedLook?.lookItems || lookComposition).length > 0 && (
+            <div className={`mb-3 p-3 rounded-xl border ${theme === 'dark' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'}`}>
               <div className="flex items-center gap-1.5 mb-2">
-                <i className={`fab fa-whatsapp text-green-500 text-xs`}></i>
-                <span className={`text-[10px] font-medium uppercase tracking-wide ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
-                  Preview da mensagem
+                <i className="fab fa-whatsapp text-green-500 text-sm"></i>
+                <span className={`text-[10px] font-medium uppercase tracking-wide ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                  Mensagem que será enviada
                 </span>
               </div>
-              <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-700'}`}>
+              <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-200' : 'text-gray-700'}`}>
                 {getFormattedMessagePreview()}
               </div>
             </div>
@@ -1274,8 +1274,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   // ============================================================
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="flex-1 overflow-y-auto p-3 md:p-6">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
