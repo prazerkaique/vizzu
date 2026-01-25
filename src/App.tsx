@@ -2189,6 +2189,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string) => {
     const finalMessage = message.replace('{nome}', client.firstName);
 
+    // Confirmação antes de enviar
+    const confirmMessage = `Deseja enviar um WhatsApp para ${client.firstName} ${client.lastName}?\n\nMensagem:\n"${finalMessage.substring(0, 100)}${finalMessage.length > 100 ? '...' : ''}"`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
     try {
       // Tenta enviar via Evolution API (envia imagem diretamente no WhatsApp)
       const result = await sendWhatsAppMessage({
