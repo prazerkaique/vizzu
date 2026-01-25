@@ -496,7 +496,7 @@ const handleSave = async () => {
   // ═══════════════════════════════════════════════════════════════
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 md:p-4">
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 safe-area-all">
       <div className={`relative w-full max-w-5xl h-[95vh] md:h-[90vh] rounded-2xl overflow-hidden flex flex-col md:flex-row ${isDark ? 'bg-neutral-900' : 'bg-white'}`}>
         
         {/* ═══════════════════════════════════════════════════════════ */}

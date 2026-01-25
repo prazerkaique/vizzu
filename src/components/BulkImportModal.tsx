@@ -446,7 +446,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
   const selectedCount = parsedProducts.filter(p => p.selected).length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 safe-area-all">
       <div className={`${bgCard} rounded-2xl border ${borderColor} w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${borderColor} shrink-0`}>

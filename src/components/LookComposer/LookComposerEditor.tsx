@@ -1929,7 +1929,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       {/* MODAL - Salvar Fundo */}
       {showSaveBackgroundModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 safe-area-all">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowSaveBackgroundModal(false)}></div>
           <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 shadow-2xl'}>
             <div className="text-center mb-4">

@@ -193,7 +193,7 @@ export const AddProductModal: React.FC<Props> = ({
 
       {/* Modal Overlay */}
       <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-        <div className={`rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+        <div className={`rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
 
           {/* ═══════════════════════════════════════════════════════════ */}
           {/* STEP 1: SOURCE - Escolher fonte da imagem */}

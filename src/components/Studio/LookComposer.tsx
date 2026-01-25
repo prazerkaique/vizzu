@@ -489,7 +489,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
       {showImageOptions && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowImageOptions(null)}>
           <div
-            className={`w-full max-w-md rounded-t-2xl overflow-hidden ${theme === 'dark' ? 'bg-neutral-900' : 'bg-white'}`}
+            className={`w-full max-w-md rounded-t-2xl overflow-hidden safe-area-bottom-sheet ${theme === 'dark' ? 'bg-neutral-900' : 'bg-white'}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>

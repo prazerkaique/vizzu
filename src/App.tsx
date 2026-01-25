@@ -5125,7 +5125,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* VIDEO TUTORIAL MODAL */}
       {showVideoTutorial && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowVideoTutorial(null)}>
-          <div className={'relative w-full max-w-4xl rounded-t-2xl md:rounded-2xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
+          <div className={'relative w-full max-w-4xl rounded-t-2xl md:rounded-2xl overflow-hidden safe-area-bottom-sheet ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 z-30">
               <div className="bg-white/30 w-10 h-1 rounded-full"></div>
@@ -5160,7 +5160,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* CREATE CLIENT MODAL */}
       {showCreateClient && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
               <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
@@ -5278,7 +5278,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* CLIENT DETAIL MODAL */}
       {showClientDetail && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowClientDetail(null)}>
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
               <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
@@ -5388,7 +5388,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* WHATSAPP LOOK MODAL */}
       {showWhatsAppLookModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowWhatsAppLookModal(null); setSelectedLookForWhatsApp(null); setWhatsAppLookMessage(''); }}>
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
               <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
@@ -5506,7 +5506,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* EDIT CLIENT MODAL */}
       {editingClient && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setEditingClient(null); setEditClientPhotos([]); }}>
-          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
               <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
@@ -5809,7 +5809,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
   <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }}>
-    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl'} onClick={(e) => e.stopPropagation()}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pb-2 flex justify-center -mt-1">
         <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
@@ -6017,7 +6017,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {showProductDetail && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowProductDetail(null)}>
           <div
-            className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col'}
+            className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col safe-area-bottom-sheet'}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag handle - mobile */}
@@ -6206,7 +6206,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* Modal de confirmação de exclusão de produtos */}
       {showDeleteProductsModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 shadow-xl'} onClick={(e) => e.stopPropagation()}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 shadow-xl safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pb-3 flex justify-center -mt-1">
               <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
@@ -6276,7 +6276,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* CREATE MODEL WIZARD MODAL */}
       {showCreateModel && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateModel(false); setEditingModel(null); }}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'} onClick={(e) => e.stopPropagation()}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
               <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
@@ -6926,7 +6926,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* MODEL DETAIL MODAL */}
       {showModelDetail && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowModelDetail(null)}>
-          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col'} onClick={(e) => e.stopPropagation()}>
+          <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
               <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>

@@ -814,7 +814,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
       {/* Modal de opcoes de foto (Galeria/Camera) */}
       {showPhotoOptions && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className={`w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden ${
+          <div className={`w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden safe-area-bottom-sheet ${
             theme === 'dark' ? 'bg-neutral-900' : 'bg-white'
           }`}>
             <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
