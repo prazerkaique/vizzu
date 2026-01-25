@@ -209,22 +209,26 @@ body.modal-open {
 
 /* Quando em modo PWA standalone (adicionado na tela inicial) */
 @media all and (display-mode: standalone) {
-  /* Root container no PWA precisa considerar safe areas */
+  /* Root container no PWA - só precisa do padding-top para status bar */
+  /* NÃO adicionar padding-bottom pois o nav fixed já cuida da safe-area */
   #root {
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
   }
 
-  /* Body no PWA */
+  /* Body no PWA - background deve cobrir toda a tela */
   body {
     background-color: #0a0a0a;
   }
 
-  /* Bottom nav precisa de safe-area extra no PWA */
+  /* Bottom nav no PWA - precisa se estender até o bottom absoluto */
   .pwa-bottom-nav {
-    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    /* Posição fixa no bottom absoluto */
     bottom: 0 !important;
+    /* Padding interno para empurrar conteúdo acima da safe-area */
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    /* Garantir que o background cobre a safe-area */
+    margin-bottom: 0 !important;
   }
 
   /* Modais fullscreen precisam respeitar safe-area no PWA */
