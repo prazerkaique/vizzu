@@ -3273,9 +3273,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-hidden flex flex-col pt-12 md:pt-0" style={{ overscrollBehavior: 'contain' }}>
+      <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 ' + (!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) ? 'pt-12' : '')} style={{ overscrollBehavior: 'contain' }}>
 
-        {/* MOBILE TOP HEADER */}
+        {/* MOBILE TOP HEADER - Esconde quando está dentro das features de criação */}
+        {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
         <div
           className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
@@ -3299,6 +3300,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             </button>
           </div>
         </div>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* DASHBOARD */}
@@ -3908,7 +3910,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* LIFESTYLE SHOT - Mantém montado para preservar estado */}
         <div style={{ display: currentPage === 'lifestyle' ? 'contents' : 'none' }}>
-          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
+          <div
+            className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}
+            style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
+          >
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">

@@ -225,7 +225,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
   // Página 1 - Lista de produtos
   return (
-    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+    <div
+      className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}
+      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
+    >
       <div className="max-w-7xl mx-auto">
 
         {/* ═══════════════════════════════════════════════════════════════ */}

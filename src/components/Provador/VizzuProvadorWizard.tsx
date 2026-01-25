@@ -1361,7 +1361,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   // ============================================================
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 md:p-6">
+    <div
+      className="flex-1 overflow-y-auto p-3 md:p-6"
+      style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))' }}
+    >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
