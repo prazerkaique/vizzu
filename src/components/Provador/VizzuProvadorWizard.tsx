@@ -109,6 +109,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   const [message, setMessage] = useState(whatsappTemplates?.[0]?.message || '');
   const [isGeneratingAIMessage, setIsGeneratingAIMessage] = useState(false);
   const [isEditingMessage, setIsEditingMessage] = useState(false);
+  const [fullEditedMessage, setFullEditedMessage] = useState<string | null>(null);
 
   // Estados de Upload de Foto
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -168,13 +169,27 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     return items.join('\n');
   }, [lookComposition, selectedSavedLook]);
 
-  // Mensagem completa formatada para preview
+  // Mensagem completa formatada para preview (gerada automaticamente)
   const getFormattedMessagePreview = useCallback(() => {
     if (!selectedClient) return message;
     const baseMessage = message.replace(/{nome}/gi, selectedClient.firstName);
     const lookItems = formatLookItemsPreview();
     return lookItems ? `${baseMessage}\n\n${lookItems}` : baseMessage;
   }, [message, selectedClient, formatLookItemsPreview]);
+
+  // Mensagem final que será enviada (editada ou gerada)
+  const getFinalMessage = useCallback(() => {
+    return fullEditedMessage !== null ? fullEditedMessage : getFormattedMessagePreview();
+  }, [fullEditedMessage, getFormattedMessagePreview]);
+
+  // Função para entrar/sair do modo de edição
+  const toggleEditMessage = useCallback(() => {
+    if (!isEditingMessage) {
+      // Entrando em modo edição: copiar a mensagem atual para editar
+      setFullEditedMessage(fullEditedMessage !== null ? fullEditedMessage : getFormattedMessagePreview());
+    }
+    setIsEditingMessage(!isEditingMessage);
+  }, [isEditingMessage, fullEditedMessage, getFormattedMessagePreview]);
 
   const formatWhatsApp = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '');
@@ -318,10 +333,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     const imageToSend = generatedImage || selectedSavedLook?.imageUrl;
     if (!imageToSend) return;
 
-    const finalMessage = message.replace(/{nome}/gi, selectedClient.firstName);
+    // Usa a mensagem editada ou a gerada automaticamente
+    const messageToSend = getFinalMessage();
     // Usa o look atual ou o look salvo selecionado
     const lookToSend = selectedSavedLook?.lookItems || lookComposition;
-    onSendWhatsApp(selectedClient, imageToSend, finalMessage, lookToSend);
+    onSendWhatsApp(selectedClient, imageToSend, messageToSend, lookToSend);
   };
 
   const handleDownload = () => {
@@ -338,7 +354,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     setIsGeneratingAIMessage(true);
     try {
       const aiMessage = await onGenerateAIMessage(selectedClient.firstName);
-      setMessage(aiMessage);
+      // Gera a mensagem completa com os itens do look
+      const lookItems = formatLookItemsPreview();
+      const fullMessage = lookItems ? `${aiMessage}\n\n${lookItems}` : aiMessage;
+      setFullEditedMessage(fullMessage);
+      setMessage(aiMessage); // Mantém a base para referência
     } catch (error) {
       console.error('Erro ao gerar mensagem IA:', error);
     } finally {
@@ -356,6 +376,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     setSelectedSavedLook(null);
     setCollectionFilter('');
     setMessage(whatsappTemplates[0]?.message || '');
+    setFullEditedMessage(null);
+    setIsEditingMessage(false);
     setCurrentStep(1);
   };
 
@@ -1186,7 +1208,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
                   )}
                 </button>
                 <button
-                  onClick={() => setIsEditingMessage(!isEditingMessage)}
+                  onClick={toggleEditMessage}
                   title={isEditingMessage ? "Fechar edição" : "Editar mensagem"}
                   className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                     isEditingMessage
@@ -1204,15 +1226,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
             </div>
 
             {isEditingMessage ? (
-              /* Modo edição - textarea */
+              /* Modo edição - textarea com mensagem completa */
               <div>
-                <p className={`text-[9px] mb-1.5 ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
-                  Use {'{nome}'} para incluir o nome do cliente automaticamente
-                </p>
                 <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={4}
+                  value={fullEditedMessage || ''}
+                  onChange={(e) => setFullEditedMessage(e.target.value)}
+                  rows={8}
                   placeholder="Escreva sua mensagem personalizada..."
                   className={`w-full px-3 py-2 border rounded-lg text-xs resize-none ${
                     theme === 'dark'
@@ -1223,9 +1242,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
                 />
               </div>
             ) : (
-              /* Modo preview - mensagem completa */
+              /* Modo preview - mensagem completa (editada ou gerada) */
               <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-200' : 'text-gray-700'}`}>
-                {getFormattedMessagePreview()}
+                {getFinalMessage()}
               </div>
             )}
           </div>
