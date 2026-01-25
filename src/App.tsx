@@ -9,7 +9,7 @@ import { BulkImportModal } from './components/BulkImportModal';
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { supabase } from './services/supabaseClient';
-import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages, sendWhatsAppMessage } from './lib/api/studio';
+import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages, sendWhatsAppMessage, analyzeProductImage } from './lib/api/studio';
 import heic2any from 'heic2any';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
@@ -167,6 +167,11 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   
   const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
   const [productAttributes, setProductAttributes] = useState<ProductAttributes>({});
+
+  // Estados para análise de IA da imagem do produto
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [detectedProducts, setDetectedProducts] = useState<Array<{ type: string; color: string; pattern: string; material?: string; gender?: string; suggestedName?: string; confidence: number }>>([]);
+  const [showProductSelector, setShowProductSelector] = useState(false);
   
   const [clients, setClients] = useState<Client[]>(() => {
     const saved = localStorage.getItem('vizzu_clients');
@@ -1371,10 +1376,13 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       const file = files[0];
       const reader = new FileReader();
       reader.onload = () => {
+        const base64 = reader.result as string;
         if (target === 'front') {
-          setSelectedFrontImage(reader.result as string);
+          setSelectedFrontImage(base64);
+          // Analisar imagem com IA para pré-preencher campos
+          analyzeProductImageWithAI(base64);
         } else {
-          setSelectedBackImage(reader.result as string);
+          setSelectedBackImage(base64);
         }
         setShowImport(false);
         setShowCreateProduct(true);
@@ -1393,6 +1401,8 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
         const base64 = event.target?.result as string;
         if (type === 'front') {
           setSelectedFrontImage(base64);
+          // Analisar imagem com IA para pré-preencher campos
+          analyzeProductImageWithAI(base64);
         } else {
           setSelectedBackImage(base64);
         }
@@ -1405,6 +1415,69 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     e.preventDefault();
     e.stopPropagation();
   };
+
+  // Função para analisar imagem do produto com IA
+  const analyzeProductImageWithAI = async (imageBase64: string) => {
+    setIsAnalyzingImage(true);
+    setDetectedProducts([]);
+
+    try {
+      const result = await analyzeProductImage({ imageBase64, userId: user?.id });
+
+      if (result.success && result.products.length > 0) {
+        if (result.multipleProducts && result.products.length > 1) {
+          // Múltiplos produtos detectados - mostrar seletor
+          setDetectedProducts(result.products);
+          setShowProductSelector(true);
+        } else {
+          // Produto único - preencher campos automaticamente
+          applyDetectedProduct(result.products[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao analisar imagem:', error);
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  };
+
+  // Função para aplicar produto detectado nos campos do formulário
+  const applyDetectedProduct = (product: { type: string; color: string; pattern?: string; material?: string; gender?: string; suggestedName?: string }) => {
+    // Mapear tipo detectado para categoria do sistema
+    const categoryMap: Record<string, string> = {
+      'Camiseta': 'Camiseta', 'Camisa': 'Camisa', 'Blusa': 'Blusa', 'Top': 'Top',
+      'Regata': 'Regata', 'Cropped': 'Cropped', 'Body': 'Body', 'Moletom': 'Moletom',
+      'Suéter': 'Suéter', 'Cardigan': 'Cardigan', 'Jaqueta': 'Jaqueta', 'Blazer': 'Blazer',
+      'Colete': 'Colete', 'Casaco': 'Casaco', 'Calça': 'Calça', 'Shorts': 'Shorts',
+      'Bermuda': 'Bermuda', 'Saia': 'Saia', 'Vestido': 'Vestido', 'Macacão': 'Macacão',
+      'Jardineira': 'Jardineira', 'Legging': 'Legging', 'Tênis': 'Tênis', 'Sapato': 'Sapato',
+      'Sandália': 'Sandália', 'Bota': 'Bota', 'Chinelo': 'Chinelo', 'Sapatilha': 'Sapatilha',
+      'Bolsa': 'Bolsa', 'Mochila': 'Mochila', 'Carteira': 'Carteira', 'Cinto': 'Cinto',
+      'Óculos': 'Óculos', 'Relógio': 'Relógio', 'Brinco': 'Brinco', 'Colar': 'Colar',
+      'Pulseira': 'Pulseira', 'Anel': 'Anel', 'Chapéu': 'Chapéu', 'Boné': 'Boné',
+      'Cachecol': 'Cachecol', 'Lenço': 'Lenço', 'Gravata': 'Gravata', 'Cueca': 'Cueca',
+      'Calcinha': 'Calcinha', 'Sutiã': 'Sutiã', 'Meias': 'Meias', 'Pijama': 'Pijama',
+      'Biquíni': 'Biquíni', 'Maiô': 'Maiô', 'Sunga': 'Sunga'
+    };
+
+    const matchedCategory = categoryMap[product.type] || '';
+
+    setNewProduct(prev => ({
+      ...prev,
+      name: product.suggestedName || prev.name,
+      color: product.color || prev.color,
+      category: matchedCategory || prev.category
+    }));
+
+    setShowProductSelector(false);
+    setDetectedProducts([]);
+  };
+
+  // Handler para seleção de produto detectado
+  const handleSelectDetectedProduct = (product: typeof detectedProducts[0]) => {
+    applyDetectedProduct(product);
+  };
+
   const handleCreateProduct = async () => {
     if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
       alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
@@ -5341,6 +5414,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   const base64 = await processImageFile(file);
                   if (showPhotoSourcePicker === 'front') {
                     setSelectedFrontImage(base64);
+                    // Analisar imagem com IA para pré-preencher campos
+                    analyzeProductImageWithAI(base64);
                   } else {
                     setSelectedBackImage(base64);
                   }
@@ -5358,11 +5433,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-camera text-orange-500"></i>
           </div>
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
-          <input 
-            type="file" 
-            accept="image/*,.heic,.heif" 
+          <input
+            type="file"
+            accept="image/*,.heic,.heif"
             capture="environment"
-            className="hidden" 
+            className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
@@ -5370,6 +5445,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   const base64 = await processImageFile(file);
                   if (showPhotoSourcePicker === 'front') {
                     setSelectedFrontImage(base64);
+                    // Analisar imagem com IA para pré-preencher campos
+                    analyzeProductImageWithAI(base64);
                   } else {
                     setSelectedBackImage(base64);
                   }
@@ -5385,6 +5462,57 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </div>
       <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
         Cancelar
+      </button>
+    </div>
+  </div>
+)}
+
+{/* PRODUCT SELECTOR MODAL - Quando múltiplos produtos são detectados na imagem */}
+{showProductSelector && detectedProducts.length > 1 && (
+  <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowProductSelector(false)}>
+    <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[80vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
+      <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+          <i className="fas fa-wand-magic-sparkles text-white"></i>
+        </div>
+        <div>
+          <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Múltiplos produtos detectados</h3>
+          <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Qual produto deseja cadastrar agora?</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {detectedProducts.map((product, index) => (
+          <button
+            key={index}
+            onClick={() => handleSelectDetectedProduct(product)}
+            className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-pink-400 hover:bg-pink-50') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
+          >
+            <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-12 h-12 rounded-lg flex items-center justify-center'}>
+              <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-tshirt text-xl'}></i>
+            </div>
+            <div className="flex-1">
+              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{product.suggestedName || product.type}</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.type}</span>
+                <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.color}</span>
+                {product.pattern && product.pattern !== 'Liso' && (
+                  <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.pattern}</span>
+                )}
+              </div>
+            </div>
+            <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-chevron-right'}></i>
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={() => setShowProductSelector(false)}
+        className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}
+      >
+        Preencher manualmente
       </button>
     </div>
   </div>
@@ -5471,6 +5599,20 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <span><strong>Dica:</strong> Adicionar foto de costas permite que a IA gere imagens de ambos os ângulos.</span>
           </p>
         </div>
+
+        {/* Indicador de análise IA */}
+        {isAnalyzingImage && (
+          <div className={(theme === 'dark' ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') + ' rounded-lg p-3 mt-3 border flex items-center gap-3'}>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+              <i className="fas fa-wand-magic-sparkles text-white text-xs animate-pulse"></i>
+            </div>
+            <div className="flex-1">
+              <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Analisando imagem com IA...</p>
+              <p className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-600') + ' text-[10px]'}>Detectando tipo, cor e categoria do produto</p>
+            </div>
+            <i className="fas fa-spinner fa-spin text-purple-500"></i>
+          </div>
+        )}
       </div>
 
       {/* Form Fields */}

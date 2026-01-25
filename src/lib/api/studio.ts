@@ -661,6 +661,68 @@ interface SendWhatsAppResponse {
  * Envia mensagem WhatsApp via Evolution API
  * Suporta envio de imagem + texto
  */
+// ═══════════════════════════════════════════════════════════════
+// ANÁLISE DE IMAGEM DE PRODUTO (IA)
+// ═══════════════════════════════════════════════════════════════
+
+interface DetectedProduct {
+  type: string;           // Ex: "Camiseta", "Calça", "Tênis"
+  color: string;          // Ex: "Branco", "Azul Marinho"
+  pattern: string;        // Ex: "Liso", "Listrado", "Estampado"
+  material?: string;      // Ex: "Algodão", "Jeans", "Couro"
+  gender?: string;        // Ex: "Masculino", "Feminino", "Unissex"
+  suggestedName?: string; // Ex: "Camiseta Básica Branca"
+  confidence: number;     // 0-1
+}
+
+interface AnalyzeProductImageParams {
+  imageBase64: string;
+  userId?: string;
+}
+
+interface AnalyzeProductImageResponse {
+  success: boolean;
+  products: DetectedProduct[];
+  multipleProducts: boolean;
+  error?: string;
+}
+
+/**
+ * Analisa uma imagem de produto usando IA (Gemini Vision)
+ * Detecta: tipo de produto, cor, padrão, material, gênero
+ * Se múltiplos produtos na imagem, retorna lista para seleção
+ */
+export async function analyzeProductImage(params: AnalyzeProductImageParams): Promise<AnalyzeProductImageResponse> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/analyze-product`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageBase64: params.imageBase64,
+        userId: params.userId || null,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Erro ao analisar imagem');
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Erro ao analisar imagem:', error);
+    return {
+      success: false,
+      products: [],
+      multipleProducts: false,
+      error: error.message || 'Erro ao analisar imagem',
+    };
+  }
+}
+
 export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<SendWhatsAppResponse> {
   try {
     const response = await fetch(`${N8N_BASE_URL}/vizzu/send-whatsapp`, {
