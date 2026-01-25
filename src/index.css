@@ -221,14 +221,11 @@ body.modal-open {
     background-color: #0a0a0a;
   }
 
-  /* Bottom nav no PWA - precisa se estender até o bottom absoluto */
+  /* Bottom nav no PWA - compacto, apenas safe-area necessária */
   .pwa-bottom-nav {
-    /* Posição fixa no bottom absoluto */
     bottom: 0 !important;
-    /* Padding interno para empurrar conteúdo acima da safe-area */
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)) !important;
-    /* Garantir que o background cobre a safe-area */
-    margin-bottom: 0 !important;
+    /* Apenas o padding da safe-area, sem espaço extra */
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
   }
 
   /* Modais fullscreen precisam respeitar safe-area no PWA */
@@ -257,7 +254,8 @@ body.modal-open {
 @supports (-webkit-touch-callout: none) {
   @media (display-mode: standalone) {
     .pwa-bottom-nav {
-      padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 20px)) !important;
+      /* Fallback para iOS - apenas safe-area */
+      padding-bottom: env(safe-area-inset-bottom, 20px) !important;
     }
   }
 }

@@ -5086,10 +5086,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* MOBILE BOTTOM NAVIGATION - Esconde quando está dentro das features de criação */}
       {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
       <nav
-        className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 pt-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
-        style={{ paddingBottom: 'calc(0.25rem + env(safe-area-inset-bottom, 0px))' }}
+        className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
       >
-        <div className="flex items-center justify-around pb-1">
+        <div className="flex items-center justify-around">
           <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-home text-sm"></i>
             <span className="text-[9px] font-medium">Home</span>
