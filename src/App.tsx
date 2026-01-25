@@ -2024,11 +2024,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           height: newModel.height,
           hairColor: newModel.hairColor,
           hairStyle: newModel.hairStyle,
+          hairLength: newModel.hairLength,
           eyeColor: newModel.eyeColor,
           expression: newModel.expression,
           bustSize: newModel.gender === 'woman' ? newModel.bustSize : undefined,
           waistType: newModel.waistType,
+          physicalNotes: newModel.physicalNotes || undefined,
+          hairNotes: newModel.hairNotes || undefined,
+          skinNotes: newModel.skinNotes || undefined,
         },
+        prompt: generateModelPrompt(), // Prompt gerado para o Gemini
       });
 
       if (result.success && result.model?.images) {

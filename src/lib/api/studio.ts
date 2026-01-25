@@ -581,16 +581,21 @@ interface SavedModelProfile {
   height: string;
   hairColor: string;
   hairStyle: string;
+  hairLength?: string;
   eyeColor: string;
   expression: string;
   bustSize?: string;
   waistType?: string;
+  physicalNotes?: string;
+  hairNotes?: string;
+  skinNotes?: string;
 }
 
 interface GenerateModelImagesParams {
   modelId: string;
   userId: string;
   modelProfile: SavedModelProfile;
+  prompt?: string; // Prompt gerado para o Gemini
 }
 
 interface GenerateModelImagesResponse {
@@ -622,6 +627,7 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
       modelId: params.modelId,
       userId: params.userId,
       modelProfile: params.modelProfile,
+      prompt: params.prompt, // Prompt gerado para o Gemini
     }),
   });
 
