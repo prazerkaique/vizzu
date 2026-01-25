@@ -186,6 +186,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [newClient, setNewClient] = useState({ firstName: '', lastName: '', whatsapp: '', email: '', photos: [] as ClientPhoto[], notes: '' });
   const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type'] | null>(null);
+  const [processingClientPhoto, setProcessingClientPhoto] = useState(false);
   
   const [provadorClient, setProvadorClient] = useState<Client | null>(null);
   const [provadorPhotoType, setProvadorPhotoType] = useState<ClientPhoto['type']>('frente');
@@ -2440,6 +2441,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
   // Função compartilhada para processar arquivo de foto (com conversão HEIC)
   const processClientPhotoFile = async (file: File, photoType: ClientPhoto['type']) => {
+    setProcessingClientPhoto(true);
+
     try {
       let processedFile: File | Blob = file;
 
@@ -2451,24 +2454,44 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                      fileName.endsWith('.heif') ||
                      (file.type === '' && (fileName.endsWith('.heic') || fileName.endsWith('.heif')));
 
-      console.log('[processClientPhotoFile] Arquivo:', file.name, 'Tipo:', file.type, 'É HEIC:', isHeic);
+      console.log('[processClientPhotoFile] Arquivo:', file.name, 'Tipo:', file.type, 'Tamanho:', file.size, 'É HEIC:', isHeic);
 
       // Converter HEIC/HEIF para PNG
       if (isHeic) {
         console.log('[processClientPhotoFile] Convertendo HEIC para PNG...');
-        const convertedBlob = await heic2any({
-          blob: file,
-          toType: 'image/png',
-          quality: 0.9
-        });
-        processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-        console.log('[processClientPhotoFile] Conversão concluída!');
+        try {
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.85
+          });
+          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          console.log('[processClientPhotoFile] Conversão HEIC concluída! Novo tamanho:', processedFile.size);
+        } catch (heicError: any) {
+          console.error('[processClientPhotoFile] Erro na conversão HEIC:', heicError);
+          // Se falhar, tenta usar o arquivo original (alguns dispositivos já enviam como JPEG)
+          if (heicError.message?.includes('already a jpeg') || heicError.message?.includes('already')) {
+            console.log('[processClientPhotoFile] Arquivo já é JPEG, usando original');
+            processedFile = file;
+          } else {
+            throw new Error('Não foi possível converter a imagem HEIC. Tente tirar a foto diretamente pelo app ou converter para JPG antes.');
+          }
+        }
       }
 
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
         console.log('[processClientPhotoFile] Base64 gerado, tamanho:', base64.length);
+
+        if (!base64 || base64.length < 100) {
+          console.error('[processClientPhotoFile] Base64 inválido ou muito pequeno');
+          alert('Erro ao processar a imagem. Tente novamente.');
+          setUploadingPhotoType(null);
+          setProcessingClientPhoto(false);
+          return;
+        }
+
         const newPhoto: ClientPhoto = {
           type: photoType,
           base64,
@@ -2479,17 +2502,20 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           photos: [...prev.photos.filter(p => p.type !== photoType), newPhoto]
         }));
         setUploadingPhotoType(null);
+        setProcessingClientPhoto(false);
       };
       reader.onerror = (error) => {
         console.error('[processClientPhotoFile] Erro ao ler arquivo:', error);
         alert('Erro ao ler a imagem. Tente novamente.');
         setUploadingPhotoType(null);
+        setProcessingClientPhoto(false);
       };
       reader.readAsDataURL(processedFile);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[processClientPhotoFile] Erro ao processar foto:', error);
-      alert('Erro ao processar a imagem. Tente outro formato (JPG ou PNG).');
+      alert(error.message || 'Erro ao processar a imagem. Tente outro formato (JPG ou PNG).');
       setUploadingPhotoType(null);
+      setProcessingClientPhoto(false);
     }
   };
 
@@ -4628,7 +4654,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   })}
                 </div>
                 <input ref={clientPhotoInputRef} type="file" accept="image/*,.heic,.heif" capture="user" onChange={handleClientPhotoUpload} className="hidden" />
-                {newClient.photos.length > 0 && (
+                {processingClientPhoto && (
+                  <div className="flex items-center gap-2 mt-2 px-2.5 py-2 bg-blue-500/10 text-blue-400 rounded-lg">
+                    <i className="fas fa-spinner fa-spin text-sm"></i>
+                    <span className="text-[10px] font-medium">Processando imagem... (pode levar alguns segundos)</span>
+                  </div>
+                )}
+                {!processingClientPhoto && newClient.photos.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-pink-500/10 text-pink-500 rounded-lg">
                     <i className="fas fa-check text-[10px]"></i>
                     <span className="text-[10px] font-medium">Provador IA ativado - {newClient.photos.length} foto(s)</span>
