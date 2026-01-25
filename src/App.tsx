@@ -241,6 +241,55 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     const saved = localStorage.getItem('vizzu_theme');
     return (saved as 'dark' | 'light') || 'dark';
   });
+
+  // Swipe navigation - estados para navegação por gestos
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
+
+  // Páginas principais para navegação por swipe (ordem da bottom nav)
+  const SWIPE_PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
+
+  // Handlers de touch para swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distanceX = touchStart.x - touchEnd.x;
+    const distanceY = touchStart.y - touchEnd.y;
+    const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+    const minSwipeDistance = 80;
+
+    // Só navega se for swipe horizontal e não estiver em uma feature específica
+    const isMainPage = SWIPE_PAGES.includes(currentPage);
+    if (!isMainPage || !isHorizontalSwipe || Math.abs(distanceX) < minSwipeDistance) {
+      setTouchStart(null);
+      setTouchEnd(null);
+      return;
+    }
+
+    const currentIndex = SWIPE_PAGES.indexOf(currentPage);
+    const isSwipeLeft = distanceX > 0;
+    const isSwipeRight = distanceX < 0;
+
+    if (isSwipeLeft && currentIndex < SWIPE_PAGES.length - 1) {
+      // Swipe para esquerda = avançar
+      setCurrentPage(SWIPE_PAGES[currentIndex + 1]);
+    } else if (isSwipeRight && currentIndex > 0) {
+      // Swipe para direita = voltar
+      setCurrentPage(SWIPE_PAGES[currentIndex - 1]);
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
   
   const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
 
@@ -1462,7 +1511,23 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       'Biquíni': 'Biquíni', 'Maiô': 'Maiô', 'Sunga': 'Sunga'
     };
 
+    // Mapear categoria singular para plural (para CATEGORY_ATTRIBUTES)
+    const categoryToPluralMap: Record<string, string> = {
+      'Camiseta': 'Camisetas', 'Camisa': 'Camisas', 'Blusa': 'Blusas', 'Top': 'Tops',
+      'Regata': 'Regatas', 'Vestido': 'Vestidos', 'Saia': 'Saias', 'Calça': 'Calças',
+      'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos'
+    };
+
+    // Mapear fit da IA para ID do atributo caimento
+    const fitToAttributeMap: Record<string, string> = {
+      'Slim': 'slim', 'Regular': 'regular', 'Oversized': 'oversized', 'Skinny': 'skinny',
+      'Loose': 'solta', 'Cropped': 'cropped', 'Longline': 'longline', 'Relaxed': 'relaxed',
+      'Boxy': 'boxy', 'Justa': 'justa', 'Solta': 'solta', 'Amplo': 'amplo',
+      'Justo': 'justo', 'Evasê': 'evase', 'Reto': 'reto'
+    };
+
     const matchedCategory = categoryMap[product.type] || '';
+    const pluralCategory = categoryToPluralMap[product.type] || '';
 
     setNewProduct(prev => ({
       ...prev,
@@ -1472,12 +1537,49 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       brand: product.brand || prev.brand
     }));
 
-    // Se detectou caimento e a categoria suporta, aplicar nos atributos
+    // Aplicar atributos baseado na categoria detectada
+    const newAttributes: ProductAttributes = {};
+
+    // Se detectou caimento/fit, mapear para o atributo correto
     if (product.fit) {
-      setProductAttributes(prev => ({
-        ...prev,
-        fit: product.fit
-      }));
+      const fitId = fitToAttributeMap[product.fit] || product.fit.toLowerCase();
+
+      // Verificar se a categoria tem o atributo 'caimento'
+      const categoryAttrs = CATEGORY_ATTRIBUTES[pluralCategory];
+      if (categoryAttrs) {
+        const caimentoAttr = categoryAttrs.find(attr => attr.id === 'caimento');
+        if (caimentoAttr) {
+          // Verificar se o valor é válido para esta categoria
+          const validOption = caimentoAttr.options.find(opt => opt.id === fitId);
+          if (validOption) {
+            newAttributes.caimento = fitId;
+          } else {
+            // Tentar encontrar a opção mais próxima
+            const normalizedFit = fitId.toLowerCase();
+            const closeMatch = caimentoAttr.options.find(opt =>
+              opt.id.toLowerCase().includes(normalizedFit) ||
+              normalizedFit.includes(opt.id.toLowerCase())
+            );
+            if (closeMatch) {
+              newAttributes.caimento = closeMatch.id;
+            }
+          }
+        }
+      }
+    }
+
+    // Definir comprimento padrão baseado no tipo de produto
+    if (pluralCategory && CATEGORY_ATTRIBUTES[pluralCategory]) {
+      const comprimentoAttr = CATEGORY_ATTRIBUTES[pluralCategory].find(attr => attr.id === 'comprimento');
+      if (comprimentoAttr && comprimentoAttr.options.length > 0) {
+        // Definir 'regular' como padrão se existir, senão o primeiro
+        const regularOption = comprimentoAttr.options.find(opt => opt.id === 'regular');
+        newAttributes.comprimento = regularOption ? 'regular' : comprimentoAttr.options[0].id;
+      }
+    }
+
+    if (Object.keys(newAttributes).length > 0) {
+      setProductAttributes(newAttributes);
     }
 
     setShowProductSelector(false);
@@ -3005,12 +3107,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   // MAIN LAYOUT - SUNO STYLE
   // ═══════════════════════════════════════════════════════════════
   return (
-    <div className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+    <div
+      className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       
       {/* DESKTOP SIDEBAR */}
       <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-gradient-to-b from-pink-500 via-fuchsia-500 to-violet-500 border-violet-600')}>
         <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
-          <img src="/logo.png" alt="Vizzu" className="h-10" />
+          <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
+            <img src="/logo.png" alt="Vizzu" className="h-10" />
+          </button>
           <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-white/70')}>Estúdio com IA para lojistas</span>
         </div>
         <nav className="flex-1 p-2 space-y-1">
@@ -3164,16 +3273,16 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0 pt-12 md:pt-0" style={{ overscrollBehavior: 'contain' }}>
+      <main className="flex-1 overflow-hidden flex flex-col pt-12 md:pt-0" style={{ overscrollBehavior: 'contain' }}>
 
         {/* MOBILE TOP HEADER */}
         <div
           className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
         >
-          <div className="flex items-center">
+          <button onClick={() => setCurrentPage('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
             <img src={theme === 'dark' ? '/logo.png' : '/logo-light.png'} alt="Vizzu" className="h-8" />
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
@@ -3718,6 +3827,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onNavigate={(page) => setCurrentPage(page)}
             initialProduct={productForCreation}
             onClearInitialProduct={() => setProductForCreation(null)}
+            onBack={() => setCurrentPage('create')}
           />
         </div>
 
@@ -3754,6 +3864,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onSetMinimized={setProvadorMinimized}
             initialProduct={productForCreation}
             onClearInitialProduct={() => setProductForCreation(null)}
+            onBack={() => setCurrentPage('create')}
           />
         </div>
 
@@ -3791,6 +3902,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
             initialProduct={productForCreation}
             onClearInitialProduct={() => setProductForCreation(null)}
+            onBack={() => setCurrentPage('create')}
           />
         </div>
 
@@ -4963,8 +5075,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       {/* MOBILE BOTTOM NAVIGATION - Esconde quando está dentro das features de criação */}
       {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
       <nav
-        className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1.5 z-40 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
-        style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+        className={'md:hidden flex-shrink-0 border-t px-2 pt-1.5 ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
+        style={{ paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <div className="flex items-center justify-around">
           <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>

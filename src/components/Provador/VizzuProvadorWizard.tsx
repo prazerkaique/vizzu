@@ -49,6 +49,8 @@ interface Props {
   // Produto pré-selecionado (vindo do modal de detalhes)
   initialProduct?: Product | null;
   onClearInitialProduct?: () => void;
+  // Navegação de volta
+  onBack?: () => void;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -92,6 +94,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   onSetMinimized,
   initialProduct,
   onClearInitialProduct,
+  onBack,
 }) => {
   // Estados do Wizard
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -1363,6 +1366,18 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <i className="fas fa-arrow-left text-sm"></i>
+              </button>
+            )}
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
               theme === 'dark'
                 ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30'

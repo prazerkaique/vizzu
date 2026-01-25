@@ -110,6 +110,7 @@ html, body {
   overflow: hidden;
   height: 100%;
   height: 100dvh; /* Dynamic viewport height - considera barra do navegador */
+  background-color: #000; /* Previne barra branca no mobile */
 }
 
 /* Container principal do app */

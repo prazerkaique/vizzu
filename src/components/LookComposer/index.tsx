@@ -33,6 +33,8 @@ interface LookComposerProps {
   // Produto pré-selecionado (vindo do modal de detalhes)
   initialProduct?: Product | null;
   onClearInitialProduct?: () => void;
+  // Navegação de volta
+  onBack?: () => void;
 }
 
 interface GeneratedLook {
@@ -92,7 +94,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   onSetLoadingText,
   isAnyGenerationRunning = false,
   initialProduct,
-  onClearInitialProduct
+  onClearInitialProduct,
+  onBack
 }) => {
   const isDark = theme === 'dark';
 
@@ -449,6 +452,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className={'w-10 h-10 rounded-xl flex items-center justify-center transition-colors ' + (isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700')}
+              >
+                <i className="fas fa-arrow-left text-sm"></i>
+              </button>
+            )}
             <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
               <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-pink-400' : 'text-white')}></i>
             </div>
