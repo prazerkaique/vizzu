@@ -1760,8 +1760,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  const saveClientLook = async (imageUrl: string, lookItems: LookComposition) => {
-    if (!user || !provadorClient) return null;
+  const saveClientLook = async (client: Client, imageUrl: string, lookItems: LookComposition) => {
+    if (!user || !client) return null;
 
     setSavingLook(true);
     try {
@@ -1771,7 +1771,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
       // Gerar nome único para o arquivo
       const fileName = `${Date.now()}.png`;
-      const storagePath = `${user.id}/${provadorClient.id}/${fileName}`;
+      const storagePath = `${user.id}/${client.id}/${fileName}`;
 
       // Upload para o Storage
       const { error: uploadError } = await supabase.storage
@@ -1794,7 +1794,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       const { data, error } = await supabase
         .from('client_looks')
         .insert({
-          client_id: provadorClient.id,
+          client_id: client.id,
           user_id: user.id,
           image_url: publicUrl,
           storage_path: storagePath,
@@ -2277,6 +2277,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string, look: LookComposition) => {
+    // DEBUG: ver o que está no look
+    console.log('🔍 Look recebido no WhatsApp:', JSON.stringify(look, null, 2));
+    console.log('🔍 Keys do look:', Object.keys(look));
+
     // Emojis para cada tipo de peça
     const lookEmojis: Record<string, string> = {
       head: '🧢',
@@ -3417,6 +3421,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             whatsappTemplates={whatsappTemplates}
             onCreateClient={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }}
             onUpdateClient={handleUpdateClientForProvador}
+            onClientSelect={(client) => {
+              setProvadorClient(client);
+              if (client) {
+                loadClientLooks(client.id);
+              } else {
+                setClientLooks([]);
+              }
+            }}
             onGenerate={handleProvadorGenerateForWizard}
             onSendWhatsApp={handleProvadorSendWhatsAppForWizard}
             onDownloadImage={handleProvadorDownloadImage}

@@ -24,6 +24,7 @@ interface Props {
   whatsappTemplates: WhatsAppTemplate[];
   onCreateClient: () => void;
   onUpdateClient: (client: Client) => void;
+  onClientSelect: (client: Client | null) => void;
   onGenerate: (
     client: Client,
     photoType: ClientPhoto['type'],
@@ -36,7 +37,7 @@ interface Props {
     look: LookComposition
   ) => void;
   onDownloadImage: (image: string, clientName: string) => void;
-  onSaveLook: (image: string, look: LookComposition) => Promise<ClientLook | null>;
+  onSaveLook: (client: Client, image: string, look: LookComposition) => Promise<ClientLook | null>;
   onDeleteLook: (look: ClientLook) => void;
   onGenerateAIMessage: (clientName: string) => Promise<string>;
   clientLooks: ClientLook[];
@@ -73,6 +74,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   whatsappTemplates,
   onCreateClient,
   onUpdateClient,
+  onClientSelect,
   onGenerate,
   onSendWhatsApp,
   onDownloadImage,
@@ -182,6 +184,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
 
   const handleSelectClient = (client: Client) => {
     setSelectedClient(client);
+    onClientSelect(client);
     setSelectedPhotoType('frente');
     setCurrentStep(2);
   };
@@ -263,10 +266,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   };
 
   const handleSaveLook = async () => {
-    if (!generatedImage) return;
+    if (!generatedImage || !selectedClient) return;
 
     setSavingLook(true);
-    const saved = await onSaveLook(generatedImage, lookComposition);
+    const saved = await onSaveLook(selectedClient, generatedImage, lookComposition);
     setSavingLook(false);
 
     if (saved) {
@@ -309,6 +312,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
 
   const handleReset = () => {
     setSelectedClient(null);
+    onClientSelect(null);
     setSelectedPhotoType('frente');
     setLookComposition({});
     setGeneratedImage(null);
@@ -426,7 +430,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
                 className="w-24 h-24 rounded-full object-cover border-4 border-pink-500/30"
               />
               <button
-                onClick={() => setSelectedClient(null)}
+                onClick={() => { setSelectedClient(null); onClientSelect(null); }}
                 className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors"
               >
                 <i className="fas fa-times"></i>
