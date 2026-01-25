@@ -183,6 +183,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   });
   const [showCreateClient, setShowCreateClient] = useState(false);
   const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
+  const [clientDetailLooks, setClientDetailLooks] = useState<ClientLook[]>([]);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -1761,28 +1762,20 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const saveClientLook = async (client: Client, imageUrl: string, lookItems: LookComposition) => {
-    if (!user || !client) {
-      console.log('❌ saveClientLook: user ou client é null', { user: !!user, client: !!client });
-      return null;
-    }
-
-    console.log('💾 Salvando look...', { clientId: client.id, imageUrl: imageUrl.substring(0, 100) });
+    if (!user || !client) return null;
 
     setSavingLook(true);
     try {
       // Fazer download da imagem e converter para blob
-      console.log('📥 Baixando imagem...');
       const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error(`Erro ao baixar imagem: ${response.status} ${response.statusText}`);
       }
       const blob = await response.blob();
-      console.log('✅ Imagem baixada:', blob.size, 'bytes');
 
       // Gerar nome único para o arquivo
       const fileName = `${Date.now()}.png`;
       const storagePath = `${user.id}/${client.id}/${fileName}`;
-      console.log('📤 Uploading para:', storagePath);
 
       // Upload para o Storage
       const { error: uploadError } = await supabase.storage
@@ -1792,11 +1785,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           upsert: false
         });
 
-      if (uploadError) {
-        console.error('❌ Erro no upload:', uploadError);
-        throw uploadError;
-      }
-      console.log('✅ Upload concluído');
+      if (uploadError) throw uploadError;
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
@@ -1818,12 +1807,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Erro ao inserir no banco:', error);
-        throw error;
-      }
-
-      console.log('✅ Look salvo no banco:', data);
+      if (error) throw error;
 
       const newLook: ClientLook = {
         id: data.id,
@@ -1836,10 +1820,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       };
 
       setClientLooks(prev => [newLook, ...prev]);
-      console.log('✅ Look adicionado à lista local');
       return newLook;
     } catch (error) {
-      console.error('❌ Erro ao salvar look:', error);
+      console.error('Erro ao salvar look:', error);
       alert('Erro ao salvar look. Tente novamente.');
       return null;
     } finally {
@@ -1878,7 +1861,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  // Carregar looks quando cliente é selecionado
+  // Carregar looks quando cliente é selecionado no Provador
   useEffect(() => {
     if (provadorClient) {
       loadClientLooks(provadorClient.id);
@@ -1887,6 +1870,40 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       setSelectedSavedLook(null);
     }
   }, [provadorClient?.id]);
+
+  // Carregar looks quando abre detalhe do cliente
+  useEffect(() => {
+    const loadLooksForDetail = async () => {
+      if (showClientDetail && user) {
+        try {
+          const { data, error } = await supabase
+            .from('client_looks')
+            .select('*')
+            .eq('client_id', showClientDetail.id)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (!error && data) {
+            const looks: ClientLook[] = data.map(l => ({
+              id: l.id,
+              clientId: l.client_id,
+              userId: l.user_id,
+              imageUrl: l.image_url,
+              storagePath: l.storage_path,
+              lookItems: l.look_items || {},
+              createdAt: l.created_at,
+            }));
+            setClientDetailLooks(looks);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar looks do cliente:', error);
+        }
+      } else {
+        setClientDetailLooks([]);
+      }
+    };
+    loadLooksForDetail();
+  }, [showClientDetail?.id, user]);
 
   // ═══════════════════════════════════════════════════════════════
   // SAVED MODELS - Funções para gerenciar modelos salvos
@@ -2298,10 +2315,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   };
 
   const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string, look: LookComposition) => {
-    // DEBUG: ver o que está no look
-    console.log('🔍 Look recebido no WhatsApp:', JSON.stringify(look, null, 2));
-    console.log('🔍 Keys do look:', Object.keys(look));
-
     // Emojis para cada tipo de peça
     const lookEmojis: Record<string, string> = {
       head: '🧢',
@@ -4895,6 +4908,30 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <div className="p-2.5 bg-neutral-800 rounded-lg">
                   <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Observações</p>
                   <p className="text-xs text-neutral-300">{showClientDetail.notes}</p>
+                </div>
+              )}
+              {/* Looks Salvos */}
+              {clientDetailLooks.length > 0 && (
+                <div>
+                  <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <i className="fas fa-images text-pink-400"></i>
+                    Looks Gerados ({clientDetailLooks.length})
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {clientDetailLooks.map(look => (
+                      <div key={look.id} className="relative group">
+                        <img
+                          src={look.imageUrl}
+                          alt="Look"
+                          className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-pink-500 transition-colors"
+                          onClick={() => window.open(look.imageUrl, '_blank')}
+                        />
+                        <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">
+                          {new Date(look.createdAt).toLocaleDateString('pt-BR')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-2 pt-2">
