@@ -1,10 +1,16 @@
 // ═══════════════════════════════════════════════════════════════
 // VIZZU - Studio API
 // Chamadas para os webhooks do n8n
-// v2.2 - Force rebuild 2026-01-21
+// v2.3 - Suporte a geração assíncrona com polling
 // ═══════════════════════════════════════════════════════════════
 
+import { supabase } from '../../services/supabaseClient';
+
 const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
+
+// Configurações de polling para geração assíncrona
+const POLLING_INTERVAL_MS = 3000; // 3 segundos entre cada verificação
+const POLLING_TIMEOUT_MS = 300000; // 5 minutos de timeout máximo
 
 if (!N8N_BASE_URL) {
   console.warn('VITE_N8N_WEBHOOK_URL não configurada - funcionalidades de geração indisponíveis');
@@ -310,6 +316,51 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar modelo');
+  }
+
+  // Se a resposta indica processamento assíncrono, fazer polling
+  if (data.processing === true && data.generation?.id) {
+    console.log('[generateModeloIA] Geração assíncrona detectada, iniciando polling...');
+    const generationId = data.generation.id;
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < POLLING_TIMEOUT_MS) {
+      // Aguardar antes de verificar
+      await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL_MS));
+
+      // Consultar status da geração no Supabase
+      const { data: generation, error } = await supabase
+        .from('generations')
+        .select('id, status, output_image_url, type')
+        .eq('id', generationId)
+        .single();
+
+      if (error) {
+        console.error('[generateModeloIA] Erro ao consultar geração:', error);
+        continue;
+      }
+
+      console.log('[generateModeloIA] Polling - Status:', generation?.status);
+
+      if (generation?.status === 'completed' && generation?.output_image_url) {
+        console.log('[generateModeloIA] Geração concluída:', generation.output_image_url);
+        return {
+          success: true,
+          generation: {
+            id: generation.id,
+            image_url: generation.output_image_url,
+            type: generation.type
+          },
+          credits_remaining: data.credits_remaining
+        };
+      }
+
+      if (generation?.status === 'failed' || generation?.status === 'error') {
+        throw new Error('Falha na geração da imagem');
+      }
+    }
+
+    throw new Error('Timeout aguardando geração da imagem');
   }
 
   return data;
