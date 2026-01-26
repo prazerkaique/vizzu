@@ -2,12 +2,13 @@
 // VIZZU - Look Composer Editor (Página 2 - Faseada)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
 import { LookComposerResult } from './LookComposerResult';
+import { supabase } from '../../services/supabaseClient';
 
 interface LookComposerEditorProps {
   product: Product;
@@ -61,6 +62,47 @@ const FINALIZING_PHRASES = [
   "Balanceando tons...",
   "Quase lá! Últimos retoques..."
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// PERSISTÊNCIA DE GERAÇÃO EM ANDAMENTO (para sobreviver ao F5)
+// ═══════════════════════════════════════════════════════════════
+const PENDING_GENERATION_KEY = 'vizzu_pending_generation';
+
+interface PendingGeneration {
+  oderId: string;
+  productId: string;
+  productName: string;
+  startTime: number;
+  viewsMode: 'front' | 'front-back';
+}
+
+const savePendingGeneration = (data: PendingGeneration) => {
+  try {
+    localStorage.setItem(PENDING_GENERATION_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Erro ao salvar geração pendente:', e);
+  }
+};
+
+const getPendingGeneration = (): PendingGeneration | null => {
+  try {
+    const stored = localStorage.getItem(PENDING_GENERATION_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Erro ao ler geração pendente:', e);
+  }
+  return null;
+};
+
+const clearPendingGeneration = () => {
+  try {
+    localStorage.removeItem(PENDING_GENERATION_KEY);
+  } catch (e) {
+    console.error('Erro ao limpar geração pendente:', e);
+  }
+};
 
 // Fundos pré-setados - com imagens de cenário completo e sceneHint para o prompt
 const PRESET_BACKGROUNDS: Array<{
@@ -256,6 +298,102 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       }
     }
   }, [userId]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // VERIFICAR GERAÇÃO PENDENTE AO CARREGAR (sobrevive ao F5)
+  // ═══════════════════════════════════════════════════════════════
+  const checkPendingGeneration = useCallback(async () => {
+    const pending = getPendingGeneration();
+    if (!pending || !userId) return;
+
+    // Verificar se a geração ainda está em andamento (menos de 5 minutos)
+    const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
+    if (elapsedMinutes > 5) {
+      console.log('[LookComposer] Geração pendente expirou (> 5 min), limpando...');
+      clearPendingGeneration();
+      return;
+    }
+
+    console.log('[LookComposer] Geração pendente encontrada, verificando status...');
+
+    // Verificar se a imagem já foi gerada no Supabase
+    const { data: generation, error } = await supabase
+      .from('generations')
+      .select('id, image_url, back_image_url, status')
+      .eq('user_id', userId)
+      .eq('product_id', pending.productId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.log('[LookComposer] Erro ao verificar geração:', error);
+      // Continuar fazendo polling
+      return 'polling';
+    }
+
+    if (generation?.image_url && generation.status === 'completed') {
+      console.log('[LookComposer] Geração completada! Mostrando resultado...');
+      clearPendingGeneration();
+      setGeneratedImageUrl(generation.image_url);
+      setGeneratedBackImageUrl(generation.back_image_url || null);
+      setGenerationId(generation.id);
+      setShowResult(true);
+      return 'completed';
+    }
+
+    // Ainda em andamento - mostrar tela de loading
+    return 'polling';
+  }, [userId]);
+
+  // Verificar geração pendente ao montar e fazer polling
+  useEffect(() => {
+    const pending = getPendingGeneration();
+    if (!pending || !userId) return;
+
+    // Se tem geração pendente, mostrar tela de loading
+    const setGenerating = onSetGenerating || setLocalIsGenerating;
+    const setProgress = onSetProgress || setLocalProgress;
+
+    console.log('[LookComposer] Retomando geração pendente:', pending.productName);
+    setGenerating(true);
+
+    // Calcular progresso estimado baseado no tempo decorrido
+    const elapsedMs = Date.now() - pending.startTime;
+    const estimatedDurationMs = 2.3 * 60 * 1000; // 2.3 minutos
+    const estimatedProgress = Math.min(95, Math.floor((elapsedMs / estimatedDurationMs) * 100));
+    setProgress(estimatedProgress);
+
+    // Fazer polling a cada 5 segundos
+    const pollInterval = setInterval(async () => {
+      const result = await checkPendingGeneration();
+
+      if (result === 'completed') {
+        clearInterval(pollInterval);
+        setGenerating(false);
+        setProgress(0);
+      } else if (result === 'polling') {
+        // Atualizar progresso estimado
+        const newElapsedMs = Date.now() - pending.startTime;
+        const newProgress = Math.min(95, Math.floor((newElapsedMs / estimatedDurationMs) * 100));
+        setProgress(newProgress);
+      }
+    }, 5000);
+
+    // Timeout de 5 minutos
+    const timeout = setTimeout(() => {
+      clearInterval(pollInterval);
+      clearPendingGeneration();
+      setGenerating(false);
+      setProgress(0);
+      console.log('[LookComposer] Timeout de geração pendente');
+    }, 5 * 60 * 1000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeout);
+    };
+  }, [userId, checkPendingGeneration, onSetGenerating, onSetProgress]);
 
   // Rotacionar frases de loading
   useEffect(() => {
@@ -839,6 +977,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       setProgress(5);
 
+      // Salvar estado para sobreviver ao F5
+      savePendingGeneration({
+        oderId: `gen_${Date.now()}`,
+        productId: product.id,
+        productName: product.name,
+        startTime: Date.now(),
+        viewsMode: viewsMode,
+      });
+
       console.log('[LookComposer] Chamando API generateModeloIA...');
       console.log('[LookComposer] Params:', {
         productId: product.id,
@@ -1016,6 +1163,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       setProgress(100);
 
+      // Limpar estado pendente - geração concluída com sucesso
+      clearPendingGeneration();
+
       // Mostrar tela de resultado
       setGeneratedImageUrl(frontImageUrl);
       setGeneratedBackImageUrl(backImageUrlResult || null);
@@ -1032,6 +1182,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
     } catch (error) {
       console.error('Erro ao gerar:', error);
+      // Limpar estado pendente em caso de erro
+      clearPendingGeneration();
+
       if (onAddHistoryLog) {
         onAddHistoryLog(
           'Look Composer',
@@ -1048,6 +1201,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       const setProgress = onSetProgress || setLocalProgress;
       setGenerating(false);
       setProgress(0);
+      clearPendingGeneration(); // Garantir limpeza
       if (onSetMinimized) onSetMinimized(false);
     }
   };
