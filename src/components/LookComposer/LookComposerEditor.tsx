@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+// DotLottieReact removido - usando spinner CSS colorido
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
@@ -68,12 +68,21 @@ const FINALIZING_PHRASES = [
 // ═══════════════════════════════════════════════════════════════
 const PENDING_GENERATION_KEY = 'vizzu_pending_generation';
 
+interface PendingGenerationLookItem {
+  name: string;
+  image: string;
+  slot: string;
+}
+
 interface PendingGeneration {
   oderId: string;
   productId: string;
   productName: string;
+  productThumbnail?: string;
   startTime: number;
   viewsMode: 'front' | 'front-back';
+  lookItems?: PendingGenerationLookItem[];
+  modelThumbnail?: string;
 }
 
 const savePendingGeneration = (data: PendingGeneration) => {
@@ -273,6 +282,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [localLoadingText, setLocalLoadingText] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [finalizingPhraseIndex, setFinalizingPhraseIndex] = useState(0);
+  const [generationStartTime, setGenerationStartTime] = useState<number | null>(null);
+  const [timerStep, setTimerStep] = useState(0); // Step controlado por timer (2 min)
+
+  // Estados para restauração após F5
+  const [restoredLookItems, setRestoredLookItems] = useState<PendingGenerationLookItem[]>([]);
+  const [restoredProductThumbnail, setRestoredProductThumbnail] = useState<string | null>(null);
+  const [restoredModelThumbnail, setRestoredModelThumbnail] = useState<string | null>(null);
 
   // Estado do resultado
   const [showResult, setShowResult] = useState(false);
@@ -358,6 +374,20 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     console.log('[LookComposer] Retomando geração pendente:', pending.productName);
     setGenerating(true);
 
+    // IMPORTANTE: Restaurar o generationStartTime para o timer funcionar
+    setGenerationStartTime(pending.startTime);
+
+    // Restaurar dados do look para exibir nos steps
+    if (pending.lookItems) {
+      setRestoredLookItems(pending.lookItems);
+    }
+    if (pending.productThumbnail) {
+      setRestoredProductThumbnail(pending.productThumbnail);
+    }
+    if (pending.modelThumbnail) {
+      setRestoredModelThumbnail(pending.modelThumbnail);
+    }
+
     // Calcular progresso estimado baseado no tempo decorrido
     const elapsedMs = Date.now() - pending.startTime;
     const estimatedDurationMs = 2.3 * 60 * 1000; // 2.3 minutos
@@ -372,6 +402,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         clearInterval(pollInterval);
         setGenerating(false);
         setProgress(0);
+        // Limpar dados restaurados
+        setRestoredLookItems([]);
+        setRestoredProductThumbnail(null);
+        setRestoredModelThumbnail(null);
+        setGenerationStartTime(null);
+        setTimerStep(0);
       } else if (result === 'polling') {
         // Atualizar progresso estimado
         const newElapsedMs = Date.now() - pending.startTime;
@@ -423,6 +459,110 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     return () => clearInterval(interval);
   }, [isGenerating]);
 
+  // Modelo selecionado (movido para antes de loadingSteps que depende dele)
+  const selectedModel = savedModels.find(m => m.id === selectedModelId);
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOADING STEPS - Lista de passos para mostrar na tela de loading
+  // (Movido para antes do timer useEffect para evitar erro de ordem)
+  // ═══════════════════════════════════════════════════════════════
+  const loadingSteps = useMemo<LoadingStep[]>(() => {
+    const steps: LoadingStep[] = [];
+
+    // Step 1: Preparando modelo IA
+    // Usa dados restaurados se disponíveis (após F5)
+    const modelThumbnail = selectedModel?.images?.front || selectedModel?.referenceImageUrl || restoredModelThumbnail;
+    steps.push({
+      id: 'model-setup',
+      label: 'Preparando modelo IA',
+      thumbnail: modelThumbnail || undefined,
+      type: 'setup'
+    });
+
+    // Step 2: Produto principal
+    // Usa dados restaurados se disponíveis (após F5)
+    const mainProductImage = product.originalImages?.front?.url || product.images?.[0]?.url || product.images?.[0]?.base64 || restoredProductThumbnail;
+    steps.push({
+      id: `product-${product.id}`,
+      label: product.name,
+      thumbnail: mainProductImage || undefined,
+      type: 'product'
+    });
+
+    // Steps 3+: Itens do look (da composição ou restaurados após F5)
+    const hasLookComposition = lookMode === 'composer' && Object.keys(lookComposition).length > 0;
+    const hasRestoredItems = restoredLookItems.length > 0;
+
+    if (hasLookComposition) {
+      // Usar dados atuais da composição
+      Object.entries(lookComposition).forEach(([slot, item]) => {
+        if (item && item.image) {
+          steps.push({
+            id: `look-${slot}`,
+            label: item.name || slot,
+            thumbnail: item.image,
+            type: 'item'
+          });
+        }
+      });
+    } else if (hasRestoredItems) {
+      // Usar dados restaurados após F5
+      restoredLookItems.forEach(item => {
+        steps.push({
+          id: `look-${item.slot}`,
+          label: item.name,
+          thumbnail: item.image,
+          type: 'item'
+        });
+      });
+    }
+
+    // Step final: Finalizando
+    steps.push({
+      id: 'finalize',
+      label: viewsMode === 'front-back' ? 'Finalizando imagens' : 'Finalizando imagem',
+      type: 'finalize'
+    });
+
+    return steps;
+  }, [product, lookComposition, lookMode, selectedModel, viewsMode, restoredLookItems, restoredProductThumbnail, restoredModelThumbnail]);
+
+  // Timer de 2 minutos para avançar os steps (independente do progresso da API)
+  useEffect(() => {
+    if (!isGenerating) {
+      setGenerationStartTime(null);
+      setTimerStep(0);
+      return;
+    }
+
+    // Se generationStartTime não foi definido, aguardar
+    // (será definido por handleGenerate ou pela restauração de pending generation)
+    if (!generationStartTime) {
+      return;
+    }
+
+    const TWO_MINUTES_MS = 2 * 60 * 1000; // 2 minutos
+
+    const interval = setInterval(() => {
+
+      const elapsed = Date.now() - generationStartTime;
+      const totalSteps = loadingSteps.length;
+      const stepsBeforeFinalize = totalSteps - 1;
+
+      if (elapsed >= TWO_MINUTES_MS) {
+        // Após 2 minutos, vai para o último step (finalizando)
+        setTimerStep(totalSteps - 1);
+      } else {
+        // Distribui os steps ao longo de 2 minutos
+        const progress = elapsed / TWO_MINUTES_MS;
+        const stepIndex = Math.floor(progress * stepsBeforeFinalize);
+        setTimerStep(Math.min(stepIndex, stepsBeforeFinalize - 1));
+      }
+    }, 500); // Atualiza a cada 500ms
+
+    return () => clearInterval(interval);
+  }, [isGenerating, generationStartTime, loadingSteps.length]);
+
   // Obter imagens do produto
   const productImages = useMemo(() => {
     const images: { url: string; type: string }[] = [];
@@ -445,94 +585,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Modelo selecionado
-  const selectedModel = savedModels.find(m => m.id === selectedModelId);
-
-  // ═══════════════════════════════════════════════════════════════
-  // LOADING STEPS - Lista de passos para mostrar na tela de loading
-  // ═══════════════════════════════════════════════════════════════
-  const loadingSteps = useMemo<LoadingStep[]>(() => {
-    const steps: LoadingStep[] = [];
-
-    // Step 1: Preparando modelo IA
-    steps.push({
-      id: 'model-setup',
-      label: 'Preparando modelo IA',
-      thumbnail: selectedModel?.images?.front || selectedModel?.referenceImageUrl,
-      type: 'setup'
-    });
-
-    // Step 2: Produto principal
-    const mainProductImage = product.originalImages?.front?.url || product.images?.[0]?.url || product.images?.[0]?.base64;
-    steps.push({
-      id: `product-${product.id}`,
-      label: product.name,
-      thumbnail: mainProductImage,
-      type: 'product'
-    });
-
-    // Steps 3+: Itens do look (da composição)
-    if (lookMode === 'composer' && Object.keys(lookComposition).length > 0) {
-      Object.entries(lookComposition).forEach(([slot, item]) => {
-        if (item && item.image) {
-          steps.push({
-            id: `look-${slot}`,
-            label: item.name || slot,
-            thumbnail: item.image,
-            type: 'item'
-          });
-        }
-      });
-    }
-
-    // Step final: Finalizando
-    steps.push({
-      id: 'finalize',
-      label: viewsMode === 'front-back' ? 'Finalizando imagens' : 'Finalizando imagem',
-      type: 'finalize'
-    });
-
-    return steps;
-  }, [product, lookComposition, lookMode, selectedModel, viewsMode]);
-
-  // Calcular step atual baseado no progresso
-  // Os steps são distribuídos para que levem ~2 minutos até a última etapa
-  // A última etapa "Finalizando" começa em 85% e tem frases rotativas
+  // Step atual é controlado pelo timer de 2 minutos
+  // O timer avança os steps gradualmente até o último (finalizando) após 2 min
   const currentGenerationStep = useMemo(() => {
-    if (!isGenerating || currentProgress === 0) return 0;
-
-    const totalSteps = loadingSteps.length;
-    const isFrontBack = viewsMode === 'front-back';
-
-    // Threshold para começar a última etapa (85% = ~2 minutos em uma geração de ~2.3 min)
-    const FINALIZE_THRESHOLD = 85;
-
-    if (isFrontBack) {
-      // Front-back: 0-48% = steps da imagem de frente, 50-95% = imagem de costas
-      if (currentProgress < 48) {
-        // Primeira imagem: distribui steps (exceto finalize) até 85% de 48% = ~41%
-        const frontFinalizeAt = 41;
-        const stepsForFront = totalSteps - 1;
-        if (currentProgress >= frontFinalizeAt) {
-          return totalSteps - 1; // Finalizando
-        }
-        const stepIndex = Math.floor((currentProgress / frontFinalizeAt) * stepsForFront);
-        return Math.min(stepIndex, stepsForFront - 1);
-      } else {
-        // Após 48%, está finalizando (gerando costas)
-        return totalSteps - 1;
-      }
-    } else {
-      // Só frente: distribui steps (exceto finalize) de 0% a 85%
-      // Última etapa "Finalizando" começa em 85%
-      if (currentProgress >= FINALIZE_THRESHOLD) {
-        return totalSteps - 1; // Última etapa com frases rotativas
-      }
-      const stepsBeforeFinalize = totalSteps - 1;
-      const stepIndex = Math.floor((currentProgress / FINALIZE_THRESHOLD) * stepsBeforeFinalize);
-      return Math.min(stepIndex, stepsBeforeFinalize - 1);
-    }
-  }, [currentProgress, loadingSteps.length, isGenerating, viewsMode]);
+    if (!isGenerating) return 0;
+    return timerStep;
+  }, [isGenerating, timerStep]);
 
   // Categorias que NÃO precisam de foto de costas (acessórios exceto cabeça)
   const categoriesWithoutBackRequired = [
@@ -827,6 +885,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     setGenerating(true);
     setProgress(0);
     setPhraseIndex(0);
+    setGenerationStartTime(Date.now()); // Iniciar timer de 2 minutos
+    setTimerStep(0);
 
     try {
       // Construir prompt do modelo a partir do selectedModel
@@ -978,12 +1038,25 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       setProgress(5);
 
       // Salvar estado para sobreviver ao F5
+      const lookItemsForStorage: PendingGenerationLookItem[] = lookItems
+        ? lookItems.map(item => ({
+            name: item.name || item.slot,
+            image: item.image,
+            slot: item.slot,
+          }))
+        : [];
+      const mainProductImage = product.originalImages?.front?.url || product.images?.[0]?.url || product.images?.[0]?.base64;
+      const modelThumb = selectedModel?.images?.front || selectedModel?.referenceImageUrl;
+
       savePendingGeneration({
         oderId: `gen_${Date.now()}`,
         productId: product.id,
         productName: product.name,
+        productThumbnail: mainProductImage,
         startTime: Date.now(),
         viewsMode: viewsMode,
+        lookItems: lookItemsForStorage,
+        modelThumbnail: modelThumb,
       });
 
       console.log('[LookComposer] Chamando API generateModeloIA...');
@@ -1202,6 +1275,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       setGenerating(false);
       setProgress(0);
       clearPendingGeneration(); // Garantir limpeza
+      // Limpar estados restaurados (F5)
+      setRestoredLookItems([]);
+      setRestoredProductThumbnail(null);
+      setRestoredModelThumbnail(null);
+      setGenerationStartTime(null);
+      setTimerStep(0);
       if (onSetMinimized) onSetMinimized(false);
     }
   };
@@ -2193,13 +2272,24 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
           <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
-            {/* Animação Lottie */}
-            <div className="w-24 h-24 mb-4">
-              <DotLottieReact
-                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                loop
-                autoplay
-                style={{ width: '100%', height: '100%' }}
+            {/* Animação colorida girando */}
+            <div className="w-20 h-20 mb-4 relative">
+              {/* Spinner com gradiente colorido */}
+              <div
+                className="absolute inset-0 rounded-full animate-spin"
+                style={{
+                  background: 'conic-gradient(from 0deg, #ff006e, #8338ec, #3a86ff, #06d6a0, #ffbe0b, #ff006e)',
+                  animationDuration: '1.5s',
+                }}
+              />
+              {/* Centro escuro */}
+              <div className="absolute inset-2 rounded-full bg-neutral-950" />
+              {/* Brilho interno */}
+              <div
+                className="absolute inset-3 rounded-full opacity-30 animate-pulse"
+                style={{
+                  background: 'radial-gradient(circle, #ff006e 0%, transparent 70%)',
+                }}
               />
             </div>
 
@@ -2282,7 +2372,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                       )}
 
                       {/* Label */}
-                      <span className={`text-xs font-medium truncate transition-all duration-300 flex-1 ${
+                      <span className={`text-xs font-medium transition-all duration-300 flex-1 leading-tight ${
                         isCompleted
                           ? 'text-green-400'
                           : isCurrent
