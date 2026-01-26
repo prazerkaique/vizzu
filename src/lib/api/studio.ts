@@ -312,9 +312,11 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       modelProfile: modelProfile,
       productCategory: params.productCategory,
       productAttributes: params.productAttributes || {},  // Atributos específicos (caimento, tamanho, etc.)
+      productDescription: params.productDescription || '', // Nome/descrição do produto
       sceneDescription: params.clothingPrompt || params.productDescription || '',
       orientation: params.orientation?.type || 'vertical',
       lookComposition: lookComposition,
+      modelReferenceUrl: params.referenceImage || null,  // URL da imagem do modelo para consistência
       savedModelId: params.referenceImage ? 'custom' : null,
       productNotes: params.productNotes || '',       // Observações adicionais do produto
       modelDetails: params.modelDetails || '',       // Detalhes do modelo (fisionomia, cabelo, etc.)
