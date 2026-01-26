@@ -752,6 +752,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         referenceImage: selectedModel?.images?.front || selectedModel?.referenceImageUrl,
         productCategory: product.category || 'Roupas',
         productDescription: product.description || product.name,
+        productAttributes: product.attributes || {},  // Atributos do produto (caimento, comprimento, etc)
         lookItems: lookItems,
         backgroundType: backgroundType,
         customBackgroundUrl: customBackgroundUrl,
@@ -805,6 +806,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           referenceImage: modelBackReference, // Usar imagem de COSTAS do modelo
           productCategory: product.category || 'Roupas',
           productDescription: (product.description || product.name) + ' - vista de costas',
+          productAttributes: product.attributes || {},  // Atributos do produto (caimento, comprimento, etc)
           lookItems: lookItemsBack, // Usar imagens de costas do look
           backgroundType: backgroundType,
           customBackgroundUrl: customBackgroundUrl,
