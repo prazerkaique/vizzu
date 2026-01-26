@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getUserBilling, createCheckoutSession, buyCredits, changePlan, calculateDaysUntilRenewal, UserSubscription, UserCredits } from '../lib/api/billing';
+import { supabase } from '../services/supabaseClient';
 
 // ═══════════════════════════════════════════════════════════════
 // TIPOS E CONSTANTES
@@ -154,7 +155,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   const daysUntilRenewal = subscription ? calculateDaysUntilRenewal(subscription) : 30;
 
   // ═══════════════════════════════════════════════════════════════
-  // CARREGAR DADOS DO BACKEND
+  // CARREGAR DADOS DO SUPABASE (direto, sem N8N)
   // ═══════════════════════════════════════════════════════════════
 
   const loadBillingData = useCallback(async () => {
@@ -164,26 +165,45 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     setError(null);
 
     try {
-      const result = await getUserBilling({ userId });
+      // Buscar créditos e plano direto da tabela users no Supabase
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('credits, plan_id')
+        .eq('id', userId)
+        .single();
 
-      if (result.success) {
-        if (result.subscription) {
-          setSubscription(result.subscription);
-        }
-        if (result.credits) {
-          setCreditsData(result.credits);
-          // Sincronizar com localStorage
-          setLocalData(prev => ({
-            ...prev,
-            credits: result.credits!.balance,
-            planId: result.subscription?.plan_id || prev.planId,
-          }));
-        }
+      if (userError) {
+        console.error('Error fetching user credits from Supabase:', userError);
+        throw userError;
+      }
+
+      if (userData) {
+        const credits = userData.credits ?? 0;
+        const planId = userData.plan_id ?? 'pro';
+
+        // Atualizar estado de créditos
+        setCreditsData({
+          user_id: userId,
+          balance: credits,
+          lifetime_purchased: 0,
+          lifetime_used: 0,
+          last_renewal_credits: 0,
+          updated_at: new Date().toISOString(),
+        });
+
+        // Sincronizar com localStorage
+        setLocalData(prev => ({
+          ...prev,
+          credits: credits,
+          planId: planId,
+        }));
+
+        console.log('[useCredits] Créditos carregados do Supabase:', credits);
       }
     } catch (e: any) {
       console.error('Error loading billing data:', e);
       setError(e.message);
-      // Fallback para dados locais - não falha silenciosamente
+      // Fallback para dados locais
     } finally {
       setIsLoading(false);
     }
