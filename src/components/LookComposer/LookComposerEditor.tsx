@@ -415,6 +415,22 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   const creditsNeeded = calculateCredits();
 
+  // DEBUG: Log das condições do botão Gerar
+  useEffect(() => {
+    if (currentStep === 'views') {
+      console.log('═══════════════════════════════════════');
+      console.log('[DEBUG BOTÃO GERAR]');
+      console.log('  isGenerating:', isGenerating);
+      console.log('  isAnyGenerationRunning:', isAnyGenerationRunning);
+      console.log('  userCredits:', userCredits);
+      console.log('  creditsNeeded:', creditsNeeded);
+      console.log('  viewsMode:', viewsMode);
+      console.log('  productsWithoutBackImage:', productsWithoutBackImage);
+      console.log('  RESULTADO: botão', (isGenerating || isAnyGenerationRunning || userCredits < creditsNeeded || (viewsMode === 'front-back' && productsWithoutBackImage.length > 0)) ? 'BLOQUEADO' : 'LIBERADO');
+      console.log('═══════════════════════════════════════');
+    }
+  }, [currentStep, isGenerating, isAnyGenerationRunning, userCredits, creditsNeeded, viewsMode, productsWithoutBackImage]);
+
   // Verificar se pode avançar para próxima fase
   const canProceed = (step: Step): boolean => {
     switch (step) {
@@ -1975,7 +1991,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                 </button>
               ) : (
                 <button
-                  onClick={handleGenerate}
+                  onClick={() => {
+                    console.log('[DEBUG BOTÃO] isGenerating:', isGenerating);
+                    console.log('[DEBUG BOTÃO] isAnyGenerationRunning:', isAnyGenerationRunning);
+                    console.log('[DEBUG BOTÃO] userCredits:', userCredits, 'creditsNeeded:', creditsNeeded);
+                    console.log('[DEBUG BOTÃO] canProceed(views):', canProceed('views'));
+                    console.log('[DEBUG BOTÃO] viewsMode:', viewsMode);
+                    console.log('[DEBUG BOTÃO] productsWithoutBackImage:', productsWithoutBackImage);
+                    handleGenerate();
+                  }}
                   disabled={isGenerating || isAnyGenerationRunning || userCredits < creditsNeeded || !canProceed('views')}
                   className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-pink-600 cursor-wait' : (userCredits < creditsNeeded || !canProceed('views')) ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 shadow-lg shadow-pink-500/25') + ' text-white'}
                 >
