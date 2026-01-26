@@ -86,6 +86,14 @@ type BackgroundMode = 'preset' | 'upload' | 'prompt' | 'saved';
 type PoseMode = 'default' | 'custom';
 type ViewsMode = 'front' | 'front-back';
 
+// Interface para os steps de loading com thumbnails
+interface LoadingStep {
+  id: string;
+  label: string;
+  thumbnail?: string;
+  type: 'setup' | 'product' | 'item' | 'finalize';
+}
+
 const STEPS: { id: Step; label: string; icon: string }[] = [
   { id: 'product', label: 'Produto', icon: 'fa-shirt' },
   { id: 'model', label: 'Modelo', icon: 'fa-user' },
@@ -275,6 +283,78 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   // Modelo selecionado
   const selectedModel = savedModels.find(m => m.id === selectedModelId);
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOADING STEPS - Lista de passos para mostrar na tela de loading
+  // ═══════════════════════════════════════════════════════════════
+  const loadingSteps = useMemo<LoadingStep[]>(() => {
+    const steps: LoadingStep[] = [];
+
+    // Step 1: Preparando modelo IA
+    steps.push({
+      id: 'model-setup',
+      label: 'Preparando modelo IA',
+      thumbnail: selectedModel?.images?.front || selectedModel?.referenceImageUrl,
+      type: 'setup'
+    });
+
+    // Step 2: Produto principal
+    const mainProductImage = product.originalImages?.front?.url || product.images?.[0]?.url || product.images?.[0]?.base64;
+    steps.push({
+      id: `product-${product.id}`,
+      label: product.name,
+      thumbnail: mainProductImage,
+      type: 'product'
+    });
+
+    // Steps 3+: Itens do look (da composição)
+    if (lookMode === 'composer' && Object.keys(lookComposition).length > 0) {
+      Object.entries(lookComposition).forEach(([slot, item]) => {
+        if (item && item.image) {
+          steps.push({
+            id: `look-${slot}`,
+            label: item.name || slot,
+            thumbnail: item.image,
+            type: 'item'
+          });
+        }
+      });
+    }
+
+    // Step final: Finalizando
+    steps.push({
+      id: 'finalize',
+      label: viewsMode === 'front-back' ? 'Finalizando imagens' : 'Finalizando imagem',
+      type: 'finalize'
+    });
+
+    return steps;
+  }, [product, lookComposition, lookMode, selectedModel, viewsMode]);
+
+  // Calcular step atual baseado no progresso
+  const currentGenerationStep = useMemo(() => {
+    if (!isGenerating || currentProgress === 0) return 0;
+
+    const totalSteps = loadingSteps.length;
+    const isFrontBack = viewsMode === 'front-back';
+
+    if (isFrontBack) {
+      // Front-back: 0-48% = steps da imagem de frente, 50-95% = finalização
+      if (currentProgress < 48) {
+        // Distribui os steps (exceto finalize) proporcionalmente de 0-48%
+        const stepsForFront = totalSteps - 1;
+        const stepIndex = Math.floor((currentProgress / 48) * stepsForFront);
+        return Math.min(stepIndex, stepsForFront - 1);
+      } else {
+        // Após 48%, está finalizando (ou gerando costas)
+        return totalSteps - 1;
+      }
+    } else {
+      // Só frente: distribui todos os steps proporcionalmente de 0-95%
+      const stepIndex = Math.floor((currentProgress / 95) * totalSteps);
+      return Math.min(stepIndex, totalSteps - 1);
+    }
+  }, [currentProgress, loadingSteps.length, isGenerating, viewsMode]);
 
   // Categorias que NÃO precisam de foto de costas (acessórios exceto cabeça)
   const categoriesWithoutBackRequired = [
@@ -1914,28 +1994,122 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
       </div>
 
-      {/* MODAL DE LOADING */}
+      {/* MODAL DE LOADING - Com steps e thumbnails */}
       {isGenerating && !isMinimized && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
-          <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
-            <div className="w-64 h-64 mb-6">
-              <DotLottieReact
-                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
-                loop
-                autoplay
-                style={{ width: '100%', height: '100%' }}
-              />
-            </div>
-            <h2 className="text-white text-2xl font-bold mb-2 text-center">Criando seu look...</h2>
-            <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px] transition-all duration-300">{currentLoadingText}</p>
-            <div className="w-full max-w-xs mb-4">
-              <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500" style={{ width: `${currentProgress}%` }}></div>
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6 w-full">
+            {/* Header */}
+            <h2 className="text-white text-xl font-bold mb-1 text-center">
+              {viewsMode === 'front-back' ? 'Criando 2 imagens...' : 'Criando seu look...'}
+            </h2>
+            <p className="text-neutral-500 text-xs mb-6 text-center">
+              {viewsMode === 'front-back' && currentProgress >= 48 ? 'Gerando imagem de costas' : 'Vestindo cada peça com IA'}
+            </p>
+
+            {/* Steps List */}
+            <div className="w-full max-w-sm bg-neutral-900/80 rounded-2xl p-4 mb-6 border border-neutral-800">
+              <div className="space-y-3">
+                {loadingSteps.map((step, index) => {
+                  const isCompleted = index < currentGenerationStep;
+                  const isCurrent = index === currentGenerationStep;
+                  const isPending = index > currentGenerationStep;
+
+                  return (
+                    <div
+                      key={step.id}
+                      className={`flex items-center gap-3 transition-all duration-300 ${
+                        isPending ? 'opacity-40' : 'opacity-100'
+                      }`}
+                    >
+                      {/* Status Icon */}
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                        isCompleted
+                          ? 'bg-green-500'
+                          : isCurrent
+                            ? 'bg-pink-500 animate-pulse'
+                            : 'bg-neutral-700'
+                      }`}>
+                        {isCompleted ? (
+                          <i className="fas fa-check text-white text-xs"></i>
+                        ) : isCurrent ? (
+                          <i className="fas fa-spinner fa-spin text-white text-xs"></i>
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-neutral-500"></div>
+                        )}
+                      </div>
+
+                      {/* Thumbnail */}
+                      {step.thumbnail ? (
+                        <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
+                          isCompleted
+                            ? 'border-green-500/50'
+                            : isCurrent
+                              ? 'border-pink-500'
+                              : 'border-neutral-700'
+                        }`}>
+                          <img
+                            src={step.thumbnail}
+                            alt={step.label}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border-2 transition-all duration-300 ${
+                          isCompleted
+                            ? 'border-green-500/50 bg-green-500/10'
+                            : isCurrent
+                              ? 'border-pink-500 bg-pink-500/10'
+                              : 'border-neutral-700 bg-neutral-800'
+                        }`}>
+                          <i className={`fas ${
+                            step.type === 'setup' ? 'fa-user' :
+                            step.type === 'finalize' ? 'fa-wand-magic-sparkles' : 'fa-shirt'
+                          } ${
+                            isCompleted ? 'text-green-400' : isCurrent ? 'text-pink-400' : 'text-neutral-500'
+                          } text-sm`}></i>
+                        </div>
+                      )}
+
+                      {/* Label */}
+                      <span className={`text-sm font-medium truncate transition-all duration-300 ${
+                        isCompleted
+                          ? 'text-green-400'
+                          : isCurrent
+                            ? 'text-white'
+                            : 'text-neutral-500'
+                      }`}>
+                        {step.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <p className="text-white text-sm font-medium text-center mt-2">{currentProgress}%</p>
             </div>
-            <button onClick={handleMinimize} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-all">
+
+            {/* Progress Bar */}
+            <div className="w-full max-w-sm mb-6">
+              <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500"
+                  style={{ width: `${currentProgress}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-neutral-500 text-xs">
+                  {viewsMode === 'front-back'
+                    ? currentProgress < 48 ? 'Imagem de frente' : 'Imagem de costas'
+                    : 'Processando'}
+                </span>
+                <span className="text-white text-sm font-bold">{currentProgress}%</span>
+              </div>
+            </div>
+
+            {/* Minimize Button */}
+            <button
+              onClick={handleMinimize}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-all border border-neutral-700"
+            >
               <i className="fas fa-minus"></i>
               <span>Minimizar e continuar navegando</span>
             </button>
