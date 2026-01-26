@@ -41,9 +41,9 @@ type GalleryFilter = 'all' | 'studio' | 'cenario' | 'lifestyle';
 type ImageViewType = 'front' | 'back';
 
 const TOOL_CFG = {
-  studio: { name: 'Studio Ready', icon: 'fa-store', credits: 1, desc: 'Fundo branco', fullDesc: 'Fundo branco profissional com sombra suave. Ideal para e-commerce.' },
-  cenario: { name: 'Cenário Criativo', icon: 'fa-film', credits: 1, desc: 'Ambiente personalizado', fullDesc: 'Crie um ambiente promocional personalizado para seu produto.' },
-  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 1, desc: 'Humano com produto', fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!' }
+  studio: { name: 'Studio Ready', icon: 'fa-store', credits: 10, desc: 'Fundo branco', fullDesc: 'Fundo branco profissional com sombra suave. Ideal para e-commerce.' },
+  cenario: { name: 'Cenário Criativo', icon: 'fa-film', credits: 10, desc: 'Ambiente personalizado', fullDesc: 'Crie um ambiente promocional personalizado para seu produto.' },
+  lifestyle: { name: 'Modelo IA', icon: 'fa-user-friends', credits: 10, desc: 'Humano com produto', fullDesc: 'Gere um modelo humano usando seu produto. Salve para reutilizar!' }
 };
 
 const MODEL_OPTS = {
@@ -184,7 +184,7 @@ export const EditorModal: React.FC<Props> = ({
   const { originals, generated, hasBack } = getOrganizedImages(product);
   const isDark = theme === 'dark';
   const selModel = savedModels.find(m => m.id === selModelId);
-  const lifestyleCredits = lookMode === 'composer' ? 2 : 1;
+  const lifestyleCredits = lookMode === 'composer' ? 20 : 10;
   
   const getCurrentOriginalImage = () => currentView === 'back' && originals.back ? (originals.back.base64 || originals.back.url) : (originals.front?.base64 || originals.front?.url);
   const getCurrentGeneratedImage = () => currentView === 'back' && genImg.back ? genImg.back : genImg.front;
@@ -868,8 +868,8 @@ const handleSave = async () => {
                           {step === 'look' && (
                             <div className="space-y-3">
                               <div className="flex gap-1 mb-2">
-                                <button onClick={() => setLookMode('describe')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'describe' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Descrever <span className="opacity-60">(1 crédito)</span></button>
-                                <button onClick={() => setLookMode('composer')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'composer' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Composer <span className="opacity-60">(2 créditos)</span></button>
+                                <button onClick={() => setLookMode('describe')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'describe' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Descrever <span className="opacity-60">(10 créditos)</span></button>
+                                <button onClick={() => setLookMode('composer')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'composer' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Composer <span className="opacity-60">(20 créditos)</span></button>
                               </div>
 
                               {lookMode === 'describe' ? (
@@ -1022,7 +1022,7 @@ const handleSave = async () => {
                   ) : (
                     <>
                       <i className="fas fa-wand-magic-sparkles"></i>
-                      <span>Gerar {hasBack ? '(2)' : ''} • {tool === 'lifestyle' ? lifestyleCredits : tool ? TOOL_CFG[tool].credits : 1} créd.</span>
+                      <span>Gerar {hasBack ? '(2)' : ''} • {tool === 'lifestyle' ? lifestyleCredits : tool ? TOOL_CFG[tool].credits : 10} créd.</span>
                     </>
                   )}
                 </button>

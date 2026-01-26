@@ -333,11 +333,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     'detail': 'Detalhe',
   };
 
-  // Calcular créditos: 2 fotos = 1 crédito, cada adicional +1
+  // Calcular créditos: 10 créditos por foto
   const calculateCredits = (numAngles: number): number => {
-    if (numAngles === 0) return 0;
-    if (numAngles <= 2) return 1;
-    return 1 + (numAngles - 2);
+    return numAngles * 10;
   };
 
   const creditsNeeded = calculateCredits(selectedAngles.length);
@@ -1360,7 +1358,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-lg p-3 mt-3'}>
                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                   <i className="fas fa-info-circle mr-1"></i>
-                  2 fotos = 1 crédito. Cada foto adicional = +1 crédito.
+                  10 créditos por foto gerada.
                 </p>
               </div>
             </div>

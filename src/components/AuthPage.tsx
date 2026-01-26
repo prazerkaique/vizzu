@@ -206,7 +206,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                   <span>
                     Não tem conta? <strong>Criar agora</strong>
                     <span className="block text-neutral-500 text-xs mt-1">
-                      Ganhe 5 créditos grátis para testar
+                      Ganhe 50 créditos grátis para testar
                     </span>
                   </span>
                 )}

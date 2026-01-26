@@ -150,7 +150,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
           <div className="flex justify-center mb-4">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-fuchsia-500/20 text-fuchsia-400">
               <i className="fas fa-gift"></i>
-              Ganhe 100 créditos com upgrade
+              Ganhe 400 créditos com upgrade
             </span>
           </div>
         )}

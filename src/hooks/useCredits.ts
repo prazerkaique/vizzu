@@ -22,10 +22,10 @@ export const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    limit: 100,
-    priceMonthly: 129.90,
-    priceYearly: 99.90,
-    creditPrice: 2.99,
+    limit: 400,
+    priceMonthly: 149.90,
+    priceYearly: 124.92, // R$ 1.499/ano = R$ 124,92/mês (17% desconto)
+    creditPrice: 0.45,
     features: [
       'Fundo de Estúdio',
       'Fotos para Reels e Stories',
@@ -42,10 +42,10 @@ export const PLANS: Plan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    limit: 200,
-    priceMonthly: 189.90,
-    priceYearly: 159.90,
-    creditPrice: 1.99,
+    limit: 800,
+    priceMonthly: 279.90,
+    priceYearly: 233.25, // R$ 2.799/ano = R$ 233,25/mês (17% desconto)
+    creditPrice: 0.39,
     badge: 'POPULAR',
     badgeColor: 'fuchsia',
     features: [
@@ -59,10 +59,10 @@ export const PLANS: Plan[] = [
   {
     id: 'premier',
     name: 'Premier',
-    limit: 300,
-    priceMonthly: 299.00,
-    priceYearly: 259.00,
-    creditPrice: 1.59,
+    limit: 1500,
+    priceMonthly: 449.90,
+    priceYearly: 374.92, // R$ 4.499/ano = R$ 374,92/mês (17% desconto)
+    creditPrice: 0.35,
     badge: 'MELHOR VALOR',
     badgeColor: 'amber',
     features: [
@@ -78,11 +78,11 @@ const DEFAULT_PLAN = PLANS[1]; // Pro
 const FREE_PLAN: Plan = {
   id: 'free',
   name: 'Free',
-  limit: 0,
+  limit: 50, // 50 créditos iniciais para testar
   priceMonthly: 0,
   priceYearly: 0,
-  creditPrice: 3.99, // Preço mais alto para compras avulsas
-  features: ['Acesso limitado', 'Sem créditos mensais']
+  creditPrice: 0.50, // Preço para compras avulsas (usuário free)
+  features: ['50 créditos para testar', 'Sem renovação mensal']
 };
 
 export const CREDIT_PACKAGES = [50, 100, 200, 500];
@@ -108,7 +108,7 @@ const getStoredData = (): LocalCreditsData => {
   } catch (e) {
     console.error('Error reading credits data:', e);
   }
-  return { credits: 200, planId: 'pro', billingPeriod: 'monthly' };
+  return { credits: 800, planId: 'pro', billingPeriod: 'monthly' };
 };
 
 const saveLocalData = (data: LocalCreditsData) => {

@@ -1299,9 +1299,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
             {/* Botao Criar */}
             <button
               onClick={handleGenerate}
-              disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3 || isGenerating}
+              disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 10 || isGenerating}
               className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
-                (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 3)
+                (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 10)
                   ? 'opacity-50 cursor-not-allowed'
                   : isGenerating
                     ? 'opacity-75 cursor-wait'

@@ -2542,7 +2542,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     if (!client || !user || Object.keys(look).length === 0) return null;
 
     // Verificar creditos
-    if (!checkCreditsAndShowModal(3, 'provador')) {
+    if (!checkCreditsAndShowModal(10, 'provador')) {
       return null;
     }
 
@@ -2910,7 +2910,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     if (!provadorClient || !user || Object.keys(provadorLook).length === 0) return;
 
     // Verificar créditos
-    if (!checkCreditsAndShowModal(3, 'provador')) {
+    if (!checkCreditsAndShowModal(10, 'provador')) {
       return;
     }
 
@@ -3645,7 +3645,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 py-0.5 bg-pink-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                        <span className="text-white/60 text-xs">1-8 créditos</span>
+                        <span className="text-white/60 text-xs">10 créditos/foto</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Vizzu Product Studio®</h3>
                       <p className="text-white/70 text-sm">Fotos profissionais do produto em múltiplos ângulos com fundo cinza de estúdio</p>
@@ -3677,7 +3677,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
-                        <span className="text-white/60 text-xs">3 créditos</span>
+                        <span className="text-white/60 text-xs">10 créditos</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Vizzu Provador®</h3>
                       <p className="text-white/70 text-sm">Vista seu cliente com suas roupas. Prova virtual pelo WhatsApp</p>
@@ -3709,7 +3709,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 py-0.5 bg-indigo-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                        <span className="text-white/60 text-xs">1-2 créditos</span>
+                        <span className="text-white/60 text-xs">10-20 créditos</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Look Completo</h3>
                       <p className="text-white/70 text-sm">Crie looks com modelos virtuais em fundo studio ou cenário personalizado</p>
@@ -3741,7 +3741,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="px-2 py-0.5 bg-teal-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                        <span className="text-white/60 text-xs">3 créditos</span>
+                        <span className="text-white/60 text-xs">10 créditos</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Lifestyle Shot</h3>
                       <p className="text-white/70 text-sm">Produto em ação. Tênis no skate, bolsa no café. Fotos que engajam</p>
@@ -3939,7 +3939,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
                 <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (theme === 'dark' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-50 text-teal-600 border border-teal-200')}>
                   <i className="fas fa-coins text-[10px]"></i>
-                  <span>3 créditos</span>
+                  <span>10 créditos</span>
                 </div>
               </div>
 
@@ -4710,7 +4710,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <div className="text-neutral-400 mt-4 space-y-3 text-xs">
                             <div>
                               <p className="text-white font-medium mb-1">O que sao creditos?</p>
-                              <p>Creditos sao usados para gerar imagens com IA. Cada geracao consome de 1 a 3 creditos dependendo da complexidade.</p>
+                              <p>Creditos sao usados para gerar imagens com IA. Cada foto gerada consome 10 creditos.</p>
                             </div>
                             <div>
                               <p className="text-white font-medium mb-1">Posso mudar de plano?</p>

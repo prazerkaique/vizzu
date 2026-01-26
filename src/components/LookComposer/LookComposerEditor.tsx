@@ -326,9 +326,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     return !!(selectedModel.images?.back);
   }, [selectedModel]);
 
-  // Calcular créditos
+  // Calcular créditos (10 por imagem, 20 se composer)
   const calculateCredits = (): number => {
-    const baseCredits = lookMode === 'composer' ? 2 : 1;
+    const baseCredits = lookMode === 'composer' ? 20 : 10;
     // Se for frente e costas, dobra os créditos
     return viewsMode === 'front-back' ? baseCredits * 2 : baseCredits;
   };
@@ -1087,13 +1087,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                 onClick={() => setLookMode('composer')}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'composer' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
               >
-                Suas Peças <span className="opacity-60">(2 créditos)</span>
+                Suas Peças <span className="opacity-60">(20 créditos)</span>
               </button>
               <button
                 onClick={() => setLookMode('describe')}
                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
               >
-                Composição Genérica <span className="opacity-60">(1 crédito)</span>
+                Composição Genérica <span className="opacity-60">(10 créditos)</span>
               </button>
             </div>
 
@@ -1545,7 +1545,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                     <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera uma imagem frontal do look</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-pink-400 font-semibold text-sm">{lookMode === 'composer' ? 2 : 1} crédito{(lookMode === 'composer' ? 2 : 1) > 1 ? 's' : ''}</span>
+                    <span className="text-pink-400 font-semibold text-sm">{lookMode === 'composer' ? 20 : 10} créditos</span>
                   </div>
                   {viewsMode === 'front' && (
                     <i className="fas fa-check-circle text-pink-500"></i>
@@ -1567,7 +1567,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                     <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera duas imagens: vista frontal e traseira</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-pink-400 font-semibold text-sm">{(lookMode === 'composer' ? 2 : 1) * 2} créditos</span>
+                    <span className="text-pink-400 font-semibold text-sm">{(lookMode === 'composer' ? 20 : 10) * 2} créditos</span>
                   </div>
                   {viewsMode === 'front-back' && (
                     <i className="fas fa-check-circle text-pink-500"></i>
