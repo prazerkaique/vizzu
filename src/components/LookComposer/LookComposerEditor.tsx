@@ -36,7 +36,7 @@ interface LookComposerEditorProps {
   isAnyGenerationRunning?: boolean;
 }
 
-// Frases de loading
+// Frases de loading (usadas durante o processo)
 const LOADING_PHRASES = [
   "Preparando o modelo...",
   "Vestindo o look selecionado...",
@@ -47,6 +47,19 @@ const LOADING_PHRASES = [
   "Finalizando detalhes...",
   "Otimizando a imagem...",
   "Quase pronto! Últimos ajustes..."
+];
+
+// Frases para a última etapa (rotacionam enquanto finaliza)
+const FINALIZING_PHRASES = [
+  "Aplicando detalhes finais...",
+  "Melhorando iluminação...",
+  "Otimizando qualidade...",
+  "Ajustando cores e contraste...",
+  "Refinando texturas...",
+  "Suavizando bordas...",
+  "Aprimorando nitidez...",
+  "Balanceando tons...",
+  "Quase lá! Últimos retoques..."
 ];
 
 // Fundos pré-setados - com imagens de cenário completo e sceneHint para o prompt
@@ -217,6 +230,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [localProgress, setLocalProgress] = useState(0);
   const [localLoadingText, setLocalLoadingText] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
+  const [finalizingPhraseIndex, setFinalizingPhraseIndex] = useState(0);
 
   // Estado do resultado
   const [showResult, setShowResult] = useState(false);
@@ -258,6 +272,18 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       setText(LOADING_PHRASES[phraseIndex]);
     }
   }, [phraseIndex, isGenerating, onSetLoadingText]);
+
+  // Rotacionar frases de finalização (quando está na última etapa)
+  useEffect(() => {
+    if (!isGenerating) {
+      setFinalizingPhraseIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setFinalizingPhraseIndex(prev => (prev + 1) % FINALIZING_PHRASES.length);
+    }, 2500); // Rotaciona a cada 2.5s
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   // Obter imagens do produto
   const productImages = useMemo(() => {
@@ -332,27 +358,41 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   }, [product, lookComposition, lookMode, selectedModel, viewsMode]);
 
   // Calcular step atual baseado no progresso
+  // Os steps são distribuídos para que levem ~2 minutos até a última etapa
+  // A última etapa "Finalizando" começa em 85% e tem frases rotativas
   const currentGenerationStep = useMemo(() => {
     if (!isGenerating || currentProgress === 0) return 0;
 
     const totalSteps = loadingSteps.length;
     const isFrontBack = viewsMode === 'front-back';
 
+    // Threshold para começar a última etapa (85% = ~2 minutos em uma geração de ~2.3 min)
+    const FINALIZE_THRESHOLD = 85;
+
     if (isFrontBack) {
-      // Front-back: 0-48% = steps da imagem de frente, 50-95% = finalização
+      // Front-back: 0-48% = steps da imagem de frente, 50-95% = imagem de costas
       if (currentProgress < 48) {
-        // Distribui os steps (exceto finalize) proporcionalmente de 0-48%
+        // Primeira imagem: distribui steps (exceto finalize) até 85% de 48% = ~41%
+        const frontFinalizeAt = 41;
         const stepsForFront = totalSteps - 1;
-        const stepIndex = Math.floor((currentProgress / 48) * stepsForFront);
+        if (currentProgress >= frontFinalizeAt) {
+          return totalSteps - 1; // Finalizando
+        }
+        const stepIndex = Math.floor((currentProgress / frontFinalizeAt) * stepsForFront);
         return Math.min(stepIndex, stepsForFront - 1);
       } else {
-        // Após 48%, está finalizando (ou gerando costas)
+        // Após 48%, está finalizando (gerando costas)
         return totalSteps - 1;
       }
     } else {
-      // Só frente: distribui todos os steps proporcionalmente de 0-95%
-      const stepIndex = Math.floor((currentProgress / 95) * totalSteps);
-      return Math.min(stepIndex, totalSteps - 1);
+      // Só frente: distribui steps (exceto finalize) de 0% a 85%
+      // Última etapa "Finalizando" começa em 85%
+      if (currentProgress >= FINALIZE_THRESHOLD) {
+        return totalSteps - 1; // Última etapa com frases rotativas
+      }
+      const stepsBeforeFinalize = totalSteps - 1;
+      const stepIndex = Math.floor((currentProgress / FINALIZE_THRESHOLD) * stepsBeforeFinalize);
+      return Math.min(stepIndex, stepsBeforeFinalize - 1);
     }
   }, [currentProgress, loadingSteps.length, isGenerating, viewsMode]);
 
@@ -1998,32 +2038,48 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       {isGenerating && !isMinimized && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
-          <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6 w-full">
+          <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
+            {/* Animação Lottie */}
+            <div className="w-24 h-24 mb-4">
+              <DotLottieReact
+                src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+
             {/* Header */}
             <h2 className="text-white text-xl font-bold mb-1 text-center">
               {viewsMode === 'front-back' ? 'Criando 2 imagens...' : 'Criando seu look...'}
             </h2>
-            <p className="text-neutral-500 text-xs mb-6 text-center">
+            <p className="text-neutral-500 text-xs mb-5 text-center">
               {viewsMode === 'front-back' && currentProgress >= 48 ? 'Gerando imagem de costas' : 'Vestindo cada peça com IA'}
             </p>
 
-            {/* Steps List */}
-            <div className="w-full max-w-sm bg-neutral-900/80 rounded-2xl p-4 mb-6 border border-neutral-800">
-              <div className="space-y-3">
+            {/* Steps List - Grid 2 colunas */}
+            <div className="w-full max-w-md bg-neutral-900/80 rounded-2xl p-4 mb-5 border border-neutral-800">
+              <div className="grid grid-cols-2 gap-3">
                 {loadingSteps.map((step, index) => {
                   const isCompleted = index < currentGenerationStep;
                   const isCurrent = index === currentGenerationStep;
                   const isPending = index > currentGenerationStep;
+                  const isLastStep = index === loadingSteps.length - 1;
+
+                  // Na última etapa, mostrar frases rotativas
+                  const displayLabel = (isLastStep && isCurrent)
+                    ? FINALIZING_PHRASES[finalizingPhraseIndex]
+                    : step.label;
 
                   return (
                     <div
                       key={step.id}
-                      className={`flex items-center gap-3 transition-all duration-300 ${
+                      className={`flex items-center gap-2 transition-all duration-300 ${
                         isPending ? 'opacity-40' : 'opacity-100'
                       }`}
                     >
                       {/* Status Icon */}
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
                         isCompleted
                           ? 'bg-green-500'
                           : isCurrent
@@ -2031,17 +2087,17 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                             : 'bg-neutral-700'
                       }`}>
                         {isCompleted ? (
-                          <i className="fas fa-check text-white text-xs"></i>
+                          <i className="fas fa-check text-white text-[10px]"></i>
                         ) : isCurrent ? (
-                          <i className="fas fa-spinner fa-spin text-white text-xs"></i>
+                          <i className="fas fa-spinner fa-spin text-white text-[10px]"></i>
                         ) : (
-                          <div className="w-2 h-2 rounded-full bg-neutral-500"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-neutral-500"></div>
                         )}
                       </div>
 
                       {/* Thumbnail */}
                       {step.thumbnail ? (
-                        <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
+                        <div className={`w-8 h-8 rounded-md overflow-hidden flex-shrink-0 border-2 transition-all duration-300 ${
                           isCompleted
                             ? 'border-green-500/50'
                             : isCurrent
@@ -2055,7 +2111,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                           />
                         </div>
                       ) : (
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border-2 transition-all duration-300 ${
+                        <div className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 border-2 transition-all duration-300 ${
                           isCompleted
                             ? 'border-green-500/50 bg-green-500/10'
                             : isCurrent
@@ -2067,19 +2123,19 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                             step.type === 'finalize' ? 'fa-wand-magic-sparkles' : 'fa-shirt'
                           } ${
                             isCompleted ? 'text-green-400' : isCurrent ? 'text-pink-400' : 'text-neutral-500'
-                          } text-sm`}></i>
+                          } text-xs`}></i>
                         </div>
                       )}
 
                       {/* Label */}
-                      <span className={`text-sm font-medium truncate transition-all duration-300 ${
+                      <span className={`text-xs font-medium truncate transition-all duration-300 flex-1 ${
                         isCompleted
                           ? 'text-green-400'
                           : isCurrent
                             ? 'text-white'
                             : 'text-neutral-500'
                       }`}>
-                        {step.label}
+                        {displayLabel}
                       </span>
                     </div>
                   );
@@ -2088,7 +2144,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full max-w-sm mb-6">
+            <div className="w-full max-w-md mb-5">
               <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500"
