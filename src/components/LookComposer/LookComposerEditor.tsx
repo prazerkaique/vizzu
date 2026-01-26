@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-// DotLottieReact removido - usando spinner CSS colorido
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
@@ -2272,24 +2272,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
           <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
-            {/* Animação colorida girando */}
-            <div className="w-20 h-20 mb-4 relative">
-              {/* Spinner com gradiente colorido */}
-              <div
-                className="absolute inset-0 rounded-full animate-spin"
-                style={{
-                  background: 'conic-gradient(from 0deg, #ff006e, #8338ec, #3a86ff, #06d6a0, #ffbe0b, #ff006e)',
-                  animationDuration: '1.5s',
-                }}
-              />
-              {/* Centro escuro */}
-              <div className="absolute inset-2 rounded-full bg-neutral-950" />
-              {/* Brilho interno */}
-              <div
-                className="absolute inset-3 rounded-full opacity-30 animate-pulse"
-                style={{
-                  background: 'radial-gradient(circle, #ff006e 0%, transparent 70%)',
-                }}
+            {/* Animação Lottie colorida */}
+            <div className="w-24 h-24 mb-4">
+              <DotLottieReact
+                src="https://lottie.host/3eaae4e0-fd02-4695-9951-01011e444cf0/qzeCDkJphL.lottie"
+                loop
+                autoplay
+                style={{ width: '100%', height: '100%' }}
               />
             </div>
 

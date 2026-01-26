@@ -113,6 +113,29 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   // Estado para controlar qual imagem cada card está mostrando (carrossel)
   const [cardViewStates, setCardViewStates] = useState<Record<string, 'front' | 'back'>>({});
 
+  // Verificar se há geração pendente (F5 durante geração)
+  useEffect(() => {
+    const PENDING_GENERATION_KEY = 'vizzu_pending_generation';
+    try {
+      const stored = localStorage.getItem(PENDING_GENERATION_KEY);
+      if (stored) {
+        const pending = JSON.parse(stored);
+        // Verificar se não expirou (5 minutos)
+        const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
+        if (elapsedMinutes <= 5 && pending.productId) {
+          // Encontrar o produto e selecionar
+          const product = products.find(p => p.id === pending.productId);
+          if (product) {
+            console.log('[LookComposer] Restaurando produto da geração pendente:', product.name);
+            setSelectedProduct(product);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao verificar geração pendente:', e);
+    }
+  }, [products]); // Roda quando products carregar
+
   // Pré-selecionar produto quando vier do modal de detalhes
   useEffect(() => {
     if (initialProduct) {
