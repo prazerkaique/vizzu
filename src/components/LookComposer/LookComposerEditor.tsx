@@ -717,7 +717,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         }
       }
 
-      setProgress(10);
+      setProgress(5);
 
       console.log('[LookComposer] Chamando API generateModeloIA...');
       console.log('[LookComposer] Params:', {
@@ -737,6 +737,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       // GERAÇÃO DE IMAGEM DE FRENTE
       // ═══════════════════════════════════════════════════════════════
       console.log('[LookComposer] Gerando imagem de FRENTE...');
+      // Determinar range de progresso baseado no modo
+      const isFrontBack = viewsMode === 'front-back';
+      const frontProgressMax = isFrontBack ? 48 : 95; // Se front-back, frente vai até 48%, senão até 95%
+
       const resultFront = await generateModeloIA({
         productId: product.id,
         userId: userId,
@@ -757,6 +761,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         sceneHint: sceneHintFinal,
         modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
         viewsMode: 'front', // Sempre 'front' na primeira chamada
+        // Callback de progresso para atualizar a barra
+        onProgress: (p) => {
+          // Mapear progresso 10-95 para 5-frontProgressMax
+          const mapped = 5 + ((p - 10) / 85) * (frontProgressMax - 5);
+          setProgress(Math.round(mapped));
+        },
       });
 
       if (!resultFront.success || !resultFront.generation?.image_url) {
@@ -807,6 +817,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
           isBackView: true,
           frontGenerationId: frontGenerationId,
+          // Callback de progresso para atualizar a barra (50% a 95%)
+          onProgress: (p) => {
+            // Mapear progresso 10-95 para 50-95
+            const mapped = 50 + ((p - 10) / 85) * 45;
+            setProgress(Math.round(mapped));
+          },
         });
 
         if (resultBack.success && resultBack.generation?.image_url) {

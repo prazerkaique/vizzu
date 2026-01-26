@@ -1413,6 +1413,7 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
           lookItems: opts?.lookItems,
           productNotes: opts?.productNotes,       // Observações adicionais do produto
           modelDetails: opts?.modelDetails,       // Detalhes do modelo
+          onProgress: opts?.onProgress,           // Callback de progresso (opcional)
         });
 
         if (result.success && result.generation) {

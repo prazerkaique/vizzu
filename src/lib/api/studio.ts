@@ -11,6 +11,34 @@ const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
 // Configurações de polling para geração assíncrona
 const POLLING_INTERVAL_MS = 3000; // 3 segundos entre cada verificação
 const POLLING_TIMEOUT_MS = 300000; // 5 minutos de timeout máximo
+const ESTIMATED_GENERATION_TIME_MS = 120000; // 2 minutos estimados para geração
+
+/**
+ * Calcula o progresso simulado baseado no tempo decorrido
+ * Usa curva ease-out: começa rápido e desacelera
+ * @param elapsedMs - Tempo decorrido em ms
+ * @param estimatedTotalMs - Tempo total estimado em ms
+ * @param startProgress - Progresso inicial (ex: 10)
+ * @param maxProgress - Progresso máximo antes de completar (ex: 95)
+ */
+function calculateEasedProgress(
+  elapsedMs: number,
+  estimatedTotalMs: number = ESTIMATED_GENERATION_TIME_MS,
+  startProgress: number = 10,
+  maxProgress: number = 95
+): number {
+  // Normaliza o tempo para 0-1 (pode passar de 1 se demorar mais que o estimado)
+  const normalizedTime = Math.min(elapsedMs / estimatedTotalMs, 1.5);
+
+  // Curva ease-out quadrática: 1 - (1 - t)^2
+  // Começa rápido e desacelera
+  const eased = 1 - Math.pow(1 - Math.min(normalizedTime, 1), 2);
+
+  // Mapeia para o range de progresso
+  const progress = startProgress + (maxProgress - startProgress) * eased;
+
+  return Math.round(progress);
+}
 
 if (!N8N_BASE_URL) {
   console.warn('VITE_N8N_WEBHOOK_URL não configurada - funcionalidades de geração indisponíveis');
@@ -226,6 +254,8 @@ interface ModeloIAParams {
   // Parâmetros para indicar que é imagem de costas (UPDATE ao invés de INSERT)
   isBackView?: boolean;              // Se true, é geração de imagem de costas
   frontGenerationId?: string;        // ID da geração de frente (para fazer UPDATE)
+  // Callback de progresso (opcional)
+  onProgress?: (progress: number) => void;  // Callback chamado durante polling com progresso 0-100
 }
 
 /**
@@ -324,9 +354,21 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
     const generationId = data.generation.id;
     const startTime = Date.now();
 
+    // Notificar progresso inicial
+    if (params.onProgress) {
+      params.onProgress(10);
+    }
+
     while (Date.now() - startTime < POLLING_TIMEOUT_MS) {
       // Aguardar antes de verificar
       await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL_MS));
+
+      // Atualizar progresso simulado
+      if (params.onProgress) {
+        const elapsedMs = Date.now() - startTime;
+        const progress = calculateEasedProgress(elapsedMs);
+        params.onProgress(progress);
+      }
 
       // Consultar status da geração no Supabase
       const { data: generation, error } = await supabase
@@ -344,6 +386,10 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
 
       if (generation?.status === 'completed' && generation?.output_image_url) {
         console.log('[generateModeloIA] Geração concluída:', generation.output_image_url);
+        // Notificar 100% ao completar
+        if (params.onProgress) {
+          params.onProgress(100);
+        }
         return {
           success: true,
           generation: {
