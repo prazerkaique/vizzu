@@ -1215,6 +1215,80 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     return deductCredits(amount, reason);
   };
 
+  // Verificar se o produto está otimizado (tem fotos do Product Studio)
+  const isProductOptimized = (product: Product): boolean => {
+    const sessions = product.generatedImages?.productStudio || [];
+    return sessions.some(session => session.images && session.images.length > 0);
+  };
+
+  // Obter a melhor imagem do produto (prioriza foto otimizada)
+  const getProductDisplayImage = (product: Product): string | undefined => {
+    const sessions = product.generatedImages?.productStudio || [];
+
+    // Se tem imagens otimizadas, priorizar
+    if (sessions.length > 0) {
+      // Primeiro, procurar imagem de frente
+      for (const session of sessions) {
+        if (session.images) {
+          const frontImage = session.images.find(img => img.angle === 'front');
+          if (frontImage?.url) return frontImage.url;
+        }
+      }
+      // Se não tem frente, pegar a primeira disponível
+      for (const session of sessions) {
+        if (session.images?.[0]?.url) return session.images[0].url;
+      }
+    }
+
+    // Fallback para imagem original
+    if (product.originalImages?.front?.url) return product.originalImages.front.url;
+    if (product.images?.[0]?.url) return product.images[0].url;
+    if (product.images?.[0]?.base64) return product.images[0].base64;
+    return undefined;
+  };
+
+  // Obter todas as imagens otimizadas do produto
+  const getOptimizedImages = (product: Product): { url: string; angle: string }[] => {
+    const sessions = product.generatedImages?.productStudio || [];
+    const images: { url: string; angle: string }[] = [];
+
+    sessions.forEach(session => {
+      if (session.images) {
+        session.images.forEach(img => {
+          if (img.url) {
+            images.push({ url: img.url, angle: img.angle });
+          }
+        });
+      }
+    });
+
+    return images;
+  };
+
+  // Obter as imagens originais do produto
+  const getOriginalImages = (product: Product): { url: string; label: string }[] => {
+    const images: { url: string; label: string }[] = [];
+
+    if (product.originalImages?.front?.url) {
+      images.push({ url: product.originalImages.front.url, label: 'Frente' });
+    }
+    if (product.originalImages?.back?.url) {
+      images.push({ url: product.originalImages.back.url, label: 'Costas' });
+    }
+
+    // Fallback para o array legado se não tem originalImages
+    if (images.length === 0 && product.images) {
+      product.images.forEach((img, idx) => {
+        const url = img.url || img.base64;
+        if (url) {
+          images.push({ url, label: idx === 0 ? 'Frente' : `Imagem ${idx + 1}` });
+        }
+      });
+    }
+
+    return images;
+  };
+
   // Função para mostrar toast
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
@@ -4459,7 +4533,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         }}
                       >
                         <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
-                          <img src={product.images[0]?.base64 || product.images[0]?.url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
+                          <img src={getProductDisplayImage(product)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
+                          {/* Badge de produto otimizado */}
+                          {isProductOptimized(product) && (
+                            <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[7px] font-bold rounded-full flex items-center gap-1 shadow-lg pointer-events-none">
+                              <i className="fas fa-cube text-[6px]"></i>
+                              <span className="hidden sm:inline">Studio</span>
+                            </div>
+                          )}
                           {/* Checkbox de seleção - visível em modo seleção ou hover no desktop */}
                           <div
                             className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-pink-500 text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
@@ -6199,13 +6280,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
             {/* Conteúdo com scroll */}
             <div className="flex-1 overflow-y-auto p-4">
-              {/* Imagem - adaptável à proporção original */}
-              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden mb-4'}>
+              {/* Imagem principal - prioriza otimizada */}
+              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden mb-4 relative'}>
                 <img
-                  src={showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url}
+                  src={getProductDisplayImage(showProductDetail)}
                   alt={showProductDetail.name}
                   className="w-full h-auto max-h-[50vh] object-contain"
                 />
+                {isProductOptimized(showProductDetail) && (
+                  <div className="absolute top-2 left-2 px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center gap-1.5 shadow-lg">
+                    <i className="fas fa-cube text-[8px]"></i>
+                    Foto Otimizada
+                  </div>
+                )}
               </div>
 
               {/* Informações do produto */}
@@ -6238,6 +6325,58 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                 )}
               </div>
+
+              {/* Seção Fotos Otimizadas (Product Studio) */}
+              {isProductOptimized(showProductDetail) && (
+                <div className={'mt-4 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+                  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3 flex items-center gap-2'}>
+                    <span className="w-6 h-6 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                      <i className="fas fa-cube text-white text-[10px]"></i>
+                    </span>
+                    Fotos Otimizadas
+                    <span className="px-1.5 py-0.5 bg-green-500/20 text-green-500 text-[8px] font-medium rounded-full">
+                      {getOptimizedImages(showProductDetail).length} {getOptimizedImages(showProductDetail).length === 1 ? 'foto' : 'fotos'}
+                    </span>
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {getOptimizedImages(showProductDetail).map((img, idx) => (
+                      <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative group'}>
+                        <img src={img.url} alt={`Otimizada ${img.angle}`} className="w-full aspect-square object-cover" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
+                          <p className="text-white text-[7px] font-medium text-center capitalize">
+                            {img.angle === 'front' ? 'Frente' : img.angle === 'back' ? 'Costas' : img.angle === 'side-left' ? 'Lat. Esq.' : img.angle === 'side-right' ? 'Lat. Dir.' : img.angle}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Seção Fotos Originais */}
+              {getOriginalImages(showProductDetail).length > 0 && (
+                <div className={'mt-4 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+                  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3 flex items-center gap-2'}>
+                    <span className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                      <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-image text-[10px]'}></i>
+                    </span>
+                    Fotos Originais
+                    <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' px-1.5 py-0.5 text-[8px] font-medium rounded-full'}>
+                      {getOriginalImages(showProductDetail).length} {getOriginalImages(showProductDetail).length === 1 ? 'foto' : 'fotos'}
+                    </span>
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {getOriginalImages(showProductDetail).map((img, idx) => (
+                      <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative'}>
+                        <img src={img.url} alt={img.label} className="w-full aspect-square object-cover" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
+                          <p className="text-white text-[7px] font-medium text-center">{img.label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Seção "Deseja criar?" */}
               <div className={'mt-5 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
