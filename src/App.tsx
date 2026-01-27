@@ -6732,33 +6732,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </p>
                     </div>
                   )}
-
-                  {/* Preview humanizado do modelo */}
-                  <div className={(theme === 'dark' ? 'bg-gradient-to-br from-pink-500/10 to-orange-400/10 border-pink-500/20' : 'bg-gradient-to-br from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl p-4 mt-4 border'}>
-                    <div className="flex items-start gap-3">
-                      <div className={'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
-                        <i className="fas fa-user text-white text-sm"></i>
-                      </div>
-                      <div className="flex-1">
-                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-1'}>
-                          <i className="fas fa-sparkles text-pink-400 mr-1"></i>Prévia do modelo
-                        </p>
-                        <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
-                          {newModel.gender === 'woman' ? 'Ela' : 'Ele'} terá{' '}
-                          <span className="text-pink-400 font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>,{' '}
-                          cabelo <span className="text-pink-400 font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
-                          <span className="text-pink-400 font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
-                          e <span className="text-pink-400 font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.{' '}
-                          Corpo <span className="text-pink-400 font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
-                          cintura <span className="text-pink-400 font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
-                          {newModel.gender === 'woman' && (
-                            <> e busto <span className="text-pink-400 font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
-                          )}.{' '}
-                          Expressão <span className="text-pink-400 font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -6901,43 +6874,41 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           type="text"
                           value={newModel.name}
                           onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
-                          placeholder="Ex: Modelo Feminino Casual"
+                          placeholder="Ex: Amanda, João, Modelo Principal..."
                           className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
                         />
                       </div>
 
-                      {/* Prompt que será enviado */}
-                      <div>
-                        <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
-                          <i className="fas fa-wand-magic-sparkles text-pink-500 mr-1"></i>
-                          Prompt para a IA (Flux 2.0)
-                        </label>
-                        <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-lg border text-xs leading-relaxed ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}>
-                          {generateModelPrompt()}
-                        </div>
-                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
-                          Este prompt será usado para gerar imagens de rosto, frente e costas
-                        </p>
-                      </div>
-
-                      {/* Preview das características */}
-                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-orange-400/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl p-3 border'}>
-                        <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>
-                          <i className="fas fa-check-circle text-green-500 mr-1"></i>
-                          Resumo do Modelo
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('gender', newModel.gender)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ageRange', newModel.ageRange)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('ethnicity', newModel.ethnicity)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('skinTone', newModel.skinTone)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('bodyType', newModel.bodyType)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('height', newModel.height)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('hairColor', newModel.hairColor)} {getModelLabel('hairLength', newModel.hairLength)}</span>
-                          <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>{getModelLabel('eyeColor', newModel.eyeColor)}</span>
-                          {newModel.gender === 'woman' && (
-                            <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-white text-gray-600') + ' px-2 py-0.5 rounded-full text-[10px]'}>Busto {getModelLabel('bustSize', newModel.bustSize)}</span>
-                          )}
+                      {/* Preview humanizado do modelo */}
+                      <div className={(theme === 'dark' ? 'bg-gradient-to-br from-pink-500/10 to-orange-400/10 border-pink-500/20' : 'bg-gradient-to-br from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl p-4 border'}>
+                        <div className="flex items-start gap-3">
+                          <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+                            <i className={'fas ' + (newModel.gender === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-white text-lg'}></i>
+                          </div>
+                          <div className="flex-1">
+                            <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
+                              <i className="fas fa-sparkles text-pink-400 mr-1"></i>O que será gerado
+                            </p>
+                            <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
+                              {newModel.name || (newModel.gender === 'woman' ? 'Ela' : 'Ele')} terá{' '}
+                              <span className="text-pink-400 font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>,{' '}
+                              cabelo <span className="text-pink-400 font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
+                              <span className="text-pink-400 font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
+                              e <span className="text-pink-400 font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.{' '}
+                              Corpo <span className="text-pink-400 font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
+                              pele <span className="text-pink-400 font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
+                              estatura <span className="text-pink-400 font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}
+                              e cintura <span className="text-pink-400 font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
+                              {newModel.gender === 'woman' && (
+                                <>, busto <span className="text-pink-400 font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
+                              )}.{' '}
+                              Expressão <span className="text-pink-400 font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
+                            </p>
+                            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
+                              <i className="fas fa-camera mr-1"></i>
+                              Serão geradas 3 imagens: rosto, frente e costas
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </>
