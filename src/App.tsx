@@ -88,6 +88,7 @@ const ModelCardCarousel: React.FC<{
         src={images[currentIndex].src}
         alt={`${modelName} - ${images[currentIndex].label}`}
         className="w-full h-full object-cover"
+        style={images[currentIndex].key === 'face' ? { objectPosition: 'top' } : undefined}
       />
 
       {/* Setas de navegação */}
@@ -177,7 +178,24 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [clients, setClients] = useState<Client[]>(() => {
     const saved = localStorage.getItem('vizzu_clients');
     if (saved) {
-      try { return JSON.parse(saved); } catch { }
+      try {
+        const parsed = JSON.parse(saved);
+        // Migrar IDs antigos (client-timestamp) para UUID
+        const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        let needsMigration = false;
+        const migrated = parsed.map((client: Client) => {
+          if (!isValidUUID(client.id)) {
+            needsMigration = true;
+            return { ...client, id: crypto.randomUUID() };
+          }
+          return client;
+        });
+        if (needsMigration) {
+          localStorage.setItem('vizzu_clients', JSON.stringify(migrated));
+          console.log('[Migração] Clientes migrados para UUID');
+        }
+        return migrated;
+      } catch { }
     }
     return [];
   });
@@ -794,6 +812,12 @@ const loadUserClients = async (userId: string) => {
 // Função para salvar cliente no Supabase
 const saveClientToSupabase = async (client: Client, userId: string) => {
   try {
+    // Validar se o ID é UUID válido (evita erro no Supabase)
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(client.id);
+    if (!isValidUUID) {
+      console.warn('ID de cliente inválido (não é UUID), ignorando sync:', client.id);
+      return;
+    }
     // Nota: fotos são salvas na tabela client_photos separadamente
     const { error } = await supabase
       .from('clients')
@@ -6951,7 +6975,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     return (
                       <div key={type} className={'aspect-[3/4] rounded-xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
                         {imgUrl ? (
-                          <img src={imgUrl} alt={type} className="w-full h-full object-cover" />
+                          <img
+                            src={imgUrl}
+                            alt={type}
+                            className="w-full h-full object-cover"
+                            style={type === 'face' ? { objectPosition: 'top' } : undefined}
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-2xl'}></i>

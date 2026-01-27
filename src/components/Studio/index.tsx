@@ -328,6 +328,7 @@ export const Studio: React.FC<StudioProps> = ({
                                 src={modelImage}
                                 alt={model.name}
                                 className="w-full h-full rounded-full object-cover"
+                                style={{ objectPosition: 'top' }}
                               />
                             ) : (
                               <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
@@ -376,6 +377,7 @@ export const Studio: React.FC<StudioProps> = ({
                   src={selectedModel.images?.front || selectedModel.images?.face}
                   alt={selectedModel.name}
                   className="w-full h-full object-cover"
+                  style={{ objectPosition: 'top' }}
                 />
               </div>
               <div className="flex-1">
