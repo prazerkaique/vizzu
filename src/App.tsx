@@ -356,6 +356,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   });
   const [savingModel, setSavingModel] = useState(false);
   const [generatingModelImages, setGeneratingModelImages] = useState(false);
+  const [modelGenerationProgress, setModelGenerationProgress] = useState(0);
+  const [modelGenerationStep, setModelGenerationStep] = useState<'front' | 'face' | 'back' | 'done'>('front');
   const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string; face?: string } | null>(null);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
 
@@ -2256,6 +2258,26 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
     setGeneratingModelImages(true);
     setModelPreviewImages(null);
+    setModelGenerationProgress(0);
+    setModelGenerationStep('front');
+
+    // Simular progresso enquanto a API processa
+    let currentProgress = 0;
+    const progressInterval = setInterval(() => {
+      currentProgress += Math.random() * 3 + 1; // Incremento de 1-4%
+      if (currentProgress < 33) {
+        setModelGenerationStep('front');
+      } else if (currentProgress < 66) {
+        setModelGenerationStep('face');
+      } else if (currentProgress < 95) {
+        setModelGenerationStep('back');
+      }
+      if (currentProgress >= 95) {
+        currentProgress = 95;
+        clearInterval(progressInterval);
+      }
+      setModelGenerationProgress(Math.round(currentProgress));
+    }, 500);
 
     try {
       const result = await generateModelImages({
@@ -2283,12 +2305,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         prompt: generateModelPrompt(), // Prompt otimizado para Flux 2.0
       });
 
+      clearInterval(progressInterval);
+      setModelGenerationProgress(100);
+      setModelGenerationStep('done');
+
       if (result.success && result.model?.images) {
         setModelPreviewImages(result.model.images);
       } else {
         throw new Error(result.error || 'Erro ao gerar preview');
       }
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Erro ao gerar preview:', error);
       alert('Erro ao gerar preview do modelo. Tente novamente.');
     } finally {
@@ -4065,9 +4092,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
                   >
                     <option value="">Idade</option>
-                    <option value="young">Jovem (18-25)</option>
-                    <option value="adult">Adulto (25-40)</option>
-                    <option value="mature">Maduro (40+)</option>
+                    <option value="young">18-25 anos</option>
+                    <option value="adult">26-35 anos</option>
+                    <option value="mature">36-50 anos</option>
+                    <option value="senior">50+ anos</option>
                   </select>
                   {/* Tipo Físico */}
                   <select
@@ -4076,11 +4104,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
                   >
                     <option value="">Tipo Físico</option>
-                    <option value="slim">Magro</option>
+                    <option value="slim">Magro(a)</option>
+                    <option value="athletic">Atlético(a)</option>
                     <option value="average">Médio</option>
-                    <option value="athletic">Atlético</option>
-                    <option value="curvy">Curvilíneo</option>
-                    <option value="plus">Plus Size</option>
+                    <option value="curvy">Curvilíneo(a)</option>
+                    <option value="plussize">Plus Size</option>
                   </select>
                   {/* Limpar filtros */}
                   {(modelFilterSearch || modelFilterGender || modelFilterSkinTone || modelFilterAge || modelFilterBodyType) && (
@@ -4138,6 +4166,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       return (
                         <div
                           key={model.id}
+                          onClick={() => setShowModelDetail(model)}
                           className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-100 shadow-sm hover:shadow-lg')}
                         >
                           {/* Image Carousel */}
@@ -4149,12 +4178,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                 onCardClick={() => setShowModelDetail(model)}
                               />
                             ) : (
-                              <div className="text-center" onClick={() => setShowModelDetail(model)}>
+                              <div className="text-center">
                                 <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
                                   <i className="fas fa-user text-3xl text-white"></i>
                                 </div>
                                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
-                                  {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Sem imagem'}
+                                  {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Clique para ver'}
                                 </p>
                               </div>
                             )}
@@ -4181,7 +4210,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             </div>
                           </div>
                           {/* Info */}
-                          <div className="p-3" onClick={() => setShowModelDetail(model)}>
+                          <div className="p-3">
                             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'}>{model.name}</h3>
                             <div className="flex flex-wrap gap-1">
                               <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
@@ -6663,8 +6692,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <div className="space-y-4">
                   {/* Estado: Gerando */}
                   {generatingModelImages && (
-                    <div className="text-center py-8">
-                      <div className="w-24 h-24 mx-auto mb-4">
+                    <div className="text-center py-4">
+                      <div className="w-20 h-20 mx-auto mb-4">
                         <DotLottieReact
                           src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
                           loop
@@ -6672,8 +6701,62 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           style={{ width: '100%', height: '100%' }}
                         />
                       </div>
-                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-2'}>Criando seu modelo...</h3>
-                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>A IA está gerando as imagens. Isso pode levar alguns segundos.</p>
+                      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+                        {modelGenerationStep === 'front' && 'Gerando imagem de frente...'}
+                        {modelGenerationStep === 'face' && 'Gerando imagem do rosto...'}
+                        {modelGenerationStep === 'back' && 'Gerando imagem de costas...'}
+                        {modelGenerationStep === 'done' && 'Finalizando...'}
+                      </p>
+
+                      {/* Steps */}
+                      <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-3 mb-4'}>
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          {[
+                            { key: 'front', label: 'Frente', icon: 'fa-user' },
+                            { key: 'face', label: 'Rosto', icon: 'fa-face-smile' },
+                            { key: 'back', label: 'Costas', icon: 'fa-person-walking-arrow-right' },
+                          ].map((step, idx) => {
+                            const isCompleted =
+                              (step.key === 'front' && modelGenerationProgress >= 33) ||
+                              (step.key === 'face' && modelGenerationProgress >= 66) ||
+                              (step.key === 'back' && modelGenerationProgress >= 95);
+                            const isCurrent = modelGenerationStep === step.key;
+                            return (
+                              <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                  isCompleted ? 'bg-green-500' : isCurrent ? 'bg-pink-500' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')
+                                }`}>
+                                  {isCompleted ? (
+                                    <i className="fas fa-check text-white text-xs"></i>
+                                  ) : isCurrent ? (
+                                    <i className="fas fa-spinner fa-spin text-white text-xs"></i>
+                                  ) : (
+                                    <i className={`fas ${step.icon} ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>
+                                  )}
+                                </div>
+                                <span className={`${isCompleted ? 'text-green-400' : isCurrent ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>
+                                  {step.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Barra de Progresso */}
+                      <div className="px-2">
+                        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
+                          <div
+                            className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500"
+                            style={{ width: `${modelGenerationProgress}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Processando</span>
+                          <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
+                        </div>
+                      </div>
                     </div>
                   )}
 
