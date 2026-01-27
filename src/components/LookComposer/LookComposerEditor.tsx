@@ -1197,7 +1197,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           prompt: lookMode === 'describe' ? clothingPrompt : undefined,
           orientation: 'vertical',
           lookItems: lookItems, // Salvar os itens do look para análises futuras
-          viewsMode: viewsMode // Salvar o modo de ângulos
+          viewsMode: viewsMode, // Salvar o modo de ângulos
+          modelId: selectedModel?.id,
+          modelName: selectedModel?.name,
+          modelThumbnail: selectedModel?.images?.front || selectedModel?.referenceImageUrl
         }
       };
 

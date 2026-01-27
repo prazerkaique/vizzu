@@ -76,6 +76,9 @@ export interface GeneratedImageSet {
       productId?: string;
       imageId?: string;
     }>;
+    modelId?: string;         // ID do modelo usado na geração
+    modelName?: string;       // Nome do modelo usado na geração
+    modelThumbnail?: string;  // Thumbnail do modelo (para exibição)
   };
 }
 

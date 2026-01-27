@@ -54,9 +54,13 @@ interface GeneratedLook {
       productId?: string;
       name?: string;
       sku?: string;
+      image?: string;
     }>;
     prompt?: string;
     viewsMode?: 'front' | 'front-back';
+    modelId?: string;
+    modelName?: string;
+    modelThumbnail?: string;
   };
 }
 
@@ -261,15 +265,22 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     return allGeneratedLooks.slice(0, 6);
   }, [allGeneratedLooks]);
 
-  // Filtrar produtos no modal
+  // Filtrar produtos no modal (ordenados por mais recente primeiro)
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchesSearch = !productSearchTerm ||
-        product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-        product.sku.toLowerCase().includes(productSearchTerm.toLowerCase());
-      const matchesCategory = !productFilterCategory || product.category === productFilterCategory;
-      return matchesSearch && matchesCategory;
-    });
+    return products
+      .filter(product => {
+        const matchesSearch = !productSearchTerm ||
+          product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+          product.sku.toLowerCase().includes(productSearchTerm.toLowerCase());
+        const matchesCategory = !productFilterCategory || product.category === productFilterCategory;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        // Ordenar por data de criação (mais recente primeiro)
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
   }, [products, productSearchTerm, productFilterCategory]);
 
   // Obter imagem do produto (prioriza otimizada)
@@ -908,6 +919,70 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
               {/* Ações */}
               <div className="md:w-1/3 flex flex-col gap-3">
+                {/* Modelo usado */}
+                {selectedLook.metadata?.modelName && (
+                  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                      <i className="fas fa-user mr-2 text-pink-400"></i>Modelo
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      {selectedLook.metadata?.modelThumbnail ? (
+                        <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-12 h-12 rounded-lg overflow-hidden flex-shrink-0'}>
+                          <img
+                            src={selectedLook.metadata.modelThumbnail}
+                            alt={selectedLook.metadata.modelName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                          <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user'}></i>
+                        </div>
+                      )}
+                      <div>
+                        <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{selectedLook.metadata.modelName}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Peças utilizadas no look */}
+                {selectedLook.metadata?.lookItems && selectedLook.metadata.lookItems.length > 0 && (
+                  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+                      <i className="fas fa-shirt mr-2 text-purple-400"></i>Peças Utilizadas
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedLook.metadata.lookItems.map((item, idx) => {
+                        const itemProduct = item.productId ? products.find(p => p.id === item.productId) : null;
+                        const itemImage = item.image || (itemProduct ? getProductImage(itemProduct) : undefined);
+                        return (
+                          <div key={idx} className={(isDark ? 'bg-neutral-700/50' : 'bg-gray-100') + ' rounded-lg p-2 flex items-center gap-3'}>
+                            {itemImage ? (
+                              <div className={(isDark ? 'bg-neutral-600' : 'bg-gray-200') + ' w-10 h-10 rounded-lg overflow-hidden flex-shrink-0'}>
+                                <img src={itemImage} alt={item.name || item.slot} className="w-full h-full object-contain" />
+                              </div>
+                            ) : (
+                              <div className={(isDark ? 'bg-neutral-600' : 'bg-gray-200') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
+                                <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-image text-xs'}></i>
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{item.name || item.slot}</p>
+                              {item.sku && item.sku !== 'external' && (
+                                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.sku}</p>
+                              )}
+                            </div>
+                            <span className={(isDark ? 'bg-neutral-600 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' px-2 py-0.5 rounded text-[9px] uppercase'}>
+                              {item.slot}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
                   <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Download</h3>
                   <div className="flex flex-col gap-2">
