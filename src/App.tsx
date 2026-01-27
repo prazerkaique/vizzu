@@ -169,6 +169,7 @@ function App() {
   const [showImport, setShowImport] = useState(false);
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
+  const [showOptimizedImage, setShowOptimizedImage] = useState(true); // Toggle foto otimizada/original no modal
 const [selectedFrontImage, setSelectedFrontImage] = useState<string | null>(null);
 const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
 const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
@@ -573,13 +574,20 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
     }
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !filterCategory || product.category === filterCategory;
-    const matchesColor = !filterColor || product.color === filterColor;
-    const matchesCollection = !filterCollection || product.collection === filterCollection;
-    return matchesSearch && matchesCategory && matchesColor && matchesCollection;
-  });
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !filterCategory || product.category === filterCategory;
+      const matchesColor = !filterColor || product.color === filterColor;
+      const matchesCollection = !filterCollection || product.collection === filterCollection;
+      return matchesSearch && matchesCategory && matchesColor && matchesCollection;
+    })
+    .sort((a, b) => {
+      // Ordenar por data de criação (mais recentes primeiro)
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
   
   const filteredClients = clients.filter(client => {
     const fullName = (client.firstName + ' ' + client.lastName).toLowerCase();
@@ -1330,7 +1338,10 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       } else {
         // Se não está em modo de seleção, abre o card
         const product = products.find(p => p.id === productId);
-        if (product) setShowProductDetail(product);
+        if (product) {
+          setShowOptimizedImage(true); // Reset toggle ao abrir novo produto
+          setShowProductDetail(product);
+        }
       }
     }
   };
@@ -4527,6 +4538,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             if (selectedProducts.length > 0) {
                               toggleProductSelection(product.id);
                             } else {
+                              setShowOptimizedImage(true); // Reset toggle ao abrir novo produto
                               setShowProductDetail(product);
                             }
                           }
@@ -6280,14 +6292,46 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
             {/* Conteúdo com scroll */}
             <div className="flex-1 overflow-y-auto p-4">
-              {/* Imagem principal - prioriza otimizada */}
+              {/* Toggle para alternar entre foto otimizada e original */}
+              {isProductOptimized(showProductDetail) && (
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <button
+                    onClick={() => setShowOptimizedImage(true)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                      showOptimizedImage
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                        : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700')
+                    }`}
+                  >
+                    <i className="fas fa-cube text-[10px]"></i>
+                    Otimizada
+                  </button>
+                  <button
+                    onClick={() => setShowOptimizedImage(false)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                      !showOptimizedImage
+                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg'
+                        : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700')
+                    }`}
+                  >
+                    <i className="fas fa-image text-[10px]"></i>
+                    Original
+                  </button>
+                </div>
+              )}
+
+              {/* Imagem principal */}
               <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden mb-4 relative'}>
                 <img
-                  src={getProductDisplayImage(showProductDetail)}
+                  src={
+                    isProductOptimized(showProductDetail) && showOptimizedImage
+                      ? getProductDisplayImage(showProductDetail)
+                      : (getOriginalImages(showProductDetail)[0]?.url || showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url)
+                  }
                   alt={showProductDetail.name}
                   className="w-full h-auto max-h-[50vh] object-contain"
                 />
-                {isProductOptimized(showProductDetail) && (
+                {isProductOptimized(showProductDetail) && showOptimizedImage && (
                   <div className="absolute top-2 left-2 px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center gap-1.5 shadow-lg">
                     <i className="fas fa-cube text-[8px]"></i>
                     Foto Otimizada
