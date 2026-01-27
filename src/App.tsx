@@ -735,7 +735,9 @@ const loadUserProducts = async (userId: string) => {
           attributes: p.attributes || {},
           images: formattedOriginalImages,
           originalImages: originalImagesObj,
-          generatedImages: generatedImages
+          generatedImages: generatedImages,
+          createdAt: p.created_at,
+          updatedAt: p.updated_at
         };
       });
       
