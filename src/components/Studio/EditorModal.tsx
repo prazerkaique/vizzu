@@ -53,6 +53,81 @@ const MODEL_OPTS = {
   ageRange: [{ id: 'young', label: '18-25 anos' }, { id: 'adult', label: '26-35 anos' }, { id: 'mature', label: '36-50 anos' }, { id: 'senior', label: '50+ anos' }]
 };
 
+// Nova estrutura de opções para o wizard de modelo
+const MODEL_OPTS_V2 = {
+  gender: [
+    { id: 'woman', label: 'Mulher', icon: 'fa-venus' },
+    { id: 'man', label: 'Homem', icon: 'fa-mars' }
+  ],
+  ageRange: [
+    { id: 'child', label: '8-12 anos' },
+    { id: 'teen', label: '13-17 anos' },
+    { id: 'young', label: '18-25 anos' },
+    { id: 'adult', label: '26-35 anos' },
+    { id: 'mature', label: '36-45 anos' },
+    { id: 'middle', label: '46-55 anos' },
+    { id: 'senior', label: '56-65 anos' },
+    { id: 'elderly', label: '65+ anos' }
+  ],
+  ethnicity: [
+    { id: 'caucasian', label: 'Branca/Caucasiana' },
+    { id: 'black', label: 'Negra/Afrodescendente' },
+    { id: 'asian', label: 'Asiática' },
+    { id: 'latino', label: 'Latina/Hispânica' },
+    { id: 'middleeastern', label: 'Oriente Médio' },
+    { id: 'mixed', label: 'Mista/Parda' }
+  ],
+  skinTone: [
+    { id: 'light', label: 'Claro' },
+    { id: 'medium', label: 'Médio' },
+    { id: 'tan', label: 'Bronzeado' },
+    { id: 'dark', label: 'Escuro' }
+  ],
+  bodyType: [
+    { id: 'slim', label: 'Magro(a)' },
+    { id: 'athletic', label: 'Atlético(a)' },
+    { id: 'average', label: 'Médio' },
+    { id: 'curvy', label: 'Curvilíneo(a)' },
+    { id: 'plussize', label: 'Plus Size' }
+  ],
+  hairColor: [
+    { id: 'black', label: 'Preto' },
+    { id: 'brown', label: 'Castanho' },
+    { id: 'blonde', label: 'Loiro' },
+    { id: 'red', label: 'Ruivo' },
+    { id: 'gray', label: 'Grisalho' },
+    { id: 'other', label: 'Outro' }
+  ],
+  hairType: [
+    { id: 'straight', label: 'Liso' },
+    { id: 'wavy', label: 'Ondulado' },
+    { id: 'curly', label: 'Cacheado' },
+    { id: 'coily', label: 'Crespo' },
+    { id: 'braided', label: 'Trançado' }
+  ],
+  eyeColor: [
+    { id: 'brown', label: 'Castanho' },
+    { id: 'blue', label: 'Azul' },
+    { id: 'green', label: 'Verde' },
+    { id: 'hazel', label: 'Mel' },
+    { id: 'gray', label: 'Cinza' },
+    { id: 'other', label: 'Outro' }
+  ],
+  expression: [
+    { id: 'neutral', label: 'Neutro' },
+    { id: 'smile', label: 'Sorrindo' },
+    { id: 'serious', label: 'Sério' },
+    { id: 'confident', label: 'Confiante' },
+    { id: 'relaxed', label: 'Relaxado' }
+  ]
+};
+
+const SLIDER_LABELS = {
+  hairLength: ['Careca', 'Muito curto', 'Curto', 'Médio', 'Longo', 'Muito longo'],
+  bustSize: ['Pequeno', 'Médio', 'Grande'],
+  waistType: ['Fina', 'Média', 'Larga']
+};
+
 
 const ORIENTATION_OPTIONS = [
   { id: 'vertical' as OrientationType, label: 'Vertical (9:16)', dimensions: '1080 x 1920', icon: 'fa-mobile-screen', usedFor: 'Stories, Reels, TikTok' },
@@ -128,7 +203,28 @@ export const EditorModal: React.FC<Props> = ({
   const [modelTab, setModelTab] = useState<'new'|'saved'>('new');
   const [selModelId, setSelModelId] = useState<string|null>(null);
   const [productNotes, setProductNotes] = useState(''); // Observações adicionais do produto
-  const [modelSettings, setModelSettings] = useState({ gender: 'woman' as 'woman'|'man', ethnicity: 'caucasian', bodyType: 'average', ageRange: 'adult' });
+  const [modelSubStep, setModelSubStep] = useState<'gender' | 'physical' | 'appearance' | 'proportions'>('gender');
+  const [modelSettings, setModelSettings] = useState({
+    // Gênero
+    gender: 'woman' as 'woman' | 'man',
+    // Físico
+    ageRange: 'adult',
+    ethnicity: 'caucasian',
+    skinTone: 'medium',
+    bodyType: 'average',
+    height: 170,
+    // Aparência
+    hairColor: 'brown',
+    hairColorCustom: '',
+    hairType: 'straight',
+    hairLength: 3,
+    eyeColor: 'brown',
+    eyeColorCustom: '',
+    expression: 'neutral',
+    // Proporções (só para mulheres)
+    bustSize: 2,
+    waistType: 2,
+  });
   const [modelDetail, setModelDetail] = useState(''); // Detalhes do modelo (fisionomia, cabelo, altura)
   const [lookMode, setLookMode] = useState<LookMode>('describe');
   const [look, setLook] = useState<LookComposition>({});
@@ -195,10 +291,37 @@ export const EditorModal: React.FC<Props> = ({
 
   const buildModelPrompt = () => {
     const g = modelSettings.gender === 'woman' ? 'Female' : 'Male';
-    const e = MODEL_OPTS.ethnicity.find(x => x.id === modelSettings.ethnicity)?.label || '';
-    const b = MODEL_OPTS.bodyType.find(x => x.id === modelSettings.bodyType)?.label || '';
-    const a = MODEL_OPTS.ageRange.find(x => x.id === modelSettings.ageRange)?.label || '';
-    return `${g} model, ${e}, ${b}, ${a}.${modelDetail ? ' Details: ' + modelDetail : ''}`;
+    const age = MODEL_OPTS_V2.ageRange.find(x => x.id === modelSettings.ageRange)?.label || '';
+    const e = MODEL_OPTS_V2.ethnicity.find(x => x.id === modelSettings.ethnicity)?.label || '';
+    const skin = MODEL_OPTS_V2.skinTone.find(x => x.id === modelSettings.skinTone)?.label || '';
+    const b = MODEL_OPTS_V2.bodyType.find(x => x.id === modelSettings.bodyType)?.label || '';
+    const h = `${modelSettings.height}cm`;
+
+    // Aparência
+    const hairColor = modelSettings.hairColor === 'other'
+      ? modelSettings.hairColorCustom
+      : MODEL_OPTS_V2.hairColor.find(x => x.id === modelSettings.hairColor)?.label || '';
+    const hairType = MODEL_OPTS_V2.hairType.find(x => x.id === modelSettings.hairType)?.label || '';
+    const hairLength = SLIDER_LABELS.hairLength[modelSettings.hairLength];
+    const eyeColor = modelSettings.eyeColor === 'other'
+      ? modelSettings.eyeColorCustom
+      : MODEL_OPTS_V2.eyeColor.find(x => x.id === modelSettings.eyeColor)?.label || '';
+    const expression = MODEL_OPTS_V2.expression.find(x => x.id === modelSettings.expression)?.label || '';
+
+    let prompt = `${g} model, ${age}, ${e}, ${skin} skin tone, ${b} body type, ${h} tall.`;
+    prompt += ` Hair: ${hairColor}, ${hairType}, ${hairLength}.`;
+    prompt += ` Eyes: ${eyeColor}. Expression: ${expression}.`;
+
+    // Proporções (só para mulheres)
+    if (modelSettings.gender === 'woman') {
+      const bust = SLIDER_LABELS.bustSize[modelSettings.bustSize - 1];
+      const waist = SLIDER_LABELS.waistType[modelSettings.waistType - 1];
+      prompt += ` Bust: ${bust}. Waist: ${waist}.`;
+    }
+
+    if (modelDetail) prompt += ` Additional details: ${modelDetail}`;
+
+    return prompt;
   };
 
   const buildLookItems = () => Object.entries(look).map(([slot, item]) => item ? { slot, image: item.image, name: item.name, productId: item.productId, imageId: item.imageId } : null).filter(Boolean) as any[];
@@ -797,60 +920,399 @@ const handleSave = async () => {
                           
                           {step === 'model' && (
                             <div className="space-y-3">
+                              {/* Tabs: Novo / Salvos */}
                               <div className="flex gap-1 mb-2">
                                 <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${modelTab === 'new' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Criar Novo</button>
                                 <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${modelTab === 'saved' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Salvos ({savedModels.length})</button>
                               </div>
-                              
+
                               {modelTab === 'new' ? (
-                                <div className="space-y-2">
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                      <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Gênero</label>
-                                      <select value={modelSettings.gender} onChange={e => setModelSettings({...modelSettings, gender: e.target.value as 'woman'|'man'})} className={`w-full px-2 py-1.5 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
-                                        {MODEL_OPTS.gender.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Etnia</label>
-                                      <select value={modelSettings.ethnicity} onChange={e => setModelSettings({...modelSettings, ethnicity: e.target.value})} className={`w-full px-2 py-1.5 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
-                                        {MODEL_OPTS.ethnicity.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Corpo</label>
-                                      <select value={modelSettings.bodyType} onChange={e => setModelSettings({...modelSettings, bodyType: e.target.value})} className={`w-full px-2 py-1.5 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
-                                        {MODEL_OPTS.bodyType.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Idade</label>
-                                      <select value={modelSettings.ageRange} onChange={e => setModelSettings({...modelSettings, ageRange: e.target.value})} className={`w-full px-2 py-1.5 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
-                                        {MODEL_OPTS.ageRange.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-                                      </select>
-                                    </div>
+                                <>
+                                  {/* Sub-step indicators */}
+                                  <div className="flex gap-1 mb-3">
+                                    {(['gender', 'physical', 'appearance', 'proportions'] as const).map((s, i) => (
+                                      <button
+                                        key={s}
+                                        onClick={() => setModelSubStep(s)}
+                                        className={`flex-1 py-1.5 rounded text-[9px] font-medium transition-all ${
+                                          modelSubStep === s
+                                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                            : isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'
+                                        }`}
+                                      >
+                                        {['Gênero', 'Físico', 'Aparência', 'Proporções'][i]}
+                                      </button>
+                                    ))}
                                   </div>
 
-                                  {/* Detalhes do Modelo */}
-                                  <div>
-                                    <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                                      Detalhes do modelo <span className="opacity-60">(opcional)</span>
-                                    </label>
-                                    <textarea
-                                      value={modelDetail}
-                                      onChange={e => setModelDetail(e.target.value)}
-                                      rows={2}
-                                      className={`w-full px-2 py-1.5 border rounded-lg text-xs resize-none ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
-                                      placeholder="Ex: cabelo cacheado, alto, tatuagem no braço..."
-                                    />
-                                    <p className={`text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
-                                      <i className="fas fa-info-circle mr-1"></i>
-                                      Descreva apenas fisionomia, cabelo, altura, etc. Não inclua roupas aqui.
-                                    </p>
+                                  {/* SUB-STEP 1: Gênero */}
+                                  {modelSubStep === 'gender' && (
+                                    <div className="space-y-3">
+                                      <p className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                        Selecione o gênero do modelo
+                                      </p>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {MODEL_OPTS_V2.gender.map(g => (
+                                          <button
+                                            key={g.id}
+                                            onClick={() => setModelSettings({...modelSettings, gender: g.id as 'woman'|'man'})}
+                                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                                              modelSettings.gender === g.id
+                                                ? 'border-pink-500 bg-pink-500/10'
+                                                : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                          >
+                                            <i className={`fas ${g.icon} text-2xl ${modelSettings.gender === g.id ? 'text-pink-500' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
+                                            <span className={`text-sm font-medium ${modelSettings.gender === g.id ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'}`}>{g.label}</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* SUB-STEP 2: Físico */}
+                                  {modelSubStep === 'physical' && (
+                                    <div className="space-y-4">
+                                      {/* Faixa Etária - Dropdown */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Faixa Etária
+                                        </label>
+                                        <select
+                                          value={modelSettings.ageRange}
+                                          onChange={e => setModelSettings({...modelSettings, ageRange: e.target.value})}
+                                          className={`w-full px-3 py-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                                        >
+                                          {MODEL_OPTS_V2.ageRange.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                                        </select>
+                                      </div>
+
+                                      {/* Etnia - Dropdown */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Etnia
+                                        </label>
+                                        <select
+                                          value={modelSettings.ethnicity}
+                                          onChange={e => setModelSettings({...modelSettings, ethnicity: e.target.value})}
+                                          className={`w-full px-3 py-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                                        >
+                                          {MODEL_OPTS_V2.ethnicity.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                                        </select>
+                                      </div>
+
+                                      {/* Tom de Pele - Chips */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Tom de Pele
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {MODEL_OPTS_V2.skinTone.map(o => (
+                                            <button
+                                              key={o.id}
+                                              onClick={() => setModelSettings({...modelSettings, skinTone: o.id})}
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                                modelSettings.skinTone === o.id
+                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
+                                              }`}
+                                            >
+                                              {o.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Tipo de Corpo - Chips */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Tipo de Corpo
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {MODEL_OPTS_V2.bodyType.map(o => (
+                                            <button
+                                              key={o.id}
+                                              onClick={() => setModelSettings({...modelSettings, bodyType: o.id})}
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                                modelSettings.bodyType === o.id
+                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
+                                              }`}
+                                            >
+                                              {o.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Altura - Slider */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Altura: <span className="text-pink-400">{modelSettings.height} cm</span>
+                                        </label>
+                                        <input
+                                          type="range"
+                                          min={140}
+                                          max={200}
+                                          value={modelSettings.height}
+                                          onChange={(e) => setModelSettings({...modelSettings, height: Number(e.target.value)})}
+                                          className={`w-full h-2 rounded-full appearance-none cursor-pointer ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}
+                                            [&::-webkit-slider-thumb]:appearance-none
+                                            [&::-webkit-slider-thumb]:w-4
+                                            [&::-webkit-slider-thumb]:h-4
+                                            [&::-webkit-slider-thumb]:rounded-full
+                                            [&::-webkit-slider-thumb]:bg-gradient-to-r
+                                            [&::-webkit-slider-thumb]:from-pink-500
+                                            [&::-webkit-slider-thumb]:to-orange-400
+                                            [&::-webkit-slider-thumb]:cursor-pointer`}
+                                        />
+                                        <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
+                                          <span>140 cm</span>
+                                          <span>200 cm</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* SUB-STEP 3: Aparência */}
+                                  {modelSubStep === 'appearance' && (
+                                    <div className="space-y-4">
+                                      {/* Cor do Cabelo - Chips + Outro */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Cor do Cabelo
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {MODEL_OPTS_V2.hairColor.map(o => (
+                                            <button
+                                              key={o.id}
+                                              onClick={() => setModelSettings({...modelSettings, hairColor: o.id, hairColorCustom: ''})}
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                                modelSettings.hairColor === o.id
+                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
+                                              }`}
+                                            >
+                                              {o.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        {modelSettings.hairColor === 'other' && (
+                                          <input
+                                            type="text"
+                                            value={modelSettings.hairColorCustom}
+                                            onChange={e => setModelSettings({...modelSettings, hairColorCustom: e.target.value})}
+                                            placeholder="Ex: rosa, azul, mechas..."
+                                            className={`mt-2 w-full px-3 py-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                                          />
+                                        )}
+                                      </div>
+
+                                      {/* Tipo de Cabelo - Chips */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Tipo de Cabelo
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {MODEL_OPTS_V2.hairType.map(o => (
+                                            <button
+                                              key={o.id}
+                                              onClick={() => setModelSettings({...modelSettings, hairType: o.id})}
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                                modelSettings.hairType === o.id
+                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
+                                              }`}
+                                            >
+                                              {o.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Tamanho do Cabelo - Slider */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Tamanho do Cabelo: <span className="text-pink-400">{SLIDER_LABELS.hairLength[modelSettings.hairLength]}</span>
+                                        </label>
+                                        <input
+                                          type="range"
+                                          min={0}
+                                          max={5}
+                                          value={modelSettings.hairLength}
+                                          onChange={(e) => setModelSettings({...modelSettings, hairLength: Number(e.target.value)})}
+                                          className={`w-full h-2 rounded-full appearance-none cursor-pointer ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}
+                                            [&::-webkit-slider-thumb]:appearance-none
+                                            [&::-webkit-slider-thumb]:w-4
+                                            [&::-webkit-slider-thumb]:h-4
+                                            [&::-webkit-slider-thumb]:rounded-full
+                                            [&::-webkit-slider-thumb]:bg-gradient-to-r
+                                            [&::-webkit-slider-thumb]:from-pink-500
+                                            [&::-webkit-slider-thumb]:to-orange-400
+                                            [&::-webkit-slider-thumb]:cursor-pointer`}
+                                        />
+                                        <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
+                                          <span>Careca</span>
+                                          <span>Muito longo</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Cor dos Olhos - Chips + Outro */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Cor dos Olhos
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {MODEL_OPTS_V2.eyeColor.map(o => (
+                                            <button
+                                              key={o.id}
+                                              onClick={() => setModelSettings({...modelSettings, eyeColor: o.id, eyeColorCustom: ''})}
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                                modelSettings.eyeColor === o.id
+                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
+                                              }`}
+                                            >
+                                              {o.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        {modelSettings.eyeColor === 'other' && (
+                                          <input
+                                            type="text"
+                                            value={modelSettings.eyeColorCustom}
+                                            onChange={e => setModelSettings({...modelSettings, eyeColorCustom: e.target.value})}
+                                            placeholder="Ex: violeta, heterocromia..."
+                                            className={`mt-2 w-full px-3 py-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                                          />
+                                        )}
+                                      </div>
+
+                                      {/* Expressão - Chips */}
+                                      <div>
+                                        <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                          Expressão
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                          {MODEL_OPTS_V2.expression.map(o => (
+                                            <button
+                                              key={o.id}
+                                              onClick={() => setModelSettings({...modelSettings, expression: o.id})}
+                                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                                modelSettings.expression === o.id
+                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
+                                              }`}
+                                            >
+                                              {o.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* SUB-STEP 4: Proporções (só para mulheres) */}
+                                  {modelSubStep === 'proportions' && (
+                                    <div className="space-y-4">
+                                      {modelSettings.gender === 'woman' ? (
+                                        <>
+                                          {/* Tamanho do Busto - Slider */}
+                                          <div>
+                                            <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                              Tamanho do Busto: <span className="text-pink-400">{SLIDER_LABELS.bustSize[modelSettings.bustSize - 1]}</span>
+                                            </label>
+                                            <input
+                                              type="range"
+                                              min={1}
+                                              max={3}
+                                              value={modelSettings.bustSize}
+                                              onChange={(e) => setModelSettings({...modelSettings, bustSize: Number(e.target.value)})}
+                                              className={`w-full h-2 rounded-full appearance-none cursor-pointer ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}
+                                                [&::-webkit-slider-thumb]:appearance-none
+                                                [&::-webkit-slider-thumb]:w-4
+                                                [&::-webkit-slider-thumb]:h-4
+                                                [&::-webkit-slider-thumb]:rounded-full
+                                                [&::-webkit-slider-thumb]:bg-gradient-to-r
+                                                [&::-webkit-slider-thumb]:from-pink-500
+                                                [&::-webkit-slider-thumb]:to-orange-400
+                                                [&::-webkit-slider-thumb]:cursor-pointer`}
+                                            />
+                                            <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
+                                              <span>Pequeno</span>
+                                              <span>Grande</span>
+                                            </div>
+                                          </div>
+
+                                          {/* Tipo de Cintura - Slider */}
+                                          <div>
+                                            <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
+                                              Tipo de Cintura: <span className="text-pink-400">{SLIDER_LABELS.waistType[modelSettings.waistType - 1]}</span>
+                                            </label>
+                                            <input
+                                              type="range"
+                                              min={1}
+                                              max={3}
+                                              value={modelSettings.waistType}
+                                              onChange={(e) => setModelSettings({...modelSettings, waistType: Number(e.target.value)})}
+                                              className={`w-full h-2 rounded-full appearance-none cursor-pointer ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}
+                                                [&::-webkit-slider-thumb]:appearance-none
+                                                [&::-webkit-slider-thumb]:w-4
+                                                [&::-webkit-slider-thumb]:h-4
+                                                [&::-webkit-slider-thumb]:rounded-full
+                                                [&::-webkit-slider-thumb]:bg-gradient-to-r
+                                                [&::-webkit-slider-thumb]:from-pink-500
+                                                [&::-webkit-slider-thumb]:to-orange-400
+                                                [&::-webkit-slider-thumb]:cursor-pointer`}
+                                            />
+                                            <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
+                                              <span>Fina</span>
+                                              <span>Larga</span>
+                                            </div>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className={`p-4 rounded-lg text-center ${isDark ? 'bg-neutral-800' : 'bg-gray-50'}`}>
+                                          <i className={`fas fa-info-circle text-lg mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+                                          <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                                            Proporções detalhadas não disponíveis para modelos masculinos
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Navegação entre sub-steps */}
+                                  <div className="flex gap-2 pt-3">
+                                    {modelSubStep !== 'gender' && (
+                                      <button
+                                        onClick={() => {
+                                          const steps = ['gender', 'physical', 'appearance', 'proportions'] as const;
+                                          const currentIndex = steps.indexOf(modelSubStep);
+                                          if (currentIndex > 0) setModelSubStep(steps[currentIndex - 1]);
+                                        }}
+                                        className={`px-4 py-2 rounded-lg text-xs font-medium ${isDark ? 'bg-neutral-700 text-white' : 'bg-gray-200 text-gray-700'}`}
+                                      >
+                                        <i className="fas fa-arrow-left mr-1.5"></i>Voltar
+                                      </button>
+                                    )}
+                                    {modelSubStep !== 'proportions' && (
+                                      <button
+                                        onClick={() => {
+                                          const steps = ['gender', 'physical', 'appearance', 'proportions'] as const;
+                                          const currentIndex = steps.indexOf(modelSubStep);
+                                          if (currentIndex < steps.length - 1) setModelSubStep(steps[currentIndex + 1]);
+                                        }}
+                                        className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium"
+                                      >
+                                        Próximo<i className="fas fa-arrow-right ml-1.5"></i>
+                                      </button>
+                                    )}
                                   </div>
-                                </div>
+                                </>
                               ) : (
-                                <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+                                /* Modelos Salvos */
+                                <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
                                   {savedModels.map(m => (
                                     <div key={m.id} onClick={() => setSelModelId(m.id)} className={`relative rounded-lg overflow-hidden cursor-pointer border-2 ${selModelId === m.id ? 'border-pink-500' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                                       <img src={m.referenceImage} alt={m.name} className="w-full aspect-square object-cover" />
@@ -859,7 +1321,11 @@ const handleSave = async () => {
                                       </div>
                                     </div>
                                   ))}
-                                  {savedModels.length === 0 && <p className={`col-span-3 text-center py-4 text-xs ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Nenhum modelo salvo</p>}
+                                  {savedModels.length === 0 && (
+                                    <p className={`col-span-3 text-center py-4 text-xs ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
+                                      Nenhum modelo salvo
+                                    </p>
+                                  )}
                                 </div>
                               )}
                             </div>
