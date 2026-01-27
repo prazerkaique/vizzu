@@ -462,6 +462,7 @@ export interface ProductAttributes {
 export interface CategoryAttributeOption {
   id: string;
   label: string;
+  description?: string; // Descrição detalhada para a IA identificar o caimento/fit
 }
 
 export interface CategoryAttributeConfig {
@@ -481,21 +482,21 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'slim', label: 'Slim (justa)' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'relaxed', label: 'Relaxed' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'boxy', label: 'Boxy' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'slim', label: 'Slim', description: 'Justa ao corpo, acompanha silhueta. Mangas coladas ao braço, tecido esticado sobre peito/abdômen.' },
+        { id: 'regular', label: 'Regular', description: 'Corte reto tradicional. Pequena folga entre tecido e corpo (1-2cm). Não marca silhueta nem flutua.' },
+        { id: 'relaxed', label: 'Relaxed', description: 'Levemente folgada mas não exagerada. Caimento natural, não marca corpo. Folga moderada nos ombros.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e ampla. Mangas caem além dos ombros, tecido forma volume no tronco. Aparência 1-2 tamanhos acima.' },
+        { id: 'boxy', label: 'Boxy', description: 'Corte quadrado/retangular. Largura igual do ombro à barra. Não afina na cintura, forma caixa.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curta acima da cintura. Mostra abdômen ou cintura alta da calça. Pode ser justa ou solta.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'curta', label: 'Curta' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'longline', label: 'Longline' },
+        { id: 'curta', label: 'Curta', description: 'Termina na linha da cintura ou logo abaixo.' },
+        { id: 'regular', label: 'Regular', description: 'Cobre quadril, termina no meio da braguilha.' },
+        { id: 'longline', label: 'Longline', description: 'Alongada, cobre parcialmente o quadril/coxa, estilo streetwear.' },
       ]
     }
   ],
@@ -504,20 +505,20 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justa', label: 'Justa' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'solta', label: 'Solta' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'justa', label: 'Justa', description: 'Colada ao corpo, marca silhueta e curvas. Tecido esticado, sem folga visível.' },
+        { id: 'regular', label: 'Regular', description: 'Leve folga, caimento natural. Acompanha corpo sem apertar nem flutuar.' },
+        { id: 'solta', label: 'Solta', description: 'Tecido flui sem tocar corpo. Caimento leve e arejado. Folga moderada.' },
+        { id: 'oversized', label: 'Oversized', description: 'Muito ampla, aparência de peça maior. Ombros caídos, muito volume no tronco.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curta, termina acima da cintura. Mostra parte do abdômen.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped (acima do umbigo)' },
-        { id: 'curta', label: 'Curta (na cintura)' },
-        { id: 'regular', label: 'Regular (abaixo da cintura)' },
+        { id: 'cropped', label: 'Cropped', description: 'Acima do umbigo, mostra abdômen.' },
+        { id: 'curta', label: 'Curta', description: 'Na linha da cintura ou logo abaixo.' },
+        { id: 'regular', label: 'Regular', description: 'Abaixo da cintura, cobre quadril parcialmente.' },
       ]
     }
   ],
@@ -526,20 +527,20 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justa', label: 'Justa' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'solta', label: 'Solta' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'justa', label: 'Justa', description: 'Colada ao corpo, marca silhueta. Tecido esticado sobre peito/abdômen.' },
+        { id: 'regular', label: 'Regular', description: 'Caimento reto natural. Leve folga, não marca corpo excessivamente.' },
+        { id: 'solta', label: 'Solta', description: 'Tecido flui livremente. Cavas amplas, caimento arejado.' },
+        { id: 'oversized', label: 'Oversized', description: 'Muito ampla, aparência de peça maior. Grande volume no tronco.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curta acima da cintura, mostra abdômen.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped (acima do umbigo)' },
-        { id: 'curta', label: 'Curta (na cintura)' },
-        { id: 'regular', label: 'Regular (abaixo da cintura)' },
+        { id: 'cropped', label: 'Cropped', description: 'Acima do umbigo, mostra abdômen.' },
+        { id: 'curta', label: 'Curta', description: 'Na linha da cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Abaixo da cintura, cobre quadril.' },
       ]
     }
   ],
@@ -548,20 +549,20 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justa', label: 'Justa' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'solta', label: 'Solta' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'justa', label: 'Justa', description: 'Colada ao corpo tipo segunda pele. Marca silhueta, sem folga.' },
+        { id: 'regular', label: 'Regular', description: 'Ajustada mas não apertada. Leve folga confortável.' },
+        { id: 'solta', label: 'Solta', description: 'Tecido flui, não marca corpo. Caimento leve e arejado.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e ampla, aparência de peça muito maior.' },
+        { id: 'cropped', label: 'Cropped', description: 'Muito curta, termina acima ou na altura do busto/peito.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped (acima do umbigo)' },
-        { id: 'curta', label: 'Curta (na cintura)' },
-        { id: 'regular', label: 'Regular (abaixo da cintura)' },
+        { id: 'cropped', label: 'Cropped', description: 'Acima do umbigo ou na linha do busto.' },
+        { id: 'curta', label: 'Curta', description: 'Na linha da cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Abaixo da cintura.' },
       ]
     }
   ],
@@ -570,10 +571,10 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'slim', label: 'Slim' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'boxy', label: 'Boxy' },
+        { id: 'slim', label: 'Slim', description: 'Justa ao tronco, acompanha silhueta. Mangas ajustadas, sem sobra de tecido.' },
+        { id: 'regular', label: 'Regular', description: 'Corte tradicional com leve folga. Permite movimento sem apertar.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e ampla, ombros caídos. Muito volume, aparência despojada.' },
+        { id: 'boxy', label: 'Boxy', description: 'Corte quadrado/retangular. Largura uniforme do ombro à barra.' },
       ]
     }
   ],
@@ -582,21 +583,21 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'mini', label: 'Mini (acima do joelho)' },
-        { id: 'midi', label: 'Midi (no joelho)' },
-        { id: 'midi-longo', label: 'Midi-longo (abaixo do joelho)' },
-        { id: 'longo', label: 'Longo (canela)' },
-        { id: 'maxi', label: 'Maxi (chão)' },
+        { id: 'mini', label: 'Mini', description: 'Acima do joelho, entre 10-15cm acima. Mostra coxas.' },
+        { id: 'midi', label: 'Midi', description: 'Na altura do joelho ou logo abaixo. Cobre joelho.' },
+        { id: 'midi-longo', label: 'Midi-longo', description: 'Abaixo do joelho até metade da canela.' },
+        { id: 'longo', label: 'Longo', description: 'Na altura da canela/tornozelo.' },
+        { id: 'maxi', label: 'Maxi', description: 'Toca ou arrasta no chão. Comprimento máximo.' },
       ]
     },
     {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justo', label: 'Justo' },
-        { id: 'evase', label: 'Evasê' },
-        { id: 'reto', label: 'Reto' },
-        { id: 'amplo', label: 'Amplo/Solto' },
+        { id: 'justo', label: 'Justo', description: 'Colado ao corpo inteiro, marca silhueta e curvas. Tecido esticado.' },
+        { id: 'evase', label: 'Evasê', description: 'Justo em cima, abre gradualmente da cintura para baixo. Forma A.' },
+        { id: 'reto', label: 'Reto', description: 'Caimento reto e uniforme do ombro à barra. Sem afinar na cintura.' },
+        { id: 'amplo', label: 'Amplo', description: 'Solto e fluido por todo corpo. Muito tecido, não marca silhueta.' },
       ]
     }
   ],
@@ -605,19 +606,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'mini', label: 'Mini' },
-        { id: 'midi', label: 'Midi' },
-        { id: 'longa', label: 'Longa' },
+        { id: 'mini', label: 'Mini', description: 'Acima do joelho, mostra coxas.' },
+        { id: 'midi', label: 'Midi', description: 'Na altura do joelho até metade da canela.' },
+        { id: 'longa', label: 'Longa', description: 'Abaixo da canela até o chão.' },
       ]
     },
     {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justa', label: 'Justa' },
-        { id: 'evase', label: 'Evasê' },
-        { id: 'reta', label: 'Reta' },
-        { id: 'gode', label: 'Godê' },
+        { id: 'justa', label: 'Justa', description: 'Colada ao corpo, marca quadril e coxas. Geralmente com fenda para caminhar.' },
+        { id: 'evase', label: 'Evasê', description: 'Abre gradualmente do quadril para baixo. Forma A suave.' },
+        { id: 'reta', label: 'Reta', description: 'Caimento reto sem abertura. Largura uniforme do quadril à barra.' },
+        { id: 'gode', label: 'Godê', description: 'Muito rodada, amplo volume. Tecido forma círculo ou semicírculo quando estendido.' },
       ]
     }
   ],
@@ -626,23 +627,23 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'modelagem',
       label: 'Modelagem',
       options: [
-        { id: 'skinny', label: 'Skinny' },
-        { id: 'slim', label: 'Slim' },
-        { id: 'reta', label: 'Reta' },
-        { id: 'wide-leg', label: 'Wide leg' },
-        { id: 'flare', label: 'Flare' },
-        { id: 'pantalona', label: 'Pantalona' },
-        { id: 'jogger', label: 'Jogger' },
-        { id: 'cargo', label: 'Cargo' },
+        { id: 'skinny', label: 'Skinny', description: 'Muito justa da coxa ao tornozelo. Segunda pele, marca toda silhueta das pernas.' },
+        { id: 'slim', label: 'Slim', description: 'Ajustada mas não apertada. Acompanha perna com leve folga, não marca excessivamente.' },
+        { id: 'reta', label: 'Reta', description: 'Largura uniforme do quadril ao tornozelo. Não afunila nem alarga.' },
+        { id: 'wide-leg', label: 'Wide leg', description: 'Pernas amplas e retas do quadril ao tornozelo. Muito volume, caimento fluido.' },
+        { id: 'flare', label: 'Flare', description: 'Justa na coxa, abre gradualmente do joelho para baixo. Formato sino.' },
+        { id: 'pantalona', label: 'Pantalona', description: 'Pernas muito largas desde o quadril. Máximo volume, estilo palazzo.' },
+        { id: 'jogger', label: 'Jogger', description: 'Folgada no corpo, afunila no tornozelo com elástico. Estilo esportivo.' },
+        { id: 'cargo', label: 'Cargo', description: 'Bolsos laterais volumosos nas coxas. Geralmente caimento reto ou folgado.' },
       ]
     },
     {
       id: 'cintura',
       label: 'Cintura',
       options: [
-        { id: 'baixa', label: 'Baixa' },
-        { id: 'media', label: 'Média' },
-        { id: 'alta', label: 'Alta' },
+        { id: 'baixa', label: 'Baixa', description: 'Abaixo do umbigo, na linha do quadril.' },
+        { id: 'media', label: 'Média', description: 'Na altura do umbigo.' },
+        { id: 'alta', label: 'Alta', description: 'Acima do umbigo, cobre cintura natural.' },
       ]
     }
   ],
@@ -651,19 +652,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'curto', label: 'Curto (meio da coxa)' },
-        { id: 'medio', label: 'Médio (acima do joelho)' },
-        { id: 'bermuda', label: 'Bermuda (no joelho)' },
+        { id: 'curto', label: 'Curto', description: 'Meio da coxa ou mais curto.' },
+        { id: 'medio', label: 'Médio', description: 'Acima do joelho, cobre maior parte da coxa.' },
+        { id: 'bermuda', label: 'Bermuda', description: 'Na altura do joelho ou logo acima.' },
       ]
     },
     {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justo', label: 'Justo' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'solto', label: 'Solto' },
-        { id: 'mom', label: 'Mom' },
+        { id: 'justo', label: 'Justo', description: 'Colado às coxas, marca silhueta. Pouca ou nenhuma folga.' },
+        { id: 'regular', label: 'Regular', description: 'Leve folga confortável, não aperta nem flutua.' },
+        { id: 'solto', label: 'Solto', description: 'Pernas amplas com bastante folga. Caimento fluido.' },
+        { id: 'mom', label: 'Mom', description: 'Cintura alta, folgado no quadril e coxas. Estilo vintage anos 90.' },
       ]
     }
   ],
@@ -672,19 +673,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'curto', label: 'Curto (meio da coxa)' },
-        { id: 'medio', label: 'Médio (acima do joelho)' },
-        { id: 'bermuda', label: 'Bermuda (no joelho)' },
+        { id: 'curto', label: 'Curto', description: 'Meio da coxa.' },
+        { id: 'medio', label: 'Médio', description: 'Acima do joelho.' },
+        { id: 'bermuda', label: 'Bermuda', description: 'Na altura do joelho.' },
       ]
     },
     {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justo', label: 'Justo' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'solto', label: 'Solto' },
-        { id: 'mom', label: 'Mom' },
+        { id: 'justo', label: 'Justo', description: 'Colado às coxas, marca silhueta.' },
+        { id: 'regular', label: 'Regular', description: 'Leve folga confortável.' },
+        { id: 'solto', label: 'Solto', description: 'Pernas amplas com folga.' },
+        { id: 'mom', label: 'Mom', description: 'Cintura alta, folgado no quadril. Estilo vintage.' },
       ]
     }
   ],
@@ -693,19 +694,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'slim', label: 'Slim' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'slim', label: 'Slim', description: 'Justa ao tronco, acompanha silhueta. Pouca folga para camadas por baixo.' },
+        { id: 'regular', label: 'Regular', description: 'Caimento tradicional com folga moderada. Permite camadas por baixo.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e ampla, ombros caídos. Aparência 1-2 tamanhos acima.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curta, termina na cintura ou acima. Mostra parte da blusa por baixo.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'alongado', label: 'Alongado' },
+        { id: 'cropped', label: 'Cropped', description: 'Termina na linha da cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Cobre quadril parcialmente.' },
+        { id: 'alongado', label: 'Alongado', description: 'Cobre quadril inteiro, próximo às coxas.' },
       ]
     }
   ],
@@ -714,19 +715,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'slim', label: 'Slim' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'slim', label: 'Slim', description: 'Ajustado ao corpo, acompanha silhueta.' },
+        { id: 'regular', label: 'Regular', description: 'Caimento tradicional, permite camadas.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e envolvente, muito volume.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curto, termina na cintura.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'alongado', label: 'Alongado' },
+        { id: 'cropped', label: 'Cropped', description: 'Na cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Cobre quadril.' },
+        { id: 'alongado', label: 'Alongado', description: 'Até as coxas ou joelhos.' },
       ]
     }
   ],
@@ -735,19 +736,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'slim', label: 'Slim' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'slim', label: 'Slim', description: 'Justa ao tronco, estruturada. Ombros definidos, cintura marcada.' },
+        { id: 'regular', label: 'Regular', description: 'Corte tradicional com leve folga. Ombros estruturados.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e despojado, ombros caídos. Estilo boyfriend.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curto, termina na cintura ou acima.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'alongado', label: 'Alongado' },
+        { id: 'cropped', label: 'Cropped', description: 'Na linha da cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Cobre quadril parcialmente, comprimento clássico.' },
+        { id: 'alongado', label: 'Alongado', description: 'Estilo longline, cobre quadril inteiro.' },
       ]
     }
   ],
@@ -756,19 +757,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'slim', label: 'Slim' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'oversized', label: 'Oversized' },
-        { id: 'cropped', label: 'Cropped' },
+        { id: 'slim', label: 'Slim', description: 'Ajustado ao corpo, silhueta definida.' },
+        { id: 'regular', label: 'Regular', description: 'Caimento confortável com folga moderada.' },
+        { id: 'oversized', label: 'Oversized', description: 'Grande e folgado, aparência despojada. Muito popular.' },
+        { id: 'cropped', label: 'Cropped', description: 'Curto, termina na cintura. Mostra cintura da calça.' },
       ]
     },
     {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'cropped', label: 'Cropped' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'alongado', label: 'Alongado' },
+        { id: 'cropped', label: 'Cropped', description: 'Na linha da cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Cobre quadril.' },
+        { id: 'alongado', label: 'Alongado', description: 'Estilo longline, cobre parte das coxas.' },
       ]
     }
   ],
@@ -777,18 +778,18 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'curto', label: 'Curto' },
-        { id: 'pantacourt', label: 'Pantacourt' },
-        { id: 'longo', label: 'Longo' },
+        { id: 'curto', label: 'Curto', description: 'Pernas curtas tipo shorts.' },
+        { id: 'pantacourt', label: 'Pantacourt', description: 'Pernas até metade da canela.' },
+        { id: 'longo', label: 'Longo', description: 'Pernas compridas até o tornozelo.' },
       ]
     },
     {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justo', label: 'Justo' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'amplo', label: 'Amplo' },
+        { id: 'justo', label: 'Justo', description: 'Colado ao corpo inteiro, marca silhueta.' },
+        { id: 'regular', label: 'Regular', description: 'Leve folga confortável no tronco e pernas.' },
+        { id: 'amplo', label: 'Amplo', description: 'Solto e fluido, pernas largas tipo pantalona.' },
       ]
     }
   ],
@@ -797,18 +798,18 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'comprimento',
       label: 'Comprimento',
       options: [
-        { id: 'curto', label: 'Curto' },
-        { id: 'pantacourt', label: 'Pantacourt' },
-        { id: 'longo', label: 'Longo' },
+        { id: 'curto', label: 'Curto', description: 'Pernas curtas tipo shorts.' },
+        { id: 'pantacourt', label: 'Pantacourt', description: 'Pernas até metade da canela.' },
+        { id: 'longo', label: 'Longo', description: 'Pernas compridas até o tornozelo.' },
       ]
     },
     {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justo', label: 'Justo' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'amplo', label: 'Amplo' },
+        { id: 'justo', label: 'Justo', description: 'Ajustado ao corpo.' },
+        { id: 'regular', label: 'Regular', description: 'Folga confortável.' },
+        { id: 'amplo', label: 'Amplo', description: 'Solto e folgado, estilo boyfriend.' },
       ]
     }
   ],
@@ -817,18 +818,18 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'caimento',
       label: 'Caimento',
       options: [
-        { id: 'justo', label: 'Justo' },
-        { id: 'regular', label: 'Regular' },
-        { id: 'solto', label: 'Solto' },
+        { id: 'justo', label: 'Justo', description: 'Colado ao corpo tipo segunda pele. Marca silhueta.' },
+        { id: 'regular', label: 'Regular', description: 'Ajustado mas confortável, não aperta.' },
+        { id: 'solto', label: 'Solto', description: 'Tecido flui, não marca corpo. Geralmente com amarração.' },
       ]
     },
     {
       id: 'decote',
       label: 'Decote',
       options: [
-        { id: 'fechado', label: 'Fechado' },
-        { id: 'moderado', label: 'Moderado' },
-        { id: 'decotado', label: 'Decotado' },
+        { id: 'fechado', label: 'Fechado', description: 'Gola alta ou fechada, sem decote.' },
+        { id: 'moderado', label: 'Moderado', description: 'Decote discreto.' },
+        { id: 'decotado', label: 'Decotado', description: 'Decote profundo ou amplo.' },
       ]
     }
   ],
@@ -837,19 +838,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'cobertura',
       label: 'Cobertura inferior',
       options: [
-        { id: 'fio-dental', label: 'Fio dental' },
-        { id: 'asa-delta', label: 'Asa delta' },
-        { id: 'tradicional', label: 'Tradicional' },
-        { id: 'hot-pants', label: 'Hot pants' },
+        { id: 'fio-dental', label: 'Fio dental', description: 'Mínima cobertura, tira fina atrás. Lateral estreita.' },
+        { id: 'asa-delta', label: 'Asa delta', description: 'Cobertura moderada, formato triangular. Lateral média.' },
+        { id: 'tradicional', label: 'Tradicional', description: 'Cobertura confortável, cobre bumbum inteiro. Lateral larga.' },
+        { id: 'hot-pants', label: 'Hot pants', description: 'Modelo shorts, cobertura total. Cintura mais alta.' },
       ]
     },
     {
       id: 'bojo',
       label: 'Bojo',
       options: [
-        { id: 'com-bojo', label: 'Com bojo' },
-        { id: 'sem-bojo', label: 'Sem bojo' },
-        { id: 'bojo-removivel', label: 'Bojo removível' },
+        { id: 'com-bojo', label: 'Com bojo', description: 'Estrutura rígida que modela e sustenta. Formato definido.' },
+        { id: 'sem-bojo', label: 'Sem bojo', description: 'Tecido flexível sem estrutura. Caimento natural.' },
+        { id: 'bojo-removivel', label: 'Bojo removível', description: 'Bojo encaixado que pode ser retirado.' },
       ]
     }
   ],
@@ -858,19 +859,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'cobertura',
       label: 'Cobertura inferior',
       options: [
-        { id: 'fio-dental', label: 'Fio dental' },
-        { id: 'asa-delta', label: 'Asa delta' },
-        { id: 'tradicional', label: 'Tradicional' },
-        { id: 'hot-pants', label: 'Hot pants' },
+        { id: 'fio-dental', label: 'Fio dental', description: 'Mínima cobertura atrás, tira fina.' },
+        { id: 'asa-delta', label: 'Asa delta', description: 'Cobertura moderada, formato triangular.' },
+        { id: 'tradicional', label: 'Tradicional', description: 'Cobertura confortável e completa.' },
+        { id: 'hot-pants', label: 'Hot pants', description: 'Modelo com pernas tipo shorts.' },
       ]
     },
     {
       id: 'bojo',
       label: 'Bojo',
       options: [
-        { id: 'com-bojo', label: 'Com bojo' },
-        { id: 'sem-bojo', label: 'Sem bojo' },
-        { id: 'bojo-removivel', label: 'Bojo removível' },
+        { id: 'com-bojo', label: 'Com bojo', description: 'Estrutura que modela e sustenta o busto.' },
+        { id: 'sem-bojo', label: 'Sem bojo', description: 'Sem estrutura, caimento natural.' },
+        { id: 'bojo-removivel', label: 'Bojo removível', description: 'Bojo que pode ser retirado.' },
       ]
     }
   ],
@@ -879,18 +880,18 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'cintura',
       label: 'Cintura',
       options: [
-        { id: 'media', label: 'Média' },
-        { id: 'alta', label: 'Alta' },
-        { id: 'super-alta', label: 'Super alta' },
+        { id: 'media', label: 'Média', description: 'Cós na altura do umbigo.' },
+        { id: 'alta', label: 'Alta', description: 'Cós acima do umbigo, cobre barriga.' },
+        { id: 'super-alta', label: 'Super alta', description: 'Cós bem alto, quase no busto. Máxima compressão abdominal.' },
       ]
     },
     {
       id: 'compressao',
       label: 'Compressão',
       options: [
-        { id: 'leve', label: 'Leve' },
-        { id: 'media', label: 'Média' },
-        { id: 'alta', label: 'Alta' },
+        { id: 'leve', label: 'Leve', description: 'Tecido flexível, sem apertar. Conforto para uso casual.' },
+        { id: 'media', label: 'Média', description: 'Compressão moderada, sustenta sem apertar demais.' },
+        { id: 'alta', label: 'Alta', description: 'Tecido firme que modela e comprime. Para treinos intensos.' },
       ]
     }
   ],
@@ -899,18 +900,18 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'cintura',
       label: 'Cintura',
       options: [
-        { id: 'media', label: 'Média' },
-        { id: 'alta', label: 'Alta' },
-        { id: 'super-alta', label: 'Super alta' },
+        { id: 'media', label: 'Média', description: 'Cós na altura do umbigo.' },
+        { id: 'alta', label: 'Alta', description: 'Cós acima do umbigo.' },
+        { id: 'super-alta', label: 'Super alta', description: 'Cós bem alto, máxima sustentação.' },
       ]
     },
     {
       id: 'compressao',
       label: 'Compressão',
       options: [
-        { id: 'leve', label: 'Leve' },
-        { id: 'media', label: 'Média' },
-        { id: 'alta', label: 'Alta' },
+        { id: 'leve', label: 'Leve', description: 'Tecido flexível e confortável.' },
+        { id: 'media', label: 'Média', description: 'Compressão moderada.' },
+        { id: 'alta', label: 'Alta', description: 'Tecido firme, máxima sustentação.' },
       ]
     }
   ],
@@ -919,11 +920,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'altura',
       label: 'Altura',
       options: [
-        { id: 'rasteiro', label: 'Rasteiro' },
-        { id: 'salto-baixo', label: 'Salto baixo (3-5cm)' },
-        { id: 'salto-medio', label: 'Salto médio (5-8cm)' },
-        { id: 'salto-alto', label: 'Salto alto (8cm+)' },
-        { id: 'plataforma', label: 'Plataforma' },
+        { id: 'rasteiro', label: 'Rasteiro', description: 'Sem salto, sola rente ao chão. Máximo conforto.' },
+        { id: 'salto-baixo', label: 'Salto baixo (3-5cm)', description: 'Salto discreto de 3-5cm. Confortável para uso prolongado.' },
+        { id: 'salto-medio', label: 'Salto médio (5-8cm)', description: 'Salto moderado de 5-8cm. Elegante e ainda confortável.' },
+        { id: 'salto-alto', label: 'Salto alto (8cm+)', description: 'Salto acima de 8cm. Elegância máxima, uso para eventos.' },
+        { id: 'plataforma', label: 'Plataforma', description: 'Sola elevada por inteiro, não apenas calcanhar. Estabilidade maior que salto.' },
       ]
     }
   ],
@@ -932,11 +933,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tamanho',
       label: 'Tamanho',
       options: [
-        { id: 'mini', label: 'Mini' },
-        { id: 'pequena', label: 'Pequena' },
-        { id: 'media', label: 'Média' },
-        { id: 'grande', label: 'Grande' },
-        { id: 'maxi', label: 'Maxi' },
+        { id: 'mini', label: 'Mini', description: 'Cabe apenas celular e cartão. Menos de 15cm.' },
+        { id: 'pequena', label: 'Pequena', description: 'Cabe celular, carteira e itens básicos. 15-20cm.' },
+        { id: 'media', label: 'Média', description: 'Uso diário, cabe itens essenciais. 20-30cm.' },
+        { id: 'grande', label: 'Grande', description: 'Cabe notebook pequeno, muitos itens. 30-40cm.' },
+        { id: 'maxi', label: 'Maxi', description: 'Bolsa grande tipo sacola. Acima de 40cm.' },
       ]
     }
   ],
@@ -945,10 +946,10 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tamanho',
       label: 'Tamanho',
       options: [
-        { id: 'unico', label: 'Único' },
-        { id: 'pequeno', label: 'Pequeno' },
-        { id: 'medio', label: 'Médio' },
-        { id: 'grande', label: 'Grande' },
+        { id: 'unico', label: 'Único', description: 'Tamanho padrão universal.' },
+        { id: 'pequeno', label: 'Pequeno', description: 'Versão compacta/delicada.' },
+        { id: 'medio', label: 'Médio', description: 'Tamanho padrão.' },
+        { id: 'grande', label: 'Grande', description: 'Versão statement/destaque.' },
       ]
     }
   ],
@@ -958,11 +959,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'modelo',
       label: 'Modelo',
       options: [
-        { id: 'dad-hat', label: 'Dad Hat' },
-        { id: 'trucker', label: 'Trucker' },
-        { id: 'snapback', label: 'Snapback' },
-        { id: 'aba-reta', label: 'Aba Reta' },
-        { id: 'five-panel', label: 'Five Panel' },
+        { id: 'dad-hat', label: 'Dad Hat', description: 'Aba curva, copa macia e desestruturada. Estilo casual e vintage.' },
+        { id: 'trucker', label: 'Trucker', description: 'Parte traseira em tela/rede. Frente estruturada, aba curva ou reta.' },
+        { id: 'snapback', label: 'Snapback', description: 'Aba reta, copa estruturada alta. Fecho traseiro ajustável de pressão.' },
+        { id: 'aba-reta', label: 'Aba Reta', description: 'Aba completamente plana/reta. Estilo urbano/streetwear.' },
+        { id: 'five-panel', label: 'Five Panel', description: 'Copa formada por 5 painéis. Visual minimalista e moderno.' },
       ]
     }
   ],
@@ -971,11 +972,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'modelo',
       label: 'Modelo',
       options: [
-        { id: 'bucket', label: 'Bucket' },
-        { id: 'fedora', label: 'Fedora' },
-        { id: 'panama', label: 'Panamá' },
-        { id: 'palha', label: 'Palha' },
-        { id: 'pescador', label: 'Pescador' },
+        { id: 'bucket', label: 'Bucket', description: 'Formato balde, aba caída em volta. Estilo anos 90, casual.' },
+        { id: 'fedora', label: 'Fedora', description: 'Copa vincada no topo, aba média. Estilo clássico elegante.' },
+        { id: 'panama', label: 'Panamá', description: 'Palha fina trançada, aba larga. Elegante para verão.' },
+        { id: 'palha', label: 'Palha', description: 'Material natural trançado, aba larga. Proteção solar, estilo praia.' },
+        { id: 'pescador', label: 'Pescador', description: 'Similar ao bucket mas mais estruturado. Proteção lateral.' },
       ]
     }
   ],
@@ -984,9 +985,9 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'largura',
       label: 'Largura',
       options: [
-        { id: 'fina', label: 'Fina' },
-        { id: 'media', label: 'Média' },
-        { id: 'larga', label: 'Larga' },
+        { id: 'fina', label: 'Fina', description: 'Menos de 1cm de largura. Delicada e discreta.' },
+        { id: 'media', label: 'Média', description: '1-3cm de largura. Versátil para uso diário.' },
+        { id: 'larga', label: 'Larga', description: 'Acima de 3cm. Statement piece, visual retrô.' },
       ]
     }
   ],
@@ -995,9 +996,9 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tamanho',
       label: 'Tamanho',
       options: [
-        { id: 'pequeno', label: 'Pequeno (bandana)' },
-        { id: 'medio', label: 'Médio' },
-        { id: 'grande', label: 'Grande (echarpe)' },
+        { id: 'pequeno', label: 'Pequeno (bandana)', description: 'Quadrado pequeno ~50cm. Para cabelo ou pescoço.' },
+        { id: 'medio', label: 'Médio', description: 'Quadrado ~70cm. Versátil, várias amarrações.' },
+        { id: 'grande', label: 'Grande (echarpe)', description: 'Retangular ou quadrado grande. Funciona como xale.' },
       ]
     }
   ],
@@ -1007,11 +1008,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tipo',
       label: 'Tipo',
       options: [
-        { id: 'casual', label: 'Casual' },
-        { id: 'corrida', label: 'Corrida' },
-        { id: 'skatista', label: 'Skatista' },
-        { id: 'chunky', label: 'Chunky/Dad Sneaker' },
-        { id: 'slip-on', label: 'Slip-on' },
+        { id: 'casual', label: 'Casual', description: 'Uso diário, design clean. Sola fina a média, sem tecnologia esportiva.' },
+        { id: 'corrida', label: 'Corrida', description: 'Sola com amortecimento visível, cabedal respirável. Design aerodinâmico.' },
+        { id: 'skatista', label: 'Skatista', description: 'Sola plana e grossa, reforço no bico. Design robusto, costuras reforçadas.' },
+        { id: 'chunky', label: 'Chunky/Dad Sneaker', description: 'Sola muito grossa e volumosa. Visual robusto e retrô anos 90.' },
+        { id: 'slip-on', label: 'Slip-on', description: 'Sem cadarços, elástico lateral. Fácil de calçar, design minimalista.' },
       ]
     }
   ],
@@ -1020,11 +1021,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tipo',
       label: 'Tipo',
       options: [
-        { id: 'rasteira', label: 'Rasteira' },
-        { id: 'plataforma', label: 'Plataforma' },
-        { id: 'salto-bloco', label: 'Salto Bloco' },
-        { id: 'salto-fino', label: 'Salto Fino' },
-        { id: 'chinelo', label: 'Chinelo/Slide' },
+        { id: 'rasteira', label: 'Rasteira', description: 'Sem salto, sola fina rente ao chão. Confortável para uso diário.' },
+        { id: 'plataforma', label: 'Plataforma', description: 'Sola alta e grossa por inteiro. Estável, altura sem desconforto.' },
+        { id: 'salto-bloco', label: 'Salto Bloco', description: 'Salto grosso e estável. Mais confortável que salto fino.' },
+        { id: 'salto-fino', label: 'Salto Fino', description: 'Salto delgado e elegante. Para ocasiões especiais.' },
+        { id: 'chinelo', label: 'Chinelo/Slide', description: 'Uma tira larga sobre o peito do pé. Fácil de calçar/tirar.' },
       ]
     }
   ],
@@ -1033,20 +1034,20 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'cano',
       label: 'Cano',
       options: [
-        { id: 'curto', label: 'Curto (tornozelo)' },
-        { id: 'medio', label: 'Médio (panturrilha)' },
-        { id: 'alto', label: 'Alto (joelho)' },
-        { id: 'over-knee', label: 'Over the Knee' },
+        { id: 'curto', label: 'Curto', description: 'Cobre apenas tornozelo. Versátil, combina com tudo.' },
+        { id: 'medio', label: 'Médio', description: 'Até metade da panturrilha. Proteção moderada.' },
+        { id: 'alto', label: 'Alto', description: 'Até o joelho. Elegante, protege toda perna.' },
+        { id: 'over-knee', label: 'Over the Knee', description: 'Acima do joelho, cobre parte da coxa. Statement piece.' },
       ]
     },
     {
       id: 'salto',
       label: 'Salto',
       options: [
-        { id: 'rasteiro', label: 'Rasteiro' },
-        { id: 'baixo', label: 'Baixo' },
-        { id: 'medio', label: 'Médio' },
-        { id: 'alto', label: 'Alto' },
+        { id: 'rasteiro', label: 'Rasteiro', description: 'Sem salto, sola plana. Máximo conforto.' },
+        { id: 'baixo', label: 'Baixo', description: 'Salto até 5cm. Confortável para uso prolongado.' },
+        { id: 'medio', label: 'Médio', description: 'Salto 5-8cm. Elegância com conforto.' },
+        { id: 'alto', label: 'Alto', description: 'Salto acima de 8cm. Para ocasiões especiais.' },
       ]
     }
   ],
@@ -1056,9 +1057,9 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'largura',
       label: 'Largura',
       options: [
-        { id: 'fino', label: 'Fino' },
-        { id: 'medio', label: 'Médio' },
-        { id: 'largo', label: 'Largo' },
+        { id: 'fino', label: 'Fino', description: 'Até 2cm. Delicado, para passantes pequenos.' },
+        { id: 'medio', label: 'Médio', description: '2-4cm. Versátil, passantes padrão.' },
+        { id: 'largo', label: 'Largo', description: 'Acima de 4cm. Statement, marca cintura.' },
       ]
     }
   ],
@@ -1067,9 +1068,9 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tamanho',
       label: 'Tamanho do Mostrador',
       options: [
-        { id: 'pequeno', label: 'Pequeno' },
-        { id: 'medio', label: 'Médio' },
-        { id: 'grande', label: 'Grande (oversized)' },
+        { id: 'pequeno', label: 'Pequeno', description: 'Mostrador até 36mm. Delicado, discreto.' },
+        { id: 'medio', label: 'Médio', description: 'Mostrador 36-42mm. Tamanho clássico unissex.' },
+        { id: 'grande', label: 'Grande (oversized)', description: 'Mostrador acima de 42mm. Statement, esportivo.' },
       ]
     }
   ],
@@ -1078,11 +1079,11 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'formato',
       label: 'Formato',
       options: [
-        { id: 'aviador', label: 'Aviador' },
-        { id: 'redondo', label: 'Redondo' },
-        { id: 'quadrado', label: 'Quadrado' },
-        { id: 'gatinho', label: 'Gatinho' },
-        { id: 'oversized', label: 'Oversized' },
+        { id: 'aviador', label: 'Aviador', description: 'Lentes em gota, ponte dupla metálica. Clássico atemporal.' },
+        { id: 'redondo', label: 'Redondo', description: 'Armação circular. Estilo vintage, intelectual.' },
+        { id: 'quadrado', label: 'Quadrado', description: 'Linhas retas e angulares. Moderno, marcante.' },
+        { id: 'gatinho', label: 'Gatinho', description: 'Cantos superiores elevados. Feminino, retrô glam.' },
+        { id: 'oversized', label: 'Oversized', description: 'Lentes grandes que cobrem sobrancelhas. Statement, proteção extra.' },
       ]
     }
   ],
@@ -1091,12 +1092,475 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       id: 'tipo',
       label: 'Tipo',
       options: [
-        { id: 'colar', label: 'Colar' },
-        { id: 'brinco', label: 'Brinco' },
-        { id: 'pulseira', label: 'Pulseira' },
-        { id: 'anel', label: 'Anel' },
-        { id: 'conjunto', label: 'Conjunto' },
+        { id: 'colar', label: 'Colar', description: 'Peça para pescoço. Corrente, choker, ou pingente.' },
+        { id: 'brinco', label: 'Brinco', description: 'Peça para orelhas. Argola, gota, ou stud.' },
+        { id: 'pulseira', label: 'Pulseira', description: 'Peça para pulso. Bracelete, corrente, ou bangles.' },
+        { id: 'anel', label: 'Anel', description: 'Peça para dedos. Fino, statement, ou midi ring.' },
+        { id: 'conjunto', label: 'Conjunto', description: 'Kit com peças combinando. Colar + brinco, por exemplo.' },
       ]
     }
   ],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Descrições visuais de fit/caimento para identificação por IA
+// Usado para analisar produtos em fotos (com ou sem modelo)
+// ═══════════════════════════════════════════════════════════════
+
+export const FIT_DESCRIPTIONS_FOR_AI = {
+  // TOPS (Camisetas, Blusas, etc.)
+  tops: {
+    slim: {
+      label: 'Slim',
+      visualCues: [
+        'Costuras laterais retas sem excesso de tecido',
+        'Largura dos ombros próxima à medida real',
+        'Pouco volume de tecido quando peça está esticada',
+        'Mangas justas que seguem linha do braço'
+      ],
+      aiPrompt: 'Peça estreita e ajustada. Quando estendida plana, apresenta silhueta alongada e pouca sobra de tecido nas laterais.'
+    },
+    regular: {
+      label: 'Regular',
+      visualCues: [
+        'Costuras laterais com leve curvatura',
+        'Largura moderada no tronco',
+        'Tecido forma leve caimento quando pendurado',
+        'Mangas com folga moderada'
+      ],
+      aiPrompt: 'Corte tradicional. Quando estendida, apresenta proporções balanceadas com leve folga nas laterais.'
+    },
+    oversized: {
+      label: 'Oversized',
+      visualCues: [
+        'Costuras dos ombros caem além da linha natural',
+        'Grande largura no tronco e mangas',
+        'Muito tecido/volume visível',
+        'Barra larga e ampla'
+      ],
+      aiPrompt: 'Peça grande e ampla. Quando estendida, apresenta largura excessiva em relação ao comprimento, ombros largos.'
+    },
+    cropped: {
+      label: 'Cropped',
+      visualCues: [
+        'Comprimento visivelmente curto',
+        'Barra termina muito antes do esperado',
+        'Proporção altura/largura diferente do normal'
+      ],
+      aiPrompt: 'Peça curta. Comprimento notavelmente menor que o padrão da categoria.'
+    },
+    boxy: {
+      label: 'Boxy',
+      visualCues: [
+        'Formato retangular/quadrado quando estendida',
+        'Largura uniforme do ombro à barra',
+        'Sem afunilamento na cintura',
+        'Costuras laterais retas e paralelas'
+      ],
+      aiPrompt: 'Formato de caixa. Quando estendida, a peça forma retângulo quase perfeito sem curvas nas laterais.'
+    }
+  },
+
+  // CALÇAS
+  pants: {
+    skinny: {
+      label: 'Skinny',
+      visualCues: [
+        'Pernas muito estreitas',
+        'Abertura de barra pequena (12-14cm)',
+        'Costuras internas próximas uma da outra',
+        'Tecido com elastano visível no toque/brilho'
+      ],
+      aiPrompt: 'Pernas muito estreitas da coxa ao tornozelo. Abertura de barra pequena, geralmente em tecido com elasticidade.'
+    },
+    slim: {
+      label: 'Slim',
+      visualCues: [
+        'Pernas estreitas mas não coladas',
+        'Abertura de barra moderada (15-17cm)',
+        'Leve afunilamento do joelho para baixo'
+      ],
+      aiPrompt: 'Pernas estreitas com leve folga. Afunila suavemente em direção ao tornozelo.'
+    },
+    reta: {
+      label: 'Reta',
+      visualCues: [
+        'Largura uniforme da coxa ao tornozelo',
+        'Costuras laterais paralelas',
+        'Abertura de barra igual à largura da coxa'
+      ],
+      aiPrompt: 'Pernas com largura uniforme. Costuras laterais formam linhas paralelas do quadril ao tornozelo.'
+    },
+    wide_leg: {
+      label: 'Wide Leg',
+      visualCues: [
+        'Pernas largas e retas',
+        'Grande abertura de barra (22cm+)',
+        'Muito volume de tecido nas pernas',
+        'Costuras laterais afastadas'
+      ],
+      aiPrompt: 'Pernas largas e amplas. Grande volume de tecido, abertura de barra larga.'
+    },
+    flare: {
+      label: 'Flare',
+      visualCues: [
+        'Estreita na coxa, larga embaixo',
+        'Formato de sino visível',
+        'Alargamento começa no joelho'
+      ],
+      aiPrompt: 'Formato sino. Justa até o joelho, depois alarga significativamente até a barra.'
+    },
+    jogger: {
+      label: 'Jogger',
+      visualCues: [
+        'Elástico visível na barra',
+        'Franzido no tornozelo',
+        'Corpo folgado afunilando no final'
+      ],
+      aiPrompt: 'Elástico na barra criando franzido. Corpo folgado que afunila drasticamente no tornozelo.'
+    }
+  },
+
+  // VESTIDOS/SAIAS
+  dresses_skirts: {
+    justo: {
+      label: 'Justo',
+      visualCues: [
+        'Peça estreita sem volume',
+        'Costuras laterais retas e próximas',
+        'Pode ter fenda para mobilidade'
+      ],
+      aiPrompt: 'Silhueta estreita e alongada. Pouco tecido, formato tubular quando estendida.'
+    },
+    evase: {
+      label: 'Evasê',
+      visualCues: [
+        'Mais estreito em cima, alarga embaixo',
+        'Formato A quando estendida',
+        'Costuras laterais em diagonal'
+      ],
+      aiPrompt: 'Formato A. Mais estreita na parte superior, gradualmente mais larga na barra.'
+    },
+    reto: {
+      label: 'Reto',
+      visualCues: [
+        'Largura uniforme de cima a baixo',
+        'Costuras laterais paralelas',
+        'Sem volume ou abertura'
+      ],
+      aiPrompt: 'Corte reto. Largura uniforme do início ao fim, sem alargamento.'
+    },
+    amplo: {
+      label: 'Amplo',
+      visualCues: [
+        'Muito tecido e volume',
+        'Franzidos ou pregas visíveis',
+        'Barra muito larga'
+      ],
+      aiPrompt: 'Muito volume de tecido. Pode ter franzidos, pregas ou godês que criam amplitude.'
+    },
+    gode: {
+      label: 'Godê',
+      visualCues: [
+        'Formato circular quando estendido',
+        'Barra forma ondas naturais',
+        'Muito mais largo embaixo que em cima'
+      ],
+      aiPrompt: 'Corte circular. Quando estendida plana, forma semicírculo ou círculo completo.'
+    }
+  },
+
+  // TÊNIS
+  sneakers: {
+    casual: {
+      label: 'Casual',
+      visualCues: [
+        'Sola fina a média, sem tecnologia visível',
+        'Design limpo e minimalista',
+        'Cabedal liso ou com poucos detalhes',
+        'Cores neutras ou básicas'
+      ],
+      aiPrompt: 'Tênis básico para uso diário. Sola simples, design clean sem elementos esportivos técnicos.'
+    },
+    corrida: {
+      label: 'Corrida',
+      visualCues: [
+        'Sola com câmaras de ar ou amortecimento visível',
+        'Cabedal em mesh/tela respirável',
+        'Design aerodinâmico com linhas fluidas',
+        'Reforços no calcanhar'
+      ],
+      aiPrompt: 'Tênis esportivo com tecnologia. Sola com amortecimento visível, cabedal respirável, design performance.'
+    },
+    skatista: {
+      label: 'Skatista',
+      visualCues: [
+        'Sola plana e grossa de borracha',
+        'Bico reforçado com costura tripla',
+        'Cabedal em camurça ou lona grossa',
+        'Design robusto e durável'
+      ],
+      aiPrompt: 'Tênis de skate. Sola vulcanizada plana, bico reforçado, construção robusta e durável.'
+    },
+    chunky: {
+      label: 'Chunky/Dad Sneaker',
+      visualCues: [
+        'Sola muito grossa e volumosa',
+        'Múltiplas camadas visíveis na sola',
+        'Design exagerado e retrô',
+        'Aparência pesada e robusta'
+      ],
+      aiPrompt: 'Tênis volumoso estilo anos 90. Sola muito grossa com múltiplas camadas, visual exagerado.'
+    },
+    slip_on: {
+      label: 'Slip-on',
+      visualCues: [
+        'Sem cadarços ou fechos visíveis',
+        'Elástico lateral ou abertura ampla',
+        'Design minimalista',
+        'Fácil de calçar'
+      ],
+      aiPrompt: 'Tênis sem cadarços. Abertura elástica para calçar facilmente, design limpo e prático.'
+    }
+  },
+
+  // SANDÁLIAS
+  sandals: {
+    rasteira: {
+      label: 'Rasteira',
+      visualCues: [
+        'Sola completamente plana, rente ao chão',
+        'Altura máxima de 1-2cm',
+        'Tiras finas ou médias'
+      ],
+      aiPrompt: 'Sandália sem salto. Sola plana, confortável para uso prolongado.'
+    },
+    plataforma: {
+      label: 'Plataforma',
+      visualCues: [
+        'Sola grossa e uniforme',
+        'Altura igual em toda extensão',
+        'Base sólida e estável'
+      ],
+      aiPrompt: 'Sandália com sola alta por inteiro. Plataforma uniforme que não forma salto.'
+    },
+    salto_bloco: {
+      label: 'Salto Bloco',
+      visualCues: [
+        'Salto grosso e quadrado',
+        'Base larga oferecendo estabilidade',
+        'Formato geométrico'
+      ],
+      aiPrompt: 'Sandália com salto grosso. Formato quadrado/retangular, mais estável que salto fino.'
+    },
+    salto_fino: {
+      label: 'Salto Fino',
+      visualCues: [
+        'Salto delgado tipo agulha',
+        'Base de apoio pequena',
+        'Visual elegante e alongado'
+      ],
+      aiPrompt: 'Sandália com salto fino/agulha. Elegante, para ocasiões especiais.'
+    }
+  },
+
+  // BOTAS
+  boots: {
+    cano_curto: {
+      label: 'Cano Curto',
+      visualCues: [
+        'Altura até tornozelo',
+        'Cobre apenas o pé e tornozelo',
+        'Abertura próxima ao início da perna'
+      ],
+      aiPrompt: 'Bota que cobre até o tornozelo. Também chamada de ankle boot ou botinha.'
+    },
+    cano_medio: {
+      label: 'Cano Médio',
+      visualCues: [
+        'Altura até metade da panturrilha',
+        'Cobre tornozelo e parte da perna',
+        'Abertura na altura da panturrilha'
+      ],
+      aiPrompt: 'Bota até a panturrilha. Proteção moderada, versátil.'
+    },
+    cano_alto: {
+      label: 'Cano Alto',
+      visualCues: [
+        'Altura até o joelho',
+        'Cobre toda a panturrilha',
+        'Abertura na linha do joelho'
+      ],
+      aiPrompt: 'Bota até o joelho. Elegante, cobre toda a perna abaixo do joelho.'
+    },
+    over_knee: {
+      label: 'Over the Knee',
+      visualCues: [
+        'Ultrapassa o joelho',
+        'Cobre parte da coxa',
+        'Visual dramático e fashion'
+      ],
+      aiPrompt: 'Bota acima do joelho. Cobre parte da coxa, peça statement.'
+    }
+  },
+
+  // BONÉS E CHAPÉUS
+  headwear: {
+    dad_hat: {
+      label: 'Dad Hat',
+      visualCues: [
+        'Aba curva',
+        'Copa macia e desestruturada',
+        'Visual casual e vintage',
+        'Fecho traseiro com fivela ou velcro'
+      ],
+      aiPrompt: 'Boné com aba curva, copa macia sem estrutura. Estilo casual, relaxado.'
+    },
+    trucker: {
+      label: 'Trucker',
+      visualCues: [
+        'Parte traseira em tela/rede',
+        'Frente estruturada em espuma',
+        'Aba geralmente reta',
+        'Fecho de pressão traseiro'
+      ],
+      aiPrompt: 'Boné com traseira em rede para ventilação. Frente estruturada, estilo americano.'
+    },
+    snapback: {
+      label: 'Snapback',
+      visualCues: [
+        'Aba completamente reta',
+        'Copa alta e estruturada',
+        'Fecho traseiro de pressão ajustável',
+        'Visual urbano/streetwear'
+      ],
+      aiPrompt: 'Boné de aba reta com fecho de pressão. Copa alta estruturada, estilo urbano.'
+    },
+    bucket: {
+      label: 'Bucket',
+      visualCues: [
+        'Formato de balde invertido',
+        'Aba curta caindo em volta',
+        'Sem estrutura rígida',
+        'Estilo anos 90'
+      ],
+      aiPrompt: 'Chapéu formato balde. Aba curta ao redor, sem estrutura, estilo casual.'
+    },
+    fedora: {
+      label: 'Fedora',
+      visualCues: [
+        'Copa com vinco central no topo',
+        'Aba média estruturada',
+        'Fita decorativa na base da copa',
+        'Visual clássico elegante'
+      ],
+      aiPrompt: 'Chapéu clássico com vinco na copa. Aba média, fita decorativa, elegante.'
+    }
+  },
+
+  // BOLSAS
+  bags: {
+    mini: {
+      label: 'Mini',
+      visualCues: [
+        'Tamanho muito pequeno',
+        'Cabe na palma da mão',
+        'Geralmente decorativa',
+        'Alça curta ou corrente'
+      ],
+      aiPrompt: 'Bolsa muito pequena, menos de 15cm. Decorativa, cabe poucos itens.'
+    },
+    pequena: {
+      label: 'Pequena',
+      visualCues: [
+        'Tamanho compacto',
+        'Maior que celular, menor que A5',
+        'Para itens essenciais'
+      ],
+      aiPrompt: 'Bolsa compacta 15-20cm. Para celular, carteira e itens básicos.'
+    },
+    media: {
+      label: 'Média',
+      visualCues: [
+        'Tamanho padrão para uso diário',
+        'Comporta itens do dia a dia',
+        'Proporção equilibrada'
+      ],
+      aiPrompt: 'Bolsa de tamanho padrão 20-30cm. Uso diário, boa capacidade.'
+    },
+    grande: {
+      label: 'Grande',
+      visualCues: [
+        'Tamanho amplo',
+        'Cabe itens grandes',
+        'Alças reforçadas',
+        'Boa capacidade'
+      ],
+      aiPrompt: 'Bolsa grande 30-40cm. Alta capacidade, para trabalho ou viagem.'
+    },
+    maxi: {
+      label: 'Maxi/Tote',
+      visualCues: [
+        'Tamanho muito grande',
+        'Formato sacola',
+        'Alças longas para ombro',
+        'Capacidade máxima'
+      ],
+      aiPrompt: 'Bolsa muito grande, tipo sacola. Acima de 40cm, máxima capacidade.'
+    }
+  },
+
+  // ÓCULOS
+  eyewear: {
+    aviador: {
+      label: 'Aviador',
+      visualCues: [
+        'Lentes em formato de gota/lágrima',
+        'Ponte dupla metálica',
+        'Hastes finas metálicas',
+        'Design clássico militar'
+      ],
+      aiPrompt: 'Óculos aviador. Lentes em gota, ponte dupla metálica, clássico atemporal.'
+    },
+    redondo: {
+      label: 'Redondo',
+      visualCues: [
+        'Armação perfeitamente circular',
+        'Visual intelectual/artístico',
+        'Hastes finas',
+        'Estilo vintage'
+      ],
+      aiPrompt: 'Óculos redondos. Armação circular, estilo John Lennon, vintage.'
+    },
+    quadrado: {
+      label: 'Quadrado',
+      visualCues: [
+        'Linhas retas e angulares',
+        'Cantos definidos',
+        'Armação marcante',
+        'Visual moderno'
+      ],
+      aiPrompt: 'Óculos quadrados. Linhas retas, cantos angulares, moderno e marcante.'
+    },
+    gatinho: {
+      label: 'Gatinho',
+      visualCues: [
+        'Cantos superiores elevados/pontudos',
+        'Formato que sobe nos cantos',
+        'Visual feminino retrô',
+        'Estilo anos 50-60'
+      ],
+      aiPrompt: 'Óculos gatinho. Cantos superiores elevados, feminino, estilo vintage glam.'
+    },
+    oversized: {
+      label: 'Oversized',
+      visualCues: [
+        'Lentes muito grandes',
+        'Cobrem parte das sobrancelhas',
+        'Cobrem parte das bochechas',
+        'Visual dramático'
+      ],
+      aiPrompt: 'Óculos grandes. Lentes que cobrem grande área do rosto, statement piece.'
+    }
+  }
 };

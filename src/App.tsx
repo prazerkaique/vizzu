@@ -1520,8 +1520,14 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       const result = await analyzeProductImage({ imageBase64, userId: user?.id });
 
       if (result.success && result.products.length > 0) {
+        // Limite de 3 produtos por imagem
+        if (result.products.length > 3) {
+          alert('⚠️ Suba uma imagem com até 3 produtos à vista.\n\nPara melhores resultados, fotografe cada produto separadamente ou agrupe no máximo 3 itens por foto.');
+          return;
+        }
+
         if (result.multipleProducts && result.products.length > 1) {
-          // Múltiplos produtos detectados - mostrar seletor
+          // Múltiplos produtos detectados (2-3) - mostrar seletor
           setDetectedProducts(result.products);
           setShowProductSelector(true);
         } else {
@@ -1537,7 +1543,26 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
   };
 
   // Função para aplicar produto detectado nos campos do formulário
-  const applyDetectedProduct = (product: { type: string; color: string; pattern?: string; material?: string; gender?: string; brand?: string; fit?: string; suggestedName?: string }) => {
+  const applyDetectedProduct = (product: {
+    type: string;
+    color: string;
+    pattern?: string;
+    material?: string;
+    gender?: string;
+    brand?: string;
+    fit?: string;
+    suggestedName?: string;
+    // Novos campos para atributos específicos
+    neckline?: string;      // Decote
+    sleeveLength?: string;  // Comprimento manga
+    waistHeight?: string;   // Cintura (baixa/média/alta)
+    length?: string;        // Comprimento (curto/regular/longo)
+    heelType?: string;      // Tipo de salto
+    bootShaft?: string;     // Cano da bota
+    bagSize?: string;       // Tamanho bolsa
+    hatStyle?: string;      // Estilo boné/chapéu
+    glassesShape?: string;  // Formato óculos
+  }) => {
     // Mapear tipo detectado para categoria do sistema
     const categoryMap: Record<string, string> = {
       'Camiseta': 'Camiseta', 'Camisa': 'Camisa', 'Blusa': 'Blusa', 'Top': 'Top',
@@ -1555,19 +1580,38 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
       'Biquíni': 'Biquíni', 'Maiô': 'Maiô', 'Sunga': 'Sunga'
     };
 
-    // Mapear categoria singular para plural (para CATEGORY_ATTRIBUTES)
+    // Mapear categoria singular para plural (para CATEGORY_ATTRIBUTES) - EXPANDIDO
     const categoryToPluralMap: Record<string, string> = {
       'Camiseta': 'Camisetas', 'Camisa': 'Camisas', 'Blusa': 'Blusas', 'Top': 'Tops',
       'Regata': 'Regatas', 'Vestido': 'Vestidos', 'Saia': 'Saias', 'Calça': 'Calças',
-      'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos'
+      'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos',
+      'Blazer': 'Blazers', 'Moletom': 'Moletons', 'Macacão': 'Macacões', 'Jardineira': 'Jardineiras',
+      'Body': 'Bodies', 'Biquíni': 'Biquínis', 'Maiô': 'Maiôs', 'Legging': 'Leggings',
+      'Tênis': 'Tênis', 'Sandália': 'Sandálias', 'Bota': 'Botas', 'Bolsa': 'Bolsas',
+      'Boné': 'Bonés', 'Chapéu': 'Chapéus', 'Tiara': 'Tiaras', 'Lenço': 'Lenços',
+      'Cinto': 'Cintos', 'Relógio': 'Relógios', 'Óculos': 'Óculos', 'Calçados': 'Calçados'
     };
 
-    // Mapear fit da IA para ID do atributo caimento
+    // Mapear fit da IA para ID do atributo caimento - EXPANDIDO
     const fitToAttributeMap: Record<string, string> = {
       'Slim': 'slim', 'Regular': 'regular', 'Oversized': 'oversized', 'Skinny': 'skinny',
       'Loose': 'solta', 'Cropped': 'cropped', 'Longline': 'longline', 'Relaxed': 'relaxed',
       'Boxy': 'boxy', 'Justa': 'justa', 'Solta': 'solta', 'Amplo': 'amplo',
-      'Justo': 'justo', 'Evasê': 'evase', 'Reto': 'reto'
+      'Justo': 'justo', 'Evasê': 'evase', 'Reto': 'reto', 'Reta': 'reta',
+      'Wide Leg': 'wide-leg', 'Wide-leg': 'wide-leg', 'Flare': 'flare', 'Pantalona': 'pantalona',
+      'Jogger': 'jogger', 'Cargo': 'cargo', 'Mom': 'mom', 'Godê': 'gode'
+    };
+
+    // Mapear comprimento para ID do atributo
+    const lengthToAttributeMap: Record<string, string> = {
+      'Curto': 'curto', 'Curta': 'curta', 'Regular': 'regular', 'Médio': 'medio',
+      'Longo': 'longo', 'Longa': 'longa', 'Mini': 'mini', 'Midi': 'midi', 'Maxi': 'maxi',
+      'Longline': 'longline', 'Cropped': 'cropped', 'Alongado': 'alongado'
+    };
+
+    // Mapear cintura para ID do atributo
+    const waistToAttributeMap: Record<string, string> = {
+      'Baixa': 'baixa', 'Média': 'media', 'Alta': 'alta', 'Super Alta': 'super-alta'
     };
 
     const matchedCategory = categoryMap[product.type] || '';
@@ -1583,40 +1627,77 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
 
     // Aplicar atributos baseado na categoria detectada
     const newAttributes: ProductAttributes = {};
+    const categoryAttrs = pluralCategory ? CATEGORY_ATTRIBUTES[pluralCategory] : null;
 
-    // Se detectou caimento/fit, mapear para o atributo correto
-    if (product.fit) {
-      const fitId = fitToAttributeMap[product.fit] || product.fit.toLowerCase();
+    // Helper para aplicar atributo se válido
+    const applyAttribute = (attrId: string, value: string | undefined, valueMap?: Record<string, string>) => {
+      if (!value || !categoryAttrs) return;
+      const attr = categoryAttrs.find(a => a.id === attrId);
+      if (!attr) return;
 
-      // Verificar se a categoria tem o atributo 'caimento'
-      const categoryAttrs = CATEGORY_ATTRIBUTES[pluralCategory];
-      if (categoryAttrs) {
-        const caimentoAttr = categoryAttrs.find(attr => attr.id === 'caimento');
-        if (caimentoAttr) {
-          // Verificar se o valor é válido para esta categoria
-          const validOption = caimentoAttr.options.find(opt => opt.id === fitId);
-          if (validOption) {
-            newAttributes.caimento = fitId;
-          } else {
-            // Tentar encontrar a opção mais próxima
-            const normalizedFit = fitId.toLowerCase();
-            const closeMatch = caimentoAttr.options.find(opt =>
-              opt.id.toLowerCase().includes(normalizedFit) ||
-              normalizedFit.includes(opt.id.toLowerCase())
-            );
-            if (closeMatch) {
-              newAttributes.caimento = closeMatch.id;
-            }
-          }
+      const mappedValue = valueMap ? (valueMap[value] || value.toLowerCase()) : value.toLowerCase();
+      const validOption = attr.options.find(opt =>
+        opt.id === mappedValue ||
+        opt.id.toLowerCase() === mappedValue.toLowerCase()
+      );
+
+      if (validOption) {
+        newAttributes[attrId] = validOption.id;
+      } else {
+        // Tentar match parcial
+        const closeMatch = attr.options.find(opt =>
+          opt.id.toLowerCase().includes(mappedValue.toLowerCase()) ||
+          mappedValue.toLowerCase().includes(opt.id.toLowerCase())
+        );
+        if (closeMatch) {
+          newAttributes[attrId] = closeMatch.id;
         }
       }
+    };
+
+    // Aplicar caimento/fit
+    applyAttribute('caimento', product.fit, fitToAttributeMap);
+
+    // Aplicar modelagem (para calças)
+    if (product.fit && pluralCategory === 'Calças') {
+      applyAttribute('modelagem', product.fit, fitToAttributeMap);
     }
 
-    // Definir comprimento padrão baseado no tipo de produto
-    if (pluralCategory && CATEGORY_ATTRIBUTES[pluralCategory]) {
-      const comprimentoAttr = CATEGORY_ATTRIBUTES[pluralCategory].find(attr => attr.id === 'comprimento');
+    // Aplicar comprimento
+    applyAttribute('comprimento', product.length, lengthToAttributeMap);
+
+    // Aplicar cintura
+    applyAttribute('cintura', product.waistHeight, waistToAttributeMap);
+
+    // Aplicar tipo de salto (sandálias)
+    if (product.heelType) {
+      applyAttribute('tipo', product.heelType);
+    }
+
+    // Aplicar cano da bota
+    if (product.bootShaft) {
+      applyAttribute('cano', product.bootShaft);
+    }
+
+    // Aplicar tamanho bolsa
+    if (product.bagSize) {
+      applyAttribute('tamanho', product.bagSize);
+    }
+
+    // Aplicar estilo boné/chapéu
+    if (product.hatStyle) {
+      applyAttribute('modelo', product.hatStyle);
+    }
+
+    // Aplicar formato óculos
+    if (product.glassesShape) {
+      applyAttribute('formato', product.glassesShape);
+    }
+
+    // Se não definiu comprimento e a categoria tem, usar regular como padrão
+    if (!newAttributes.comprimento && categoryAttrs) {
+      const comprimentoAttr = categoryAttrs.find(attr => attr.id === 'comprimento');
       if (comprimentoAttr && comprimentoAttr.options.length > 0) {
-        // Definir 'regular' como padrão se existir, senão o primeiro
         const regularOption = comprimentoAttr.options.find(opt => opt.id === 'regular');
         newAttributes.comprimento = regularOption ? 'regular' : comprimentoAttr.options[0].id;
       }

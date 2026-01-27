@@ -771,9 +771,27 @@ interface DetectedProduct {
   material?: string;      // Ex: "Algodão", "Jeans", "Couro"
   gender?: string;        // Ex: "Masculino", "Feminino", "Unissex"
   brand?: string;         // Ex: "Nike", "Adidas", "Zara" (se identificável)
-  fit?: string;           // Ex: "Slim", "Regular", "Oversized", "Skinny"
+  fit?: string;           // Ex: "Slim", "Regular", "Oversized", "Skinny", "Wide Leg", "Flare"
   suggestedName?: string; // Ex: "Camiseta Básica Branca"
   confidence: number;     // 0-1
+
+  // Atributos adicionais detectados pela IA
+  length?: string;        // Ex: "Curto", "Regular", "Longo", "Mini", "Midi", "Maxi"
+  waistHeight?: string;   // Ex: "Baixa", "Média", "Alta"
+  neckline?: string;      // Ex: "V", "Redondo", "Quadrado", "Gola Alta"
+  sleeveLength?: string;  // Ex: "Curta", "Longa", "Regata", "3/4"
+
+  // Calçados
+  heelType?: string;      // Ex: "Rasteira", "Salto Bloco", "Salto Fino", "Plataforma"
+  bootShaft?: string;     // Ex: "Curto", "Médio", "Alto", "Over the Knee"
+  sneakerStyle?: string;  // Ex: "Casual", "Corrida", "Skatista", "Chunky"
+
+  // Acessórios
+  bagSize?: string;       // Ex: "Mini", "Pequena", "Média", "Grande", "Maxi"
+  hatStyle?: string;      // Ex: "Dad Hat", "Trucker", "Snapback", "Bucket", "Fedora"
+  glassesShape?: string;  // Ex: "Aviador", "Redondo", "Quadrado", "Gatinho", "Oversized"
+  beltWidth?: string;     // Ex: "Fino", "Médio", "Largo"
+  watchSize?: string;     // Ex: "Pequeno", "Médio", "Grande"
 }
 
 export type { DetectedProduct };
