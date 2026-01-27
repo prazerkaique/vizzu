@@ -26,7 +26,28 @@ const CATEGORY_GROUPS = [
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
-const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege', 'Laranja', 'Roxo', 'Nude', 'Estampado', 'Multicolor'];
+const COLORS = [
+  // Básicas
+  'Preto', 'Branco', 'Cinza', 'Cinza Claro', 'Cinza Escuro', 'Chumbo',
+  // Azuis
+  'Azul', 'Azul Claro', 'Azul Marinho', 'Azul Royal', 'Azul Bebê', 'Azul Petróleo', 'Turquesa', 'Ciano',
+  // Verdes
+  'Verde', 'Verde Claro', 'Verde Escuro', 'Verde Militar', 'Verde Musgo', 'Oliva', 'Menta', 'Esmeralda',
+  // Vermelhos e Rosas
+  'Vermelho', 'Vermelho Escuro', 'Vinho', 'Bordô', 'Marsala', 'Coral', 'Salmão',
+  'Rosa', 'Rosa Claro', 'Rosa Pink', 'Rosa Bebê', 'Rosa Chá', 'Fúcsia', 'Magenta',
+  // Amarelos e Laranjas
+  'Amarelo', 'Amarelo Claro', 'Amarelo Ouro', 'Mostarda', 'Laranja', 'Laranja Queimado', 'Terracota', 'Pêssego',
+  // Marrons e Neutros
+  'Marrom', 'Marrom Claro', 'Marrom Escuro', 'Chocolate', 'Café', 'Caramelo', 'Castanho',
+  'Bege', 'Creme', 'Areia', 'Nude', 'Off-White', 'Cru',
+  // Roxos
+  'Roxo', 'Lilás', 'Lavanda', 'Violeta', 'Uva', 'Berinjela', 'Púrpura',
+  // Metálicos
+  'Dourado', 'Prateado', 'Bronze', 'Cobre', 'Rose Gold', 'Champagne',
+  // Especiais
+  'Estampado', 'Multicolor', 'Tie-dye', 'Degradê', 'Animal Print', 'Floral', 'Xadrez', 'Listrado'
+];
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
   { id: 'frente', label: 'Frente', icon: 'fa-user' },
@@ -1563,34 +1584,32 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     hatStyle?: string;      // Estilo boné/chapéu
     glassesShape?: string;  // Formato óculos
   }) => {
-    // Mapear tipo detectado para categoria do sistema
+    // Mapear tipo detectado pela IA para categoria do select (usa PLURAL que é o valor do CATEGORY_GROUPS)
     const categoryMap: Record<string, string> = {
-      'Camiseta': 'Camiseta', 'Camisa': 'Camisa', 'Blusa': 'Blusa', 'Top': 'Top',
-      'Regata': 'Regata', 'Cropped': 'Cropped', 'Body': 'Body', 'Moletom': 'Moletom',
-      'Suéter': 'Suéter', 'Cardigan': 'Cardigan', 'Jaqueta': 'Jaqueta', 'Blazer': 'Blazer',
-      'Colete': 'Colete', 'Casaco': 'Casaco', 'Calça': 'Calça', 'Shorts': 'Shorts',
-      'Bermuda': 'Bermuda', 'Saia': 'Saia', 'Vestido': 'Vestido', 'Macacão': 'Macacão',
-      'Jardineira': 'Jardineira', 'Legging': 'Legging', 'Tênis': 'Tênis', 'Sapato': 'Sapato',
-      'Sandália': 'Sandália', 'Bota': 'Bota', 'Chinelo': 'Chinelo', 'Sapatilha': 'Sapatilha',
-      'Bolsa': 'Bolsa', 'Mochila': 'Mochila', 'Carteira': 'Carteira', 'Cinto': 'Cinto',
-      'Óculos': 'Óculos', 'Relógio': 'Relógio', 'Brinco': 'Brinco', 'Colar': 'Colar',
-      'Pulseira': 'Pulseira', 'Anel': 'Anel', 'Chapéu': 'Chapéu', 'Boné': 'Boné',
-      'Cachecol': 'Cachecol', 'Lenço': 'Lenço', 'Gravata': 'Gravata', 'Cueca': 'Cueca',
-      'Calcinha': 'Calcinha', 'Sutiã': 'Sutiã', 'Meias': 'Meias', 'Pijama': 'Pijama',
-      'Biquíni': 'Biquíni', 'Maiô': 'Maiô', 'Sunga': 'Sunga'
+      // Cabeça
+      'Boné': 'Bonés', 'Chapéu': 'Chapéus', 'Tiara': 'Tiaras', 'Lenço': 'Lenços',
+      // Topo
+      'Camiseta': 'Camisetas', 'Blusa': 'Blusas', 'Regata': 'Regatas', 'Top': 'Tops',
+      'Camisa': 'Camisas', 'Body': 'Bodies', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos',
+      'Blazer': 'Blazers', 'Moletom': 'Moletons', 'Cropped': 'Tops', 'Suéter': 'Moletons',
+      'Cardigan': 'Casacos', 'Colete': 'Casacos',
+      // Baixo
+      'Calça': 'Calças', 'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Saia': 'Saias',
+      'Legging': 'Leggings', 'Short Fitness': 'Shorts Fitness',
+      // Peças inteiras
+      'Vestido': 'Vestidos', 'Macacão': 'Macacões', 'Jardineira': 'Jardineiras',
+      'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+      // Pés
+      'Tênis': 'Tênis', 'Sandália': 'Sandálias', 'Bota': 'Botas', 'Sapato': 'Calçados',
+      'Chinelo': 'Sandálias', 'Sapatilha': 'Calçados',
+      // Acessórios
+      'Bolsa': 'Bolsas', 'Mochila': 'Bolsas', 'Cinto': 'Cintos', 'Relógio': 'Relógios',
+      'Óculos': 'Óculos', 'Brinco': 'Bijuterias', 'Colar': 'Bijuterias', 'Pulseira': 'Bijuterias',
+      'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias',
     };
 
-    // Mapear categoria singular para plural (para CATEGORY_ATTRIBUTES) - EXPANDIDO
-    const categoryToPluralMap: Record<string, string> = {
-      'Camiseta': 'Camisetas', 'Camisa': 'Camisas', 'Blusa': 'Blusas', 'Top': 'Tops',
-      'Regata': 'Regatas', 'Vestido': 'Vestidos', 'Saia': 'Saias', 'Calça': 'Calças',
-      'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos',
-      'Blazer': 'Blazers', 'Moletom': 'Moletons', 'Macacão': 'Macacões', 'Jardineira': 'Jardineiras',
-      'Body': 'Bodies', 'Biquíni': 'Biquínis', 'Maiô': 'Maiôs', 'Legging': 'Leggings',
-      'Tênis': 'Tênis', 'Sandália': 'Sandálias', 'Bota': 'Botas', 'Bolsa': 'Bolsas',
-      'Boné': 'Bonés', 'Chapéu': 'Chapéus', 'Tiara': 'Tiaras', 'Lenço': 'Lenços',
-      'Cinto': 'Cintos', 'Relógio': 'Relógios', 'Óculos': 'Óculos', 'Calçados': 'Calçados'
-    };
+    // Mapear para CATEGORY_ATTRIBUTES (usa mesmo valor plural)
+    const categoryToPluralMap: Record<string, string> = { ...categoryMap };
 
     // Mapear fit da IA para ID do atributo caimento - EXPANDIDO
     const fitToAttributeMap: Record<string, string> = {
@@ -1616,6 +1635,15 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
 
     const matchedCategory = categoryMap[product.type] || '';
     const pluralCategory = categoryToPluralMap[product.type] || '';
+
+    // Debug log para verificar mapeamento
+    console.log('[AI Detection]', {
+      originalType: product.type,
+      mappedCategory: matchedCategory,
+      color: product.color,
+      fit: product.fit,
+      availableCategories: Object.keys(categoryMap)
+    });
 
     setNewProduct(prev => ({
       ...prev,
