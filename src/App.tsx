@@ -6526,47 +6526,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Step 3: Aparência */}
               {modelWizardStep === 3 && (
                 <div className="space-y-4">
-                  {/* Cor do Cabelo - Chips (6 opções) */}
-                  <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor do Cabelo</label>
-                    <div className="flex flex-wrap gap-2">
-                      {MODEL_OPTIONS.hairColor.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, hairColor: opt.id })}
-                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
-                            newModel.hairColor === opt.id
-                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
-                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tipo de Cabelo - Chips (5 opções) */}
-                  <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cabelo</label>
-                    <div className="flex flex-wrap gap-2">
-                      {MODEL_OPTIONS.hairStyle.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, hairStyle: opt.id })}
-                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
-                            newModel.hairStyle === opt.id
-                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
-                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tamanho do Cabelo - Slider (6 opções escala) */}
+                  {/* Tamanho do Cabelo - Slider (6 opções escala) - PRIMEIRO */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
                       Tamanho do Cabelo: <span className="text-pink-400">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
@@ -6594,17 +6554,62 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                   </div>
 
-                  {/* Observações do Cabelo */}
-                  <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações do Cabelo <span className="text-neutral-500">(opcional)</span></label>
-                    <input
-                      type="text"
-                      value={newModel.hairNotes}
-                      onChange={(e) => setNewModel({ ...newModel, hairNotes: e.target.value })}
-                      placeholder="Ex: Franja, mechas coloridas, raspado nas laterais..."
-                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
-                    />
-                  </div>
+                  {/* Campos de cabelo - só aparecem se NÃO for careca */}
+                  {newModel.hairLength !== 'bald' && (
+                    <>
+                      {/* Cor do Cabelo - Chips */}
+                      <div>
+                        <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor do Cabelo</label>
+                        <div className="flex flex-wrap gap-2">
+                          {MODEL_OPTIONS.hairColor.map(opt => (
+                            <button
+                              key={opt.id}
+                              onClick={() => setNewModel({ ...newModel, hairColor: opt.id })}
+                              className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
+                                newModel.hairColor === opt.id
+                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                  : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+                              )}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Tipo de Cabelo - Chips */}
+                      <div>
+                        <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cabelo</label>
+                        <div className="flex flex-wrap gap-2">
+                          {MODEL_OPTIONS.hairStyle.map(opt => (
+                            <button
+                              key={opt.id}
+                              onClick={() => setNewModel({ ...newModel, hairStyle: opt.id })}
+                              className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
+                                newModel.hairStyle === opt.id
+                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                  : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+                              )}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Observações do Cabelo */}
+                      <div>
+                        <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações do Cabelo <span className="text-neutral-500">(opcional)</span></label>
+                        <input
+                          type="text"
+                          value={newModel.hairNotes}
+                          onChange={(e) => setNewModel({ ...newModel, hairNotes: e.target.value })}
+                          placeholder="Ex: Franja, mechas coloridas, raspado nas laterais..."
+                          className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
+                        />
+                      </div>
+                    </>
+                  )}
 
                   {/* Cor dos Olhos - Chips (5 opções) */}
                   <div>
@@ -6891,10 +6896,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             </p>
                             <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
                               {newModel.name || (newModel.gender === 'woman' ? 'Ela' : 'Ele')} terá{' '}
-                              <span className="text-pink-400 font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>,{' '}
-                              cabelo <span className="text-pink-400 font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
-                              <span className="text-pink-400 font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
-                              e <span className="text-pink-400 font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.{' '}
+                              <span className="text-pink-400 font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>
+                              {newModel.hairLength === 'bald' ? (
+                                <> e será <span className="text-pink-400 font-medium">careca</span>.</>
+                              ) : (
+                                <>, cabelo <span className="text-pink-400 font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
+                                <span className="text-pink-400 font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
+                                e <span className="text-pink-400 font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.</>
+                              )}{' '}
                               Corpo <span className="text-pink-400 font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
                               pele <span className="text-pink-400 font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
                               estatura <span className="text-pink-400 font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}

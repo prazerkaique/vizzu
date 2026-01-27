@@ -371,7 +371,6 @@ export const MODEL_OPTIONS = {
     { id: 'wavy', label: 'Ondulado' },
     { id: 'curly', label: 'Cacheado' },
     { id: 'coily', label: 'Crespo' },
-    { id: 'bald', label: 'Careca' },
   ],
   hairLength: [
     { id: 'bald', label: 'Careca' },
