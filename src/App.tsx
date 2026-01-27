@@ -6412,53 +6412,46 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Step 2: Físico */}
               {modelWizardStep === 2 && (
                 <div className="space-y-4">
+                  {/* Faixa Etária - Dropdown (8 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Faixa Etária</label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <select
+                      value={newModel.ageRange}
+                      onChange={(e) => setNewModel({ ...newModel, ageRange: e.target.value })}
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer'}
+                    >
                       {MODEL_OPTIONS.ageRange.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, ageRange: opt.id })}
-                          className={'px-2 py-2 rounded-lg border transition-all text-[10px] font-medium ' + (
-                            newModel.ageRange === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
+                        <option key={opt.id} value={opt.id}>{opt.label}</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
+
+                  {/* Etnia - Dropdown (6 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Etnia</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <select
+                      value={newModel.ethnicity}
+                      onChange={(e) => setNewModel({ ...newModel, ethnicity: e.target.value })}
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer'}
+                    >
                       {MODEL_OPTIONS.ethnicity.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, ethnicity: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
-                            newModel.ethnicity === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
+                        <option key={opt.id} value={opt.id}>{opt.label}</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
+
+                  {/* Tom de Pele - Chips (4 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tom de Pele</label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {MODEL_OPTIONS.skinTone.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, skinTone: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.skinTone === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
                           {opt.label}
@@ -6466,17 +6459,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Tipo de Corpo - Chips (5 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Corpo</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {MODEL_OPTIONS.bodyType.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, bodyType: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.bodyType === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
                           {opt.label}
@@ -6484,24 +6479,37 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Altura - Slider (3 opções) */}
                   <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Altura</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MODEL_OPTIONS.height.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, height: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
-                            newModel.height === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+                      Altura: <span className="text-pink-400">{MODEL_OPTIONS.height.find(h => h.id === newModel.height)?.label}</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={2}
+                      value={MODEL_OPTIONS.height.findIndex(h => h.id === newModel.height)}
+                      onChange={(e) => setNewModel({ ...newModel, height: MODEL_OPTIONS.height[Number(e.target.value)].id })}
+                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                        [&::-webkit-slider-thumb]:appearance-none
+                        [&::-webkit-slider-thumb]:w-5
+                        [&::-webkit-slider-thumb]:h-5
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-webkit-slider-thumb]:bg-gradient-to-r
+                        [&::-webkit-slider-thumb]:from-pink-500
+                        [&::-webkit-slider-thumb]:to-orange-400
+                        [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg`}
+                    />
+                    <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+                      <span>Baixa</span>
+                      <span>Média</span>
+                      <span>Alta</span>
                     </div>
                   </div>
+
+                  {/* Observações */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Físicas <span className="text-neutral-500">(opcional)</span></label>
                     <textarea
@@ -6518,17 +6526,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Step 3: Aparência */}
               {modelWizardStep === 3 && (
                 <div className="space-y-4">
+                  {/* Cor do Cabelo - Chips (6 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor do Cabelo</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {MODEL_OPTIONS.hairColor.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, hairColor: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.hairColor === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
                           {opt.label}
@@ -6536,17 +6545,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Tipo de Cabelo - Chips (5 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cabelo</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {MODEL_OPTIONS.hairStyle.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, hairStyle: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.hairStyle === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
                           {opt.label}
@@ -6554,24 +6565,36 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Tamanho do Cabelo - Slider (6 opções escala) */}
                   <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tamanho do Cabelo</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MODEL_OPTIONS.hairLength.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, hairLength: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
-                            newModel.hairLength === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+                      Tamanho do Cabelo: <span className="text-pink-400">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={5}
+                      value={MODEL_OPTIONS.hairLength.findIndex(h => h.id === newModel.hairLength)}
+                      onChange={(e) => setNewModel({ ...newModel, hairLength: MODEL_OPTIONS.hairLength[Number(e.target.value)].id })}
+                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                        [&::-webkit-slider-thumb]:appearance-none
+                        [&::-webkit-slider-thumb]:w-5
+                        [&::-webkit-slider-thumb]:h-5
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-webkit-slider-thumb]:bg-gradient-to-r
+                        [&::-webkit-slider-thumb]:from-pink-500
+                        [&::-webkit-slider-thumb]:to-orange-400
+                        [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg`}
+                    />
+                    <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+                      <span>Careca</span>
+                      <span>Muito longo</span>
                     </div>
                   </div>
+
+                  {/* Observações do Cabelo */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações do Cabelo <span className="text-neutral-500">(opcional)</span></label>
                     <input
@@ -6582,17 +6605,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
                     />
                   </div>
+
+                  {/* Cor dos Olhos - Chips (5 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor dos Olhos</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {MODEL_OPTIONS.eyeColor.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, eyeColor: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
+                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.eyeColor === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
                           {opt.label}
@@ -6600,17 +6625,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Expressão - Chips (5 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Expressão</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {MODEL_OPTIONS.expression.map(opt => (
                         <button
                           key={opt.id}
                           onClick={() => setNewModel({ ...newModel, expression: opt.id })}
-                          className={'px-2 py-2 rounded-lg border transition-all text-[10px] font-medium ' + (
+                          className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.expression === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
+                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
                           {opt.label}
@@ -6618,6 +6645,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Observações da Pele */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações da Pele <span className="text-neutral-500">(opcional)</span></label>
                     <input
@@ -6634,44 +6663,76 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Step 4: Proporções */}
               {modelWizardStep === 4 && (
                 <div className="space-y-4">
+                  {/* Tamanho do Busto - Slider (3 opções, só para mulheres) */}
                   {newModel.gender === 'woman' && (
                     <div>
-                      <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tamanho do Busto</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {MODEL_OPTIONS.bustSize.map(opt => (
-                          <button
-                            key={opt.id}
-                            onClick={() => setNewModel({ ...newModel, bustSize: opt.id })}
-                            className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
-                              newModel.bustSize === opt.id
-                                ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                                : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                            )}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
+                      <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+                        Tamanho do Busto: <span className="text-pink-400">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
+                      </label>
+                      <input
+                        type="range"
+                        min={0}
+                        max={2}
+                        value={MODEL_OPTIONS.bustSize.findIndex(b => b.id === newModel.bustSize)}
+                        onChange={(e) => setNewModel({ ...newModel, bustSize: MODEL_OPTIONS.bustSize[Number(e.target.value)].id })}
+                        className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-5
+                          [&::-webkit-slider-thumb]:h-5
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-gradient-to-r
+                          [&::-webkit-slider-thumb]:from-pink-500
+                          [&::-webkit-slider-thumb]:to-orange-400
+                          [&::-webkit-slider-thumb]:cursor-pointer
+                          [&::-webkit-slider-thumb]:shadow-lg`}
+                      />
+                      <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+                        <span>Pequeno</span>
+                        <span>Médio</span>
+                        <span>Grande</span>
                       </div>
                     </div>
                   )}
+
+                  {/* Tipo de Cintura - Slider (3 opções) */}
                   <div>
-                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cintura</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MODEL_OPTIONS.waistType.map(opt => (
-                        <button
-                          key={opt.id}
-                          onClick={() => setNewModel({ ...newModel, waistType: opt.id })}
-                          className={'px-3 py-2 rounded-lg border transition-all text-xs font-medium ' + (
-                            newModel.waistType === opt.id
-                              ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-pink-400'
-                              : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700 text-neutral-400' : 'border-gray-200 hover:border-pink-300 text-gray-600')
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+                      Tipo de Cintura: <span className="text-pink-400">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={2}
+                      value={MODEL_OPTIONS.waistType.findIndex(w => w.id === newModel.waistType)}
+                      onChange={(e) => setNewModel({ ...newModel, waistType: MODEL_OPTIONS.waistType[Number(e.target.value)].id })}
+                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                        [&::-webkit-slider-thumb]:appearance-none
+                        [&::-webkit-slider-thumb]:w-5
+                        [&::-webkit-slider-thumb]:h-5
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-webkit-slider-thumb]:bg-gradient-to-r
+                        [&::-webkit-slider-thumb]:from-pink-500
+                        [&::-webkit-slider-thumb]:to-orange-400
+                        [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-webkit-slider-thumb]:shadow-lg`}
+                    />
+                    <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+                      <span>Fina</span>
+                      <span>Média</span>
+                      <span>Larga</span>
                     </div>
                   </div>
+
+                  {/* Mensagem para homens */}
+                  {newModel.gender === 'man' && (
+                    <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
+                      <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-info-circle text-lg mb-2'}></i>
+                      <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
+                        Para modelos masculinos, apenas a cintura é configurável nesta etapa.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Preview rápido das características até agora */}
                   <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-3 mt-4'}>
                     <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Resumo do Modelo</p>
