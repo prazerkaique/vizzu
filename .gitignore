@@ -56,3 +56,6 @@ n8n/
 n8n-*.json
 n8n-*.js
 n8n-workflows/
+
+# Documentação interna (não commitar)
+OTIMIZACOES_PROXIMOS_PASSOS.md
