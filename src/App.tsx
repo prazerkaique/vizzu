@@ -630,15 +630,6 @@ const loadUserProducts = async (userId: string) => {
         const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
         const generatedProductStudio = allImages.filter((img: any) => img.type === 'product_studio');
 
-        // Debug: verificar generation_id das imagens do Supabase
-        if (generatedModelo.length > 0) {
-          console.log('[Debug] Modelo IA images from Supabase:', generatedModelo.map((img: any) => ({
-            id: img.id,
-            generation_id: img.generation_id,
-            url: img.url?.substring(0, 50) + '...',
-            metadata: img.metadata
-          })));
-        }
 
         // Formatar imagens originais para o array images
         const formattedOriginalImages = originalImages.map((img: any) => ({
@@ -768,7 +759,6 @@ const loadUserClients = async (userId: string) => {
 
     if (error) {
       // Tabela pode não existir ainda - usar apenas localStorage
-      console.log('Clientes: tabela não existe no Supabase, usando localStorage');
       return;
     }
 
@@ -828,12 +818,10 @@ const loadUserClients = async (userId: string) => {
 
       // IMPORTANTE: Substituir estado local com dados do servidor + locais sincronizados
       setClients([...formattedClients, ...localOnly]);
-      console.log(`Clientes: ${formattedClients.length} do servidor + ${localOnly.length} locais sincronizados`);
     } else {
       // Servidor vazio - sincronizar locais para o servidor
       const validLocalClients = localClients;
       if (validLocalClients.length > 0) {
-        console.log(`Clientes: sincronizando ${validLocalClients.length} clientes locais para o servidor`);
         for (const client of validLocalClients) {
           await saveClientToSupabase(client, userId);
         }
@@ -841,7 +829,6 @@ const loadUserClients = async (userId: string) => {
       } else {
         // Servidor vazio e local vazio - limpar estado
         setClients([]);
-        console.log('Clientes: nenhum cliente encontrado');
       }
     }
   } catch (error) {
@@ -916,7 +903,7 @@ const loadUserHistory = async (userId: string) => {
       .limit(100);
 
     if (error) {
-      console.log('Histórico: tabela não existe no Supabase, usando localStorage');
+      // Tabela pode não existir ainda - usar apenas localStorage
       return;
     }
 
@@ -937,17 +924,14 @@ const loadUserHistory = async (userId: string) => {
 
       // Substituir estado com dados do servidor
       setHistoryLogs(formattedHistory);
-      console.log(`Histórico: ${formattedHistory.length} registros carregados do servidor`);
     } else {
       // Servidor vazio - sincronizar locais
       if (localHistory.length > 0) {
-        console.log(`Histórico: sincronizando ${localHistory.length} registros locais`);
         for (const log of localHistory.slice(0, 50)) {
           await saveHistoryToSupabase(log, userId);
         }
       } else {
         setHistoryLogs([]);
-        console.log('Histórico: nenhum registro encontrado');
       }
     }
   } catch (error) {
@@ -998,12 +982,10 @@ const loadUserCompanySettings = async (userId: string) => {
       if (error.code === 'PGRST116') {
         // Não encontrado no servidor - sincronizar local se existir
         if (localSettings.name) {
-          console.log('Configurações: sincronizando do localStorage para o servidor');
           await saveCompanySettingsToSupabase(localSettings, userId);
         }
-      } else {
-        console.log('Configurações: tabela não existe no Supabase, usando localStorage');
       }
+      // Silenciosamente usa localStorage se a tabela não existir
       return;
     }
 
@@ -1022,10 +1004,9 @@ const loadUserCompanySettings = async (userId: string) => {
       };
 
       setCompanySettings(formattedSettings);
-      console.log('Configurações: carregadas do servidor');
     }
-  } catch (error) {
-    console.error('Erro ao carregar configurações:', error);
+  } catch {
+    // Silenciosamente falha - usa localStorage
   }
 };
 
@@ -1731,14 +1712,6 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
     const pluralCategory = categoryToPluralMap[product.type] || '';
 
     // Debug log para verificar mapeamento
-    console.log('[AI Detection]', {
-      originalType: product.type,
-      mappedCategory: matchedCategory,
-      color: product.color,
-      fit: product.fit,
-      availableCategories: Object.keys(categoryMap)
-    });
-
     setNewProduct(prev => ({
       ...prev,
       name: product.suggestedName || prev.name,

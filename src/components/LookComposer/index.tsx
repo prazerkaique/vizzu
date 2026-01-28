@@ -139,7 +139,6 @@ export const LookComposer: React.FC<LookComposerProps> = ({
           // Encontrar o produto e selecionar
           const product = products.find(p => p.id === pending.productId);
           if (product) {
-            console.log('[LookComposer] Restaurando produto da geração pendente:', product.name);
             setSelectedProduct(product);
           }
         }

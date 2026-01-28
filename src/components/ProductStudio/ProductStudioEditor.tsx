@@ -321,8 +321,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     if (!refs.front && product.images?.[0]?.id) refs.front = true;
     if (!refs.back && product.images?.[1]?.id) refs.back = true;
 
-    console.log('🔍 [ProductStudio] Referências disponíveis (com ID):', refs);
-
     return refs;
   }, [product]);
 
@@ -649,12 +647,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       return;
     }
 
-    // Debug: mostrar estrutura do produto
-    console.log('🔍 [ProductStudio] Estrutura do produto:', {
-      originalImages: product.originalImages,
-      images: product.images,
-    });
-
     // Obter os IDs das imagens originais para TODOS os ângulos disponíveis
     const imageIds: Record<string, string | undefined> = {};
 
@@ -663,10 +655,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       if (!img) return undefined;
       // Prioriza o ID, mas se não tiver, tenta extrair do URL ou usa a URL como fallback
       if (img.id) return img.id;
-      // Se tem URL mas não tem ID, logamos o aviso
-      if (img.url) {
-        console.warn('⚠️ [ProductStudio] Imagem tem URL mas não tem ID:', img.url);
-      }
       return undefined;
     };
 
@@ -688,9 +676,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       alert('Erro: Imagem frontal ou usuário não encontrado.');
       return;
     }
-
-    console.log('📸 [ProductStudio] IDs de imagens disponíveis:', imageIds);
-    console.log('📸 [ProductStudio] Ângulos selecionados:', selectedAngles);
 
     // Iniciar geração (global ou local)
     const setGenerating = onSetGenerating || setLocalIsGenerating;
@@ -722,15 +707,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       if (imageIds.detail) referenceImages.detail = imageIds.detail;
 
       // Chamar a API real
-      console.log('🚀 [ProductStudio] Enviando para API:', {
-        productId: product.id,
-        userId: userId,
-        imageId: imageIds.front,
-        referenceImages,
-        angles: selectedAngles,
-        presentationStyle,
-      });
-
       const response = await generateProductStudioV2({
         productId: product.id,
         userId: userId,
@@ -750,13 +726,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       clearInterval(progressInterval);
       setProgress(95);
 
-      // DEBUG: Log completo da resposta
-      console.log('📦 [ProductStudio] Resposta da API:', JSON.stringify(response, null, 2));
-      console.log('📊 [ProductStudio] Ângulos solicitados:', selectedAngles.length);
-      console.log('📊 [ProductStudio] Resultados retornados:', response.results?.length || 0);
-
       if (!response.success || !response.results) {
-        console.error('❌ [ProductStudio] Erro na resposta:', response);
         throw new Error(response.message || 'Erro ao gerar imagens');
       }
 
@@ -767,8 +737,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         angle: result.angle as ProductStudioAngle,
         createdAt: new Date().toISOString()
       }));
-
-      console.log('✅ [ProductStudio] Imagens convertidas:', newImages.map(img => img.angle));
 
       setProgress(100);
 

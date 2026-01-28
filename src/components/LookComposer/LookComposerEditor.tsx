@@ -325,12 +325,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     // Verificar se a geração ainda está em andamento (menos de 5 minutos)
     const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
     if (elapsedMinutes > 5) {
-      console.log('[LookComposer] Geração pendente expirou (> 5 min), limpando...');
       clearPendingGeneration();
       return;
     }
-
-    console.log('[LookComposer] Geração pendente encontrada, verificando status...');
 
     // Verificar se a imagem já foi gerada no Supabase
     const { data: generation, error } = await supabase
@@ -343,13 +340,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       .single();
 
     if (error) {
-      console.log('[LookComposer] Erro ao verificar geração:', error);
       // Continuar fazendo polling
       return 'polling';
     }
 
     if (generation?.image_url && generation.status === 'completed') {
-      console.log('[LookComposer] Geração completada! Mostrando resultado...');
       clearPendingGeneration();
       setGeneratedImageUrl(generation.image_url);
       setGeneratedBackImageUrl(generation.back_image_url || null);
@@ -371,7 +366,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     const setGenerating = onSetGenerating || setLocalIsGenerating;
     const setProgress = onSetProgress || setLocalProgress;
 
-    console.log('[LookComposer] Retomando geração pendente:', pending.productName);
     setGenerating(true);
 
     // IMPORTANTE: Restaurar o generationStartTime para o timer funcionar
@@ -422,7 +416,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       clearPendingGeneration();
       setGenerating(false);
       setProgress(0);
-      console.log('[LookComposer] Timeout de geração pendente');
     }, 5 * 60 * 1000);
 
     return () => {
@@ -784,7 +777,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   // Handlers da tela de resultado
   const handleResultSave = () => {
-    console.log('[LookComposer] Look salvo:', generationId);
     setShowResult(false);
     setGeneratedImageUrl(null);
     setGeneratedBackImageUrl(null);
@@ -853,18 +845,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
   // Gerar look
   const handleGenerate = async () => {
-    console.log('[LookComposer] handleGenerate chamado');
-    console.log('[LookComposer] userId:', userId);
-    console.log('[LookComposer] selectedModel:', selectedModel);
-    console.log('[LookComposer] isAnyGenerationRunning:', isAnyGenerationRunning);
-
     if (isAnyGenerationRunning) {
       alert('Aguarde a geração atual terminar.');
       return;
     }
 
     if (onCheckCredits && !onCheckCredits(creditsNeeded, 'lifestyle')) {
-      console.log('[LookComposer] onCheckCredits retornou false');
       return;
     }
 
@@ -1059,24 +1045,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         modelThumbnail: modelThumb,
       });
 
-      console.log('[LookComposer] Chamando API generateModeloIA...');
-      console.log('[LookComposer] Params:', {
-        productId: product.id,
-        userId,
-        imageId,
-        imageUrl,
-        backgroundType,
-        backgroundMode,
-        lookMode,
-        poseMode,
-        lookItems: lookItems?.length,
-        viewsMode
-      });
-
       // ═══════════════════════════════════════════════════════════════
       // GERAÇÃO DE IMAGEM DE FRENTE
       // ═══════════════════════════════════════════════════════════════
-      console.log('[LookComposer] Gerando imagem de FRENTE...');
       // Determinar range de progresso baseado no modo
       const isFrontBack = viewsMode === 'front-back';
       const frontProgressMax = isFrontBack ? 48 : 95; // Se front-back, frente vai até 48%, senão até 95%
@@ -1114,9 +1085,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         throw new Error(resultFront.error || resultFront.message || 'Erro ao gerar imagem de frente');
       }
 
-      console.log('[LookComposer] Imagem de FRENTE gerada:', resultFront.generation.image_url);
-      console.log('[LookComposer] frontGenerationId:', resultFront.generation.id);
-      console.log('[LookComposer] resultFront.generation COMPLETO:', JSON.stringify(resultFront.generation));
       let frontImageUrl = resultFront.generation.image_url;
       let frontGenerationId = resultFront.generation.id;
       let backImageUrlResult: string | undefined;
@@ -1131,9 +1099,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
         // Usar imagem de costas do modelo como referência (se existir)
         const modelBackReference = selectedModel?.images?.back || selectedModel?.images?.front || selectedModel?.referenceImageUrl;
-        console.log('[LookComposer] Gerando imagem de COSTAS...');
-        console.log('[LookComposer] Referência do modelo (costas):', modelBackReference ? 'disponível' : 'não disponível');
-        console.log('[LookComposer] frontGenerationId para COSTAS:', frontGenerationId);
 
         const resultBack = await generateModeloIA({
           productId: product.id,
@@ -1168,21 +1133,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         });
 
         if (resultBack.success && resultBack.generation?.image_url) {
-          console.log('[LookComposer] Imagem de COSTAS gerada:', resultBack.generation.image_url);
           backImageUrlResult = resultBack.generation.image_url;
-        } else {
-          console.warn('[LookComposer] Falha ao gerar imagem de costas:', resultBack.error);
-          // Não falhar completamente, apenas avisar
         }
+        // Se falhar, continua sem a imagem de costas
       }
 
       setProgress(90);
-
-      // Debug: verificar URLs antes de salvar
-      console.log('[LookComposer] Salvando imagens no produto:');
-      console.log('[LookComposer] - frontImageUrl:', frontImageUrl);
-      console.log('[LookComposer] - backImageUrlResult:', backImageUrlResult);
-      console.log('[LookComposer] - viewsMode:', viewsMode);
 
       // Salvar a imagem gerada no produto (formato GeneratedImageSet)
       const newModeloIAImage: import('../../types').GeneratedImageSet = {
@@ -2275,14 +2231,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
           <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
-            {/* Animação Lottie colorida */}
-            <div className="w-24 h-24 mb-4">
-              <DotLottieReact
-                src="https://lottie.host/3eaae4e0-fd02-4695-9951-01011e444cf0/qzeCDkJphL.lottie"
-                loop
-                autoplay
-                style={{ width: '100%', height: '100%' }}
-              />
+            {/* Animação de loading com gradiente */}
+            <div className="w-24 h-24 mb-4 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full border-4 border-purple-500/30 border-t-purple-500 animate-spin"></div>
             </div>
 
             {/* Header */}

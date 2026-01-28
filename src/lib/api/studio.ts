@@ -270,9 +270,6 @@ interface ModeloIAParams {
  * Custo: 1-2 créditos (composer = 2)
  */
 export async function generateModeloIA(params: ModeloIAParams): Promise<StudioReadyResponse> {
-  console.log('[generateModeloIA] Iniciando...');
-  console.log('[generateModeloIA] N8N_BASE_URL:', N8N_BASE_URL);
-
   // Determinar modo: composer se tem lookItems, senão describe
   const isComposerMode = params.lookItems && params.lookItems.length > 0;
   const mode = isComposerMode ? 'composer' : 'describe';
@@ -297,13 +294,6 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   const modelProfile = parseModelPrompt(params.modelPrompt);
 
   const fullUrl = `${N8N_BASE_URL}/vizzu/modelo-ia-v2`;
-  console.log('[generateModeloIA] Chamando URL:', fullUrl);
-
-  // Debug para rastrear linkedTo
-  const linkedToValue = params.isBackView ? params.frontGenerationId : null;
-  console.log('[generateModeloIA] isBackView:', params.isBackView);
-  console.log('[generateModeloIA] frontGenerationId:', params.frontGenerationId);
-  console.log('[generateModeloIA] linkedTo sendo enviado:', linkedToValue);
 
   const response = await fetch(fullUrl, {
     method: 'POST',
@@ -350,8 +340,6 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   });
 
   const data = await response.json();
-  console.log('[generateModeloIA] Response status:', response.status);
-  console.log('[generateModeloIA] Response data:', data);
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar modelo');
@@ -359,7 +347,6 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
 
   // Se a resposta indica processamento assíncrono, fazer polling
   if (data.processing === true && data.generation?.id) {
-    console.log('[generateModeloIA] Geração assíncrona detectada, iniciando polling...');
     const generationId = data.generation.id;
     const startTime = Date.now();
 
@@ -387,14 +374,10 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
         .single();
 
       if (error) {
-        console.error('[generateModeloIA] Erro ao consultar geração:', error);
         continue;
       }
 
-      console.log('[generateModeloIA] Polling - Status:', generation?.status);
-
       if (generation?.status === 'completed' && generation?.output_image_url) {
-        console.log('[generateModeloIA] Geração concluída:', generation.output_image_url);
         // Notificar 100% ao completar
         if (params.onProgress) {
           params.onProgress(100);
