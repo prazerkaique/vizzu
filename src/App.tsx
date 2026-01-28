@@ -406,8 +406,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [savingModel, setSavingModel] = useState(false);
   const [generatingModelImages, setGeneratingModelImages] = useState(false);
   const [modelGenerationProgress, setModelGenerationProgress] = useState(0);
-  const [modelGenerationStep, setModelGenerationStep] = useState<'front' | 'face' | 'back' | 'done'>('front');
-  const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string; face?: string } | null>(null);
+  const [modelGenerationStep, setModelGenerationStep] = useState<'front' | 'back' | 'done'>('front');
+  const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string } | null>(null);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
 
   // Filtros da página de Modelos
@@ -2409,14 +2409,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setModelGenerationProgress(0);
     setModelGenerationStep('front');
 
-    // Simular progresso enquanto a API processa
+    // Simular progresso enquanto a API processa (2 steps: frente e costas)
     let currentProgress = 0;
     const progressInterval = setInterval(() => {
-      currentProgress += Math.random() * 3 + 1; // Incremento de 1-4%
-      if (currentProgress < 33) {
+      currentProgress += Math.random() * 2 + 0.5; // Incremento mais lento para ~2 min
+      if (currentProgress < 50) {
         setModelGenerationStep('front');
-      } else if (currentProgress < 66) {
-        setModelGenerationStep('face');
       } else if (currentProgress < 95) {
         setModelGenerationStep('back');
       }
@@ -2425,7 +2423,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         clearInterval(progressInterval);
       }
       setModelGenerationProgress(Math.round(currentProgress));
-    }, 500);
+    }, 1000);
 
     try {
       const result = await generateModelImages({
@@ -2477,7 +2475,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     setSavingModel(true);
     try {
       // Se já tem preview, salva como 'ready' com as imagens
-      const hasPreview = modelPreviewImages && (modelPreviewImages.front || modelPreviewImages.back || modelPreviewImages.face);
+      const hasPreview = modelPreviewImages && (modelPreviewImages.front || modelPreviewImages.back);
 
       const modelData = {
         user_id: user.id,
@@ -7118,7 +7116,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
                       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
                         {modelGenerationStep === 'front' && 'Gerando imagem de frente...'}
-                        {modelGenerationStep === 'face' && 'Gerando imagem do rosto...'}
                         {modelGenerationStep === 'back' && 'Gerando imagem de costas...'}
                         {modelGenerationStep === 'done' && 'Finalizando...'}
                       </p>
@@ -7128,12 +7125,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div className="flex items-center justify-between gap-2 text-xs">
                           {[
                             { key: 'front', label: 'Frente', icon: 'fa-user' },
-                            { key: 'face', label: 'Rosto', icon: 'fa-face-smile' },
                             { key: 'back', label: 'Costas', icon: 'fa-person-walking-arrow-right' },
                           ].map((step, idx) => {
                             const isCompleted =
-                              (step.key === 'front' && modelGenerationProgress >= 33) ||
-                              (step.key === 'face' && modelGenerationProgress >= 66) ||
+                              (step.key === 'front' && modelGenerationProgress >= 50) ||
                               (step.key === 'back' && modelGenerationProgress >= 95);
                             const isCurrent = modelGenerationStep === step.key;
                             return (
@@ -7184,10 +7179,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         </p>
                       </div>
                       {/* Grid de imagens geradas */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {['front', 'back', 'face'].map((type) => {
+                      <div className="grid grid-cols-2 gap-3">
+                        {['front', 'back'].map((type) => {
                           const imgUrl = modelPreviewImages[type as keyof typeof modelPreviewImages];
-                          const labels = { front: 'Frente', back: 'Costas', face: 'Rosto' };
+                          const labels = { front: 'Frente', back: 'Costas' };
                           return (
                             <div key={type} className="text-center">
                               <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
