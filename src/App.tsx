@@ -16,6 +16,23 @@ import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
 import { smartDownload } from './utils/downloadHelper';
 import { compressImage, formatFileSize, COMPRESSION_ENABLED } from './utils/imageCompression';
 import { ImageMigrationPanel } from './components/Admin/ImageMigrationPanel';
+import { runFullMigration, runProductMigration, runStorageMigration } from './utils/imageMigration';
+
+// Expor funções de migração globalmente para uso via Console (F12)
+declare global {
+  interface Window {
+    vizzu: {
+      comprimirImagens: typeof runFullMigration;
+      comprimirProdutos: typeof runProductMigration;
+      comprimirStorage: typeof runStorageMigration;
+    };
+  }
+}
+window.vizzu = {
+  comprimirImagens: runFullMigration,
+  comprimirProdutos: runProductMigration,
+  comprimirStorage: runStorageMigration,
+};
 
 
 const CATEGORY_GROUPS = [
