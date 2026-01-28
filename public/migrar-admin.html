@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>VIZZU - Migrar</title>
+  <style>
+    body{font-family:system-ui;background:#0a0a0a;color:#fff;padding:20px;max-width:800px;margin:0 auto}
+    h1{color:#f472b6}
+    .btn{background:linear-gradient(to right,#ec4899,#f97316);color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:16px;cursor:pointer;margin:5px}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-secondary{background:#333}
+    #log{background:#111;border:1px solid #333;border-radius:8px;padding:15px;height:400px;overflow-y:auto;font-family:monospace;font-size:13px}
+    .success{color:#4ade80}.error{color:#f87171}.info{color:#60a5fa}.warning{color:#fbbf24}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+    .stat{background:#1a1a1a;padding:15px;border-radius:8px;text-align:center}
+    .stat-value{font-size:24px;font-weight:bold;color:#f472b6}
+    .stat-label{font-size:12px;color:#888}
+  </style>
+</head>
+<body>
+  <h1>VIZZU - Migrar Imagens</h1>
+  <p style="color:#4ade80">Admin Mode - Service Role Key</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="total">0</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-value" id="compressed" style="color:#4ade80">0</div><div class="stat-label">Comprimidas</div></div>
+    <div class="stat"><div class="stat-value" id="skipped" style="color:#fbbf24">0</div><div class="stat-label">Puladas</div></div>
+    <div class="stat"><div class="stat-value" id="saved" style="color:#60a5fa">0 MB</div><div class="stat-label">Economizado</div></div>
+  </div>
+  <div style="margin-bottom:15px">
+    <button class="btn btn-secondary" id="btnSimular" onclick="run(true)">Simular</button>
+    <button class="btn" id="btnExecutar" onclick="run(false)">Executar</button>
+  </div>
+  <div id="log">Carregando bibliotecas...</div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://unpkg.com/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+  <script>
+    var sb = null;
+    var logEl = document.getElementById('log');
+
+    function log(m, t) {
+      var d = document.createElement('div');
+      d.className = t || 'info';
+      d.textContent = m;
+      logEl.appendChild(d);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function stats(a, b, c, d) {
+      document.getElementById('total').textContent = a;
+      document.getElementById('compressed').textContent = b;
+      document.getElementById('skipped').textContent = c;
+      document.getElementById('saved').textContent = (d / 1048576).toFixed(2) + ' MB';
+    }
+
+    function init() {
+      try {
+        sb = window.supabase.createClient(
+          'https://dbdqiqehuapcicejnzyd.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM'
+        );
+        logEl.innerHTML = '';
+        log('Pronto! Clique em Simular ou Executar.', 'success');
+      } catch(e) {
+        log('Erro ao inicializar: ' + e.message, 'error');
+      }
+    }
+
+    async function run(dry) {
+      if (!sb) { log('Aguarde carregar...', 'error'); return; }
+
+      document.getElementById('btnSimular').disabled = true;
+      document.getElementById('btnExecutar').disabled = true;
+      logEl.innerHTML = '';
+      log(dry ? '=== SIMULACAO ===' : '=== EXECUTANDO ===', 'warning');
+
+      var comp = 0, skip = 0, saved = 0;
+
+      try {
+        log('Buscando imagens...');
+        var r = await sb.from('product_images').select('id, storage_path');
+        if (r.error) throw r.error;
+        var imgs = r.data || [];
+        log('Encontradas ' + imgs.length + ' imagens', 'success');
+        stats(imgs.length, 0, 0, 0);
+
+        for (var i = 0; i < imgs.length; i++) {
+          var img = imgs[i];
+          var n = '[' + (i+1) + '/' + imgs.length + '] ';
+
+          if (!img.storage_path) { skip++; stats(imgs.length, comp, skip, saved); continue; }
+
+          try {
+            var dl = await sb.storage.from('products').download(img.storage_path);
+            if (dl.error || !dl.data) { log(n + 'nao encontrada', 'warning'); skip++; stats(imgs.length, comp, skip, saved); continue; }
+
+            var orig = dl.data.size;
+            if (orig < 102400) { log(n + (orig/1024).toFixed(0) + 'KB - pequena', 'info'); skip++; stats(imgs.length, comp, skip, saved); continue; }
+
+            var f = new File([dl.data], 'i.jpg', {type: dl.data.type || 'image/jpeg'});
+            var z = await imageCompression(f, {maxSizeMB:1, maxWidthOrHeight:1920, initialQuality:0.85});
+
+            var pct = Math.round((1 - z.size/orig) * 100);
+            if (pct < 10) { log(n + 'ja otimizada', 'info'); skip++; stats(imgs.length, comp, skip, saved); continue; }
+
+            if (!dry) {
+              var up = await sb.storage.from('products').upload(img.storage_path, z, {upsert:true, contentType:z.type});
+              if (up.error) { log(n + 'ERRO: ' + up.error.message, 'error'); continue; }
+            }
+
+            saved += orig - z.size;
+            comp++;
+            log(n + (orig/1024).toFixed(0) + 'KB -> ' + (z.size/1024).toFixed(0) + 'KB (' + pct + '% menor)', 'success');
+            stats(imgs.length, comp, skip, saved);
+          } catch(e) { log(n + 'erro: ' + e.message, 'error'); }
+        }
+
+        log('=============================', 'info');
+        log('CONCLUIDO! Economia: ' + (saved/1048576).toFixed(2) + ' MB', 'success');
+        if (dry) log('Simulacao - nada alterado', 'warning');
+      } catch(e) { log('ERRO: ' + e.message, 'error'); }
+
+      document.getElementById('btnSimular').disabled = false;
+      document.getElementById('btnExecutar').disabled = false;
+    }
+
+    window.onload = function() { setTimeout(init, 1000); };
+  </script>
+</body>
+</html>
