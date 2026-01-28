@@ -472,6 +472,24 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   // Modelo selecionado (movido para antes de loadingSteps que depende dele)
   const selectedModel = savedModels.find(m => m.id === selectedModelId);
 
+  // Helper: Obter melhor imagem do produto (prioriza Product Studio otimizado)
+  const getOptimizedProductImage = useCallback((p: Product): string | undefined => {
+    // Primeiro tenta imagem otimizada do Product Studio
+    if (p.generatedImages?.productStudio?.length) {
+      const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.length) {
+        const frontImage = lastSession.images.find(img => img.angle === 'front');
+        if (frontImage?.url) return frontImage.url;
+        if (lastSession.images[0]?.url) return lastSession.images[0].url;
+      }
+    }
+    // Fallback para imagem original
+    if (p.originalImages?.front?.url) return p.originalImages.front.url;
+    if (p.images?.[0]?.url) return p.images[0].url;
+    if (p.images?.[0]?.base64) return p.images[0].base64;
+    return undefined;
+  }, []);
+
   // ═══════════════════════════════════════════════════════════════
   // LOADING STEPS - Lista de passos para mostrar na tela de loading
   // (Movido para antes do timer useEffect para evitar erro de ordem)
@@ -490,8 +508,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     });
 
     // Step 2: Produto principal
-    // Usa dados restaurados se disponíveis (após F5)
-    const mainProductImage = product.originalImages?.front?.url || product.images?.[0]?.url || product.images?.[0]?.base64 || restoredProductThumbnail;
+    // Usa dados restaurados se disponíveis (após F5) - Prioriza imagem otimizada do Product Studio
+    const mainProductImage = getOptimizedProductImage(product) || restoredProductThumbnail;
     steps.push({
       id: `product-${product.id}`,
       label: product.name,
@@ -573,9 +591,33 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     return () => clearInterval(interval);
   }, [isGenerating, generationStartTime, loadingSteps.length]);
 
-  // Obter imagens do produto
+  // Obter imagens do produto (prioriza Product Studio otimizadas)
   const productImages = useMemo(() => {
     const images: { url: string; type: string }[] = [];
+
+    // Primeiro verifica se tem imagens otimizadas do Product Studio
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.length) {
+        // Adiciona imagens otimizadas com labels
+        const frontImg = lastSession.images.find(img => img.angle === 'front');
+        const backImg = lastSession.images.find(img => img.angle === 'back');
+
+        if (frontImg?.url) {
+          images.push({ url: frontImg.url, type: 'Frente (Otimizada)' });
+        }
+        if (backImg?.url) {
+          images.push({ url: backImg.url, type: 'Costas (Otimizada)' });
+        }
+
+        // Se encontrou pelo menos uma, retorna
+        if (images.length > 0) {
+          return images;
+        }
+      }
+    }
+
+    // Fallback: usa imagens originais
     if (product.originalImages?.front?.url) {
       images.push({ url: product.originalImages.front.url, type: 'Frente' });
     }
@@ -1084,7 +1126,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
             slot: item.slot,
           }))
         : [];
-      const mainProductImage = product.originalImages?.front?.url || product.images?.[0]?.url || product.images?.[0]?.base64;
+      const mainProductImage = getOptimizedProductImage(product);
       const modelThumb = selectedModel?.images?.front || selectedModel?.referenceImageUrl;
 
       savePendingGeneration({

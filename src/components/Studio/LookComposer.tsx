@@ -50,7 +50,30 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const productsGridRef = useRef<HTMLDivElement>(null);
 
-  const productsWithImages = products.filter(p => p.images?.length > 0 && (p.images[0]?.base64 || p.images[0]?.url));
+  // Função para obter a melhor imagem do produto (prioriza Product Studio otimizadas)
+  const getOptimizedProductImage = (p: Product): string | undefined => {
+    // Primeiro verifica se tem imagens otimizadas do Product Studio
+    if (p.generatedImages?.productStudio?.length) {
+      const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.length) {
+        const frontImage = lastSession.images.find(img => img.angle === 'front');
+        if (frontImage?.url) return frontImage.url;
+        if (lastSession.images[0]?.url) return lastSession.images[0].url;
+      }
+    }
+    // Fallback para imagem original
+    if (p.originalImages?.front?.url) return p.originalImages.front.url;
+    if (p.images?.[0]?.url) return p.images[0].url;
+    if (p.images?.[0]?.base64) return p.images?.[0].base64;
+    return undefined;
+  };
+
+  const productsWithImages = products.filter(p => {
+    const hasImage = p.images?.length > 0 && (p.images[0]?.base64 || p.images[0]?.url);
+    const hasOptimizedImage = p.generatedImages?.productStudio?.length &&
+      p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1]?.images?.length;
+    return hasImage || hasOptimizedImage;
+  });
 
   // Detectar se é mobile
   const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -95,7 +118,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     : [...new Set(productsWithImages.map(p => p.collection).filter(Boolean))] as string[];
 
   const selectProduct = (slot: keyof LookComposition, product: Product) => {
-    const img = product.images[0]?.base64 || product.images[0]?.url;
+    // Usa imagem otimizada do Product Studio se disponível
+    const img = getOptimizedProductImage(product);
     if (img) onChange({
       ...composition,
       [slot]: {
@@ -451,7 +475,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
                       theme === 'dark' ? 'border-neutral-700 hover:border-pink-500 bg-neutral-800' : 'border-gray-200 hover:border-pink-400 bg-white'
                     }`}
                   >
-                    <img src={p.images[0]?.base64 || p.images[0]?.url} alt={p.name} className="w-full h-full object-contain p-1" />
+                    <img src={getOptimizedProductImage(p)} alt={p.name} className="w-full h-full object-contain p-1" />
                     <div className={`absolute inset-x-0 bottom-0 text-white text-[8px] p-1 truncate transition-opacity ${
                       theme === 'dark' ? 'bg-gradient-to-t from-black/90 to-transparent' : 'bg-gradient-to-t from-black/80 to-transparent'
                     }`}>

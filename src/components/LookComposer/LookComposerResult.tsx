@@ -106,16 +106,30 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Obter imagem original do produto
-  const getOriginalImage = (): string => {
-    if (product.originalImages?.front?.url) return product.originalImages.front.url;
-    if (product.images?.[0]?.url) return product.images[0].url;
-    if (product.images?.[0]?.base64) return product.images[0].base64;
+  // Obter imagem do produto (prioriza Product Studio otimizadas)
+  const getProductImage = (view: 'front' | 'back'): string => {
+    // Primeiro verifica se tem imagens otimizadas do Product Studio
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.length) {
+        const img = lastSession.images.find(i => i.angle === view);
+        if (img?.url) return img.url;
+      }
+    }
+
+    // Fallback: usa imagens originais
+    if (view === 'front') {
+      if (product.originalImages?.front?.url) return product.originalImages.front.url;
+      if (product.images?.[0]?.url) return product.images[0].url;
+      if (product.images?.[0]?.base64) return product.images[0].base64;
+    } else {
+      if (product.originalImages?.back?.url) return product.originalImages.back.url;
+    }
     return '';
   };
 
-  const originalImage = getOriginalImage();
-  const originalBackImage = product.originalImages?.back?.url || '';
+  const originalImage = getProductImage('front');
+  const originalBackImage = getProductImage('back');
 
   // Determinar qual imagem mostrar
   const getCurrentGeneratedImage = () => {
