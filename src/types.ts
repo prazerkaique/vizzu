@@ -1103,6 +1103,19 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       ]
     }
   ],
+  'Outros Acessórios': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'carteira', label: 'Carteira', description: 'Porta-cartões, documentos e dinheiro.' },
+        { id: 'porta-celular', label: 'Porta Celular', description: 'Capinha ou bolsa para celular.' },
+        { id: 'necessaire', label: 'Necessaire', description: 'Bolsa pequena para cosméticos ou itens pessoais.' },
+        { id: 'chaveiro', label: 'Chaveiro', description: 'Acessório decorativo para chaves.' },
+        { id: 'outro', label: 'Outro', description: 'Outros tipos de acessórios não listados.' },
+      ]
+    }
+  ],
 };
 
 // ═══════════════════════════════════════════════════════════════

@@ -24,7 +24,7 @@ interface ParsedProduct {
   selected: boolean;
 }
 
-const CATEGORIES = ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness', 'Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs', 'Calçados', 'Tênis', 'Sandálias', 'Botas', 'Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços'];
+const CATEGORIES = ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness', 'Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs', 'Calçados', 'Tênis', 'Sandálias', 'Botas', 'Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
 export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImportModalProps) {
   const [method, setMethod] = useState<ImportMethod>(null);

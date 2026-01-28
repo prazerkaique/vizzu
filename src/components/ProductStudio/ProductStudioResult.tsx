@@ -45,7 +45,7 @@ const ANGLE_ICONS: Record<ProductStudioAngle, string> = {
 // Categorias de calçados
 const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos'];
 // Categorias de acessórios
-const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Bolsas', 'Acessórios', 'Bonés', 'Chapéus'];
+const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Bolsas', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
 export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
   product,
