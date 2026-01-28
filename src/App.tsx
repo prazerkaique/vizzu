@@ -196,9 +196,11 @@ function App() {
   const [showOptimizedImage, setShowOptimizedImage] = useState(true); // Toggle foto otimizada/original no modal
 const [selectedFrontImage, setSelectedFrontImage] = useState<string | null>(null);
 const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
-const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
+const [selectedDetailImage, setSelectedDetailImage] = useState<string | null>(null);
+const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('front');
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
-  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | null>(null);
+  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'detail' | null>(null);
+  const [showConfirmNoDetail, setShowConfirmNoDetail] = useState(false);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
@@ -1555,7 +1557,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
     }
   };
 // Drag and Drop para imagens de produto
-  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, type: 'front' | 'back') => {
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, type: 'front' | 'back' | 'detail') => {
     e.preventDefault();
     e.stopPropagation();
     const file = e.dataTransfer.files[0];
@@ -1567,8 +1569,10 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
           setSelectedFrontImage(base64);
           // Analisar imagem com IA para pré-preencher campos
           analyzeProductImageWithAI(base64);
-        } else {
+        } else if (type === 'back') {
           setSelectedBackImage(base64);
+        } else {
+          setSelectedDetailImage(base64);
         }
       };
       reader.readAsDataURL(file);
@@ -1810,7 +1814,8 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
           collection: newProduct.collection || null,
           attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
           image_front_base64: selectedFrontImage,
-          image_back_base64: selectedBackImage || null
+          image_back_base64: selectedBackImage || null,
+          image_detail_base64: selectedDetailImage || null
         })
       });
 
@@ -1824,6 +1829,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
         setShowImport(false);
         setSelectedFrontImage(null);
         setSelectedBackImage(null);
+        setSelectedDetailImage(null);
         setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
         setProductAttributes({});
 
@@ -5940,7 +5946,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
       <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
-        Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : 'de costas'}
+        Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : showPhotoSourcePicker === 'back' ? 'de costas' : 'de detalhe'}
       </h3>
       <div className="grid grid-cols-2 gap-3">
         <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
@@ -5948,10 +5954,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <i className="fas fa-images text-pink-500"></i>
           </div>
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
-          <input 
-            type="file" 
-            accept="image/*,.heic,.heif" 
-            className="hidden" 
+          <input
+            type="file"
+            accept="image/*,.heic,.heif"
+            className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
@@ -5961,8 +5967,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     setSelectedFrontImage(base64);
                     // Analisar imagem com IA para pré-preencher campos
                     analyzeProductImageWithAI(base64);
-                  } else {
+                  } else if (showPhotoSourcePicker === 'back') {
                     setSelectedBackImage(base64);
+                  } else {
+                    setSelectedDetailImage(base64);
                   }
                   setShowPhotoSourcePicker(null);
                 } catch (error) {
@@ -5992,8 +6000,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     setSelectedFrontImage(base64);
                     // Analisar imagem com IA para pré-preencher campos
                     analyzeProductImageWithAI(base64);
-                  } else {
+                  } else if (showPhotoSourcePicker === 'back') {
                     setSelectedBackImage(base64);
+                  } else {
+                    setSelectedDetailImage(base64);
                   }
                   setShowPhotoSourcePicker(null);
                 } catch (error) {
@@ -6127,7 +6137,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }}>
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); }}>
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pb-2 flex justify-center -mt-1">
@@ -6135,15 +6145,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </div>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
-        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
           <i className="fas fa-times text-xs"></i>
         </button>
       </div>
 
-      {/* Fotos Frente/Costas */}
+      {/* Fotos Frente/Costas/Detalhe */}
       <div className="mb-4">
         <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {/* FRENTE */}
           <div className="flex flex-col">
             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
@@ -6153,22 +6163,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             {selectedFrontImage ? (
               <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-pink-500">
                 <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
-                <div className="absolute top-1 right-1 flex gap-1">
-                  <button onClick={() => setShowPhotoSourcePicker('front')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-sync text-[8px]"></i>
+                <div className="absolute top-1 right-1 flex gap-0.5">
+                  <button onClick={() => setShowPhotoSourcePicker('front')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[7px]"></i>
                   </button>
-                  <button onClick={() => setSelectedFrontImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-times text-[8px]"></i>
+                  <button onClick={() => setSelectedFrontImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[7px]"></i>
                   </button>
                 </div>
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full">
+                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-pink-500 text-white text-[7px] font-bold rounded-full">
                   <i className="fas fa-check mr-0.5"></i>OK
                 </div>
               </div>
             ) : (
               <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
-                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
               </div>
             )}
           </div>
@@ -6177,37 +6187,66 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className="flex flex-col">
             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
               <i className="fas fa-image text-neutral-400 text-[8px]"></i>
-              Costas <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[8px]'}>(opcional)</span>
+              Costas
             </label>
             {selectedBackImage ? (
               <div className={(theme === 'dark' ? 'border-green-500' : 'border-green-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
                 <img src={selectedBackImage} alt="Costas" className="w-full h-full object-cover" />
-                <div className="absolute top-1 right-1 flex gap-1">
-                  <button onClick={() => setShowPhotoSourcePicker('back')} className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-sync text-[8px]"></i>
+                <div className="absolute top-1 right-1 flex gap-0.5">
+                  <button onClick={() => setShowPhotoSourcePicker('back')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[7px]"></i>
                   </button>
-                  <button onClick={() => setSelectedBackImage(null)} className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
-                    <i className="fas fa-times text-[8px]"></i>
+                  <button onClick={() => setSelectedBackImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[7px]"></i>
                   </button>
                 </div>
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
+                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-green-500 text-white text-[7px] font-bold rounded-full">
                   <i className="fas fa-check mr-0.5"></i>OK
                 </div>
               </div>
             ) : (
               <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
-                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-lg'}></i>
-                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Arraste ou clique</span>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
+              </div>
+            )}
+          </div>
+
+          {/* DETALHE */}
+          <div className="flex flex-col">
+            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+              <i className="fas fa-magnifying-glass-plus text-purple-500 text-[8px]"></i>
+              Detalhe
+            </label>
+            {selectedDetailImage ? (
+              <div className={(theme === 'dark' ? 'border-purple-500' : 'border-purple-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
+                <img src={selectedDetailImage} alt="Detalhe" className="w-full h-full object-cover" />
+                <div className="absolute top-1 right-1 flex gap-0.5">
+                  <button onClick={() => setShowPhotoSourcePicker('detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-sync text-[7px]"></i>
+                  </button>
+                  <button onClick={() => setSelectedDetailImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+                    <i className="fas fa-times text-[7px]"></i>
+                  </button>
+                </div>
+                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-purple-500 text-white text-[7px] font-bold rounded-full">
+                  <i className="fas fa-check mr-0.5"></i>OK
+                </div>
+              </div>
+            ) : (
+              <div onDrop={(e) => handleImageDrop(e, 'detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-purple-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+                <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
+                <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Dica */}
-        <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-lg p-2 mt-3 border'}>
-          <p className="text-amber-500 text-[10px] flex items-start gap-1.5">
-            <i className="fas fa-lightbulb mt-0.5"></i>
-            <span><strong>Dica:</strong> Adicionar foto de costas permite que a IA gere imagens de ambos os ângulos.</span>
+        <div className={(theme === 'dark' ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') + ' rounded-lg p-2 mt-3 border'}>
+          <p className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-600') + ' text-[10px] flex items-start gap-1.5'}>
+            <i className="fas fa-magnifying-glass-plus mt-0.5"></i>
+            <span><strong>Imagem de Detalhe:</strong> Importante para logos, estampas ou detalhes pequenos que precisam aparecer fielmente na IA.</span>
           </p>
         </div>
 

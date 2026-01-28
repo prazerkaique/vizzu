@@ -140,6 +140,9 @@ export interface Product {
   // NOVO: Flag para saber se tem foto de costas
   hasBackImage?: boolean;
 
+  // NOVO: Flag para saber se tem foto de detalhe
+  hasDetailImage?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }

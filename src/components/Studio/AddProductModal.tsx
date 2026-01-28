@@ -9,7 +9,7 @@ import { compressImage, formatFileSize } from '../../utils/imageCompression';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onCreateProduct: (product: Omit<Product, 'id' | 'sku'>, frontImage: string, backImage?: string) => Promise<void>;
+  onCreateProduct: (product: Omit<Product, 'id' | 'sku'>, frontImage: string, backImage?: string, detailImage?: string) => Promise<void>;
   theme?: 'dark' | 'light';
 }
 
@@ -36,8 +36,10 @@ export const AddProductModal: React.FC<Props> = ({
   const [step, setStep] = useState<Step>('source');
   const [frontImage, setFrontImage] = useState<string | null>(null);
   const [backImage, setBackImage] = useState<string | null>(null);
-  const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
+  const [detailImage, setDetailImage] = useState<string | null>(null);
+  const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('front');
   const [showConfirmNoBack, setShowConfirmNoBack] = useState(false);
+  const [showConfirmNoDetail, setShowConfirmNoDetail] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -63,9 +65,11 @@ export const AddProductModal: React.FC<Props> = ({
     setStep('source');
     setFrontImage(null);
     setBackImage(null);
+    setDetailImage(null);
     setFormData({ name: '', brand: '', color: '', category: '' });
     setAttributes({});
     setShowConfirmNoBack(false);
+    setShowConfirmNoDetail(false);
     onClose();
   };
 
@@ -84,8 +88,10 @@ export const AddProductModal: React.FC<Props> = ({
         const base64 = result.base64;
         if (uploadTarget === 'front') {
           setFrontImage(base64);
-        } else {
+        } else if (uploadTarget === 'back') {
           setBackImage(base64);
+        } else {
+          setDetailImage(base64);
         }
         // Se é a primeira foto (frente), vai para step de fotos
         if (step === 'source') {
@@ -99,8 +105,8 @@ export const AddProductModal: React.FC<Props> = ({
     if (e.target) e.target.value = '';
   };
 
-  // Trigger upload para frente ou costas
-  const triggerUpload = (target: 'front' | 'back', useCamera: boolean = false) => {
+  // Trigger upload para frente, costas ou detalhe
+  const triggerUpload = (target: 'front' | 'back' | 'detail', useCamera: boolean = false) => {
     setUploadTarget(target);
     if (useCamera) {
       cameraInputRef.current?.click();
@@ -110,13 +116,15 @@ export const AddProductModal: React.FC<Props> = ({
   };
 
   // Remover foto
-  const removePhoto = (target: 'front' | 'back') => {
+  const removePhoto = (target: 'front' | 'back' | 'detail') => {
     if (target === 'front') {
       setFrontImage(null);
       // Se removeu a frente, volta para source
       setStep('source');
-    } else {
+    } else if (target === 'back') {
       setBackImage(null);
+    } else {
+      setDetailImage(null);
     }
   };
 
@@ -125,6 +133,8 @@ export const AddProductModal: React.FC<Props> = ({
     if (!frontImage) return;
     if (!backImage) {
       setShowConfirmNoBack(true);
+    } else if (!detailImage) {
+      setShowConfirmNoDetail(true);
     } else {
       setStep('details');
     }
@@ -133,6 +143,17 @@ export const AddProductModal: React.FC<Props> = ({
   // Confirmar sem foto de costas
   const confirmNoBack = () => {
     setShowConfirmNoBack(false);
+    // Após confirmar sem costas, verifica se tem detalhe
+    if (!detailImage) {
+      setShowConfirmNoDetail(true);
+    } else {
+      setStep('details');
+    }
+  };
+
+  // Confirmar sem foto de detalhe
+  const confirmNoDetail = () => {
+    setShowConfirmNoDetail(false);
     setStep('details');
   };
 
@@ -164,10 +185,12 @@ export const AddProductModal: React.FC<Props> = ({
           category: formData.category,
           attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
           images: [],
-          hasBackImage: !!backImage
+          hasBackImage: !!backImage,
+          hasDetailImage: !!detailImage
         },
         frontImage,
-        backImage || undefined
+        backImage || undefined,
+        detailImage || undefined
       );
       handleClose();
     } catch (error) {
@@ -280,79 +303,117 @@ export const AddProductModal: React.FC<Props> = ({
               </div>
 
               {/* Fotos Grid */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 {/* FRENTE */}
                 <div className="flex flex-col">
-                  <label className={`text-[10px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                    <i className="fas fa-image text-pink-500"></i>
+                  <label className={`text-[9px] font-medium uppercase tracking-wide mb-1.5 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                    <i className="fas fa-image text-pink-500 text-[8px]"></i>
                     Frente <span className="text-pink-500">*</span>
                   </label>
                   {frontImage ? (
                     <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-pink-500">
                       <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />
-                      <div className="absolute top-2 right-2 flex gap-1">
+                      <div className="absolute top-1 right-1 flex gap-0.5">
                         <button
                           onClick={() => triggerUpload('front', false)}
-                          className="w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                          className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
                         >
-                          <i className="fas fa-sync text-[10px]"></i>
+                          <i className="fas fa-sync text-[8px]"></i>
                         </button>
                         <button
                           onClick={() => removePhoto('front')}
-                          className="w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
+                          className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
                         >
-                          <i className="fas fa-times text-[10px]"></i>
+                          <i className="fas fa-times text-[8px]"></i>
                         </button>
                       </div>
-                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-pink-500 text-white text-[9px] font-bold rounded-full">
-                        <i className="fas fa-check mr-1"></i>OK
+                      <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full">
+                        <i className="fas fa-check mr-0.5"></i>OK
                       </div>
                     </div>
                   ) : (
                     <button
                       onClick={() => triggerUpload('front', false)}
-                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50'}`}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50'}`}
                     >
-                      <i className={`fas fa-plus text-lg ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
-                      <span className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
+                      <i className={`fas fa-plus text-sm ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                      <span className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
                     </button>
                   )}
                 </div>
 
                 {/* COSTAS */}
                 <div className="flex flex-col">
-                  <label className={`text-[10px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                    <i className="fas fa-image text-neutral-500"></i>
-                    Costas <span className={`text-[9px] ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>(opcional)</span>
+                  <label className={`text-[9px] font-medium uppercase tracking-wide mb-1.5 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                    <i className="fas fa-image text-neutral-500 text-[8px]"></i>
+                    Costas
                   </label>
                   {backImage ? (
                     <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isDark ? 'border-green-500' : 'border-green-400'}`}>
                       <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
-                      <div className="absolute top-2 right-2 flex gap-1">
+                      <div className="absolute top-1 right-1 flex gap-0.5">
                         <button
                           onClick={() => triggerUpload('back', false)}
-                          className="w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                          className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
                         >
-                          <i className="fas fa-sync text-[10px]"></i>
+                          <i className="fas fa-sync text-[8px]"></i>
                         </button>
                         <button
                           onClick={() => removePhoto('back')}
-                          className="w-7 h-7 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
+                          className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
                         >
-                          <i className="fas fa-times text-[10px]"></i>
+                          <i className="fas fa-times text-[8px]"></i>
                         </button>
                       </div>
-                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-green-500 text-white text-[9px] font-bold rounded-full">
-                        <i className="fas fa-check mr-1"></i>OK
+                      <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full">
+                        <i className="fas fa-check mr-0.5"></i>OK
                       </div>
                     </div>
                   ) : (
                     <button
                       onClick={() => triggerUpload('back', false)}
-                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50'}`}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50'}`}
                     >
-                      <i className={`fas fa-plus text-lg ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
-                      <span className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
+                      <i className={`fas fa-plus text-sm ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                      <span className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* DETALHE */}
+                <div className="flex flex-col">
+                  <label className={`text-[9px] font-medium uppercase tracking-wide mb-1.5 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                    <i className="fas fa-magnifying-glass-plus text-purple-500 text-[8px]"></i>
+                    Detalhe
+                  </label>
+                  {detailImage ? (
+                    <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isDark ? 'border-purple-500' : 'border-purple-400'}`}>
+                      <img src={detailImage} alt="Detalhe" className="w-full h-full object-cover" />
+                      <div className="absolute top-1 right-1 flex gap-0.5">
+                        <button
+                          onClick={() => triggerUpload('detail', false)}
+                          className="w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                        >
+                          <i className="fas fa-sync text-[8px]"></i>
+                        </button>
+                        <button
+                          onClick={() => removePhoto('detail')}
+                          className="w-6 h-6 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center"
+                        >
+                          <i className="fas fa-times text-[8px]"></i>
+                        </button>
+                      </div>
+                      <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-purple-500 text-white text-[8px] font-bold rounded-full">
+                        <i className="fas fa-check mr-0.5"></i>OK
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => triggerUpload('detail', false)}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-purple-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50'}`}
+                    >
+                      <i className={`fas fa-plus text-sm ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                      <span className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
                     </button>
                   )}
                 </div>
@@ -406,29 +467,43 @@ export const AddProductModal: React.FC<Props> = ({
               </div>
 
               {/* Preview das imagens */}
-              <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="flex items-center justify-center gap-2 mb-4">
                 {frontImage && (
                   <div className="relative">
-                    <div className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-pink-500/50' : 'border-pink-300'}`}>
                       <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />
                     </div>
-                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[8px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>F</span>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-500'}`}>F</span>
                   </div>
                 )}
-                {backImage && (
+                {backImage ? (
                   <div className="relative">
-                    <div className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-green-500/50' : 'border-green-300'}`}>
                       <img src={backImage} alt="Costas" className="w-full h-full object-cover" />
                     </div>
-                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[8px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>C</span>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-500'}`}>C</span>
+                  </div>
+                ) : (
+                  <div className="relative opacity-40">
+                    <div className={`w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center ${isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-300 bg-gray-100'}`}>
+                      <i className={`fas fa-image text-xs ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                    </div>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'}`}>C</span>
                   </div>
                 )}
-                {!backImage && (
-                  <div className="relative opacity-40">
-                    <div className={`w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center ${isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-300 bg-gray-100'}`}>
-                      <i className={`fas fa-image ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                {detailImage ? (
+                  <div className="relative">
+                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-purple-500/50' : 'border-purple-300'}`}>
+                      <img src={detailImage} alt="Detalhe" className="w-full h-full object-cover" />
                     </div>
-                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[8px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'}`}>C</span>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-500'}`}>D</span>
+                  </div>
+                ) : (
+                  <div className="relative opacity-40">
+                    <div className={`w-14 h-14 rounded-lg border-2 border-dashed flex items-center justify-center ${isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-300 bg-gray-100'}`}>
+                      <i className={`fas fa-magnifying-glass-plus text-xs ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+                    </div>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'}`}>D</span>
                   </div>
                 )}
               </div>
@@ -592,6 +667,64 @@ export const AddProductModal: React.FC<Props> = ({
                 className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90"
               >
                 Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* MODAL: Confirmação sem foto de detalhe */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {showConfirmNoDetail && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className={`rounded-2xl border w-full max-w-sm p-5 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
+                <i className="fas fa-magnifying-glass-plus text-purple-500"></i>
+              </div>
+              <div>
+                <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Imagem de detalhe</h4>
+              </div>
+            </div>
+
+            <p className={`text-sm mb-3 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+              A imagem de detalhe é importante quando o produto possui:
+            </p>
+
+            <ul className={`text-sm mb-4 space-y-1.5 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+              <li className="flex items-center gap-2">
+                <i className="fas fa-tag text-purple-500 text-xs"></i>
+                <span><strong>Logo da marca</strong> que precisa aparecer fiel</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <i className="fas fa-palette text-purple-500 text-xs"></i>
+                <span><strong>Estampa específica</strong> ou desenho</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <i className="fas fa-gem text-purple-500 text-xs"></i>
+                <span><strong>Detalhes pequenos</strong> como bordados ou botões</span>
+              </li>
+            </ul>
+
+            <p className={`text-xs mb-4 ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
+              <i className="fas fa-lightbulb text-amber-500 mr-1"></i>
+              Tire uma foto com zoom no detalhe mais importante do produto.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowConfirmNoDetail(false); }}
+                className={`flex-1 py-2.5 rounded-lg font-medium text-sm ${isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <i className="fas fa-plus mr-1.5"></i>
+                Adicionar
+              </button>
+              <button
+                onClick={confirmNoDetail}
+                className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90"
+              >
+                Continuar sem
               </button>
             </div>
           </div>
