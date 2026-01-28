@@ -6,6 +6,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
 import { smartDownload } from '../../utils/downloadHelper';
+import { Plan } from '../../hooks/useCredits';
 
 interface LookComposerProps {
   products: Product[];
@@ -14,7 +15,7 @@ interface LookComposerProps {
   onDeductCredits: (amount: number, reason: string) => boolean;
   onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => void;
   onImport?: () => void;
-  currentPlan?: { name: string; limit: number };
+  currentPlan?: Plan;
   onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
   theme?: 'dark' | 'light';
   userId?: string;
@@ -36,6 +37,8 @@ interface LookComposerProps {
   onClearInitialProduct?: () => void;
   // Navegação de volta
   onBack?: () => void;
+  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
+  onOpenPlanModal?: () => void;
 }
 
 interface GeneratedLook {
@@ -109,7 +112,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   isAnyGenerationRunning = false,
   initialProduct,
   onClearInitialProduct,
-  onBack
+  onBack,
+  onOpenPlanModal
 }) => {
   const isDark = theme === 'dark';
 
@@ -480,6 +484,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         onSetProgress={onSetProgress}
         onSetLoadingText={onSetLoadingText}
         isAnyGenerationRunning={isAnyGenerationRunning}
+        currentPlan={currentPlan}
+        onOpenPlanModal={onOpenPlanModal}
       />
     );
   }

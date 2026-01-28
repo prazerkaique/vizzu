@@ -2736,12 +2736,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   const handleProvadorGenerateForWizard = async (
     client: Client,
     photoType: ClientPhoto['type'],
-    look: LookComposition
+    look: LookComposition,
+    resolution: '2k' | '4k' = '2k'
   ): Promise<string | null> => {
     if (!client || !user || Object.keys(look).length === 0) return null;
 
+    // Calcular créditos baseado na resolução (3 base * multiplicador)
+    const resolutionMultiplier = resolution === '4k' ? 2 : 1;
+    const creditsNeeded = 3 * resolutionMultiplier;
+
     // Verificar creditos
-    if (!checkCreditsAndShowModal(10, 'provador')) {
+    if (!checkCreditsAndShowModal(creditsNeeded, 'provador')) {
       return null;
     }
 
@@ -2796,7 +2801,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           type: photoType,
           base64: base64Clean
         },
-        lookComposition: lookCompositionPayload
+        lookComposition: lookCompositionPayload,
+        resolution: resolution
       });
 
       clearInterval(loadingInterval);
@@ -4093,6 +4099,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               initialProduct={productForCreation}
               onClearInitialProduct={() => setProductForCreation(null)}
               onBack={() => setCurrentPage('create')}
+              onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
             />
           </Suspense>
         </div>
@@ -4132,6 +4139,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               initialProduct={productForCreation}
               onClearInitialProduct={() => setProductForCreation(null)}
               onBack={() => setCurrentPage('create')}
+              currentPlan={currentPlan}
+              onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
             />
           </Suspense>
         </div>
@@ -4172,6 +4181,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               initialProduct={productForCreation}
               onClearInitialProduct={() => setProductForCreation(null)}
               onBack={() => setCurrentPage('create')}
+              onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
             />
           </Suspense>
         </div>

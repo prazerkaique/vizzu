@@ -8,6 +8,9 @@ import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStu
 import { generateProductStudioV2, ProductPresentationStyle } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 import { smartDownload } from '../../utils/downloadHelper';
+import { ResolutionSelector, Resolution } from '../ResolutionSelector';
+import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
+import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 
 // Estilos CSS para animação de cor no Lottie (lilás → rosa → laranja)
 // Usa steps discretos para evitar passar pelo verde
@@ -45,6 +48,10 @@ interface ProductStudioEditorProps {
   isAnyGenerationRunning?: boolean;
   // Navegação para outras ferramentas
   onNavigate?: (page: 'look-composer' | 'lifestyle' | 'provador', productId?: string, imageUrl?: string) => void;
+  // Plano atual do usuário para verificar permissões de resolução
+  currentPlan?: Plan;
+  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
+  onOpenPlanModal?: () => void;
 }
 
 // Frases de loading para Product Studio
@@ -121,7 +128,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   onSetProgress,
   onSetLoadingText,
   isAnyGenerationRunning = false,
-  onNavigate
+  onNavigate,
+  currentPlan,
+  onOpenPlanModal
 }) => {
   // Estados de edição do produto
   const [editMode, setEditMode] = useState(false);
@@ -160,6 +169,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   const [showNoRefModal, setShowNoRefModal] = useState(false);
   const [angleWithoutRef, setAngleWithoutRef] = useState<ProductStudioAngle | null>(null);
   const [uploadingRef, setUploadingRef] = useState(false);
+
+  // Estado de resolução (2K ou 4K)
+  const [resolution, setResolution] = useState<Resolution>(() => getPreferredResolution());
+  const [show4KConfirmModal, setShow4KConfirmModal] = useState(false);
+  const [pending4KConfirm, setPending4KConfirm] = useState(false);
+
+  // Verificar se plano permite 4K
+  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
 
   // Usar estado global se disponível, senão local
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
@@ -336,12 +353,47 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
     'detail': 'Detalhe',
   };
 
-  // Calcular créditos: 10 créditos por foto
+  // Calcular créditos: 10 créditos por foto * multiplicador de resolução
   const calculateCredits = (numAngles: number): number => {
-    return numAngles * 10;
+    const baseCredits = numAngles * 10;
+    return baseCredits * RESOLUTION_COST[resolution];
   };
 
   const creditsNeeded = calculateCredits(selectedAngles.length);
+
+  // Handler para mudança de resolução com confirmação 4K
+  const handleResolutionChange = (newResolution: Resolution) => {
+    if (newResolution === '4k' && !has4KConfirmation()) {
+      // Primeira vez selecionando 4K - mostrar modal de confirmação
+      setPending4KConfirm(true);
+      setShow4KConfirmModal(true);
+      return;
+    }
+
+    setResolution(newResolution);
+    savePreferredResolution(newResolution);
+  };
+
+  // Confirmar seleção de 4K
+  const handleConfirm4K = () => {
+    setResolution('4k');
+    savePreferredResolution('4k');
+    setShow4KConfirmModal(false);
+    setPending4KConfirm(false);
+  };
+
+  // Cancelar seleção de 4K
+  const handleCancel4K = () => {
+    setShow4KConfirmModal(false);
+    setPending4KConfirm(false);
+  };
+
+  // Handler para abrir modal de upgrade de plano
+  const handleUpgradeClick = () => {
+    if (onOpenPlanModal) {
+      onOpenPlanModal();
+    }
+  };
 
   // Toggle ângulo - verifica se tem referência antes de selecionar
   const toggleAngle = (angle: ProductStudioAngle) => {
@@ -720,6 +772,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           category: product.category || editedProduct.category,
           description: product.description || editedProduct.description,
         },
+        // Resolução da imagem (2k ou 4k)
+        resolution,
       });
 
       clearInterval(progressInterval);
@@ -1450,6 +1504,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               </div>
             )}
 
+            {/* Seletor de Resolução */}
+            <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+              <ResolutionSelector
+                resolution={resolution}
+                onChange={handleResolutionChange}
+                canUse4K={canUse4K}
+                onUpgradeClick={handleUpgradeClick}
+                theme={theme}
+                disabled={isGenerating}
+              />
+            </div>
+
             {/* Resumo de Créditos */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
@@ -1460,6 +1526,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                 <div className="flex items-center justify-between">
                   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>Fotos selecionadas</span>
                   <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{selectedAngles.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>Resolução</span>
+                  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{resolution.toUpperCase()}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>Créditos necessários</span>
@@ -1476,7 +1546,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-lg p-3 mt-3'}>
                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                   <i className="fas fa-info-circle mr-1"></i>
-                  10 créditos por foto gerada.
+                  10 créditos por foto{resolution === '4k' ? ' (x2 para 4K)' : ''}.
                 </p>
               </div>
             </div>
@@ -1800,6 +1870,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de confirmação 4K */}
+      <Resolution4KConfirmModal
+        isOpen={show4KConfirmModal}
+        onConfirm={handleConfirm4K}
+        onCancel={handleCancel4K}
+        theme={theme}
+      />
     </div>
   );
 };

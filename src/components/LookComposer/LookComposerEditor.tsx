@@ -9,6 +9,9 @@ import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
 import { LookComposerResult } from './LookComposerResult';
 import { supabase } from '../../services/supabaseClient';
+import { ResolutionSelector, Resolution } from '../ResolutionSelector';
+import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
+import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 
 interface LookComposerEditorProps {
   product: Product;
@@ -35,6 +38,10 @@ interface LookComposerEditorProps {
   onSetProgress?: (value: number) => void;
   onSetLoadingText?: (value: string) => void;
   isAnyGenerationRunning?: boolean;
+  // Plano atual do usuário para verificar permissões de resolução
+  currentPlan?: Plan;
+  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
+  onOpenPlanModal?: () => void;
 }
 
 // Frases de loading (usadas durante o processo)
@@ -233,7 +240,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   onSetMinimized,
   onSetProgress,
   onSetLoadingText,
-  isAnyGenerationRunning = false
+  isAnyGenerationRunning = false,
+  currentPlan,
+  onOpenPlanModal
 }) => {
   // Estado da fase atual
   const [currentStep, setCurrentStep] = useState<Step>('product');
@@ -295,6 +304,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [generatedBackImageUrl, setGeneratedBackImageUrl] = useState<string | null>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
+
+  // Estado de resolução (2K ou 4K)
+  const [resolution, setResolution] = useState<Resolution>(() => getPreferredResolution());
+  const [show4KConfirmModal, setShow4KConfirmModal] = useState(false);
+  const [pending4KConfirm, setPending4KConfirm] = useState(false);
+
+  // Verificar se plano permite 4K
+  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
 
   // Usar estado global se disponível
   const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
@@ -639,10 +656,46 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
   const calculateCredits = (): number => {
     const baseCredits = lookMode === 'composer' ? 20 : 10;
     // Se for frente e costas, dobra os créditos
-    return viewsMode === 'front-back' ? baseCredits * 2 : baseCredits;
+    const viewsMultiplier = viewsMode === 'front-back' ? 2 : 1;
+    // Multiplicar por custo de resolução
+    return baseCredits * viewsMultiplier * RESOLUTION_COST[resolution];
   };
 
   const creditsNeeded = calculateCredits();
+
+  // Handler para mudança de resolução com confirmação 4K
+  const handleResolutionChange = (newResolution: Resolution) => {
+    if (newResolution === '4k' && !has4KConfirmation()) {
+      // Primeira vez selecionando 4K - mostrar modal de confirmação
+      setPending4KConfirm(true);
+      setShow4KConfirmModal(true);
+      return;
+    }
+
+    setResolution(newResolution);
+    savePreferredResolution(newResolution);
+  };
+
+  // Confirmar seleção de 4K
+  const handleConfirm4K = () => {
+    setResolution('4k');
+    savePreferredResolution('4k');
+    setShow4KConfirmModal(false);
+    setPending4KConfirm(false);
+  };
+
+  // Cancelar seleção de 4K
+  const handleCancel4K = () => {
+    setShow4KConfirmModal(false);
+    setPending4KConfirm(false);
+  };
+
+  // Handler para abrir modal de upgrade de plano
+  const handleUpgradeClick = () => {
+    if (onOpenPlanModal) {
+      onOpenPlanModal();
+    }
+  };
 
   // Verificar se pode avançar para próxima fase
   const canProceed = (step: Step): boolean => {
@@ -1073,6 +1126,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         sceneHint: sceneHintFinal,
         modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
         viewsMode: 'front', // Sempre 'front' na primeira chamada
+        // Resolução da imagem (2k ou 4k)
+        resolution,
         // Callback de progresso para atualizar a barra
         onProgress: (p) => {
           // Mapear progresso 10-95 para 5-frontProgressMax
@@ -1124,6 +1179,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
           isBackView: true,
           frontGenerationId: frontGenerationId,
+          // Resolução da imagem (2k ou 4k)
+          resolution,
           // Callback de progresso para atualizar a barra (50% a 95%)
           onProgress: (p) => {
             // Mapear progresso 10-95 para 50-95
@@ -1980,6 +2037,18 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
               </div>
             )}
 
+            {/* Seletor de Resolução */}
+            <div className={(isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border mt-4'}>
+              <ResolutionSelector
+                resolution={resolution}
+                onChange={handleResolutionChange}
+                canUse4K={canUse4K}
+                onUpgradeClick={handleUpgradeClick}
+                theme={theme}
+                disabled={isGenerating}
+              />
+            </div>
+
             {/* Resumo */}
             <div className={(isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border mt-4'}>
               <h4 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3'}>Resumo da Geração</h4>
@@ -2014,10 +2083,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Ângulos</span>
                   <span className={(isDark ? 'text-white' : 'text-gray-900')}>{viewsMode === 'front' ? 'Só Frente' : 'Frente e Costas'}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Resolução</span>
+                  <span className={(isDark ? 'text-white' : 'text-gray-900')}>{resolution.toUpperCase()}</span>
+                </div>
                 <div className={'h-px my-2 ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}></div>
                 <div className="flex justify-between font-medium">
                   <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Créditos</span>
-                  <span className="text-pink-400">{creditsNeeded}</span>
+                  <span className="text-pink-400">{creditsNeeded}{resolution === '4k' ? ' (4K)' : ''}</span>
                 </div>
               </div>
             </div>
@@ -2457,6 +2530,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de confirmação 4K */}
+      <Resolution4KConfirmModal
+        isOpen={show4KConfirmModal}
+        onConfirm={handleConfirm4K}
+        onCancel={handleCancel4K}
+        theme={theme}
+      />
     </div>
   );
 };

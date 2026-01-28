@@ -118,6 +118,8 @@ interface ProductStudioV2Params {
     category?: string;
     description?: string;
   };
+  // Resolução da imagem gerada
+  resolution?: '2k' | '4k';
 }
 
 interface ProductStudioV2Result {
@@ -160,6 +162,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
       product_name: params.productInfo?.name,
       product_category: params.productInfo?.category,
       product_description: params.productInfo?.description,
+      // Resolução da imagem (2k ou 4k)
+      resolution: params.resolution || '2k',
     }),
   });
 
@@ -263,6 +267,8 @@ interface ModeloIAParams {
   frontGenerationId?: string;        // ID da geração de frente (para fazer UPDATE)
   // Callback de progresso (opcional)
   onProgress?: (progress: number) => void;  // Callback chamado durante polling com progresso 0-100
+  // Resolução da imagem gerada
+  resolution?: '2k' | '4k';
 }
 
 /**
@@ -336,6 +342,8 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       frontGenerationId: params.frontGenerationId || null,
       // Se for back view, vincular à geração de frente via campo linked_to
       linkedTo: params.isBackView ? params.frontGenerationId : null,
+      // Resolução da imagem (2k ou 4k)
+      resolution: params.resolution || '2k',
     }),
   });
 
@@ -613,6 +621,8 @@ interface ProvadorParams {
     accessory2?: ProvadorLookItem;
   };
   notes?: string;
+  // Resolução da imagem gerada
+  resolution?: '2k' | '4k';
 }
 
 interface ProvadorResponse {
@@ -644,6 +654,8 @@ export async function generateProvador(params: ProvadorParams): Promise<Provador
       clientPhoto: params.clientPhoto,
       lookComposition: params.lookComposition,
       notes: params.notes || '',
+      // Resolução da imagem (2k ou 4k)
+      resolution: params.resolution || '2k',
     }),
   });
 

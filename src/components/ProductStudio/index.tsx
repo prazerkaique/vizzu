@@ -5,6 +5,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Product, HistoryLog } from '../../types';
 import { ProductStudioEditor } from './ProductStudioEditor';
+import { Plan } from '../../hooks/useCredits';
 
 interface ProductStudioProps {
   products: Product[];
@@ -13,8 +14,9 @@ interface ProductStudioProps {
   onDeductCredits: (amount: number, reason: string) => boolean;
   onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => void;
   onImport?: () => void;
-  currentPlan?: { name: string; limit: number };
+  currentPlan?: Plan;
   onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
+  onOpenPlanModal?: () => void;
   theme?: 'dark' | 'light';
   userId?: string;
   // Estados de geração em background
@@ -73,7 +75,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   onNavigate,
   initialProduct,
   onClearInitialProduct,
-  onBack
+  onBack,
+  onOpenPlanModal
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -278,6 +281,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         onSetLoadingText={onSetLoadingText}
         isAnyGenerationRunning={isAnyGenerationRunning}
         onNavigate={onNavigate}
+        currentPlan={currentPlan}
+        onOpenPlanModal={onOpenPlanModal}
       />
     );
   }

@@ -144,7 +144,7 @@ export const FREE_PLAN: Plan = {
   id: 'free',
   name: 'Free',
   limit: 5,
-  productLimit: 1000,
+  productLimit: 50,
   priceMonthly: 0,
   priceYearly: 0,
   creditPrice: 4.90, // Preço para compras avulsas (usuário free)
@@ -152,7 +152,7 @@ export const FREE_PLAN: Plan = {
   hasWatermark: true,
   features: [
     '5 gerações para testar',
-    'Até 1.000 produtos',
+    'Até 50 produtos',
     'Resolução 2K',
     'Marca d\'água nas imagens',
     'Todas as ferramentas básicas'

@@ -11,6 +11,9 @@ import {
 } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { compressImage, formatFileSize } from '../../utils/imageCompression';
+import { ResolutionSelector, Resolution } from '../ResolutionSelector';
+import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
+import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 
 // ============================================================
 // TIPOS E CONSTANTES
@@ -29,7 +32,8 @@ interface Props {
   onGenerate: (
     client: Client,
     photoType: ClientPhoto['type'],
-    look: LookComposition
+    look: LookComposition,
+    resolution?: '2k' | '4k'
   ) => Promise<string | null>;
   onSendWhatsApp: (
     client: Client,
@@ -52,6 +56,10 @@ interface Props {
   onClearInitialProduct?: () => void;
   // Navegação de volta
   onBack?: () => void;
+  // Plano atual do usuário para verificar permissões de resolução
+  currentPlan?: Plan;
+  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
+  onOpenPlanModal?: () => void;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -96,6 +104,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   initialProduct,
   onClearInitialProduct,
   onBack,
+  currentPlan,
+  onOpenPlanModal,
 }) => {
   // Estados do Wizard
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -124,6 +134,18 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type']>('frente');
+
+  // Estado de resolução (2K ou 4K)
+  const [resolution, setResolution] = useState<Resolution>(() => getPreferredResolution());
+  const [show4KConfirmModal, setShow4KConfirmModal] = useState(false);
+  const [pending4KConfirm, setPending4KConfirm] = useState(false);
+
+  // Verificar se plano permite 4K
+  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
+
+  // Custo base do Provador: 3 créditos (multiplicado por resolução)
+  const BASE_PROVADOR_CREDITS = 3;
+  const creditsNeeded = BASE_PROVADOR_CREDITS * RESOLUTION_COST[resolution];
 
   // Refs
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -346,6 +368,40 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     setShowPhotoOptions(true);
   };
 
+  // Handler para mudança de resolução com confirmação 4K
+  const handleResolutionChange = (newResolution: Resolution) => {
+    if (newResolution === '4k' && !has4KConfirmation()) {
+      // Primeira vez selecionando 4K - mostrar modal de confirmação
+      setPending4KConfirm(true);
+      setShow4KConfirmModal(true);
+      return;
+    }
+
+    setResolution(newResolution);
+    savePreferredResolution(newResolution);
+  };
+
+  // Confirmar seleção de 4K
+  const handleConfirm4K = () => {
+    setResolution('4k');
+    savePreferredResolution('4k');
+    setShow4KConfirmModal(false);
+    setPending4KConfirm(false);
+  };
+
+  // Cancelar seleção de 4K
+  const handleCancel4K = () => {
+    setShow4KConfirmModal(false);
+    setPending4KConfirm(false);
+  };
+
+  // Handler para abrir modal de upgrade de plano
+  const handleUpgradeClick = () => {
+    if (onOpenPlanModal) {
+      onOpenPlanModal();
+    }
+  };
+
   const handleGenerate = async () => {
     if (!selectedClient || Object.keys(lookComposition).length === 0) return;
 
@@ -356,7 +412,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
     }
 
     setSelectedSavedLook(null);
-    const result = await onGenerate(selectedClient, selectedPhotoType, lookComposition);
+    const result = await onGenerate(selectedClient, selectedPhotoType, lookComposition, resolution);
 
     if (result) {
       setGeneratedImage(result);
@@ -1307,14 +1363,26 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
             )}
           </div>
 
+          {/* Seletor de Resolução */}
+          <div className={`rounded-xl p-4 mb-3 ${theme === 'dark' ? 'bg-neutral-800/50 border border-neutral-700' : 'bg-gray-50 border border-gray-200'}`}>
+            <ResolutionSelector
+              resolution={resolution}
+              onChange={handleResolutionChange}
+              canUse4K={canUse4K}
+              onUpgradeClick={handleUpgradeClick}
+              theme={theme}
+              disabled={isGenerating}
+            />
+          </div>
+
           {/* Botoes de acao */}
           <div className="space-y-2">
             {/* Botao Criar */}
             <button
               onClick={handleGenerate}
-              disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 10 || isGenerating}
+              disabled={!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < creditsNeeded || isGenerating}
               className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
-                (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < 10)
+                (!selectedClient || Object.keys(lookComposition).length === 0 || userCredits < creditsNeeded)
                   ? 'opacity-50 cursor-not-allowed'
                   : isGenerating
                     ? 'opacity-75 cursor-wait'
@@ -1324,7 +1392,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
               {isGenerating ? (
                 <><i className="fas fa-spinner fa-spin"></i>Gerando...</>
               ) : (
-                <><i className="fas fa-wand-magic-sparkles"></i>Criar (3 cred.)</>
+                <><i className="fas fa-wand-magic-sparkles"></i>Criar ({creditsNeeded} cred.)</>
               )}
             </button>
 
@@ -1522,6 +1590,14 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de confirmação 4K */}
+      <Resolution4KConfirmModal
+        isOpen={show4KConfirmModal}
+        onConfirm={handleConfirm4K}
+        onCancel={handleCancel4K}
+        theme={theme}
+      />
     </div>
   );
 };
