@@ -126,6 +126,9 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                     </svg>
                     <input
                       type="text"
+                      id="auth-name"
+                      name="name"
+                      autoComplete="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-600 focus:border-pink-500 focus:outline-none transition-colors"
@@ -144,6 +147,9 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                   </svg>
                   <input
                     type="email"
+                    id="auth-email"
+                    name="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-600 focus:border-pink-500 focus:outline-none transition-colors"
@@ -161,6 +167,9 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                   </svg>
                   <input
                     type="password"
+                    id="auth-password"
+                    name="password"
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-600 focus:border-pink-500 focus:outline-none transition-colors"

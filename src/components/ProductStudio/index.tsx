@@ -353,6 +353,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
           <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
           <input
             type="text"
+            id="product-studio-search"
+            name="productSearch"
             placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -405,6 +407,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
                   <select
+                    id="ps-filter-category-group"
+                    name="filterCategoryGroup"
                     value={filterCategoryGroup}
                     onChange={(e) => { setFilterCategoryGroup(e.target.value); setFilterCategory(''); }}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -420,6 +424,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Subcategoria</label>
                   <select
+                    id="ps-filter-subcategory"
+                    name="filterSubcategory"
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
                     disabled={!filterCategoryGroup}
@@ -436,6 +442,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
                   <select
+                    id="ps-filter-collection"
+                    name="filterCollection"
                     value={filterCollection}
                     onChange={(e) => setFilterCollection(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -451,6 +459,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
                   <select
+                    id="ps-filter-color"
+                    name="filterColor"
                     value={filterColor}
                     onChange={(e) => setFilterColor(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -466,6 +476,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
                   <select
+                    id="ps-filter-gender"
+                    name="filterGender"
                     value={filterGender}
                     onChange={(e) => setFilterGender(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -481,6 +493,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Ordenar</label>
                   <select
+                    id="ps-sort"
+                    name="sortBy"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as 'recent' | 'a-z' | 'z-a')}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -745,6 +759,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
                 <input
                   type="text"
+                  id="ps-modal-search"
+                  name="productModalSearch"
                   placeholder="Buscar produto..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
@@ -753,6 +769,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 />
               </div>
               <select
+                id="ps-modal-category"
+                name="productModalCategory"
                 value={productFilterCategoryGroup}
                 onChange={(e) => { setProductFilterCategoryGroup(e.target.value); setProductFilterCategory(''); }}
                 className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
@@ -764,6 +782,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
               </select>
               {productFilterCategoryGroup && (
                 <select
+                  id="ps-modal-subcategory"
+                  name="productModalSubcategory"
                   value={productFilterCategory}
                   onChange={(e) => setProductFilterCategory(e.target.value)}
                   className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}

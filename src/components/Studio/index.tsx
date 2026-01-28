@@ -100,10 +100,6 @@ export const Studio: React.FC<StudioProps> = ({
   // Filtrar modelos prontos (status ready)
   const readyModels = savedModels.filter(m => m.status === 'ready');
 
-  // Debug: mostrar todos os modelos no console
-  console.log('Studio - savedModels recebidos:', savedModels);
-  console.log('Studio - readyModels filtrados:', readyModels);
-
   const clearFilters = () => {
     setSearchTerm('');
     setFilterCategory('');
@@ -163,6 +159,8 @@ export const Studio: React.FC<StudioProps> = ({
           <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
           <input
             type="text"
+            id="studio-search"
+            name="studioSearch"
             placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -216,6 +214,8 @@ export const Studio: React.FC<StudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
                   <select
+                    id="studio-filter-category"
+                    name="filterCategory"
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -231,6 +231,8 @@ export const Studio: React.FC<StudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
                   <select
+                    id="studio-filter-collection"
+                    name="filterCollection"
                     value={filterCollection}
                     onChange={(e) => setFilterCollection(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -246,6 +248,8 @@ export const Studio: React.FC<StudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
                   <select
+                    id="studio-filter-color"
+                    name="filterColor"
                     value={filterColor}
                     onChange={(e) => setFilterColor(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -261,6 +265,8 @@ export const Studio: React.FC<StudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
                   <select
+                    id="studio-filter-gender"
+                    name="filterGender"
                     value={filterGender}
                     onChange={(e) => setFilterGender(e.target.value)}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
@@ -276,6 +282,8 @@ export const Studio: React.FC<StudioProps> = ({
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Ordenar</label>
                   <select
+                    id="studio-sort"
+                    name="sortBy"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as 'recent' | 'a-z' | 'z-a')}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}

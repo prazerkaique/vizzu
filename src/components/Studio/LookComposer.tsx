@@ -386,6 +386,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
                   <input
                     ref={searchInputRef}
                     type="text"
+                    id="look-composer-search"
+                    name="lookComposerSearch"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Buscar..."
@@ -417,6 +419,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
               {/* Filtro de coleção */}
               {availableCollections.length > 0 && (
                 <select
+                  id="look-composer-collection"
+                  name="lookComposerCollection"
                   value={selectedCollection}
                   onChange={(e) => setSelectedCollection(e.target.value)}
                   className={`px-2 py-2 text-xs border rounded-lg ${
@@ -567,6 +571,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
       {/* Inputs de arquivo ocultos */}
       <input
         ref={galleryInputRef}
+        id="look-composer-gallery"
+        name="lookComposerGallery"
         type="file"
         accept="image/*,.heic,.heif"
         onChange={handleImageSelect}
@@ -574,6 +580,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
       />
       <input
         ref={cameraInputRef}
+        id="look-composer-camera"
+        name="lookComposerCamera"
         type="file"
         accept="image/*,.heic,.heif"
         capture="environment"

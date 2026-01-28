@@ -776,6 +776,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
                 <input
                   type="text"
+                  id="lc-modal-search"
+                  name="lookComposerSearch"
                   placeholder="Buscar produto..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
@@ -784,6 +786,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 />
               </div>
               <select
+                id="lc-modal-category"
+                name="lookComposerCategory"
                 value={productFilterCategoryGroup}
                 onChange={(e) => { setProductFilterCategoryGroup(e.target.value); setProductFilterCategory(''); }}
                 className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
@@ -795,6 +799,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
               </select>
               {productFilterCategoryGroup && (
                 <select
+                  id="lc-modal-subcategory"
+                  name="lookComposerSubcategory"
                   value={productFilterCategory}
                   onChange={(e) => setProductFilterCategory(e.target.value)}
                   className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}

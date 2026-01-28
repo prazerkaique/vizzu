@@ -424,11 +424,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
   // Salvar sessão (já está salva no produto, só marca como "confirmada")
   const handleResultSave = () => {
-    // A sessão já foi salva no produto durante a geração
-    // Este callback é para confirmar que o usuário quer manter as imagens
-    console.log('Sessão salva:', currentSession?.id);
+    // Session was already saved in product during generation
+    // This callback confirms user wants to keep the images
 
-    // Após salvar, fica na página do produto (não volta para lista)
+    // After saving, stay on product page (don't return to list)
     setShowResult(false);
     setCurrentSession(null);
     // Produto já está atualizado com as imagens geradas

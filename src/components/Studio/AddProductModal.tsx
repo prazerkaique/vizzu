@@ -177,6 +177,8 @@ export const AddProductModal: React.FC<Props> = ({
       {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
+        id="add-product-file"
+        name="productFile"
         type="file"
         accept="image/*"
         className="hidden"
@@ -184,6 +186,8 @@ export const AddProductModal: React.FC<Props> = ({
       />
       <input
         ref={cameraInputRef}
+        id="add-product-camera"
+        name="productCamera"
         type="file"
         accept="image/*"
         capture="environment"
@@ -429,6 +433,8 @@ export const AddProductModal: React.FC<Props> = ({
                   </label>
                   <input
                     type="text"
+                    id="add-product-name"
+                    name="productName"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -441,6 +447,8 @@ export const AddProductModal: React.FC<Props> = ({
                     <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Marca</label>
                     <input
                       type="text"
+                      id="add-product-brand"
+                      name="productBrand"
                       value={formData.brand}
                       onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                       className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -450,6 +458,8 @@ export const AddProductModal: React.FC<Props> = ({
                   <div>
                     <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Cor</label>
                     <select
+                      id="add-product-color"
+                      name="productColor"
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                       className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
@@ -466,6 +476,8 @@ export const AddProductModal: React.FC<Props> = ({
                     Categoria <span className="text-pink-500">*</span>
                   </label>
                   <select
+                    id="add-product-category"
+                    name="productCategory"
                     value={formData.category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     className={`w-full px-3 py-2.5 border rounded-lg text-sm ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}

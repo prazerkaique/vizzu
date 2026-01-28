@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vizzu-v6';
+const CACHE_NAME = 'vizzu-v7';
 const OFFLINE_URL = '/';
 
 const STATIC_ASSETS = [
@@ -10,7 +10,20 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      // Cachear cada arquivo individualmente, ignorando erros
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          fetch(url)
+            .then(response => {
+              if (response.ok) {
+                return cache.put(url, response);
+              }
+            })
+            .catch(() => {
+              // Ignorar erros silenciosamente
+            })
+        )
+      );
     })
   );
   // Força ativação imediata

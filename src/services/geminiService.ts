@@ -172,14 +172,7 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
   const { imageBase64, modelReferenceImage, lookItems } = request;
   
   const fullPrompt = buildVisualStudioPrompt(request);
-  
-  console.log('🎨 [VIZZU] Gerando imagem:', { 
-    action: request.action, 
-    hasModelReference: !!modelReferenceImage,
-    lookItemsCount: lookItems?.length || 0,
-    category: request.productCategory
-  });
-  
+
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('VITE_GEMINI_API_KEY não configurada');
@@ -209,7 +202,6 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
         mimeType: mimeType,
       },
     });
-    console.log(`📷 [VIZZU] Imagem adicionada: ${label}`);
   };
   
   addImagePart(imageBase64, `PRODUTO PRINCIPAL: ${request.productName || 'Main Product'}`);
@@ -227,8 +219,6 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
   
   parts.push({ text: fullPrompt });
 
-  console.log(`📦 [VIZZU] Total de imagens: ${parts.length - 1}`);
-
   try {
     const result = await model.generateContent(parts);
     const response = result.response;
@@ -237,7 +227,6 @@ export async function generateVisualStudioImage(request: VisualStudioRequest): P
       for (const part of response.candidates[0].content.parts) {
         if ('inlineData' in part && part.inlineData && part.inlineData.data) {
           const mimeType = part.inlineData.mimeType || 'image/png';
-          console.log('✅ [VIZZU] Imagem gerada com sucesso');
           return `data:${mimeType};base64,${part.inlineData.data}`;
         }
       }

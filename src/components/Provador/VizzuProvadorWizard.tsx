@@ -564,6 +564,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
                 <i className={`fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
                 <input
                   type="text"
+                  id="provador-client-search"
+                  name="clientSearch"
                   placeholder="Buscar cliente..."
                   className={`w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border ${
                     theme === 'dark'
@@ -901,6 +903,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
       {/* Inputs de arquivo ocultos */}
       <input
         ref={photoInputRef}
+        id="provador-photo-gallery"
+        name="photoGallery"
         type="file"
         accept="image/*,.heic,.heif"
         onChange={(e) => handlePhotoUpload(e, 'gallery')}
@@ -908,6 +912,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
       />
       <input
         ref={cameraInputRef}
+        id="provador-photo-camera"
+        name="photoCamera"
         type="file"
         accept="image/*,.heic,.heif"
         capture="environment"
@@ -962,6 +968,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
         <div className="flex-1 p-3">
           {/* Filtro de colecao */}
           <select
+            id="provador-collection-filter"
+            name="collectionFilter"
             value={collectionFilter}
             onChange={(e) => setCollectionFilter(e.target.value)}
             className={`w-full px-3 py-2 border rounded-xl text-xs mb-3 ${
@@ -1274,6 +1282,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
               /* Modo edição - textarea com mensagem completa */
               <div>
                 <textarea
+                  id="provador-message"
+                  name="provadorMessage"
                   value={fullEditedMessage || ''}
                   onChange={(e) => setFullEditedMessage(e.target.value)}
                   rows={8}

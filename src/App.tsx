@@ -217,7 +217,6 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
         });
         if (needsMigration) {
           localStorage.setItem('vizzu_clients', JSON.stringify(migrated));
-          console.log('[Migração] Clientes migrados para UUID');
         }
         return migrated;
       } catch { }
@@ -866,10 +865,10 @@ const saveClientToSupabase = async (client: Client, userId: string) => {
       }, { onConflict: 'id' });
 
     if (error) {
-      console.log('Erro ao salvar cliente no Supabase (tabela pode não existir):', error.message);
+      // Silently ignore - table may not exist
     }
-  } catch (error) {
-    console.error('Erro ao salvar cliente:', error);
+  } catch {
+    // Silently ignore
   }
 };
 
@@ -882,10 +881,10 @@ const deleteClientFromSupabase = async (clientId: string) => {
       .eq('id', clientId);
 
     if (error) {
-      console.log('Erro ao deletar cliente do Supabase:', error.message);
+      // Silently ignore - table may not exist
     }
-  } catch (error) {
-    console.error('Erro ao deletar cliente:', error);
+  } catch {
+    // Silently ignore
   }
 };
 
@@ -957,10 +956,10 @@ const saveHistoryToSupabase = async (log: HistoryLog, userId: string) => {
       }, { onConflict: 'id' });
 
     if (error) {
-      console.log('Erro ao salvar histórico no Supabase:', error.message);
+      // Silently ignore - table may not exist
     }
-  } catch (error) {
-    console.error('Erro ao salvar histórico:', error);
+  } catch {
+    // Silently ignore
   }
 };
 
@@ -1880,10 +1879,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         }, { onConflict: 'client_id,type' });
 
       if (error) {
-        console.log('Erro ao salvar foto no banco:', error.message);
+        // Silently ignore
       }
-    } catch (error) {
-      console.error('Erro ao salvar foto:', error);
+    } catch {
+      // Silently ignore
     }
   };
 
@@ -2677,9 +2676,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           });
           return; // Sucesso - não precisa do fallback
         }
-      } catch (error) {
-        // Usuário cancelou ou erro - usa fallback
-        console.log('Share API não disponível ou cancelado, usando fallback');
+      } catch {
+        // User cancelled or error - use fallback
       }
 
       // Fallback: WhatsApp com texto + link da imagem
@@ -2853,9 +2851,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         return;
       }
 
-      console.log('Evolution API falhou, tentando fallback:', result.error);
-    } catch (error) {
-      console.log('Erro Evolution API, usando fallback:', error);
+      // Evolution API failed, try fallback
+    } catch {
+      // Evolution API error, use fallback
     }
 
     // Fallback: Web Share API (mobile) ou wa.me (desktop)
@@ -2871,11 +2869,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         });
         return;
       }
-    } catch (error) {
-      console.log('Share API falhou, usando wa.me');
+    } catch {
+      // Share API failed, use wa.me
     }
 
-    // Fallback final: WhatsApp com texto + link da imagem
+    // Final fallback: WhatsApp with text + image link
     const phone = client.whatsapp?.replace(/\D/g, '') || '';
     const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
     const fullMessage = finalMessage + '\n\n' + imageUrl;
@@ -2974,9 +2972,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         return;
       }
 
-      console.log('Evolution API falhou, tentando fallback:', result.error);
-    } catch (error) {
-      console.log('Erro Evolution API, usando fallback:', error);
+      // Evolution API failed, try fallback
+    } catch {
+      // Evolution API error, use fallback
     }
 
     // Fallback: Web Share API (mobile) ou wa.me (desktop)
@@ -2997,12 +2995,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           setIsSendingWhatsAppLook(false);
           return;
         }
-      } catch (error) {
-        console.log('Share API falhou, usando wa.me');
+      } catch {
+        // Share API failed, use wa.me
       }
     }
 
-    // Fallback final: WhatsApp com texto + link da imagem
+    // Final fallback: WhatsApp with text + image link
     const phone = client.whatsapp?.replace(/\D/g, '') || '';
     const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
     const fullMessage = imageUrl ? whatsAppLookMessage + '\n\n' + imageUrl : whatsAppLookMessage;
@@ -3164,11 +3162,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                      fileName.endsWith('.heif') ||
                      (file.type === '' && (fileName.endsWith('.heic') || fileName.endsWith('.heif')));
 
-      console.log('[processClientPhotoFile] Arquivo:', file.name, 'Tipo:', file.type, 'Tamanho:', file.size, 'É HEIC:', isHeic);
-
-      // Converter HEIC/HEIF para PNG
+      // Convert HEIC/HEIF to PNG
       if (isHeic) {
-        console.log('[processClientPhotoFile] Convertendo HEIC para PNG...');
         try {
           const convertedBlob = await heic2any({
             blob: file,
@@ -3176,12 +3171,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             quality: 0.85
           });
           processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-          console.log('[processClientPhotoFile] Conversão HEIC concluída! Novo tamanho:', processedFile.size);
         } catch (heicError: any) {
-          console.error('[processClientPhotoFile] Erro na conversão HEIC:', heicError);
-          // Se falhar, tenta usar o arquivo original (alguns dispositivos já enviam como JPEG)
+          // If conversion fails, try using original file (some devices already send as JPEG)
           if (heicError.message?.includes('already a jpeg') || heicError.message?.includes('already')) {
-            console.log('[processClientPhotoFile] Arquivo já é JPEG, usando original');
             processedFile = file;
           } else {
             throw new Error('Não foi possível converter a imagem HEIC. Tente tirar a foto diretamente pelo app ou converter para JPG antes.');
@@ -3192,10 +3184,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
-        console.log('[processClientPhotoFile] Base64 gerado, tamanho:', base64.length);
 
         if (!base64 || base64.length < 100) {
-          console.error('[processClientPhotoFile] Base64 inválido ou muito pequeno');
           alert('Erro ao processar a imagem. Tente novamente.');
           setUploadingPhotoType(null);
           setProcessingClientPhoto(false);
@@ -5000,12 +4990,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
-                            <input type="text" defaultValue={user?.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+                            <label htmlFor="profile-name" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
+                            <input type="text" id="profile-name" name="profileName" autoComplete="name" defaultValue={user?.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                           </div>
                           <div>
-                            <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
-                            <input type="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
+                            <label htmlFor="profile-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
+                            <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
                           </div>
                         </div>
                       </div>
@@ -5814,11 +5804,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Nome *</label>
-                  <input type="text" value={editingClient.firstName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, firstName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+                  <input type="text" id="edit-client-firstName" name="firstName" autoComplete="given-name" value={editingClient.firstName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, firstName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Sobrenome *</label>
-                  <input type="text" value={editingClient.lastName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, lastName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+                  <input type="text" id="edit-client-lastName" name="lastName" autoComplete="family-name" value={editingClient.lastName} onChange={(e) => setEditingClient(prev => prev ? { ...prev, lastName: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
               </div>
               {/* Gênero */}
@@ -5838,13 +5828,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">WhatsApp *</label>
                 <div className="relative">
                   <i className="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm"></i>
-                  <input type="tel" value={editingClient.whatsapp} onChange={(e) => setEditingClient(prev => prev ? { ...prev, whatsapp: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
+                  <input type="tel" id="edit-client-whatsapp" name="whatsapp" autoComplete="tel" value={editingClient.whatsapp} onChange={(e) => setEditingClient(prev => prev ? { ...prev, whatsapp: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
                 </div>
               </div>
               {/* Email */}
               <div>
                 <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">E-mail (opcional)</label>
-                <input type="email" value={editingClient.email || ''} onChange={(e) => setEditingClient(prev => prev ? { ...prev, email: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
+                <input type="email" id="edit-client-email" name="email" autoComplete="email" value={editingClient.email || ''} onChange={(e) => setEditingClient(prev => prev ? { ...prev, email: e.target.value } : null)} className="bg-neutral-800 border-neutral-700 text-white w-full px-3 py-2 border rounded-lg text-sm" />
               </div>
               {/* Observações */}
               <div>
@@ -6191,12 +6181,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       <div className="space-y-3">
         <div>
           <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
-          <input type="text" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
+          <input type="text" id="new-product-name" name="productName" autoComplete="off" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
-            <input type="text" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
+            <input type="text" id="new-product-brand" name="productBrand" autoComplete="off" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
           </div>
           <div>
             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
@@ -7132,16 +7122,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                       const target = e.target as HTMLImageElement;
                                       const retryCount = parseInt(target.dataset.retry || '0');
                                       if (retryCount < 3) {
-                                        console.log('Retry imagem:', type, 'tentativa', retryCount + 1);
                                         target.dataset.retry = String(retryCount + 1);
                                         setTimeout(() => {
                                           target.src = imgUrl + '?retry=' + Date.now();
                                         }, 1000 * (retryCount + 1));
-                                      } else {
-                                        console.error('Falha ao carregar imagem após 3 tentativas:', type);
                                       }
                                     }}
-                                    onLoad={() => console.log('Imagem carregada:', type)}
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center">

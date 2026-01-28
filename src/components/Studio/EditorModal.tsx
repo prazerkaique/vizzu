@@ -840,7 +840,7 @@ const handleSave = async () => {
                 <label className={`block text-[10px] font-medium uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
                   <i className="fas fa-film mr-1 text-purple-400"></i>Descreva o cenário
                 </label>
-                <textarea value={cenPrompt} onChange={e => setCenPrompt(e.target.value)} rows={3} className={`w-full px-3 py-2 border rounded-lg text-sm resize-none ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`} placeholder="Ex: Vitrine de loja de luxo com iluminação dourada e plantas tropicais" />
+                <textarea id="editor-cenario-prompt" name="cenarioPrompt" value={cenPrompt} onChange={e => setCenPrompt(e.target.value)} rows={3} className={`w-full px-3 py-2 border rounded-lg text-sm resize-none ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`} placeholder="Ex: Vitrine de loja de luxo com iluminação dourada e plantas tropicais" />
               </div>
             )}
 
@@ -908,6 +908,8 @@ const handleSave = async () => {
                                   Observações adicionais <span className="opacity-60">(opcional)</span>
                                 </label>
                                 <textarea
+                                  id="editor-product-notes"
+                                  name="productNotes"
                                   value={productNotes}
                                   onChange={e => setProductNotes(e.target.value)}
                                   rows={2}
@@ -979,6 +981,8 @@ const handleSave = async () => {
                                           Faixa Etária
                                         </label>
                                         <select
+                                          id="model-age-range"
+                                          name="ageRange"
                                           value={modelSettings.ageRange}
                                           onChange={e => setModelSettings({...modelSettings, ageRange: e.target.value})}
                                           className={`w-full px-3 py-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
@@ -993,6 +997,8 @@ const handleSave = async () => {
                                           Etnia
                                         </label>
                                         <select
+                                          id="model-ethnicity"
+                                          name="ethnicity"
                                           value={modelSettings.ethnicity}
                                           onChange={e => setModelSettings({...modelSettings, ethnicity: e.target.value})}
                                           className={`w-full px-3 py-2 border rounded-lg text-xs ${isDark ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
@@ -1052,6 +1058,8 @@ const handleSave = async () => {
                                         </label>
                                         <input
                                           type="range"
+                                          id="model-height"
+                                          name="height"
                                           min={140}
                                           max={200}
                                           value={modelSettings.height}
@@ -1100,6 +1108,8 @@ const handleSave = async () => {
                                         {modelSettings.hairColor === 'other' && (
                                           <input
                                             type="text"
+                                            id="model-hair-color-custom"
+                                            name="hairColorCustom"
                                             value={modelSettings.hairColorCustom}
                                             onChange={e => setModelSettings({...modelSettings, hairColorCustom: e.target.value})}
                                             placeholder="Ex: rosa, azul, mechas..."
@@ -1137,6 +1147,8 @@ const handleSave = async () => {
                                         </label>
                                         <input
                                           type="range"
+                                          id="model-hair-length"
+                                          name="hairLength"
                                           min={0}
                                           max={5}
                                           value={modelSettings.hairLength}
@@ -1180,6 +1192,8 @@ const handleSave = async () => {
                                         {modelSettings.eyeColor === 'other' && (
                                           <input
                                             type="text"
+                                            id="model-eye-color-custom"
+                                            name="eyeColorCustom"
                                             value={modelSettings.eyeColorCustom}
                                             onChange={e => setModelSettings({...modelSettings, eyeColorCustom: e.target.value})}
                                             placeholder="Ex: violeta, heterocromia..."
@@ -1224,6 +1238,8 @@ const handleSave = async () => {
                                             </label>
                                             <input
                                               type="range"
+                                              id="model-bust-size"
+                                              name="bustSize"
                                               min={1}
                                               max={3}
                                               value={modelSettings.bustSize}
@@ -1251,6 +1267,8 @@ const handleSave = async () => {
                                             </label>
                                             <input
                                               type="range"
+                                              id="model-waist-type"
+                                              name="waistType"
                                               min={1}
                                               max={3}
                                               value={modelSettings.waistType}
@@ -1351,6 +1369,8 @@ const handleSave = async () => {
                                       <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Parte de cima</label>
                                       <input
                                         type="text"
+                                        id="look-top"
+                                        name="lookTop"
                                         value={describedLook.top}
                                         onChange={e => setDescribedLook({...describedLook, top: e.target.value})}
                                         className={`w-full px-2 py-1.5 border rounded-lg text-[10px] ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -1361,6 +1381,8 @@ const handleSave = async () => {
                                       <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Parte de baixo</label>
                                       <input
                                         type="text"
+                                        id="look-bottom"
+                                        name="lookBottom"
                                         value={describedLook.bottom}
                                         onChange={e => setDescribedLook({...describedLook, bottom: e.target.value})}
                                         className={`w-full px-2 py-1.5 border rounded-lg text-[10px] ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -1371,6 +1393,8 @@ const handleSave = async () => {
                                       <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Calçado</label>
                                       <input
                                         type="text"
+                                        id="look-shoes"
+                                        name="lookShoes"
                                         value={describedLook.shoes}
                                         onChange={e => setDescribedLook({...describedLook, shoes: e.target.value})}
                                         className={`w-full px-2 py-1.5 border rounded-lg text-[10px] ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -1381,6 +1405,8 @@ const handleSave = async () => {
                                       <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Acessórios</label>
                                       <input
                                         type="text"
+                                        id="look-accessories"
+                                        name="lookAccessories"
                                         value={describedLook.accessories}
                                         onChange={e => setDescribedLook({...describedLook, accessories: e.target.value})}
                                         className={`w-full px-2 py-1.5 border rounded-lg text-[10px] ${isDark ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
@@ -1524,7 +1550,7 @@ const handleSave = async () => {
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
           <div className={`rounded-2xl w-full max-w-sm p-5 ${isDark ? 'bg-neutral-900' : 'bg-white'}`}>
             <h4 className={`font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Salvar Modelo</h4>
-            <input type="text" value={newModelName} onChange={e => setNewModelName(e.target.value)} placeholder="Nome do modelo" className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`} />
+            <input type="text" id="new-model-name" name="modelName" autoComplete="off" value={newModelName} onChange={e => setNewModelName(e.target.value)} placeholder="Nome do modelo" className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`} />
             <div className="flex gap-2">
               <button onClick={() => setShowSaveModal(false)} className={`flex-1 py-2 rounded-lg text-sm ${isDark ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-700'}`}>Cancelar</button>
               <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="flex-1 py-2 bg-pink-500 text-white rounded-lg text-sm disabled:opacity-50">Salvar</button>
