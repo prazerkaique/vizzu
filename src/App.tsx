@@ -205,6 +205,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [filterCategory, setFilterCategory] = useState(''); // Subcategoria (Camisetas, Calças, etc.)
   const [filterColor, setFilterColor] = useState('');
   const [filterCollection, setFilterCollection] = useState('');
+  const [visibleProductsCount, setVisibleProductsCount] = useState(20); // Paginação: 20 produtos por vez
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showDeleteProductsModal, setShowDeleteProductsModal] = useState(false);
   const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
@@ -613,7 +614,12 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
       const dateB = new Date(b.createdAt || 0).getTime();
       return dateB - dateA;
     });
-  
+
+  // Reset paginação quando filtros mudam
+  useEffect(() => {
+    setVisibleProductsCount(20);
+  }, [searchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
+
   const filteredClients = clients.filter(client => {
     const fullName = (client.firstName + ' ' + client.lastName).toLowerCase();
     return fullName.includes(clientSearchTerm.toLowerCase()) || client.whatsapp.includes(clientSearchTerm) || (client.email && client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()));
@@ -4510,7 +4516,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   )}
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px]'}>{filteredProducts.length} de {products.length} produtos</p>
+                  <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px]'}>
+                    {filteredProducts.length > visibleProductsCount
+                      ? `Mostrando ${Math.min(visibleProductsCount, filteredProducts.length)} de ${filteredProducts.length} produtos`
+                      : `${filteredProducts.length} de ${products.length} produtos`}
+                  </p>
                   {filteredProducts.length > 0 && (
                     <button onClick={selectAllProducts} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] flex items-center gap-1'}>
                       <i className={`far fa-${selectedProducts.length === filteredProducts.length ? 'check-square' : 'square'} text-xs`}></i>
@@ -4538,7 +4548,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border overflow-hidden'}>
                 {filteredProducts.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
-                    {filteredProducts.map(product => (
+                    {filteredProducts.slice(0, visibleProductsCount).map(product => (
                       <div
                         key={product.id}
                         className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-pink-500' : '')}
@@ -4588,7 +4598,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
                     ))}
                   </div>
-                ) : (
+                ) : null}
+
+                {/* Botão Carregar Mais */}
+                {filteredProducts.length > 0 && visibleProductsCount < filteredProducts.length && (
+                  <div className="flex justify-center p-4 pt-2">
+                    <button
+                      onClick={() => setVisibleProductsCount(prev => prev + 20)}
+                      className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                    >
+                      <i className="fas fa-chevron-down text-xs"></i>
+                      Carregar mais ({filteredProducts.length - visibleProductsCount} restantes)
+                    </button>
+                  </div>
+                )}
+
+                {filteredProducts.length === 0 && (
                   <div className="p-8 text-center">
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
                       <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-box text-xl'}></i>
