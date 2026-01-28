@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vizzu-v7';
+const CACHE_NAME = 'vizzu-v8';
 const OFFLINE_URL = '/';
 
 const STATIC_ASSETS = [
@@ -47,7 +47,28 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Ignorar APIs externas
+  // CACHEAR imagens do Supabase Storage (economiza egress!)
+  if (event.request.url.includes('supabase') && event.request.url.includes('/storage/v1/object/')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse; // Retorna do cache local (0 egress)
+        }
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Ignorar outras APIs externas (auth, database, etc)
   if (
     event.request.url.includes('supabase') ||
     event.request.url.includes('googleapis') ||
