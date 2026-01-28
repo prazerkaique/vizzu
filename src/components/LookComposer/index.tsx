@@ -118,7 +118,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedLook, setSelectedLook] = useState<GeneratedLook | null>(null);
   const [selectedLookView, setSelectedLookView] = useState<'front' | 'back'>('front');
-  const [showAllLooks, setShowAllLooks] = useState(false);
+  const [visibleLooksCount, setVisibleLooksCount] = useState(6); // Paginação de looks
+  const [visibleModalProductsCount, setVisibleModalProductsCount] = useState(20); // Paginação do modal
   const [selectedProductForModal, setSelectedProductForModal] = useState<ProductWithLooks | null>(null);
   const [modalSelectedLook, setModalSelectedLook] = useState<GeneratedLook | null>(null);
   const [modalSelectedView, setModalSelectedView] = useState<'front' | 'back'>('front');
@@ -269,10 +270,10 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     return result.sort((a, b) => b.lookCount - a.lookCount);
   }, [products, allGeneratedLooks]);
 
-  // Últimos 6 looks
-  const recentLooks = useMemo(() => {
-    return allGeneratedLooks.slice(0, 6);
-  }, [allGeneratedLooks]);
+  // Reset paginação quando filtros do modal mudam
+  useEffect(() => {
+    setVisibleModalProductsCount(20);
+  }, [productSearchTerm, productFilterCategoryGroup, productFilterCategory]);
 
   // Filtrar produtos no modal (ordenados por mais recente primeiro)
   const filteredProducts = useMemo(() => {
@@ -410,6 +411,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
     setProductSearchTerm('');
     setProductFilterCategoryGroup('');
     setProductFilterCategory('');
+    setVisibleModalProductsCount(20); // Reset paginação
   };
 
   const handleSelectProductForNewLook = (product: Product) => {
@@ -544,24 +546,19 @@ export const LookComposer: React.FC<LookComposerProps> = ({
               </div>
               <div>
                 <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Últimos Looks</h2>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{allGeneratedLooks.length} looks criados</p>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                  {allGeneratedLooks.length > visibleLooksCount
+                    ? `Mostrando ${Math.min(visibleLooksCount, allGeneratedLooks.length)} de ${allGeneratedLooks.length} looks`
+                    : `${allGeneratedLooks.length} looks criados`}
+                </p>
               </div>
             </div>
-            {allGeneratedLooks.length > 6 && (
-              <button
-                onClick={() => setShowAllLooks(!showAllLooks)}
-                className={(isDark ? 'text-pink-400 hover:text-pink-300' : 'text-pink-500 hover:text-pink-600') + ' text-xs font-medium flex items-center gap-1'}
-              >
-                {showAllLooks ? 'Mostrar menos' : 'Ver todos'}
-                <i className={'fas fa-chevron-' + (showAllLooks ? 'up' : 'down') + ' text-[10px]'}></i>
-              </button>
-            )}
           </div>
 
           {allGeneratedLooks.length > 0 ? (
             <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-4'}>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                {(showAllLooks ? allGeneratedLooks : recentLooks).map((look) => {
+                {allGeneratedLooks.slice(0, visibleLooksCount).map((look) => {
                   const currentView = getCardView(look.id);
                   const displayImage = currentView === 'back' && look.backImageUrl ? look.backImageUrl : look.imageUrl;
 
@@ -648,6 +645,19 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                   );
                 })}
               </div>
+
+              {/* Botão Carregar Mais - Looks */}
+              {visibleLooksCount < allGeneratedLooks.length && (
+                <div className="flex justify-center mt-4">
+                  <button
+                    onClick={() => setVisibleLooksCount(prev => prev + 6)}
+                    className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                  >
+                    <i className="fas fa-chevron-down text-xs"></i>
+                    Carregar mais ({allGeneratedLooks.length - visibleLooksCount} restantes)
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-8 text-center'}>
@@ -816,8 +826,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
             {/* Grid de Produtos */}
             <div className="flex-1 overflow-y-auto p-4 pt-0">
               {filteredProducts.length > 0 ? (
+                <>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mb-3'}>
+                  {filteredProducts.length > visibleModalProductsCount
+                    ? `Mostrando ${Math.min(visibleModalProductsCount, filteredProducts.length)} de ${filteredProducts.length} produtos`
+                    : `${filteredProducts.length} produtos`}
+                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {filteredProducts.map(product => {
+                  {filteredProducts.slice(0, visibleModalProductsCount).map(product => {
                     const productImage = getProductImage(product);
                     const isOptimized = hasOptimizedImage(product);
                     return (
@@ -860,6 +876,20 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                     );
                   })}
                 </div>
+
+                {/* Botão Carregar Mais - Modal de Produtos */}
+                {visibleModalProductsCount < filteredProducts.length && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={() => setVisibleModalProductsCount(prev => prev + 20)}
+                      className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                    >
+                      <i className="fas fa-chevron-down text-xs"></i>
+                      Carregar mais ({filteredProducts.length - visibleModalProductsCount} restantes)
+                    </button>
+                  </div>
+                )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
