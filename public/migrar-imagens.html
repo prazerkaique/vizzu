@@ -21,25 +21,49 @@
     .stat { background: #1a1a1a; padding: 15px; border-radius: 8px; text-align: center; }
     .stat-value { font-size: 24px; font-weight: bold; color: #f472b6; }
     .stat-label { font-size: 12px; color: #888; }
+    .login-form { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .login-form input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; background: #0a0a0a; color: #fff; font-size: 14px; }
+    .login-form input:focus { outline: none; border-color: #f472b6; }
+    .hidden { display: none; }
+    .user-info { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .user-email { color: #4ade80; }
   </style>
 </head>
 <body>
   <h1>VIZZU - Migrar Imagens</h1>
   <p style="color: #888;">Comprimir imagens existentes no Supabase Storage para economizar bandwidth.</p>
 
-  <div class="stats">
-    <div class="stat"><div class="stat-value" id="total">0</div><div class="stat-label">Total</div></div>
-    <div class="stat"><div class="stat-value" id="compressed" style="color: #4ade80;">0</div><div class="stat-label">Comprimidas</div></div>
-    <div class="stat"><div class="stat-value" id="skipped" style="color: #fbbf24;">0</div><div class="stat-label">Puladas</div></div>
-    <div class="stat"><div class="stat-value" id="saved" style="color: #60a5fa;">0 MB</div><div class="stat-label">Economizado</div></div>
+  <!-- Login Form -->
+  <div id="loginSection" class="login-form">
+    <h3 style="margin-top: 0;">Fazer Login</h3>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Senha" />
+    <button class="btn" onclick="doLogin()" id="btnLogin">Entrar</button>
+    <p id="loginError" style="color: #f87171; display: none;"></p>
   </div>
 
-  <div style="margin-bottom: 15px;">
-    <button class="btn btn-secondary" id="btnSimular" onclick="runMigration(true)">Simular (Seguro)</button>
-    <button class="btn" id="btnExecutar" onclick="runMigration(false)">Executar Migracao</button>
+  <!-- User Info (shown after login) -->
+  <div id="userSection" class="user-info hidden">
+    <span>Logado como: <span id="userEmail" class="user-email"></span></span>
+    <button class="btn-secondary btn" onclick="doLogout()" style="padding: 8px 16px; font-size: 12px;">Sair</button>
   </div>
 
-  <div id="log">Clique em "Simular" para comecar...</div>
+  <!-- Migration Controls (shown after login) -->
+  <div id="migrationSection" class="hidden">
+    <div class="stats">
+      <div class="stat"><div class="stat-value" id="total">0</div><div class="stat-label">Total</div></div>
+      <div class="stat"><div class="stat-value" id="compressed" style="color: #4ade80;">0</div><div class="stat-label">Comprimidas</div></div>
+      <div class="stat"><div class="stat-value" id="skipped" style="color: #fbbf24;">0</div><div class="stat-label">Puladas</div></div>
+      <div class="stat"><div class="stat-value" id="saved" style="color: #60a5fa;">0 MB</div><div class="stat-label">Economizado</div></div>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+      <button class="btn btn-secondary" id="btnSimular" onclick="runMigration(true)">Simular (Seguro)</button>
+      <button class="btn" id="btnExecutar" onclick="runMigration(false)">Executar Migracao</button>
+    </div>
+
+    <div id="log">Clique em "Simular" para comecar...</div>
+  </div>
 
   <script type="module">
     const SUPABASE_URL = 'https://dbdqiqehuapcicejnzyd.supabase.co';
@@ -68,33 +92,76 @@
       savedEl.textContent = (saved / 1024 / 1024).toFixed(2) + ' MB';
     }
 
+    function showLoggedIn(email) {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('userSection').classList.remove('hidden');
+      document.getElementById('migrationSection').classList.remove('hidden');
+      document.getElementById('userEmail').textContent = email;
+    }
+
+    function showLoggedOut() {
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('userSection').classList.add('hidden');
+      document.getElementById('migrationSection').classList.add('hidden');
+    }
+
     async function init() {
-      log('Carregando bibliotecas...');
       const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
       supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
       imageCompression = (await import('https://esm.sh/browser-image-compression@2.0.2')).default;
 
-      // Verificar se usuario esta logado
+      // Check existing session
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         currentUserId = session.user.id;
-        log('Logado como: ' + session.user.email, 'success');
-      } else {
-        log('AVISO: Voce precisa estar logado no app principal primeiro!', 'error');
-        log('1. Abra o app Vizzu em outra aba', 'warning');
-        log('2. Faca login normalmente', 'warning');
-        log('3. Volte aqui e recarregue esta pagina', 'warning');
-        document.getElementById('btnSimular').disabled = true;
-        document.getElementById('btnExecutar').disabled = true;
+        showLoggedIn(session.user.email);
+      }
+    }
+
+    window.doLogin = async function() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('loginError');
+      const btnLogin = document.getElementById('btnLogin');
+
+      if (!email || !password) {
+        errorEl.textContent = 'Preencha email e senha';
+        errorEl.style.display = 'block';
         return;
       }
 
-      log('Bibliotecas carregadas!', 'success');
-    }
+      btnLogin.disabled = true;
+      btnLogin.textContent = 'Entrando...';
+      errorEl.style.display = 'none';
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          errorEl.textContent = error.message;
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        currentUserId = data.user.id;
+        showLoggedIn(data.user.email);
+
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Entrar';
+      }
+    };
+
+    window.doLogout = async function() {
+      await supabase.auth.signOut();
+      currentUserId = null;
+      showLoggedOut();
+    };
 
     window.runMigration = async function(dryRun) {
-      if (!supabase) await init();
-
       const btnSimular = document.getElementById('btnSimular');
       const btnExecutar = document.getElementById('btnExecutar');
       btnSimular.disabled = true;
