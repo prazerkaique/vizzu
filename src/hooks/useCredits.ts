@@ -197,8 +197,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
           credits: credits,
           planId: planId,
         }));
-
-        console.log('[useCredits] Créditos carregados do Supabase:', credits);
       }
     } catch (e: any) {
       console.error('Error loading billing data:', e);

@@ -968,73 +968,17 @@ const saveHistoryToSupabase = async (log: HistoryLog, userId: string) => {
 // SINCRONIZAÇÃO DE CONFIGURAÇÕES DA EMPRESA
 // ═══════════════════════════════════════════════════════════════
 
-const loadUserCompanySettings = async (userId: string) => {
-  try {
-    const { data: settingsData, error } = await supabase
-      .from('company_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    const localSettings = JSON.parse(localStorage.getItem('vizzu_company_settings') || '{}');
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // Não encontrado no servidor - sincronizar local se existir
-        if (localSettings.name) {
-          await saveCompanySettingsToSupabase(localSettings, userId);
-        }
-      }
-      // Silenciosamente usa localStorage se a tabela não existir
-      return;
-    }
-
-    if (settingsData) {
-      const formattedSettings: CompanySettings = {
-        name: settingsData.name || '',
-        cnpj: settingsData.cnpj || undefined,
-        instagram: settingsData.instagram || undefined,
-        targetAudience: settingsData.target_audience || '',
-        voiceTone: settingsData.voice_tone || 'casual',
-        voiceExamples: settingsData.voice_examples || undefined,
-        hashtags: settingsData.hashtags || [],
-        emojisEnabled: settingsData.emojis_enabled ?? true,
-        captionStyle: settingsData.caption_style || 'media',
-        callToAction: settingsData.call_to_action || undefined,
-      };
-
-      setCompanySettings(formattedSettings);
-    }
-  } catch {
-    // Silenciosamente falha - usa localStorage
-  }
+const loadUserCompanySettings = async (_userId: string) => {
+  // TODO: Tabela company_settings não existe no Supabase ainda
+  // Por enquanto, usar apenas localStorage (carregado no useEffect inicial)
+  // Quando a tabela for criada, descomentar o código abaixo
+  return;
 };
 
-const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: string) => {
-  try {
-    const { error } = await supabase
-      .from('company_settings')
-      .upsert({
-        user_id: userId,
-        name: settings.name,
-        cnpj: settings.cnpj || null,
-        instagram: settings.instagram || null,
-        target_audience: settings.targetAudience,
-        voice_tone: settings.voiceTone,
-        voice_examples: settings.voiceExamples || null,
-        hashtags: settings.hashtags || [],
-        emojis_enabled: settings.emojisEnabled,
-        caption_style: settings.captionStyle,
-        call_to_action: settings.callToAction || null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
-
-    if (error) {
-      console.log('Erro ao salvar configurações no Supabase:', error.message);
-    }
-  } catch (error) {
-    console.error('Erro ao salvar configurações:', error);
-  }
+const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId: string) => {
+  // TODO: Tabela company_settings não existe no Supabase ainda
+  // Por enquanto, salvar apenas em localStorage (feito automaticamente pelo useEffect)
+  return;
 };
 
   // Check for existing Supabase session on mount
@@ -1047,7 +991,7 @@ const saveCompanySettingsToSupabase = async (settings: CompanySettings, userId: 
         // Verificar se é um usuário diferente do último logado
         const lastUserId = localStorage.getItem('vizzu_last_user_id');
         if (lastUserId && lastUserId !== userId) {
-          console.log('⚠️ Usuário diferente detectado! Limpando dados locais antigos...');
+          // Limpar dados locais do usuário anterior
           localStorage.removeItem('vizzu_clients');
           localStorage.removeItem('vizzu_history');
           localStorage.removeItem('vizzu_company_settings');
@@ -2377,7 +2321,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         updatedAt: m.updated_at,
       }));
 
-      console.log('Modelos carregados:', models);
       setSavedModels(models);
     } catch (error) {
       console.error('Erro ao carregar modelos:', error);
