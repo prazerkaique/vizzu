@@ -45,7 +45,7 @@
     const SUPABASE_URL = 'https://dbdqiqehuapcicejnzyd.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjMxMjUsImV4cCI6MjA4NDA5OTEyNX0.LDcIu4VPBifzmy8z-lKkjqzgWo8-d8C0VjLl1XSWJiQ';
 
-    let supabase, imageCompression;
+    let supabase, imageCompression, currentUserId;
 
     const logEl = document.getElementById('log');
     const totalEl = document.getElementById('total');
@@ -73,6 +73,22 @@
       const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
       supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
       imageCompression = (await import('https://esm.sh/browser-image-compression@2.0.2')).default;
+
+      // Verificar se usuario esta logado
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        currentUserId = session.user.id;
+        log('Logado como: ' + session.user.email, 'success');
+      } else {
+        log('AVISO: Voce precisa estar logado no app principal primeiro!', 'error');
+        log('1. Abra o app Vizzu em outra aba', 'warning');
+        log('2. Faca login normalmente', 'warning');
+        log('3. Volte aqui e recarregue esta pagina', 'warning');
+        document.getElementById('btnSimular').disabled = true;
+        document.getElementById('btnExecutar').disabled = true;
+        return;
+      }
+
       log('Bibliotecas carregadas!', 'success');
     }
 
@@ -88,10 +104,11 @@
       log(dryRun ? '=== MODO SIMULACAO (nao altera nada) ===' : '=== EXECUTANDO MIGRACAO ===', 'warning');
 
       try {
-        log('Buscando imagens...');
+        log('Buscando imagens do usuario...');
         const { data: images, error } = await supabase
           .from('product_images')
-          .select('id, storage_path, url');
+          .select('id, storage_path, url, user_id')
+          .eq('user_id', currentUserId);
 
         if (error) {
           log('Erro: ' + error.message, 'error');
