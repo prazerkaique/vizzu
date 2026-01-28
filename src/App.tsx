@@ -4457,7 +4457,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="flex-shrink-0 w-44">
                     <div className="relative">
                       <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
-                      <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
+                      <input type="text" id="product-search" name="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
                     </div>
                   </div>
                   <select
@@ -4634,7 +4634,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <div className="mb-4">
                   <div className="relative">
                     <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
-                    <input type="text" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-gray-200 text-gray-900 shadow-sm') + ' w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm'} />
+                    <input type="text" id="client-search" name="clientSearch" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-gray-200 text-gray-900 shadow-sm') + ' w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm'} />
                   </div>
                 </div>
               )}
@@ -5471,12 +5471,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Nome *</label>
-                  <input type="text" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+                  <label htmlFor="client-firstName" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Nome *</label>
+                  <input type="text" id="client-firstName" name="firstName" autoComplete="given-name" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                 </div>
                 <div>
-                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Sobrenome *</label>
-                  <input type="text" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+                  <label htmlFor="client-lastName" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Sobrenome *</label>
+                  <input type="text" id="client-lastName" name="lastName" autoComplete="family-name" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
               <div>
@@ -5491,17 +5491,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
               <div>
-                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>WhatsApp *</label>
+                <label htmlFor="client-whatsapp" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>WhatsApp *</label>
                 <div className="relative">
                   <i className="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm"></i>
-                  <input type="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
+                  <input type="tel" id="client-whatsapp" name="whatsapp" autoComplete="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
               <div>
-                <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>E-mail (opcional)</label>
+                <label htmlFor="client-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>E-mail (opcional)</label>
                 <div className="relative">
                   <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
-                  <input type="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
+                  <input type="email" id="client-email" name="email" autoComplete="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
                 </div>
               </div>
               <div>
