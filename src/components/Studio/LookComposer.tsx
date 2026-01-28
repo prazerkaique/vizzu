@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Product, LookComposition } from '../../types';
 import { BaseballCap, TShirt, Pants, Sneaker, Watch, Handbag } from '@phosphor-icons/react';
 import heic2any from 'heic2any';
+import { compressImage, formatFileSize } from '../../utils/imageCompression';
 
 interface Props {
   products: Product[];
@@ -180,30 +181,32 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
     }
   }, []);
 
-  // Processar imagem com conversao HEIC
+  // Processar imagem com conversao HEIC + compressão
   const processImageFile = async (file: File): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let processedFile: File | Blob = file;
+    try {
+      let processedFile: File | Blob = file;
 
-        if (file.type === 'image/heic' || file.type === 'image/heif' ||
-            file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-          const convertedBlob = await heic2any({
-            blob: file,
-            toType: 'image/png',
-            quality: 0.9
-          });
-          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-        }
-
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-        reader.readAsDataURL(processedFile);
-      } catch (error) {
-        reject(error);
+      if (file.type === 'image/heic' || file.type === 'image/heif' ||
+          file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/png',
+          quality: 0.9
+        });
+        processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
       }
-    });
+
+      // Comprimir imagem para reduzir consumo de banda
+      const result = await compressImage(processedFile);
+
+      if (result.wasCompressed && result.savings > 0) {
+        console.info(`[Compressão] ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${result.savings}% menor)`);
+      }
+
+      return result.base64;
+    } catch (error) {
+      throw error;
+    }
   };
 
   // Handler para upload de imagem via galeria/camera

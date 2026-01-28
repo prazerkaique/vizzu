@@ -14,6 +14,7 @@ import heic2any from 'heic2any';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
 import { smartDownload } from './utils/downloadHelper';
+import { compressImage, formatFileSize, COMPRESSION_ENABLED } from './utils/imageCompression';
 
 
 const CATEGORY_GROUPS = [
@@ -3051,29 +3052,33 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     }
   };
 
-  // Função para processar imagem (converte HEIC se necessário)
+  // Função para processar imagem (converte HEIC se necessário + comprime)
   const processImageFile = async (file: File): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let processedFile: File | Blob = file;
-        
-        if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-          const convertedBlob = await heic2any({
-            blob: file,
-            toType: 'image/png',
-            quality: 0.9
-          });
-          processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-        reader.readAsDataURL(processedFile);
-      } catch (error) {
-        reject(error);
+    try {
+      let processedFile: File | Blob = file;
+
+      // Converter HEIC/HEIF para PNG se necessário
+      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/png',
+          quality: 0.9
+        });
+        processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
       }
-    });
+
+      // Comprimir imagem para reduzir consumo de banda
+      const result = await compressImage(processedFile);
+
+      // Log de economia (apenas em desenvolvimento)
+      if (result.wasCompressed && result.savings > 0) {
+        console.info(`[Compressão] ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${result.savings}% menor)`);
+      }
+
+      return result.base64;
+    } catch (error) {
+      throw error;
+    }
   };
   const handleProvadorGenerate = async () => {
     if (!provadorClient || !user || Object.keys(provadorLook).length === 0) return;

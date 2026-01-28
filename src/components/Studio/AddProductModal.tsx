@@ -4,6 +4,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Product, ProductImage, ProductAttributes, CATEGORY_ATTRIBUTES } from '../../types';
+import { compressImage, formatFileSize } from '../../utils/imageCompression';
 
 interface Props {
   isOpen: boolean;
@@ -69,12 +70,18 @@ export const AddProductModal: React.FC<Props> = ({
   };
 
   // Handler de seleção de arquivo
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
+      try {
+        // Comprimir imagem antes de salvar
+        const result = await compressImage(file);
+
+        if (result.wasCompressed && result.savings > 0) {
+          console.info(`[Compressão] ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${result.savings}% menor)`);
+        }
+
+        const base64 = result.base64;
         if (uploadTarget === 'front') {
           setFrontImage(base64);
         } else {
@@ -84,8 +91,9 @@ export const AddProductModal: React.FC<Props> = ({
         if (step === 'source') {
           setStep('photos');
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+      }
     }
     // Reset input
     if (e.target) e.target.value = '';
