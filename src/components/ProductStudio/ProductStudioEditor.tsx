@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
-import { generateProductStudioV2 } from '../../lib/api/studio';
+import { generateProductStudioV2, ProductPresentationStyle } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 import { smartDownload } from '../../utils/downloadHelper';
 
@@ -140,6 +140,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
   // Estados de seleção de ângulos
   const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>([]);
+
+  // Estado do estilo de apresentação (Ghost Mannequin ou Flat Lay)
+  const [presentationStyle, setPresentationStyle] = useState<ProductPresentationStyle>('ghost-mannequin');
+  const [showPresentationTooltip, setShowPresentationTooltip] = useState(false);
 
   // Estado de geração local (fallback se não tiver props globais)
   const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -723,6 +727,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         imageId: imageIds.front,
         referenceImages,
         angles: selectedAngles,
+        presentationStyle,
       });
 
       const response = await generateProductStudioV2({
@@ -731,6 +736,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
         imageId: imageIds.front!,
         referenceImages: Object.keys(referenceImages).length > 0 ? referenceImages : undefined,
         angles: selectedAngles,
+        // Estilo de apresentação (Ghost Mannequin ou Flat Lay)
+        presentationStyle,
         // Informações do produto para instruções do prompt
         productInfo: {
           name: product.name,
@@ -1329,6 +1336,117 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   </div>
                   <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Sem referência</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Estilo de Apresentação */}
+            <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
+                  <i className="fas fa-tshirt mr-2 text-pink-400"></i>Estilo de Apresentação
+                </h3>
+                {/* Tooltip de ajuda */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowPresentationTooltip(!showPresentationTooltip)}
+                    onBlur={() => setTimeout(() => setShowPresentationTooltip(false), 200)}
+                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white bg-neutral-800 hover:bg-neutral-700' : 'text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200') + ' w-6 h-6 rounded-full flex items-center justify-center transition-all'}
+                  >
+                    <i className="fas fa-question text-[10px]"></i>
+                  </button>
+                  {/* Dropdown de explicação */}
+                  {showPresentationTooltip && (
+                    <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200 shadow-xl') + ' absolute right-0 top-8 w-72 rounded-xl border p-4 z-20'}>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                              <i className="fas fa-person text-purple-400 text-sm"></i>
+                            </div>
+                            <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Ghost Mannequin</span>
+                          </div>
+                          <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+                            A roupa aparece como se estivesse vestida em um corpo invisível, dando forma e volume realista. Ideal para mostrar o caimento da peça.
+                          </p>
+                        </div>
+                        <div className={'h-px ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+                              <i className="fas fa-shirt text-blue-400 text-sm"></i>
+                            </div>
+                            <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Flat Lay</span>
+                          </div>
+                          <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+                            A roupa aparece deitada/esticada sobre uma superfície plana, vista de cima. Ideal para mostrar estampas, detalhes e composições de looks.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-neutral-700/50">
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                          <i className="fas fa-lightbulb mr-1 text-yellow-500"></i>
+                          Dica: Ghost Mannequin é mais usado para e-commerce, Flat Lay para redes sociais.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Ghost Mannequin */}
+                <button
+                  onClick={() => setPresentationStyle('ghost-mannequin')}
+                  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
+                    (presentationStyle === 'ghost-mannequin'
+                      ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500'
+                      : (theme === 'dark'
+                        ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+                    )
+                  }
+                >
+                  <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' +
+                    (presentationStyle === 'ghost-mannequin'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                      : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+                  }>
+                    <i className={'fas fa-person text-xl ' + (presentationStyle === 'ghost-mannequin' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+                  </div>
+                  <span className={(presentationStyle === 'ghost-mannequin' ? 'text-purple-400' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-xs font-medium'}>
+                    Ghost Mannequin
+                  </span>
+                  {presentationStyle === 'ghost-mannequin' && (
+                    <i className="fas fa-check-circle text-purple-400 text-sm"></i>
+                  )}
+                </button>
+
+                {/* Flat Lay */}
+                <button
+                  onClick={() => setPresentationStyle('flat-lay')}
+                  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
+                    (presentationStyle === 'flat-lay'
+                      ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500'
+                      : (theme === 'dark'
+                        ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+                    )
+                  }
+                >
+                  <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' +
+                    (presentationStyle === 'flat-lay'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                      : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+                  }>
+                    <i className={'fas fa-shirt text-xl ' + (presentationStyle === 'flat-lay' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+                  </div>
+                  <span className={(presentationStyle === 'flat-lay' ? 'text-blue-400' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-xs font-medium'}>
+                    Flat Lay
+                  </span>
+                  {presentationStyle === 'flat-lay' && (
+                    <i className="fas fa-check-circle text-blue-400 text-sm"></i>
+                  )}
+                </button>
               </div>
             </div>
 

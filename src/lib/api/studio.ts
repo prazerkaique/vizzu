@@ -92,11 +92,16 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
 // PRODUCT STUDIO v2 - MULTI-ANGLE
 // ═══════════════════════════════════════════════════════════════
 
+// Tipo de apresentação do produto
+export type ProductPresentationStyle = 'ghost-mannequin' | 'flat-lay';
+
 interface ProductStudioV2Params {
   productId: string;
   userId: string;
   imageId: string;  // Imagem frontal (obrigatória)
   angles: string[];
+  // Estilo de apresentação: Ghost Mannequin ou Flat Lay
+  presentationStyle?: ProductPresentationStyle;
   // Imagens de referência para cada ângulo (se disponíveis)
   referenceImages?: {
     back?: string;
@@ -147,6 +152,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
       user_id: params.userId,
       image_id: params.imageId,
       angles: params.angles,
+      // Estilo de apresentação (ghost-mannequin ou flat-lay)
+      presentation_style: params.presentationStyle || 'ghost-mannequin',
       // Enviar todas as imagens de referência disponíveis
       reference_images: params.referenceImages || {},
       // Informações do produto (contexto útil para o n8n)
