@@ -113,6 +113,17 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   const [optimizedCollapsed, setOptimizedCollapsed] = useState(false);
   const [pendingCollapsed, setPendingCollapsed] = useState(false);
 
+  // Estados de paginação (20 produtos por página)
+  const PRODUCTS_PER_PAGE = 20;
+  const [visibleOptimized, setVisibleOptimized] = useState(PRODUCTS_PER_PAGE);
+  const [visiblePending, setVisiblePending] = useState(PRODUCTS_PER_PAGE);
+
+  // Reset paginação quando filtros mudam
+  useEffect(() => {
+    setVisibleOptimized(PRODUCTS_PER_PAGE);
+    setVisiblePending(PRODUCTS_PER_PAGE);
+  }, [searchTerm, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
+
   // Filtrar e ordenar produtos
   const filteredProducts = useMemo(() => {
     let result = products.filter(product => {
@@ -570,7 +581,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                       Produtos Otimizados
                     </h2>
                     <span className={(theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
-                      {optimizedProducts.length}
+                      {optimizedProducts.length > visibleOptimized
+                        ? `${Math.min(visibleOptimized, optimizedProducts.length)} de ${optimizedProducts.length}`
+                        : optimizedProducts.length}
                     </span>
                   </div>
                   <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
@@ -580,7 +593,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
                 {!optimizedCollapsed && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {optimizedProducts.map(product => {
+                    {optimizedProducts.slice(0, visibleOptimized).map(product => {
                       const productImage = getProductImage(product);
                       const studioCount = getProductStudioCount(product);
                       return (
@@ -630,6 +643,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                     })}
                   </div>
                 )}
+
+                {/* Botão Carregar Mais - Otimizados */}
+                {!optimizedCollapsed && visibleOptimized < optimizedProducts.length && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={() => setVisibleOptimized(prev => prev + PRODUCTS_PER_PAGE)}
+                      className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                    >
+                      <i className="fas fa-chevron-down text-xs"></i>
+                      Carregar mais ({optimizedProducts.length - visibleOptimized} restantes)
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -650,7 +676,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                       Pendentes de otimização
                     </h2>
                     <span className={(theme === 'dark' ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
-                      {pendingProducts.length}
+                      {pendingProducts.length > visiblePending
+                        ? `${Math.min(visiblePending, pendingProducts.length)} de ${pendingProducts.length}`
+                        : pendingProducts.length}
                     </span>
                   </div>
                   <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
@@ -660,7 +688,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
                 {!pendingCollapsed && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {pendingProducts.map(product => {
+                    {pendingProducts.slice(0, visiblePending).map(product => {
                       const productImage = getProductImage(product);
                       return (
                         <div
@@ -697,6 +725,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Botão Carregar Mais - Pendentes */}
+                {!pendingCollapsed && visiblePending < pendingProducts.length && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={() => setVisiblePending(prev => prev + PRODUCTS_PER_PAGE)}
+                      className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                    >
+                      <i className="fas fa-chevron-down text-xs"></i>
+                      Carregar mais ({pendingProducts.length - visiblePending} restantes)
+                    </button>
                   </div>
                 )}
               </div>
