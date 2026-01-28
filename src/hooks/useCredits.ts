@@ -9,10 +9,13 @@ import { supabase } from '../services/supabaseClient';
 export interface Plan {
   id: string;
   name: string;
-  limit: number;
+  limit: number; // Gerações por mês
+  productLimit: number; // Limite de produtos no catálogo
   priceMonthly: number;
   priceYearly: number;
-  creditPrice: number;
+  creditPrice: number; // Preço por geração avulsa
+  maxResolution: '2k' | '4k'; // Resolução máxima permitida
+  hasWatermark: boolean;
   badge?: string;
   badgeColor?: string;
   features: string[];
@@ -23,67 +26,137 @@ export const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    limit: 400,
-    priceMonthly: 149.90,
-    priceYearly: 124.92, // R$ 1.499/ano = R$ 124,92/mês (17% desconto)
-    creditPrice: 0.45,
+    limit: 30,
+    productLimit: 5000,
+    priceMonthly: 97,
+    priceYearly: 80.58, // ~17% desconto
+    creditPrice: 3.90,
+    maxResolution: '2k',
+    hasWatermark: false,
     features: [
-      'Fundo de Estúdio',
-      'Fotos para Reels e Stories',
-      'Modelo IA Feito sob medida',
+      '30 gerações/mês',
+      'Até 5.000 produtos',
+      'Resolução 2K',
+      'Vizzu Product Studio',
       'Vizzu Provador',
-      'Vizzu Studio',
-      'Dashboard',
+      'Look Composer',
+      'Fundo de Estúdio',
       'Cenário Criativo',
-      'Gerador de Legendas para Redes Sociais',
-      'Catálogo Virtual com venda para Whatsapp',
-      'Atendente Receptivo de Whatsapp'
+      'Modelo IA sob medida',
+      'Dashboard',
+      'Fotos para Reels e Stories',
+      'Gerador de Legendas IA',
+      'Catálogo Virtual + WhatsApp',
+      'Atendente Receptivo WhatsApp',
+      'Suporte por Email'
     ]
   },
   {
     id: 'pro',
     name: 'Pro',
-    limit: 800,
-    priceMonthly: 279.90,
-    priceYearly: 233.25, // R$ 2.799/ano = R$ 233,25/mês (17% desconto)
-    creditPrice: 0.39,
-    badge: 'POPULAR',
+    limit: 100,
+    productLimit: 10000,
+    priceMonthly: 247,
+    priceYearly: 205.01, // ~17% desconto
+    creditPrice: 3.50,
+    maxResolution: '4k',
+    hasWatermark: false,
+    badge: 'MAIS POPULAR',
     badgeColor: 'fuchsia',
     features: [
-      'Todas do Starter, mais:',
-      'Geração de Vídeos para Instagram com modelos',
-      'Agente Receptivo de Whatsapp',
-      'Todas as funcionalidades exceto integração com e-commerces'
+      '100 gerações/mês',
+      'Até 10.000 produtos',
+      'Resolução 2K + 4K',
+      'Tudo do Starter, mais:',
+      'Geração de Vídeos Instagram',
+      'Agente Ativo WhatsApp',
+      '4K consome 2 gerações'
     ],
     highlight: true
   },
   {
-    id: 'premier',
-    name: 'Premier',
-    limit: 1500,
-    priceMonthly: 449.90,
-    priceYearly: 374.92, // R$ 4.499/ano = R$ 374,92/mês (17% desconto)
-    creditPrice: 0.35,
-    badge: 'MELHOR VALOR',
+    id: 'business',
+    name: 'Business',
+    limit: 250,
+    productLimit: 50000,
+    priceMonthly: 447,
+    priceYearly: 371.01, // ~17% desconto
+    creditPrice: 3.00,
+    maxResolution: '4k',
+    hasWatermark: false,
+    badge: 'PARA EMPRESAS',
     badgeColor: 'amber',
     features: [
-      'Todas as funcionalidades desbloqueadas',
-      'Integração com e-commerces',
-      'Suporte prioritário'
+      '250 gerações/mês',
+      'Até 50.000 produtos',
+      'Resolução 2K + 4K',
+      'Tudo do Pro, mais:',
+      'Integração E-commerce',
+      'Suporte Prioritário'
+    ]
+  },
+  {
+    id: 'scale',
+    name: 'Scale',
+    limit: 500,
+    productLimit: -1, // Ilimitado
+    priceMonthly: 0, // Sob consulta
+    priceYearly: 0,
+    creditPrice: 2.50,
+    maxResolution: '4k',
+    hasWatermark: false,
+    badge: 'ENTERPRISE',
+    badgeColor: 'purple',
+    features: [
+      '500+ gerações/mês',
+      'Produtos ilimitados',
+      'Resolução 2K + 4K',
+      'Tudo do Business, mais:',
+      'API Dedicada',
+      'Account Manager',
+      'Suporte VIP',
+      'Preço sob consulta'
     ]
   }
 ];
 
 // Plano padrão para usuários não autenticados ou em fallback
 const DEFAULT_PLAN = PLANS[1]; // Pro
-const FREE_PLAN: Plan = {
+
+// Custo em gerações por resolução
+export const RESOLUTION_COST: Record<string, number> = {
+  '2k': 1,
+  '4k': 2,
+};
+
+// Helper para verificar se plano permite resolução
+export const canUseResolution = (plan: Plan, resolution: '2k' | '4k'): boolean => {
+  if (resolution === '2k') return true;
+  return plan.maxResolution === '4k';
+};
+
+// Helper para obter custo de geração por resolução
+export const getGenerationCost = (resolution: '2k' | '4k'): number => {
+  return RESOLUTION_COST[resolution] || 1;
+};
+
+export const FREE_PLAN: Plan = {
   id: 'free',
   name: 'Free',
-  limit: 50, // 50 créditos iniciais para testar
+  limit: 5,
+  productLimit: 1000,
   priceMonthly: 0,
   priceYearly: 0,
-  creditPrice: 0.50, // Preço para compras avulsas (usuário free)
-  features: ['50 créditos para testar', 'Sem renovação mensal']
+  creditPrice: 4.90, // Preço para compras avulsas (usuário free)
+  maxResolution: '2k',
+  hasWatermark: true,
+  features: [
+    '5 gerações para testar',
+    'Até 1.000 produtos',
+    'Resolução 2K',
+    'Marca d\'água nas imagens',
+    'Todas as ferramentas básicas'
+  ]
 };
 
 export const CREDIT_PACKAGES = [50, 100, 200, 500];
