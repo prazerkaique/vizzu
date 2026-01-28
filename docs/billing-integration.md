@@ -133,15 +133,21 @@ CREATE POLICY "Users can view own checkout sessions"
 -- FUNÇÕES AUXILIARES
 -- ═══════════════════════════════════════════════════════════════
 
--- Função para criar usuário com créditos iniciais
+-- Função para criar usuário com créditos iniciais (5 créditos grátis no plano free)
 CREATE OR REPLACE FUNCTION create_user_credits()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Criar registro de créditos com 5 créditos iniciais grátis
   INSERT INTO user_credits (user_id, balance, last_renewal_credits)
-  VALUES (NEW.id, 0, 0);
+  VALUES (NEW.id, 5, 0);
 
+  -- Criar assinatura no plano free
   INSERT INTO user_subscriptions (user_id, plan_id, status)
   VALUES (NEW.id, 'free', 'active');
+
+  -- Registrar transação de bônus de boas-vindas
+  INSERT INTO credit_transactions (user_id, type, amount, balance_after, description)
+  VALUES (NEW.id, 'bonus', 5, 5, 'Créditos de boas-vindas - Plano Free');
 
   RETURN NEW;
 END;

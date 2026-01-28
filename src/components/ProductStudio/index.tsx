@@ -36,7 +36,16 @@ interface ProductStudioProps {
   onBack?: () => void;
 }
 
-const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas'];
+const CATEGORY_GROUPS = [
+  { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+  { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+  { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
+  { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas'] },
+];
+const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
+const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
 const GENDERS = ['Masculino', 'Feminino', 'Unissex'];
@@ -69,6 +78,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
   const [productFilterCategory, setProductFilterCategory] = useState('');
 
   // Pré-selecionar produto quando vier do modal de detalhes
@@ -92,7 +102,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCategoryGroup, setFilterCategoryGroup] = useState(''); // Categoria principal
+  const [filterCategory, setFilterCategory] = useState(''); // Subcategoria
   const [filterCollection, setFilterCollection] = useState('');
   const [filterColor, setFilterColor] = useState('');
   const [filterGender, setFilterGender] = useState('');
@@ -108,11 +119,15 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
       const matchesSearch = !searchTerm ||
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      // Filtro de categoria principal (grupo)
+      const categoryGroup = getCategoryGroupBySubcategory(product.category);
+      const matchesCategoryGroup = !filterCategoryGroup || categoryGroup?.id === filterCategoryGroup;
+      // Filtro de subcategoria
       const matchesCategory = !filterCategory || product.category === filterCategory;
       const matchesCollection = !filterCollection || product.collection === filterCollection;
       const matchesColor = !filterColor || product.color === filterColor;
       const matchesGender = !filterGender || (product as any).gender === filterGender;
-      return matchesSearch && matchesCategory && matchesCollection && matchesColor && matchesGender;
+      return matchesSearch && matchesCategoryGroup && matchesCategory && matchesCollection && matchesColor && matchesGender;
     });
 
     // Ordenar
@@ -125,10 +140,11 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
     }
 
     return result;
-  }, [products, searchTerm, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
+  }, [products, searchTerm, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
 
   const clearFilters = () => {
     setSearchTerm('');
+    setFilterCategoryGroup('');
     setFilterCategory('');
     setFilterCollection('');
     setFilterColor('');
@@ -136,7 +152,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
     setSortBy('recent');
   };
 
-  const hasActiveFilters = searchTerm || filterCategory || filterCollection || filterColor || filterGender || sortBy !== 'recent';
+  const hasActiveFilters = searchTerm || filterCategoryGroup || filterCategory || filterCollection || filterColor || filterGender || sortBy !== 'recent';
 
   // Verificar se o produto está otimizado (tem imagens do Product Studio)
   const isProductOptimized = (product: Product): boolean => {
@@ -203,6 +219,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
   const handleNewProduct = () => {
     setShowProductModal(true);
     setProductSearchTerm('');
+    setProductFilterCategoryGroup('');
     setProductFilterCategory('');
   };
 
@@ -218,10 +235,14 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
       const matchesSearch = !productSearchTerm ||
         product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(productSearchTerm.toLowerCase());
+      // Filtro de categoria principal (grupo)
+      const categoryGroup = getCategoryGroupBySubcategory(product.category);
+      const matchesCategoryGroup = !productFilterCategoryGroup || categoryGroup?.id === productFilterCategoryGroup;
+      // Filtro de subcategoria
       const matchesCategory = !productFilterCategory || product.category === productFilterCategory;
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategoryGroup && matchesCategory;
     });
-  }, [pendingProducts, productSearchTerm, productFilterCategory]);
+  }, [pendingProducts, productSearchTerm, productFilterCategoryGroup, productFilterCategory]);
 
   // Se tem produto selecionado, mostra o editor (página 2)
   if (selectedProduct) {
@@ -379,17 +400,33 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                   </button>
                 </div>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {/* Categoria */}
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                {/* Categoria Principal */}
                 <div>
                   <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
                   <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
+                    value={filterCategoryGroup}
+                    onChange={(e) => { setFilterCategoryGroup(e.target.value); setFilterCategory(''); }}
                     className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
                   >
                     <option value="">Todas</option>
-                    {CATEGORIES.map(cat => (
+                    {CATEGORY_GROUPS.map(group => (
+                      <option key={group.id} value={group.id}>{group.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Subcategoria (condicional) */}
+                <div>
+                  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Subcategoria</label>
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    disabled={!filterCategoryGroup}
+                    className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white disabled:opacity-50' : 'bg-gray-50 border-gray-200 text-gray-900 disabled:opacity-50') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+                  >
+                    <option value="">Todas</option>
+                    {filterCategoryGroup && CATEGORY_GROUPS.find(g => g.id === filterCategoryGroup)?.items.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
@@ -716,15 +753,27 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 />
               </div>
               <select
-                value={productFilterCategory}
-                onChange={(e) => setProductFilterCategory(e.target.value)}
-                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-48'}
+                value={productFilterCategoryGroup}
+                onChange={(e) => { setProductFilterCategoryGroup(e.target.value); setProductFilterCategory(''); }}
+                className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
               >
-                <option value="">Todas categorias</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                <option value="">Categoria</option>
+                {CATEGORY_GROUPS.map(group => (
+                  <option key={group.id} value={group.id}>{group.label}</option>
                 ))}
               </select>
+              {productFilterCategoryGroup && (
+                <select
+                  value={productFilterCategory}
+                  onChange={(e) => setProductFilterCategory(e.target.value)}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+                >
+                  <option value="">Subcategoria</option>
+                  {CATEGORY_GROUPS.find(g => g.id === productFilterCategoryGroup)?.items.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Grid de Produtos */}
@@ -774,10 +823,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                     <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-check-circle text-xl'}></i>
                   </div>
                   <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>
-                    {productSearchTerm || productFilterCategory ? 'Nenhum produto encontrado' : 'Todos os produtos estão otimizados!'}
+                    {productSearchTerm || productFilterCategoryGroup || productFilterCategory ? 'Nenhum produto encontrado' : 'Todos os produtos estão otimizados!'}
                   </p>
                   <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
-                    {productSearchTerm || productFilterCategory ? 'Tente ajustar os filtros' : 'Importe novos produtos para continuar'}
+                    {productSearchTerm || productFilterCategoryGroup || productFilterCategory ? 'Tente ajustar os filtros' : 'Importe novos produtos para continuar'}
                   </p>
                 </div>
               )}

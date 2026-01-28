@@ -17,14 +17,16 @@ import { smartDownload } from './utils/downloadHelper';
 
 
 const CATEGORY_GROUPS = [
-  { label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
-  { label: '👕 Topo', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
-  { label: '👖 Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
-  { label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
-  { label: '👟 Pés', items: ['Calçados', 'Tênis', 'Sandálias', 'Botas'] },
-  { label: '👜 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Acessórios'] },
+  { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+  { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+  { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
+  { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas'] },
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
+// Helper para encontrar categoria pai de uma subcategoria
+const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = [
   // Básicas
@@ -180,7 +182,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCategoryGroup, setFilterCategoryGroup] = useState(''); // Categoria principal (Cabeça, Parte de Cima, etc.)
+  const [filterCategory, setFilterCategory] = useState(''); // Subcategoria (Camisetas, Calças, etc.)
   const [filterColor, setFilterColor] = useState('');
   const [filterCollection, setFilterCollection] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -577,10 +580,14 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const filteredProducts = products
     .filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      // Filtro de categoria principal (grupo)
+      const categoryGroup = getCategoryGroupBySubcategory(product.category);
+      const matchesCategoryGroup = !filterCategoryGroup || categoryGroup?.id === filterCategoryGroup;
+      // Filtro de subcategoria
       const matchesCategory = !filterCategory || product.category === filterCategory;
       const matchesColor = !filterColor || product.color === filterColor;
       const matchesCollection = !filterCollection || product.collection === filterCollection;
-      return matchesSearch && matchesCategory && matchesColor && matchesCollection;
+      return matchesSearch && matchesCategoryGroup && matchesCategory && matchesColor && matchesCollection;
     })
     .sort((a, b) => {
       // Ordenar por data de criação (mais recentes primeiro)
@@ -4476,14 +4483,28 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
                     </div>
                   </div>
-                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
+                  <select
+                    value={filterCategoryGroup}
+                    onChange={(e) => { setFilterCategoryGroup(e.target.value); setFilterCategory(''); }}
+                    className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}
+                  >
                     <option value="">Categoria</option>
                     {CATEGORY_GROUPS.map(group => (
-                      <optgroup key={group.label} label={group.label}>
-                        {group.items.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                      </optgroup>
+                      <option key={group.id} value={group.id}>{group.label}</option>
                     ))}
                   </select>
+                  {filterCategoryGroup && (
+                    <select
+                      value={filterCategory}
+                      onChange={(e) => setFilterCategory(e.target.value)}
+                      className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}
+                    >
+                      <option value="">Subcategoria</option>
+                      {CATEGORY_GROUPS.find(g => g.id === filterCategoryGroup)?.items.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  )}
                   <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
                     <option value="">Cor</option>
                     {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
@@ -4492,8 +4513,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <option value="">Coleção</option>
                     {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
                   </select>
-                  {(filterCategory || filterColor || filterCollection) && (
-                    <button onClick={() => { setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-pink-500 hover:bg-pink-500/10 rounded-lg transition-colors">
+                  {(filterCategoryGroup || filterCategory || filterColor || filterCollection) && (
+                    <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-pink-500 hover:bg-pink-500/10 rounded-lg transition-colors">
                       <i className="fas fa-times mr-1"></i>Limpar
                     </button>
                   )}

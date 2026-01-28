@@ -72,7 +72,16 @@ interface ProductWithLooks {
   participations?: number; // Quantas vezes participou como item (não principal)
 }
 
-const CATEGORIES = ['Camisetas', 'Calças', 'Calçados', 'Acessórios', 'Vestidos', 'Shorts', 'Jaquetas', 'Blusas', 'Regatas', 'Tops'];
+const CATEGORY_GROUPS = [
+  { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+  { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+  { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
+  { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas'] },
+];
+const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
+const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
 
 export const LookComposer: React.FC<LookComposerProps> = ({
   products,
@@ -174,6 +183,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
   // Filtros para modal de produtos
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
   const [productFilterCategory, setProductFilterCategory] = useState('');
 
   // Coletar todos os looks gerados
@@ -272,8 +282,12 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         const matchesSearch = !productSearchTerm ||
           product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
           product.sku.toLowerCase().includes(productSearchTerm.toLowerCase());
+        // Filtro de categoria principal (grupo)
+        const categoryGroup = getCategoryGroupBySubcategory(product.category);
+        const matchesCategoryGroup = !productFilterCategoryGroup || categoryGroup?.id === productFilterCategoryGroup;
+        // Filtro de subcategoria
         const matchesCategory = !productFilterCategory || product.category === productFilterCategory;
-        return matchesSearch && matchesCategory;
+        return matchesSearch && matchesCategoryGroup && matchesCategory;
       })
       .sort((a, b) => {
         // Ordenar por data de criação (mais recente primeiro)
@@ -281,7 +295,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
-  }, [products, productSearchTerm, productFilterCategory]);
+  }, [products, productSearchTerm, productFilterCategoryGroup, productFilterCategory]);
 
   // Obter imagem do produto (prioriza otimizada)
   const getProductImage = (product: Product): string | undefined => {
@@ -395,6 +409,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   const handleNewLook = () => {
     setShowProductModal(true);
     setProductSearchTerm('');
+    setProductFilterCategoryGroup('');
     setProductFilterCategory('');
   };
 
@@ -770,15 +785,27 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 />
               </div>
               <select
-                value={productFilterCategory}
-                onChange={(e) => setProductFilterCategory(e.target.value)}
-                className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-48'}
+                value={productFilterCategoryGroup}
+                onChange={(e) => { setProductFilterCategoryGroup(e.target.value); setProductFilterCategory(''); }}
+                className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
               >
-                <option value="">Todas categorias</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                <option value="">Categoria</option>
+                {CATEGORY_GROUPS.map(group => (
+                  <option key={group.id} value={group.id}>{group.label}</option>
                 ))}
               </select>
+              {productFilterCategoryGroup && (
+                <select
+                  value={productFilterCategory}
+                  onChange={(e) => setProductFilterCategory(e.target.value)}
+                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+                >
+                  <option value="">Subcategoria</option>
+                  {CATEGORY_GROUPS.find(g => g.id === productFilterCategoryGroup)?.items.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Grid de Produtos */}
