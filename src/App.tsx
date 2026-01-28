@@ -3611,9 +3611,58 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 // Adicionar produtos com imagens geradas
                 products.forEach(product => {
                   const genImages = (product as any).generatedImages;
+
+                  // Product Studio (novo sistema)
+                  if (genImages?.productStudio?.length > 0) {
+                    genImages.productStudio.forEach((session: any) => {
+                      if (session.images?.length > 0) {
+                        // Pegar a primeira imagem da sessão (geralmente a frente)
+                        const frontImg = session.images.find((img: any) => img.angle === 'front') || session.images[0];
+                        recentCreations.push({
+                          id: `studio-${product.id}-${session.id}`,
+                          imageUrl: frontImg.url,
+                          name: product.name,
+                          type: 'studio',
+                          date: session.createdAt || frontImg.createdAt || new Date().toISOString()
+                        });
+                      }
+                    });
+                  }
+
+                  // Modelo IA / Look Composer
+                  if (genImages?.modeloIA?.length > 0) {
+                    genImages.modeloIA.forEach((item: any) => {
+                      if (item.image_url || item.imageUrl) {
+                        recentCreations.push({
+                          id: `look-${product.id}-${item.id}`,
+                          imageUrl: item.image_url || item.imageUrl,
+                          name: product.name,
+                          type: 'look',
+                          date: item.createdAt || item.created_at || new Date().toISOString()
+                        });
+                      }
+                    });
+                  }
+
+                  // Cenário Criativo
+                  if (genImages?.cenarioCriativo?.length > 0) {
+                    genImages.cenarioCriativo.forEach((item: any) => {
+                      if (item.image_url || item.imageUrl) {
+                        recentCreations.push({
+                          id: `cenario-${product.id}-${item.id}`,
+                          imageUrl: item.image_url || item.imageUrl,
+                          name: product.name,
+                          type: 'look',
+                          date: item.createdAt || item.created_at || new Date().toISOString()
+                        });
+                      }
+                    });
+                  }
+
+                  // Studio Ready (sistema legado)
                   if (genImages?.studioReady?.[0]?.images?.front) {
                     recentCreations.push({
-                      id: `studio-${product.id}`,
+                      id: `studio-legacy-${product.id}`,
                       imageUrl: genImages.studioReady[0].images.front,
                       name: product.name,
                       type: 'studio',
@@ -3699,56 +3748,68 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               })()}
 
               {/* STATS GRID - 4 Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                {/* Créditos */}
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100')}>
-                      <i className={'fas fa-coins text-xs ' + (theme === 'dark' ? 'text-amber-400' : 'text-amber-600')}></i>
-                    </div>
-                  </div>
-                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{userCredits}<span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-sm font-normal'}>/{currentPlan.limit}</span></p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Créditos</p>
-                  <div className={'mt-2 h-1 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                    <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500" style={{ width: `${Math.min(100, (userCredits / currentPlan.limit) * 100)}%` }} />
-                  </div>
-                </div>
+              {(() => {
+                // Calcular estatísticas
+                const optimizedProducts = products.filter(p => {
+                  const gen = (p as any).generatedImages;
+                  return gen?.productStudio?.some((s: any) => s.images?.length > 0);
+                }).length;
 
-                {/* Imagens Geradas */}
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
-                      <i className={'fas fa-wand-magic-sparkles text-xs ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
-                    </div>
-                  </div>
-                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>
-                    {historyLogs.filter(log => log.method === 'ai' && log.status === 'success').length}
-                  </p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
-                </div>
+                const looksGenerated = products.reduce((total, p) => {
+                  const gen = (p as any).generatedImages;
+                  const modeloIA = gen?.modeloIA?.length || 0;
+                  const cenario = gen?.cenarioCriativo?.length || 0;
+                  return total + modeloIA + cenario;
+                }, 0) + clientLooks.length;
 
-                {/* Clientes */}
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
-                      <i className={'fas fa-users text-xs ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-600')}></i>
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {/* Produtos Cadastrados */}
+                    <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
+                          <i className={'fas fa-box text-xs ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
+                        </div>
+                      </div>
+                      <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
                     </div>
-                  </div>
-                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes</p>
-                </div>
 
-                {/* Produtos */}
-                <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
-                      <i className={'fas fa-box text-xs ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
+                    {/* Produtos Otimizados */}
+                    <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100')}>
+                          <i className={'fas fa-sparkles text-xs ' + (theme === 'dark' ? 'text-green-400' : 'text-green-600')}></i>
+                        </div>
+                      </div>
+                      <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{optimizedProducts}</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos otimizados</p>
+                    </div>
+
+                    {/* Looks Gerados */}
+                    <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
+                          <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
+                        </div>
+                      </div>
+                      <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{looksGenerated}</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Looks gerados</p>
+                    </div>
+
+                    {/* Clientes Cadastrados */}
+                    <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
+                          <i className={'fas fa-users text-xs ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-600')}></i>
+                        </div>
+                      </div>
+                      <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
                     </div>
                   </div>
-                  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
-                  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos</p>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* USO DE CRÉDITOS - Dados reais */}
               {(() => {
