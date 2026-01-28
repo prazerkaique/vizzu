@@ -15,6 +15,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
 import { smartDownload } from './utils/downloadHelper';
 import { compressImage, formatFileSize, COMPRESSION_ENABLED } from './utils/imageCompression';
+import { ImageMigrationPanel } from './components/Admin/ImageMigrationPanel';
 
 
 const CATEGORY_GROUPS = [
@@ -80,7 +81,7 @@ const PROVADOR_LOADING_PHRASES = [
 ];
 
 type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
-type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations' | 'history';
+type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations' | 'history' | 'tools';
 
 // Componente de carrossel para cards de modelos
 const ModelCardCarousel: React.FC<{
@@ -4727,6 +4728,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   { id: 'plan' as SettingsTab, label: 'Planos', icon: 'fa-credit-card' },
                   { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
                   { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
+                  { id: 'tools' as SettingsTab, label: 'Ferramentas', icon: 'fa-wrench' },
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -5326,6 +5328,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           })}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {settingsTab === 'tools' && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Ferramentas</h3>
+                      </div>
+                      <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Ferramentas de administração e manutenção</p>
+
+                      {/* Painel de Migração de Imagens */}
+                      <ImageMigrationPanel userId={user?.id} theme={theme} />
                     </div>
                   )}
                 </div>
