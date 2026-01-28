@@ -144,6 +144,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   // Estado do estilo de apresentação (Ghost Mannequin ou Flat Lay)
   const [presentationStyle, setPresentationStyle] = useState<ProductPresentationStyle>('ghost-mannequin');
   const [showPresentationTooltip, setShowPresentationTooltip] = useState(false);
+  const [expandedStyleImage, setExpandedStyleImage] = useState<{ url: string; label: string } | null>(null);
 
   // Estado de geração local (fallback se não tiver props globais)
   const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -1364,12 +1365,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                         <div className="grid grid-cols-2 gap-3">
                           {/* Ghost Mannequin Example */}
                           <div className="text-center">
-                            <div className={'rounded-lg overflow-hidden border-2 mb-2 ' + (theme === 'dark' ? 'border-purple-500/50' : 'border-purple-300')}>
+                            <div
+                              className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme === 'dark' ? 'border-purple-500/50' : 'border-purple-300')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedStyleImage({
+                                  url: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png',
+                                  label: 'Ghost Mannequin'
+                                });
+                              }}
+                            >
                               <img
                                 src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png"
                                 alt="Ghost Mannequin"
                                 className="w-full h-32 object-cover"
                               />
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
+                                <i className="fas fa-search-plus text-white text-lg"></i>
+                              </div>
                             </div>
                             <span className="text-purple-400 text-xs font-semibold">Ghost Mannequin</span>
                             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
@@ -1378,12 +1391,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                           </div>
                           {/* Flat Lay Example */}
                           <div className="text-center">
-                            <div className={'rounded-lg overflow-hidden border-2 mb-2 ' + (theme === 'dark' ? 'border-blue-500/50' : 'border-blue-300')}>
+                            <div
+                              className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme === 'dark' ? 'border-blue-500/50' : 'border-blue-300')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedStyleImage({
+                                  url: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png',
+                                  label: 'Flat Lay'
+                                });
+                              }}
+                            >
                               <img
                                 src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png"
                                 alt="Flat Lay"
                                 className="w-full h-32 object-cover"
                               />
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
+                                <i className="fas fa-search-plus text-white text-lg"></i>
+                              </div>
                             </div>
                             <span className="text-blue-400 text-xs font-semibold">Flat Lay</span>
                             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
@@ -1391,6 +1416,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                             </p>
                           </div>
                         </div>
+                        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] text-center mt-3'}>
+                          <i className="fas fa-search-plus mr-1"></i>
+                          Clique nas imagens para ampliar
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1775,6 +1804,35 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
       )}
 
       {/* BARRA MINIMIZADA - Renderizada no App.tsx para aparecer em todas as páginas */}
+
+      {/* Lightbox Modal para visualizar imagens de estilo ampliadas */}
+      {expandedStyleImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setExpandedStyleImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] mx-4">
+            {/* Botão fechar */}
+            <button
+              onClick={() => setExpandedStyleImage(null)}
+              className="absolute -top-12 right-0 text-white/80 hover:text-white transition-colors"
+            >
+              <i className="fas fa-times text-2xl"></i>
+            </button>
+            {/* Imagem ampliada */}
+            <img
+              src={expandedStyleImage.url}
+              alt={expandedStyleImage.label}
+              className="max-w-full max-h-[80vh] rounded-xl shadow-2xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            {/* Label */}
+            <p className="text-center text-white text-lg font-semibold mt-4">
+              {expandedStyleImage.label}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
