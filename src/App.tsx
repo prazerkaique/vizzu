@@ -2554,12 +2554,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           .remove([model.referenceStoragePath]);
       }
 
-      // Deletar imagens geradas
+      // Deletar imagens geradas (frente e costas)
       if (model.images) {
         const imagePaths = [];
         if (model.images.front) imagePaths.push(`${user.id}/${model.id}/front.png`);
         if (model.images.back) imagePaths.push(`${user.id}/${model.id}/back.png`);
-        if (model.images.face) imagePaths.push(`${user.id}/${model.id}/face.png`);
         if (imagePaths.length > 0) {
           await supabase.storage.from('model-images').remove(imagePaths);
         }
@@ -4381,7 +4380,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       const images = [
                         { key: 'front', label: 'Frente', src: model.images.front },
                         { key: 'back', label: 'Costas', src: model.images.back },
-                        { key: 'face', label: 'Rosto', src: model.images.face },
                       ].filter(img => img.src);
                       return (
                         <div
@@ -7465,18 +7463,17 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4">
               {/* Images Grid */}
-              {(showModelDetail.images.front || showModelDetail.images.back || showModelDetail.images.face) ? (
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {['front', 'back', 'face'].map((type) => {
+              {(showModelDetail.images.front || showModelDetail.images.back) ? (
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {['front', 'back'].map((type) => {
                     const imgUrl = showModelDetail.images[type as keyof typeof showModelDetail.images];
                     return (
                       <div key={type} className={'aspect-[3/4] rounded-xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
                         {imgUrl ? (
                           <img
                             src={imgUrl}
-                            alt={type}
+                            alt={type === 'front' ? 'Frente' : 'Costas'}
                             className="w-full h-full object-cover"
-                            style={type === 'face' ? { objectPosition: 'top' } : undefined}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
