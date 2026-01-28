@@ -1,18 +1,21 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Studio } from './components/Studio';
-import { LookComposer as StudioLookComposer } from './components/Studio/LookComposer';
-import { LookComposer as VizzuLookComposer } from './components/LookComposer';
-import { ProductStudio } from './components/ProductStudio';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
 import { BulkImportModal } from './components/BulkImportModal';
+import { LoadingSkeleton } from './components/LoadingSkeleton';
+
+// Lazy loading dos componentes pesados (carrega só quando acessar)
+const VizzuLookComposer = lazy(() => import('./components/LookComposer').then(m => ({ default: m.LookComposer })));
+const ProductStudio = lazy(() => import('./components/ProductStudio').then(m => ({ default: m.ProductStudio })));
+const VizzuProvadorWizard = lazy(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
+
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
+import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
 import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages, sendWhatsAppMessage, analyzeProductImage } from './lib/api/studio';
 import heic2any from 'heic2any';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { VizzuProvadorWizard } from './components/Provador/VizzuProvadorWizard';
 import { smartDownload } from './utils/downloadHelper';
 import { compressImage, formatFileSize, COMPRESSION_ENABLED } from './utils/imageCompression';
 import { ImageMigrationPanel } from './components/Admin/ImageMigrationPanel';
@@ -201,6 +204,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300); // Debounce de 300ms na busca
   const [filterCategoryGroup, setFilterCategoryGroup] = useState(''); // Categoria principal (Cabeça, Parte de Cima, etc.)
   const [filterCategory, setFilterCategory] = useState(''); // Subcategoria (Camisetas, Calças, etc.)
   const [filterColor, setFilterColor] = useState('');
@@ -260,6 +264,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const debouncedClientSearchTerm = useDebounce(clientSearchTerm, 300);
   const [newClient, setNewClient] = useState({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '' as 'male' | 'female' | '', photos: [] as ClientPhoto[], notes: '' });
   const [uploadingPhotoType, setUploadingPhotoType] = useState<ClientPhoto['type'] | null>(null);
   const [processingClientPhoto, setProcessingClientPhoto] = useState(false);
@@ -598,7 +603,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
 
   const filteredProducts = products
     .filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       // Filtro de categoria principal (grupo)
       const categoryGroup = getCategoryGroupBySubcategory(product.category);
       const matchesCategoryGroup = !filterCategoryGroup || categoryGroup?.id === filterCategoryGroup;
@@ -618,11 +623,11 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back'>('front');
   // Reset paginação quando filtros mudam
   useEffect(() => {
     setVisibleProductsCount(20);
-  }, [searchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
+  }, [debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
 
   const filteredClients = clients.filter(client => {
     const fullName = (client.firstName + ' ' + client.lastName).toLowerCase();
-    return fullName.includes(clientSearchTerm.toLowerCase()) || client.whatsapp.includes(clientSearchTerm) || (client.email && client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()));
+    return fullName.includes(debouncedClientSearchTerm.toLowerCase()) || client.whatsapp.includes(debouncedClientSearchTerm) || (client.email && client.email.toLowerCase().includes(debouncedClientSearchTerm.toLowerCase()));
   });
   
   const clientsWithProvador = clients.filter(c => c.hasProvadorIA && (c.photos?.length || c.photo));
@@ -4063,106 +4068,112 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* PRODUCT STUDIO - Mantém montado para preservar estado */}
         <div style={{ display: currentPage === 'product-studio' ? 'contents' : 'none' }}>
-          <ProductStudio
-            products={products}
-            userCredits={userCredits}
-            onUpdateProduct={handleUpdateProduct}
-            onDeductCredits={handleDeductCredits}
-            onAddHistoryLog={handleAddHistoryLog}
-            onImport={() => setShowImport(true)}
-            currentPlan={currentPlan}
-            theme={theme}
-            onCheckCredits={checkCreditsAndShowModal}
-            userId={user?.id}
-            isGenerating={isGeneratingProductStudio}
-            isMinimized={productStudioMinimized}
-            generationProgress={productStudioProgress}
-            generationText={productStudioLoadingText}
-            onSetGenerating={setIsGeneratingProductStudio}
-            onSetMinimized={setProductStudioMinimized}
-            onSetProgress={setProductStudioProgress}
-            onSetLoadingText={setProductStudioLoadingText}
-            isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
-            onNavigate={(page) => setCurrentPage(page)}
-            initialProduct={productForCreation}
-            onClearInitialProduct={() => setProductForCreation(null)}
-            onBack={() => setCurrentPage('create')}
-          />
+          <Suspense fallback={<LoadingSkeleton theme={theme} />}>
+            <ProductStudio
+              products={products}
+              userCredits={userCredits}
+              onUpdateProduct={handleUpdateProduct}
+              onDeductCredits={handleDeductCredits}
+              onAddHistoryLog={handleAddHistoryLog}
+              onImport={() => setShowImport(true)}
+              currentPlan={currentPlan}
+              theme={theme}
+              onCheckCredits={checkCreditsAndShowModal}
+              userId={user?.id}
+              isGenerating={isGeneratingProductStudio}
+              isMinimized={productStudioMinimized}
+              generationProgress={productStudioProgress}
+              generationText={productStudioLoadingText}
+              onSetGenerating={setIsGeneratingProductStudio}
+              onSetMinimized={setProductStudioMinimized}
+              onSetProgress={setProductStudioProgress}
+              onSetLoadingText={setProductStudioLoadingText}
+              isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+              onNavigate={(page) => setCurrentPage(page)}
+              initialProduct={productForCreation}
+              onClearInitialProduct={() => setProductForCreation(null)}
+              onBack={() => setCurrentPage('create')}
+            />
+          </Suspense>
         </div>
 
         {/* PROVADOR - Mantém montado para preservar estado */}
         <div style={{ display: currentPage === 'provador' ? 'contents' : 'none' }}>
-          <VizzuProvadorWizard
-            theme={theme}
-            clients={clients}
-            products={products}
-            collections={COLLECTIONS}
-            userCredits={userCredits}
-            whatsappTemplates={whatsappTemplates}
-            onCreateClient={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }}
-            onUpdateClient={handleUpdateClientForProvador}
-            onClientSelect={(client) => {
-              setProvadorClient(client);
-              if (client) {
-                loadClientLooks(client.id);
-              } else {
-                setClientLooks([]);
-              }
-            }}
-            onGenerate={handleProvadorGenerateForWizard}
-            onSendWhatsApp={handleProvadorSendWhatsAppForWizard}
-            onDownloadImage={handleProvadorDownloadImage}
-            onSaveLook={saveClientLook}
-            onDeleteLook={deleteClientLook}
-            onGenerateAIMessage={handleProvadorGenerateAIMessage}
-            clientLooks={clientLooks}
-            isGenerating={isGeneratingProvador}
-            isMinimized={provadorMinimized}
-            generationProgress={provadorProgress}
-            loadingText={PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...'}
-            onSetMinimized={setProvadorMinimized}
-            initialProduct={productForCreation}
-            onClearInitialProduct={() => setProductForCreation(null)}
-            onBack={() => setCurrentPage('create')}
-          />
+          <Suspense fallback={<LoadingSkeleton theme={theme} />}>
+            <VizzuProvadorWizard
+              theme={theme}
+              clients={clients}
+              products={products}
+              collections={COLLECTIONS}
+              userCredits={userCredits}
+              whatsappTemplates={whatsappTemplates}
+              onCreateClient={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }}
+              onUpdateClient={handleUpdateClientForProvador}
+              onClientSelect={(client) => {
+                setProvadorClient(client);
+                if (client) {
+                  loadClientLooks(client.id);
+                } else {
+                  setClientLooks([]);
+                }
+              }}
+              onGenerate={handleProvadorGenerateForWizard}
+              onSendWhatsApp={handleProvadorSendWhatsAppForWizard}
+              onDownloadImage={handleProvadorDownloadImage}
+              onSaveLook={saveClientLook}
+              onDeleteLook={deleteClientLook}
+              onGenerateAIMessage={handleProvadorGenerateAIMessage}
+              clientLooks={clientLooks}
+              isGenerating={isGeneratingProvador}
+              isMinimized={provadorMinimized}
+              generationProgress={provadorProgress}
+              loadingText={PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...'}
+              onSetMinimized={setProvadorMinimized}
+              initialProduct={productForCreation}
+              onClearInitialProduct={() => setProductForCreation(null)}
+              onBack={() => setCurrentPage('create')}
+            />
+          </Suspense>
         </div>
 
         {/* LOOK COMPOSER - Mantém montado para preservar estado */}
         <div style={{ display: currentPage === 'look-composer' ? 'contents' : 'none' }}>
-          <VizzuLookComposer
-            products={products}
-            userCredits={userCredits}
-            onUpdateProduct={handleUpdateProduct}
-            onDeductCredits={handleDeductCredits}
-            onAddHistoryLog={handleAddHistoryLog}
-            onImport={() => setShowImport(true)}
-            currentPlan={currentPlan}
-            theme={theme}
-            onCheckCredits={checkCreditsAndShowModal}
-            userId={user?.id}
-            savedModels={savedModels}
-            onSaveModel={handleSaveModel}
-            onOpenCreateModel={() => {
-              if (!canCreateModel()) {
-                return; // UI já mostra mensagem de limite
-              }
-              resetModelWizard();
-              setShowCreateModel(true);
-            }}
-            modelLimit={getModelLimit()}
-            isGenerating={isGeneratingLookComposer}
-            isMinimized={lookComposerMinimized}
-            generationProgress={lookComposerProgress}
-            generationText={lookComposerLoadingText}
-            onSetGenerating={setIsGeneratingLookComposer}
-            onSetMinimized={setLookComposerMinimized}
-            onSetProgress={setLookComposerProgress}
-            onSetLoadingText={setLookComposerLoadingText}
-            isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
-            initialProduct={productForCreation}
-            onClearInitialProduct={() => setProductForCreation(null)}
-            onBack={() => setCurrentPage('create')}
-          />
+          <Suspense fallback={<LoadingSkeleton theme={theme} />}>
+            <VizzuLookComposer
+              products={products}
+              userCredits={userCredits}
+              onUpdateProduct={handleUpdateProduct}
+              onDeductCredits={handleDeductCredits}
+              onAddHistoryLog={handleAddHistoryLog}
+              onImport={() => setShowImport(true)}
+              currentPlan={currentPlan}
+              theme={theme}
+              onCheckCredits={checkCreditsAndShowModal}
+              userId={user?.id}
+              savedModels={savedModels}
+              onSaveModel={handleSaveModel}
+              onOpenCreateModel={() => {
+                if (!canCreateModel()) {
+                  return; // UI já mostra mensagem de limite
+                }
+                resetModelWizard();
+                setShowCreateModel(true);
+              }}
+              modelLimit={getModelLimit()}
+              isGenerating={isGeneratingLookComposer}
+              isMinimized={lookComposerMinimized}
+              generationProgress={lookComposerProgress}
+              generationText={lookComposerLoadingText}
+              onSetGenerating={setIsGeneratingLookComposer}
+              onSetMinimized={setLookComposerMinimized}
+              onSetProgress={setLookComposerProgress}
+              onSetLoadingText={setLookComposerLoadingText}
+              isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+              initialProduct={productForCreation}
+              onClearInitialProduct={() => setProductForCreation(null)}
+              onBack={() => setCurrentPage('create')}
+            />
+          </Suspense>
         </div>
 
         {/* LIFESTYLE SHOT - Mantém montado para preservar estado */}
