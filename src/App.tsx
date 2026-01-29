@@ -1886,112 +1886,54 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
     setIsCreatingProduct(true);
 
     try {
-      // 1. Update text fields
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({
+      const n8nUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      if (!n8nUrl) {
+        throw new Error('URL do webhook não configurada');
+      }
+
+      // Imagens: se começa com http, não mudou → envia null para o n8n não sobrescrever
+      const frontImage = selectedFrontImage?.startsWith('data:') ? selectedFrontImage : null;
+      const backImage = selectedBackImage?.startsWith('data:') ? selectedBackImage : null;
+      const detailImage = selectedDetailImage?.startsWith('data:') ? selectedDetailImage : null;
+
+      const response = await fetch(`${n8nUrl}/vizzu/produto-editar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id,
+          product_id: editingProduct.id,
           name: newProduct.name,
           brand: newProduct.brand || null,
           color: newProduct.color || null,
           category: newProduct.category,
           collection: newProduct.collection || null,
+          attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
+          image_front_base64: frontImage,
+          image_back_base64: backImage,
+          image_detail_base64: detailImage,
         })
-        .eq('id', editingProduct.id);
+      });
 
-      if (updateError) throw updateError;
+      const data = await response.json();
 
-      // 2. Upload new images if changed (base64 means new image)
-      const imageUpdates: { type: string; angle: string; image: string | null }[] = [
-        { type: 'original', angle: 'front', image: selectedFrontImage },
-        { type: 'back', angle: 'back', image: selectedBackImage },
-        { type: 'detail', angle: 'detail', image: selectedDetailImage },
-      ];
-
-      for (const entry of imageUpdates) {
-        if (!entry.image) continue;
-        // If it starts with http, the image wasn't changed
-        if (entry.image.startsWith('http')) continue;
-        // It's a base64 image - upload to storage
-        if (entry.image.startsWith('data:')) {
-          const base64Data = entry.image.replace(/^data:image\/\w+;base64,/, '');
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const mimeType = entry.image.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
-          const extension = mimeType.split('/')[1] || 'jpg';
-          const blob = new Blob([byteArray], { type: mimeType });
-
-          const fileName = `${entry.angle}_${Date.now()}.${extension}`;
-          const storagePath = `${user?.id}/${editingProduct.id}/${fileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('products')
-            .upload(storagePath, blob, { upsert: true });
-
-          if (uploadError) {
-            console.error(`Erro ao fazer upload da imagem ${entry.angle}:`, uploadError);
-            continue;
-          }
-
-          const { data: urlData } = supabase.storage
-            .from('products')
-            .getPublicUrl(storagePath);
-
-          const publicUrl = urlData.publicUrl;
-
-          // Upsert product_images row
-          // First try to find existing image of this type/angle
-          const { data: existingImg } = await supabase
-            .from('product_images')
-            .select('id')
-            .eq('product_id', editingProduct.id)
-            .eq('type', entry.type)
-            .maybeSingle();
-
-          if (existingImg) {
-            await supabase
-              .from('product_images')
-              .update({
-                url: publicUrl,
-                storage_path: storagePath,
-                file_name: fileName,
-              })
-              .eq('id', existingImg.id);
-          } else {
-            await supabase
-              .from('product_images')
-              .insert({
-                product_id: editingProduct.id,
-                user_id: user?.id,
-                url: publicUrl,
-                storage_path: storagePath,
-                file_name: fileName,
-                type: entry.type,
-                angle: entry.angle,
-              });
-          }
+      if (data.success) {
+        if (user?.id) {
+          await loadUserProducts(user.id);
         }
+
+        setShowCreateProduct(false);
+        setEditingProduct(null);
+        setSelectedFrontImage(null);
+        setSelectedBackImage(null);
+        setSelectedDetailImage(null);
+        setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
+        setProductAttributes({});
+
+        showToast('Produto atualizado com sucesso!', 'success');
+        handleAddHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
+      } else {
+        alert('Erro ao atualizar produto: ' + (data.error || 'Tente novamente'));
       }
-
-      // 3. Reload products
-      if (user?.id) {
-        await loadUserProducts(user.id);
-      }
-
-      // 4. Close modal and reset
-      setShowCreateProduct(false);
-      setEditingProduct(null);
-      setSelectedFrontImage(null);
-      setSelectedBackImage(null);
-      setSelectedDetailImage(null);
-      setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
-      setProductAttributes({});
-
-      showToast('Produto atualizado com sucesso!', 'success');
-      handleAddHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
     } catch (error) {
       console.error('Erro ao atualizar produto:', error);
       showToast('Erro ao atualizar produto', 'error');
