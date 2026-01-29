@@ -57,7 +57,7 @@ export interface ProductOriginalImages {
 export interface GeneratedImageSet {
   id: string;
   createdAt: string;
-  tool: 'studio' | 'cenario' | 'lifestyle';
+  tool: 'studio' | 'cenario' | 'lifestyle' | 'creative-still';
   images: {
     front: string;            // URL ou base64 da imagem gerada (frente)
     back?: string;            // URL ou base64 da imagem gerada (costas) - se tinha costas
@@ -1583,3 +1583,98 @@ export const FIT_DESCRIPTIONS_FOR_AI = {
     }
   }
 };
+
+// ═══════════════════════════════════════════════════════════════
+// STILL CRIATIVO - Templates e Gerações
+// ═══════════════════════════════════════════════════════════════
+
+export interface CreativeStillTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  thumbnail_url?: string;
+
+  mode: 'simple' | 'advanced';
+
+  // Estética
+  aesthetic_preset: string | null;
+  aesthetic_custom: string | null;
+
+  // Cena
+  surface_description: string;
+  elements_description: string | null;
+  elements_images: { url: string; description: string }[];
+
+  // Configurações avançadas
+  lighting: string;
+  camera_type: string;
+  lens_model: string;
+  camera_angle: string;
+  depth_of_field: number;
+  color_tone: string;
+  color_style: string;
+  frame_ratio: string;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreativeStillAdditionalProduct {
+  product_id: string;
+  product_name: string;
+  product_image_url: string;
+  position_description: string;
+  source: 'catalog' | 'upload' | 'prompt';
+  upload_base64?: string;
+  upload_mime_type?: string;
+}
+
+export interface CreativeStillGeneration {
+  id: string;
+  user_id: string;
+  template_id: string | null;
+  product_id: string;
+  additional_products: CreativeStillAdditionalProduct[];
+  settings_snapshot: Record<string, unknown>;
+  variation_1_url: string | null;
+  variation_2_url: string | null;
+  selected_variation: number | null;
+  reference_image_url: string | null;
+  credits_used: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  error_message: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface CreativeStillWizardState {
+  mode: 'simple' | 'advanced';
+
+  // Step 1 - Produto
+  mainProduct: Product | null;
+  additionalProducts: CreativeStillAdditionalProduct[];
+
+  // Step 2 - Estilo
+  aestheticPreset: string | null;
+  aestheticCustom: string;
+  colorTone: string;
+  colorStyle: string;
+  referenceImage: { base64: string; mimeType: string } | null;
+
+  // Step 3 - Cena
+  surfaceDescription: string;
+  elementsDescription: string;
+  elementsImages: { base64: string; mimeType: string; description: string }[];
+  lighting: string;
+
+  // Step 4 - Câmera
+  frameRatio: string;
+  cameraType: string;
+  lensModel: string;
+  cameraAngle: string;
+  depthOfField: number;
+
+  // Template
+  saveAsTemplate: boolean;
+  templateName: string;
+}

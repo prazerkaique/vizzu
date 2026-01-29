@@ -8,6 +8,7 @@ import { LoadingSkeleton } from './components/LoadingSkeleton';
 const VizzuLookComposer = lazy(() => import('./components/LookComposer').then(m => ({ default: m.LookComposer })));
 const ProductStudio = lazy(() => import('./components/ProductStudio').then(m => ({ default: m.ProductStudio })));
 const VizzuProvadorWizard = lazy(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
+const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
 
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
@@ -100,7 +101,7 @@ const PROVADOR_LOADING_PHRASES = [
   { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
+type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
 type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations' | 'history' | 'tools';
 
 // Componente de carrossel para cards de modelos
@@ -3451,7 +3452,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <button
               onClick={() => setCurrentPage('create')}
               className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
-                (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio'
+                (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio'
                   ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
                   : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
                 )
@@ -3570,10 +3571,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 md:pb-0 ' + (!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) ? 'pt-12 pb-16' : '')} style={{ overscrollBehavior: 'contain' }}>
+      <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 md:pb-0 ' + (!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) ? 'pt-12 pb-16' : '')} style={{ overscrollBehavior: 'contain' }}>
 
         {/* MOBILE TOP HEADER - Esconde quando está dentro das features de criação */}
-        {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
+        {!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) && (
         <div
           className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
@@ -4081,29 +4082,29 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 </div>
 
-                {/* Card 4: Lifestyle Shot */}
+                {/* Card 4: Still Criativo */}
                 <div
-                  onClick={() => setCurrentPage('lifestyle')}
+                  onClick={() => setCurrentPage('creative-still')}
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-teal-600 via-cyan-600 to-emerald-600"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-rose-600"></div>
                   <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-teal-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-                        <span className="text-white/60 text-xs">10 créditos</span>
+                        <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
+                        <span className="text-white/60 text-xs">2 créditos</span>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-1">Lifestyle Shot</h3>
-                      <p className="text-white/70 text-sm">Produto em ação. Tênis no skate, bolsa no café. Fotos que engajam</p>
+                      <h3 className="text-xl font-bold text-white mb-1">Still Criativo</h3>
+                      <p className="text-white/70 text-sm">Composições artísticas de produto. Fotos estilo still life para Instagram</p>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-300 border border-white/30 group-hover:bg-white/30 group-hover:scale-110">
-                        <i className="fas fa-camera-retro text-white text-lg"></i>
+                        <i className="fas fa-palette text-white text-lg"></i>
                       </div>
                       <button
-                        onClick={(e) => { e.stopPropagation(); setCurrentPage('lifestyle'); }}
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage('creative-still'); }}
                         className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
                       >
                         Acessar <i className="fas fa-arrow-right text-xs"></i>
@@ -4276,54 +4277,24 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </Suspense>
         </div>
 
-        {/* LIFESTYLE SHOT - Mantém montado para preservar estado */}
-        <div style={{ display: currentPage === 'lifestyle' ? 'contents' : 'none' }}>
-          <div
-            className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}
-            style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
-          >
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setCurrentPage('create')}
-                    className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' p-2 -ml-2 rounded-lg transition-colors'}
-                  >
-                    <i className="fas fa-arrow-left"></i>
-                  </button>
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-teal-500/20 to-cyan-400/20 border border-teal-500/30' : 'bg-gradient-to-r from-teal-500 to-cyan-500 shadow-lg shadow-teal-500/25')}>
-                    <i className={'fas fa-camera-retro text-sm ' + (theme === 'dark' ? 'text-teal-400' : 'text-white')}></i>
-                  </div>
-                  <div>
-                    <h1 className={(theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold'}>Lifestyle Shot</h1>
-                    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Produto em ação, fotos que engajam</p>
-                  </div>
-                </div>
-                <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (theme === 'dark' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-teal-50 text-teal-600 border border-teal-200')}>
-                  <i className="fas fa-coins text-[10px]"></i>
-                  <span>10 créditos</span>
-                </div>
-              </div>
-
-              {/* Conteúdo em desenvolvimento */}
-              <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border p-8 text-center'}>
-                <div className={'w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-4 ' + (theme === 'dark' ? 'bg-teal-500/20' : 'bg-teal-100')}>
-                  <i className={'fas fa-camera-retro text-3xl ' + (theme === 'dark' ? 'text-teal-400' : 'text-teal-500')}></i>
-                </div>
-                <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-2'}>Em desenvolvimento</h2>
-                <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
-                  O Lifestyle Shot coloca seu produto em ação: tênis no skate, bolsa no café, óculos na praia.
-                  Fotos contextuais que geram mais engajamento. Em breve!
-                </p>
-                <button
-                  onClick={() => setCurrentPage('create')}
-                  className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
-                >
-                  <i className="fas fa-arrow-left mr-2"></i>Voltar
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* STILL CRIATIVO - Mantém montado para preservar estado */}
+        <div style={{ display: currentPage === 'creative-still' ? 'contents' : 'none' }}>
+          <Suspense fallback={<LoadingSkeleton theme={theme} />}>
+            <CreativeStill
+              theme={theme}
+              products={products}
+              userCredits={userCredits}
+              userId={user?.id}
+              onDeductCredits={handleDeductCredits}
+              onAddHistoryLog={handleAddHistoryLog}
+              onCheckCredits={checkCreditsAndShowModal}
+              currentPlan={currentPlan}
+              onBack={() => setCurrentPage('create')}
+              onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+              initialProduct={productForCreation}
+              onClearInitialProduct={() => setProductForCreation(null)}
+            />
+          </Suspense>
         </div>
 
         {/* MODELS */}
@@ -5501,7 +5472,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
       </main>
 
       {/* MOBILE BOTTOM NAVIGATION - Esconde quando está dentro das features de criação */}
-      {!['product-studio', 'provador', 'look-composer', 'lifestyle'].includes(currentPage) && (
+      {!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) && (
       <nav
         className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
       >
@@ -5516,10 +5487,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </button>
           {/* Botão CRIAR - Central destacado */}
           <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
           <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-user-tie text-sm"></i>
