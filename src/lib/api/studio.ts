@@ -79,7 +79,20 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
     }),
   });
 
-  const data = await response.json();
+  const text = await response.text();
+
+  if (!text) {
+    console.error(`[StudioReady] Resposta vazia - status: ${response.status} ${response.statusText}`);
+    throw new Error(`Servidor retornou resposta vazia (status ${response.status}). Tente novamente.`);
+  }
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(`[StudioReady] Resposta não é JSON - status: ${response.status}, body: ${text.substring(0, 500)}`);
+    throw new Error(`Resposta inválida do servidor (status ${response.status}). Tente novamente.`);
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar imagem');
@@ -167,7 +180,20 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
     }),
   });
 
-  const data = await response.json();
+  const text = await response.text();
+
+  if (!text) {
+    console.error(`[Studio] Resposta vazia - status: ${response.status} ${response.statusText}`);
+    throw new Error(`Servidor retornou resposta vazia (status ${response.status}). Tente novamente.`);
+  }
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(`[Studio] Resposta não é JSON - status: ${response.status}, body: ${text.substring(0, 500)}`);
+    throw new Error(`Resposta inválida do servidor (status ${response.status}). Tente novamente.`);
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar imagens');
@@ -205,7 +231,20 @@ export async function generateCenario(params: CenarioParams): Promise<StudioRead
     }),
   });
 
-  const data = await response.json();
+  const text = await response.text();
+
+  if (!text) {
+    console.error(`[Cenario] Resposta vazia - status: ${response.status} ${response.statusText}`);
+    throw new Error(`Servidor retornou resposta vazia (status ${response.status}). Tente novamente.`);
+  }
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(`[Cenario] Resposta não é JSON - status: ${response.status}, body: ${text.substring(0, 500)}`);
+    throw new Error(`Resposta inválida do servidor (status ${response.status}). Tente novamente.`);
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar cenário');
@@ -347,7 +386,20 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
     }),
   });
 
-  const data = await response.json();
+  const text = await response.text();
+
+  if (!text) {
+    console.error(`[ModeloIA] Resposta vazia - status: ${response.status} ${response.statusText}`);
+    throw new Error(`Servidor retornou resposta vazia (status ${response.status}). Tente novamente.`);
+  }
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error(`[ModeloIA] Resposta não é JSON - status: ${response.status}, body: ${text.substring(0, 500)}`);
+    throw new Error(`Resposta inválida do servidor (status ${response.status}). Tente novamente.`);
+  }
 
   if (!response.ok) {
     throw new Error(data.message || 'Erro ao gerar modelo');
@@ -434,7 +486,8 @@ function parseModelPrompt(prompt: string): ModelProfile {
   let bodyType = 'average';
   if (lowerPrompt.includes('slim') || lowerPrompt.includes('thin')) bodyType = 'slim';
   else if (lowerPrompt.includes('athletic') || lowerPrompt.includes('fit')) bodyType = 'athletic';
-  else if (lowerPrompt.includes('curvy') || lowerPrompt.includes('plus')) bodyType = 'curvy';
+  else if (lowerPrompt.includes('plus')) bodyType = 'plus';
+  else if (lowerPrompt.includes('curvy')) bodyType = 'curvy';
   else if (lowerPrompt.includes('average')) bodyType = 'average';
 
   // Detectar faixa etária
