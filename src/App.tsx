@@ -204,7 +204,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
-  
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300); // Debounce de 300ms na busca
   const [filterCategoryGroup, setFilterCategoryGroup] = useState(''); // Categoria principal (Cabeça, Parte de Cima, etc.)
@@ -1854,6 +1855,146 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
     } catch (error) {
       console.error('Erro:', error);
       alert('Erro ao criar produto. Verifique sua conexão.');
+    } finally {
+      setIsCreatingProduct(false);
+    }
+  };
+
+  const startEditProduct = (product: Product) => {
+    setNewProduct({
+      name: product.name || '',
+      brand: product.brand || '',
+      color: product.color || '',
+      category: product.category || '',
+      collection: product.collection || '',
+    });
+    setSelectedFrontImage(product.originalImages?.front?.url || null);
+    setSelectedBackImage(product.originalImages?.back?.url || null);
+    setSelectedDetailImage(product.originalImages?.detail?.url || null);
+    setEditingProduct(product);
+    setShowProductDetail(null);
+    setShowCreateProduct(true);
+  };
+
+  const handleSaveEditedProduct = async () => {
+    if (!editingProduct) return;
+    if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
+      alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
+      return;
+    }
+
+    setIsCreatingProduct(true);
+
+    try {
+      // 1. Update text fields
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({
+          name: newProduct.name,
+          brand: newProduct.brand || null,
+          color: newProduct.color || null,
+          category: newProduct.category,
+          collection: newProduct.collection || null,
+        })
+        .eq('id', editingProduct.id);
+
+      if (updateError) throw updateError;
+
+      // 2. Upload new images if changed (base64 means new image)
+      const imageUpdates: { type: string; angle: string; image: string | null }[] = [
+        { type: 'original', angle: 'front', image: selectedFrontImage },
+        { type: 'back', angle: 'back', image: selectedBackImage },
+        { type: 'detail', angle: 'detail', image: selectedDetailImage },
+      ];
+
+      for (const entry of imageUpdates) {
+        if (!entry.image) continue;
+        // If it starts with http, the image wasn't changed
+        if (entry.image.startsWith('http')) continue;
+        // It's a base64 image - upload to storage
+        if (entry.image.startsWith('data:')) {
+          const base64Data = entry.image.replace(/^data:image\/\w+;base64,/, '');
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const mimeType = entry.image.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
+          const extension = mimeType.split('/')[1] || 'jpg';
+          const blob = new Blob([byteArray], { type: mimeType });
+
+          const fileName = `${entry.angle}_${Date.now()}.${extension}`;
+          const storagePath = `${user?.id}/${editingProduct.id}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('products')
+            .upload(storagePath, blob, { upsert: true });
+
+          if (uploadError) {
+            console.error(`Erro ao fazer upload da imagem ${entry.angle}:`, uploadError);
+            continue;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('products')
+            .getPublicUrl(storagePath);
+
+          const publicUrl = urlData.publicUrl;
+
+          // Upsert product_images row
+          // First try to find existing image of this type/angle
+          const { data: existingImg } = await supabase
+            .from('product_images')
+            .select('id')
+            .eq('product_id', editingProduct.id)
+            .eq('type', entry.type)
+            .maybeSingle();
+
+          if (existingImg) {
+            await supabase
+              .from('product_images')
+              .update({
+                url: publicUrl,
+                storage_path: storagePath,
+                file_name: fileName,
+              })
+              .eq('id', existingImg.id);
+          } else {
+            await supabase
+              .from('product_images')
+              .insert({
+                product_id: editingProduct.id,
+                user_id: user?.id,
+                url: publicUrl,
+                storage_path: storagePath,
+                file_name: fileName,
+                type: entry.type,
+                angle: entry.angle,
+              });
+          }
+        }
+      }
+
+      // 3. Reload products
+      if (user?.id) {
+        await loadUserProducts(user.id);
+      }
+
+      // 4. Close modal and reset
+      setShowCreateProduct(false);
+      setEditingProduct(null);
+      setSelectedFrontImage(null);
+      setSelectedBackImage(null);
+      setSelectedDetailImage(null);
+      setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
+      setProductAttributes({});
+
+      showToast('Produto atualizado com sucesso!', 'success');
+      handleAddHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error);
+      showToast('Erro ao atualizar produto', 'error');
     } finally {
       setIsCreatingProduct(false);
     }
@@ -6141,15 +6282,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); }}>
+  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); setEditingProduct(null); }}>
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pb-2 flex justify-center -mt-1">
         <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
       </div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Criar Produto</h3>
-        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+        <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
+        <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
           <i className="fas fa-times text-xs"></i>
         </button>
       </div>
@@ -6358,7 +6499,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </div>
         )}
 
-        <button onClick={handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        <button onClick={editingProduct ? handleSaveEditedProduct : handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           {isCreatingProduct ? (
             <>
               <i className="fas fa-spinner fa-spin text-xs"></i>
@@ -6366,7 +6507,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             </>
           ) : (
             <>
-              <i className="fas fa-check mr-1.5"></i>Criar Produto
+              <i className="fas fa-check mr-1.5"></i>{editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
             </>
           )}
         </button>
@@ -6396,9 +6537,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             {/* Header fixo com botão fechar visível no mobile */}
             <div className={'flex items-center justify-between p-4 border-b safe-area-top md:pt-4 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Detalhes do Produto</h3>
-              <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-full flex items-center justify-center'}>
-                <i className="fas fa-times text-sm"></i>
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => startEditProduct(showProductDetail)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-full flex items-center justify-center'}>
+                  <i className="fas fa-pen text-sm"></i>
+                </button>
+                <button onClick={() => setShowProductDetail(null)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-full flex items-center justify-center'}>
+                  <i className="fas fa-times text-sm"></i>
+                </button>
+              </div>
             </div>
 
             {/* Conteúdo com scroll */}
