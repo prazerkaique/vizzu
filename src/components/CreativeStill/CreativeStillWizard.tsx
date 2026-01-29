@@ -1305,7 +1305,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
 
             {/* Category pills */}
             {allCategories.length > 1 && (
-              <div className="px-3 pb-2 overflow-x-auto flex gap-1.5 no-scrollbar">
+              <div className="px-3 pb-2 overflow-x-auto flex gap-1.5 scrollbar-hide">
                 <button
                   onClick={() => setProductCategory('')}
                   className={'flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all border ' +
@@ -1452,7 +1452,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
 
                   {/* Category pills */}
                   {allCategories.length > 1 && (
-                    <div className="mb-2 overflow-x-auto flex gap-1.5 no-scrollbar">
+                    <div className="mb-2 overflow-x-auto flex gap-1.5 scrollbar-hide">
                       <button
                         onClick={() => setElementCategory('')}
                         className={'flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all border ' +
