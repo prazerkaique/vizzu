@@ -122,6 +122,7 @@ const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
   cameraAngle: 'ai_choose',
   depthOfField: 50,
   productPlacement: 'ai_choose',
+  elementsPlacement: '',
   saveAsTemplate: false,
   templateName: '',
 };

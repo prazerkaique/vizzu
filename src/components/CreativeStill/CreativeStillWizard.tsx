@@ -799,59 +799,80 @@ export const CreativeStillWizard: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Posicionamento - modo avançado */}
-        {!isSimple && (
-          <>
-            {separator()}
-            {sectionTitle('Posicionamento na composição', 'fa-crosshairs')}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {PRODUCT_PLACEMENTS.map(pl => (
-                <button
-                  key={pl.id}
-                  onClick={() => onUpdateState({ productPlacement: pl.id })}
-                  className={cardClass(wizardState.productPlacement === pl.id)}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <i className={'fas ' + pl.icon + ' text-xs ' + (wizardState.productPlacement === pl.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
-                    <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{pl.label}</span>
-                  </div>
-                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{pl.description}</p>
-                </button>
+        {/* Posicionamento na composição */}
+        {separator()}
+        {sectionTitle('Posicionamento na composição', 'fa-crosshairs')}
+
+        {/* Produto principal */}
+        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+          <i className="fas fa-box mr-1.5 text-[10px] opacity-50"></i>
+          Onde posicionar o produto principal?
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {PRODUCT_PLACEMENTS.map(pl => (
+            <button
+              key={pl.id}
+              onClick={() => onUpdateState({ productPlacement: pl.id })}
+              className={cardClass(wizardState.productPlacement === pl.id)}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <i className={'fas ' + pl.icon + ' text-xs ' + (wizardState.productPlacement === pl.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{pl.label}</span>
+              </div>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{pl.description}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Posição dos produtos adicionais */}
+        {wizardState.additionalProducts.length > 0 && (
+          <div className="mt-4">
+            <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+              <i className="fas fa-layer-group mr-1.5 text-[10px] opacity-50"></i>
+              Posição dos produtos adicionais
+            </p>
+            <div className="space-y-2">
+              {wizardState.additionalProducts.map((el, i) => (
+                <div key={i} className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
+                  {el.product_image_url && (
+                    <div className={'w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                      <img src={el.product_image_url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium flex-shrink-0'}>{el.product_name}</span>
+                  <input
+                    value={el.position_description}
+                    onChange={(e) => {
+                      const updated = [...wizardState.additionalProducts];
+                      updated[i] = { ...updated[i], position_description: e.target.value };
+                      onUpdateState({ additionalProducts: updated });
+                    }}
+                    placeholder="Ex: ao lado esquerdo, levemente atrás"
+                    className={'flex-1 rounded-md px-2 py-1.5 text-xs ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
+                  />
+                </div>
               ))}
             </div>
+          </div>
+        )}
 
-            {/* Posição dos elementos adicionais */}
-            {wizardState.additionalProducts.length > 0 && (
-              <div className="mt-4">
-                <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
-                  <i className="fas fa-layer-group mr-1.5 text-[10px] opacity-50"></i>
-                  Posição dos produtos adicionais
-                </p>
-                <div className="space-y-2">
-                  {wizardState.additionalProducts.map((el, i) => (
-                    <div key={i} className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
-                      {el.product_image_url && (
-                        <div className={'w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
-                          <img src={el.product_image_url} alt="" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium flex-shrink-0'}>{el.product_name}</span>
-                      <input
-                        value={el.position_description}
-                        onChange={(e) => {
-                          const updated = [...wizardState.additionalProducts];
-                          updated[i] = { ...updated[i], position_description: e.target.value };
-                          onUpdateState({ additionalProducts: updated });
-                        }}
-                        placeholder="Ex: ao lado esquerdo, levemente atrás"
-                        className={'flex-1 rounded-md px-2 py-1.5 text-xs ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+        {/* Posição dos elementos decorativos */}
+        {wizardState.elementsDescription.trim() && (
+          <div className="mt-4">
+            <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+              <i className="fas fa-leaf mr-1.5 text-[10px] opacity-50"></i>
+              Onde posicionar os elementos decorativos?
+            </p>
+            <input
+              value={wizardState.elementsPlacement}
+              onChange={(e) => onUpdateState({ elementsPlacement: e.target.value })}
+              placeholder='Ex: "Folhas espalhadas ao redor", "Pedras alinhadas à frente do produto", "Pétalas caindo do canto superior"'
+              className={'w-full rounded-lg px-3 py-2.5 text-xs ' + (isDark ? 'bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
+            />
+            <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-1'}>
+              Elementos: {wizardState.elementsDescription}
+            </p>
+          </div>
         )}
 
         {separator()}

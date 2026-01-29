@@ -1675,8 +1675,9 @@ export interface CreativeStillWizardState {
   cameraAngle: string;
   depthOfField: number;
 
-  // Composição (modo avançado)
+  // Composição / Posicionamento
   productPlacement: string;
+  elementsPlacement: string;
 
   // Template
   saveAsTemplate: boolean;
