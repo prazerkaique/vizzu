@@ -62,8 +62,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const [showProductModal, setShowProductModal] = useState(false);
   const [showAddElementModal, setShowAddElementModal] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [elementTab, setElementTab] = useState<'catalog' | 'upload' | 'prompt'>('catalog');
-  const [elementPromptText, setElementPromptText] = useState('');
+  const [elementTab, setElementTab] = useState<'catalog' | 'upload'>('catalog');
   const [elementPosition, setElementPosition] = useState('');
   const [elementSearchTerm, setElementSearchTerm] = useState('');
   const elementFileRef = useRef<HTMLInputElement>(null);
@@ -154,24 +153,6 @@ export const CreativeStillWizard: React.FC<Props> = ({
     if (elementFileRef.current) elementFileRef.current.value = '';
   };
 
-  // Adicionar elemento por prompt
-  const handleAddPromptElement = () => {
-    if (!elementPromptText.trim()) return;
-    const newElement: CreativeStillAdditionalProduct = {
-      product_id: '',
-      product_name: elementPromptText,
-      product_image_url: '',
-      position_description: elementPosition,
-      source: 'prompt',
-    };
-    onUpdateState({
-      additionalProducts: [...wizardState.additionalProducts, newElement],
-    });
-    setShowAddElementModal(false);
-    setElementPosition('');
-    setElementPromptText('');
-  };
-
   // Remover elemento
   const handleRemoveElement = (index: number) => {
     onUpdateState({
@@ -218,9 +199,45 @@ export const CreativeStillWizard: React.FC<Props> = ({
   // RENDER STEPS
   // ============================================================
 
+  // Upload do produto principal via arquivo/foto
+  const mainProductFileRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleMainProductUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const uploadedProduct: Product = {
+        id: `upload-${Date.now()}`,
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        images: [{ name: file.name, url: dataUrl }],
+        originalImages: { front: { name: file.name, url: dataUrl } },
+        category: '',
+        color: '',
+      } as Product;
+      onUpdateState({ mainProduct: uploadedProduct });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleMainProductFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleMainProductUpload(file);
+    if (mainProductFileRef.current) mainProductFileRef.current.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      handleMainProductUpload(file);
+    }
+  };
+
   const renderStep1Product = () => (
     <div>
-      {sectionTitle('Qual produto você quer fotografar?', 'fa-box')}
+      {sectionTitle('Qual o produto principal?', 'fa-box')}
 
       {/* Produto selecionado */}
       {wizardState.mainProduct ? (
@@ -242,28 +259,66 @@ export const CreativeStillWizard: React.FC<Props> = ({
             </p>
           </div>
           <button
-            onClick={() => setShowProductModal(true)}
+            onClick={() => { onUpdateState({ mainProduct: null }); }}
             className={(isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-500') + ' text-xs font-medium'}
           >
             Trocar
           </button>
         </div>
       ) : (
-        <button
-          onClick={() => setShowProductModal(true)}
-          className={'w-full rounded-xl p-6 border-2 border-dashed text-center transition-colors ' + (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500 hover:text-amber-400' : 'border-gray-300 hover:border-amber-400 text-gray-400 hover:text-amber-500')}
-        >
-          <i className="fas fa-plus text-lg mb-2 block"></i>
-          <span className="text-sm font-medium">Selecionar produto do catálogo</span>
-        </button>
+        <div className="space-y-3">
+          {/* Selecionar do catálogo */}
+          <button
+            onClick={() => setShowProductModal(true)}
+            className={'w-full rounded-xl p-4 text-left flex items-center gap-4 transition-all border ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-amber-500/50' : 'bg-white border-gray-200 hover:border-amber-400 shadow-sm')}
+          >
+            <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-blue-500/20' : 'bg-blue-100')}>
+              <i className={'fas fa-box text-sm ' + (isDark ? 'text-blue-400' : 'text-blue-500')}></i>
+            </div>
+            <div>
+              <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Selecionar do catálogo</p>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Escolha um produto já cadastrado</p>
+            </div>
+            <i className={'fas fa-chevron-right ml-auto text-xs ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
+          </button>
+
+          {/* Upload / Drag and Drop */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            className={'w-full rounded-xl p-6 border-2 border-dashed text-center transition-all cursor-pointer ' +
+              (dragOver
+                ? (isDark ? 'border-amber-500 bg-amber-500/10 text-amber-400' : 'border-amber-400 bg-amber-50 text-amber-500')
+                : (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500 hover:text-amber-400' : 'border-gray-300 hover:border-amber-400 text-gray-400 hover:text-amber-500')
+              )}
+            onClick={() => mainProductFileRef.current?.click()}
+          >
+            <i className={'text-2xl mb-2 block fas ' + (dragOver ? 'fa-arrow-down' : 'fa-cloud-arrow-up')}></i>
+            <span className="text-sm font-medium block">
+              {dragOver ? 'Solte a imagem aqui' : 'Subir imagem ou tirar foto'}
+            </span>
+            <span className={'text-[10px] block mt-1 ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
+              Arraste e solte, ou clique para selecionar · JPG, PNG, WebP
+            </span>
+            <input
+              ref={mainProductFileRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleMainProductFileChange}
+              className="hidden"
+            />
+          </div>
+        </div>
       )}
 
       {separator()}
 
-      {/* Elementos adicionais */}
-      {sectionTitle('Elementos adicionais na composição', 'fa-layer-group')}
+      {/* Produtos adicionais */}
+      {sectionTitle('Produtos adicionais na composição', 'fa-layer-group')}
       <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3 -mt-1'}>
-        Adicione outros produtos, acessórios ou elementos para compor a cena (opcional)
+        Adicione outros produtos do catálogo ou tire fotos de novos produtos para compor a cena (opcional)
       </p>
 
       {/* Lista de elementos adicionados */}
@@ -287,10 +342,9 @@ export const CreativeStillWizard: React.FC<Props> = ({
                 )}
                 <span className={'text-[9px] px-1.5 py-0.5 rounded-full mt-0.5 inline-block ' + (
                   el.source === 'catalog' ? (isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600') :
-                  el.source === 'upload' ? (isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') :
-                  (isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600')
+                  (isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')
                 )}>
-                  {el.source === 'catalog' ? 'Catálogo' : el.source === 'upload' ? 'Upload' : 'Prompt'}
+                  {el.source === 'catalog' ? 'Catálogo' : 'Foto/Upload'}
                 </span>
               </div>
               <button onClick={() => handleRemoveElement(i)} className={(isDark ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' transition-colors'}>
@@ -305,7 +359,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
         onClick={() => setShowAddElementModal(true)}
         className={'w-full rounded-lg p-3 border border-dashed text-center text-xs font-medium transition-colors ' + (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500 hover:text-amber-400' : 'border-gray-300 hover:border-amber-400 text-gray-400 hover:text-amber-500')}
       >
-        <i className="fas fa-plus mr-1.5"></i>Adicionar elemento
+        <i className="fas fa-plus mr-1.5"></i>Adicionar produto
       </button>
     </div>
   );
@@ -977,7 +1031,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
           >
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
-              <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Adicionar Elemento</h3>
+              <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Adicionar Produto</h3>
               <button onClick={() => setShowAddElementModal(false)} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
                 <i className="fas fa-times"></i>
               </button>
@@ -986,9 +1040,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
             {/* Tabs */}
             <div className={'flex border-b ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
               {[
-                { id: 'catalog' as const, label: 'Catálogo', icon: 'fa-box' },
-                { id: 'upload' as const, label: 'Upload', icon: 'fa-cloud-arrow-up' },
-                { id: 'prompt' as const, label: 'Descrever', icon: 'fa-font' },
+                { id: 'catalog' as const, label: 'Do Catálogo', icon: 'fa-box' },
+                { id: 'upload' as const, label: 'Foto / Upload', icon: 'fa-camera' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1057,29 +1110,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
               {elementTab === 'upload' && (
                 <div className="text-center py-6">
                   <label className={'block rounded-xl p-6 border-2 border-dashed cursor-pointer transition-colors ' + (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500' : 'border-gray-300 hover:border-amber-400 text-gray-400')}>
-                    <i className="fas fa-cloud-arrow-up text-2xl mb-2 block"></i>
-                    <span className="text-sm font-medium block">Selecionar imagem</span>
+                    <i className="fas fa-camera text-2xl mb-2 block"></i>
+                    <span className="text-sm font-medium block">Tirar foto ou selecionar imagem</span>
                     <span className="text-[10px] block mt-1">JPG, PNG ou WebP</span>
-                    <input ref={elementFileRef} type="file" accept="image/*" onChange={handleElementUpload} className="hidden" />
+                    <input ref={elementFileRef} type="file" accept="image/*" capture="environment" onChange={handleElementUpload} className="hidden" />
                   </label>
-                </div>
-              )}
-
-              {elementTab === 'prompt' && (
-                <div>
-                  <textarea
-                    value={elementPromptText}
-                    onChange={(e) => setElementPromptText(e.target.value)}
-                    placeholder='Descreva o item: ex. "Um óculos de sol escuro estilo aviador", "Um cinto de couro marrom"'
-                    className={'w-full rounded-lg p-3 text-sm resize-none h-24 ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400')}
-                  />
-                  <button
-                    onClick={handleAddPromptElement}
-                    disabled={!elementPromptText.trim()}
-                    className="mt-3 w-full px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <i className="fas fa-plus mr-1.5"></i>Adicionar
-                  </button>
                 </div>
               )}
             </div>

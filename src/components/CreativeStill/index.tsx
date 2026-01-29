@@ -148,6 +148,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [view, setView] = useState<View>('home');
   const [wizardState, setWizardState] = useState<CreativeStillWizardState>({ ...INITIAL_WIZARD_STATE });
   const [templates, setTemplates] = useState<CreativeStillTemplate[]>([]);
+  const [generations, setGenerations] = useState<CreativeStillGeneration[]>([]);
+  const [favorites, setFavorites] = useState<CreativeStillGeneration[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -368,50 +370,98 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             </div>
           </div>
 
-          {/* Templates Salvos */}
-          <div>
+          {/* Stills Gerados */}
+          <div className="mb-8">
             <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
-              <i className="fas fa-bookmark mr-2 text-xs opacity-50"></i>
-              Seus Templates Salvos
+              <i className="fas fa-images mr-2 text-xs opacity-50"></i>
+              Stills Gerados
             </h2>
             {loadingTemplates ? (
               <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200')}>
                 <i className="fas fa-spinner fa-spin text-lg text-neutral-500"></i>
               </div>
-            ) : templates.length === 0 ? (
+            ) : generations.length === 0 ? (
               <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
                 <div className={'w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-3 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
-                  <i className={'fas fa-bookmark text-xl ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
+                  <i className={'fas fa-images text-xl ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
                 </div>
                 <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
-                  Você ainda não tem templates salvos.
+                  Você ainda não gerou nenhum still.
                 </p>
                 <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-1'}>
-                  Crie seu primeiro still e salve como template para reutilizar!
+                  Crie seu primeiro still criativo e ele aparecerá aqui!
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {templates.map(template => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleUseTemplate(template)}
+                {generations.map(gen => (
+                  <div
+                    key={gen.id}
                     className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border border-gray-200 hover:border-amber-400 shadow-sm')}
                   >
                     <div className={'aspect-square flex items-center justify-center ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
-                      {template.thumbnail_url ? (
-                        <img src={template.thumbnail_url} alt={template.name} className="w-full h-full object-cover" />
+                      {(gen.variation_1_url || gen.variation_2_url) ? (
+                        <img src={(gen.selected_variation === 2 ? gen.variation_2_url : gen.variation_1_url) || ''} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
                       )}
                     </div>
                     <div className="p-3">
-                      <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{template.name}</p>
+                      <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>
+                        {gen.status === 'completed' ? 'Still gerado' : gen.status === 'processing' ? 'Gerando...' : 'Falhou'}
+                      </p>
                       <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
-                        {template.aesthetic_preset || 'Personalizado'} · {template.frame_ratio}
+                        {new Date(gen.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                  </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Meus Stills Favoritos */}
+          <div>
+            <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+              <i className="fas fa-heart mr-2 text-xs opacity-50"></i>
+              Meus Stills Favoritos
+            </h2>
+            {favorites.length === 0 ? (
+              <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
+                <div className={'w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-3 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
+                  <i className={'fas fa-heart text-xl ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
+                </div>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+                  Nenhum favorito ainda.
+                </p>
+                <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-1'}>
+                  Favorite seus melhores stills para acessá-los rapidamente!
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {favorites.map(gen => (
+                  <div
+                    key={gen.id}
+                    className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-200 hover:border-pink-400 shadow-sm')}
+                  >
+                    <div className={'aspect-square flex items-center justify-center relative ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                      {(gen.variation_1_url || gen.variation_2_url) ? (
+                        <img src={(gen.selected_variation === 2 ? gen.variation_2_url : gen.variation_1_url) || ''} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <i className="fas fa-heart text-pink-500 text-sm drop-shadow"></i>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>Still favorito</p>
+                      <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+                        {new Date(gen.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
