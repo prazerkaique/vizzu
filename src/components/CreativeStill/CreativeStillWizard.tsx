@@ -115,13 +115,10 @@ export const CreativeStillWizard: React.FC<Props> = ({
   // Apresentações filtradas pelo tipo de produto
   const availablePresentations = getPresentationsForType(effectiveProductType);
 
-  // Validação: produto precisa ter foto de detalhe para gerar
+  // Validação: nenhuma imagem é obrigatória além da principal
   const mainProductHasRequiredImages = (): boolean => {
     if (!wizardState.mainProduct) return false;
-    // Produtos uploaded não precisam validação de ângulo (é a foto que o user subiu)
-    if (wizardState.mainProduct.id?.startsWith('upload-')) return true;
-    // Produto do catálogo: precisa ter detalhe
-    return hasDetailImage(wizardState.mainProduct);
+    return true;
   };
 
   // Se selecionou "back" mas não tem foto de costas, bloqueia
@@ -479,7 +476,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
             </button>
           </div>
 
-          {/* Imagem de detalhe */}
+          {/* Imagem de detalhe (opcional) */}
           {hasDetailImage(wizardState.mainProduct!) ? (
             <div className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200')}>
               <div className={'w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
@@ -495,16 +492,16 @@ export const CreativeStillWizard: React.FC<Props> = ({
               </div>
             </div>
           ) : (
-            <div className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200')}>
-              <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-red-500/10' : 'bg-red-100')}>
-                <i className={'fas fa-magnifying-glass-plus text-sm ' + (isDark ? 'text-red-400' : 'text-red-500')}></i>
+            <div className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200')}>
+              <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-amber-500/10' : 'bg-amber-100')}>
+                <i className={'fas fa-magnifying-glass-plus text-sm ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
               </div>
               <div className="flex-1">
-                <p className={(isDark ? 'text-red-400' : 'text-red-700') + ' text-xs font-medium'}>
-                  <i className="fas fa-exclamation-circle mr-1.5"></i>Foto de detalhe obrigatória
+                <p className={(isDark ? 'text-amber-400' : 'text-amber-700') + ' text-xs font-medium'}>
+                  <i className="fas fa-info-circle mr-1.5"></i>Foto de detalhe não encontrada
                 </p>
-                <p className={(isDark ? 'text-red-400/60' : 'text-red-600') + ' text-[10px]'}>
-                  Cadastre a foto de detalhe/logo no Product Studio para poder gerar
+                <p className={(isDark ? 'text-amber-400/60' : 'text-amber-600') + ' text-[10px]'}>
+                  Para melhor fidelidade do logo, cadastre a foto de detalhe no Product Studio
                 </p>
               </div>
             </div>
@@ -1305,35 +1302,37 @@ export const CreativeStillWizard: React.FC<Props> = ({
 
             {/* Category pills */}
             {allCategories.length > 1 && (
-              <div className="px-3 pb-2 overflow-x-auto flex gap-1.5 scrollbar-hide">
-                <button
-                  onClick={() => setProductCategory('')}
-                  className={'flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all border ' +
-                    (!productCategory
-                      ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
-                      : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
-                    )}
-                >
-                  Todos
-                </button>
-                {allCategories.map(cat => (
+              <div className="flex-shrink-0 px-3 pb-2">
+                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
                   <button
-                    key={cat}
-                    onClick={() => setProductCategory(productCategory === cat ? '' : cat!)}
-                    className={'flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all border ' +
-                      (productCategory === cat
+                    onClick={() => setProductCategory('')}
+                    className={'flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border whitespace-nowrap ' +
+                      (!productCategory
                         ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
                         : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
                       )}
                   >
-                    {cat}
+                    Todos
                   </button>
-                ))}
+                  {allCategories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setProductCategory(productCategory === cat ? '' : cat!)}
+                      className={'flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border whitespace-nowrap ' +
+                        (productCategory === cat
+                          ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
+                          : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
+                        )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Product count */}
-            <div className={'px-3 pb-2 flex items-center justify-between ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
+            <div className={'flex-shrink-0 px-3 pb-2 ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
               <span className="text-[10px]">{filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''}{productCategory ? ` em "${productCategory}"` : ''}</span>
             </div>
 
@@ -1452,30 +1451,32 @@ export const CreativeStillWizard: React.FC<Props> = ({
 
                   {/* Category pills */}
                   {allCategories.length > 1 && (
-                    <div className="mb-2 overflow-x-auto flex gap-1.5 scrollbar-hide">
-                      <button
-                        onClick={() => setElementCategory('')}
-                        className={'flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all border ' +
-                          (!elementCategory
-                            ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
-                            : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
-                          )}
-                      >
-                        Todos
-                      </button>
-                      {allCategories.map(cat => (
+                    <div className="mb-2">
+                      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
                         <button
-                          key={cat}
-                          onClick={() => setElementCategory(elementCategory === cat ? '' : cat!)}
-                          className={'flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all border ' +
-                            (elementCategory === cat
+                          onClick={() => setElementCategory('')}
+                          className={'flex-shrink-0 px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all border whitespace-nowrap ' +
+                            (!elementCategory
                               ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
                               : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
                             )}
                         >
-                          {cat}
+                          Todos
                         </button>
-                      ))}
+                        {allCategories.map(cat => (
+                          <button
+                            key={cat}
+                            onClick={() => setElementCategory(elementCategory === cat ? '' : cat!)}
+                            className={'flex-shrink-0 px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all border whitespace-nowrap ' +
+                              (elementCategory === cat
+                                ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
+                                : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
+                              )}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
