@@ -651,9 +651,10 @@ const loadUserProducts = async (userId: string) => {
       const formattedProducts: Product[] = productsData.map(p => {
         const allImages = p.product_images || [];
         
-        // Separar imagens originais das geradas
-        const originalImages = allImages.filter((img: any) => 
-          img.type === 'original' || img.type === 'front' || img.type === 'back'
+        // Separar imagens originais das geradas (excluir tipos gerados)
+        const generatedTypes = ['studio_ready', 'cenario_criativo', 'modelo_ia', 'product_studio'];
+        const originalImages = allImages.filter((img: any) =>
+          !generatedTypes.includes(img.type)
         );
         
         const generatedStudio = allImages.filter((img: any) => img.type === 'studio_ready');
