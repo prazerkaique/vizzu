@@ -1652,6 +1652,7 @@ export interface CreativeStillWizardState {
 
   // Step 1 - Produto
   mainProduct: Product | null;
+  productPresentation: string;
   additionalProducts: CreativeStillAdditionalProduct[];
 
   // Step 2 - Estilo
@@ -1673,6 +1674,9 @@ export interface CreativeStillWizardState {
   lensModel: string;
   cameraAngle: string;
   depthOfField: number;
+
+  // Composição (modo avançado)
+  productPlacement: string;
 
   // Template
   saveAsTemplate: boolean;

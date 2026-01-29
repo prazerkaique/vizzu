@@ -77,6 +77,24 @@ export const COLOR_STYLES = [
   { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
 ];
 
+export const PRODUCT_PRESENTATIONS = [
+  { id: 'open', label: 'Aberto / Estendido', description: 'Peça aberta e esticada', icon: 'fa-expand' },
+  { id: 'folded', label: 'Dobrado', description: 'Dobrado com cuidado', icon: 'fa-shirt' },
+  { id: 'hanging', label: 'Pendurado', description: 'Pendurado em cabide ou gancho', icon: 'fa-grip-lines' },
+  { id: 'rolled', label: 'Enrolado', description: 'Enrolado de forma estilosa', icon: 'fa-toilet-paper' },
+  { id: 'natural', label: 'Jogado Natural', description: 'Solto de forma casual e natural', icon: 'fa-wind' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
+];
+
+export const PRODUCT_PLACEMENTS = [
+  { id: 'center', label: 'Centralizado', description: 'Centro da composição', icon: 'fa-crosshairs' },
+  { id: 'left_third', label: 'Terço Esquerdo', description: 'Regra dos terços, à esquerda', icon: 'fa-align-left' },
+  { id: 'right_third', label: 'Terço Direito', description: 'Regra dos terços, à direita', icon: 'fa-align-right' },
+  { id: 'slight_left', label: 'Levemente Esquerda', description: 'Deslocado sutil para esquerda', icon: 'fa-arrow-left' },
+  { id: 'slight_right', label: 'Levemente Direita', description: 'Deslocado sutil para direita', icon: 'fa-arrow-right' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
+];
+
 export const FRAME_RATIOS = [
   { id: '1:1', label: '1:1', description: 'Feed quadrado', icon: 'fa-square' },
   { id: '4:5', label: '4:5', description: 'Feed vertical', icon: 'fa-rectangle-portrait' },
@@ -87,6 +105,7 @@ export const FRAME_RATIOS = [
 const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
   mode: 'simple',
   mainProduct: null,
+  productPresentation: 'ai_choose',
   additionalProducts: [],
   aestheticPreset: null,
   aestheticCustom: '',
@@ -102,6 +121,7 @@ const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
   lensModel: 'ai_choose',
   cameraAngle: 'ai_choose',
   depthOfField: 50,
+  productPlacement: 'ai_choose',
   saveAsTemplate: false,
   templateName: '',
 };

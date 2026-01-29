@@ -13,6 +13,8 @@ import {
   COLOR_TONES,
   COLOR_STYLES,
   FRAME_RATIOS,
+  PRODUCT_PRESENTATIONS,
+  PRODUCT_PLACEMENTS,
 } from './index';
 import { compressImage } from '../../utils/imageCompression';
 
@@ -320,6 +322,29 @@ export const CreativeStillWizard: React.FC<Props> = ({
         </div>
       )}
 
+      {/* Apresentação do produto - só aparece quando tem produto selecionado */}
+      {wizardState.mainProduct && (
+        <>
+          {separator()}
+          {sectionTitle('Como quer exibir o produto?', 'fa-shirt')}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {PRODUCT_PRESENTATIONS.map(pres => (
+              <button
+                key={pres.id}
+                onClick={() => onUpdateState({ productPresentation: pres.id })}
+                className={cardClass(wizardState.productPresentation === pres.id)}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <i className={'fas ' + pres.icon + ' text-xs ' + (wizardState.productPresentation === pres.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{pres.label}</span>
+                </div>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{pres.description}</p>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       {separator()}
 
       {/* Produtos adicionais */}
@@ -371,11 +396,9 @@ export const CreativeStillWizard: React.FC<Props> = ({
     </div>
   );
 
-  const renderStep2StyleSimple = () => (
-    <div>
-      {/* Estética */}
-      {sectionTitle('Estética', 'fa-palette')}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+  const renderAestheticPicker = () => (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
         {AESTHETIC_PRESETS.map(preset => (
           <button
             key={preset.id}
@@ -390,25 +413,34 @@ export const CreativeStillWizard: React.FC<Props> = ({
           </button>
         ))}
       </div>
-      <div className="mb-1">
-        <label className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
-          <input
-            type="radio"
-            checked={wizardState.aestheticPreset === null && wizardState.aestheticCustom.length > 0}
-            onChange={() => onUpdateState({ aestheticPreset: null })}
-            className="mr-2"
-          />
-          Descrever minha própria estética
-        </label>
-      </div>
-      {(wizardState.aestheticPreset === null) && (
+      {/* Personalizado — card clicável */}
+      <button
+        onClick={() => onUpdateState({ aestheticPreset: null })}
+        className={cardClass(wizardState.aestheticPreset === null) + ' w-full'}
+      >
+        <div className="flex items-center gap-2">
+          <i className={'fas fa-pen-fancy text-xs ' + (wizardState.aestheticPreset === null ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+          <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Descrever minha própria estética</span>
+        </div>
+        <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>Escreva uma descrição livre do estilo que você quer</p>
+      </button>
+      {wizardState.aestheticPreset === null && (
         <textarea
           value={wizardState.aestheticCustom}
           onChange={(e) => onUpdateState({ aestheticCustom: e.target.value })}
           placeholder="Ex: Aesthetic Y2K com elementos metálicos e tons pastel..."
-          className={'w-full rounded-lg p-3 text-sm resize-none h-20 ' + (isDark ? 'bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
+          className={'w-full rounded-lg p-3 text-sm resize-none h-20 mt-2 ' + (isDark ? 'bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
+          autoFocus
         />
       )}
+    </>
+  );
+
+  const renderStep2StyleSimple = () => (
+    <div>
+      {/* Estética */}
+      {sectionTitle('Estética', 'fa-palette')}
+      {renderAestheticPicker()}
 
       {separator()}
 
@@ -463,40 +495,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
     <div>
       {/* Estética */}
       {sectionTitle('Estética', 'fa-palette')}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
-        {AESTHETIC_PRESETS.map(preset => (
-          <button
-            key={preset.id}
-            onClick={() => onUpdateState({ aestheticPreset: preset.id, aestheticCustom: '' })}
-            className={cardClass(wizardState.aestheticPreset === preset.id)}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <i className={'fas ' + preset.icon + ' text-xs ' + (wizardState.aestheticPreset === preset.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
-              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{preset.label}</span>
-            </div>
-            <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{preset.description}</p>
-          </button>
-        ))}
-      </div>
-      <div className="mb-1">
-        <label className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
-          <input
-            type="radio"
-            checked={wizardState.aestheticPreset === null && wizardState.aestheticCustom.length > 0}
-            onChange={() => onUpdateState({ aestheticPreset: null })}
-            className="mr-2"
-          />
-          Descrever minha própria estética
-        </label>
-      </div>
-      {(wizardState.aestheticPreset === null) && (
-        <textarea
-          value={wizardState.aestheticCustom}
-          onChange={(e) => onUpdateState({ aestheticCustom: e.target.value })}
-          placeholder="Ex: Aesthetic Y2K com elementos metálicos..."
-          className={'w-full rounded-lg p-3 text-sm resize-none h-20 ' + (isDark ? 'bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
-        />
-      )}
+      {renderAestheticPicker()}
 
       {separator()}
 
@@ -723,6 +722,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
     const toneLabel = COLOR_TONES.find(t => t.id === wizardState.colorTone)?.label || wizardState.colorTone;
     const styleLabel = COLOR_STYLES.find(s => s.id === wizardState.colorStyle)?.label || wizardState.colorStyle;
     const ratioLabel = FRAME_RATIOS.find(r => r.id === wizardState.frameRatio)?.label || wizardState.frameRatio;
+    const presentationLabel = PRODUCT_PRESENTATIONS.find(p => p.id === wizardState.productPresentation)?.label || wizardState.productPresentation;
+    const placementLabel = PRODUCT_PLACEMENTS.find(p => p.id === wizardState.productPlacement)?.label || wizardState.productPlacement;
 
     const ReviewRow = ({ icon, label, value, onEdit }: { icon: string; label: string; value: string; onEdit: () => void }) => (
       <div className="flex items-center justify-between py-2">
@@ -752,6 +753,9 @@ export const CreativeStillWizard: React.FC<Props> = ({
                 ))}
               </div>
             )}
+          </div>
+          <div className="px-4">
+            <ReviewRow icon="fa-shirt" label="Exibição" value={presentationLabel} onEdit={() => setCurrentStep(1)} />
           </div>
           <div className="px-4">
             <ReviewRow icon="fa-palette" label="Estética" value={aestheticLabel} onEdit={() => setCurrentStep(2)} />
@@ -794,6 +798,61 @@ export const CreativeStillWizard: React.FC<Props> = ({
             </>
           )}
         </div>
+
+        {/* Posicionamento - modo avançado */}
+        {!isSimple && (
+          <>
+            {separator()}
+            {sectionTitle('Posicionamento na composição', 'fa-crosshairs')}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {PRODUCT_PLACEMENTS.map(pl => (
+                <button
+                  key={pl.id}
+                  onClick={() => onUpdateState({ productPlacement: pl.id })}
+                  className={cardClass(wizardState.productPlacement === pl.id)}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <i className={'fas ' + pl.icon + ' text-xs ' + (wizardState.productPlacement === pl.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                    <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{pl.label}</span>
+                  </div>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{pl.description}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Posição dos elementos adicionais */}
+            {wizardState.additionalProducts.length > 0 && (
+              <div className="mt-4">
+                <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+                  <i className="fas fa-layer-group mr-1.5 text-[10px] opacity-50"></i>
+                  Posição dos produtos adicionais
+                </p>
+                <div className="space-y-2">
+                  {wizardState.additionalProducts.map((el, i) => (
+                    <div key={i} className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
+                      {el.product_image_url && (
+                        <div className={'w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                          <img src={el.product_image_url} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium flex-shrink-0'}>{el.product_name}</span>
+                      <input
+                        value={el.position_description}
+                        onChange={(e) => {
+                          const updated = [...wizardState.additionalProducts];
+                          updated[i] = { ...updated[i], position_description: e.target.value };
+                          onUpdateState({ additionalProducts: updated });
+                        }}
+                        placeholder="Ex: ao lado esquerdo, levemente atrás"
+                        className={'flex-1 rounded-md px-2 py-1.5 text-xs ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {separator()}
 
