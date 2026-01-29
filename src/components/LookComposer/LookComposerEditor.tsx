@@ -591,55 +591,43 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     return () => clearInterval(interval);
   }, [isGenerating, generationStartTime, loadingSteps.length]);
 
-  // Obter imagens do produto (prioriza Product Studio otimizadas)
+  // Obter imagens do produto (prioriza Product Studio otimizadas, mas inclui todas as originais disponíveis)
   const productImages = useMemo(() => {
     const images: { url: string; type: string }[] = [];
+    const addedUrls = new Set<string>(); // Evitar duplicatas
 
-    // Primeiro verifica se tem imagens otimizadas do Product Studio
+    const addImage = (url: string, type: string) => {
+      if (url && !addedUrls.has(url)) {
+        addedUrls.add(url);
+        images.push({ url, type });
+      }
+    };
+
+    // Primeiro: imagens otimizadas do Product Studio (frente e costas)
     if (product.generatedImages?.productStudio?.length) {
       const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
       if (lastSession.images?.length) {
-        // Adiciona imagens otimizadas com labels
         const frontImg = lastSession.images.find(img => img.angle === 'front');
         const backImg = lastSession.images.find(img => img.angle === 'back');
 
-        if (frontImg?.url) {
-          images.push({ url: frontImg.url, type: 'Frente (Otimizada)' });
-        }
-        if (backImg?.url) {
-          images.push({ url: backImg.url, type: 'Costas (Otimizada)' });
-        }
-
-        // Adiciona detalhe original (não passa pelo Product Studio)
-        if (product.originalImages?.detail?.url) {
-          images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
-        }
-
-        // Se encontrou pelo menos uma, retorna
-        if (images.length > 0) {
-          return images;
-        }
+        if (frontImg?.url) addImage(frontImg.url, 'Frente (Otimizada)');
+        if (backImg?.url) addImage(backImg.url, 'Costas (Otimizada)');
       }
     }
 
-    // Fallback: usa imagens originais
-    if (product.originalImages?.front?.url) {
-      images.push({ url: product.originalImages.front.url, type: 'Frente' });
-    }
-    if (product.originalImages?.back?.url) {
-      images.push({ url: product.originalImages.back.url, type: 'Costas' });
-    }
-    if (product.originalImages?.detail?.url) {
-      images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
-    }
+    // Segundo: imagens originais que não foram cobertas pelas otimizadas
+    if (product.originalImages?.front?.url) addImage(product.originalImages.front.url, 'Frente');
+    if (product.originalImages?.back?.url) addImage(product.originalImages.back.url, 'Costas');
+    if (product.originalImages?.detail?.url) addImage(product.originalImages.detail.url, 'Detalhe');
+
+    // Fallback legacy
     if (images.length === 0 && product.images) {
       product.images.forEach((img, idx) => {
         const url = img.url || img.base64;
-        if (url) {
-          images.push({ url, type: `Foto ${idx + 1}` });
-        }
+        if (url) addImage(url, `Foto ${idx + 1}`);
       });
     }
+
     return images;
   }, [product]);
 
@@ -1385,10 +1373,21 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
             {/* Info do produto */}
             <div className={(isDark ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4'}>
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                  {productImages[0] && (
-                    <img src={productImages[0].url} alt={product.name} className="w-full h-full object-cover" />
-                  )}
+                <div className="flex gap-2 flex-shrink-0">
+                  {productImages.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-colors ${
+                        currentImageIndex === idx
+                          ? (isDark ? 'border-pink-500' : 'border-pink-400')
+                          : 'border-transparent'
+                      }`}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      title={img.type}
+                    >
+                      <img src={img.url} alt={img.type} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{product.name}</p>
