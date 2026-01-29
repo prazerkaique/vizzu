@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   Product,
   CreativeStillWizardState,
@@ -22,6 +22,20 @@ import {
   ProductTypeGroup,
 } from './index';
 import { compressImage } from '../../utils/imageCompression';
+
+// ============================================================
+// CONSTANTES (mesmo padrão do Product Studio)
+// ============================================================
+
+const CATEGORY_GROUPS = [
+  { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+  { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+  { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
+  { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
+];
+const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
 
 // ============================================================
 // TIPOS
@@ -69,14 +83,14 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const [showProductModal, setShowProductModal] = useState(false);
   const [showAddElementModal, setShowAddElementModal] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [productCategory, setProductCategory] = useState('');
+  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
+  const [productFilterCategory, setProductFilterCategory] = useState('');
   const [elementTab, setElementTab] = useState<'catalog' | 'upload'>('catalog');
   const [elementPosition, setElementPosition] = useState('');
   const [elementSearchTerm, setElementSearchTerm] = useState('');
-  const [elementCategory, setElementCategory] = useState('');
+  const [elementFilterCategoryGroup, setElementFilterCategoryGroup] = useState('');
+  const [elementFilterCategory, setElementFilterCategory] = useState('');
   const [uploadProductType, setUploadProductType] = useState<ProductTypeGroup | null>(null);
-  const [productCollection, setProductCollection] = useState('');
-  const [elementCollection, setElementCollection] = useState('');
   const elementFileRef = useRef<HTMLInputElement>(null);
 
   const isDark = theme === 'dark';
@@ -84,32 +98,30 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const steps = isSimple ? SIMPLE_STEPS : ADVANCED_STEPS;
   const totalSteps = steps.length;
 
-  // Categorias e coleções únicas dos produtos
-  const allCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort();
-  const allCollections = Array.from(new Set(products.map(p => p.collection).filter(Boolean))).sort() as string[];
+  // Filtra produtos (mesmo padrão do Product Studio)
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = !productSearchTerm ||
+        product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+        (product.sku || '').toLowerCase().includes(productSearchTerm.toLowerCase());
+      const categoryGroup = getCategoryGroupBySubcategory(product.category);
+      const matchesCategoryGroup = !productFilterCategoryGroup || categoryGroup?.id === productFilterCategoryGroup;
+      const matchesCategory = !productFilterCategory || product.category === productFilterCategory;
+      return matchesSearch && matchesCategoryGroup && matchesCategory;
+    });
+  }, [products, productSearchTerm, productFilterCategoryGroup, productFilterCategory]);
 
-  // Filtra produtos (busca + categoria + coleção)
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = !productSearchTerm ||
-      p.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      (p.sku || '').toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      (p.category || '').toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      (p.color || '').toLowerCase().includes(productSearchTerm.toLowerCase());
-    const matchesCategory = !productCategory || p.category === productCategory;
-    const matchesCollection = !productCollection || p.collection === productCollection;
-    return matchesSearch && matchesCategory && matchesCollection;
-  });
-
-  const filteredElementProducts = products.filter(p => {
-    const matchesSearch = !elementSearchTerm ||
-      p.name.toLowerCase().includes(elementSearchTerm.toLowerCase()) ||
-      (p.sku || '').toLowerCase().includes(elementSearchTerm.toLowerCase()) ||
-      (p.category || '').toLowerCase().includes(elementSearchTerm.toLowerCase()) ||
-      (p.color || '').toLowerCase().includes(elementSearchTerm.toLowerCase());
-    const matchesCategory = !elementCategory || p.category === elementCategory;
-    const matchesCollection = !elementCollection || p.collection === elementCollection;
-    return matchesSearch && matchesCategory && matchesCollection;
-  });
+  const filteredElementProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = !elementSearchTerm ||
+        product.name.toLowerCase().includes(elementSearchTerm.toLowerCase()) ||
+        (product.sku || '').toLowerCase().includes(elementSearchTerm.toLowerCase());
+      const categoryGroup = getCategoryGroupBySubcategory(product.category);
+      const matchesCategoryGroup = !elementFilterCategoryGroup || categoryGroup?.id === elementFilterCategoryGroup;
+      const matchesCategory = !elementFilterCategory || product.category === elementFilterCategory;
+      return matchesSearch && matchesCategoryGroup && matchesCategory;
+    });
+  }, [products, elementSearchTerm, elementFilterCategoryGroup, elementFilterCategory]);
 
   // Tipo de produto efetivo: do catálogo (pela categoria) ou do upload (selecionado pelo user)
   const isUploadedProduct = wizardState.mainProduct?.id?.startsWith('upload-') ?? false;
@@ -1300,135 +1312,121 @@ export const CreativeStillWizard: React.FC<Props> = ({
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL: Selecionar Produto */}
+      {/* MODAL: Selecionar Produto (mesmo padrão do Product Studio) */}
       {/* ============================================================ */}
       {showProductModal && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductCategory(''); setProductCollection(''); }}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={'relative w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl overflow-hidden max-h-[85vh] flex flex-col ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white')}
-          >
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header */}
-            <div className={'p-4 border-b flex items-center justify-between ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
               <div>
-                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Selecionar Produto</h3>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>{products.length} produtos disponíveis</p>
+                <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Selecione o produto</h2>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} disponíveis</p>
               </div>
-              <button onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductCategory(''); setProductCollection(''); }} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+              <button
+                onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductFilterCategoryGroup(''); setProductFilterCategory(''); }}
+                className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
+              >
                 <i className="fas fa-times"></i>
               </button>
             </div>
 
-            {/* Search */}
-            <div className="p-3 pb-2">
-              <div className={'flex items-center gap-2 rounded-lg px-3 py-2 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
-                <i className={'fas fa-search text-xs ' + (isDark ? 'text-neutral-500' : 'text-gray-400')}></i>
+            {/* Filtros */}
+            <div className="p-4 flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
                 <input
+                  type="text"
+                  placeholder="Buscar produto..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
-                  placeholder="Buscar por nome, SKU, cor..."
-                  className={'flex-1 bg-transparent text-sm outline-none ' + (isDark ? 'text-white placeholder-neutral-600' : 'text-gray-900 placeholder-gray-400')}
+                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-amber-500/50'}
                   autoFocus
                 />
-                {productSearchTerm && (
-                  <button onClick={() => setProductSearchTerm('')} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600')}>
-                    <i className="fas fa-times text-[10px]"></i>
-                  </button>
-                )}
               </div>
-            </div>
-
-            {/* Category pills */}
-            {allCategories.length > 1 && (
-              <div className="flex-shrink-0 px-3 pb-2">
-                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-                  <button
-                    onClick={() => setProductCategory('')}
-                    className={'flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border whitespace-nowrap ' +
-                      (!productCategory
-                        ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
-                        : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
-                      )}
-                  >
-                    Todos
-                  </button>
-                  {allCategories.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setProductCategory(productCategory === cat ? '' : cat!)}
-                      className={'flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border whitespace-nowrap ' +
-                        (productCategory === cat
-                          ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
-                          : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
-                        )}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Collection filter */}
-            {allCollections.length > 1 && (
-              <div className="flex-shrink-0 px-3 pb-2">
+              <select
+                value={productFilterCategoryGroup}
+                onChange={(e) => { setProductFilterCategoryGroup(e.target.value); setProductFilterCategory(''); }}
+                className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+              >
+                <option value="">Categoria</option>
+                {CATEGORY_GROUPS.map(group => (
+                  <option key={group.id} value={group.id}>{group.label}</option>
+                ))}
+              </select>
+              {productFilterCategoryGroup && (
                 <select
-                  value={productCollection}
-                  onChange={(e) => setProductCollection(e.target.value)}
-                  className={'w-full px-3 py-1.5 text-xs border rounded-lg outline-none transition-colors ' +
-                    (isDark ? 'bg-neutral-800 border-neutral-700 text-white focus:border-amber-500/50' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-amber-400')}
+                  value={productFilterCategory}
+                  onChange={(e) => setProductFilterCategory(e.target.value)}
+                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
                 >
-                  <option value="">Todas as coleções</option>
-                  {allCollections.map(col => (
-                    <option key={col} value={col}>{col}</option>
+                  <option value="">Subcategoria</option>
+                  {CATEGORY_GROUPS.find(g => g.id === productFilterCategoryGroup)?.items.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-              </div>
-            )}
-
-            {/* Product count */}
-            <div className={'flex-shrink-0 px-3 pb-2 ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
-              <span className="text-[10px]">{filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''}{productCategory ? ` em "${productCategory}"` : ''}{productCollection ? ` · ${productCollection}` : ''}</span>
+              )}
             </div>
 
-            {/* Grid */}
-            <div className="flex-1 overflow-y-auto px-3 pb-3">
-              {filteredProducts.length === 0 ? (
-                <div className="text-center py-12">
-                  <i className={'fas fa-search text-2xl mb-3 block ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm font-medium'}>Nenhum produto encontrado</p>
-                  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-1'}>Tente outra busca ou categoria</p>
+            {/* Grid de Produtos */}
+            <div className="flex-1 overflow-y-auto p-4 pt-0">
+              {filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {filteredProducts.map(product => {
+                    const productImage = getProductImageUrl(product);
+                    return (
+                      <div
+                        key={product.id}
+                        onClick={() => {
+                          onUpdateState({ mainProduct: product, mainProductView: 'front', productPresentation: 'ai_choose', customPresentationText: '' });
+                          setUploadProductType(null);
+                          setShowProductModal(false);
+                          setProductSearchTerm('');
+                          setProductFilterCategoryGroup('');
+                          setProductFilterCategory('');
+                        }}
+                        className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-gray-50 border-gray-200 hover:border-amber-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                      >
+                        <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                          {productImage ? (
+                            <img
+                              src={productImage}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                            </div>
+                          )}
+                          <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                              <i className="fas fa-check mr-1"></i>Selecionar
+                            </button>
+                          </div>
+                        </div>
+                        <div className="p-2.5">
+                          <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                          <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                          {product.category && (
+                            <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                  {filteredProducts.map(product => (
-                    <button
-                      key={product.id}
-                      onClick={() => {
-                        onUpdateState({ mainProduct: product, mainProductView: 'front', productPresentation: 'ai_choose', customPresentationText: '' });
-                        setUploadProductType(null);
-                        setShowProductModal(false);
-                        setProductSearchTerm('');
-                        setProductCategory('');
-                      }}
-                      className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.03] hover:shadow-lg border ' + (isDark ? 'bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-white border-gray-200 hover:border-amber-400')}
-                    >
-                      <div className={'aspect-square flex items-center justify-center overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-50')}>
-                        {getProductImageUrl(product) ? (
-                          <img src={getProductImageUrl(product)} alt="" className="w-full h-full object-contain p-1" />
-                        ) : (
-                          <i className={'fas fa-image text-lg ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[11px] font-medium truncate'}>{product.name}</p>
-                        <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] truncate'}>
-                          {[product.color, product.category].filter(Boolean).join(' · ')}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+                <div className="text-center py-12">
+                  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                    <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search text-xl'}></i>
+                  </div>
+                  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>
+                    {productSearchTerm || productFilterCategoryGroup || productFilterCategory ? 'Nenhum produto encontrado' : 'Nenhum produto disponível'}
+                  </p>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
+                    {productSearchTerm || productFilterCategoryGroup || productFilterCategory ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
+                  </p>
                 </div>
               )}
             </div>
@@ -1440,16 +1438,18 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {/* MODAL: Adicionar Elemento */}
       {/* ============================================================ */}
       {showAddElementModal && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementCategory(''); setElementCollection(''); }}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={'relative w-full md:max-w-2xl md:rounded-2xl rounded-t-2xl overflow-hidden max-h-[85vh] flex flex-col ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white')}
-          >
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'}>
             {/* Header */}
-            <div className={'p-4 border-b flex items-center justify-between ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
-              <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Adicionar Produto</h3>
-              <button onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementCategory(''); setElementCollection(''); }} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+            <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
+              <div>
+                <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Adicionar Produto</h2>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Selecione um produto adicional para a composição</p>
+              </div>
+              <button
+                onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementFilterCategoryGroup(''); setElementFilterCategory(''); }}
+                className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
+              >
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -1476,129 +1476,122 @@ export const CreativeStillWizard: React.FC<Props> = ({
             </div>
 
             {/* Posição (comum a todos) */}
-            <div className="p-3 pb-0">
+            <div className="p-4 pb-0">
               <input
                 value={elementPosition}
                 onChange={(e) => setElementPosition(e.target.value)}
                 placeholder="Posicionamento: ex. ao lado esquerdo, levemente inclinado"
-                className={'w-full rounded-lg px-3 py-2 text-xs ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400')}
+                className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-amber-500/50'}
               />
             </div>
 
             {/* Tab Content */}
-            <div className="flex-1 overflow-y-auto p-3">
-              {elementTab === 'catalog' && (
-                <>
-                  {/* Search */}
-                  <div className={'flex items-center gap-2 rounded-lg px-3 py-2 mb-2 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
-                    <i className={'fas fa-search text-xs ' + (isDark ? 'text-neutral-500' : 'text-gray-400')}></i>
+            {elementTab === 'catalog' && (
+              <>
+                {/* Filtros */}
+                <div className="p-4 pb-0 flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 relative">
+                    <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
                     <input
+                      type="text"
+                      placeholder="Buscar produto..."
                       value={elementSearchTerm}
                       onChange={(e) => setElementSearchTerm(e.target.value)}
-                      placeholder="Buscar por nome, SKU, cor..."
-                      className={'flex-1 bg-transparent text-sm outline-none ' + (isDark ? 'text-white placeholder-neutral-600' : 'text-gray-900 placeholder-gray-400')}
+                      className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-amber-500/50'}
                     />
-                    {elementSearchTerm && (
-                      <button onClick={() => setElementSearchTerm('')} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600')}>
-                        <i className="fas fa-times text-[10px]"></i>
-                      </button>
-                    )}
                   </div>
+                  <select
+                    value={elementFilterCategoryGroup}
+                    onChange={(e) => { setElementFilterCategoryGroup(e.target.value); setElementFilterCategory(''); }}
+                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+                  >
+                    <option value="">Categoria</option>
+                    {CATEGORY_GROUPS.map(group => (
+                      <option key={group.id} value={group.id}>{group.label}</option>
+                    ))}
+                  </select>
+                  {elementFilterCategoryGroup && (
+                    <select
+                      value={elementFilterCategory}
+                      onChange={(e) => setElementFilterCategory(e.target.value)}
+                      className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+                    >
+                      <option value="">Subcategoria</option>
+                      {CATEGORY_GROUPS.find(g => g.id === elementFilterCategoryGroup)?.items.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
 
-                  {/* Category pills */}
-                  {allCategories.length > 1 && (
-                    <div className="mb-2">
-                      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-                        <button
-                          onClick={() => setElementCategory('')}
-                          className={'flex-shrink-0 px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all border whitespace-nowrap ' +
-                            (!elementCategory
-                              ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
-                              : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
-                            )}
-                        >
-                          Todos
-                        </button>
-                        {allCategories.map(cat => (
-                          <button
-                            key={cat}
-                            onClick={() => setElementCategory(elementCategory === cat ? '' : cat!)}
-                            className={'flex-shrink-0 px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all border whitespace-nowrap ' +
-                              (elementCategory === cat
-                                ? (isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-amber-100 text-amber-700 border-amber-300')
-                                : (isDark ? 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600' : 'bg-gray-100 text-gray-500 border-gray-200 hover:border-gray-300')
-                              )}
+                {/* Grid de Produtos */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  {filteredElementProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {filteredElementProducts.map(product => {
+                        const productImage = getProductImageUrl(product);
+                        return (
+                          <div
+                            key={product.id}
+                            onClick={() => handleAddCatalogElement(product)}
+                            className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-gray-50 border-gray-200 hover:border-amber-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                           >
-                            {cat}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Collection filter */}
-                  {allCollections.length > 1 && (
-                    <div className="mb-2">
-                      <select
-                        value={elementCollection}
-                        onChange={(e) => setElementCollection(e.target.value)}
-                        className={'w-full px-3 py-1.5 text-xs border rounded-lg outline-none transition-colors ' +
-                          (isDark ? 'bg-neutral-800 border-neutral-700 text-white focus:border-amber-500/50' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-amber-400')}
-                      >
-                        <option value="">Todas as coleções</option>
-                        {allCollections.map(col => (
-                          <option key={col} value={col}>{col}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Count */}
-                  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mb-2'}>{filteredElementProducts.length} produto{filteredElementProducts.length !== 1 ? 's' : ''}{elementCollection ? ` · ${elementCollection}` : ''}</p>
-
-                  {/* Grid */}
-                  {filteredElementProducts.length === 0 ? (
-                    <div className="text-center py-8">
-                      <i className={'fas fa-search text-xl mb-2 block ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                      <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Nenhum produto encontrado</p>
+                            <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+                              {productImage ? (
+                                <img
+                                  src={productImage}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+                                </div>
+                              )}
+                              <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                                  <i className="fas fa-plus mr-1"></i>Adicionar
+                                </button>
+                              </div>
+                            </div>
+                            <div className="p-2.5">
+                              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+                              <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+                              {product.category && (
+                                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                      {filteredElementProducts.map(product => (
-                        <button
-                          key={product.id}
-                          onClick={() => handleAddCatalogElement(product)}
-                          className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.03] hover:shadow-lg border ' + (isDark ? 'bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-white border-gray-200 hover:border-amber-400')}
-                        >
-                          <div className={'aspect-square flex items-center justify-center overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-50')}>
-                            {getProductImageUrl(product) ? (
-                              <img src={getProductImageUrl(product)} alt="" className="w-full h-full object-contain p-1" />
-                            ) : (
-                              <i className={'fas fa-image text-lg ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                            )}
-                          </div>
-                          <div className="p-1.5">
-                            <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{product.name}</p>
-                            <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] truncate'}>{product.category}</p>
-                          </div>
-                        </button>
-                      ))}
+                    <div className="text-center py-12">
+                      <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+                        <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search text-xl'}></i>
+                      </div>
+                      <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>
+                        {elementSearchTerm || elementFilterCategoryGroup || elementFilterCategory ? 'Nenhum produto encontrado' : 'Nenhum produto disponível'}
+                      </p>
+                      <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
+                        {elementSearchTerm || elementFilterCategoryGroup || elementFilterCategory ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
+                      </p>
                     </div>
                   )}
-                </>
-              )}
-
-              {elementTab === 'upload' && (
-                <div className="text-center py-6">
-                  <label className={'block rounded-xl p-6 border-2 border-dashed cursor-pointer transition-colors ' + (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500' : 'border-gray-300 hover:border-amber-400 text-gray-400')}>
-                    <i className="fas fa-camera text-2xl mb-2 block"></i>
-                    <span className="text-sm font-medium block">Tirar foto ou selecionar imagem</span>
-                    <span className="text-[10px] block mt-1">JPG, PNG ou WebP</span>
-                    <input ref={elementFileRef} type="file" accept="image/*" capture="environment" onChange={handleElementUpload} className="hidden" />
-                  </label>
                 </div>
-              )}
-            </div>
+              </>
+            )}
+
+            {elementTab === 'upload' && (
+              <div className="flex-1 flex items-center justify-center p-4">
+                <label className={'block rounded-xl p-8 border-2 border-dashed cursor-pointer transition-colors w-full text-center ' + (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500' : 'border-gray-300 hover:border-amber-400 text-gray-400')}>
+                  <i className="fas fa-camera text-3xl mb-3 block"></i>
+                  <span className="text-sm font-medium block">Tirar foto ou selecionar imagem</span>
+                  <span className="text-[10px] block mt-1">JPG, PNG ou WebP</span>
+                  <input ref={elementFileRef} type="file" accept="image/*" capture="environment" onChange={handleElementUpload} className="hidden" />
+                </label>
+              </div>
+            )}
           </div>
         </div>
       )}
