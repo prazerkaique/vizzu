@@ -85,9 +85,28 @@ export const CreativeStillWizard: React.FC<Props> = ({
     (p.category || '').toLowerCase().includes(elementSearchTerm.toLowerCase())
   );
 
+  // Validação: produto precisa ter foto de detalhe para gerar
+  const mainProductHasRequiredImages = (): boolean => {
+    if (!wizardState.mainProduct) return false;
+    // Produtos uploaded não precisam validação de ângulo (é a foto que o user subiu)
+    if (wizardState.mainProduct.id?.startsWith('upload-')) return true;
+    // Produto do catálogo: precisa ter detalhe
+    return hasDetailImage(wizardState.mainProduct);
+  };
+
+  // Se selecionou "back" mas não tem foto de costas, bloqueia
+  const mainProductViewValid = (): boolean => {
+    if (!wizardState.mainProduct) return false;
+    if (wizardState.mainProduct.id?.startsWith('upload-')) return true;
+    if (wizardState.mainProductView === 'back' && !hasBackImage(wizardState.mainProduct)) return false;
+    return true;
+  };
+
   // Navegação
   const canGoNext = () => {
-    if (currentStep === 1) return !!wizardState.mainProduct;
+    if (currentStep === 1) {
+      return !!wizardState.mainProduct && mainProductHasRequiredImages() && mainProductViewValid();
+    }
     if (isSimple && currentStep === 2) return !!wizardState.surfaceDescription.trim();
     if (!isSimple && currentStep === 2) return !!(wizardState.aestheticPreset || wizardState.aestheticCustom.trim());
     if (!isSimple && currentStep === 3) return !!wizardState.surfaceDescription.trim();
@@ -108,6 +127,50 @@ export const CreativeStillWizard: React.FC<Props> = ({
     if (product.originalImages?.front?.url) return product.originalImages.front.url;
     if (product.images?.[0]?.url) return product.images[0].url;
     return '';
+  };
+
+  // Helper: pegar imagem de costas
+  const getProductBackImageUrl = (product: Product): string => {
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      const back = lastSession.images?.find(i => i.angle === 'back');
+      if (back?.url) return back.url;
+    }
+    if (product.originalImages?.back?.url) return product.originalImages.back.url;
+    return '';
+  };
+
+  // Helper: pegar imagem de detalhe
+  const getProductDetailImageUrl = (product: Product): string => {
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      const detail = lastSession.images?.find(i => i.angle === 'detail');
+      if (detail?.url) return detail.url;
+    }
+    if (product.originalImages?.detail?.url) return product.originalImages.detail.url;
+    return '';
+  };
+
+  // Verificar se produto tem foto de costas
+  const hasBackImage = (product: Product): boolean => {
+    if (product.hasBackImage) return true;
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.find(i => i.angle === 'back')) return true;
+    }
+    if (product.originalImages?.back?.url) return true;
+    return false;
+  };
+
+  // Verificar se produto tem foto de detalhe
+  const hasDetailImage = (product: Product): boolean => {
+    if (product.hasDetailImage) return true;
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.find(i => i.angle === 'detail')) return true;
+    }
+    if (product.originalImages?.detail?.url) return true;
+    return false;
   };
 
   // Adicionar elemento do catálogo
@@ -320,6 +383,94 @@ export const CreativeStillWizard: React.FC<Props> = ({
             />
           </div>
         </div>
+      )}
+
+      {/* Seleção de ângulo (frente ou costas) + detalhe — só para produtos do catálogo */}
+      {wizardState.mainProduct && !wizardState.mainProduct.id?.startsWith('upload-') && (
+        <>
+          {separator()}
+          {sectionTitle('Qual foto usar?', 'fa-camera-rotate')}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            {/* Frente */}
+            <button
+              onClick={() => onUpdateState({ mainProductView: 'front' })}
+              className={cardClass(wizardState.mainProductView === 'front')}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <i className={'fas fa-shirt text-xs ' + (wizardState.mainProductView === 'front' ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Foto de Frente</span>
+              </div>
+              {getProductImageUrl(wizardState.mainProduct!) && (
+                <div className={'w-full aspect-square rounded-lg overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                  <img src={getProductImageUrl(wizardState.mainProduct!)} alt="Frente" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </button>
+
+            {/* Costas */}
+            <button
+              onClick={() => {
+                if (hasBackImage(wizardState.mainProduct!)) {
+                  onUpdateState({ mainProductView: 'back' });
+                }
+              }}
+              className={
+                hasBackImage(wizardState.mainProduct!)
+                  ? cardClass(wizardState.mainProductView === 'back')
+                  : 'rounded-xl p-3 text-left border opacity-50 cursor-not-allowed ' + (isDark ? 'bg-neutral-900/50 border-neutral-800' : 'bg-gray-50 border-gray-200')
+              }
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <i className={'fas fa-shirt text-xs ' + (
+                  !hasBackImage(wizardState.mainProduct!) ? (isDark ? 'text-neutral-700' : 'text-gray-300') :
+                  wizardState.mainProductView === 'back' ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400')
+                )}></i>
+                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Foto de Costas</span>
+              </div>
+              {hasBackImage(wizardState.mainProduct!) ? (
+                <div className={'w-full aspect-square rounded-lg overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                  <img src={getProductBackImageUrl(wizardState.mainProduct!)} alt="Costas" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className={'w-full aspect-square rounded-lg flex flex-col items-center justify-center ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-100')}>
+                  <i className={'fas fa-ban text-lg mb-1 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                  <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] text-center px-2'}>Sem foto de costas</span>
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* Imagem de detalhe */}
+          {hasDetailImage(wizardState.mainProduct!) ? (
+            <div className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200')}>
+              <div className={'w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                <img src={getProductDetailImageUrl(wizardState.mainProduct!)} alt="Detalhe" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1">
+                <p className={(isDark ? 'text-green-400' : 'text-green-700') + ' text-xs font-medium'}>
+                  <i className="fas fa-check-circle mr-1.5"></i>Foto de detalhe/logo disponível
+                </p>
+                <p className={(isDark ? 'text-green-400/60' : 'text-green-600') + ' text-[10px]'}>
+                  Será usada para melhorar a fidelidade do logo e detalhes
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200')}>
+              <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-red-500/10' : 'bg-red-100')}>
+                <i className={'fas fa-magnifying-glass-plus text-sm ' + (isDark ? 'text-red-400' : 'text-red-500')}></i>
+              </div>
+              <div className="flex-1">
+                <p className={(isDark ? 'text-red-400' : 'text-red-700') + ' text-xs font-medium'}>
+                  <i className="fas fa-exclamation-circle mr-1.5"></i>Foto de detalhe obrigatória
+                </p>
+                <p className={(isDark ? 'text-red-400/60' : 'text-red-600') + ' text-[10px]'}>
+                  Cadastre a foto de detalhe/logo no Product Studio para poder gerar
+                </p>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Apresentação do produto - só aparece quando tem produto selecionado */}
@@ -743,7 +894,10 @@ export const CreativeStillWizard: React.FC<Props> = ({
         {sectionTitle('Resumo do seu Still Criativo', 'fa-clipboard-list')}
         <div className={'rounded-xl overflow-hidden divide-y ' + (isDark ? 'bg-neutral-900 border border-neutral-800 divide-neutral-800' : 'bg-white border border-gray-200 divide-gray-100 shadow-sm')}>
           <div className="px-4">
-            <ReviewRow icon="fa-box" label="Produto" value={wizardState.mainProduct?.name || 'Nenhum'} onEdit={() => setCurrentStep(1)} />
+            <ReviewRow icon="fa-box" label="Produto" value={
+              (wizardState.mainProduct?.name || 'Nenhum') +
+              (!wizardState.mainProduct?.id?.startsWith('upload-') ? ` (${wizardState.mainProductView === 'back' ? 'Costas' : 'Frente'} + Detalhe)` : '')
+            } onEdit={() => setCurrentStep(1)} />
             {wizardState.additionalProducts.length > 0 && (
               <div className="pb-2">
                 {wizardState.additionalProducts.map((el, i) => (

@@ -106,6 +106,7 @@ export const FRAME_RATIOS = [
 const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
   mode: 'simple',
   mainProduct: null,
+  mainProductView: 'front',
   productPresentation: 'ai_choose',
   additionalProducts: [],
   aestheticPreset: null,
@@ -273,8 +274,36 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           position_description: p.position_description,
           source: p.source,
         })),
+        product_image_url: (() => {
+          const p = wizardState.mainProduct!;
+          const view = wizardState.mainProductView;
+          // Prioridade: Product Studio optimized → original images → legacy images
+          if (p.generatedImages?.productStudio?.length) {
+            const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
+            const img = lastSession.images?.find(i => i.angle === view);
+            if (img?.url) return img.url;
+          }
+          if (view === 'back' && p.originalImages?.back?.url) return p.originalImages.back.url;
+          if (p.originalImages?.front?.url) return p.originalImages.front.url;
+          if (p.images?.[0]?.url) return p.images[0].url;
+          return '';
+        })(),
+        product_detail_image_url: (() => {
+          const p = wizardState.mainProduct!;
+          if (p.generatedImages?.productStudio?.length) {
+            const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
+            const img = lastSession.images?.find(i => i.angle === 'detail');
+            if (img?.url) return img.url;
+          }
+          if (p.originalImages?.detail?.url) return p.originalImages.detail.url;
+          return null;
+        })(),
+        product_name: wizardState.mainProduct!.name,
+        product_category: wizardState.mainProduct!.category || '',
+        product_color: wizardState.mainProduct!.color || '',
         settings_snapshot: {
           mode: wizardState.mode,
+          mainProductView: wizardState.mainProductView,
           productPresentation: wizardState.productPresentation,
           aestheticPreset: wizardState.aestheticPreset,
           aestheticCustom: wizardState.aestheticCustom,

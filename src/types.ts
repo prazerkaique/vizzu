@@ -1652,6 +1652,7 @@ export interface CreativeStillWizardState {
 
   // Step 1 - Produto
   mainProduct: Product | null;
+  mainProductView: 'front' | 'back';
   productPresentation: string;
   additionalProducts: CreativeStillAdditionalProduct[];
 
