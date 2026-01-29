@@ -82,10 +82,6 @@
             {
               "fieldName": "status",
               "fieldValue": "processing"
-            },
-            {
-              "fieldName": "started_at",
-              "fieldValue": "={{ new Date().toISOString() }}"
             }
           ]
         }

@@ -423,27 +423,37 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
     try {
       const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
+        let webhookFailed = false;
+
         const poll = async () => {
           if (Date.now() - pollStart > POLL_TIMEOUT) {
             reject(new Error('Tempo limite excedido'));
             return;
           }
-          const { data, error } = await supabase
-            .from('creative_still_generations')
-            .select('*')
-            .eq('id', generationId)
-            .single();
+          try {
+            const { data, error } = await supabase
+              .from('creative_still_generations')
+              .select('*')
+              .eq('id', generationId)
+              .single();
 
-          if (error) { reject(error); return; }
+            if (error) { reject(error); return; }
 
-          if (data.status === 'completed') {
-            resolve(data as CreativeStillGeneration);
-          } else if (data.status === 'failed') {
-            resolve(data as CreativeStillGeneration);
-          } else {
-            setTimeout(poll, POLL_INTERVAL);
+            if (data.status === 'completed') {
+              resolve(data as CreativeStillGeneration);
+            } else if (data.status === 'failed') {
+              resolve(data as CreativeStillGeneration);
+            } else if (webhookFailed) {
+              // Webhook falhou e status ainda pending — não vai mudar
+              reject(new Error('Falha na comunicação com o servidor de geração.'));
+            } else {
+              setTimeout(poll, POLL_INTERVAL);
+            }
+          } catch (pollErr) {
+            reject(pollErr);
           }
         };
+
         // Chamar webhook n8n para iniciar geração
         fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate', {
           method: 'POST',
@@ -452,8 +462,20 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             generation_id: generationId,
             user_id: userId,
           }),
-        }).catch(err => console.error('Erro ao chamar webhook n8n:', err));
-        poll();
+        })
+          .then(res => {
+            if (!res.ok) {
+              console.error('Webhook retornou erro:', res.status);
+              webhookFailed = true;
+            }
+          })
+          .catch(err => {
+            console.error('Erro ao chamar webhook n8n:', err);
+            webhookFailed = true;
+          });
+
+        // Dar tempo pro webhook responder antes de começar polling
+        setTimeout(poll, 2000);
       });
 
       clearInterval(progressInterval);
