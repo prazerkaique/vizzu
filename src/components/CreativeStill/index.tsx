@@ -4,7 +4,6 @@ import {
   CreativeStillTemplate,
   CreativeStillGeneration,
   CreativeStillWizardState,
-  CreativeStillAdditionalProduct,
 } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 import { Plan } from '../../hooks/useCredits';
@@ -15,13 +14,52 @@ import { CreativeStillResults } from './CreativeStillResults';
 // CONSTANTES
 // ============================================================
 
-export const AESTHETIC_PRESETS = [
-  { id: 'minimal', label: 'Minimal', description: 'Clean, simples, espaço branco', icon: 'fa-minimize' },
-  { id: 'luxury', label: 'Luxo', description: 'Premium, elegante, sofisticado', icon: 'fa-gem' },
-  { id: 'organic', label: 'Orgânico', description: 'Natural, terroso, botânico', icon: 'fa-leaf' },
-  { id: 'urban', label: 'Urban', description: 'Street, concreto, industrial', icon: 'fa-city' },
-  { id: 'tropical', label: 'Tropical', description: 'Vibrante, plantas, verão', icon: 'fa-sun' },
-  { id: 'editorial', label: 'Editorial', description: 'Magazine, artístico, bold', icon: 'fa-newspaper' },
+export const PRODUCT_SCALES = [
+  { id: 'close-up', label: 'Close-up', description: 'Bem próximo, destaque nos detalhes', icon: 'fa-magnifying-glass-plus' },
+  { id: 'medium', label: 'Médio', description: 'Enquadramento intermediário', icon: 'fa-expand' },
+  { id: 'full', label: 'Completo', description: 'Produto inteiro visível com contexto', icon: 'fa-up-right-and-down-left-from-center' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
+];
+
+export const MOOD_SEASONS = [
+  { id: 'verao_tropical', label: 'Verão Tropical', icon: 'fa-sun' },
+  { id: 'alto_verao_resort', label: 'Alto Verão Resort', icon: 'fa-umbrella-beach' },
+  { id: 'primavera_floral', label: 'Primavera Floral', icon: 'fa-seedling' },
+  { id: 'inverno_urbano', label: 'Inverno Urbano', icon: 'fa-snowflake' },
+  { id: 'outono_rustico', label: 'Outono Rústico', icon: 'fa-leaf' },
+  { id: 'colecao_festa', label: 'Coleção Festa', icon: 'fa-champagne-glasses' },
+  { id: 'basics_atemporal', label: 'Basics Atemporal', icon: 'fa-circle' },
+  { id: 'ai_choose', label: 'IA Escolhe', icon: 'fa-wand-magic-sparkles' },
+  { id: 'custom', label: 'Personalizado', icon: 'fa-pen' },
+];
+
+export const COLOR_GRADING_TEMPERATURES = [
+  { id: 'warm', label: 'Warm', description: 'Tons dourados, aconchegantes' },
+  { id: 'cool', label: 'Cool', description: 'Tons azulados, nítidos' },
+  { id: 'neutral', label: 'Neutro', description: 'Equilibrado, sem cast' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
+];
+
+export const COLOR_GRADING_STYLES = [
+  { id: 'clean_natural', label: 'Clean/Natural', description: 'Cores reais e limpas', icon: 'fa-droplet' },
+  { id: 'filme_analogico', label: 'Filme Analógico', description: 'Look de película', icon: 'fa-film' },
+  { id: 'vintage_faded', label: 'Vintage Faded', description: 'Desbotado, retrô', icon: 'fa-clock-rotate-left' },
+  { id: 'moody_escuro', label: 'Moody/Escuro', description: 'Sombras profundas', icon: 'fa-moon' },
+  { id: 'vibrante', label: 'Vibrante', description: 'Saturado, impactante', icon: 'fa-palette' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
+];
+
+export const TEXTURE_GRAINS = [
+  { id: 'clean', label: 'Clean', description: 'Sem grão, nítido' },
+  { id: 'subtle', label: 'Sutil', description: 'Grão quase imperceptível' },
+  { id: 'film', label: 'Film', description: 'Grão de filme analógico' },
+  { id: 'heavy', label: 'Pesado', description: 'Grão forte, artístico' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
+];
+
+export const RESOLUTIONS = [
+  { id: '2k', label: '2K', description: 'Resolução padrão' },
+  { id: '4k', label: '4K', description: 'Alta resolução' },
 ];
 
 export const LIGHTING_OPTIONS = [
@@ -62,21 +100,6 @@ export const CAMERA_ANGLES = [
   { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
 ];
 
-export const COLOR_TONES = [
-  { id: 'natural', label: 'Natural', description: 'Cores reais' },
-  { id: 'warm', label: 'Warm', description: 'Tons dourados, aconchegantes' },
-  { id: 'cool', label: 'Cool', description: 'Tons azulados, nítidos' },
-  { id: 'neutral', label: 'Neutro', description: 'Equilibrado, sem cast' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
-];
-
-export const COLOR_STYLES = [
-  { id: 'vibrant', label: 'Vibrante', description: 'Saturado, impactante' },
-  { id: 'muted', label: 'Suave', description: 'Dessaturado, soft' },
-  { id: 'film', label: 'Film', description: 'Look analógico' },
-  { id: 'faded', label: 'Faded', description: 'Desbotado, vintage' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
-];
 
 // Mapeamento de categorias para tipo de produto (para apresentações condicionais)
 export type ProductTypeGroup = 'clothing' | 'footwear' | 'bags' | 'accessories' | 'headwear' | 'fullpiece';
@@ -161,28 +184,42 @@ export const FRAME_RATIOS = [
 ];
 
 const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
-  mode: 'simple',
+  // Step 1 - Produtos
   mainProduct: null,
   mainProductView: 'front',
+  mainProductHighlight: 'front',
   productPresentation: 'ai_choose',
   customPresentationText: '',
+  productScale: 'ai_choose',
   additionalProducts: [],
-  aestheticPreset: null,
-  aestheticCustom: '',
-  colorTone: 'ai_choose',
-  colorStyle: 'ai_choose',
-  referenceImage: null,
+
+  // Step 2 - Cenário
   surfaceDescription: '',
-  elementsDescription: '',
-  elementsImages: [],
+  surfaceReference: null,
+  environmentDescription: '',
+  environmentReference: null,
+  compositionElements: [],
+  compositionReference: null,
+  moodSeason: 'ai_choose',
+  customMoodSeason: '',
+
+  // Step 3 - Estética Fotográfica
   lighting: 'ai_choose',
-  frameRatio: '4:5',
+  customLighting: '',
+  lightingReference: null,
   cameraType: 'ai_choose',
   lensModel: 'ai_choose',
   cameraAngle: 'ai_choose',
   depthOfField: 50,
-  productPlacement: 'ai_choose',
-  elementsPlacement: '',
+  colorGradingTemperature: 'ai_choose',
+  colorGradingStyle: 'ai_choose',
+  colorGradingReference: null,
+  textureGrain: 'ai_choose',
+
+  // Step 4 - Frame & Configs
+  frameRatio: '4:5',
+  resolution: '2k',
+  variationsCount: 2,
   saveAsTemplate: false,
   templateName: '',
 };
@@ -283,27 +320,30 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     loadData();
   }, [loadData]);
 
-  const handleStartNew = (mode: 'simple' | 'advanced') => {
-    setWizardState({ ...INITIAL_WIZARD_STATE, mode });
+  const handleStartNew = () => {
+    setWizardState({ ...INITIAL_WIZARD_STATE });
     setView('wizard');
   };
 
   const handleUseTemplate = (template: CreativeStillTemplate) => {
     setWizardState({
       ...INITIAL_WIZARD_STATE,
-      mode: template.mode,
-      aestheticPreset: template.aesthetic_preset,
-      aestheticCustom: template.aesthetic_custom || '',
       surfaceDescription: template.surface_description,
-      elementsDescription: template.elements_description || '',
+      environmentDescription: template.environment_description || '',
+      moodSeason: template.mood_season || 'ai_choose',
+      productPresentation: template.product_presentation || 'ai_choose',
+      productScale: (template.product_scale as CreativeStillWizardState['productScale']) || 'ai_choose',
       lighting: template.lighting,
       cameraType: template.camera_type,
       lensModel: template.lens_model,
       cameraAngle: template.camera_angle,
       depthOfField: template.depth_of_field,
-      colorTone: template.color_tone,
-      colorStyle: template.color_style,
+      colorGradingTemperature: (template.color_grading_temperature as CreativeStillWizardState['colorGradingTemperature']) || 'ai_choose',
+      colorGradingStyle: template.color_grading_style || 'ai_choose',
+      textureGrain: (template.texture_grain as CreativeStillWizardState['textureGrain']) || 'ai_choose',
       frameRatio: template.frame_ratio,
+      resolution: (template.resolution as CreativeStillWizardState['resolution']) || '2k',
+      variationsCount: template.default_variations || 2,
     });
     setView('wizard');
   };
@@ -311,7 +351,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const handleGenerate = async () => {
     if (!wizardState.mainProduct) return;
 
-    const creditsNeeded = 2;
+    const creditsNeeded = wizardState.variationsCount;
     if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still')) return;
 
     setIsGenerating(true);
@@ -333,27 +373,40 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           source: p.source,
         })),
         settings_snapshot: {
-          mode: wizardState.mode,
           mainProductView: wizardState.mainProductView,
+          mainProductHighlight: wizardState.mainProductHighlight,
           productPresentation: wizardState.productPresentation,
-          aestheticPreset: wizardState.aestheticPreset,
-          aestheticCustom: wizardState.aestheticCustom,
-          colorTone: wizardState.colorTone,
-          colorStyle: wizardState.colorStyle,
+          customPresentationText: wizardState.customPresentationText,
+          productScale: wizardState.productScale,
           surfaceDescription: wizardState.surfaceDescription,
-          elementsDescription: wizardState.elementsDescription,
-          elementsPlacement: wizardState.elementsPlacement,
+          surfaceReference: wizardState.surfaceReference ? 'attached' : null,
+          environmentDescription: wizardState.environmentDescription,
+          environmentReference: wizardState.environmentReference ? 'attached' : null,
+          compositionElements: wizardState.compositionElements.map(el => ({
+            description: el.description,
+            hasImage: !!el.image,
+          })),
+          compositionReference: wizardState.compositionReference ? 'attached' : null,
+          moodSeason: wizardState.moodSeason,
+          customMoodSeason: wizardState.customMoodSeason,
           lighting: wizardState.lighting,
-          frameRatio: wizardState.frameRatio,
+          customLighting: wizardState.customLighting,
+          lightingReference: wizardState.lightingReference ? 'attached' : null,
           cameraType: wizardState.cameraType,
           lensModel: wizardState.lensModel,
           cameraAngle: wizardState.cameraAngle,
           depthOfField: wizardState.depthOfField,
-          productPlacement: wizardState.productPlacement,
-          // Dados do produto (dentro do settings_snapshot pq são campos JSONB)
+          colorGradingTemperature: wizardState.colorGradingTemperature,
+          colorGradingStyle: wizardState.colorGradingStyle,
+          colorGradingReference: wizardState.colorGradingReference ? 'attached' : null,
+          textureGrain: wizardState.textureGrain,
+          frameRatio: wizardState.frameRatio,
+          resolution: wizardState.resolution,
+          variationsCount: wizardState.variationsCount,
+          // Dados do produto
           product_image_url: (() => {
             const p = wizardState.mainProduct!;
-            const view = wizardState.mainProductView;
+            const view = wizardState.mainProductView === 'both' ? 'front' : wizardState.mainProductView;
             if (p.generatedImages?.productStudio?.length) {
               const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
               const img = lastSession.images?.find(i => i.angle === view);
@@ -378,6 +431,11 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           product_category: wizardState.mainProduct!.category || '',
           product_color: wizardState.mainProduct!.color || '',
         },
+        variations_requested: wizardState.variationsCount,
+        resolution: wizardState.resolution,
+        variation_urls: [],
+        variation_1_url: null,
+        variation_2_url: null,
         credits_used: creditsNeeded,
         status: 'pending',
       })
@@ -394,10 +452,13 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         product_id: wizardState.mainProduct.id || '',
         additional_products: [],
         settings_snapshot: {},
+        variation_urls: [],
         variation_1_url: null,
         variation_2_url: null,
+        variations_requested: wizardState.variationsCount,
         selected_variation: null,
         reference_image_url: null,
+        resolution: wizardState.resolution,
         credits_used: 0,
         status: 'failed',
         error_message: 'Erro ao iniciar geração. Tente novamente.',
@@ -510,10 +571,13 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         product_id: wizardState.mainProduct.id || '',
         additional_products: [],
         settings_snapshot: {},
+        variation_urls: [],
         variation_1_url: null,
         variation_2_url: null,
+        variations_requested: wizardState.variationsCount,
         selected_variation: null,
         reference_image_url: null,
+        resolution: wizardState.resolution,
         credits_used: 0,
         status: 'failed',
         error_message: 'Erro ao gerar imagem. Tente novamente.',
@@ -566,53 +630,28 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             </div>
             <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-600 border border-amber-200')}>
               <i className="fas fa-coins text-[10px]"></i>
-              <span>2 créditos/geração</span>
+              <span>1 crédito/variação</span>
             </div>
           </div>
 
-          {/* Como quer começar */}
+          {/* Novo Still */}
           <div className="mb-8">
-            <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Como você quer começar?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Novo Still - Simples */}
-              <button
-                onClick={() => handleStartNew('simple')}
-                className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400 shadow-sm')}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-amber-500/20' : 'bg-amber-100')}>
-                    <i className={'fas fa-wand-magic-sparkles text-lg ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
-                  </div>
-                  <div>
-                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Modo Simples</h3>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
-                      3 passos rápidos. A IA escolhe câmera, lente, iluminação e cores automaticamente.
-                    </p>
-                  </div>
+            <button
+              onClick={() => handleStartNew()}
+              className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400 shadow-sm')}
+            >
+              <div className="flex items-start gap-4">
+                <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-400/20' : 'bg-gradient-to-r from-amber-100 to-orange-100')}>
+                  <i className={'fas fa-wand-magic-sparkles text-lg ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
                 </div>
-                <div className={'absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ' + (isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')}>
-                  Recomendado
+                <div>
+                  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Novo Still</h3>
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
+                    4 passos: Produto, Cenário, Estética e Frame. Controle total sobre cada detalhe.
+                  </p>
                 </div>
-              </button>
-
-              {/* Novo Still - Avançado */}
-              <button
-                onClick={() => handleStartNew('advanced')}
-                className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400 shadow-sm')}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-purple-500/20' : 'bg-purple-100')}>
-                    <i className={'fas fa-sliders text-lg ' + (isDark ? 'text-purple-400' : 'text-purple-500')}></i>
-                  </div>
-                  <div>
-                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Modo Avançado</h3>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
-                      5 passos com controle total sobre câmera, lente, iluminação e coloração.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            </div>
+              </div>
+            </button>
           </div>
 
           {/* Stills Gerados */}
@@ -645,11 +684,17 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                     className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border border-gray-200 hover:border-amber-400 shadow-sm')}
                   >
                     <div className={'aspect-square flex items-center justify-center ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
-                      {(gen.variation_1_url || gen.variation_2_url) ? (
-                        <img src={(gen.selected_variation === 2 ? gen.variation_2_url : gen.variation_1_url) || ''} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                      )}
+                      {(() => {
+                        const urls = gen.variation_urls?.length ? gen.variation_urls : [gen.variation_1_url, gen.variation_2_url].filter(Boolean) as string[];
+                        const displayUrl = gen.selected_variation != null && urls[gen.selected_variation - 1]
+                          ? urls[gen.selected_variation - 1]
+                          : urls[0] || null;
+                        return displayUrl ? (
+                          <img src={displayUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                        );
+                      })()}
                     </div>
                     <div className="p-3">
                       <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>
@@ -691,11 +736,17 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                     className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-200 hover:border-pink-400 shadow-sm')}
                   >
                     <div className={'aspect-square flex items-center justify-center relative ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
-                      {(gen.variation_1_url || gen.variation_2_url) ? (
-                        <img src={(gen.selected_variation === 2 ? gen.variation_2_url : gen.variation_1_url) || ''} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                      )}
+                      {(() => {
+                        const urls = gen.variation_urls?.length ? gen.variation_urls : [gen.variation_1_url, gen.variation_2_url].filter(Boolean) as string[];
+                        const displayUrl = gen.selected_variation != null && urls[gen.selected_variation - 1]
+                          ? urls[gen.selected_variation - 1]
+                          : urls[0] || null;
+                        return displayUrl ? (
+                          <img src={displayUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                        );
+                      })()}
                       <div className="absolute top-2 right-2">
                         <i className="fas fa-heart text-pink-500 text-sm drop-shadow"></i>
                       </div>
@@ -753,20 +804,24 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           .insert({
             user_id: userId,
             name,
-            mode: wizardState.mode,
-            aesthetic_preset: wizardState.aestheticPreset,
-            aesthetic_custom: wizardState.aestheticCustom || null,
             surface_description: wizardState.surfaceDescription,
-            elements_description: wizardState.elementsDescription || null,
+            environment_description: wizardState.environmentDescription || null,
+            elements_description: wizardState.compositionElements.map(e => e.description).join('; ') || null,
             elements_images: [],
+            mood_season: wizardState.moodSeason || null,
+            product_presentation: wizardState.productPresentation || null,
+            product_scale: wizardState.productScale || null,
             lighting: wizardState.lighting,
             camera_type: wizardState.cameraType,
             lens_model: wizardState.lensModel,
             camera_angle: wizardState.cameraAngle,
             depth_of_field: wizardState.depthOfField,
-            color_tone: wizardState.colorTone,
-            color_style: wizardState.colorStyle,
+            color_grading_temperature: wizardState.colorGradingTemperature,
+            color_grading_style: wizardState.colorGradingStyle,
+            texture_grain: wizardState.textureGrain,
             frame_ratio: wizardState.frameRatio,
+            resolution: wizardState.resolution,
+            default_variations: wizardState.variationsCount,
           });
         if (error) {
           console.error('Erro ao salvar template:', error);

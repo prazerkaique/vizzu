@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
 
@@ -22,8 +22,6 @@ const LOADING_PHRASES = [
   "Ajustando a iluminação da cena...",
   "Configurando câmera e lente...",
   "Renderizando em alta qualidade...",
-  "Gerando variação 1...",
-  "Gerando variação 2...",
   "Aplicando acabamentos finais...",
   "Quase pronto! Últimos ajustes...",
 ];
@@ -40,6 +38,23 @@ interface Props {
   onSaveTemplate: (name: string) => Promise<void>;
 }
 
+/** Get the list of variation URLs from a generation, with retrocompat fallback */
+function getVariationUrls(generation: CreativeStillGeneration | null): string[] {
+  if (!generation) return [];
+  if (generation.variation_urls && generation.variation_urls.length > 0) {
+    return generation.variation_urls;
+  }
+  // Fallback for old generations with variation_1_url / variation_2_url
+  return [generation.variation_1_url, generation.variation_2_url].filter(Boolean) as string[];
+}
+
+/** Dynamic grid classes based on number of variations */
+function getGridClasses(count: number): string {
+  if (count <= 2) return 'grid-cols-1 md:grid-cols-2';
+  if (count <= 6) return 'grid-cols-2 md:grid-cols-3';
+  return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+}
+
 export const CreativeStillResults: React.FC<Props> = ({
   theme,
   generation,
@@ -51,12 +66,16 @@ export const CreativeStillResults: React.FC<Props> = ({
   onGenerateAgain,
   onSaveTemplate,
 }) => {
-  const [selectedVariation, setSelectedVariation] = useState<1 | 2 | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
 
   const isDark = theme === 'dark';
+
+  const variationUrls = useMemo(() => getVariationUrls(generation), [generation]);
+  const variationsRequested = generation?.variations_requested ?? wizardState.variationsCount ?? 2;
+  const creditsUsed = generation?.credits_used ?? variationsRequested;
 
   // Rotacionar frases de loading
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -153,7 +172,7 @@ export const CreativeStillResults: React.FC<Props> = ({
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-medium truncate">{wizardState.mainProduct.name}</p>
                   <p className="text-neutral-500 text-xs">
-                    2 variações · 2 créditos · {wizardState.mode === 'simple' ? 'Simples' : 'Avançado'}
+                    {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'} · {creditsUsed} {creditsUsed === 1 ? 'crédito' : 'créditos'}
                   </p>
                 </div>
               </div>
@@ -198,9 +217,16 @@ export const CreativeStillResults: React.FC<Props> = ({
   // ============================================================
   // SUCCESS STATE
   // ============================================================
+  // Build display list: show actual URLs or placeholders up to variationsRequested
+  const displayCount = Math.max(variationUrls.length, variationsRequested);
+  const displayItems = Array.from({ length: displayCount }, (_, i) => ({
+    index: i,
+    url: variationUrls[i] || null,
+  }));
+
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-[#F5F5F7]')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -210,21 +236,21 @@ export const CreativeStillResults: React.FC<Props> = ({
             <div>
               <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold'}>Resultado</h1>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
-                {wizardState.mainProduct?.name || 'Still Criativo'}
+                {wizardState.mainProduct?.name || 'Still Criativo'} · {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Variações */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {[1, 2].map(v => {
-            const url = v === 1 ? generation?.variation_1_url : generation?.variation_2_url;
-            const isSelected = selectedVariation === v;
+        {/* Variações - Dynamic Grid */}
+        <div className={`grid ${getGridClasses(displayCount)} gap-4 mb-6`}>
+          {displayItems.map(({ index, url }) => {
+            const vNum = index + 1;
+            const isSelected = selectedVariation === vNum;
             return (
-              <div key={v} className="space-y-2">
+              <div key={index} className="space-y-2">
                 <button
-                  onClick={() => setSelectedVariation(v as 1 | 2)}
+                  onClick={() => setSelectedVariation(vNum)}
                   className={'w-full rounded-xl overflow-hidden border-2 transition-all ' +
                     (isSelected
                       ? (isDark ? 'border-amber-500 ring-2 ring-amber-500/30' : 'border-amber-400 ring-2 ring-amber-300')
@@ -233,11 +259,11 @@ export const CreativeStillResults: React.FC<Props> = ({
                 >
                   <div className={'aspect-[4/5] flex items-center justify-center ' + (isDark ? 'bg-neutral-900' : 'bg-gray-100')}>
                     {url ? (
-                      <img src={url} alt={`Variação ${v}`} className="w-full h-full object-cover" />
+                      <img src={url} alt={`Variação ${vNum}`} className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center">
                         <i className={'fas fa-image text-4xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                        <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-sm'}>Variação {v}</p>
+                        <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-sm'}>Variação {vNum}</p>
                         <p className={(isDark ? 'text-neutral-700' : 'text-gray-300') + ' text-xs mt-1'}>Preview disponível após integração com n8n</p>
                       </div>
                     )}
@@ -248,11 +274,11 @@ export const CreativeStillResults: React.FC<Props> = ({
                     <div className={'w-4 h-4 rounded-full border-2 flex items-center justify-center ' + (isSelected ? 'border-amber-500 bg-amber-500' : (isDark ? 'border-neutral-700' : 'border-gray-300'))}>
                       {isSelected && <i className="fas fa-check text-[8px] text-white"></i>}
                     </div>
-                    <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Variação {v}</span>
+                    <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Variação {vNum}</span>
                   </div>
                   {url && (
                     <button
-                      onClick={() => handleDownload(url, v)}
+                      onClick={() => handleDownload(url, vNum)}
                       className={(isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-500') + ' text-xs font-medium'}
                     >
                       <i className="fas fa-download mr-1"></i>Download

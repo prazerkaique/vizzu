@@ -1594,26 +1594,29 @@ export interface CreativeStillTemplate {
   name: string;
   thumbnail_url?: string;
 
-  mode: 'simple' | 'advanced';
-
-  // Estética
-  aesthetic_preset: string | null;
-  aesthetic_custom: string | null;
-
   // Cena
   surface_description: string;
+  environment_description: string | null;
   elements_description: string | null;
   elements_images: { url: string; description: string }[];
+  mood_season: string | null;
 
-  // Configurações avançadas
+  // Apresentação
+  product_presentation: string | null;
+  product_scale: string | null;
+
+  // Configurações
   lighting: string;
   camera_type: string;
   lens_model: string;
   camera_angle: string;
   depth_of_field: number;
-  color_tone: string;
-  color_style: string;
+  color_grading_temperature: string;
+  color_grading_style: string;
+  texture_grain: string;
   frame_ratio: string;
+  resolution: string;
+  default_variations: number;
 
   created_at: string;
   updated_at: string;
@@ -1636,52 +1639,58 @@ export interface CreativeStillGeneration {
   product_id: string;
   additional_products: CreativeStillAdditionalProduct[];
   settings_snapshot: Record<string, unknown>;
-  variation_1_url: string | null;
-  variation_2_url: string | null;
+  variation_urls: string[];               // array dinâmico de variações
+  variation_1_url: string | null;         // retrocompat
+  variation_2_url: string | null;         // retrocompat
+  variations_requested: number;
   selected_variation: number | null;
   reference_image_url: string | null;
+  resolution: string;
   credits_used: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   error_message: string | null;
+  is_favorite?: boolean;
   created_at: string;
   completed_at: string | null;
 }
 
 export interface CreativeStillWizardState {
-  mode: 'simple' | 'advanced';
-
-  // Step 1 - Produto
+  // Step 1 - Produtos
   mainProduct: Product | null;
-  mainProductView: 'front' | 'back';
+  mainProductView: 'front' | 'back' | 'both';
+  mainProductHighlight: 'front' | 'back';       // só quando 'both'
   productPresentation: string;
   customPresentationText: string;
+  productScale: 'close-up' | 'medium' | 'full' | 'ai_choose';
   additionalProducts: CreativeStillAdditionalProduct[];
 
-  // Step 2 - Estilo
-  aestheticPreset: string | null;
-  aestheticCustom: string;
-  colorTone: string;
-  colorStyle: string;
-  referenceImage: { base64: string; mimeType: string } | null;
-
-  // Step 3 - Cena
+  // Step 2 - Cenário
   surfaceDescription: string;
-  elementsDescription: string;
-  elementsImages: { base64: string; mimeType: string; description: string }[];
-  lighting: string;
+  surfaceReference: { base64: string; mimeType: string } | null;
+  environmentDescription: string;
+  environmentReference: { base64: string; mimeType: string } | null;
+  compositionElements: { description: string; image?: { base64: string; mimeType: string } }[];
+  compositionReference: { base64: string; mimeType: string } | null;
+  moodSeason: string;
+  customMoodSeason: string;
 
-  // Step 4 - Câmera
-  frameRatio: string;
+  // Step 3 - Estética Fotográfica
+  lighting: string;
+  customLighting: string;
+  lightingReference: { base64: string; mimeType: string } | null;
   cameraType: string;
   lensModel: string;
   cameraAngle: string;
   depthOfField: number;
+  colorGradingTemperature: 'warm' | 'cool' | 'neutral' | 'ai_choose';
+  colorGradingStyle: string;
+  colorGradingReference: { base64: string; mimeType: string } | null;
+  textureGrain: 'clean' | 'subtle' | 'film' | 'heavy' | 'ai_choose';
 
-  // Composição / Posicionamento
-  productPlacement: string;
-  elementsPlacement: string;
-
-  // Template
+  // Step 4 - Frame & Configs
+  frameRatio: string;
+  resolution: '2k' | '4k';
+  variationsCount: number;          // 1 a 10
   saveAsTemplate: boolean;
   templateName: string;
 }
