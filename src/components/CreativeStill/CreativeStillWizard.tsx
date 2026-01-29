@@ -15,6 +15,11 @@ import {
   FRAME_RATIOS,
   PRODUCT_PRESENTATIONS,
   PRODUCT_PLACEMENTS,
+  ALL_PRESENTATIONS,
+  PRODUCT_TYPES_FOR_UPLOAD,
+  getPresentationsForType,
+  getProductTypeGroup,
+  ProductTypeGroup,
 } from './index';
 import { compressImage } from '../../utils/imageCompression';
 
@@ -69,6 +74,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const [elementPosition, setElementPosition] = useState('');
   const [elementSearchTerm, setElementSearchTerm] = useState('');
   const [elementCategory, setElementCategory] = useState('');
+  const [uploadProductType, setUploadProductType] = useState<ProductTypeGroup | null>(null);
   const elementFileRef = useRef<HTMLInputElement>(null);
 
   const isDark = theme === 'dark';
@@ -100,6 +106,15 @@ export const CreativeStillWizard: React.FC<Props> = ({
     return matchesSearch && matchesCategory;
   });
 
+  // Tipo de produto efetivo: do catálogo (pela categoria) ou do upload (selecionado pelo user)
+  const isUploadedProduct = wizardState.mainProduct?.id?.startsWith('upload-') ?? false;
+  const effectiveProductType: ProductTypeGroup | null = wizardState.mainProduct
+    ? (isUploadedProduct ? uploadProductType : getProductTypeGroup(wizardState.mainProduct.category))
+    : null;
+
+  // Apresentações filtradas pelo tipo de produto
+  const availablePresentations = getPresentationsForType(effectiveProductType);
+
   // Validação: produto precisa ter foto de detalhe para gerar
   const mainProductHasRequiredImages = (): boolean => {
     if (!wizardState.mainProduct) return false;
@@ -120,7 +135,15 @@ export const CreativeStillWizard: React.FC<Props> = ({
   // Navegação
   const canGoNext = () => {
     if (currentStep === 1) {
-      return !!wizardState.mainProduct && mainProductHasRequiredImages() && mainProductViewValid();
+      if (!wizardState.mainProduct) return false;
+      // Upload: precisa selecionar tipo de produto
+      if (isUploadedProduct && !uploadProductType) return false;
+      // Catálogo: precisa ter detalhe e view válida
+      if (!isUploadedProduct) {
+        if (!mainProductHasRequiredImages()) return false;
+        if (!mainProductViewValid()) return false;
+      }
+      return true;
     }
     if (isSimple && currentStep === 2) return !!wizardState.surfaceDescription.trim();
     if (!isSimple && currentStep === 2) return !!(wizardState.aestheticPreset || wizardState.aestheticCustom.trim());
@@ -295,7 +318,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
         category: '',
         color: '',
       } as Product;
-      onUpdateState({ mainProduct: uploadedProduct });
+      onUpdateState({ mainProduct: uploadedProduct, productPresentation: 'ai_choose' });
+      setUploadProductType(null);
     };
     reader.readAsDataURL(file);
   };
@@ -339,7 +363,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
             </p>
           </div>
           <button
-            onClick={() => { onUpdateState({ mainProduct: null }); }}
+            onClick={() => { onUpdateState({ mainProduct: null, productPresentation: 'ai_choose' }); setUploadProductType(null); }}
             className={(isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-500') + ' text-xs font-medium'}
           >
             Trocar
@@ -488,26 +512,61 @@ export const CreativeStillWizard: React.FC<Props> = ({
         </>
       )}
 
-      {/* Apresentação do produto - só aparece quando tem produto selecionado */}
+      {/* Tipo de produto (upload) + Apresentação do produto */}
       {wizardState.mainProduct && (
         <>
-          {separator()}
-          {sectionTitle('Como quer exibir o produto?', 'fa-shirt')}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {PRODUCT_PRESENTATIONS.map(pres => (
-              <button
-                key={pres.id}
-                onClick={() => onUpdateState({ productPresentation: pres.id })}
-                className={cardClass(wizardState.productPresentation === pres.id)}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <i className={'fas ' + pres.icon + ' text-xs ' + (wizardState.productPresentation === pres.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
-                  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{pres.label}</span>
-                </div>
-                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{pres.description}</p>
-              </button>
-            ))}
-          </div>
+          {/* Se é upload, precisa selecionar o tipo de produto */}
+          {isUploadedProduct && (
+            <>
+              {separator()}
+              {sectionTitle('Que tipo de produto é?', 'fa-tag')}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {PRODUCT_TYPES_FOR_UPLOAD.map(type => (
+                  <button
+                    key={type.id}
+                    onClick={() => {
+                      setUploadProductType(type.id);
+                      // Se a apresentação atual não é válida para o novo tipo, reseta
+                      const newPresentations = getPresentationsForType(type.id);
+                      if (!newPresentations.find(p => p.id === wizardState.productPresentation)) {
+                        onUpdateState({ productPresentation: 'ai_choose' });
+                      }
+                    }}
+                    className={cardClass(uploadProductType === type.id)}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <i className={'fas ' + type.icon + ' text-xs ' + (uploadProductType === type.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                      <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{type.label}</span>
+                    </div>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{type.description}</p>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Apresentação — só se temos um tipo definido */}
+          {effectiveProductType && (
+            <>
+              {separator()}
+              {sectionTitle('Como quer exibir o produto?', 'fa-shirt')}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {availablePresentations.map(pres => (
+                  <button
+                    key={pres.id}
+                    onClick={() => onUpdateState({ productPresentation: pres.id })}
+                    className={cardClass(wizardState.productPresentation === pres.id)}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <i className={'fas ' + pres.icon + ' text-xs ' + (wizardState.productPresentation === pres.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                      <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{pres.label}</span>
+                    </div>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{pres.description}</p>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -888,7 +947,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
     const toneLabel = COLOR_TONES.find(t => t.id === wizardState.colorTone)?.label || wizardState.colorTone;
     const styleLabel = COLOR_STYLES.find(s => s.id === wizardState.colorStyle)?.label || wizardState.colorStyle;
     const ratioLabel = FRAME_RATIOS.find(r => r.id === wizardState.frameRatio)?.label || wizardState.frameRatio;
-    const presentationLabel = PRODUCT_PRESENTATIONS.find(p => p.id === wizardState.productPresentation)?.label || wizardState.productPresentation;
+    const presentationLabel = ALL_PRESENTATIONS.find(p => p.id === wizardState.productPresentation)?.label || wizardState.productPresentation;
     const placementLabel = PRODUCT_PLACEMENTS.find(p => p.id === wizardState.productPlacement)?.label || wizardState.productPlacement;
 
     const ReviewRow = ({ icon, label, value, onEdit }: { icon: string; label: string; value: string; onEdit: () => void }) => (
@@ -1292,7 +1351,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
                     <button
                       key={product.id}
                       onClick={() => {
-                        onUpdateState({ mainProduct: product, mainProductView: 'front' });
+                        onUpdateState({ mainProduct: product, mainProductView: 'front', productPresentation: 'ai_choose' });
+                        setUploadProductType(null);
                         setShowProductModal(false);
                         setProductSearchTerm('');
                         setProductCategory('');

@@ -78,14 +78,70 @@ export const COLOR_STYLES = [
   { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
 ];
 
-export const PRODUCT_PRESENTATIONS = [
-  { id: 'open', label: 'Aberto / Estendido', description: 'Peça aberta e esticada', icon: 'fa-expand' },
-  { id: 'folded', label: 'Dobrado', description: 'Dobrado com cuidado', icon: 'fa-shirt' },
-  { id: 'hanging', label: 'Pendurado', description: 'Pendurado em cabide ou gancho', icon: 'fa-grip-lines' },
-  { id: 'rolled', label: 'Enrolado', description: 'Enrolado de forma estilosa', icon: 'fa-toilet-paper' },
-  { id: 'natural', label: 'Jogado Natural', description: 'Solto de forma casual e natural', icon: 'fa-wind' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
+// Mapeamento de categorias para tipo de produto (para apresentações condicionais)
+export type ProductTypeGroup = 'clothing' | 'footwear' | 'bags' | 'accessories' | 'headwear' | 'fullpiece';
+
+export const CATEGORY_TO_TYPE: Record<string, ProductTypeGroup> = {
+  // Topo
+  'Camisetas': 'clothing', 'Blusas': 'clothing', 'Regatas': 'clothing', 'Tops': 'clothing',
+  'Camisas': 'clothing', 'Bodies': 'clothing', 'Jaquetas': 'clothing', 'Casacos': 'clothing',
+  'Blazers': 'clothing', 'Moletons': 'clothing',
+  // Baixo
+  'Calças': 'clothing', 'Shorts': 'clothing', 'Bermudas': 'clothing', 'Saias': 'clothing',
+  'Leggings': 'clothing', 'Shorts Fitness': 'clothing',
+  // Peças inteiras
+  'Vestidos': 'fullpiece', 'Macacões': 'fullpiece', 'Jardineiras': 'fullpiece',
+  'Biquínis': 'clothing', 'Maiôs': 'clothing',
+  // Calçados
+  'Calçados': 'footwear', 'Tênis': 'footwear', 'Sandálias': 'footwear', 'Botas': 'footwear',
+  // Cabeça
+  'Bonés': 'headwear', 'Chapéus': 'headwear', 'Tiaras': 'headwear', 'Lenços': 'clothing',
+  // Acessórios
+  'Bolsas': 'bags', 'Cintos': 'accessories', 'Relógios': 'accessories', 'Óculos': 'accessories',
+  'Bijuterias': 'accessories', 'Acessórios': 'accessories', 'Outros Acessórios': 'accessories',
+};
+
+// Tipos de produto para upload (quando não vem do catálogo)
+export const PRODUCT_TYPES_FOR_UPLOAD = [
+  { id: 'clothing' as ProductTypeGroup, label: 'Roupa', description: 'Camiseta, calça, vestido, etc.', icon: 'fa-shirt' },
+  { id: 'footwear' as ProductTypeGroup, label: 'Calçado', description: 'Tênis, bota, sandália, etc.', icon: 'fa-shoe-prints' },
+  { id: 'bags' as ProductTypeGroup, label: 'Bolsa', description: 'Bolsa, mochila, clutch, etc.', icon: 'fa-bag-shopping' },
+  { id: 'headwear' as ProductTypeGroup, label: 'Chapéu / Boné', description: 'Chapéu, boné, tiara, etc.', icon: 'fa-hat-cowboy' },
+  { id: 'accessories' as ProductTypeGroup, label: 'Acessório', description: 'Óculos, relógio, cinto, etc.', icon: 'fa-gem' },
 ];
+
+// Todas as apresentações possíveis
+export const ALL_PRESENTATIONS = [
+  { id: 'open', label: 'Aberto / Estendido', description: 'Peça aberta e esticada', icon: 'fa-expand', types: ['clothing', 'fullpiece'] },
+  { id: 'folded', label: 'Dobrado', description: 'Dobrado com cuidado', icon: 'fa-shirt', types: ['clothing'] },
+  { id: 'hanging', label: 'Pendurado', description: 'Pendurado em cabide ou gancho', icon: 'fa-grip-lines', types: ['clothing', 'fullpiece'] },
+  { id: 'rolled', label: 'Enrolado', description: 'Enrolado de forma estilosa', icon: 'fa-toilet-paper', types: ['clothing'] },
+  { id: 'natural', label: 'Jogado Natural', description: 'Solto de forma casual e natural', icon: 'fa-wind', types: ['clothing', 'fullpiece'] },
+  { id: 'standing', label: 'Em Pé', description: 'Posicionado em pé, ereto', icon: 'fa-shoe-prints', types: ['footwear'] },
+  { id: 'side_view', label: 'Vista Lateral', description: 'Lateral mostrando o perfil', icon: 'fa-arrows-left-right', types: ['footwear'] },
+  { id: 'pair', label: 'Par Cruzado', description: 'Par sobreposto em composição', icon: 'fa-xmarks-lines', types: ['footwear'] },
+  { id: 'flat_lay', label: 'Flat Lay', description: 'Deitado visto de cima', icon: 'fa-arrow-down', types: ['footwear', 'bags', 'headwear', 'accessories'] },
+  { id: 'upright', label: 'Em Pé / Ereto', description: 'Posicionado verticalmente', icon: 'fa-arrow-up', types: ['bags'] },
+  { id: 'open_bag', label: 'Aberta', description: 'Bolsa aberta mostrando interior', icon: 'fa-box-open', types: ['bags'] },
+  { id: 'worn_style', label: 'Estilo Vestido', description: 'Posicionado como se estivesse sendo usado', icon: 'fa-user', types: ['headwear', 'accessories'] },
+  { id: 'display', label: 'Em Display', description: 'Em suporte ou expositor', icon: 'fa-display', types: ['accessories', 'headwear'] },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles', types: ['clothing', 'fullpiece', 'footwear', 'bags', 'headwear', 'accessories'] },
+];
+
+// Helper: filtrar apresentações por tipo de produto
+export const getPresentationsForType = (typeGroup: ProductTypeGroup | null) => {
+  if (!typeGroup) return ALL_PRESENTATIONS.filter(p => p.id === 'ai_choose');
+  return ALL_PRESENTATIONS.filter(p => p.types.includes(typeGroup));
+};
+
+// Helper: obter tipo do produto pela categoria
+export const getProductTypeGroup = (category?: string): ProductTypeGroup | null => {
+  if (!category) return null;
+  return CATEGORY_TO_TYPE[category] || null;
+};
+
+// Mantido por compatibilidade (usado no review step)
+export const PRODUCT_PRESENTATIONS = ALL_PRESENTATIONS;
 
 export const PRODUCT_PLACEMENTS = [
   { id: 'center', label: 'Centralizado', description: 'Centro da composição', icon: 'fa-crosshairs' },
