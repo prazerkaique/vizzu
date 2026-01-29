@@ -1,5 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
+
+const lottieColorStyles = `
+  @keyframes stillColorCycle {
+    0%, 100% { filter: sepia(1) saturate(3) hue-rotate(20deg) brightness(1.1); }
+    33% { filter: sepia(1) saturate(3) hue-rotate(35deg) brightness(1.2); }
+    66% { filter: sepia(1) saturate(2.5) hue-rotate(10deg) brightness(1.1); }
+  }
+  .vizzu-still-lottie-gradient {
+    animation: stillColorCycle 3s ease-in-out infinite;
+  }
+`;
+
+const LOADING_PHRASES = [
+  "Preparando a composição criativa...",
+  "Analisando a estética escolhida...",
+  "Montando a superfície e cenário...",
+  "Posicionando o produto principal...",
+  "Adicionando elementos decorativos...",
+  "Ajustando a iluminação da cena...",
+  "Configurando câmera e lente...",
+  "Renderizando em alta qualidade...",
+  "Gerando variação 1...",
+  "Gerando variação 2...",
+  "Aplicando acabamentos finais...",
+  "Quase pronto! Últimos ajustes...",
+];
 
 interface Props {
   theme: 'dark' | 'light';
@@ -31,6 +58,17 @@ export const CreativeStillResults: React.FC<Props> = ({
 
   const isDark = theme === 'dark';
 
+  // Rotacionar frases de loading
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  useEffect(() => {
+    if (!isGenerating) return;
+    setPhraseIndex(0);
+    const interval = setInterval(() => {
+      setPhraseIndex(prev => (prev + 1) % LOADING_PHRASES.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
   const handleSave = async () => {
     if (!templateName.trim()) return;
     setSavingTemplate(true);
@@ -55,33 +93,76 @@ export const CreativeStillResults: React.FC<Props> = ({
   // ============================================================
   if (isGenerating) {
     return (
-      <div className={'flex-1 overflow-y-auto flex items-center justify-center p-4 ' + (isDark ? '' : 'bg-[#F5F5F7]')}>
-        <div className="max-w-md w-full text-center">
-          <div className={'w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 ' + (isDark ? 'bg-amber-500/20' : 'bg-amber-100')}>
-            <i className={'fas fa-palette text-3xl animate-pulse ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
-          </div>
-          <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-2'}>Criando seu Still...</h2>
-          <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-6'}>{loadingText}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop com blur */}
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
 
-          {/* Progress bar */}
-          <div className={'w-full h-2 rounded-full overflow-hidden mb-2 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            ></div>
+        {/* Container do conteúdo */}
+        <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
+          {/* Animação Lottie com degradê de cores (âmbar → laranja) */}
+          <style>{lottieColorStyles}</style>
+          <div className="w-64 h-64 mb-6 vizzu-still-lottie-gradient">
+            <DotLottieReact
+              src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+              loop
+              autoplay
+              style={{ width: '100%', height: '100%' }}
+            />
           </div>
-          <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs'}>{progress}%</p>
 
-          {/* Product info */}
+          {/* Título */}
+          <h2 className="text-white text-2xl font-bold mb-2 text-center">
+            Criando seu Still Criativo...
+          </h2>
+
+          {/* Frase de loading */}
+          <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px] transition-all duration-300">
+            {LOADING_PHRASES[phraseIndex]}
+          </p>
+
+          {/* Barra de progresso */}
+          <div className="w-full max-w-xs mb-4">
+            <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <p className="text-white text-sm font-medium text-center mt-2">
+              {progress}%
+            </p>
+          </div>
+
+          {/* Info do produto sendo gerado */}
           {wizardState.mainProduct && (
-            <div className={'mt-8 rounded-xl p-4 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide mb-1'}>Gerando para</p>
-              <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{wizardState.mainProduct.name}</p>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-0.5'}>
-                2 variações · {wizardState.mode === 'simple' ? 'Modo Simples' : 'Modo Avançado'}
-              </p>
+            <div className="bg-neutral-900/80 rounded-xl p-4 border border-neutral-800 mb-6 w-full max-w-xs">
+              <div className="flex items-center gap-3">
+                {wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url ? (
+                  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url || ''}
+                      alt={wizardState.mainProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-image text-neutral-600"></i>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{wizardState.mainProduct.name}</p>
+                  <p className="text-neutral-500 text-xs">
+                    2 variações · 2 créditos · {wizardState.mode === 'simple' ? 'Simples' : 'Avançado'}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
+
+          <p className="text-neutral-600 text-xs text-center">
+            A geração pode levar até 2 minutos
+          </p>
         </div>
       </div>
     );

@@ -236,39 +236,27 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still')) return;
 
     setIsGenerating(true);
-    setGenerationProgress(0);
-    setLoadingText('Preparando composição...');
+    setGenerationProgress(10);
+    setLoadingText('');
     setView('results');
 
-    // TODO: Integrar com webhook n8n
-    // Por enquanto simula o progresso
-    const phrases = [
-      'Analisando estética escolhida...',
-      'Montando a superfície...',
-      'Posicionando elementos...',
-      'Ajustando iluminação...',
-      'Configurando câmera...',
-      'Gerando variação 1...',
-      'Gerando variação 2...',
-      'Finalizando composição...',
-    ];
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 12;
-      if (progress > 95) progress = 95;
-      setGenerationProgress(progress);
-      const phraseIndex = Math.min(Math.floor(progress / 13), phrases.length - 1);
-      setLoadingText(phrases[phraseIndex]);
-    }, 2000);
+    // Progresso suave estilo Vizzu Studio (~2 min, desacelera ao se aproximar de 90%)
+    let currentProg = 10;
+    const progressInterval = setInterval(() => {
+      const remaining = 90 - currentProg;
+      const increment = Math.max(remaining * 0.08, 0.5);
+      currentProg = Math.min(currentProg + increment, 90);
+      setGenerationProgress(Math.round(currentProg));
+    }, 1000);
 
     try {
-      // Simular geração - será substituído por chamada real
-      await new Promise(resolve => setTimeout(resolve, 8000));
+      // TODO: Integrar com webhook n8n — por enquanto simula geração
+      await new Promise(resolve => setTimeout(resolve, 15000));
 
-      clearInterval(interval);
+      clearInterval(progressInterval);
+      setGenerationProgress(95);
+      await new Promise(resolve => setTimeout(resolve, 500));
       setGenerationProgress(100);
-      setLoadingText('Concluído!');
 
       setCurrentGeneration({
         id: crypto.randomUUID(),
@@ -288,7 +276,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         completed_at: new Date().toISOString(),
       });
     } catch (err) {
-      clearInterval(interval);
+      clearInterval(progressInterval);
       setCurrentGeneration({
         id: crypto.randomUUID(),
         user_id: userId || '',
