@@ -1249,6 +1249,9 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
     if (product.originalImages?.back?.url) {
       images.push({ url: product.originalImages.back.url, label: 'Costas' });
     }
+    if (product.originalImages?.detail?.url) {
+      images.push({ url: product.originalImages.detail.url, label: 'Detalhe' });
+    }
 
     // Fallback para o array legado se não tem originalImages
     if (images.length === 0 && product.images) {
