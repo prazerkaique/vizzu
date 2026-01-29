@@ -413,6 +413,8 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   if (data.processing === true && data.generation?.id) {
     const generationId = data.generation.id;
     const startTime = Date.now();
+    let consecutiveErrors = 0;
+    let pendingTooLongChecks = 0;
 
     // Notificar progresso inicial
     if (params.onProgress) {
@@ -433,13 +435,21 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       // Consultar status da geração no Supabase
       const { data: generation, error } = await supabase
         .from('generations')
-        .select('id, status, output_image_url, type')
+        .select('id, status, output_image_url, type, error_message')
         .eq('id', generationId)
         .single();
 
       if (error) {
+        consecutiveErrors++;
+        console.warn(`[ModeloIA] Erro no polling (${consecutiveErrors}x):`, error.message);
+        if (consecutiveErrors >= 5) {
+          throw new Error('Erro ao consultar status da geração. Verifique sua conexão e tente novamente.');
+        }
         continue;
       }
+
+      // Reset error counter on successful query
+      consecutiveErrors = 0;
 
       if (generation?.status === 'completed' && generation?.output_image_url) {
         // Notificar 100% ao completar
@@ -458,7 +468,24 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       }
 
       if (generation?.status === 'failed' || generation?.status === 'error') {
-        throw new Error('Falha na geração da imagem');
+        const errorMsg = generation?.error_message || 'Falha na geração da imagem';
+        throw new Error(errorMsg);
+      }
+
+      // Detectar n8n travado: se o status ainda é 'pending' após 30s, o n8n provavelmente falhou
+      if (generation?.status === 'pending') {
+        const elapsedMs = Date.now() - startTime;
+        if (elapsedMs > 30000) {
+          pendingTooLongChecks++;
+          console.warn(`[ModeloIA] Geração ainda pending após ${Math.round(elapsedMs / 1000)}s (check ${pendingTooLongChecks})`);
+          // Após 3 checks consecutivos em pending depois de 30s = ~39s total
+          if (pendingTooLongChecks >= 3) {
+            throw new Error('O servidor de geração não respondeu. Tente novamente.');
+          }
+        }
+      } else {
+        // Status é 'processing' ou outro - n8n está trabalhando, reset counter
+        pendingTooLongChecks = 0;
       }
     }
 
