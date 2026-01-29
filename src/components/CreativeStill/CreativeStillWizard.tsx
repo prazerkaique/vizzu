@@ -266,11 +266,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-0">
           {/* Selecionar do catálogo */}
           <button
             onClick={() => setShowProductModal(true)}
-            className={'w-full rounded-xl p-4 text-left flex items-center gap-4 transition-all border ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-amber-500/50' : 'bg-white border-gray-200 hover:border-amber-400 shadow-sm')}
+            className={'w-full rounded-t-xl p-4 text-left flex items-center gap-4 transition-all border border-b-0 ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-amber-500/50' : 'bg-white border-gray-200 hover:border-amber-400 shadow-sm')}
           >
             <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-blue-500/20' : 'bg-blue-100')}>
               <i className={'fas fa-box text-sm ' + (isDark ? 'text-blue-400' : 'text-blue-500')}></i>
@@ -282,15 +282,22 @@ export const CreativeStillWizard: React.FC<Props> = ({
             <i className={'fas fa-chevron-right ml-auto text-xs ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
           </button>
 
+          {/* Divisor OU */}
+          <div className={'flex items-center border-x ' + (isDark ? 'border-neutral-800 bg-neutral-900' : 'border-gray-200 bg-white')}>
+            <div className={'flex-1 h-px ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}></div>
+            <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] font-medium uppercase tracking-wider px-4 py-2'}>ou</span>
+            <div className={'flex-1 h-px ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}></div>
+          </div>
+
           {/* Upload / Drag and Drop */}
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
-            className={'w-full rounded-xl p-6 border-2 border-dashed text-center transition-all cursor-pointer ' +
+            className={'w-full rounded-b-xl p-6 text-center transition-all cursor-pointer border ' +
               (dragOver
                 ? (isDark ? 'border-amber-500 bg-amber-500/10 text-amber-400' : 'border-amber-400 bg-amber-50 text-amber-500')
-                : (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500 hover:text-amber-400' : 'border-gray-300 hover:border-amber-400 text-gray-400 hover:text-amber-500')
+                : (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-amber-500/50 text-neutral-500 hover:text-amber-400' : 'bg-white border-gray-200 hover:border-amber-400 text-gray-400 hover:text-amber-500')
               )}
             onClick={() => mainProductFileRef.current?.click()}
           >
@@ -872,7 +879,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
   // ============================================================
   return (
     <div className={'flex-1 overflow-y-auto ' + (isDark ? '' : 'bg-[#F5F5F7]')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
-      <div className="max-w-2xl mx-auto p-4 md:p-6 pb-32">
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -919,35 +926,32 @@ export const CreativeStillWizard: React.FC<Props> = ({
         {/* Step Content */}
         {renderCurrentStep()}
 
-        {/* Footer Navigation */}
-        <div className={'fixed bottom-0 left-0 right-0 md:left-52 p-4 border-t z-30 ' + (isDark ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800' : 'bg-white/95 backdrop-blur-xl border-gray-200')}>
-          <div className="max-w-2xl mx-auto flex items-center justify-between">
+        {/* Navigation Buttons (inline) */}
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={goPrev}
+            className={'flex-1 py-3 rounded-xl font-medium text-sm transition-all ' + (isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}
+          >
+            <i className="fas fa-arrow-left mr-2"></i>Voltar
+          </button>
+          {isLastStep ? (
             <button
-              onClick={goPrev}
-              className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2.5 rounded-xl text-sm font-medium transition-colors'}
+              onClick={onGenerate}
+              disabled={userCredits < 2}
+              className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <i className="fas fa-arrow-left mr-2 text-xs"></i>Voltar
+              <i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar 2 Variações (2 créditos)
             </button>
-            {isLastStep ? (
-              <button
-                onClick={onGenerate}
-                disabled={userCredits < 2}
-                className={'px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:shadow-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'}
-              >
-                <i className="fas fa-wand-magic-sparkles text-xs"></i>
-                Gerar 2 Variações
-                <span className="text-xs opacity-80">(2 créditos)</span>
-              </button>
-            ) : (
+          ) : (
+            canGoNext() && (
               <button
                 onClick={goNext}
-                disabled={!canGoNext()}
-                className={'px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:shadow-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed'}
+                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium text-sm"
               >
-                Próximo <i className="fas fa-arrow-right ml-2 text-xs"></i>
+                Continuar<i className="fas fa-arrow-right ml-2"></i>
               </button>
-            )}
-          </div>
+            )
+          )}
         </div>
       </div>
 
