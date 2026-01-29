@@ -1654,6 +1654,7 @@ export interface CreativeStillWizardState {
   mainProduct: Product | null;
   mainProductView: 'front' | 'back';
   productPresentation: string;
+  customPresentationText: string;
   additionalProducts: CreativeStillAdditionalProduct[];
 
   // Step 2 - Estilo

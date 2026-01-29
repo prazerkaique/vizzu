@@ -125,6 +125,7 @@ export const ALL_PRESENTATIONS = [
   { id: 'open_bag', label: 'Aberta', description: 'Bolsa aberta mostrando interior', icon: 'fa-box-open', types: ['bags'] },
   { id: 'worn_style', label: 'Estilo Vestido', description: 'Posicionado como se estivesse sendo usado', icon: 'fa-user', types: ['headwear', 'accessories'] },
   { id: 'display', label: 'Em Display', description: 'Em suporte ou expositor', icon: 'fa-display', types: ['accessories', 'headwear'] },
+  { id: 'custom', label: 'Personalizado', description: 'Descreva como quer exibir', icon: 'fa-pen', types: ['clothing', 'fullpiece', 'footwear', 'bags', 'headwear', 'accessories'] },
   { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles', types: ['clothing', 'fullpiece', 'footwear', 'bags', 'headwear', 'accessories'] },
 ];
 
@@ -164,6 +165,7 @@ const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
   mainProduct: null,
   mainProductView: 'front',
   productPresentation: 'ai_choose',
+  customPresentationText: '',
   additionalProducts: [],
   aestheticPreset: null,
   aestheticCustom: '',

@@ -75,6 +75,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const [elementSearchTerm, setElementSearchTerm] = useState('');
   const [elementCategory, setElementCategory] = useState('');
   const [uploadProductType, setUploadProductType] = useState<ProductTypeGroup | null>(null);
+  const [productCollection, setProductCollection] = useState('');
+  const [elementCollection, setElementCollection] = useState('');
   const elementFileRef = useRef<HTMLInputElement>(null);
 
   const isDark = theme === 'dark';
@@ -82,10 +84,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const steps = isSimple ? SIMPLE_STEPS : ADVANCED_STEPS;
   const totalSteps = steps.length;
 
-  // Categorias únicas dos produtos
+  // Categorias e coleções únicas dos produtos
   const allCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort();
+  const allCollections = Array.from(new Set(products.map(p => p.collection).filter(Boolean))).sort() as string[];
 
-  // Filtra produtos (busca + categoria)
+  // Filtra produtos (busca + categoria + coleção)
   const filteredProducts = products.filter(p => {
     const matchesSearch = !productSearchTerm ||
       p.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
@@ -93,7 +96,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
       (p.category || '').toLowerCase().includes(productSearchTerm.toLowerCase()) ||
       (p.color || '').toLowerCase().includes(productSearchTerm.toLowerCase());
     const matchesCategory = !productCategory || p.category === productCategory;
-    return matchesSearch && matchesCategory;
+    const matchesCollection = !productCollection || p.collection === productCollection;
+    return matchesSearch && matchesCategory && matchesCollection;
   });
 
   const filteredElementProducts = products.filter(p => {
@@ -103,7 +107,8 @@ export const CreativeStillWizard: React.FC<Props> = ({
       (p.category || '').toLowerCase().includes(elementSearchTerm.toLowerCase()) ||
       (p.color || '').toLowerCase().includes(elementSearchTerm.toLowerCase());
     const matchesCategory = !elementCategory || p.category === elementCategory;
-    return matchesSearch && matchesCategory;
+    const matchesCollection = !elementCollection || p.collection === elementCollection;
+    return matchesSearch && matchesCategory && matchesCollection;
   });
 
   // Tipo de produto efetivo: do catálogo (pela categoria) ou do upload (selecionado pelo user)
@@ -157,10 +162,22 @@ export const CreativeStillWizard: React.FC<Props> = ({
     else onBack();
   };
 
-  // Helper: pegar imagem de um produto
+  // Helper: pegar imagem de um produto (prioriza Product Studio otimizadas)
   const getProductImageUrl = (product: Product): string => {
+    // Prioridade 1: Imagens otimizadas do Product Studio
+    if (product.generatedImages?.productStudio?.length) {
+      const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+      if (lastSession.images?.length) {
+        const frontImage = lastSession.images.find(img => img.angle === 'front');
+        if (frontImage?.url) return frontImage.url;
+        if (lastSession.images[0]?.url) return lastSession.images[0].url;
+      }
+    }
+    // Prioridade 2: Imagem original (frente)
     if (product.originalImages?.front?.url) return product.originalImages.front.url;
+    // Prioridade 3: Legacy images array
     if (product.images?.[0]?.url) return product.images[0].url;
+    if (product.images?.[0]?.base64) return product.images[0].base64;
     return '';
   };
 
@@ -315,7 +332,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
         category: '',
         color: '',
       } as Product;
-      onUpdateState({ mainProduct: uploadedProduct, productPresentation: 'ai_choose' });
+      onUpdateState({ mainProduct: uploadedProduct, productPresentation: 'ai_choose', customPresentationText: '' });
       setUploadProductType(null);
     };
     reader.readAsDataURL(file);
@@ -360,7 +377,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
             </p>
           </div>
           <button
-            onClick={() => { onUpdateState({ mainProduct: null, productPresentation: 'ai_choose' }); setUploadProductType(null); }}
+            onClick={() => { onUpdateState({ mainProduct: null, productPresentation: 'ai_choose', customPresentationText: '' }); setUploadProductType(null); }}
             className={(isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-500') + ' text-xs font-medium'}
           >
             Trocar
@@ -526,7 +543,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
                       // Se a apresentação atual não é válida para o novo tipo, reseta
                       const newPresentations = getPresentationsForType(type.id);
                       if (!newPresentations.find(p => p.id === wizardState.productPresentation)) {
-                        onUpdateState({ productPresentation: 'ai_choose' });
+                        onUpdateState({ productPresentation: 'ai_choose', customPresentationText: '' });
                       }
                     }}
                     className={cardClass(uploadProductType === type.id)}
@@ -551,7 +568,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
                 {availablePresentations.map(pres => (
                   <button
                     key={pres.id}
-                    onClick={() => onUpdateState({ productPresentation: pres.id })}
+                    onClick={() => onUpdateState({ productPresentation: pres.id, ...(pres.id !== 'custom' ? { customPresentationText: '' } : {}) })}
                     className={cardClass(wizardState.productPresentation === pres.id)}
                   >
                     <div className="flex items-center gap-2 mb-1">
@@ -562,6 +579,26 @@ export const CreativeStillWizard: React.FC<Props> = ({
                   </button>
                 ))}
               </div>
+
+              {/* Campo de texto livre para apresentação personalizada */}
+              {wizardState.productPresentation === 'custom' && (
+                <div className="mt-3">
+                  <textarea
+                    value={wizardState.customPresentationText}
+                    onChange={(e) => onUpdateState({ customPresentationText: e.target.value })}
+                    placeholder="Ex: Boné apoiado de lado sobre uma superfície de madeira, com a aba levemente inclinada..."
+                    rows={3}
+                    className={'w-full rounded-lg px-3 py-2 text-sm outline-none border transition-colors resize-none ' +
+                      (isDark
+                        ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-600 focus:border-amber-500/50'
+                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-amber-400'
+                      )}
+                  />
+                  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-1'}>
+                    Descreva como o produto deve ser posicionado e exibido na cena
+                  </p>
+                </div>
+              )}
             </>
           )}
         </>
@@ -944,7 +981,9 @@ export const CreativeStillWizard: React.FC<Props> = ({
     const toneLabel = COLOR_TONES.find(t => t.id === wizardState.colorTone)?.label || wizardState.colorTone;
     const styleLabel = COLOR_STYLES.find(s => s.id === wizardState.colorStyle)?.label || wizardState.colorStyle;
     const ratioLabel = FRAME_RATIOS.find(r => r.id === wizardState.frameRatio)?.label || wizardState.frameRatio;
-    const presentationLabel = ALL_PRESENTATIONS.find(p => p.id === wizardState.productPresentation)?.label || wizardState.productPresentation;
+    const presentationLabel = wizardState.productPresentation === 'custom'
+      ? (wizardState.customPresentationText ? `Personalizado: ${wizardState.customPresentationText}` : 'Personalizado (sem descrição)')
+      : (ALL_PRESENTATIONS.find(p => p.id === wizardState.productPresentation)?.label || wizardState.productPresentation);
     const placementLabel = PRODUCT_PLACEMENTS.find(p => p.id === wizardState.productPlacement)?.label || wizardState.productPlacement;
 
     const ReviewRow = ({ icon, label, value, onEdit }: { icon: string; label: string; value: string; onEdit: () => void }) => (
@@ -1264,7 +1303,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {/* MODAL: Selecionar Produto */}
       {/* ============================================================ */}
       {showProductModal && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductCategory(''); }}>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductCategory(''); setProductCollection(''); }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
           <div
             onClick={(e) => e.stopPropagation()}
@@ -1276,7 +1315,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
                 <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Selecionar Produto</h3>
                 <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>{products.length} produtos disponíveis</p>
               </div>
-              <button onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductCategory(''); }} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+              <button onClick={() => { setShowProductModal(false); setProductSearchTerm(''); setProductCategory(''); setProductCollection(''); }} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -1331,9 +1370,26 @@ export const CreativeStillWizard: React.FC<Props> = ({
               </div>
             )}
 
+            {/* Collection filter */}
+            {allCollections.length > 1 && (
+              <div className="flex-shrink-0 px-3 pb-2">
+                <select
+                  value={productCollection}
+                  onChange={(e) => setProductCollection(e.target.value)}
+                  className={'w-full px-3 py-1.5 text-xs border rounded-lg outline-none transition-colors ' +
+                    (isDark ? 'bg-neutral-800 border-neutral-700 text-white focus:border-amber-500/50' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-amber-400')}
+                >
+                  <option value="">Todas as coleções</option>
+                  {allCollections.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Product count */}
             <div className={'flex-shrink-0 px-3 pb-2 ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
-              <span className="text-[10px]">{filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''}{productCategory ? ` em "${productCategory}"` : ''}</span>
+              <span className="text-[10px]">{filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''}{productCategory ? ` em "${productCategory}"` : ''}{productCollection ? ` · ${productCollection}` : ''}</span>
             </div>
 
             {/* Grid */}
@@ -1350,7 +1406,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
                     <button
                       key={product.id}
                       onClick={() => {
-                        onUpdateState({ mainProduct: product, mainProductView: 'front', productPresentation: 'ai_choose' });
+                        onUpdateState({ mainProduct: product, mainProductView: 'front', productPresentation: 'ai_choose', customPresentationText: '' });
                         setUploadProductType(null);
                         setShowProductModal(false);
                         setProductSearchTerm('');
@@ -1384,7 +1440,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {/* MODAL: Adicionar Elemento */}
       {/* ============================================================ */}
       {showAddElementModal && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementCategory(''); }}>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementCategory(''); setElementCollection(''); }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
           <div
             onClick={(e) => e.stopPropagation()}
@@ -1393,7 +1449,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
               <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Adicionar Produto</h3>
-              <button onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementCategory(''); }} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+              <button onClick={() => { setShowAddElementModal(false); setElementSearchTerm(''); setElementCategory(''); setElementCollection(''); }} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
@@ -1480,8 +1536,25 @@ export const CreativeStillWizard: React.FC<Props> = ({
                     </div>
                   )}
 
+                  {/* Collection filter */}
+                  {allCollections.length > 1 && (
+                    <div className="mb-2">
+                      <select
+                        value={elementCollection}
+                        onChange={(e) => setElementCollection(e.target.value)}
+                        className={'w-full px-3 py-1.5 text-xs border rounded-lg outline-none transition-colors ' +
+                          (isDark ? 'bg-neutral-800 border-neutral-700 text-white focus:border-amber-500/50' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-amber-400')}
+                      >
+                        <option value="">Todas as coleções</option>
+                        {allCollections.map(col => (
+                          <option key={col} value={col}>{col}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   {/* Count */}
-                  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mb-2'}>{filteredElementProducts.length} produto{filteredElementProducts.length !== 1 ? 's' : ''}</p>
+                  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mb-2'}>{filteredElementProducts.length} produto{filteredElementProducts.length !== 1 ? 's' : ''}{elementCollection ? ` · ${elementCollection}` : ''}</p>
 
                   {/* Grid */}
                   {filteredElementProducts.length === 0 ? (
