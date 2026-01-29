@@ -56,6 +56,14 @@ n8n/
 n8n-*.json
 n8n-*.js
 n8n-workflows/
+**/n8n-*.json
+**/n8n-*.cjs
+
+# Scripts com credenciais (NUNCA commitar!)
+scripts/
+
+# Workflows antigos com credenciais
+workflow-generate-model-images*.json
 
 # Documentação interna (não commitar)
 OTIMIZACOES_PROXIMOS_PASSOS.md
