@@ -359,14 +359,15 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             setTimeout(poll, POLL_INTERVAL);
           }
         };
-        // TODO: Quando tiver o n8n, chamar o webhook aqui antes de iniciar o polling
-        // Por enquanto, simular com timeout que marca como completed
-        setTimeout(async () => {
-          await supabase
-            .from('creative_still_generations')
-            .update({ status: 'completed', completed_at: new Date().toISOString() })
-            .eq('id', generationId);
-        }, 12000);
+        // Chamar webhook n8n para iniciar geração
+        fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            generation_id: generationId,
+            user_id: userId,
+          }),
+        }).catch(err => console.error('Erro ao chamar webhook n8n:', err));
         poll();
       });
 
