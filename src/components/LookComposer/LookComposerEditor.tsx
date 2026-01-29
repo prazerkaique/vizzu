@@ -610,6 +610,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           images.push({ url: backImg.url, type: 'Costas (Otimizada)' });
         }
 
+        // Adiciona detalhe original (não passa pelo Product Studio)
+        if (product.originalImages?.detail?.url) {
+          images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
+        }
+
         // Se encontrou pelo menos uma, retorna
         if (images.length > 0) {
           return images;
@@ -623,6 +628,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
     }
     if (product.originalImages?.back?.url) {
       images.push({ url: product.originalImages.back.url, type: 'Costas' });
+    }
+    if (product.originalImages?.detail?.url) {
+      images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
     }
     if (images.length === 0 && product.images) {
       product.images.forEach((img, idx) => {
@@ -988,17 +996,24 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         sku?: string;
         productId?: string;
         imageId?: string;
+        detailImage?: string;
       }> | undefined;
 
       if (lookMode === 'composer' && Object.keys(lookComposition).length > 0) {
-        lookItems = Object.entries(lookComposition).map(([slot, item]) => ({
-          slot,
-          image: item.image || '',
-          name: item.name || '',
-          sku: item.sku || '',
-          productId: item.productId,
-          imageId: item.imageId,
-        }));
+        lookItems = Object.entries(lookComposition).map(([slot, item]) => {
+          // Buscar imagem de detalhe do produto
+          const lookProduct = item.productId ? products.find(p => p.id === item.productId) : null;
+          const detailUrl = lookProduct?.originalImages?.detail?.url || undefined;
+          return {
+            slot,
+            image: item.image || '',
+            name: item.name || '',
+            sku: item.sku || '',
+            productId: item.productId,
+            imageId: item.imageId,
+            detailImage: detailUrl,
+          };
+        });
       }
 
       // Construir clothingPrompt para modo describe
@@ -1017,6 +1032,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
       const imageUrl = mainImage?.url || '';
       const imageId = product.originalImages?.front?.id || product.images?.[0]?.id || '';
 
+      // Obter imagem de detalhe do produto principal (logo, estampa, bordado)
+      const mainDetailImageUrl = product.originalImages?.detail?.url || undefined;
+
       // Obter imagem de costas do produto principal (se viewsMode === 'front-back')
       // Se o produto não precisa de costas (acessório), usa a imagem de frente
       const productNeedsBack = needsBackImage(product.category);
@@ -1033,6 +1051,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         sku?: string;
         productId?: string;
         imageId?: string;
+        detailImage?: string;
       }> | undefined;
 
       if (viewsMode === 'front-back' && lookMode === 'composer' && Object.keys(lookComposition).length > 0) {
@@ -1056,6 +1075,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           const backImgId = lookProduct?.originalImages?.back?.id ||
             (!itemNeedsBack ? frontImgId : '');
 
+          const detailUrl = lookProduct?.originalImages?.detail?.url || undefined;
           return {
             slot,
             image: backImage,
@@ -1063,6 +1083,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
             sku: item.sku || '',
             productId: item.productId,
             imageId: backImgId,
+            detailImage: detailUrl,
           };
         }).filter(item => item.image); // Só incluir se tiver imagem
       }
@@ -1152,6 +1173,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
         userId: userId,
         imageId: imageId,
         imageUrl: imageUrl,
+        detailImageUrl: mainDetailImageUrl,
         modelPrompt: modelPrompt,
         clothingPrompt: clothingPrompt,
         posePrompt: posePromptFinal,
@@ -1202,6 +1224,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
           userId: userId,
           imageId: backImageId, // Usar imagem de costas do produto principal
           imageUrl: backImageUrl,
+          detailImageUrl: mainDetailImageUrl,
           modelPrompt: modelPrompt,
           clothingPrompt: clothingPrompt ? clothingPrompt + ' (back view, from behind)' : undefined,
           posePrompt: posePromptFinal ? posePromptFinal + ', back view, from behind' : undefined,

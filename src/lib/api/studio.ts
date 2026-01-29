@@ -264,6 +264,7 @@ interface LookPiece {
   sku?: string;
   productId?: string;
   imageId?: string;
+  detailImage?: string;           // URL da imagem de detalhe (logo, estampa, bordado)
 }
 
 interface ModelProfile {
@@ -286,6 +287,7 @@ interface ModeloIAParams {
   productDescription?: string;
   productAttributes?: Record<string, string>;  // Atributos específicos (caimento, tamanho, etc.)
   lookItems?: Array<LookPiece>;
+  detailImageUrl?: string;             // URL da imagem de detalhe do produto principal
   orientation?: { type: 'vertical' | 'horizontal'; width: number; height: number };
   productNotes?: string;      // Observações adicionais do produto
   modelDetails?: string;      // Detalhes do modelo (fisionomia, cabelo, altura, etc.)
@@ -320,7 +322,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   const mode = isComposerMode ? 'composer' : 'describe';
 
   // Converter lookItems para lookComposition (formato do novo workflow)
-  let lookComposition: Record<string, { name: string; sku: string; image: string; productId?: string; imageId?: string }> | null = null;
+  let lookComposition: Record<string, { name: string; sku: string; image: string; productId?: string; imageId?: string; detailImage?: string }> | null = null;
 
   if (isComposerMode && params.lookItems) {
     lookComposition = {};
@@ -331,6 +333,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
         image: item.image,
         productId: item.productId,
         imageId: item.imageId,
+        detailImage: item.detailImage || undefined,
       };
     }
   }
@@ -350,6 +353,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       userId: params.userId,
       imageId: params.imageId,
       imageUrl: params.imageUrl,
+      detailImageUrl: params.detailImageUrl || null,
       mode: mode,
       modelProfile: modelProfile,
       productCategory: params.productCategory,
