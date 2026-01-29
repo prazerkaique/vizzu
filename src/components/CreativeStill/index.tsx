@@ -6,6 +6,7 @@ import {
   CreativeStillWizardState,
   CreativeStillAdditionalProduct,
 } from '../../types';
+import { supabase } from '../../services/supabaseClient';
 import { Plan } from '../../hooks/useCredits';
 import { CreativeStillWizard } from './CreativeStillWizard';
 import { CreativeStillResults } from './CreativeStillResults';
@@ -188,21 +189,40 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     }
   }, [initialProduct, onClearInitialProduct]);
 
-  // Carregar templates do usuário
-  // TODO: Integrar com Supabase quando as tabelas existirem
-  const loadTemplates = useCallback(async () => {
+  // Carregar dados do Supabase
+  const loadData = useCallback(async () => {
+    if (!userId) return;
     setLoadingTemplates(true);
     try {
-      // Placeholder - será substituído por chamada ao Supabase
-      setTemplates([]);
+      // Templates
+      const { data: tplData } = await supabase
+        .from('creative_still_templates')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (tplData) setTemplates(tplData as CreativeStillTemplate[]);
+
+      // Gerações
+      const { data: genData } = await supabase
+        .from('creative_still_generations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (genData) {
+        setGenerations(genData as CreativeStillGeneration[]);
+        setFavorites((genData as (CreativeStillGeneration & { is_favorite?: boolean })[]).filter(g => g.is_favorite));
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados do Still Criativo:', err);
     } finally {
       setLoadingTemplates(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
+    loadData();
+  }, [loadData]);
 
   const handleStartNew = (mode: 'simple' | 'advanced') => {
     setWizardState({ ...INITIAL_WIZARD_STATE, mode });
@@ -240,6 +260,68 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     setLoadingText('');
     setView('results');
 
+    // Criar registro no Supabase com status 'pending'
+    const { data: insertedGen, error: insertError } = await supabase
+      .from('creative_still_generations')
+      .insert({
+        user_id: userId,
+        product_id: wizardState.mainProduct.id || '',
+        additional_products: wizardState.additionalProducts.map(p => ({
+          product_id: p.product_id,
+          product_name: p.product_name,
+          product_image_url: p.product_image_url,
+          position_description: p.position_description,
+          source: p.source,
+        })),
+        settings_snapshot: {
+          mode: wizardState.mode,
+          productPresentation: wizardState.productPresentation,
+          aestheticPreset: wizardState.aestheticPreset,
+          aestheticCustom: wizardState.aestheticCustom,
+          colorTone: wizardState.colorTone,
+          colorStyle: wizardState.colorStyle,
+          surfaceDescription: wizardState.surfaceDescription,
+          elementsDescription: wizardState.elementsDescription,
+          elementsPlacement: wizardState.elementsPlacement,
+          lighting: wizardState.lighting,
+          frameRatio: wizardState.frameRatio,
+          cameraType: wizardState.cameraType,
+          lensModel: wizardState.lensModel,
+          cameraAngle: wizardState.cameraAngle,
+          depthOfField: wizardState.depthOfField,
+          productPlacement: wizardState.productPlacement,
+        },
+        credits_used: creditsNeeded,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (insertError || !insertedGen) {
+      console.error('Erro ao criar geração:', insertError);
+      setIsGenerating(false);
+      setCurrentGeneration({
+        id: crypto.randomUUID(),
+        user_id: userId || '',
+        template_id: null,
+        product_id: wizardState.mainProduct.id || '',
+        additional_products: [],
+        settings_snapshot: {},
+        variation_1_url: null,
+        variation_2_url: null,
+        selected_variation: null,
+        reference_image_url: null,
+        credits_used: 0,
+        status: 'failed',
+        error_message: 'Erro ao iniciar geração. Tente novamente.',
+        created_at: new Date().toISOString(),
+        completed_at: null,
+      });
+      return;
+    }
+
+    const generationId = insertedGen.id;
+
     // Progresso suave estilo Vizzu Studio (~2 min, desacelera ao se aproximar de 90%)
     let currentProg = 10;
     const progressInterval = setInterval(() => {
@@ -249,36 +331,70 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       setGenerationProgress(Math.round(currentProg));
     }, 1000);
 
+    // Polling: verificar status a cada 3s até completar ou falhar (timeout 5min)
+    const POLL_INTERVAL = 3000;
+    const POLL_TIMEOUT = 300000;
+    const pollStart = Date.now();
+
     try {
-      // TODO: Integrar com webhook n8n — por enquanto simula geração
-      await new Promise(resolve => setTimeout(resolve, 15000));
+      const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
+        const poll = async () => {
+          if (Date.now() - pollStart > POLL_TIMEOUT) {
+            reject(new Error('Tempo limite excedido'));
+            return;
+          }
+          const { data, error } = await supabase
+            .from('creative_still_generations')
+            .select('*')
+            .eq('id', generationId)
+            .single();
+
+          if (error) { reject(error); return; }
+
+          if (data.status === 'completed') {
+            resolve(data as CreativeStillGeneration);
+          } else if (data.status === 'failed') {
+            resolve(data as CreativeStillGeneration);
+          } else {
+            setTimeout(poll, POLL_INTERVAL);
+          }
+        };
+        // TODO: Quando tiver o n8n, chamar o webhook aqui antes de iniciar o polling
+        // Por enquanto, simular com timeout que marca como completed
+        setTimeout(async () => {
+          await supabase
+            .from('creative_still_generations')
+            .update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('id', generationId);
+        }, 12000);
+        poll();
+      });
 
       clearInterval(progressInterval);
       setGenerationProgress(95);
       await new Promise(resolve => setTimeout(resolve, 500));
       setGenerationProgress(100);
+      setCurrentGeneration(result);
 
-      setCurrentGeneration({
-        id: crypto.randomUUID(),
-        user_id: userId || '',
-        template_id: null,
-        product_id: wizardState.mainProduct.id || '',
-        additional_products: wizardState.additionalProducts,
-        settings_snapshot: { ...wizardState },
-        variation_1_url: null, // TODO: URL real
-        variation_2_url: null, // TODO: URL real
-        selected_variation: null,
-        reference_image_url: null,
-        credits_used: creditsNeeded,
-        status: 'completed',
-        error_message: null,
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
-      });
+      // Recarregar lista
+      loadData();
+
     } catch (err) {
       clearInterval(progressInterval);
-      setCurrentGeneration({
-        id: crypto.randomUUID(),
+      // Marcar como falha no Supabase
+      await supabase
+        .from('creative_still_generations')
+        .update({ status: 'failed', error_message: 'Erro ao gerar imagem.' })
+        .eq('id', generationId);
+
+      const { data: failedGen } = await supabase
+        .from('creative_still_generations')
+        .select('*')
+        .eq('id', generationId)
+        .single();
+
+      setCurrentGeneration((failedGen as CreativeStillGeneration) || {
+        id: generationId,
         user_id: userId || '',
         template_id: null,
         product_id: wizardState.mainProduct.id || '',
@@ -303,6 +419,16 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     setView('home');
     setCurrentGeneration(null);
     setWizardState({ ...INITIAL_WIZARD_STATE });
+    loadData(); // Recarregar listas ao voltar
+  };
+
+  // Toggle favorito
+  const handleToggleFavorite = async (generationId: string, current: boolean) => {
+    await supabase
+      .from('creative_still_generations')
+      .update({ is_favorite: !current })
+      .eq('id', generationId);
+    loadData();
   };
 
   // ============================================================
@@ -511,8 +637,32 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       onBackToHome={handleBackToHome}
       onGenerateAgain={handleGenerate}
       onSaveTemplate={async (name: string) => {
-        // TODO: Salvar template no Supabase
-        console.log('Salvar template:', name);
+        if (!userId) return;
+        const { error } = await supabase
+          .from('creative_still_templates')
+          .insert({
+            user_id: userId,
+            name,
+            mode: wizardState.mode,
+            aesthetic_preset: wizardState.aestheticPreset,
+            aesthetic_custom: wizardState.aestheticCustom || null,
+            surface_description: wizardState.surfaceDescription,
+            elements_description: wizardState.elementsDescription || null,
+            elements_images: [],
+            lighting: wizardState.lighting,
+            camera_type: wizardState.cameraType,
+            lens_model: wizardState.lensModel,
+            camera_angle: wizardState.cameraAngle,
+            depth_of_field: wizardState.depthOfField,
+            color_tone: wizardState.colorTone,
+            color_style: wizardState.colorStyle,
+            frame_ratio: wizardState.frameRatio,
+          });
+        if (error) {
+          console.error('Erro ao salvar template:', error);
+        } else {
+          loadData();
+        }
       }}
     />
   );
