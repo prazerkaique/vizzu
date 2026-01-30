@@ -4034,9 +4034,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/Banner-Vizzu-Studio.jpg)' }}></div>
- <div className="absolute inset-0 bg-gradient-to-br from-[#E91E8C]/75 to-[#E91E8C]/25"></div>
- <div className="video-overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 group-hover:to-black/20 transition-all duration-300"></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-product-studio.png)' }}></div>
+ <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
  <div className="flex items-center gap-2 mb-2">
@@ -4067,8 +4066,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-gradient-to-br from-[#A855F7] via-[#A855F7] to-[#E91E8C]"></div>
- <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-provador.png)' }}></div>
+ <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
  <div className="flex items-center gap-2 mb-2">
@@ -4099,8 +4098,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-[#A855F7]"></div>
- <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-look-composer.png)' }}></div>
+ <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
  <div className="flex items-center gap-2 mb-2">
@@ -4131,8 +4130,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-[#FF6B9D]"></div>
- <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-still-criativo.png)' }}></div>
+ <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
  <div className="flex items-center gap-2 mb-2">
