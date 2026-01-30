@@ -2204,8 +2204,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <i className="fas fa-arrow-left"></i>
  </button>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Look Composer</h1>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{product.name}</p>
+ <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Look Composer</h1>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>{product.name}</p>
  </div>
  </div>
  <div className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>

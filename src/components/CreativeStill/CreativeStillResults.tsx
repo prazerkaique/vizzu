@@ -234,7 +234,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  <i className="fas fa-arrow-left"></i>
  </button>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold font-serif'}>Resultado</h1>
+ <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Resultado</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
  {wizardState.mainProduct?.name || 'Still Criativo'} · {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'}
  </p>

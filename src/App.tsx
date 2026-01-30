@@ -3423,18 +3423,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* DESKTOP SIDEBAR */}
  <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-16' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
  <div className={'p-4 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
- <div className="flex items-center justify-between w-full">
- {!sidebarCollapsed && (
  <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
- <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-10" />
+ {sidebarCollapsed
+ ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-8 w-8" />
+ : <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-10" />
+ }
  </button>
- )}
- {sidebarCollapsed && (
- <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity mx-auto">
- <img src="/favicon-96x96.png" alt="Vizzu" className="h-8 w-8" />
- </button>
- )}
- </div>
  {!sidebarCollapsed && <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio com IA para lojistas</span>}
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -3659,10 +3653,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-center justify-between mb-6">
  <div>
  <div className="flex items-center gap-2 mb-1">
- <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
+ <h1 className={'text-xl font-extrabold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
  <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>{currentPlan.name}</span>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
  Bem-vindo de volta, <span className="font-medium">{user?.name?.split(' ')[0] || 'usuário'}</span>
  </p>
  </div>
@@ -4026,8 +4020,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
  </div>
  <div>
- <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escolha uma ferramenta para criar com IA</p>
+ <h1 className={'text-xl font-extrabold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Escolha uma ferramenta para criar com IA</p>
  </div>
  </div>
  </div>
@@ -4176,7 +4170,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-center gap-2">
  <span className={'px-2 py-0.5 text-[9px] font-bold rounded-full uppercase ' + (theme === 'dark' ? 'bg-neutral-600 text-neutral-300' : 'bg-gray-400 text-white')}>Em breve</span>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mt-0.5'}>Mais ferramentas em desenvolvimento</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mt-0.5 font-serif italic'}>Mais ferramentas em desenvolvimento</p>
  </div>
  </div>
  <button
@@ -4357,8 +4351,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className={'fas fa-user-tie text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Modelos Salvos</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Crie e gerencie seus modelos de IA</p>
+ <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Modelos Salvos</h1>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Crie e gerencie seus modelos de IA</p>
  </div>
  </div>
  <div className="flex items-center gap-2">
@@ -4587,8 +4581,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Produtos</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gerencie seu catálogo</p>
+ <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Produtos</h1>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seu catálogo</p>
  </div>
  </div>
  <div className="flex items-center gap-2">
@@ -4770,8 +4764,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Clientes</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gerencie seus clientes</p>
+ <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Clientes</h1>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seus clientes</p>
  </div>
  </div>
  <button onClick={() => setShowCreateClient(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
@@ -4881,8 +4875,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Configurações</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs hidden md:block'}>Gerencie sua conta e preferências</p>
+ <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Configurações</h1>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic hidden md:block'}>Gerencie sua conta e preferências</p>
  </div>
  </div>
  <button onClick={handleLogout} className={'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 transition-colors ' + (theme === 'dark' ? 'hover:bg-red-500/10' : 'hover:bg-red-50')}>
@@ -4945,7 +4939,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Header */}
  <div className="text-center mb-6">
  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1 font-serif'}>Escolha o plano ideal para seu negocio</h2>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Transforme suas fotos de produtos em imagens profissionais com IA</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>Transforme suas fotos de produtos em imagens profissionais com IA</p>
  </div>
 
  {/* Status atual de creditos */}

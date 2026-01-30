@@ -597,8 +597,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  <i className={'fas fa-palette text-sm ' + (isDark ? 'text-amber-400' : 'text-white')}></i>
  </div>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-semibold font-serif'}>Still Criativo</h1>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Composições artísticas para Instagram e e-commerce</p>
+ <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Still Criativo</h1>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
  </div>
  </div>
  <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-600 border border-amber-200')}>

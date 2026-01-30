@@ -1470,10 +1470,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <i className={`fas fa-shirt text-lg ${theme === 'dark' ? 'text-[#E91E8C]' : 'text-white'}`}></i>
  </div>
  <div>
- <h1 className={`text-xl font-semibold font-serif ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <h1 className={`text-xl font-extrabold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  Vizzu Provador
  </h1>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
+ <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm font-serif italic`}>
  Vista seus clientes virtualmente
  </p>
  </div>

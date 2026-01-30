@@ -516,14 +516,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  <div>
  <div className="flex items-center gap-2">
- <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Vizzu Look Composer®</h1>
+ <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Vizzu Look Composer®</h1>
  {currentPlan && (
  <span className={(isDark ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
  {currentPlan.name}
  </span>
  )}
  </div>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Seus looks criados com modelo IA</p>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Seus looks criados com modelo IA</p>
  </div>
  </div>
  <div className="flex items-center gap-2">
