@@ -3423,18 +3423,25 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* DESKTOP SIDEBAR */}
  <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-16' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
  <div className={'p-4 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
+ <div className="flex items-center justify-between w-full">
+ {!sidebarCollapsed && (
  <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
- {sidebarCollapsed
- ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-8 w-8" />
- : <img src={theme === 'dark' ? '/logo.png' : '/logo-light.png'} alt="Vizzu" className="h-10" />
- }
+ <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-10" />
  </button>
+ )}
+ {sidebarCollapsed && (
+ <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity mx-auto">
+ <img src="/favicon-96x96.png" alt="Vizzu" className="h-8 w-8" />
+ </button>
+ )}
+ </div>
  {!sidebarCollapsed && <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio com IA para lojistas</span>}
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
- className={'mt-2 w-6 h-6 rounded-full flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-800' : 'text-[#373632]/60 hover:text-[#373632] hover:bg-white/60')}
+ title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
+ className={'mt-2 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-800' : 'text-[#373632]/50 hover:text-[#373632] hover:bg-white/60')}
  >
- <i className={'fas fa-chevron-' + (sidebarCollapsed ? 'right' : 'left') + ' text-[10px]'}></i>
+ <i className={'fas ' + (sidebarCollapsed ? 'fa-bars' : 'fa-angles-left') + ' text-[11px]'}></i>
  </button>
  </div>
  <nav className="flex-1 p-2 space-y-1">
@@ -3622,7 +3629,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
  >
  <button onClick={() => setCurrentPage('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
- <img src={theme === 'dark' ? '/logo.png' : '/logo-light.png'} alt="Vizzu" className="h-8" />
+ <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-8" />
  </button>
  <div className="flex items-center gap-2">
  <button
