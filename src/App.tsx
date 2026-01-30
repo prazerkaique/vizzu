@@ -3426,7 +3426,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
  ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-8 w-8" />
- : <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-10" />
+ : <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-10" />
  }
  </button>
  {!sidebarCollapsed && <span className={'text-[9px] -mt-1 font-serif italic ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
@@ -3623,7 +3623,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
  >
  <button onClick={() => setCurrentPage('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
- <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-8" />
+ <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-8" />
  </button>
  <div className="flex items-center gap-2">
  <button
@@ -6284,7 +6284,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  </div>
  ) : (
- <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-green-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
  </div>

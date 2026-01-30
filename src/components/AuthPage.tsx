@@ -77,7 +77,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
  {/* Logo */}
  <div className="text-center mb-8">
  <img
- src="/logo.png"
+ src="/Logo2Black.png"
  alt="Vizzu"
  className="h-16 w-auto mx-auto mb-4"
  />
