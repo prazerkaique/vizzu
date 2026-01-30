@@ -3426,7 +3426,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
  ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-8 w-8" />
- : <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-10" />
+ : <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-14" />
  }
  </button>
  {!sidebarCollapsed && <span className={'text-[9px] -mt-1 font-serif italic ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
@@ -3623,7 +3623,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
  >
  <button onClick={() => setCurrentPage('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
- <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-8" />
+ <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-10" />
  </button>
  <div className="flex items-center gap-2">
  <button
