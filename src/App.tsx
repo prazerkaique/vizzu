@@ -4647,9 +4647,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Barra de ações para produtos selecionados */}
  {selectedProducts.length > 0 && (
- <div className={(theme === 'dark' ? 'bg-[#E91E8C]/20 border-[#E91E8C]/30' : 'bg-[#E91E8C]/10 border-[#E91E8C]/20') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
+ <div className={(theme === 'dark' ? 'bg-white/10 border-white/15 backdrop-blur-xl' : 'bg-white/60 border-gray-200/60 backdrop-blur-xl shadow-sm') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
  <div className="flex items-center gap-2">
- <span className="text-[#E91E8C] font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
+ <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
  <button onClick={() => setSelectedProducts([])} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs'}>
  <i className="fas fa-times mr-1"></i>Cancelar
  </button>
@@ -4693,7 +4693,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )}
  {/* Checkbox de seleção - visível em modo seleção ou hover no desktop */}
  <div
- className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-[#E91E8C]/100 text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
+ className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
  >
  <i className={`fas fa-${selectedProducts.includes(product.id) ? 'check' : 'square'} text-[8px]`}></i>
  </div>
@@ -6333,40 +6333,40 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* OVERLAY DE ANÁLISE IA - Tela imersiva de loading */}
  {isAnalyzingImage && (
- <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center rounded-2xl">
+ <div className="absolute inset-0 z-50 bg-neutral-900/70 backdrop-blur-xl border border-white/10 flex flex-col items-center justify-center rounded-2xl">
  {/* Animação central */}
  <div className="relative mb-6">
  {/* Círculo externo pulsante */}
- <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-[#A855F7]/30 to-[#FF6B9D]/30 animate-ping"></div>
+ <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-[#FF6B6B]/30 to-[#FF9F43]/30 animate-ping"></div>
  {/* Círculo principal */}
- <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] flex items-center justify-center ">
+ <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
  <i className="fas fa-wand-magic-sparkles text-white text-3xl animate-pulse"></i>
  </div>
  </div>
 
  {/* Texto */}
  <h3 className="text-white text-lg font-semibold mb-2 font-serif">Analisando imagem...</h3>
- <p className="text-purple-300 text-sm text-center px-8 mb-4">
+ <p className="text-neutral-300 text-sm text-center px-8 mb-4">
  Nossa IA está identificando o produto, cor, marca e categoria
  </p>
 
  {/* Barra de progresso animada */}
  <div className="w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
- <div className="h-full w-1/2 bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] rounded-full animate-loading"></div>
+ <div className="h-full w-1/2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full animate-loading"></div>
  </div>
 
  {/* Lista de detecções */}
  <div className="mt-6 space-y-2 text-center">
- <div className="flex items-center gap-2 text-purple-300 text-xs">
+ <div className="flex items-center gap-2 text-neutral-300 text-xs">
  <i className="fas fa-check-circle text-green-400"></i>
  <span>Tipo de produto</span>
  </div>
- <div className="flex items-center gap-2 text-purple-300 text-xs">
- <i className="fas fa-spinner fa-spin text-purple-400"></i>
+ <div className="flex items-center gap-2 text-neutral-300 text-xs">
+ <i className="fas fa-spinner fa-spin text-[#FF9F43]"></i>
  <span>Cor e padrão</span>
  </div>
- <div className="flex items-center gap-2 text-purple-300/50 text-xs">
- <i className="fas fa-circle text-purple-400/30"></i>
+ <div className="flex items-center gap-2 text-neutral-400/50 text-xs">
+ <i className="fas fa-circle text-[#FF9F43]/30"></i>
  <span>Marca e caimento</span>
  </div>
  </div>

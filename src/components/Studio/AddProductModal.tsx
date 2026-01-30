@@ -236,7 +236,7 @@ export const AddProductModal: React.FC<Props> = ({
           {step === 'source' && (
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-sm font-semibold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Adicionar Produto
                 </h3>
                 <button
@@ -255,10 +255,10 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* Galeria */}
                 <button
                   onClick={() => triggerUpload('front', false)}
-                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-[#A855F7]/20 hover:border-[#E91E8C]/50 hover:bg-purple-50'}`}
+                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-purple-100'}`}>
-                    <i className={`fas fa-images text-lg ${isDark ? 'text-purple-400' : 'text-purple-500'}`}></i>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
+                    <i className={`fas fa-images text-lg ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}></i>
                   </div>
                   <span className={`text-sm font-medium ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>Galeria</span>
                 </button>
@@ -266,10 +266,10 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* Câmera */}
                 <button
                   onClick={() => triggerUpload('front', true)}
-                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-[#A855F7]/20 hover:border-[#E91E8C]/50 hover:bg-purple-50'}`}
+                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-purple-100'}`}>
-                    <i className={`fas fa-camera text-lg ${isDark ? 'text-purple-400' : 'text-purple-500'}`}></i>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
+                    <i className={`fas fa-camera text-lg ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}></i>
                   </div>
                   <span className={`text-sm font-medium ${isDark ? 'text-neutral-300' : 'text-gray-700'}`}>Câmera</span>
                 </button>
@@ -290,7 +290,7 @@ export const AddProductModal: React.FC<Props> = ({
                   >
                     <i className="fas fa-arrow-left text-xs"></i>
                   </button>
-                  <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <h3 className={`text-sm font-semibold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Fotos do Produto
                   </h3>
                 </div>
@@ -454,7 +454,7 @@ export const AddProductModal: React.FC<Props> = ({
                   >
                     <i className="fas fa-arrow-left text-xs"></i>
                   </button>
-                  <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <h3 className={`text-sm font-semibold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Criar Produto
                   </h3>
                 </div>
@@ -646,7 +646,7 @@ export const AddProductModal: React.FC<Props> = ({
                 <i className="fas fa-exclamation-triangle text-amber-500"></i>
               </div>
               <div>
-                <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Produto sem foto de costas</h4>
+                <h4 className={`font-semibold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>Produto sem foto de costas</h4>
               </div>
             </div>
 
@@ -680,11 +680,11 @@ export const AddProductModal: React.FC<Props> = ({
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
           <div className={`rounded-2xl border w-full max-w-sm p-5 ${isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200'}`}>
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
-                <i className="fas fa-magnifying-glass-plus text-purple-500"></i>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r ${isDark ? 'from-[#FF6B6B]/20 to-[#FF9F43]/20' : 'from-[#FF6B6B]/10 to-[#FF9F43]/10'}`}>
+                <i className="fas fa-magnifying-glass-plus text-[#FF9F43]"></i>
               </div>
               <div>
-                <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Imagem de detalhe</h4>
+                <h4 className={`font-semibold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>Imagem de detalhe</h4>
               </div>
             </div>
 
@@ -694,15 +694,15 @@ export const AddProductModal: React.FC<Props> = ({
 
             <ul className={`text-sm mb-4 space-y-1.5 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
               <li className="flex items-center gap-2">
-                <i className="fas fa-tag text-purple-500 text-xs"></i>
+                <i className="fas fa-tag text-[#FF9F43] text-xs"></i>
                 <span><strong>Logo da marca</strong> que precisa aparecer fiel</span>
               </li>
               <li className="flex items-center gap-2">
-                <i className="fas fa-palette text-purple-500 text-xs"></i>
+                <i className="fas fa-palette text-[#FF9F43] text-xs"></i>
                 <span><strong>Estampa específica</strong> ou desenho</span>
               </li>
               <li className="flex items-center gap-2">
-                <i className="fas fa-gem text-purple-500 text-xs"></i>
+                <i className="fas fa-gem text-[#FF9F43] text-xs"></i>
                 <span><strong>Detalhes pequenos</strong> como bordados ou botões</span>
               </li>
             </ul>
