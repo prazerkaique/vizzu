@@ -3433,7 +3433,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
  title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
- className={'mt-2 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-800' : 'text-[#373632]/50 hover:text-[#373632] hover:bg-white/60')}
+ className={'mt-2 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-[#373632]/50 hover:text-[#373632] hover:bg-white/60')}
  >
  <i className={'fas ' + (sidebarCollapsed ? 'fa-bars' : 'fa-angles-left') + ' text-[11px]'}></i>
  </button>
@@ -3447,7 +3447,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'dashboard'
  ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -3462,7 +3462,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'products'
  ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -3493,7 +3493,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'models'
  ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -3508,7 +3508,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'clients'
  ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -3520,7 +3520,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {!sidebarCollapsed ? (
  <>
  <div className="flex items-center justify-between mb-1.5">
- <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-[#373632]/60')}>Créditos</span>
+ <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60')}>Créditos</span>
  <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-[#E91E8C] hover:text-[#E91E8C]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
@@ -3541,7 +3541,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  (sidebarCollapsed ? 'justify-center' : 'justify-between') + ' ' +
  (currentPage === 'settings'
  ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -3662,7 +3662,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  <button
  onClick={() => setCurrentPage('create')}
- className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#373632] text-white rounded-xl text-sm font-medium hover:bg-[#373632]/85 transition-colors "
+ className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity "
  >
  <i className="fas fa-plus text-xs"></i>
  Novo Projeto
@@ -3965,22 +3965,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
 
  {/* Plano - 1 coluna */}
- <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#373632]')}>
- <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+ <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
+ <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex flex-col w-full">
  <div className="flex items-center gap-3 mb-2">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/15')}>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'}>
  <i className="fas fa-crown text-white"></i>
  </div>
  <div className="flex-1 min-w-0">
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-white/60') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
- <p className="text-xl font-bold text-white">{currentPlan.name}</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-[#373632]') + ' text-xl font-bold'}>{currentPlan.name}</p>
  </div>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-white/80') + ' text-xs mb-2'}>{userCredits}/{currentPlan.limit} créditos</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-xs mb-2'}>{userCredits}/{currentPlan.limit} créditos</p>
  <button
  onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
- className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-white/20 hover:bg-white/30 text-white')}
+ className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90')}
  >
  Upgrade <i className="fas fa-arrow-right text-[10px]"></i>
  </button>
