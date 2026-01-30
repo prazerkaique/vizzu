@@ -70,6 +70,8 @@ export const CreativeStillResults: React.FC<Props> = ({
  const [showSaveModal, setShowSaveModal] = useState(false);
  const [templateName, setTemplateName] = useState('');
  const [savingTemplate, setSavingTemplate] = useState(false);
+ const [showReveal, setShowReveal] = useState(false);
+ const [wasGenerating, setWasGenerating] = useState(false);
 
  const isDark = theme === 'dark';
 
@@ -87,6 +89,17 @@ export const CreativeStillResults: React.FC<Props> = ({
  }, 3000);
  return () => clearInterval(interval);
  }, [isGenerating]);
+
+ // Track generating→done transition for reveal animation
+ useEffect(() => {
+ if (isGenerating) {
+ setWasGenerating(true);
+ } else if (wasGenerating && variationUrls.length > 0 && generation?.status !== 'failed') {
+ setShowReveal(true);
+ const timer = setTimeout(() => setShowReveal(false), 2500);
+ return () => clearTimeout(timer);
+ }
+ }, [isGenerating, wasGenerating, variationUrls.length, generation?.status]);
 
  const handleSave = async () => {
  if (!templateName.trim()) return;
@@ -182,6 +195,27 @@ export const CreativeStillResults: React.FC<Props> = ({
  <p className="text-neutral-600 text-xs text-center">
  A geração pode levar até 2 minutos
  </p>
+ </div>
+ </div>
+ );
+ }
+
+ // ============================================================
+ // REVEAL ANIMATION STATE
+ // ============================================================
+ if (showReveal) {
+ return (
+ <div className="fixed inset-0 z-50 flex items-center justify-center">
+ <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+ <div className="relative z-10 flex flex-col items-center justify-center">
+ <div className="w-72 h-72">
+ <DotLottieReact
+ src="https://lottie.host/c73f7881-d168-4dee-be3a-3c73bd916083/vnLD4LVey6.lottie"
+ loop
+ autoplay
+ style={{ width: '100%', height: '100%' }}
+ />
+ </div>
  </div>
  </div>
  );

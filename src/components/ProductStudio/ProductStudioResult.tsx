@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, ProductStudioSession, ProductStudioAngle } from '../../types';
 import { smartDownload } from '../../utils/downloadHelper';
 
@@ -66,6 +67,13 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  const [showOriginal, setShowOriginal] = useState(false);
  const [pendingAction, setPendingAction] = useState<'back' | null>(null);
  const [timeAgo, setTimeAgo] = useState('agora');
+ const [showReveal, setShowReveal] = useState(true);
+
+ // Reveal animation on mount
+ useEffect(() => {
+ const timer = setTimeout(() => setShowReveal(false), 2500);
+ return () => clearTimeout(timer);
+ }, []);
 
  // Zoom com hover
  const [isHovering, setIsHovering] = useState(false);
@@ -218,6 +226,21 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  setShowOriginal(false);
  }
  };
+
+ if (showReveal) {
+ return (
+ <div className={'min-h-screen flex items-center justify-center ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+ <div className="w-72 h-72">
+ <DotLottieReact
+ src="https://lottie.host/c73f7881-d168-4dee-be3a-3c73bd916083/vnLD4LVey6.lottie"
+ loop
+ autoplay
+ style={{ width: '100%', height: '100%' }}
+ />
+ </div>
+ </div>
+ );
+ }
 
  return (
  <div className={'min-h-screen flex flex-col overflow-y-auto ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>

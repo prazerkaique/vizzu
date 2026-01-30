@@ -122,6 +122,19 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  const [showBeforeAfter, setShowBeforeAfter] = useState<'before' | 'after'>('after');
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
  const [savingLook, setSavingLook] = useState(false);
+ const [showReveal, setShowReveal] = useState(false);
+ const [wasGeneratingProvador, setWasGeneratingProvador] = useState(false);
+
+ // Reveal animation: generating → done transition
+ useEffect(() => {
+ if (isGenerating) {
+ setWasGeneratingProvador(true);
+ } else if (wasGeneratingProvador && generatedImage) {
+ setShowReveal(true);
+ const timer = setTimeout(() => setShowReveal(false), 2500);
+ return () => clearTimeout(timer);
+ }
+ }, [isGenerating, wasGeneratingProvador, generatedImage]);
 
  // Estados de Mensagem
  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(whatsappTemplates?.[0] || null);
@@ -1123,6 +1136,17 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] mt-1`}>
  {Math.round(Math.min(generationProgress, 100))}%
  </p>
+ </div>
+ ) : showReveal ? (
+ <div className="flex flex-col items-center justify-center h-full">
+ <div className="w-48 h-48">
+ <DotLottieReact
+ src="https://lottie.host/c73f7881-d168-4dee-be3a-3c73bd916083/vnLD4LVey6.lottie"
+ loop
+ autoplay
+ style={{ width: '100%', height: '100%' }}
+ />
+ </div>
  </div>
  ) : selectedSavedLook ? (
  <>
