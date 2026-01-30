@@ -1012,7 +1012,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  {separator()}
 
  {/* Resumo */}
- {sectionTitle('Resumo do seu Still Criativo', 'fa-clipboard-list')}
+ {sectionTitle('Resumo do seu Still Criativo®', 'fa-clipboard-list')}
  <div className={'rounded-xl overflow-hidden divide-y ' + (isDark ? 'bg-neutral-900 border border-neutral-800 divide-neutral-800' : 'bg-white border border-gray-200 divide-gray-100 ')}>
  <div className="px-4">
  <ReviewRow icon="fa-box" label="Produto" value={
@@ -1104,7 +1104,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  <i className="fas fa-arrow-left"></i>
  </button>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Still Criativo</h1>
+ <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Still Criativo®</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
  Passo {currentStep} de {totalSteps}
  </p>

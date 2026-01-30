@@ -1640,8 +1640,8 @@ const handleSave = async () => {
  <div className={`rounded-2xl w-full max-w-md p-5 ${isDark ? 'bg-neutral-900' : 'bg-white'}`}>
  {/* Header */}
  <div className="flex items-center gap-3 mb-4">
- <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
- <i className="fab fa-instagram text-white text-lg"></i>
+ <div className={'w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fab fa-instagram text-lg ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Legenda para Instagram</h4>

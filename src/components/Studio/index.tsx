@@ -120,8 +120,8 @@ export const Studio: React.FC<StudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  <div className="flex items-center justify-between mb-5">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] ')}>
- <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <div className="flex items-center gap-2">

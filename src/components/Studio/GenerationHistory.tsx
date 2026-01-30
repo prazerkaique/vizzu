@@ -51,8 +51,8 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
  >
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A855F7] to-[#FF6B9D] flex items-center justify-center">
- <i className="fas fa-history text-white"></i>
+ <div className="w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl bg-white/60 border border-gray-200/60 shadow-sm">
+ <i className="fas fa-history text-[#1A1A1A]"></i>
  </div>
  <div className="text-left">
  <h3 className="font-bold text-slate-800">Histórico de Gerações</h3>

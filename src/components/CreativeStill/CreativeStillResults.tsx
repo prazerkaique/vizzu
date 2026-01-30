@@ -131,7 +131,7 @@ export const CreativeStillResults: React.FC<Props> = ({
 
  {/* Título */}
  <h2 className="text-white text-2xl font-bold font-serif mb-2 text-center">
- Criando seu Still Criativo...
+ Criando seu Still Criativo®...
  </h2>
 
  {/* Frase de loading */}

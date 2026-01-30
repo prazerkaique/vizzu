@@ -40,12 +40,12 @@ window.vizzu = {
 
 
 const CATEGORY_GROUPS = [
- { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
- { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
- { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
- { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
- { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
- { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
+ { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+ { id: 'parte-de-cima', label: 'Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+ { id: 'parte-de-baixo', label: 'Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+ { id: 'pecas-inteiras', label: 'Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+ { id: 'calcados', label: 'Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
+ { id: 'acessorios', label: 'Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 // Helper para encontrar categoria pai de uma subcategoria
@@ -3847,9 +3847,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Produtos Cadastrados */}
  <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100')}>
- <i className={'fas fa-box text-xs ' + (theme === 'dark' ? 'text-blue-400' : 'text-blue-600')}></i>
- </div>
+ <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
@@ -3858,9 +3856,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Produtos Otimizados */}
  <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100')}>
- <i className={'fas fa-sparkles text-xs ' + (theme === 'dark' ? 'text-green-400' : 'text-green-600')}></i>
- </div>
+ <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#A855F7]' : 'text-[#A855F7]')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{optimizedProducts}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos otimizados</p>
@@ -3869,9 +3865,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Looks Gerados */}
  <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100')}>
- <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-purple-400' : 'text-purple-600')}></i>
- </div>
+ <i className={'fas fa-shirt text-sm ' + (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{looksGenerated}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Looks gerados</p>
@@ -3880,9 +3874,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Clientes Cadastrados */}
  <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15')}>
- <i className={'fas fa-users text-xs ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
- </div>
+ <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-[#4ADE80]' : 'text-[#4ADE80]')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
@@ -4016,8 +4008,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Header */}
  <div className="mb-6">
  <div className="flex items-center gap-3 mb-2">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] ')}>
- <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h1 className={'text-xl font-extrabold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
@@ -4106,7 +4098,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <span className="px-2 py-0.5 bg-indigo-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
  <span className="text-white/60 text-xs">10-20 créditos</span>
  </div>
- <h3 className="text-xl font-bold text-white mb-1 font-serif">Look Completo</h3>
+ <h3 className="text-xl font-bold text-white mb-1 font-serif">Look Completo®</h3>
  <p className="text-white/70 text-sm">Crie looks com modelos virtuais em fundo studio ou cenário personalizado</p>
  </div>
  <div className="flex items-center justify-between">
@@ -4138,7 +4130,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
  <span className="text-white/60 text-xs">2 créditos</span>
  </div>
- <h3 className="text-xl font-bold text-white mb-1 font-serif">Still Criativo</h3>
+ <h3 className="text-xl font-bold text-white mb-1 font-serif">Still Criativo®</h3>
  <p className="text-white/70 text-sm">Composições artísticas de produto. Fotos estilo still life para Instagram</p>
  </div>
  <div className="flex items-center justify-between">
@@ -4185,8 +4177,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4 mt-4'}>
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 flex items-center justify-center">
- <i className="fas fa-coins text-[#E91E8C]"></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-coins ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
@@ -4346,8 +4338,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Header */}
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] ')}>
- <i className={'fas fa-user-tie text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-user-tie text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Modelos Salvos</h1>
@@ -4576,8 +4568,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="max-w-6xl mx-auto">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] ')}>
- <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Produtos</h1>
@@ -4674,7 +4666,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {filteredProducts.slice(0, visibleProductsCount).map(product => (
  <div
  key={product.id}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-[#E91E8C]' : '')}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? (theme === 'dark' ? 'ring-2 ring-neutral-500' : 'ring-2 ring-gray-400') : '')}
  onTouchStart={() => handleProductTouchStart(product.id)}
  onTouchEnd={() => handleProductTouchEnd(product.id)}
  onTouchMove={handleProductTouchMove}
@@ -4759,8 +4751,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="max-w-5xl mx-auto">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] ')}>
- <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Clientes</h1>
@@ -4815,7 +4807,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
  <div className={'divide-y ' + (theme === 'dark' ? 'divide-neutral-800' : 'divide-gray-100')}>
  {filteredClients.map(client => (
- <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-purple-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => setShowClientDetail(client)}>
+ <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-purple-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => { setProvadorClient(client); setCurrentPage('provador'); }}>
  <div className="flex items-center gap-3">
  <div className="relative">
  {getClientPhoto(client) ? (
@@ -4826,8 +4818,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  )}
  {client.hasProvadorIA && (
- <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
- <i className="fas fa-camera text-white text-[6px]"></i>
+ <div className={'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-camera text-[6px] ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  )}
  </div>
@@ -4841,13 +4833,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(client.whatsapp)}</p>
  </div>
  <div className="flex items-center gap-1.5">
- {client.hasProvadorIA && (
- <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-[#E91E8C]/15 hover:bg-[#E91E8C]/20') + ' w-8 h-8 rounded-lg text-[#E91E8C] flex items-center justify-center transition-colors'} title="Vizzu Provador®">
- <i className="fas fa-wand-magic-sparkles text-xs"></i>
- </button>
- )}
- <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-green-100 hover:bg-green-200') + ' w-8 h-8 rounded-lg text-green-500 flex items-center justify-center transition-colors'} title="WhatsApp">
- <i className="fab fa-whatsapp text-sm"></i>
+ <button onClick={(e) => { e.stopPropagation(); startEditingClient(client); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-100 hover:bg-gray-200') + ' w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')} title="Editar">
+ <i className="fas fa-pen text-xs"></i>
  </button>
  <button onClick={(e) => { e.stopPropagation(); if (confirm('Excluir cliente ' + client.firstName + ' ' + client.lastName + '?')) handleDeleteClient(client.id); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-red-500/20' : 'bg-gray-100 hover:bg-red-100') + ' w-8 h-8 rounded-lg text-red-500 flex items-center justify-center transition-colors'} title="Excluir">
  <i className="fas fa-trash text-xs"></i>
@@ -4870,8 +4857,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Header com Dropdown */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B9D]/20 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] ')}>
- <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Configurações</h1>
@@ -4900,7 +4887,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => setSettingsTab(tab.id)}
  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
  settingsTab === tab.id
- ? 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white '
+ ? theme === 'dark' ? 'bg-neutral-700 text-white' : 'bg-gray-900 text-white'
  : theme === 'dark'
  ? 'bg-neutral-800 text-neutral-400 hover:bg-gray-300'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -4945,8 +4932,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="bg-gradient-to-br from-[#E91E8C]/20 via-[#A855F7]/15 to-[#FF6B9D]/20 border border-[#E91E8C]/30 rounded-2xl p-5 mb-6 backdrop-blur-sm">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D] flex items-center justify-center ">
- <i className="fas fa-coins text-white text-lg"></i>
+ <div className={'w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-coins text-lg ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="text-[#E91E8C] text-[10px] uppercase tracking-wider font-medium">Seus Creditos</p>
@@ -5086,8 +5073,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Secao: Compre Creditos Adicionais */}
  <div className="bg-gradient-to-br from-amber-900/20 via-orange-900/10 to-neutral-900 border border-amber-500/20 rounded-2xl p-5 mb-6">
  <div className="flex items-center gap-3 mb-4">
- <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-[#FF9F43] flex items-center justify-center ">
- <i className="fas fa-coins text-white"></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-coins ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h4 className="text-white font-semibold">Compre Creditos Adicionais</h4>
@@ -5703,13 +5690,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* CLIENT DETAIL MODAL */}
  {showClientDetail && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowClientDetail(null)}>
- <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
+ <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet cursor-pointer" onClick={(e) => { e.stopPropagation(); setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
  <div className="bg-gray-300 w-10 h-1 rounded-full"></div>
  </div>
  <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
- <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-300 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+ <button onClick={(e) => { e.stopPropagation(); setShowClientDetail(null); }} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-300 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
  <i className="fas fa-times text-xs"></i>
  </button>
  <div className="relative inline-block">
@@ -5721,8 +5708,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  )}
  {showClientDetail.hasProvadorIA && (
- <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center border-2 border-neutral-800">
- <i className="fas fa-camera text-white text-[8px]"></i>
+ <div className={'absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center backdrop-blur-xl border-2 ' + (theme === 'dark' ? 'bg-white/10 border-white/15' : 'bg-white/60 border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-camera text-[8px] ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  )}
  </div>
@@ -5778,8 +5765,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <img
  src={look.imageUrl}
  alt="Look"
- className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-[#E91E8C] transition-colors"
- onClick={() => window.open(look.imageUrl, '_blank')}
+ className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-neutral-500 transition-colors"
+ onClick={(e) => { e.stopPropagation(); window.open(look.imageUrl, '_blank'); }}
  />
  <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">
  {new Date(look.createdAt).toLocaleDateString('pt-BR')}
@@ -5790,18 +5777,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  )}
  <div className="grid grid-cols-2 gap-2 pt-2">
- {showClientDetail.hasProvadorIA && (
- <button onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }} className="col-span-2 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2">
- <i className="fas fa-wand-magic-sparkles text-[10px]"></i>Vizzu Provador®
- </button>
- )}
- <button onClick={() => startEditingClient(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-gray-300 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+ <button onClick={(e) => { e.stopPropagation(); startEditingClient(showClientDetail); }} className="py-2.5 bg-neutral-800 hover:bg-gray-300 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
  <i className="fas fa-pen text-[10px]"></i>Editar
  </button>
- <button onClick={() => openWhatsAppLookModal(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-gray-300 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
- <i className="fab fa-whatsapp text-sm"></i>WhatsApp
- </button>
- <button onClick={() => handleDeleteClient(showClientDetail.id)} className="col-span-2 py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+ <button onClick={(e) => { e.stopPropagation(); handleDeleteClient(showClientDetail.id); }} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
  <i className="fas fa-trash text-[10px]"></i>Excluir
  </button>
  </div>
@@ -6191,8 +6170,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
 
  <div className="flex items-center gap-3 mb-4">
- <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] flex items-center justify-center">
- <i className="fas fa-wand-magic-sparkles text-white"></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-wand-magic-sparkles ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Múltiplos produtos detectados</h3>
@@ -6650,8 +6629,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center mb-2">
- <i className="fas fa-camera text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center mb-2 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-camera text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Product Studio</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Foto profissional</p>
@@ -6666,8 +6645,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] flex items-center justify-center mb-2">
- <i className="fas fa-shirt text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center mb-2 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-shirt text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Provador</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Vista seus clientes</p>
@@ -6682,10 +6661,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF9F43] to-yellow-400 flex items-center justify-center mb-2">
- <i className="fas fa-layer-group text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center mb-2 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Look Completo</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Look Completo®</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Monte combinações</p>
  </button>
 
@@ -6698,8 +6677,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#E91E8C] flex items-center justify-center mb-2">
- <i className="fas fa-mountain-sun text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center mb-2 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-mountain-sun text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Com ambiente</p>
@@ -7512,8 +7491,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center">
- <i className="fas fa-camera text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-camera text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="font-medium">Studio Ready</p>
@@ -7529,8 +7508,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#E91E8C] flex items-center justify-center">
- <i className="fas fa-mountain-sun text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-mountain-sun text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="font-medium">Cenário Criativo</p>
@@ -7546,8 +7525,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF9F43] to-yellow-400 flex items-center justify-center">
- <i className="fas fa-layer-group text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="font-medium">Look Composer</p>
@@ -7755,8 +7734,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  >
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
- <i className={'fas ' + modal.icon + ' text-white text-xs'}></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas ' + modal.icon + ' text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium truncate max-w-[120px]'}>{modal.title}</p>

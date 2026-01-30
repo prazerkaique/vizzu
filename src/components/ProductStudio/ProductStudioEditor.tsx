@@ -1196,8 +1196,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  disabled={!onNavigate}
  className={(theme === 'dark' ? 'bg-gradient-to-r from-[#A855F7]/20 to-[#FF6B9D]/20 border-[#A855F7]/30 hover:border-[#A855F7]/50' : 'bg-gradient-to-r from-[#A855F7]/10 to-[#E91E8C]/10 border-[#A855F7]/20 hover:border-[#A855F7]/30') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] flex items-center justify-center flex-shrink-0">
- <i className="fas fa-layer-group text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Montar Look</span>
  </button>
@@ -1208,8 +1208,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  disabled={!onNavigate}
  className={(theme === 'dark' ? 'bg-gradient-to-r from-[#FF9F43]/20 to-yellow-500/20 border-orange-500/30 hover:border-orange-500/50' : 'bg-gradient-to-r from-[#FF9F43]/10 to-yellow-100 border-orange-200 hover:border-orange-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF9F43] to-yellow-500 flex items-center justify-center flex-shrink-0">
- <i className="fas fa-mountain-sun text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-mountain-sun text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</span>
  </button>
@@ -1220,8 +1220,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  disabled={!onNavigate}
  className={(theme === 'dark' ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30 hover:border-blue-500/50' : 'bg-gradient-to-r from-blue-100 to-cyan-100 border-blue-200 hover:border-blue-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
- <i className="fas fa-user-check text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-user-check text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Vestir Cliente</span>
  </button>
@@ -1231,8 +1231,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <button
  className={(theme === 'dark' ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 hover:border-green-500/50' : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-200 hover:border-green-300') + ' w-full p-3 rounded-xl border transition-all flex items-center gap-2'}
  >
- <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
- <i className="fas fa-download text-white text-xs"></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-download text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Download</span>
  <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-down text-[8px] ml-auto'}></i>

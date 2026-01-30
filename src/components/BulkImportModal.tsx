@@ -451,8 +451,8 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${borderColor} shrink-0`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
-              <i className="fas fa-file-import text-white text-sm"></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+              <i className={'fas fa-file-import text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
             </div>
             <div>
               <h3 className={`${textPrimary} font-semibold text-sm sm:text-base`}>Importação em Massa</h3>

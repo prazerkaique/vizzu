@@ -96,8 +96,8 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
       <div className={`p-4 border-b ${isDark ? 'border-neutral-800' : 'border-gray-200'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-[#E91E8C]/15 to-[#FF9F43]/20' : 'bg-gradient-to-br from-[#E91E8C]/10 to-[#FF9F43]/10'}`}>
-              <i className="fas fa-compress-arrows-alt text-[#E91E8C]"></i>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ${isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm'}`}>
+              <i className={`fas fa-compress-arrows-alt ${isDark ? 'text-neutral-200' : 'text-[#1A1A1A]'}`}></i>
             </div>
             <div>
               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>

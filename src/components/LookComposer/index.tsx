@@ -511,8 +511,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <i className="fas fa-arrow-left text-sm"></i>
  </button>
  )}
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] ')}>
- <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-[#E91E8C]' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <div className="flex items-center gap-2">
@@ -547,8 +547,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border mb-6 overflow-hidden'}>
  <div className="p-4 flex items-center justify-between">
  <div className="flex items-center gap-3">
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15')}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-clock text-sm'}></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={(isDark ? 'text-neutral-200' : 'text-[#1A1A1A]') + ' fas fa-clock text-sm'}></i>
  </div>
  <div>
  <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Últimos Looks</h2>

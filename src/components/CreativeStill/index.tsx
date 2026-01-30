@@ -593,11 +593,11 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  <i className="fas fa-arrow-left"></i>
  </button>
  )}
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-[#FF9F43]/15 border border-amber-500/30' : 'bg-gradient-to-r from-amber-500 to-[#FF9F43] ')}>
- <i className={'fas fa-palette text-sm ' + (isDark ? 'text-amber-400' : 'text-white')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-palette text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Still Criativo</h1>
+ <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Still Criativo®</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
  </div>
  </div>
