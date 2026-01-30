@@ -255,7 +255,7 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* Galeria */}
                 <button
                   onClick={() => triggerUpload('front', false)}
-                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-200 hover:border-pink-400 hover:bg-purple-50'}`}
+                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-[#A855F7]/20 hover:border-[#E91E8C]/50 hover:bg-purple-50'}`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-purple-100'}`}>
                     <i className={`fas fa-images text-lg ${isDark ? 'text-purple-400' : 'text-purple-500'}`}></i>
@@ -266,7 +266,7 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* Câmera */}
                 <button
                   onClick={() => triggerUpload('front', true)}
-                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-200 hover:border-pink-400 hover:bg-purple-50'}`}
+                  className={`flex flex-col items-center gap-3 p-6 border-2 border-dashed rounded-xl transition-all ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-[#A855F7]/20 hover:border-[#E91E8C]/50 hover:bg-purple-50'}`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-purple-100'}`}>
                     <i className={`fas fa-camera text-lg ${isDark ? 'text-purple-400' : 'text-purple-500'}`}></i>
@@ -307,11 +307,11 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* FRENTE */}
                 <div className="flex flex-col">
                   <label className={`text-[9px] font-medium uppercase tracking-wide mb-1.5 flex items-center gap-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                    <i className="fas fa-image text-pink-500 text-[8px]"></i>
-                    Frente <span className="text-pink-500">*</span>
+                    <i className="fas fa-image text-[#E91E8C] text-[8px]"></i>
+                    Frente <span className="text-[#E91E8C]">*</span>
                   </label>
                   {frontImage ? (
-                    <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-pink-500">
+                    <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-[#E91E8C]">
                       <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />
                       <div className="absolute top-1 right-1 flex gap-0.5">
                         <button
@@ -327,14 +327,14 @@ export const AddProductModal: React.FC<Props> = ({
                           <i className="fas fa-times text-[8px]"></i>
                         </button>
                       </div>
-                      <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-pink-500 text-white text-[8px] font-bold rounded-full">
+                      <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-[#E91E8C]/100 text-white text-[8px] font-bold rounded-full">
                         <i className="fas fa-check mr-0.5"></i>OK
                       </div>
                     </div>
                   ) : (
                     <button
                       onClick={() => triggerUpload('front', false)}
-                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50'}`}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50 bg-neutral-800/50' : 'border-gray-300 hover:border-[#E91E8C]/50 bg-gray-50'}`}
                     >
                       <i className={`fas fa-plus text-sm ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
                       <span className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
@@ -387,7 +387,7 @@ export const AddProductModal: React.FC<Props> = ({
                     Detalhe
                   </label>
                   {detailImage ? (
-                    <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isDark ? 'border-purple-500' : 'border-purple-400'}`}>
+                    <div className={`relative aspect-square rounded-xl overflow-hidden border-2 ${isDark ? 'border-[#A855F7]' : 'border-purple-400'}`}>
                       <img src={detailImage} alt="Detalhe" className="w-full h-full object-cover" />
                       <div className="absolute top-1 right-1 flex gap-0.5">
                         <button
@@ -410,7 +410,7 @@ export const AddProductModal: React.FC<Props> = ({
                   ) : (
                     <button
                       onClick={() => triggerUpload('detail', false)}
-                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-purple-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50'}`}
+                      className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'border-neutral-700 hover:border-[#A855F7]/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50'}`}
                     >
                       <i className={`fas fa-plus text-sm ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
                       <span className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Adicionar</span>
@@ -433,7 +433,7 @@ export const AddProductModal: React.FC<Props> = ({
               <button
                 onClick={goToDetails}
                 disabled={!frontImage}
-                className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 Continuar
                 <i className="fas fa-arrow-right text-xs"></i>
@@ -470,10 +470,10 @@ export const AddProductModal: React.FC<Props> = ({
               <div className="flex items-center justify-center gap-2 mb-4">
                 {frontImage && (
                   <div className="relative">
-                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-pink-500/50' : 'border-pink-300'}`}>
+                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-[#E91E8C]/50' : 'border-[#E91E8C]/40'}`}>
                       <img src={frontImage} alt="Frente" className="w-full h-full object-cover" />
                     </div>
-                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-pink-500/20 text-pink-400' : 'bg-pink-100 text-pink-500'}`}>F</span>
+                    <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-[#E91E8C]/15 text-[#E91E8C]'}`}>F</span>
                   </div>
                 )}
                 {backImage ? (
@@ -493,7 +493,7 @@ export const AddProductModal: React.FC<Props> = ({
                 )}
                 {detailImage ? (
                   <div className="relative">
-                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-purple-500/50' : 'border-purple-300'}`}>
+                    <div className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${isDark ? 'border-[#A855F7]/50' : 'border-purple-300'}`}>
                       <img src={detailImage} alt="Detalhe" className="w-full h-full object-cover" />
                     </div>
                     <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-bold rounded ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-500'}`}>D</span>
@@ -512,7 +512,7 @@ export const AddProductModal: React.FC<Props> = ({
               <div className="space-y-3">
                 <div>
                   <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                    Nome do Produto <span className="text-pink-500">*</span>
+                    Nome do Produto <span className="text-[#E91E8C]">*</span>
                   </label>
                   <input
                     type="text"
@@ -556,7 +556,7 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* Categoria */}
                 <div>
                   <label className={`block text-[9px] font-medium uppercase tracking-wide mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                    Categoria <span className="text-pink-500">*</span>
+                    Categoria <span className="text-[#E91E8C]">*</span>
                   </label>
                   <select
                     id="add-product-category"
@@ -578,9 +578,9 @@ export const AddProductModal: React.FC<Props> = ({
                 {/* ATRIBUTOS CONDICIONAIS POR CATEGORIA */}
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {categoryAttrs.length > 0 && (
-                  <div className={`p-3 rounded-xl border transition-all ${isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-purple-200'}`}>
+                  <div className={`p-3 rounded-xl border transition-all ${isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-[#A855F7]/20'}`}>
                     <div className="flex items-center gap-2 mb-3">
-                      <i className={`fas fa-sliders text-xs ${isDark ? 'text-pink-400' : 'text-pink-500'}`}></i>
+                      <i className={`fas fa-sliders text-xs ${isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]'}`}></i>
                       <span className={`text-[10px] font-medium uppercase tracking-wide ${isDark ? 'text-neutral-400' : 'text-gray-600'}`}>
                         Atributos de {formData.category}
                       </span>
@@ -615,7 +615,7 @@ export const AddProductModal: React.FC<Props> = ({
                 <button
                   onClick={handleCreate}
                   disabled={isCreating || !formData.name || !formData.category}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isCreating ? (
                     <>
@@ -664,7 +664,7 @@ export const AddProductModal: React.FC<Props> = ({
               </button>
               <button
                 onClick={confirmNoBack}
-                className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90"
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90"
               >
                 Continuar
               </button>
@@ -722,7 +722,7 @@ export const AddProductModal: React.FC<Props> = ({
               </button>
               <button
                 onClick={confirmNoDetail}
-                className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90"
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90"
               >
                 Continuar sem
               </button>

@@ -52,8 +52,8 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
           className={`flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
             resolution === '2k'
               ? isDark
-                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
-                : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
+                : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
               : isDark
                 ? 'text-neutral-400 hover:text-white hover:bg-neutral-700'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
@@ -77,8 +77,8 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
                 : 'text-gray-400 cursor-pointer'
               : resolution === '4k'
                 ? isDark
-                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
-                  : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
+                  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                 : isDark
                   ? 'text-neutral-400 hover:text-white hover:bg-neutral-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'

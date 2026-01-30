@@ -24,11 +24,11 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ 
-          email, 
+        const { error } = await supabase.auth.signUp({
+          email,
           password,
           options: {
             data: { name }
@@ -56,15 +56,15 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
   };
 
   const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({ 
-      provider: 'google', 
-      options: { redirectTo: window.location.origin } 
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
     });
   };
 
   return (
     <div
-      className="bg-[#0a0a0f] flex overflow-auto"
+      className="bg-cream flex overflow-auto"
       style={{
         minHeight: '100dvh',
         paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -76,27 +76,27 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <img 
-              src="/logo.png" 
-              alt="Vizzu" 
+            <img
+              src="/logo.png"
+              alt="Vizzu"
               className="h-16 w-auto mx-auto mb-4"
             />
-            <p className="text-gray-400 text-sm">AI Visual Studio para e-commerce</p>
+            <p className="text-gray-500 text-sm">AI Visual Studio para e-commerce</p>
           </div>
 
           {/* Form Card */}
-          <div className="bg-neutral-900/80 backdrop-blur-xl rounded-3xl p-8 border border-neutral-800 shadow-2xl">
-            <h2 className="text-2xl font-bold text-white mb-2 text-center">
+          <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
               {isSignUp ? 'Criar conta' : 'Bem-vindo de volta'}
             </h2>
-            <p className="text-neutral-400 text-center mb-6 text-sm">
+            <p className="text-gray-500 text-center mb-6 text-sm">
               {isSignUp ? 'Comece a criar imagens incríveis' : 'Entre para continuar'}
             </p>
 
             {/* Google Login */}
-            <button 
+            <button
               onClick={handleGoogleLogin}
-              className="w-full py-3 bg-white text-neutral-900 rounded-xl font-medium text-sm flex items-center justify-center gap-3 hover:bg-neutral-100 transition-colors mb-4"
+              className="w-full py-3 bg-gray-50 text-gray-900 rounded-xl font-medium text-sm flex items-center justify-center gap-3 hover:bg-gray-100 border border-gray-200 transition-colors mb-4"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -109,19 +109,19 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
 
             <div className="relative mb-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-neutral-800"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-neutral-900 text-neutral-600">ou</span>
+                <span className="px-3 bg-white text-gray-400">ou</span>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSignUp && (
                 <div>
-                  <label className="block text-sm text-neutral-400 mb-2">Nome</label>
+                  <label className="block text-sm text-gray-600 mb-2">Nome</label>
                   <div className="relative">
-                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     <input
@@ -131,7 +131,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                       autoComplete="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-600 focus:border-pink-500 focus:outline-none transition-colors"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
                       placeholder="Seu nome"
                       required={isSignUp}
                     />
@@ -140,9 +140,9 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
               )}
 
               <div>
-                <label className="block text-sm text-neutral-400 mb-2">Email</label>
+                <label className="block text-sm text-gray-600 mb-2">Email</label>
                 <div className="relative">
-                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <input
@@ -152,7 +152,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-600 focus:border-pink-500 focus:outline-none transition-colors"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
                     placeholder="seu@email.com"
                     required
                   />
@@ -160,9 +160,9 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-neutral-400 mb-2">Senha</label>
+                <label className="block text-sm text-gray-600 mb-2">Senha</label>
                 <div className="relative">
-                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <input
@@ -172,7 +172,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                     autoComplete={isSignUp ? "new-password" : "current-password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-600 focus:border-pink-500 focus:outline-none transition-colors"
+                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
                     placeholder="••••••••"
                     required
                   />
@@ -180,7 +180,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
               </div>
 
               {error && (
-                <p className={`text-sm ${error.includes('✓') ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-sm ${error.includes('✓') ? 'text-green-600' : 'text-red-500'}`}>
                   {error}
                 </p>
               )}
@@ -188,7 +188,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white font-semibold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 group"
+                className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white font-semibold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 group"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -209,12 +209,12 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                   setIsSignUp(!isSignUp);
                   setError('');
                 }}
-                className="text-pink-400 hover:text-pink-300 text-sm transition-colors"
+                className="text-[#E91E8C] hover:text-[#E91E8C]/80 text-sm transition-colors"
               >
                 {isSignUp ? 'Já tem conta? Entrar' : (
                   <span>
                     Não tem conta? <strong>Criar agora</strong>
-                    <span className="block text-neutral-500 text-xs mt-1">
+                    <span className="block text-gray-400 text-xs mt-1">
                       Ganhe 50 créditos grátis para testar
                     </span>
                   </span>
@@ -226,28 +226,28 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
       </div>
 
       {/* Right Side - Visual */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-pink-900/20 via-[#0a0a0f] to-orange-900/20 items-center justify-center relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#E91E8C]/10 via-cream to-[#FF9F43]/10 items-center justify-center relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#E91E8C]/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF9F43]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
 
         {/* Content */}
         <div className="relative z-10 text-center p-12">
-          <div className="w-24 h-24 bg-gradient-to-r from-pink-500 to-orange-400 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-pink-500/30">
+          <div className="w-24 h-24 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-[#E91E8C]/20">
             <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
           </div>
-          <h2 className="text-4xl font-bold text-white mb-4">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Transforme suas
             <br />
-            <span className="bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#E91E8C] to-[#FF9F43] bg-clip-text text-transparent">
               fotos de produto
             </span>
           </h2>
-          <p className="text-neutral-400 text-lg max-w-md mx-auto">
+          <p className="text-gray-500 text-lg max-w-md mx-auto">
             Use inteligência artificial para criar imagens profissionais de e-commerce em segundos
           </p>
 
@@ -259,11 +259,11 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
               'Cenários pro',
               'Provador virtual'
             ].map((feature, i) => (
-              <div 
+              <div
                 key={i}
-                className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10"
+                className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-gray-200/50 shadow-sm"
               >
-                <p className="text-sm text-neutral-300">{feature}</p>
+                <p className="text-sm text-gray-700">{feature}</p>
               </div>
             ))}
           </div>

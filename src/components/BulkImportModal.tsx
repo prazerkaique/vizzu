@@ -451,7 +451,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
         {/* Header */}
         <div className={`flex items-center justify-between p-4 border-b ${borderColor} shrink-0`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
               <i className="fas fa-file-import text-white text-sm"></i>
             </div>
             <div>
@@ -492,7 +492,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className={`${textPrimary} font-medium text-sm sm:text-base`}>Google Sheets + Drive</h4>
-                      <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 text-white text-[10px] font-medium">Recomendado</span>
+                      <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-medium">Recomendado</span>
                     </div>
                     <p className={`${textSecondary} text-xs mt-1`}>
                       Importe direto de uma planilha Google com link para imagens no Drive
@@ -569,7 +569,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                       value={spreadsheetUrl}
                       onChange={(e) => setSpreadsheetUrl(e.target.value)}
                       placeholder="https://docs.google.com/spreadsheets/d/..."
-                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/50`}
+                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-[#E91E8C]/50`}
                     />
                   </div>
 
@@ -582,7 +582,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                       value={driveFolder}
                       onChange={(e) => setDriveFolder(e.target.value)}
                       placeholder="https://drive.google.com/drive/folders/..."
-                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/50`}
+                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-[#E91E8C]/50`}
                     />
                     <p className={`${textMuted} text-[10px] mt-1.5`}>
                       Se as imagens estão em uma pasta do Drive, cole o link aqui
@@ -642,11 +642,11 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
 
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-300 hover:border-pink-400'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
+                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-300 hover:border-[#E91E8C]/50'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
                   >
                     {xmlFileName ? (
                       <>
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center mx-auto mb-3">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center mx-auto mb-3">
                           <i className="fas fa-check text-white text-xl"></i>
                         </div>
                         <p className={`${textPrimary} font-medium text-sm mb-1`}>{xmlFileName}</p>
@@ -711,11 +711,11 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
 
                   <div
                     onClick={() => zipInputRef.current?.click()}
-                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-300 hover:border-pink-400'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
+                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-300 hover:border-[#E91E8C]/50'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
                   >
                     {zipFileName ? (
                       <>
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center mx-auto mb-3">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center mx-auto mb-3">
                           <i className="fas fa-check text-white text-xl"></i>
                         </div>
                         <p className={`${textPrimary} font-medium text-sm mb-1`}>{zipFileName}</p>
@@ -783,7 +783,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                   onClick={toggleAll}
                   className={`${textSecondary} text-xs hover:${textPrimary} transition-colors flex items-center gap-2`}
                 >
-                  <i className={`${parsedProducts.every(p => p.selected) ? 'fas fa-check-square text-pink-500' : 'far fa-square'}`}></i>
+                  <i className={`${parsedProducts.every(p => p.selected) ? 'fas fa-check-square text-[#E91E8C]' : 'far fa-square'}`}></i>
                   Selecionar todos
                 </button>
                 <span className={`${textMuted} text-xs`}>
@@ -796,7 +796,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                 {parsedProducts.map((product) => (
                   <div
                     key={product.id}
-                    className={`p-3 rounded-xl border ${borderColor} ${product.selected ? (isDark ? 'bg-pink-500/10 border-pink-500/30' : 'bg-pink-50 border-pink-200') : bgMuted} transition-all`}
+                    className={`p-3 rounded-xl border ${borderColor} ${product.selected ? (isDark ? 'bg-[#E91E8C]/10 border-[#E91E8C]/30' : 'bg-[#E91E8C]/10 border-[#E91E8C]/20') : bgMuted} transition-all`}
                   >
                     <div className="flex items-start gap-3">
                       {/* Checkbox */}
@@ -804,7 +804,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                         onClick={() => toggleProduct(product.id)}
                         className="mt-1 shrink-0"
                       >
-                        <i className={`${product.selected ? 'fas fa-check-square text-pink-500' : `far fa-square ${textMuted}`} text-lg`}></i>
+                        <i className={`${product.selected ? 'fas fa-check-square text-[#E91E8C]' : `far fa-square ${textMuted}`} text-lg`}></i>
                       </button>
 
                       {/* Image preview */}
@@ -876,7 +876,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
           {/* Step 4: Importing */}
           {step === 'importing' && (
             <div className="py-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center mx-auto mb-4 animate-pulse">
                 <i className="fas fa-sync-alt text-white text-2xl animate-spin"></i>
               </div>
               <h4 className={`${textPrimary} font-semibold text-lg mb-2`}>Importando produtos...</h4>
@@ -885,7 +885,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
               </p>
               <div className={`w-full ${bgMuted} rounded-full h-2 overflow-hidden`}>
                 <div
-                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all duration-300"
                   style={{ width: `${importProgress}%` }}
                 />
               </div>
@@ -930,7 +930,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                 <button
                   onClick={handleGoogleConnect}
                   disabled={isLoading || !spreadsheetUrl.trim()}
-                  className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <><i className="fas fa-spinner animate-spin"></i>Conectando...</>
@@ -953,7 +953,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
               <button
                 onClick={handleImport}
                 disabled={selectedCount === 0}
-                className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <i className="fas fa-upload"></i>
                 Importar {selectedCount} {selectedCount === 1 ? 'produto' : 'produtos'}
@@ -964,7 +964,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
           {step === 'done' && (
             <button
               onClick={handleClose}
-              className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
+              className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
             >
               <i className="fas fa-check mr-2"></i>Concluir
             </button>
@@ -975,7 +975,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
         {isLoading && step === 'configure' && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <div className={`${bgCard} rounded-xl p-6 text-center`}>
-              <i className="fas fa-spinner animate-spin text-pink-500 text-2xl mb-3"></i>
+              <i className="fas fa-spinner animate-spin text-[#E91E8C] text-2xl mb-3"></i>
               <p className={`${textPrimary} text-sm`}>Processando arquivo...</p>
             </div>
           </div>

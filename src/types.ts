@@ -1607,13 +1607,10 @@ export interface CreativeStillTemplate {
 
   // Configurações
   lighting: string;
-  camera_type: string;
   lens_model: string;
   camera_angle: string;
   depth_of_field: number;
-  color_grading_temperature: string;
-  color_grading_style: string;
-  texture_grain: string;
+  visual_style: string;
   frame_ratio: string;
   resolution: string;
   default_variations: number;
@@ -1678,14 +1675,12 @@ export interface CreativeStillWizardState {
   lighting: string;
   customLighting: string;
   lightingReference: { base64: string; mimeType: string } | null;
-  cameraType: string;
   lensModel: string;
   cameraAngle: string;
   depthOfField: number;
-  colorGradingTemperature: 'warm' | 'cool' | 'neutral' | 'ai_choose';
-  colorGradingStyle: string;
-  colorGradingReference: { base64: string; mimeType: string } | null;
-  textureGrain: 'clean' | 'subtle' | 'film' | 'heavy' | 'ai_choose';
+  visualStyle: string;
+  customVisualStyle: string;
+  visualStyleReference: { base64: string; mimeType: string } | null;
 
   // Step 4 - Frame & Configs
   frameRatio: string;

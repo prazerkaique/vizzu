@@ -641,7 +641,7 @@ const handleSave = async () => {
           
           {/* Credits Badge */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 bg-black/50 rounded-full">
-            <i className="fas fa-coins text-pink-400 text-[10px]"></i>
+            <i className="fas fa-coins text-[#E91E8C] text-[10px]"></i>
             <span className="text-white font-medium text-xs">{userCredits}</span>
           </div>
           
@@ -674,7 +674,7 @@ const handleSave = async () => {
               <button onClick={() => setViewMode('original')} className={`px-2.5 py-1 rounded text-[10px] font-medium ${viewMode === 'original' ? 'bg-white text-black' : 'text-white/70'}`}>
                 Original
               </button>
-              <button onClick={() => setViewMode('result')} className={`px-2.5 py-1 rounded text-[10px] font-medium ${viewMode === 'result' ? 'bg-pink-500 text-white' : 'text-white/70'}`}>
+              <button onClick={() => setViewMode('result')} className={`px-2.5 py-1 rounded text-[10px] font-medium ${viewMode === 'result' ? 'bg-[#E91E8C]/100 text-white' : 'text-white/70'}`}>
                 Resultado
               </button>
             </div>
@@ -685,8 +685,8 @@ const handleSave = async () => {
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20">
               <div className="text-center px-6">
                 <div className="relative w-16 h-16 mx-auto mb-4">
-                  <div className="absolute inset-0 border-4 border-pink-500/30 rounded-full"></div>
-                  <div className="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 border-4 border-[#E91E8C]/30 rounded-full"></div>
+                  <div className="absolute inset-0 border-4 border-[#E91E8C] border-t-transparent rounded-full animate-spin"></div>
                   <div className="absolute inset-0 flex items-center justify-center text-2xl">
                     {LOADING_PHRASES[loadingPhraseIndex].icon}
                   </div>
@@ -703,7 +703,7 @@ const handleSave = async () => {
                     <div
                       key={idx}
                       className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                        idx <= loadingPhraseIndex % 5 ? 'bg-pink-500' : 'bg-white/20'
+                        idx <= loadingPhraseIndex % 5 ? 'bg-[#E91E8C]/100' : 'bg-white/20'
                       }`}
                     />
                   ))}
@@ -722,7 +722,7 @@ const handleSave = async () => {
           <div className={`flex-shrink-0 px-4 py-3 border-b ${isDark ? 'border-neutral-800' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <h2 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                <i className="fas fa-wand-magic-sparkles text-pink-500 mr-2"></i>
+                <i className="fas fa-wand-magic-sparkles text-[#E91E8C] mr-2"></i>
                 Vizzu Studio
               </h2>
               <button onClick={onClose} className="md:hidden w-7 h-7 bg-neutral-800 text-neutral-400 hover:text-white rounded-full flex items-center justify-center">
@@ -740,7 +740,7 @@ const handleSave = async () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                  <i className="fas fa-images mr-1.5 text-pink-500"></i>Galeria
+                  <i className="fas fa-images mr-1.5 text-[#E91E8C]"></i>Galeria
                 </h3>
               </div>
               
@@ -749,7 +749,7 @@ const handleSave = async () => {
                 <p className={`text-[10px] font-medium uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Originais</p>
                 <div className="flex gap-2">
                   {/* Frente */}
-                  <div className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${currentView === 'front' && viewMode === 'original' ? 'border-pink-500' : isDark ? 'border-neutral-700' : 'border-gray-200'}`} onClick={() => { setCurrentView('front'); setViewMode('original'); }}>
+                  <div className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${currentView === 'front' && viewMode === 'original' ? 'border-[#E91E8C]' : isDark ? 'border-neutral-700' : 'border-gray-200'}`} onClick={() => { setCurrentView('front'); setViewMode('original'); }}>
                     {originals.front ? (
                       <img src={originals.front.base64 || originals.front.url} alt="Frente" className="w-full h-full object-cover" />
                     ) : (
@@ -761,7 +761,7 @@ const handleSave = async () => {
                   </div>
                   
                   {/* Costas */}
-                  <div className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${currentView === 'back' && viewMode === 'original' ? 'border-pink-500' : isDark ? 'border-neutral-700' : 'border-gray-200'} ${!originals.back ? 'opacity-40' : ''}`} onClick={() => { if (originals.back) { setCurrentView('back'); setViewMode('original'); } }}>
+                  <div className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${currentView === 'back' && viewMode === 'original' ? 'border-[#E91E8C]' : isDark ? 'border-neutral-700' : 'border-gray-200'} ${!originals.back ? 'opacity-40' : ''}`} onClick={() => { if (originals.back) { setCurrentView('back'); setViewMode('original'); } }}>
                     {originals.back ? (
                       <img src={originals.back.base64 || originals.back.url} alt="Costas" className="w-full h-full object-cover" />
                     ) : (
@@ -781,7 +781,7 @@ const handleSave = async () => {
                     <p className={`text-[10px] font-medium uppercase tracking-wide ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Geradas ({totalGenerated})</p>
                     <div className="flex gap-1">
                       {['all', 'studio', 'cenario', 'lifestyle'].map(f => (
-                        <button key={f} onClick={() => setGalleryFilter(f as GalleryFilter)} className={`px-2 py-0.5 rounded text-[9px] font-medium ${galleryFilter === f ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
+                        <button key={f} onClick={() => setGalleryFilter(f as GalleryFilter)} className={`px-2 py-0.5 rounded text-[9px] font-medium ${galleryFilter === f ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}>
                           {f === 'all' ? 'Todas' : f === 'studio' ? 'Studio' : f === 'cenario' ? 'Cenário' : 'IA'}
                         </button>
                       ))}
@@ -789,9 +789,9 @@ const handleSave = async () => {
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {getFilteredGeneratedImages().map(gen => (
-                      <div key={gen.id} className={`group/thumb relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${isDark ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300'}`} onClick={() => { setGenImg({ front: gen.images.front, back: gen.images.back || null }); setIsFromHistory(true); setViewMode('result'); setCurrentView('front'); }}>
+                      <div key={gen.id} className={`group/thumb relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-200 hover:border-[#E91E8C]/40'}`} onClick={() => { setGenImg({ front: gen.images.front, back: gen.images.back || null }); setIsFromHistory(true); setViewMode('result'); setCurrentView('front'); }}>
                         <img src={gen.images.front} alt="Gerada" className="w-full h-full object-cover" />
-                        <span className={`absolute bottom-0.5 left-0.5 px-1 py-0.5 text-[7px] font-bold rounded ${gen.tool === 'studio' ? 'bg-blue-500 text-white' : gen.tool === 'cenario' ? 'bg-purple-500 text-white' : 'bg-pink-500 text-white'}`}>
+                        <span className={`absolute bottom-0.5 left-0.5 px-1 py-0.5 text-[7px] font-bold rounded ${gen.tool === 'studio' ? 'bg-blue-500 text-white' : gen.tool === 'cenario' ? 'bg-purple-500 text-white' : 'bg-[#E91E8C]/100 text-white'}`}>
                           {gen.tool === 'studio' ? 'S' : gen.tool === 'cenario' ? 'C' : 'IA'}
                         </span>
                         {gen.images.back && <span className="absolute top-0.5 right-0.5 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center"><i className="fas fa-check text-white text-[6px]"></i></span>}
@@ -815,14 +815,14 @@ const handleSave = async () => {
             {/* ═══════════════════════════════════════════════════════ */}
             <div>
               <h3 className={`text-xs font-semibold uppercase tracking-wide mb-2 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                <i className="fas fa-magic mr-1.5 text-pink-500"></i>Ferramentas
+                <i className="fas fa-magic mr-1.5 text-[#E91E8C]"></i>Ferramentas
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.entries(TOOL_CFG) as [ToolType, typeof TOOL_CFG.studio][]).map(([key, cfg]) => (
-                  <button key={key} onClick={() => handleSelectTool(key)} className={`p-3 rounded-xl border-2 text-left transition-all ${tool === key ? 'border-pink-500 bg-pink-500/10' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <button key={key} onClick={() => handleSelectTool(key)} className={`p-3 rounded-xl border-2 text-left transition-all ${tool === key ? 'border-[#E91E8C] bg-[#E91E8C]/10' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}>
                     <div className="flex items-center gap-2 mb-1">
-                      <i className={`fas ${cfg.icon} text-sm ${tool === key ? 'text-pink-500' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
-                      <span className={`text-[10px] font-medium ${tool === key ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'}`}>{cfg.name}</span>
+                      <i className={`fas ${cfg.icon} text-sm ${tool === key ? 'text-[#E91E8C]' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
+                      <span className={`text-[10px] font-medium ${tool === key ? 'text-[#E91E8C]' : isDark ? 'text-white' : 'text-gray-900'}`}>{cfg.name}</span>
                     </div>
                     <p className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{cfg.desc}</p>
                   </button>
@@ -858,7 +858,7 @@ const handleSave = async () => {
                     <div key={step} className={`border-b last:border-b-0 ${isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                       {/* Step Header */}
                       <button onClick={() => setLifestyleStep(step)} className={`w-full flex items-center gap-3 p-3 ${isActive ? isDark ? 'bg-neutral-700/50' : 'bg-gray-100' : ''}`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isComplete ? 'bg-green-500 text-white' : isActive ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500'}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isComplete ? 'bg-green-500 text-white' : isActive ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500'}`}>
                           {isComplete && step !== lifestyleStep ? <i className="fas fa-check text-[8px]"></i> : stepNumber}
                         </div>
                         <span className={`flex-1 text-left text-xs font-medium ${isActive ? isDark ? 'text-white' : 'text-gray-900' : isDark ? 'text-neutral-400' : 'text-gray-500'}`}>{stepLabels[step]}</span>
@@ -873,7 +873,7 @@ const handleSave = async () => {
                               {/* Categoria do Produto (importada) */}
                               <div>
                                 <label className={`block text-[9px] font-medium uppercase mb-1 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>Categoria</label>
-                                <div className={`px-3 py-2 rounded-lg text-xs font-medium ${isDark ? 'bg-neutral-900 text-pink-400' : 'bg-pink-50 text-pink-600'}`}>
+                                <div className={`px-3 py-2 rounded-lg text-xs font-medium ${isDark ? 'bg-neutral-900 text-[#E91E8C]' : 'bg-[#E91E8C]/10 text-[#E91E8C]'}`}>
                                   <i className="fas fa-tag mr-1.5"></i>{product.category || 'Não definida'}
                                 </div>
                               </div>
@@ -924,8 +924,8 @@ const handleSave = async () => {
                             <div className="space-y-3">
                               {/* Tabs: Novo / Salvos */}
                               <div className="flex gap-1 mb-2">
-                                <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${modelTab === 'new' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Criar Novo</button>
-                                <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${modelTab === 'saved' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Salvos ({savedModels.length})</button>
+                                <button onClick={() => setModelTab('new')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${modelTab === 'new' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Criar Novo</button>
+                                <button onClick={() => setModelTab('saved')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${modelTab === 'saved' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Salvos ({savedModels.length})</button>
                               </div>
 
                               {modelTab === 'new' ? (
@@ -938,7 +938,7 @@ const handleSave = async () => {
                                         onClick={() => setModelSubStep(s)}
                                         className={`flex-1 py-1.5 rounded text-[9px] font-medium transition-all ${
                                           modelSubStep === s
-                                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                            ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                             : isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'
                                         }`}
                                       >
@@ -960,12 +960,12 @@ const handleSave = async () => {
                                             onClick={() => setModelSettings({...modelSettings, gender: g.id as 'woman'|'man'})}
                                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
                                               modelSettings.gender === g.id
-                                                ? 'border-pink-500 bg-pink-500/10'
+                                                ? 'border-[#E91E8C] bg-[#E91E8C]/10'
                                                 : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                           >
-                                            <i className={`fas ${g.icon} text-2xl ${modelSettings.gender === g.id ? 'text-pink-500' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
-                                            <span className={`text-sm font-medium ${modelSettings.gender === g.id ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'}`}>{g.label}</span>
+                                            <i className={`fas ${g.icon} text-2xl ${modelSettings.gender === g.id ? 'text-[#E91E8C]' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
+                                            <span className={`text-sm font-medium ${modelSettings.gender === g.id ? 'text-[#E91E8C]' : isDark ? 'text-white' : 'text-gray-900'}`}>{g.label}</span>
                                           </button>
                                         ))}
                                       </div>
@@ -1019,7 +1019,7 @@ const handleSave = async () => {
                                               onClick={() => setModelSettings({...modelSettings, skinTone: o.id})}
                                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                                 modelSettings.skinTone === o.id
-                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                                   : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
                                               }`}
                                             >
@@ -1041,7 +1041,7 @@ const handleSave = async () => {
                                               onClick={() => setModelSettings({...modelSettings, bodyType: o.id})}
                                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                                 modelSettings.bodyType === o.id
-                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                                   : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
                                               }`}
                                             >
@@ -1054,7 +1054,7 @@ const handleSave = async () => {
                                       {/* Altura - Slider */}
                                       <div>
                                         <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                                          Altura: <span className="text-pink-400">{modelSettings.height} cm</span>
+                                          Altura: <span className="text-[#E91E8C]">{modelSettings.height} cm</span>
                                         </label>
                                         <input
                                           type="range"
@@ -1070,8 +1070,8 @@ const handleSave = async () => {
                                             [&::-webkit-slider-thumb]:h-4
                                             [&::-webkit-slider-thumb]:rounded-full
                                             [&::-webkit-slider-thumb]:bg-gradient-to-r
-                                            [&::-webkit-slider-thumb]:from-pink-500
-                                            [&::-webkit-slider-thumb]:to-orange-400
+                                            [&::-webkit-slider-thumb]:from-[#E91E8C]/50
+                                            [&::-webkit-slider-thumb]:to-[#FF9F43]
                                             [&::-webkit-slider-thumb]:cursor-pointer`}
                                         />
                                         <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
@@ -1097,7 +1097,7 @@ const handleSave = async () => {
                                               onClick={() => setModelSettings({...modelSettings, hairColor: o.id, hairColorCustom: ''})}
                                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                                 modelSettings.hairColor === o.id
-                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                                   : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
                                               }`}
                                             >
@@ -1130,7 +1130,7 @@ const handleSave = async () => {
                                               onClick={() => setModelSettings({...modelSettings, hairType: o.id})}
                                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                                 modelSettings.hairType === o.id
-                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                                   : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
                                               }`}
                                             >
@@ -1143,7 +1143,7 @@ const handleSave = async () => {
                                       {/* Tamanho do Cabelo - Slider */}
                                       <div>
                                         <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                                          Tamanho do Cabelo: <span className="text-pink-400">{SLIDER_LABELS.hairLength[modelSettings.hairLength]}</span>
+                                          Tamanho do Cabelo: <span className="text-[#E91E8C]">{SLIDER_LABELS.hairLength[modelSettings.hairLength]}</span>
                                         </label>
                                         <input
                                           type="range"
@@ -1159,8 +1159,8 @@ const handleSave = async () => {
                                             [&::-webkit-slider-thumb]:h-4
                                             [&::-webkit-slider-thumb]:rounded-full
                                             [&::-webkit-slider-thumb]:bg-gradient-to-r
-                                            [&::-webkit-slider-thumb]:from-pink-500
-                                            [&::-webkit-slider-thumb]:to-orange-400
+                                            [&::-webkit-slider-thumb]:from-[#E91E8C]/50
+                                            [&::-webkit-slider-thumb]:to-[#FF9F43]
                                             [&::-webkit-slider-thumb]:cursor-pointer`}
                                         />
                                         <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
@@ -1181,7 +1181,7 @@ const handleSave = async () => {
                                               onClick={() => setModelSettings({...modelSettings, eyeColor: o.id, eyeColorCustom: ''})}
                                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                                 modelSettings.eyeColor === o.id
-                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                                   : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
                                               }`}
                                             >
@@ -1214,7 +1214,7 @@ const handleSave = async () => {
                                               onClick={() => setModelSettings({...modelSettings, expression: o.id})}
                                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                                 modelSettings.expression === o.id
-                                                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                                   : isDark ? 'text-neutral-400 hover:bg-neutral-700' : 'text-gray-500 hover:bg-gray-100'
                                               }`}
                                             >
@@ -1234,7 +1234,7 @@ const handleSave = async () => {
                                           {/* Tamanho do Busto - Slider */}
                                           <div>
                                             <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                                              Tamanho do Busto: <span className="text-pink-400">{SLIDER_LABELS.bustSize[modelSettings.bustSize - 1]}</span>
+                                              Tamanho do Busto: <span className="text-[#E91E8C]">{SLIDER_LABELS.bustSize[modelSettings.bustSize - 1]}</span>
                                             </label>
                                             <input
                                               type="range"
@@ -1250,8 +1250,8 @@ const handleSave = async () => {
                                                 [&::-webkit-slider-thumb]:h-4
                                                 [&::-webkit-slider-thumb]:rounded-full
                                                 [&::-webkit-slider-thumb]:bg-gradient-to-r
-                                                [&::-webkit-slider-thumb]:from-pink-500
-                                                [&::-webkit-slider-thumb]:to-orange-400
+                                                [&::-webkit-slider-thumb]:from-[#E91E8C]/50
+                                                [&::-webkit-slider-thumb]:to-[#FF9F43]
                                                 [&::-webkit-slider-thumb]:cursor-pointer`}
                                             />
                                             <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
@@ -1263,7 +1263,7 @@ const handleSave = async () => {
                                           {/* Tipo de Cintura - Slider */}
                                           <div>
                                             <label className={`block text-[9px] font-medium uppercase mb-1.5 ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
-                                              Tipo de Cintura: <span className="text-pink-400">{SLIDER_LABELS.waistType[modelSettings.waistType - 1]}</span>
+                                              Tipo de Cintura: <span className="text-[#E91E8C]">{SLIDER_LABELS.waistType[modelSettings.waistType - 1]}</span>
                                             </label>
                                             <input
                                               type="range"
@@ -1279,8 +1279,8 @@ const handleSave = async () => {
                                                 [&::-webkit-slider-thumb]:h-4
                                                 [&::-webkit-slider-thumb]:rounded-full
                                                 [&::-webkit-slider-thumb]:bg-gradient-to-r
-                                                [&::-webkit-slider-thumb]:from-pink-500
-                                                [&::-webkit-slider-thumb]:to-orange-400
+                                                [&::-webkit-slider-thumb]:from-[#E91E8C]/50
+                                                [&::-webkit-slider-thumb]:to-[#FF9F43]
                                                 [&::-webkit-slider-thumb]:cursor-pointer`}
                                             />
                                             <div className={`flex justify-between text-[9px] mt-1 ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}>
@@ -1321,7 +1321,7 @@ const handleSave = async () => {
                                           const currentIndex = steps.indexOf(modelSubStep);
                                           if (currentIndex < steps.length - 1) setModelSubStep(steps[currentIndex + 1]);
                                         }}
-                                        className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-xs font-medium"
+                                        className="flex-1 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-xs font-medium"
                                       >
                                         Próximo<i className="fas fa-arrow-right ml-1.5"></i>
                                       </button>
@@ -1332,7 +1332,7 @@ const handleSave = async () => {
                                 /* Modelos Salvos */
                                 <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
                                   {savedModels.map(m => (
-                                    <div key={m.id} onClick={() => setSelModelId(m.id)} className={`relative rounded-lg overflow-hidden cursor-pointer border-2 ${selModelId === m.id ? 'border-pink-500' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                                    <div key={m.id} onClick={() => setSelModelId(m.id)} className={`relative rounded-lg overflow-hidden cursor-pointer border-2 ${selModelId === m.id ? 'border-[#E91E8C]' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                                       <img src={m.referenceImage} alt={m.name} className="w-full aspect-square object-cover" />
                                       <div className={`absolute inset-x-0 bottom-0 p-1 ${isDark ? 'bg-black/70' : 'bg-white/90'}`}>
                                         <p className={`text-[8px] font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{m.name}</p>
@@ -1352,14 +1352,14 @@ const handleSave = async () => {
                           {step === 'look' && (
                             <div className="space-y-3">
                               <div className="flex gap-1 mb-2">
-                                <button onClick={() => setLookMode('describe')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'describe' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Descrever <span className="opacity-60">(10 créditos)</span></button>
-                                <button onClick={() => setLookMode('composer')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'composer' ? 'bg-pink-500 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Composer <span className="opacity-60">(20 créditos)</span></button>
+                                <button onClick={() => setLookMode('describe')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'describe' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Descrever <span className="opacity-60">(10 créditos)</span></button>
+                                <button onClick={() => setLookMode('composer')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'composer' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Composer <span className="opacity-60">(20 créditos)</span></button>
                               </div>
 
                               {lookMode === 'describe' ? (
                                 <div className="space-y-2">
                                   {/* Aviso de opcional */}
-                                  <div className={`p-2 rounded-lg text-[10px] ${isDark ? 'bg-pink-500/10 text-pink-300' : 'bg-pink-50 text-pink-600'}`}>
+                                  <div className={`p-2 rounded-lg text-[10px] ${isDark ? 'bg-[#E91E8C]/10 text-[#E91E8C]' : 'bg-[#E91E8C]/10 text-[#E91E8C]'}`}>
                                     <i className="fas fa-lightbulb mr-1.5"></i>
                                     Opcional: deixe em branco e a IA escolherá automaticamente
                                   </div>
@@ -1430,10 +1430,10 @@ const handleSave = async () => {
                           {step === 'orientation' && (
                             <div className="grid grid-cols-2 gap-2">
                               {ORIENTATION_OPTIONS.map(o => (
-                                <button key={o.id} onClick={() => setOrientation(o.id)} className={`p-3 rounded-lg border-2 text-left ${orientation === o.id ? 'border-pink-500 bg-pink-500/10' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                                <button key={o.id} onClick={() => setOrientation(o.id)} className={`p-3 rounded-lg border-2 text-left ${orientation === o.id ? 'border-[#E91E8C] bg-[#E91E8C]/10' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                                   <div className="flex items-center gap-2 mb-1">
-                                    <i className={`fas ${o.icon} text-sm ${orientation === o.id ? 'text-pink-500' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
-                                    <span className={`text-xs font-medium ${orientation === o.id ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'}`}>{o.label}</span>
+                                    <i className={`fas ${o.icon} text-sm ${orientation === o.id ? 'text-[#E91E8C]' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
+                                    <span className={`text-xs font-medium ${orientation === o.id ? 'text-[#E91E8C]' : isDark ? 'text-white' : 'text-gray-900'}`}>{o.label}</span>
                                   </div>
                                   <p className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{o.usedFor}</p>
                                 </button>
@@ -1444,10 +1444,10 @@ const handleSave = async () => {
                           {step === 'export' && (
                             <div className="grid grid-cols-2 gap-2">
                               {EXPORT_OPTIONS.map(o => (
-                                <button key={o.id} onClick={() => setExportType(o.id)} className={`p-3 rounded-lg border-2 text-left ${exportType === o.id ? 'border-pink-500 bg-pink-500/10' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
+                                <button key={o.id} onClick={() => setExportType(o.id)} className={`p-3 rounded-lg border-2 text-left ${exportType === o.id ? 'border-[#E91E8C] bg-[#E91E8C]/10' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
                                   <div className="flex items-center gap-2 mb-1">
-                                    <i className={`fas ${o.icon} text-sm ${exportType === o.id ? 'text-pink-500' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
-                                    <span className={`text-xs font-medium ${exportType === o.id ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'}`}>{o.label}</span>
+                                    <i className={`fas ${o.icon} text-sm ${exportType === o.id ? 'text-[#E91E8C]' : isDark ? 'text-neutral-400' : 'text-gray-400'}`}></i>
+                                    <span className={`text-xs font-medium ${exportType === o.id ? 'text-[#E91E8C]' : isDark ? 'text-white' : 'text-gray-900'}`}>{o.label}</span>
                                   </div>
                                   <p className={`text-[9px] ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>{o.format} • {o.desc}</p>
                                 </button>
@@ -1482,12 +1482,12 @@ const handleSave = async () => {
                 <button onClick={() => { setGenImg({ front: null, back: null }); setViewMode('original'); }} className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-neutral-800 text-red-400 hover:bg-red-500/20' : 'bg-gray-100 text-red-500 hover:bg-red-50'}`}>
                   <i className="fas fa-trash text-sm"></i>
                 </button>
-                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2">
+                <button onClick={handleSave} disabled={isSaving} className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSaving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-check"></i>}
                   Salvar{hasBack && genImg.back ? ' Todas (2)' : ''}
                 </button>
                 {tool === 'lifestyle' && (
-                  <button onClick={() => setShowSaveModal(true)} className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-neutral-800 text-pink-400 hover:bg-pink-500/20' : 'bg-gray-100 text-pink-500 hover:bg-pink-50'}`} title="Salvar Modelo">
+                  <button onClick={() => setShowSaveModal(true)} className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-neutral-800 text-[#E91E8C] hover:bg-[#E91E8C]/20' : 'bg-gray-100 text-[#E91E8C] hover:bg-[#E91E8C]/10'}`} title="Salvar Modelo">
                     <i className="fas fa-user-plus text-sm"></i>
                   </button>
                 )}
@@ -1504,7 +1504,7 @@ const handleSave = async () => {
                     if (!tool) return;
                     handleGen();
                   }}
-                  className={`w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 ${!tool ? 'opacity-50 cursor-not-allowed' : isGen ? 'opacity-75 cursor-wait' : 'hover:opacity-90'}`}
+                  className={`w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 ${!tool ? 'opacity-50 cursor-not-allowed' : isGen ? 'opacity-75 cursor-wait' : 'hover:opacity-90'}`}
                 >
                   {isGen ? (
                     <>
@@ -1553,7 +1553,7 @@ const handleSave = async () => {
             <input type="text" id="new-model-name" name="modelName" autoComplete="off" value={newModelName} onChange={e => setNewModelName(e.target.value)} placeholder="Nome do modelo" className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 ${isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`} />
             <div className="flex gap-2">
               <button onClick={() => setShowSaveModal(false)} className={`flex-1 py-2 rounded-lg text-sm ${isDark ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-700'}`}>Cancelar</button>
-              <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="flex-1 py-2 bg-pink-500 text-white rounded-lg text-sm disabled:opacity-50">Salvar</button>
+              <button onClick={handleSaveModel} disabled={!newModelName.trim()} className="flex-1 py-2 bg-[#E91E8C]/100 text-white rounded-lg text-sm disabled:opacity-50">Salvar</button>
             </div>
           </div>
         </div>
@@ -1640,7 +1640,7 @@ const handleSave = async () => {
           <div className={`rounded-2xl w-full max-w-md p-5 ${isDark ? 'bg-neutral-900' : 'bg-white'}`}>
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
                 <i className="fab fa-instagram text-white text-lg"></i>
               </div>
               <div>
@@ -1658,7 +1658,7 @@ const handleSave = async () => {
 
                 <div className={`p-3 rounded-lg mb-4 ${isDark ? 'bg-neutral-800' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-2 text-xs">
-                    <i className={`fas fa-info-circle ${isDark ? 'text-pink-400' : 'text-pink-500'}`}></i>
+                    <i className={`fas fa-info-circle ${isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]'}`}></i>
                     <span className={isDark ? 'text-neutral-400' : 'text-gray-500'}>
                       A legenda será baseada nas configurações da sua empresa
                     </span>
@@ -1679,7 +1679,7 @@ const handleSave = async () => {
                   </button>
                   <button
                     onClick={handleGenerateCaption}
-                    className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium hover:opacity-90 flex items-center justify-center gap-2"
+                    className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium hover:opacity-90 flex items-center justify-center gap-2"
                   >
                     <i className="fas fa-wand-magic-sparkles"></i>
                     Gerar Legenda
@@ -1692,10 +1692,10 @@ const handleSave = async () => {
             {isGeneratingCaption && (
               <div className="py-8 text-center">
                 <div className="relative w-16 h-16 mx-auto mb-4">
-                  <div className="absolute inset-0 border-4 border-pink-500/30 rounded-full"></div>
-                  <div className="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 border-4 border-[#E91E8C]/30 rounded-full"></div>
+                  <div className="absolute inset-0 border-4 border-[#E91E8C] border-t-transparent rounded-full animate-spin"></div>
                   <div className="absolute inset-0 flex items-center justify-center text-2xl">
-                    <i className="fab fa-instagram text-pink-500"></i>
+                    <i className="fab fa-instagram text-[#E91E8C]"></i>
                   </div>
                 </div>
                 <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -1734,7 +1734,7 @@ const handleSave = async () => {
                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
                       captionCopied
                         ? 'bg-green-500 text-white'
-                        : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90'
+                        : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
                     }`}
                   >
                     {captionCopied ? (

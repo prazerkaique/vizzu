@@ -6,7 +6,6 @@ import {
 } from '../../types';
 import {
   LIGHTING_OPTIONS,
-  CAMERA_TYPES,
   LENS_OPTIONS,
   CAMERA_ANGLES,
   FRAME_RATIOS,
@@ -14,9 +13,7 @@ import {
   PRODUCT_TYPES_FOR_UPLOAD,
   PRODUCT_SCALES,
   MOOD_SEASONS,
-  COLOR_GRADING_TEMPERATURES,
-  COLOR_GRADING_STYLES,
-  TEXTURE_GRAINS,
+  VISUAL_STYLES,
   RESOLUTIONS,
   getPresentationsForType,
   getProductTypeGroup,
@@ -43,6 +40,31 @@ const STEPS = [
   { id: 3, title: 'Estética', icon: 'fa-camera-retro' },
   { id: 4, title: 'Frame & Configs', icon: 'fa-sliders' },
 ];
+
+// ============================================================
+// INFO TOOLTIP (click-toggle, mobile-friendly)
+// ============================================================
+
+const InfoTooltip: React.FC<{ text: string; isDark: boolean }> = ({ text, isDark }) => {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <span className="relative inline-flex ml-1.5 align-middle">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className={(isDark ? 'text-neutral-500 hover:text-amber-400' : 'text-gray-400 hover:text-amber-500') + ' transition-colors'}
+        aria-label="Mais informações"
+      >
+        <i className="fas fa-circle-question text-[11px]"></i>
+      </button>
+      {open && (
+        <div className={'absolute left-0 top-full mt-1.5 z-30 w-64 rounded-lg p-3 text-xs leading-relaxed shadow-lg border ' + (isDark ? 'bg-neutral-800 border-neutral-700 text-neutral-300' : 'bg-white border-gray-200 text-gray-600 shadow-gray-200/50')}>
+          {text}
+        </div>
+      )}
+    </span>
+  );
+};
 
 // ============================================================
 // BUDGET CALCULATOR
@@ -75,7 +97,7 @@ export function calculateImageBudget(ws: CreativeStillWizardState): ImageBudget 
   if (ws.environmentReference) references++;
   if (ws.compositionReference) references++;
   if (ws.lightingReference) references++;
-  if (ws.colorGradingReference) references++;
+  if (ws.visualStyleReference) references++;
   used += references;
 
   // Priority 3 — Composition elements with image
@@ -267,7 +289,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
     onUpdateState({ additionalProducts: wizardState.additionalProducts.filter((_, i) => i !== index) });
   };
 
-  const handleReferenceUpload = (field: 'surfaceReference' | 'environmentReference' | 'compositionReference' | 'lightingReference' | 'colorGradingReference') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReferenceUpload = (field: 'surfaceReference' | 'environmentReference' | 'compositionReference' | 'lightingReference' | 'visualStyleReference') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -331,7 +353,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
     <div className={'my-5 border-t ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}></div>
   );
 
-  const renderRefUpload = (field: 'surfaceReference' | 'environmentReference' | 'compositionReference' | 'lightingReference' | 'colorGradingReference', value: { base64: string; mimeType: string } | null) => (
+  const renderRefUpload = (field: 'surfaceReference' | 'environmentReference' | 'compositionReference' | 'lightingReference' | 'visualStyleReference', value: { base64: string; mimeType: string } | null) => (
     value ? (
       <div className="relative inline-block mt-2">
         <img src={`data:${value.mimeType};base64,${value.base64}`} alt="Ref" className="w-20 h-20 object-cover rounded-lg" />
@@ -342,7 +364,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
     ) : (
       <label className={'inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg border border-dashed cursor-pointer text-xs transition-colors ' + (isDark ? 'border-neutral-700 hover:border-amber-500/50 text-neutral-500' : 'border-gray-300 hover:border-amber-400 text-gray-400')}>
         <i className="fas fa-cloud-arrow-up text-[10px]"></i>
-        Referência visual
+        Referência visual (opcional)
         <input type="file" accept="image/*" onChange={handleReferenceUpload(field)} className="hidden" />
       </label>
     )
@@ -525,7 +547,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {wizardState.mainProduct && (
         <>
           {separator()}
-          {sectionTitle('Escala na imagem', 'fa-up-right-and-down-left-from-center')}
+          <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+            <i className="fas fa-up-right-and-down-left-from-center mr-2 text-xs opacity-50"></i>
+            Escala na imagem
+            <InfoTooltip isDark={isDark} text="Define o quão próximo o produto aparece na foto. Close-up mostra detalhes de textura, Completo mostra o produto inteiro com espaço ao redor." />
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {PRODUCT_SCALES.map(scale => (
               <button
@@ -597,7 +623,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
   const renderStep2 = () => (
     <div>
       {/* Superfície */}
-      {sectionTitle('Superfície', 'fa-table')}
+      <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+        <i className="fas fa-table mr-2 text-xs opacity-50"></i>
+        Superfície
+        <InfoTooltip isDark={isDark} text="A base onde o produto será colocado. Ex: mármore branco, madeira rústica, concreto polido, areia." />
+      </h3>
       <textarea
         value={wizardState.surfaceDescription}
         onChange={(e) => onUpdateState({ surfaceDescription: e.target.value })}
@@ -609,7 +639,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {separator()}
 
       {/* Ambiente/Contexto */}
-      {sectionTitle('Ambiente / Contexto', 'fa-mountain-sun')}
+      <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+        <i className="fas fa-mountain-sun mr-2 text-xs opacity-50"></i>
+        Ambiente / Contexto
+        <InfoTooltip isDark={isDark} text="O fundo e cenário ao redor. Ex: jardim com plantas tropicais, estúdio minimalista, praia ao entardecer." />
+      </h3>
       <textarea
         value={wizardState.environmentDescription}
         onChange={(e) => onUpdateState({ environmentDescription: e.target.value })}
@@ -621,7 +655,11 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {separator()}
 
       {/* Elementos de composição */}
-      {sectionTitle('Elementos de composição', 'fa-leaf')}
+      <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+        <i className="fas fa-leaf mr-2 text-xs opacity-50"></i>
+        Elementos de composição
+        <InfoTooltip isDark={isDark} text="Objetos decorativos que complementam a cena. Ex: flores secas, folhas, conchas, velas, tecidos." />
+      </h3>
       <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3 -mt-1'}>
         Adicione elementos decorativos para a cena (até 6)
       </p>
@@ -691,13 +729,21 @@ export const CreativeStillWizard: React.FC<Props> = ({
       {separator()}
 
       {/* Referência geral de composição */}
-      {sectionTitle('Referência geral de composição (opcional)', 'fa-image')}
+      <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+        <i className="fas fa-image mr-2 text-xs opacity-50"></i>
+        Referência de composição (opcional)
+        <InfoTooltip isDark={isDark} text="Uma foto de referência para o estilo geral de composição que você quer. A IA usará como inspiração." />
+      </h3>
       {renderRefUpload('compositionReference', wizardState.compositionReference)}
 
       {separator()}
 
       {/* Mood / Estação */}
-      {sectionTitle('Mood / Estação', 'fa-sun')}
+      <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+        <i className="fas fa-sun mr-2 text-xs opacity-50"></i>
+        Mood / Estação
+        <InfoTooltip isDark={isDark} text="Define a atmosfera e paleta de cores geral. Influencia tons, texturas e sensação da imagem." />
+      </h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {MOOD_SEASONS.map(mood => (
           <button
@@ -730,28 +776,17 @@ export const CreativeStillWizard: React.FC<Props> = ({
 
   const renderStep3 = () => (
     <div>
-      {/* BLOCO: Câmera */}
+      {/* BLOCO: Enquadramento */}
       <div className={'rounded-xl p-4 mb-4 ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
         <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-4'}>
-          <i className="fas fa-camera mr-2 text-xs opacity-50"></i>Câmera
+          <i className="fas fa-camera mr-2 text-xs opacity-50"></i>Enquadramento
         </h3>
 
-        {/* Tipo de câmera */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Tipo de câmera</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-          {CAMERA_TYPES.map(cam => (
-            <button key={cam.id} onClick={() => onUpdateState({ cameraType: cam.id })} className={cardClass(wizardState.cameraType === cam.id)}>
-              <div className="flex items-center gap-2 mb-1">
-                <i className={'fas ' + cam.icon + ' text-xs ' + (wizardState.cameraType === cam.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
-                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{cam.label}</span>
-              </div>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{cam.description}</p>
-            </button>
-          ))}
-        </div>
-
         {/* Lente */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Modelo da Lente</p>
+        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+          Modelo da Lente
+          <InfoTooltip isDark={isDark} text="A lente define a perspectiva e o estilo visual da foto. Wide cria drama, Standard é versátil, Portrait desfoca o fundo, Macro captura detalhes extremos." />
+        </p>
         {['wide', 'standard', 'portrait', 'macro', 'ai'].map(category => {
           const lenses = LENS_OPTIONS.filter(l => l.category === category);
           const labels: Record<string, string> = { wide: 'Wide', standard: 'Standard', portrait: 'Portrait', macro: 'Macro', ai: '' };
@@ -770,8 +805,13 @@ export const CreativeStillWizard: React.FC<Props> = ({
           );
         })}
 
+        <div className={'my-4 border-t ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}></div>
+
         {/* Ângulo */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2 mt-3'}>Ângulo de câmera</p>
+        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+          Ângulo de câmera
+          <InfoTooltip isDark={isDark} text="Define de onde a câmera aponta para o produto. Top-Down é visto de cima, 45° é angular, Eye-Level é frontal, Low Angle é de baixo para cima." />
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
           {CAMERA_ANGLES.map(angle => (
             <button key={angle.id} onClick={() => onUpdateState({ cameraAngle: angle.id })} className={cardClass(wizardState.cameraAngle === angle.id)}>
@@ -785,7 +825,10 @@ export const CreativeStillWizard: React.FC<Props> = ({
         </div>
 
         {/* Profundidade de campo */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Profundidade de campo</p>
+        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+          Profundidade de campo
+          <InfoTooltip isDark={isDark} text="Controla o desfoque do fundo. À esquerda tudo fica nítido, à direita só o produto fica em foco (efeito bokeh)." />
+        </p>
         <div className="flex items-center gap-3">
           <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] w-16 text-right'}>Tudo em foco</span>
           <input type="range" min={0} max={100} value={wizardState.depthOfField} onChange={(e) => onUpdateState({ depthOfField: Number(e.target.value) })} className="flex-1 accent-amber-500" />
@@ -794,13 +837,41 @@ export const CreativeStillWizard: React.FC<Props> = ({
       </div>
 
       {/* BLOCO: Estilo Visual */}
-      <div className={'rounded-xl p-4 ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
+      <div className={'rounded-xl p-4 mb-4 ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
         <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-4'}>
           <i className="fas fa-palette mr-2 text-xs opacity-50"></i>Estilo Visual
+          <InfoTooltip isDark={isDark} text="Combina cor, contraste e textura da imagem final. Cada preset aplica uma combinação coerente desses elementos." />
         </h3>
 
-        {/* Iluminação */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Iluminação</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+          {VISUAL_STYLES.map(style => (
+            <button key={style.id} onClick={() => onUpdateState({ visualStyle: style.id, ...(style.id !== 'custom' ? { customVisualStyle: '' } : {}) })} className={cardClass(wizardState.visualStyle === style.id)}>
+              <div className="flex items-center gap-2 mb-1">
+                <i className={'fas ' + style.icon + ' text-xs ' + (wizardState.visualStyle === style.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{style.label}</span>
+              </div>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{style.description}</p>
+            </button>
+          ))}
+        </div>
+        {wizardState.visualStyle === 'custom' && (
+          <textarea
+            value={wizardState.customVisualStyle}
+            onChange={(e) => onUpdateState({ customVisualStyle: e.target.value })}
+            placeholder="Descreva o estilo visual desejado (cores, contraste, grão, temperatura)..."
+            rows={2}
+            className={'w-full rounded-lg px-3 py-2 text-sm resize-none mb-2 ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')}
+          />
+        )}
+        {renderRefUpload('visualStyleReference', wizardState.visualStyleReference)}
+      </div>
+
+      {/* BLOCO: Iluminação */}
+      <div className={'rounded-xl p-4 ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
+        <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-4'}>
+          <i className="fas fa-lightbulb mr-2 text-xs opacity-50"></i>Iluminação
+        </h3>
+
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
           {LIGHTING_OPTIONS.map(opt => (
             <button key={opt.id} onClick={() => onUpdateState({ lighting: opt.id, ...(opt.id !== 'custom' ? { customLighting: '' } : {}) })} className={cardClass(wizardState.lighting === opt.id)}>
@@ -830,47 +901,6 @@ export const CreativeStillWizard: React.FC<Props> = ({
           />
         )}
         {renderRefUpload('lightingReference', wizardState.lightingReference)}
-
-        <div className={'my-4 border-t ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}></div>
-
-        {/* Color Grading - Temperatura */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Color Grading — Temperatura</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-          {COLOR_GRADING_TEMPERATURES.map(t => (
-            <button key={t.id} onClick={() => onUpdateState({ colorGradingTemperature: t.id as CreativeStillWizardState['colorGradingTemperature'] })} className={cardClass(wizardState.colorGradingTemperature === t.id) + ' text-center'}>
-              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium block'}>{t.label}</span>
-              <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] block'}>{t.description}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Color Grading - Estilo */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Color Grading — Estilo</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
-          {COLOR_GRADING_STYLES.map(s => (
-            <button key={s.id} onClick={() => onUpdateState({ colorGradingStyle: s.id })} className={cardClass(wizardState.colorGradingStyle === s.id)}>
-              <div className="flex items-center gap-2 mb-1">
-                <i className={'fas ' + s.icon + ' text-xs ' + (wizardState.colorGradingStyle === s.id ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-neutral-500' : 'text-gray-400'))}></i>
-                <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{s.label}</span>
-              </div>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{s.description}</p>
-            </button>
-          ))}
-        </div>
-        {renderRefUpload('colorGradingReference', wizardState.colorGradingReference)}
-
-        <div className={'my-4 border-t ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}></div>
-
-        {/* Textura / Grain */}
-        <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium mb-2'}>Textura / Grain</p>
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-          {TEXTURE_GRAINS.map(g => (
-            <button key={g.id} onClick={() => onUpdateState({ textureGrain: g.id as CreativeStillWizardState['textureGrain'] })} className={cardClass(wizardState.textureGrain === g.id) + ' text-center'}>
-              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium block'}>{g.label}</span>
-              <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] block'}>{g.description}</span>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -884,12 +914,9 @@ export const CreativeStillWizard: React.FC<Props> = ({
 
     // Review labels
     const lightingLabel = wizardState.lighting === 'custom' ? (wizardState.customLighting || 'Personalizado') : (LIGHTING_OPTIONS.find(l => l.id === wizardState.lighting)?.label || wizardState.lighting);
-    const cameraLabel = CAMERA_TYPES.find(c => c.id === wizardState.cameraType)?.label || wizardState.cameraType;
     const lensLabel = LENS_OPTIONS.find(l => l.id === wizardState.lensModel)?.label || wizardState.lensModel;
     const angleLabel = CAMERA_ANGLES.find(a => a.id === wizardState.cameraAngle)?.label || wizardState.cameraAngle;
-    const tempLabel = COLOR_GRADING_TEMPERATURES.find(t => t.id === wizardState.colorGradingTemperature)?.label || wizardState.colorGradingTemperature;
-    const styleLabel = COLOR_GRADING_STYLES.find(s => s.id === wizardState.colorGradingStyle)?.label || wizardState.colorGradingStyle;
-    const grainLabel = TEXTURE_GRAINS.find(g => g.id === wizardState.textureGrain)?.label || wizardState.textureGrain;
+    const visualStyleLabel = wizardState.visualStyle === 'custom' ? (wizardState.customVisualStyle || 'Personalizado') : (VISUAL_STYLES.find(s => s.id === wizardState.visualStyle)?.label || wizardState.visualStyle);
     const ratioLabel = FRAME_RATIOS.find(r => r.id === wizardState.frameRatio)?.label || wizardState.frameRatio;
     const scaleLabel = PRODUCT_SCALES.find(s => s.id === wizardState.productScale)?.label || wizardState.productScale;
     const moodLabel = wizardState.moodSeason === 'custom' ? (wizardState.customMoodSeason || 'Personalizado') : (MOOD_SEASONS.find(m => m.id === wizardState.moodSeason)?.label || wizardState.moodSeason);
@@ -1008,11 +1035,9 @@ export const CreativeStillWizard: React.FC<Props> = ({
           )}
           <div className="px-4"><ReviewRow icon="fa-sun" label="Mood" value={moodLabel} onEdit={() => setCurrentStep(2)} /></div>
           <div className="px-4"><ReviewRow icon="fa-lightbulb" label="Iluminação" value={lightingLabel} onEdit={() => setCurrentStep(3)} /></div>
-          <div className="px-4"><ReviewRow icon="fa-camera" label="Câmera" value={cameraLabel} onEdit={() => setCurrentStep(3)} /></div>
           <div className="px-4"><ReviewRow icon="fa-circle-dot" label="Lente" value={lensLabel} onEdit={() => setCurrentStep(3)} /></div>
           <div className="px-4"><ReviewRow icon="fa-rotate" label="Ângulo" value={angleLabel} onEdit={() => setCurrentStep(3)} /></div>
-          <div className="px-4"><ReviewRow icon="fa-droplet" label="Color" value={tempLabel + ' / ' + styleLabel} onEdit={() => setCurrentStep(3)} /></div>
-          <div className="px-4"><ReviewRow icon="fa-film" label="Grain" value={grainLabel} onEdit={() => setCurrentStep(3)} /></div>
+          <div className="px-4"><ReviewRow icon="fa-palette" label="Estilo Visual" value={visualStyleLabel} onEdit={() => setCurrentStep(3)} /></div>
           <div className="px-4"><ReviewRow icon="fa-crop-simple" label="Formato" value={ratioLabel + ' · ' + wizardState.resolution.toUpperCase()} onEdit={() => setCurrentStep(4)} /></div>
         </div>
 
@@ -1024,7 +1049,10 @@ export const CreativeStillWizard: React.FC<Props> = ({
           >
             <div className="flex items-center gap-2">
               <span className="text-sm">📊</span>
-              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold'}>Budget de Imagens ({budget.totalUsed}/14 usadas)</span>
+              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold'}>
+                Budget de Imagens ({budget.totalUsed}/14 usadas)
+                <InfoTooltip isDark={isDark} text="A IA aceita até 14 imagens por geração. Produtos têm prioridade máxima, depois referências, depois elementos." />
+              </span>
             </div>
             <i className={'fas fa-chevron-' + (budgetExpanded ? 'up' : 'down') + ' text-xs ' + (isDark ? 'text-neutral-500' : 'text-gray-400')}></i>
           </button>
@@ -1067,7 +1095,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
   // RENDER
   // ============================================================
   return (
-    <div className={'flex-1 overflow-y-auto ' + (isDark ? '' : 'bg-[#F5F5F7]')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
+    <div className={'flex-1 overflow-y-auto ' + (isDark ? '' : 'bg-cream')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
       <div className="max-w-2xl mx-auto p-4 md:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -1127,7 +1155,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
             <button
               onClick={onGenerate}
               disabled={userCredits < wizardState.variationsCount}
-              className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {wizardState.variationsCount} {wizardState.variationsCount === 1 ? 'Variação' : 'Variações'} ({wizardState.variationsCount} {wizardState.variationsCount === 1 ? 'crédito' : 'créditos'})
             </button>
@@ -1135,7 +1163,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
             canGoNext() && (
               <button
                 onClick={goNext}
-                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium text-sm"
+                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl font-medium text-sm"
               >
                 Continuar<i className="fas fa-arrow-right ml-2"></i>
               </button>
@@ -1220,7 +1248,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
                             </div>
                           )}
                           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                            <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
                               <i className="fas fa-check mr-1"></i>Selecionar
                             </button>
                           </div>
@@ -1345,7 +1373,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
                                 </div>
                               )}
                               <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                                <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
                                   <i className="fas fa-plus mr-1"></i>Adicionar
                                 </button>
                               </div>

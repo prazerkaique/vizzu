@@ -4,8 +4,8 @@
   "description": "Transforme fotos de produtos em imagens profissionais com IA",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#ec4899",
+  "background_color": "#F8F6F2",
+  "theme_color": "#E91E8C",
   "orientation": "portrait-primary",
   "icons": [
     {

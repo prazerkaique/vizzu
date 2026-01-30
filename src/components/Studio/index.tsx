@@ -120,14 +120,14 @@ export const Studio: React.FC<StudioProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-              <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+              <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Studio®</h1>
                 {currentPlan && (
-                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+                  <span className={(theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
                     {currentPlan.name}
                   </span>
                 )}
@@ -137,13 +137,13 @@ export const Studio: React.FC<StudioProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
-              <i className="fas fa-coins text-pink-400 text-xs"></i>
+              <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
               <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
             {onImport && (
               <button
                 onClick={onImport}
-                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
                 <i className="fas fa-plus"></i>
                 <span>Novo</span>
@@ -164,7 +164,7 @@ export const Studio: React.FC<StudioProps> = ({
             placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-pink-500/50' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-pink-400 shadow-sm') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
+            className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-[#E91E8C]/50' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#E91E8C]/50 shadow-sm') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
           />
           {searchTerm && (
             <button 
@@ -189,7 +189,7 @@ export const Studio: React.FC<StudioProps> = ({
               <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-filter text-xs'}></i>
               <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar e ordenar</span>
               {hasActiveFilters && (
-                <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[8px] rounded-full">{
+                <span className="px-1.5 py-0.5 bg-[#E91E8C]/100 text-white text-[8px] rounded-full">{
                   [filterCategory, filterCollection, filterColor, filterGender, sortBy !== 'recent' ? sortBy : ''].filter(Boolean).length
                 }</span>
               )}
@@ -203,7 +203,7 @@ export const Studio: React.FC<StudioProps> = ({
                 <div className="flex justify-end mb-2">
                   <button
                     onClick={clearFilters}
-                    className="text-[10px] text-pink-500 hover:text-pink-400 font-medium"
+                    className="text-[10px] text-[#E91E8C] hover:text-[#E91E8C] font-medium"
                   >
                     Limpar filtros
                   </button>
@@ -310,7 +310,7 @@ export const Studio: React.FC<StudioProps> = ({
               <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-user text-xs'}></i>
               <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Meus Modelos</span>
               {readyModels.length > 0 && (
-                <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[8px] rounded-full">{readyModels.length}</span>
+                <span className="px-1.5 py-0.5 bg-[#E91E8C]/100 text-white text-[8px] rounded-full">{readyModels.length}</span>
               )}
             </div>
             <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-' + (showModels ? 'up' : 'down') + ' text-xs'}></i>
@@ -329,7 +329,7 @@ export const Studio: React.FC<StudioProps> = ({
                         onClick={() => setSelectedModel(isSelected ? null : model)}
                         className={'flex-shrink-0 group relative cursor-pointer transition-all ' + (isSelected ? 'scale-105' : '')}
                       >
-                        <div className={'w-14 h-14 md:w-18 md:h-18 rounded-full p-[2px] transition-all ' + (isSelected ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-orange-500 ring-2 ring-pink-500 ring-offset-2 ring-offset-black' : 'bg-gradient-to-r from-pink-500/50 via-purple-500/50 to-orange-500/50 hover:from-pink-500 hover:via-purple-500 hover:to-orange-500')}>
+                        <div className={'w-14 h-14 md:w-18 md:h-18 rounded-full p-[2px] transition-all ' + (isSelected ? 'bg-gradient-to-r from-[#E91E8C]/50 via-[#A855F7] to-[#FF9F43] ring-2 ring-[#E91E8C] ring-offset-2 ring-offset-black' : 'bg-gradient-to-r from-[#E91E8C]/50/50 via-[#A855F7]/50 to-[#FF9F43]/50 hover:from-[#E91E8C]/50 hover:via-[#A855F7] hover:to-[#FF9F43]')}>
                           <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' w-full h-full rounded-full p-[1px]'}>
                             {modelImage ? (
                               <img
@@ -347,10 +347,10 @@ export const Studio: React.FC<StudioProps> = ({
                         </div>
                         {isSelected && (
                           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                            <i className="fas fa-check-circle text-pink-500 text-xs"></i>
+                            <i className="fas fa-check-circle text-[#E91E8C] text-xs"></i>
                           </div>
                         )}
-                        <p className={(isSelected ? 'text-pink-400' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[9px] text-center mt-1.5 truncate max-w-[56px] md:max-w-[72px] font-medium'}>{model.name}</p>
+                        <p className={(isSelected ? 'text-[#E91E8C]' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[9px] text-center mt-1.5 truncate max-w-[56px] md:max-w-[72px] font-medium'}>{model.name}</p>
                       </div>
                     );
                   })}
@@ -360,7 +360,7 @@ export const Studio: React.FC<StudioProps> = ({
                   <div className="text-center">
                     <div className="flex justify-center gap-2 mb-2">
                       {[1, 2, 3].map(i => (
-                        <div key={i} className="w-10 h-10 rounded-full p-[1px] bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-orange-500/20">
+                        <div key={i} className="w-10 h-10 rounded-full p-[1px] bg-gradient-to-r from-[#E91E8C]/15 via-[#A855F7]/20 to-[#FF9F43]/20">
                           <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
                             <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-user text-xs'}></i>
                           </div>
@@ -378,7 +378,7 @@ export const Studio: React.FC<StudioProps> = ({
 
         {/* Modelo selecionado info */}
         {selectedModel && (
-          <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-purple-500/10 border-pink-500/30' : 'bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200') + ' rounded-xl p-3 border mb-4'}>
+          <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/50/10 to-[#A855F7]/50/10 border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#E91E8C]/5 to-[#A855F7]/5 border-[#E91E8C]/20') + ' rounded-xl p-3 border mb-4'}>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl overflow-hidden">
                 <img
@@ -407,7 +407,7 @@ export const Studio: React.FC<StudioProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* BANNER - Seus Produtos + Plano */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
+        <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/50/10 via-[#A855F7]/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-r from-[#E91E8C]/10 via-[#A855F7]/10 to-[#FF9F43]/10 border-[#E91E8C]/20') + ' rounded-xl p-4 border mb-4'}>
           <div className="flex items-center justify-between">
             <div>
               <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus produtos</p>
@@ -419,7 +419,7 @@ export const Studio: React.FC<StudioProps> = ({
             {currentPlan && (
               <div className="text-right">
                 <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
-                <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
+                <span className={(theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
                   {currentPlan.name}
                 </span>
               </div>
@@ -444,7 +444,7 @@ export const Studio: React.FC<StudioProps> = ({
                     key={product.id}
                     data-product-id={product.id}
                     onClick={() => setSelectedProduct(product)}
-                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                    className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border-gray-200 hover:border-[#E91E8C]/40 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                   >
                     <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                       <img
@@ -459,7 +459,7 @@ export const Studio: React.FC<StudioProps> = ({
                         </div>
                       )}
                       <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                        <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
                           <i className="fas fa-wand-magic-sparkles mr-1"></i>Editar
                         </button>
                       </div>
@@ -495,7 +495,7 @@ export const Studio: React.FC<StudioProps> = ({
                 ) : onImport && (
                   <button 
                     onClick={onImport}
-                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                    className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
                   >
                     <i className="fas fa-plus mr-1.5"></i>Importar produto
                   </button>

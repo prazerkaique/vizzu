@@ -96,8 +96,8 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
       <div className={`p-4 border-b ${isDark ? 'border-neutral-800' : 'border-gray-200'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-pink-500/20 to-orange-500/20' : 'bg-gradient-to-br from-pink-100 to-orange-100'}`}>
-              <i className="fas fa-compress-arrows-alt text-pink-500"></i>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-[#E91E8C]/15 to-[#FF9F43]/20' : 'bg-gradient-to-br from-[#E91E8C]/10 to-[#FF9F43]/10'}`}>
+              <i className="fas fa-compress-arrows-alt text-[#E91E8C]"></i>
             </div>
             <div>
               <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -158,7 +158,7 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
                 disabled={isRunning}
                 className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
                   migrationType === option.value
-                    ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                     : isDark
                     ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -210,7 +210,7 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
             </div>
             <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-neutral-800' : 'bg-gray-200'}`}>
               <div
-                className="h-full bg-gradient-to-r from-pink-500 to-orange-400 transition-all duration-300"
+                className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all duration-300"
                 style={{ width: progress.total > 0 ? `${(progress.processed / progress.total) * 100}%` : '0%' }}
               />
             </div>
@@ -231,7 +231,7 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
               <div className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Erros</div>
             </div>
             <div className={`p-2 rounded-lg text-center ${isDark ? 'bg-neutral-800' : 'bg-gray-50'}`}>
-              <div className="text-pink-400 text-lg font-bold">{formatFileSize(progress.totalSavings)}</div>
+              <div className="text-[#E91E8C] text-lg font-bold">{formatFileSize(progress.totalSavings)}</div>
               <div className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Economizado</div>
             </div>
           </div>
@@ -263,7 +263,7 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
           className={`w-full py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${
             isRunning
               ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90'
+              : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
           }`}
         >
           {isRunning ? (

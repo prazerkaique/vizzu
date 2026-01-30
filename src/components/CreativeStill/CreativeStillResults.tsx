@@ -143,7 +143,7 @@ export const CreativeStillResults: React.FC<Props> = ({
           <div className="w-full max-w-xs mb-4">
             <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-amber-500 to-[#FF9F43] rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -192,7 +192,7 @@ export const CreativeStillResults: React.FC<Props> = ({
   // ============================================================
   if (generation?.status === 'failed') {
     return (
-      <div className={'flex-1 overflow-y-auto flex items-center justify-center p-4 ' + (isDark ? '' : 'bg-[#F5F5F7]')}>
+      <div className={'flex-1 overflow-y-auto flex items-center justify-center p-4 ' + (isDark ? '' : 'bg-cream')}>
         <div className="max-w-md w-full text-center">
           <div className={'w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 ' + (isDark ? 'bg-red-500/20' : 'bg-red-100')}>
             <i className={'fas fa-exclamation-triangle text-3xl ' + (isDark ? 'text-red-400' : 'text-red-500')}></i>
@@ -205,7 +205,7 @@ export const CreativeStillResults: React.FC<Props> = ({
             <button onClick={onBackToHome} className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2.5 rounded-xl text-sm font-medium transition-colors'}>
               Voltar
             </button>
-            <button onClick={onGenerateAgain} className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold">
+            <button onClick={onGenerateAgain} className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl text-sm font-semibold">
               <i className="fas fa-redo mr-2 text-xs"></i>Tentar novamente
             </button>
           </div>
@@ -225,7 +225,7 @@ export const CreativeStillResults: React.FC<Props> = ({
   }));
 
   return (
-    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-[#F5F5F7]')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
+    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-cream')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -306,7 +306,7 @@ export const CreativeStillResults: React.FC<Props> = ({
           </button>
           <button
             onClick={onBackToHome}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl text-sm font-semibold"
           >
             <i className="fas fa-check text-xs"></i>Finalizar
           </button>
@@ -348,7 +348,7 @@ export const CreativeStillResults: React.FC<Props> = ({
                 <button
                   onClick={handleSave}
                   disabled={!templateName.trim() || savingTemplate}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {savingTemplate ? <i className="fas fa-spinner fa-spin"></i> : 'Salvar'}
                 </button>

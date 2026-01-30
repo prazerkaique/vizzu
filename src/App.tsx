@@ -311,7 +311,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('vizzu_theme');
-    return (saved as 'dark' | 'light') || 'dark';
+    return (saved as 'dark' | 'light') || 'light';
   });
 
   // Detecta se está rodando como PWA standalone (sem UI do browser)
@@ -1100,7 +1100,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
     // Atualiza a cor do tema na status bar do PWA/mobile
     const themeColorMeta = document.querySelector('meta[name="theme-color"]:not([media])') || document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#ffffff');
+      themeColorMeta.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#F8F6F2');
     }
   }, [theme]);
 
@@ -3406,14 +3406,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
   // ═══════════════════════════════════════════════════════════════
   return (
     <div
-      className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}
+      className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-cream')}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       
       {/* DESKTOP SIDEBAR */}
-      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-gradient-to-b from-pink-500 via-fuchsia-500 to-violet-500 border-violet-600')}>
+      <aside className={'hidden md:flex w-52 flex-col border-r ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-gradient-to-b from-[#E91E8C] to-[#FF6B9D] border-[#E91E8C]/30')}>
         <div className={'p-5 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-white/20')}>
           <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Vizzu" className="h-10" />
@@ -3426,7 +3426,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onClick={() => setCurrentPage('dashboard')}
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
               (currentPage === 'dashboard'
-                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/25 text-white')
                 : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
@@ -3439,7 +3439,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onClick={() => setCurrentPage('products')}
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
               (currentPage === 'products'
-                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/25 text-white')
                 : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
@@ -3453,8 +3453,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               onClick={() => setCurrentPage('create')}
               className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
                 (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio'
-                  ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg shadow-pink-500/30 scale-[1.02]'
-                  : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:shadow-lg hover:shadow-pink-500/30 hover:scale-[1.02]'
+                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-lg shadow-[#E91E8C]/20 scale-[1.02]'
+                  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:shadow-lg hover:shadow-[#E91E8C]/20 hover:scale-[1.02]'
                 )
               }
             >
@@ -3467,7 +3467,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onClick={() => setCurrentPage('models')}
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
               (currentPage === 'models'
-                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/25 text-white')
                 : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
@@ -3480,7 +3480,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             onClick={() => setCurrentPage('clients')}
             className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
               (currentPage === 'clients'
-                ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/25 text-white')
                 : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
               )
             }
@@ -3492,11 +3492,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/20 backdrop-blur-sm') + ' rounded-xl p-3'}>
             <div className="flex items-center justify-between mb-1.5">
               <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-500' : 'text-white/70')}>Créditos</span>
-              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-pink-500 hover:text-pink-400' : 'text-white hover:text-white/80') + ' text-[9px] font-medium'}>+ Add</button>
+              <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-[#E91E8C] hover:text-[#E91E8C]' : 'text-white hover:text-white/80') + ' text-[9px] font-medium'}>+ Add</button>
             </div>
             <p className="text-xl font-bold text-white">{userCredits.toLocaleString()}</p>
             <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/30')}>
-              <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+              <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-white') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
             </div>
           </div>
           {/* Configurações com Dropdown */}
@@ -3505,7 +3505,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
               className={'w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
                 (currentPage === 'settings'
-                  ? (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 text-white' : 'bg-white/25 text-white')
+                  ? (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 text-white' : 'bg-white/25 text-white')
                   : (theme === 'dark' ? 'text-neutral-500 hover:text-white hover:bg-neutral-900' : 'text-white/90 hover:text-white hover:bg-white/15')
                 )
               }
@@ -3520,38 +3520,38 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' absolute bottom-full mb-1 left-0 right-0 rounded-xl border shadow-lg overflow-hidden z-50'}>
                 <button
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
-                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
                 >
                   <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
                 </button>
                 <button
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('appearance'); setShowSettingsDropdown(false); }}
-                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
                 >
                   <i className="fas fa-palette w-4 text-[10px] text-center"></i>Aparência
                 </button>
                 <button
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('company'); setShowSettingsDropdown(false); }}
-                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
                 >
                   <i className="fas fa-building w-4 text-[10px] text-center"></i>Empresa
                 </button>
                 <button
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
-                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
                 >
                   <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
                 </button>
                 <button
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
-                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
                 >
                   <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
                 </button>
                 <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' border-t'}></div>
                 <button
                   onClick={() => { setCurrentPage('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
-                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+                  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
                 >
                   <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
                 </button>
@@ -3576,7 +3576,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         {/* MOBILE TOP HEADER - Esconde quando está dentro das features de criação */}
         {!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) && (
         <div
-          className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-white/95 border-gray-200 backdrop-blur-sm shadow-sm')}
+          className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-cream/95 border-gray-200 backdrop-blur-sm')}
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
         >
           <button onClick={() => setCurrentPage('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
@@ -3585,7 +3585,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-              className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30' : 'bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200')}
+              className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30' : 'bg-[#E91E8C]/10 text-[#E91E8C] border border-[#E91E8C]/20')}
             >
               <i className="fas fa-coins text-[10px]"></i>
               <span>{userCredits}</span>
@@ -3604,14 +3604,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         {/* DASHBOARD */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         {currentPage === 'dashboard' && (
-          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
+          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-cream')}>
             <div className="max-w-5xl mx-auto">
               {/* Header com boas-vindas */}
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
-                    <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>{currentPlan.name}</span>
+                    <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>{currentPlan.name}</span>
                   </div>
                   <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>
                     Bem-vindo de volta, <span className="font-medium">{user?.name?.split(' ')[0] || 'usuário'}</span>
@@ -3619,7 +3619,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
                 <button
                   onClick={() => setCurrentPage('create')}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-pink-500/25"
+                  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-[#E91E8C]/20"
                 >
                   <i className="fas fa-plus text-xs"></i>
                   Novo Projeto
@@ -3717,7 +3717,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                        <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
                         <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
                       </div>
                       {sortedCreations.length > 0 && (
@@ -3746,7 +3746,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             <img src={creation.imageUrl} alt="" className="w-full h-full object-cover" />
                             <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
                               (creation.type === 'studio' ? 'bg-purple-500 text-white' :
-                               creation.type === 'provador' ? 'bg-pink-500 text-white' :
+                               creation.type === 'provador' ? 'bg-[#E91E8C]/100 text-white' :
                                'bg-amber-500 text-white')}>
                               {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : 'Look'}
                             </div>
@@ -3760,10 +3760,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         onClick={() => setCurrentPage('create')}
                         className={'flex-shrink-0 w-24 cursor-pointer group'}
                       >
-                        <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-pink-400 hover:bg-gray-100')}>
+                        <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-[#E91E8C]/50 hover:bg-gray-100')}>
                           <div className="text-center">
-                            <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
-                              <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-500')}></i>
+                            <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15')}>
+                              <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
                             </div>
                           </div>
                         </div>
@@ -3837,8 +3837,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     {/* Clientes Cadastrados */}
                     <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm')}>
                       <div className="flex items-start justify-between mb-2">
-                        <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-100')}>
-                          <i className={'fas fa-users text-xs ' + (theme === 'dark' ? 'text-pink-400' : 'text-pink-600')}></i>
+                        <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15')}>
+                          <i className={'fas fa-users text-xs ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
                         </div>
                       </div>
                       <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
@@ -3879,21 +3879,21 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div className="flex items-center gap-3">
                           <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Studio</span>
                           <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                            <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all" style={{ width: `${studioPercent}%` }} />
+                            <div className="h-full rounded-full bg-gradient-to-r from-[#A855F7] to-indigo-500 transition-all" style={{ width: `${studioPercent}%` }} />
                           </div>
                           <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{studioPercent}%</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Provador</span>
                           <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                            <div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all" style={{ width: `${provadorPercent}%` }} />
+                            <div className="h-full rounded-full bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] transition-all" style={{ width: `${provadorPercent}%` }} />
                           </div>
                           <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{provadorPercent}%</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Look</span>
                           <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
-                            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all" style={{ width: `${lookPercent}%` }} />
+                            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-[#FF9F43] transition-all" style={{ width: `${lookPercent}%` }} />
                           </div>
                           <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{lookPercent}%</span>
                         </div>
@@ -3922,11 +3922,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
 
                 {/* Plano - 1 coluna */}
-                <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-gradient-to-br from-purple-900/40 via-pink-900/30 to-orange-900/40 border border-pink-500/20 backdrop-blur-xl' : 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400')}>
+                <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-gradient-to-br from-[#A855F7]/40 via-[#E91E8C]/30 to-[#FF9F43]/40 border border-[#E91E8C]/20 backdrop-blur-xl' : 'bg-gradient-to-br from-[#A855F7] via-[#E91E8C] to-[#FF9F43]')}>
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
                   <div className="relative flex flex-col w-full">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500 to-orange-400' : 'bg-white/20 backdrop-blur-sm')}>
+                      <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-white/20 backdrop-blur-sm')}>
                         <i className="fas fa-crown text-white"></i>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -3950,7 +3950,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* PÁGINA VIZZU CREATION - Hub de Features */}
         {currentPage === 'create' && (
-          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-[#F5F5F7]')}>
+          <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-cream')}>
             <style>{`
               .creation-card {
                 transition: all 0.3s ease;
@@ -3973,8 +3973,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                    <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+                    <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
                   </div>
                   <div>
                     <h1 className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
@@ -3992,12 +3992,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
                   <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/Banner-Vizzu-Studio.jpg)' }}></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-600/75 to-pink-600/25"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#E91E8C]/75 to-[#E91E8C]/25"></div>
                   <div className="video-overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30 group-hover:from-black/70 group-hover:via-black/40 group-hover:to-black/20 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-pink-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+                        <span className="px-2 py-0.5 bg-[#E91E8C]/100 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
                         <span className="text-white/60 text-xs">10 créditos/foto</span>
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">Vizzu Product Studio®</h3>
@@ -4024,7 +4024,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#A855F7] via-[#A855F7] to-[#E91E8C]"></div>
                   <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
@@ -4056,7 +4056,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-[#A855F7]"></div>
                   <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
@@ -4088,7 +4088,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
                   style={{ minHeight: '240px', height: 'auto' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-rose-600"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-[#FF6B9D]"></div>
                   <div className="video-overlay absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all duration-300"></div>
                   <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
                     <div>
@@ -4120,7 +4120,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <div className="relative px-5 py-4 flex items-center justify-between">
                   <div className="absolute inset-0 bg-gradient-to-r from-gray-700/30 via-gray-600/20 to-gray-700/30"></div>
                   <div className="relative flex items-center gap-3">
-                    <div className={'w-10 h-10 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')}>
+                    <div className={'w-10 h-10 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300')}>
                       <i className={'fas fa-sparkles ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}></i>
                     </div>
                     <div>
@@ -4132,7 +4132,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                   <button
                     disabled
-                    className={'px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 cursor-not-allowed ' + (theme === 'dark' ? 'bg-neutral-700 text-neutral-500' : 'bg-gray-300 text-gray-500')}
+                    className={'px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 cursor-not-allowed ' + (theme === 'dark' ? 'bg-gray-300 text-neutral-500' : 'bg-gray-300 text-gray-500')}
                   >
                     Aguarde <i className="fas fa-clock text-xs"></i>
                   </button>
@@ -4143,8 +4143,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4 mt-4'}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500/20 to-orange-400/20 flex items-center justify-center">
-                      <i className="fas fa-coins text-pink-400"></i>
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 flex items-center justify-center">
+                      <i className="fas fa-coins text-[#E91E8C]"></i>
                     </div>
                     <div>
                       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
@@ -4153,7 +4153,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                   <button
                     onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
-                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Comprar mais
                   </button>
@@ -4304,8 +4304,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                    <i className={'fas fa-user-tie text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+                    <i className={'fas fa-user-tie text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
                   </div>
                   <div>
                     <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Modelos Salvos</h1>
@@ -4319,7 +4319,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <button
                     onClick={() => { resetModelWizard(); setShowCreateModel(true); }}
                     disabled={!canCreateModel()}
-                    className={'px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs transition-opacity ' + (!canCreateModel() ? 'opacity-50 cursor-not-allowed' : '')}
+                    className={'px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs transition-opacity ' + (!canCreateModel() ? 'opacity-50 cursor-not-allowed' : '')}
                   >
                     <i className="fas fa-plus mr-1.5"></i>Novo Modelo
                   </button>
@@ -4412,8 +4412,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Empty State */}
               {savedModels.length === 0 ? (
                 <div className={'rounded-2xl p-12 text-center ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 shadow-sm')}>
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-pink-500/10 to-orange-400/10 flex items-center justify-center">
-                    <i className="fas fa-user-tie text-3xl text-pink-500"></i>
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 flex items-center justify-center">
+                    <i className="fas fa-user-tie text-3xl text-[#E91E8C]"></i>
                   </div>
                   <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2'}>Nenhum modelo criado</h3>
                   <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
@@ -4421,7 +4421,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </p>
                   <button
                     onClick={() => { resetModelWizard(); setShowCreateModel(true); }}
-                    className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm"
+                    className="px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm"
                   >
                     <i className="fas fa-plus mr-2"></i>Criar Primeiro Modelo
                   </button>
@@ -4447,10 +4447,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <div
                           key={model.id}
                           onClick={() => setShowModelDetail(model)}
-                          className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-100 shadow-sm hover:shadow-lg')}
+                          className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border border-gray-100 shadow-sm hover:shadow-lg')}
                         >
                           {/* Image Carousel */}
-                          <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-pink-50 to-orange-50')}>
+                          <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#E91E8C]/5 to-[#FF9F43]/5')}>
                             {images.length > 0 ? (
                               <ModelCardCarousel
                                 images={images}
@@ -4459,7 +4459,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               />
                             ) : (
                               <div className="text-center">
-                                <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+                                <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
                                   <i className="fas fa-user text-3xl text-white"></i>
                                 </div>
                                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
@@ -4534,8 +4534,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                    <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+                    <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
                   </div>
                   <div>
                     <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Produtos</h1>
@@ -4543,10 +4543,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setShowBulkImport(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
+                  <button onClick={() => setShowBulkImport(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
                     <i className="fas fa-file-import mr-1.5"></i>Importar
                   </button>
-                  <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                  <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
                     <i className="fas fa-plus mr-1.5"></i>Novo
                   </button>
                 </div>
@@ -4591,7 +4591,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
                   </select>
                   {(filterCategoryGroup || filterCategory || filterColor || filterCollection) && (
-                    <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-pink-500 hover:bg-pink-500/10 rounded-lg transition-colors">
+                    <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-[#E91E8C] hover:bg-[#E91E8C]/10 rounded-lg transition-colors">
                       <i className="fas fa-times mr-1"></i>Limpar
                     </button>
                   )}
@@ -4613,9 +4613,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
               {/* Barra de ações para produtos selecionados */}
               {selectedProducts.length > 0 && (
-                <div className={(theme === 'dark' ? 'bg-pink-500/20 border-pink-500/30' : 'bg-pink-50 border-pink-200') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
+                <div className={(theme === 'dark' ? 'bg-[#E91E8C]/20 border-[#E91E8C]/30' : 'bg-[#E91E8C]/10 border-[#E91E8C]/20') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
                   <div className="flex items-center gap-2">
-                    <span className="text-pink-500 font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
+                    <span className="text-[#E91E8C] font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
                     <button onClick={() => setSelectedProducts([])} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs'}>
                       <i className="fas fa-times mr-1"></i>Cancelar
                     </button>
@@ -4632,7 +4632,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     {filteredProducts.slice(0, visibleProductsCount).map(product => (
                       <div
                         key={product.id}
-                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-pink-500' : '')}
+                        className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? 'ring-2 ring-[#E91E8C]' : '')}
                         onTouchStart={() => handleProductTouchStart(product.id)}
                         onTouchEnd={() => handleProductTouchEnd(product.id)}
                         onTouchMove={handleProductTouchMove}
@@ -4648,7 +4648,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           }
                         }}
                       >
-                        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
+                        <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
                           <img src={getProductDisplayImage(product)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
                           {/* Badge de produto otimizado */}
                           {isProductOptimized(product) && (
@@ -4659,7 +4659,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           )}
                           {/* Checkbox de seleção - visível em modo seleção ou hover no desktop */}
                           <div
-                            className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-pink-500 text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
+                            className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-[#E91E8C]/100 text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
                           >
                             <i className={`fas fa-${selectedProducts.includes(product.id) ? 'check' : 'square'} text-[8px]`}></i>
                           </div>
@@ -4686,7 +4686,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div className="flex justify-center p-4 pt-2">
                     <button
                       onClick={() => setVisibleProductsCount(prev => prev + 20)}
-                      className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                      className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
                     >
                       <i className="fas fa-chevron-down text-xs"></i>
                       Carregar mais ({filteredProducts.length - visibleProductsCount} restantes)
@@ -4701,7 +4701,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     </div>
                     <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum produto</h3>
                     <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>Adicione seu primeiro produto</p>
-                    <button onClick={() => setShowImport(true)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-pink-500 text-white hover:bg-pink-600') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs'}>
+                    <button onClick={() => setShowImport(true)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-[#E91E8C]/100 text-white hover:bg-[#E91E8C]') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs'}>
                       <i className="fas fa-plus mr-1.5"></i>Adicionar
                     </button>
                   </div>
@@ -4717,15 +4717,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <div className="max-w-5xl mx-auto">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-                    <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+                    <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
                   </div>
                   <div>
                     <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Clientes</h1>
                     <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gerencie seus clientes</p>
                   </div>
                 </div>
-                <button onClick={() => setShowCreateClient(true)} className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                <button onClick={() => setShowCreateClient(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
                   <i className="fas fa-plus mr-1.5"></i>Novo Cliente
                 </button>
               </div>
@@ -4765,7 +4765,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                   <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum cliente cadastrado</h3>
                   <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Adicione clientes para usar o Vizzu Provador®</p>
-                  <button onClick={() => setShowCreateClient(true)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs">
+                  <button onClick={() => setShowCreateClient(true)} className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
                     <i className="fas fa-plus mr-1.5"></i>Adicionar Cliente
                   </button>
                 </div>
@@ -4784,7 +4784,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               </div>
                             )}
                             {client.hasProvadorIA && (
-                              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-pink-500 rounded-full flex items-center justify-center">
+                              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
                                 <i className="fas fa-camera text-white text-[6px]"></i>
                               </div>
                             )}
@@ -4800,11 +4800,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           </div>
                           <div className="flex items-center gap-1.5">
                             {client.hasProvadorIA && (
-                              <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-pink-100 hover:bg-pink-200') + ' w-8 h-8 rounded-lg text-pink-500 flex items-center justify-center transition-colors'} title="Vizzu Provador®">
+                              <button onClick={(e) => { e.stopPropagation(); setProvadorClient(client); setCurrentPage('provador'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-[#E91E8C]/15 hover:bg-[#E91E8C]/20') + ' w-8 h-8 rounded-lg text-[#E91E8C] flex items-center justify-center transition-colors'} title="Vizzu Provador®">
                                 <i className="fas fa-wand-magic-sparkles text-xs"></i>
                               </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-green-100 hover:bg-green-200') + ' w-8 h-8 rounded-lg text-green-500 flex items-center justify-center transition-colors'} title="WhatsApp">
+                            <button onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(client, 'Olá ' + client.firstName + '!'); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-green-100 hover:bg-green-200') + ' w-8 h-8 rounded-lg text-green-500 flex items-center justify-center transition-colors'} title="WhatsApp">
                               <i className="fab fa-whatsapp text-sm"></i>
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); if (confirm('Excluir cliente ' + client.firstName + ' ' + client.lastName + '?')) handleDeleteClient(client.id); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-red-500/20' : 'bg-gray-100 hover:bg-red-100') + ' w-8 h-8 rounded-lg text-red-500 flex items-center justify-center transition-colors'} title="Excluir">
@@ -4828,8 +4828,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Header com Dropdown */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-fuchsia-500/20 to-rose-400/20 border border-fuchsia-500/30' : 'bg-gradient-to-r from-fuchsia-500 to-rose-400 shadow-lg shadow-fuchsia-500/25')}>
-                    <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-fuchsia-400' : 'text-white')}></i>
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B9D]/20 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] shadow-lg shadow-[#E91E8C]/25')}>
+                    <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
                   </div>
                   <div>
                     <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Configurações</h1>
@@ -4858,9 +4858,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     onClick={() => setSettingsTab(tab.id)}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                       settingsTab === tab.id
-                        ? 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow-lg shadow-fuchsia-500/30'
+                        ? 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white shadow-lg shadow-[#E91E8C]/30'
                         : theme === 'dark'
-                          ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                          ? 'bg-neutral-800 text-neutral-400 hover:bg-gray-300'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -4900,26 +4900,26 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
 
                       {/* Status atual de creditos */}
-                      <div className="bg-gradient-to-br from-fuchsia-600/20 via-purple-600/15 to-rose-600/20 border border-fuchsia-500/30 rounded-2xl p-5 mb-6 backdrop-blur-sm">
+                      <div className="bg-gradient-to-br from-[#E91E8C]/20 via-[#A855F7]/15 to-[#FF6B9D]/20 border border-[#E91E8C]/30 rounded-2xl p-5 mb-6 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-rose-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/30">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D] flex items-center justify-center shadow-lg shadow-[#E91E8C]/30">
                               <i className="fas fa-coins text-white text-lg"></i>
                             </div>
                             <div>
-                              <p className="text-fuchsia-300 text-[10px] uppercase tracking-wider font-medium">Seus Creditos</p>
+                              <p className="text-[#E91E8C] text-[10px] uppercase tracking-wider font-medium">Seus Creditos</p>
                               <p className="text-white text-3xl font-bold">{userCredits} <span className="text-base font-normal text-neutral-400">/ {currentPlan.limit}</span></p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow-lg whitespace-nowrap">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white shadow-lg whitespace-nowrap">
                               <i className="fas fa-crown text-[10px]"></i>
                               {currentPlan.name}
                             </span>
                           </div>
                         </div>
                         <div className="bg-neutral-900/50 h-3 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-fuchsia-500 via-purple-500 to-rose-500 rounded-full transition-all shadow-lg shadow-fuchsia-500/50" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+                          <div className="h-full bg-gradient-to-r from-[#E91E8C] via-[#A855F7] to-[#FF6B9D] rounded-full transition-all shadow-lg shadow-[#E91E8C]/50" style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
                         </div>
                       </div>
 
@@ -4928,7 +4928,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <span className={(billingPeriod === 'monthly' ? 'text-white' : 'text-neutral-500') + ' text-sm font-medium'}>Mensal</span>
                         <button
                           onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
-                          className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-fuchsia-500 to-rose-500' : 'bg-neutral-700') + ' relative w-14 h-7 rounded-full transition-colors'}
+                          className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D]' : 'bg-gray-300') + ' relative w-14 h-7 rounded-full transition-colors'}
                         >
                           <div className={'absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ' + (billingPeriod === 'yearly' ? 'translate-x-8' : 'translate-x-1')}></div>
                         </button>
@@ -4952,9 +4952,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               className={
                                 'relative rounded-2xl p-5 transition-all ' +
                                 (isCurrentPlan
-                                  ? 'bg-gradient-to-br from-fuchsia-600/30 via-purple-600/20 to-rose-600/30 border-2 border-fuchsia-500 shadow-xl shadow-fuchsia-500/20'
+                                  ? 'bg-gradient-to-br from-[#E91E8C]/30 via-[#A855F7]/20 to-[#FF6B9D]/30 border-2 border-[#E91E8C] shadow-xl shadow-[#E91E8C]/20'
                                   : isPro
-                                    ? 'bg-gradient-to-br from-fuchsia-900/30 via-purple-900/20 to-neutral-900 border border-fuchsia-500/30 hover:border-fuchsia-500/60'
+                                    ? 'bg-gradient-to-br from-[#E91E8C]/30 via-[#A855F7]/20 to-neutral-900 border border-[#E91E8C]/30 hover:border-[#E91E8C]/60'
                                     : isPremier
                                       ? 'bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-neutral-900 border border-amber-500/30 hover:border-amber-500/60'
                                       : 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 hover:border-neutral-600'
@@ -4964,21 +4964,21 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                               {/* Badge */}
                               {isCurrentPlan && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                  <span className="px-4 py-1.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white text-[10px] font-bold rounded-full shadow-lg whitespace-nowrap">
+                                  <span className="px-4 py-1.5 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white text-[10px] font-bold rounded-full shadow-lg whitespace-nowrap">
                                     ATUAL
                                   </span>
                                 </div>
                               )}
                               {isPro && !isCurrentPlan && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                  <span className="px-4 py-1.5 bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white text-[10px] font-bold rounded-full shadow-lg whitespace-nowrap">
+                                  <span className="px-4 py-1.5 bg-gradient-to-r from-[#E91E8C] to-[#A855F7] text-white text-[10px] font-bold rounded-full shadow-lg whitespace-nowrap">
                                     POPULAR
                                   </span>
                                 </div>
                               )}
                               {isPremier && !isCurrentPlan && (
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                  <span className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap">
+                                  <span className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white text-[10px] font-bold rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap">
                                     <i className="fas fa-star text-[8px]"></i>
                                     COMPLETO
                                   </span>
@@ -5029,7 +5029,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                     'w-full py-3 rounded-xl font-semibold text-sm transition-all ' +
                                     (isCurrentPlan
                                       ? 'bg-neutral-800 text-neutral-500 cursor-default'
-                                      : 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white hover:shadow-lg hover:shadow-fuchsia-500/30 hover:scale-[1.02]'
+                                      : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white hover:shadow-lg hover:shadow-[#E91E8C]/30 hover:scale-[1.02]'
                                     )
                                   }
                                 >
@@ -5044,7 +5044,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       {/* Secao: Compre Creditos Adicionais */}
                       <div className="bg-gradient-to-br from-amber-900/20 via-orange-900/10 to-neutral-900 border border-amber-500/20 rounded-2xl p-5 mb-6">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-[#FF9F43] flex items-center justify-center shadow-lg shadow-amber-500/30">
                             <i className="fas fa-coins text-white"></i>
                           </div>
                           <div>
@@ -5078,7 +5078,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <details className="group">
                           <summary className="text-white hover:text-neutral-300 font-medium text-sm cursor-pointer flex items-center justify-between">
                             <span className="flex items-center gap-2">
-                              <i className="fas fa-circle-question text-fuchsia-400"></i>
+                              <i className="fas fa-circle-question text-[#E91E8C]"></i>
                               Perguntas Frequentes
                             </span>
                             <i className="fas fa-chevron-down text-xs transition-transform group-open:rotate-180"></i>
@@ -5102,7 +5102,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
                       {/* Footer */}
                       <p className="text-neutral-500 text-center text-xs mt-6">
-                        Precisa de mais? <a href="#" className="text-fuchsia-400 hover:underline">Entre em contato</a> para planos personalizados.
+                        Precisa de mais? <a href="#" className="text-[#E91E8C] hover:underline">Entre em contato</a> para planos personalizados.
                       </p>
                     </div>
                   );
@@ -5116,7 +5116,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
                             {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
                           </div>
-                          <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
+                          <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
@@ -5177,7 +5177,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       {/* Dados Básicos */}
                       <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                         <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3 flex items-center gap-2'}>
-                          <i className="fas fa-building text-pink-500 text-xs"></i>
+                          <i className="fas fa-building text-[#E91E8C] text-xs"></i>
                           Dados Básicos
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -5205,9 +5205,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
 
                       {/* Configurações de Legenda IA */}
-                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-orange-500/10 border-pink-500/30' : 'bg-gradient-to-r from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl border p-4'}>
+                      <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#E91E8C]/5 to-[#FF9F43]/5 border-[#E91E8C]/20') + ' rounded-xl border p-4'}>
                         <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1 flex items-center gap-2'}>
-                          <i className="fas fa-wand-magic-sparkles text-pink-500 text-xs"></i>
+                          <i className="fas fa-wand-magic-sparkles text-[#E91E8C] text-xs"></i>
                           Gerador de Legendas IA
                         </h4>
                         <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-4'}>Configure como a IA vai gerar legendas para suas postagens</p>
@@ -5241,7 +5241,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                   onClick={() => setCompanySettings({ ...companySettings, voiceTone: tone.id as any })}
                                   className={`p-2 rounded-lg border text-center transition-all ${
                                     companySettings.voiceTone === tone.id
-                                      ? 'border-pink-500 bg-pink-500/20 text-pink-500'
+                                      ? 'border-[#E91E8C] bg-[#E91E8C]/20 text-[#E91E8C]'
                                       : theme === 'dark'
                                         ? 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
                                         : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
@@ -5302,7 +5302,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                 onClick={() => setCompanySettings({ ...companySettings, emojisEnabled: !companySettings.emojisEnabled })}
                                 className={`w-full px-3 py-2 border rounded-lg text-sm font-medium transition-all ${
                                   companySettings.emojisEnabled
-                                    ? 'border-pink-500 bg-pink-500/20 text-pink-500'
+                                    ? 'border-[#E91E8C] bg-[#E91E8C]/20 text-[#E91E8C]'
                                     : theme === 'dark'
                                       ? 'border-neutral-700 bg-neutral-800 text-neutral-400'
                                       : 'border-gray-200 bg-white text-gray-500'
@@ -5333,7 +5333,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       {/* Botão Salvar */}
                       <button
                         onClick={() => showToast('Configurações salvas!', 'success')}
-                        className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                        className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                       >
                         <i className="fas fa-check"></i>
                         Salvar Configurações
@@ -5360,7 +5360,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.desc}</p>
                               </div>
                             </div>
-                            <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors'}>Conectar</button>
+                            <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors'}>Conectar</button>
                           </div>
                         ))}
                       </div>
@@ -5432,7 +5432,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                         {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                       </span>
                                       {log.cost > 0 && (
-                                        <span className="text-pink-500">
+                                        <span className="text-[#E91E8C]">
                                           <i className="fas fa-coins mr-1"></i>
                                           {log.cost} crédito{log.cost !== 1 ? 's' : ''}
                                         </span>
@@ -5477,26 +5477,26 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 shadow-lg')}
       >
         <div className="flex items-center justify-around">
-          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-home text-sm"></i>
             <span className="text-[9px] font-medium">Home</span>
           </button>
-          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-box text-sm"></i>
             <span className="text-[9px] font-medium">Produtos</span>
           </button>
           {/* Botão CRIAR - Central destacado */}
           <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-pink-500 to-orange-400 scale-110' : 'bg-gradient-to-br from-pink-500 to-orange-400')}>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-[#E91E8C]/20 transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]')}>
               <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+            <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
           </button>
-          <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-user-tie text-sm"></i>
             <span className="text-[9px] font-medium">Modelos</span>
           </button>
-          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-pink-500') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+          <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
             <i className="fas fa-users text-sm"></i>
             <span className="text-[9px] font-medium">Clientes</span>
           </button>
@@ -5517,7 +5517,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <i className="fas fa-times"></i>
             </button>
             <div className="relative aspect-video bg-black">
-              <div className={'absolute inset-0 flex flex-col items-center justify-center text-white ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600' : 'bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500')}>
+              <div className={'absolute inset-0 flex flex-col items-center justify-center text-white ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-br from-[#A855F7] via-indigo-600 to-blue-600' : 'bg-gradient-to-br from-[#E91E8C] via-[#FF6B9D] to-[#FF9F43]')}>
                 <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
                   <i className="fas fa-play text-3xl ml-1"></i>
                 </div>
@@ -5531,7 +5531,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold'}>{showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}</h3>
                   <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{showVideoTutorial === 'studio' ? 'Transforme suas fotos de produto em imagens profissionais' : 'Vista seus clientes virtualmente e aumente suas vendas'}</p>
                 </div>
-                <button onClick={() => { setShowVideoTutorial(null); setCurrentPage(showVideoTutorial); }} className={'px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500')}>
+                <button onClick={() => { setShowVideoTutorial(null); setCurrentPage(showVideoTutorial); }} className={'px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-[#A855F7] via-indigo-500 to-[#A855F7]' : 'bg-gradient-to-r from-[#E91E8C] via-[#FF6B9D] to-[#FF9F43]')}>
                   <i className="fas fa-rocket"></i>Começar Agora<i className="fas fa-arrow-right text-sm"></i>
                 </button>
               </div>
@@ -5546,7 +5546,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
-              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+              <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
             </div>
             <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
@@ -5557,7 +5557,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <div className="p-4 space-y-4">
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 block'}>
-                  <i className="fas fa-camera text-pink-400 mr-1"></i>Fotos para Provador IA
+                  <i className="fas fa-camera text-[#E91E8C] mr-1"></i>Fotos para Provador IA
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {PHOTO_TYPES.map(photoType => {
@@ -5568,13 +5568,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'create' }); }}
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleClientPhotoDrop(e, photoType.id)}
-                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-pink-400 hover:bg-purple-50'))}
+                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#E91E8C]/50 bg-[#E91E8C]/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-[#E91E8C]/50 hover:bg-purple-50'))}
                         >
                           {existingPhoto ? (
                             <>
                               <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
                               <button onClick={(e) => { e.stopPropagation(); handleRemoveClientPhoto(photoType.id); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
-                              <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
+                              <div className="absolute bottom-0 left-0 right-0 bg-[#E91E8C]/100 text-white text-[8px] py-0.5 font-medium"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
                             </>
                           ) : (
                             <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
@@ -5595,7 +5595,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </div>
                 )}
                 {!processingClientPhoto && newClient.photos.length > 0 && (
-                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-pink-500/10 text-pink-500 rounded-lg">
+                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-[#E91E8C]/10 text-[#E91E8C] rounded-lg">
                     <i className="fas fa-check text-[10px]"></i>
                     <span className="text-[10px] font-medium">Provador IA ativado - {newClient.photos.length} foto(s)</span>
                   </div>
@@ -5614,7 +5614,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div>
                 <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Gênero *</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-pink-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-pink-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-pink-400')}`}>
+                  <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-[#E91E8C]/100 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-[#E91E8C]/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-[#E91E8C]/50')}`}>
                     <i className="fas fa-venus mr-1.5"></i>Feminino
                   </button>
                   <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'male' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'male' ? 'bg-blue-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-blue-400')}`}>
@@ -5642,10 +5642,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </div>
               {/* Botões de ação */}
               <div className="flex gap-2 pt-2">
-                <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-3 rounded-xl font-medium text-sm transition-colors md:hidden'}>
+                <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-gray-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-3 rounded-xl font-medium text-sm transition-colors md:hidden'}>
                   Cancelar
                 </button>
-                <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp || isSavingClient || processingClientPhoto} className="flex-1 md:w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp || isSavingClient || processingClientPhoto} className="flex-1 md:w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSavingClient ? (
                     <><i className="fas fa-spinner fa-spin mr-2"></i>Salvando...</>
                   ) : (
@@ -5664,22 +5664,22 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
-              <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
+              <div className="bg-gray-300 w-10 h-1 rounded-full"></div>
             </div>
             <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
-              <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-700 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+              <button onClick={() => setShowClientDetail(null)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-300 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
                 <i className="fas fa-times text-xs"></i>
               </button>
               <div className="relative inline-block">
                 {getClientPhoto(showClientDetail) ? (
                   <img src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full object-cover border-2 border-neutral-600 mx-auto" />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-neutral-700 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center mx-auto">
                     <span className="text-xl font-medium text-neutral-400">{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
                   </div>
                 )}
                 {showClientDetail.hasProvadorIA && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center border-2 border-neutral-800">
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center border-2 border-neutral-800">
                     <i className="fas fa-camera text-white text-[8px]"></i>
                   </div>
                 )}
@@ -5706,7 +5706,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
                 </span>
                 {showClientDetail.hasProvadorIA && (
-                  <span className="px-2 py-1 bg-pink-500/20 text-pink-400 rounded-full text-[10px] font-medium">
+                  <span className="px-2 py-1 bg-[#E91E8C]/20 text-[#E91E8C] rounded-full text-[10px] font-medium">
                     <i className="fas fa-camera mr-1"></i>Vizzu Provador®
                   </span>
                 )}
@@ -5727,7 +5727,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {clientDetailLooks.length > 0 && (
                 <div>
                   <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                    <i className="fas fa-images text-pink-400"></i>
+                    <i className="fas fa-images text-[#E91E8C]"></i>
                     Looks Gerados ({clientDetailLooks.length})
                   </p>
                   <div className="grid grid-cols-4 gap-2">
@@ -5736,7 +5736,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         <img
                           src={look.imageUrl}
                           alt="Look"
-                          className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-pink-500 transition-colors"
+                          className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-[#E91E8C] transition-colors"
                           onClick={() => window.open(look.imageUrl, '_blank')}
                         />
                         <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">
@@ -5749,14 +5749,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               )}
               <div className="grid grid-cols-2 gap-2 pt-2">
                 {showClientDetail.hasProvadorIA && (
-                  <button onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }} className="col-span-2 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2">
+                  <button onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }} className="col-span-2 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs flex items-center justify-center gap-2">
                     <i className="fas fa-wand-magic-sparkles text-[10px]"></i>Vizzu Provador®
                   </button>
                 )}
-                <button onClick={() => startEditingClient(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                <button onClick={() => startEditingClient(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-gray-300 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fas fa-pen text-[10px]"></i>Editar
                 </button>
-                <button onClick={() => openWhatsAppLookModal(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
+                <button onClick={() => openWhatsAppLookModal(showClientDetail)} className="py-2.5 bg-neutral-800 hover:bg-gray-300 text-green-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
                   <i className="fab fa-whatsapp text-sm"></i>WhatsApp
                 </button>
                 <button onClick={() => handleDeleteClient(showClientDetail.id)} className="col-span-2 py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
@@ -5774,7 +5774,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
-              <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
+              <div className="bg-gray-300 w-10 h-1 rounded-full"></div>
             </div>
             <div className="sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 bg-neutral-900 border-neutral-800">
               <h3 className="text-white text-sm font-medium flex items-center gap-2">
@@ -5892,7 +5892,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet" onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
-              <div className="bg-neutral-700 w-10 h-1 rounded-full"></div>
+              <div className="bg-gray-300 w-10 h-1 rounded-full"></div>
             </div>
             <div className="sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 bg-neutral-900 border-neutral-800">
               <h3 className="text-white text-sm font-medium">Editar Cliente</h3>
@@ -5904,7 +5904,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Fotos */}
               <div>
                 <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-2 block">
-                  <i className="fas fa-camera text-pink-400 mr-1"></i>Fotos para Provador IA
+                  <i className="fas fa-camera text-[#E91E8C] mr-1"></i>Fotos para Provador IA
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {PHOTO_TYPES.map(photoType => {
@@ -5915,13 +5915,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'edit' }); }}
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleEditClientPhotoDrop(e, photoType.id)}
-                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-pink-500/50 bg-pink-500/10' : 'border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800')}
+                          className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#E91E8C]/50 bg-[#E91E8C]/10' : 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800')}
                         >
                           {existingPhoto ? (
                             <>
                               <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
                               <button onClick={(e) => { e.stopPropagation(); setEditClientPhotos(prev => prev.filter(p => p.type !== photoType.id)); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
-                              <div className="absolute bottom-0 left-0 right-0 bg-pink-500 text-white text-[8px] py-0.5 font-medium text-center"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
+                              <div className="absolute bottom-0 left-0 right-0 bg-[#E91E8C]/100 text-white text-[8px] py-0.5 font-medium text-center"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
                             </>
                           ) : (
                             <div className="flex flex-col items-center justify-center h-full text-neutral-600">
@@ -5957,7 +5957,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               <div>
                 <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Gênero</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'female' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'female' ? 'bg-pink-500 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-pink-500/50'}`}>
+                  <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'female' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'female' ? 'bg-[#E91E8C]/100 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-[#E91E8C]/50'}`}>
                     <i className="fas fa-venus mr-1.5"></i>Feminino
                   </button>
                   <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'male' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'male' ? 'bg-blue-500 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50'}`}>
@@ -5988,7 +5988,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 <button onClick={() => { setEditingClient(null); setEditClientPhotos([]); }} className="flex-1 py-3 bg-neutral-800 text-neutral-300 rounded-xl font-medium text-sm">
                   Cancelar
                 </button>
-                <button onClick={saveEditingClient} disabled={!editingClient.firstName || !editingClient.lastName || !editingClient.whatsapp || processingClientPhoto} className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={saveEditingClient} disabled={!editingClient.firstName || !editingClient.lastName || !editingClient.whatsapp || processingClientPhoto} className="flex-1 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                   <i className="fas fa-check mr-2"></i>Salvar
                 </button>
               </div>
@@ -6002,14 +6002,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 {showPhotoSourcePicker && (
   <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
-      <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+      <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
         Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : showPhotoSourcePicker === 'back' ? 'de costas' : 'de detalhe'}
       </h3>
       <div className="grid grid-cols-2 gap-3">
-        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-pink-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
-            <i className="fas fa-images text-pink-500"></i>
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-images text-[#E91E8C]"></i>
           </div>
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
           <input
@@ -6039,9 +6039,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             }}
           />
         </label>
-        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
-            <i className="fas fa-camera text-orange-500"></i>
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-camera text-[#FF9F43]"></i>
           </div>
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
           <input
@@ -6084,14 +6084,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 {showClientPhotoSourcePicker && (
   <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowClientPhotoSourcePicker(null)}>
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
-      <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+      <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
         Adicionar foto - {PHOTO_TYPES.find(p => p.id === showClientPhotoSourcePicker.photoType)?.label}
       </h3>
       <div className="grid grid-cols-2 gap-3">
-        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-pink-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
-            <i className="fas fa-images text-pink-500"></i>
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-images text-[#E91E8C]"></i>
           </div>
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
           <input
@@ -6111,9 +6111,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             }}
           />
         </label>
-        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-400') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-          <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
-            <i className="fas fa-camera text-orange-500"></i>
+        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+          <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+            <i className="fas fa-camera text-[#FF9F43]"></i>
           </div>
           <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
           <input
@@ -6146,10 +6146,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 {showProductSelector && detectedProducts.length > 1 && (
   <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowProductSelector(false)}>
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[80vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
-      <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
+      <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
 
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] flex items-center justify-center">
           <i className="fas fa-wand-magic-sparkles text-white"></i>
         </div>
         <div>
@@ -6163,18 +6163,18 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <button
             key={index}
             onClick={() => handleSelectDetectedProduct(product)}
-            className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-pink-400 hover:bg-pink-50') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
+            className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50 hover:bg-[#E91E8C]/10') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
           >
-            <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-12 h-12 rounded-lg flex items-center justify-center'}>
+            <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' w-12 h-12 rounded-lg flex items-center justify-center'}>
               <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-tshirt text-xl'}></i>
             </div>
             <div className="flex-1">
               <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{product.suggestedName || product.type}</p>
               <div className="flex flex-wrap gap-1.5 mt-1">
-                <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.type}</span>
-                <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.color}</span>
+                <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.type}</span>
+                <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.color}</span>
                 {product.pattern && product.pattern !== 'Liso' && (
-                  <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.pattern}</span>
+                  <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.pattern}</span>
                 )}
               </div>
             </div>
@@ -6199,7 +6199,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto shadow-2xl safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pb-2 flex justify-center -mt-1">
-        <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+        <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
       </div>
       <div className="flex items-center justify-between mb-4">
         <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
@@ -6215,11 +6215,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           {/* FRENTE */}
           <div className="flex flex-col">
             <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
-              <i className="fas fa-image text-pink-500 text-[8px]"></i>
-              Frente <span className="text-pink-500">*</span>
+              <i className="fas fa-image text-[#E91E8C] text-[8px]"></i>
+              Frente <span className="text-[#E91E8C]">*</span>
             </label>
             {selectedFrontImage ? (
-              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-pink-500">
+              <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#E91E8C]">
                 <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
                 <div className="absolute top-1 right-1 flex gap-0.5">
                   <button onClick={() => setShowPhotoSourcePicker('front')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
@@ -6229,12 +6229,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     <i className="fas fa-times text-[7px]"></i>
                   </button>
                 </div>
-                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-pink-500 text-white text-[7px] font-bold rounded-full">
+                <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-[#E91E8C]/100 text-white text-[7px] font-bold rounded-full">
                   <i className="fas fa-check mr-0.5"></i>OK
                 </div>
               </div>
             ) : (
-              <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-pink-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+              <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C]/50 bg-neutral-800/50' : 'border-gray-300 hover:border-[#E91E8C]/50 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
               </div>
@@ -6277,7 +6277,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               Detalhe
             </label>
             {selectedDetailImage ? (
-              <div className={(theme === 'dark' ? 'border-purple-500' : 'border-purple-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
+              <div className={(theme === 'dark' ? 'border-[#A855F7]' : 'border-purple-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
                 <img src={selectedDetailImage} alt="Detalhe" className="w-full h-full object-cover" />
                 <div className="absolute top-1 right-1 flex gap-0.5">
                   <button onClick={() => setShowPhotoSourcePicker('detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
@@ -6292,7 +6292,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               </div>
             ) : (
-              <div onDrop={(e) => handleImageDrop(e, 'detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-purple-500/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+              <div onDrop={(e) => handleImageDrop(e, 'detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-[#A855F7]/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
                 <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
               </div>
@@ -6301,7 +6301,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
         </div>
 
         {/* Dica */}
-        <div className={(theme === 'dark' ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200') + ' rounded-lg p-2 mt-3 border'}>
+        <div className={(theme === 'dark' ? 'bg-purple-500/10 border-[#A855F7]/30' : 'bg-purple-50 border-[#A855F7]/20') + ' rounded-lg p-2 mt-3 border'}>
           <p className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-600') + ' text-[10px] flex items-start gap-1.5'}>
             <i className="fas fa-magnifying-glass-plus mt-0.5"></i>
             <span><strong>Imagem de Detalhe:</strong> Importante para logos, estampas ou detalhes pequenos que precisam aparecer fielmente na IA.</span>
@@ -6316,9 +6316,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           {/* Animação central */}
           <div className="relative mb-6">
             {/* Círculo externo pulsante */}
-            <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 animate-ping"></div>
+            <div className="absolute inset-0 w-24 h-24 rounded-full bg-gradient-to-r from-[#A855F7]/30 to-[#FF6B9D]/30 animate-ping"></div>
             {/* Círculo principal */}
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50">
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] flex items-center justify-center shadow-lg shadow-purple-500/50">
               <i className="fas fa-wand-magic-sparkles text-white text-3xl animate-pulse"></i>
             </div>
           </div>
@@ -6331,7 +6331,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
           {/* Barra de progresso animada */}
           <div className="w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full w-1/2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-loading"></div>
+            <div className="h-full w-1/2 bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] rounded-full animate-loading"></div>
           </div>
 
           {/* Lista de detecções */}
@@ -6385,9 +6385,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
         {/* Atributos condicionais por categoria */}
         {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
-          <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-purple-200') + ' p-3 rounded-xl border'}>
+          <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-[#A855F7]/20') + ' p-3 rounded-xl border'}>
             <div className="flex items-center gap-2 mb-2">
-              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-500') + ' fas fa-sliders text-xs'}></i>
+              <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-sliders text-xs'}></i>
               <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
             </div>
             <div className={`grid gap-3 ${CATEGORY_ATTRIBUTES[newProduct.category].length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -6412,7 +6412,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           </div>
         )}
 
-        <button onClick={editingProduct ? handleSaveEditedProduct : handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        <button onClick={editingProduct ? handleSaveEditedProduct : handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           {isCreatingProduct ? (
             <>
               <i className="fas fa-spinner fa-spin text-xs"></i>
@@ -6480,7 +6480,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                     onClick={() => setShowOptimizedImage(false)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
                       !showOptimizedImage
-                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-lg'
+                        ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-lg'
                         : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700')
                     }`}
                   >
@@ -6571,11 +6571,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {getOriginalImages(showProductDetail).length > 0 && (
                 <div className={'mt-4 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
                   <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3 flex items-center gap-2'}>
-                    <span className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                    <span className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
                       <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-image text-[10px]'}></i>
                     </span>
                     Fotos Originais
-                    <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' px-1.5 py-0.5 text-[8px] font-medium rounded-full'}>
+                    <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' px-1.5 py-0.5 text-[8px] font-medium rounded-full'}>
                       {getOriginalImages(showProductDetail).length} {getOriginalImages(showProductDetail).length === 1 ? 'foto' : 'fotos'}
                     </span>
                   </p>
@@ -6595,7 +6595,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               {/* Seção "Deseja criar?" */}
               <div className={'mt-5 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
                 <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
-                  <i className="fas fa-wand-magic-sparkles text-pink-500 mr-2"></i>
+                  <i className="fas fa-wand-magic-sparkles text-[#E91E8C] mr-2"></i>
                   Deseja criar?
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -6606,7 +6606,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       setShowProductDetail(null);
                       setCurrentPage('product-studio');
                     }}
-                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
                   >
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center mb-2">
                       <i className="fas fa-camera text-white text-xs"></i>
@@ -6622,9 +6622,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       setShowProductDetail(null);
                       setCurrentPage('provador');
                     }}
-                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-rose-400 flex items-center justify-center mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] flex items-center justify-center mb-2">
                       <i className="fas fa-shirt text-white text-xs"></i>
                     </div>
                     <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Provador</p>
@@ -6638,9 +6638,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       setShowProductDetail(null);
                       setCurrentPage('look-composer');
                     }}
-                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 flex items-center justify-center mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF9F43] to-yellow-400 flex items-center justify-center mb-2">
                       <i className="fas fa-layer-group text-white text-xs"></i>
                     </div>
                     <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Look Completo</p>
@@ -6654,9 +6654,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       setShowProductDetail(null);
                       setCurrentPage('lifestyle');
                     }}
-                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
+                    className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-400 flex items-center justify-center mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#E91E8C] flex items-center justify-center mb-2">
                       <i className="fas fa-mountain-sun text-white text-xs"></i>
                     </div>
                     <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</p>
@@ -6727,7 +6727,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 shadow-xl safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pb-3 flex justify-center -mt-1">
-              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+              <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
             </div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -6751,7 +6751,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}
-                className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
+                className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
               >
                 Cancelar
               </button>
@@ -6797,7 +6797,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
-              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+              <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
             </div>
             {/* Header com Steps */}
             <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
@@ -6830,7 +6830,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   <div key={step} className="flex-1 text-center">
                     <div className={'mx-auto w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium mb-1 transition-all ' + (
                       modelWizardStep === step
-                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                        ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                         : modelWizardStep > step
                           ? (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')
                           : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400')
@@ -6859,11 +6859,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         onClick={() => setNewModel({ ...newModel, gender: opt.id as 'woman' | 'man' })}
                         className={'p-6 rounded-xl border-2 transition-all text-center ' + (
                           newModel.gender === opt.id
-                            ? 'border-pink-500/50 bg-gradient-to-r from-pink-500/20 to-orange-400/20'
-                            : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-pink-300')
+                            ? 'border-[#E91E8C]/50 bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15'
+                            : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-[#E91E8C]/40')
                         )}
                       >
-                        <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-pink-500' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
+                        <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-[#E91E8C]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
                         <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>{opt.label}</p>
                       </button>
                     ))}
@@ -6912,7 +6912,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, skinTone: opt.id })}
                           className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.skinTone === opt.id
-                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                               : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
@@ -6932,7 +6932,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, bodyType: opt.id })}
                           className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.bodyType === opt.id
-                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                               : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
@@ -6945,7 +6945,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {/* Altura - Slider (3 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
-                      Altura: <span className="text-pink-400">{MODEL_OPTIONS.height.find(h => h.id === newModel.height)?.label}</span>
+                      Altura: <span className="text-[#E91E8C]">{MODEL_OPTIONS.height.find(h => h.id === newModel.height)?.label}</span>
                     </label>
                     <input
                       type="range"
@@ -6953,14 +6953,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       max={2}
                       value={MODEL_OPTIONS.height.findIndex(h => h.id === newModel.height)}
                       onChange={(e) => setNewModel({ ...newModel, height: MODEL_OPTIONS.height[Number(e.target.value)].id })}
-                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
                         [&::-webkit-slider-thumb]:appearance-none
                         [&::-webkit-slider-thumb]:w-5
                         [&::-webkit-slider-thumb]:h-5
                         [&::-webkit-slider-thumb]:rounded-full
                         [&::-webkit-slider-thumb]:bg-gradient-to-r
-                        [&::-webkit-slider-thumb]:from-pink-500
-                        [&::-webkit-slider-thumb]:to-orange-400
+                        [&::-webkit-slider-thumb]:from-[#E91E8C]
+                        [&::-webkit-slider-thumb]:to-[#FF9F43]
                         [&::-webkit-slider-thumb]:cursor-pointer
                         [&::-webkit-slider-thumb]:shadow-lg`}
                     />
@@ -7000,7 +7000,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             newModel.hairLength === 'bald'
                               ? (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')
                               : newModel.hairStyle === opt.id
-                                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                 : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
@@ -7022,7 +7022,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             newModel.hairLength === 'bald'
                               ? (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')
                               : newModel.hairColor === opt.id
-                                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                                 : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
@@ -7035,7 +7035,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {/* Tamanho do Cabelo - Slider */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
-                      Tamanho do Cabelo: <span className="text-pink-400">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
+                      Tamanho do Cabelo: <span className="text-[#E91E8C]">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
                     </label>
                     <input
                       type="range"
@@ -7043,14 +7043,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       max={5}
                       value={MODEL_OPTIONS.hairLength.findIndex(h => h.id === newModel.hairLength)}
                       onChange={(e) => setNewModel({ ...newModel, hairLength: MODEL_OPTIONS.hairLength[Number(e.target.value)].id })}
-                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
                         [&::-webkit-slider-thumb]:appearance-none
                         [&::-webkit-slider-thumb]:w-5
                         [&::-webkit-slider-thumb]:h-5
                         [&::-webkit-slider-thumb]:rounded-full
                         [&::-webkit-slider-thumb]:bg-gradient-to-r
-                        [&::-webkit-slider-thumb]:from-pink-500
-                        [&::-webkit-slider-thumb]:to-orange-400
+                        [&::-webkit-slider-thumb]:from-[#E91E8C]
+                        [&::-webkit-slider-thumb]:to-[#FF9F43]
                         [&::-webkit-slider-thumb]:cursor-pointer
                         [&::-webkit-slider-thumb]:shadow-lg`}
                     />
@@ -7082,7 +7082,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, eyeColor: opt.id })}
                           className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.eyeColor === opt.id
-                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                               : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
@@ -7102,7 +7102,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                           onClick={() => setNewModel({ ...newModel, expression: opt.id })}
                           className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
                             newModel.expression === opt.id
-                              ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white'
+                              ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                               : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
                           )}
                         >
@@ -7133,7 +7133,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {newModel.gender === 'woman' && (
                     <div>
                       <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
-                        Tamanho do Busto: <span className="text-pink-400">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
+                        Tamanho do Busto: <span className="text-[#E91E8C]">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
                       </label>
                       <input
                         type="range"
@@ -7141,14 +7141,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                         max={2}
                         value={MODEL_OPTIONS.bustSize.findIndex(b => b.id === newModel.bustSize)}
                         onChange={(e) => setNewModel({ ...newModel, bustSize: MODEL_OPTIONS.bustSize[Number(e.target.value)].id })}
-                        className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                        className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
                           [&::-webkit-slider-thumb]:appearance-none
                           [&::-webkit-slider-thumb]:w-5
                           [&::-webkit-slider-thumb]:h-5
                           [&::-webkit-slider-thumb]:rounded-full
                           [&::-webkit-slider-thumb]:bg-gradient-to-r
-                          [&::-webkit-slider-thumb]:from-pink-500
-                          [&::-webkit-slider-thumb]:to-orange-400
+                          [&::-webkit-slider-thumb]:from-[#E91E8C]
+                          [&::-webkit-slider-thumb]:to-[#FF9F43]
                           [&::-webkit-slider-thumb]:cursor-pointer
                           [&::-webkit-slider-thumb]:shadow-lg`}
                       />
@@ -7163,7 +7163,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   {/* Tipo de Cintura - Slider (3 opções) */}
                   <div>
                     <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
-                      Tipo de Cintura: <span className="text-pink-400">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
+                      Tipo de Cintura: <span className="text-[#E91E8C]">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
                     </label>
                     <input
                       type="range"
@@ -7171,14 +7171,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       max={2}
                       value={MODEL_OPTIONS.waistType.findIndex(w => w.id === newModel.waistType)}
                       onChange={(e) => setNewModel({ ...newModel, waistType: MODEL_OPTIONS.waistType[Number(e.target.value)].id })}
-                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+                      className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
                         [&::-webkit-slider-thumb]:appearance-none
                         [&::-webkit-slider-thumb]:w-5
                         [&::-webkit-slider-thumb]:h-5
                         [&::-webkit-slider-thumb]:rounded-full
                         [&::-webkit-slider-thumb]:bg-gradient-to-r
-                        [&::-webkit-slider-thumb]:from-pink-500
-                        [&::-webkit-slider-thumb]:to-orange-400
+                        [&::-webkit-slider-thumb]:from-[#E91E8C]
+                        [&::-webkit-slider-thumb]:to-[#FF9F43]
                         [&::-webkit-slider-thumb]:cursor-pointer
                         [&::-webkit-slider-thumb]:shadow-lg`}
                     />
@@ -7236,7 +7236,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                             return (
                               <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                  isCompleted ? 'bg-green-500' : isCurrent ? 'bg-pink-500' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')
+                                  isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#E91E8C]/100' : (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300')
                                 }`}>
                                   {isCompleted ? (
                                     <i className="fas fa-check text-white text-xs"></i>
@@ -7259,7 +7259,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <div className="px-2">
                         <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
                           <div
-                            className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500"
+                            className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
                             style={{ width: `${modelGenerationProgress}%` }}
                           ></div>
                         </div>
@@ -7339,33 +7339,33 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       </div>
 
                       {/* Preview humanizado do modelo */}
-                      <div className={(theme === 'dark' ? 'bg-gradient-to-br from-pink-500/10 to-orange-400/10 border-pink-500/20' : 'bg-gradient-to-br from-pink-50 to-orange-50 border-pink-200') + ' rounded-xl p-4 border'}>
+                      <div className={(theme === 'dark' ? 'bg-gradient-to-br from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-br from-[#E91E8C]/5 to-[#FF9F43]/5 border-[#E91E8C]/20') + ' rounded-xl p-4 border'}>
                         <div className="flex items-start gap-3">
-                          <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+                          <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
                             <i className={'fas ' + (newModel.gender === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-white text-lg'}></i>
                           </div>
                           <div className="flex-1">
                             <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
-                              <i className="fas fa-sparkles text-pink-400 mr-1"></i>O que será gerado
+                              <i className="fas fa-sparkles text-[#E91E8C] mr-1"></i>O que será gerado
                             </p>
                             <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
                               {newModel.name || (newModel.gender === 'woman' ? 'Ela' : 'Ele')} terá{' '}
-                              <span className="text-pink-400 font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>
+                              <span className="text-[#E91E8C] font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>
                               {newModel.hairLength === 'bald' ? (
-                                <> e será <span className="text-pink-400 font-medium">careca</span>.</>
+                                <> e será <span className="text-[#E91E8C] font-medium">careca</span>.</>
                               ) : (
-                                <>, cabelo <span className="text-pink-400 font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
-                                <span className="text-pink-400 font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
-                                e <span className="text-pink-400 font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.</>
+                                <>, cabelo <span className="text-[#E91E8C] font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
+                                <span className="text-[#E91E8C] font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
+                                e <span className="text-[#E91E8C] font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.</>
                               )}{' '}
-                              Corpo <span className="text-pink-400 font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
-                              pele <span className="text-pink-400 font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
-                              estatura <span className="text-pink-400 font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}
-                              e cintura <span className="text-pink-400 font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
+                              Corpo <span className="text-[#E91E8C] font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
+                              pele <span className="text-[#E91E8C] font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
+                              estatura <span className="text-[#E91E8C] font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}
+                              e cintura <span className="text-[#E91E8C] font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
                               {newModel.gender === 'woman' && (
-                                <>, busto <span className="text-pink-400 font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
+                                <>, busto <span className="text-[#E91E8C] font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
                               )}.{' '}
-                              Expressão <span className="text-pink-400 font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
+                              Expressão <span className="text-[#E91E8C] font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
                             </p>
                             <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
                               <i className="fas fa-camera mr-1"></i>
@@ -7393,7 +7393,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                   </button>
                   <button
                     onClick={() => setModelWizardStep((modelWizardStep + 1) as 1 | 2 | 3 | 4 | 5)}
-                    className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium"
+                    className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium"
                   >
                     Próximo
                   </button>
@@ -7424,7 +7424,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <button
                         onClick={generateModelPreview}
                         disabled={!newModel.name.trim()}
-                        className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (!newModel.name.trim() ? 'opacity-50 cursor-not-allowed' : '')}
+                        className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (!newModel.name.trim() ? 'opacity-50 cursor-not-allowed' : '')}
                       >
                         <i className="fas fa-wand-magic-sparkles"></i>
                         Criar Modelo
@@ -7468,7 +7468,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                 setCurrentPage('product-studio');
                                 // TODO: Pass model to Studio Ready
                               }}
-                              className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+                              className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
                             >
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center">
                                 <i className="fas fa-camera text-white text-xs"></i>
@@ -7485,9 +7485,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                 setCurrentPage('lifestyle');
                                 // TODO: Pass model to Cenário Criativo
                               }}
-                              className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+                              className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
                             >
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-400 flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#E91E8C] flex items-center justify-center">
                                 <i className="fas fa-mountain-sun text-white text-xs"></i>
                               </div>
                               <div>
@@ -7502,9 +7502,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                                 setCurrentPage('look-composer');
                                 // TODO: Pass model to Look Composer
                               }}
-                              className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+                              className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
                             >
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-400 flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF9F43] to-yellow-400 flex items-center justify-center">
                                 <i className="fas fa-layer-group text-white text-xs"></i>
                               </div>
                               <div>
@@ -7519,7 +7519,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                       <button
                         onClick={saveModel}
                         disabled={savingModel}
-                        className={'px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium flex items-center gap-2 ' + (savingModel ? 'opacity-70' : '')}
+                        className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium flex items-center gap-2 ' + (savingModel ? 'opacity-70' : '')}
                       >
                         {savingModel ? (
                           <>
@@ -7548,7 +7548,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
             {/* Drag handle - mobile */}
             <div className="md:hidden pt-3 pb-1 flex justify-center">
-              <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+              <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
             </div>
             {/* Header */}
             <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
@@ -7583,7 +7583,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
                 </div>
               ) : (
                 <div className={'rounded-xl p-8 mb-4 text-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
-                  <div className={'w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center ' + (showModelDetail.gender === 'woman' ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+                  <div className={'w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center ' + (showModelDetail.gender === 'woman' ? 'bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
                     <i className="fas fa-user text-3xl text-white"></i>
                   </div>
                   <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
@@ -7693,7 +7693,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
               </button>
               <button
                 onClick={() => setShowModelDetail(null)}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg text-sm font-medium"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium"
               >
                 Fechar
               </button>
@@ -7713,15 +7713,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-orange-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
                     <i className={'fas ' + modal.icon + ' text-white text-xs'}></i>
                   </div>
                   <div>
                     <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium truncate max-w-[120px]'}>{modal.title}</p>
                     {modal.progress !== undefined && (
                       <div className="flex items-center gap-1.5">
-                        <div className="w-16 h-1 bg-neutral-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-pink-500 to-orange-400 animate-pulse" style={{ width: '60%' }}></div>
+                        <div className="w-16 h-1 bg-gray-300 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] animate-pulse" style={{ width: '60%' }}></div>
                         </div>
                         <span className="text-[10px] text-neutral-500">Gerando...</span>
                       </div>
@@ -7750,7 +7750,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           className="fixed bottom-6 right-6 z-50 cursor-pointer"
           onClick={() => setProductStudioMinimized(false)}
         >
-          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-2xl p-4 shadow-2xl shadow-pink-500/20 flex items-center gap-4 min-w-[280px]">
+          <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 shadow-2xl shadow-[#E91E8C]/15 flex items-center gap-4 min-w-[280px]">
             <div className="w-10 h-10 flex-shrink-0">
               <DotLottieReact
                 src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
@@ -7818,7 +7818,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
           className="fixed bottom-6 right-6 z-50 cursor-pointer"
           onClick={() => setProvadorMinimized(false)}
         >
-          <div className="bg-gradient-to-r from-pink-500 to-orange-400 rounded-2xl p-4 shadow-2xl shadow-pink-500/20 flex items-center gap-4 min-w-[280px]">
+          <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 shadow-2xl shadow-[#E91E8C]/15 flex items-center gap-4 min-w-[280px]">
             <div className="w-10 h-10 flex-shrink-0">
               <DotLottieReact
                 src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"

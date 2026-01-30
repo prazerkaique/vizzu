@@ -225,7 +225,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* HEADER - Gradient Pink → Orange */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-3 sticky top-0 z-40 flex-shrink-0">
+      <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] px-4 py-3 sticky top-0 z-40 flex-shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -332,7 +332,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
                     </div>
 
                     {/* Badge indicando tipo */}
-                    <div className={'absolute top-3 left-3 px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>
+                    <div className={'absolute top-3 left-3 px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>
                       {showOriginal ? 'Original' : ANGLE_LABELS[currentImage?.angle] || 'Gerada'}
                     </div>
                   </>
@@ -359,7 +359,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
                         disabled={!isGenerated}
                         className={'px-3 py-1.5 rounded-lg font-medium text-[11px] transition-all flex items-center gap-1.5 ' +
                           (isActive
-                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md'
+                            ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-md'
                             : isGenerated
                               ? (theme === 'dark'
                                 ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
@@ -389,7 +389,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
             {/* Card Informações */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
-                <i className="fas fa-chart-simple text-pink-400 text-[10px]"></i>
+                <i className="fas fa-chart-simple text-[#E91E8C] text-[10px]"></i>
                 Informações
               </h3>
 
@@ -423,7 +423,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
               className={'w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ' +
                 (isSaved
                   ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30'
-                  : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 shadow-lg shadow-pink-500/25'
+                  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 shadow-lg shadow-[#E91E8C]/20'
                 )
               }
             >
@@ -569,7 +569,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => confirmExit(true)}
-                className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-semibold text-sm hover:opacity-90"
+                className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm hover:opacity-90"
               >
                 <i className="fas fa-images mr-2"></i>Salvar e Sair
               </button>

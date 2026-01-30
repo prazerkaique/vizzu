@@ -26,7 +26,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'studio': return { label: 'Studio', color: 'bg-purple-100 text-purple-700', icon: 'fa-store' };
-      case 'cenario': return { label: 'Cenário', color: 'bg-pink-100 text-pink-700', icon: 'fa-film' };
+      case 'cenario': return { label: 'Cenário', color: 'bg-[#E91E8C]/15 text-[#E91E8C]', icon: 'fa-film' };
       case 'lifestyle': return { label: 'Modelo', color: 'bg-orange-100 text-orange-700', icon: 'fa-user' };
       case 'refine': return { label: 'Refinado', color: 'bg-blue-100 text-blue-700', icon: 'fa-magic' };
       default: return { label: type, color: 'bg-slate-100 text-slate-700', icon: 'fa-image' };
@@ -51,7 +51,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
           className="w-full p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A855F7] to-[#FF6B9D] flex items-center justify-center">
               <i className="fas fa-history text-white"></i>
             </div>
             <div className="text-left">

@@ -511,14 +511,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 <i className="fas fa-arrow-left text-sm"></i>
               </button>
             )}
-            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-              <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-pink-400' : 'text-white')}></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+              <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-[#E91E8C]' : 'text-white')}></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Look Composer®</h1>
                 {currentPlan && (
-                  <span className={(isDark ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+                  <span className={(isDark ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
                     {currentPlan.name}
                   </span>
                 )}
@@ -528,12 +528,12 @@ export const LookComposer: React.FC<LookComposerProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
-              <i className="fas fa-coins text-pink-400 text-xs"></i>
+              <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
               <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
             <button
               onClick={handleNewLook}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity shadow-lg shadow-pink-500/25"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[#E91E8C]/20"
             >
               <i className="fas fa-plus"></i>
               <span>Novo Look</span>
@@ -547,8 +547,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
         <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-2xl border mb-6 overflow-hidden'}>
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-pink-500/20' : 'bg-pink-100')}>
-                <i className={(isDark ? 'text-pink-400' : 'text-pink-500') + ' fas fa-clock text-sm'}></i>
+              <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15')}>
+                <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-clock text-sm'}></i>
               </div>
               <div>
                 <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Últimos Looks</h2>
@@ -572,7 +572,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                     <div
                       key={look.id}
                       onClick={() => { setSelectedLook(look); setSelectedLookView('front'); }}
-                      className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                      className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                     >
                       <div className="aspect-[3/4] relative overflow-hidden bg-neutral-900">
                         <img
@@ -597,7 +597,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                               onClick={(e) => setCardView(look.id, 'front', e)}
                               className={'absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
                                 (currentView === 'front'
-                                  ? 'bg-pink-500 text-white'
+                                  ? 'bg-[#E91E8C]/100 text-white'
                                   : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
                               }
                             >
@@ -608,7 +608,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                               onClick={(e) => setCardView(look.id, 'back', e)}
                               className={'absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
                                 (currentView === 'back'
-                                  ? 'bg-pink-500 text-white'
+                                  ? 'bg-[#E91E8C]/100 text-white'
                                   : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
                               }
                             >
@@ -623,13 +623,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             <button
                               onClick={(e) => setCardView(look.id, 'front', e)}
                               className={'w-1.5 h-1.5 rounded-full transition-all ' +
-                                (currentView === 'front' ? 'bg-pink-500 scale-125' : 'bg-white/50 hover:bg-white/80')
+                                (currentView === 'front' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
                               }
                             />
                             <button
                               onClick={(e) => setCardView(look.id, 'back', e)}
                               className={'w-1.5 h-1.5 rounded-full transition-all ' +
-                                (currentView === 'back' ? 'bg-pink-500 scale-125' : 'bg-white/50 hover:bg-white/80')
+                                (currentView === 'back' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
                               }
                             />
                           </div>
@@ -673,7 +673,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-4'}>Nenhum look criado ainda</p>
               <button
                 onClick={handleNewLook}
-                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
                 <i className="fas fa-plus mr-1.5"></i>Criar primeiro look
               </button>
@@ -707,7 +707,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                     <div
                       key={pwl.product.id}
                       onClick={() => handleOpenProductModal(pwl)}
-                      className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-purple-500/50' : 'bg-gray-50 border-gray-200 hover:border-purple-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                      className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#A855F7]/50' : 'bg-gray-50 border-gray-200 hover:border-[#A855F7]/30') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                     >
                       <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                         {productImage ? (
@@ -725,7 +725,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                         <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                           {/* Badge de quantidade de looks */}
                           {pwl.looks.length > 0 && (
-                            <div className="px-2 py-1 bg-pink-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.looks.length} look${pwl.looks.length > 1 ? 's' : ''} criado${pwl.looks.length > 1 ? 's' : ''}`}>
+                            <div className="px-2 py-1 bg-[#E91E8C]/100 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.looks.length} look${pwl.looks.length > 1 ? 's' : ''} criado${pwl.looks.length > 1 ? 's' : ''}`}>
                               <i className="fas fa-layer-group text-[8px]"></i>
                               {pwl.looks.length}
                             </div>
@@ -797,7 +797,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                   placeholder="Buscar produto..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
-                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-pink-500/50'}
+                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-[#E91E8C]/50'}
                   autoFocus
                 />
               </div>
@@ -846,7 +846,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                       <div
                         key={product.id}
                         onClick={() => handleSelectProductForNewLook(product)}
-                        className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                        className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                       >
                         <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                           {productImage ? (
@@ -866,7 +866,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             </div>
                           )}
                           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                            <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
                               <i className="fas fa-check mr-1"></i>Selecionar
                             </button>
                           </div>
@@ -964,7 +964,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                         onClick={() => setSelectedLookView('front')}
                         className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
                           (selectedLookView === 'front'
-                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                             : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                         }
                       >
@@ -974,7 +974,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                         onClick={() => setSelectedLookView('back')}
                         className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
                           (selectedLookView === 'back'
-                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                             : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                         }
                       >
@@ -991,7 +991,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                 {selectedLook.metadata?.modelName && (
                   <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
                     <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
-                      <i className="fas fa-user mr-2 text-pink-400"></i>Modelo
+                      <i className="fas fa-user mr-2 text-[#E91E8C]"></i>Modelo
                     </h3>
                     <div className="flex items-center gap-3">
                       {selectedLook.metadata?.modelThumbnail ? (
@@ -1094,7 +1094,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                       setSelectedProduct(product);
                     }
                   }}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                   <i className="fas fa-wand-magic-sparkles"></i>
                   Criar novo look
@@ -1191,7 +1191,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             `${modalSelectedLook.productName}${modalSelectedLook.imageCount > 1 ? `-${modalSelectedView}` : ''}`,
                             'png'
                           )}
-                          className="flex-1 py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                          className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                         >
                           <i className="fas fa-download"></i>
                           Download {modalSelectedLook.imageCount > 1 && (modalSelectedView === 'front' ? '(Frente)' : '(Costas)')}
@@ -1226,7 +1226,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                       setModalSelectedLook(null);
                       setSelectedProduct(selectedProductForModal.product);
                     }}
-                    className="w-full py-3 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   >
                     <i className="fas fa-wand-magic-sparkles"></i>
                     Gerar novo look com este produto
@@ -1244,7 +1244,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                           <div
                             key={look.id}
                             onClick={() => { setModalSelectedLook(look); setModalSelectedView('front'); }}
-                            className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-pink-500 ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative group/thumb'}
+                            className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-[#E91E8C] ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative group/thumb'}
                           >
                             <img
                               src={thumbImage}
@@ -1270,13 +1270,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                                 <button
                                   onClick={(e) => setCardView(`modal-${look.id}`, 'front', e)}
                                   className={'w-1.5 h-1.5 rounded-full transition-all ' +
-                                    (thumbView === 'front' ? 'bg-pink-500' : 'bg-white/50 hover:bg-white/80')
+                                    (thumbView === 'front' ? 'bg-[#E91E8C]/100' : 'bg-white/50 hover:bg-white/80')
                                   }
                                 />
                                 <button
                                   onClick={(e) => setCardView(`modal-${look.id}`, 'back', e)}
                                   className={'w-1.5 h-1.5 rounded-full transition-all ' +
-                                    (thumbView === 'back' ? 'bg-pink-500' : 'bg-white/50 hover:bg-white/80')
+                                    (thumbView === 'back' ? 'bg-[#E91E8C]/100' : 'bg-white/50 hover:bg-white/80')
                                   }
                                 />
                               </div>
@@ -1297,7 +1297,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             onClick={() => setModalSelectedView('front')}
                             className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
                               (modalSelectedView === 'front'
-                                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                                 : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                             }
                           >
@@ -1307,7 +1307,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
                             onClick={() => setModalSelectedView('back')}
                             className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
                               (modalSelectedView === 'back'
-                                ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                                 : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                             }
                           >

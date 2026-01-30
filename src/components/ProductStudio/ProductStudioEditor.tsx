@@ -896,7 +896,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             </div>
           </div>
           <div className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
-            <i className="fas fa-coins text-pink-400 text-xs"></i>
+            <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
             <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
           </div>
         </div>
@@ -918,7 +918,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                     onClick={() => { setViewMode('original'); setCurrentImageIndex(0); }}
                     className={'px-4 py-2 rounded-lg text-xs font-medium transition-all ' +
                       (viewMode === 'original'
-                        ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-md'
+                        ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-md'
                         : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
                       )
                     }
@@ -987,7 +987,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                                 <button
                                   key={idx}
                                   onClick={() => setCurrentImageIndex(idx)}
-                                  className={`w-2 h-2 rounded-full transition-all ${idx === safeIndex ? (viewMode === 'otimizada' ? 'bg-green-400 w-4' : 'bg-pink-400 w-4') : 'bg-white/50'}`}
+                                  className={`w-2 h-2 rounded-full transition-all ${idx === safeIndex ? (viewMode === 'otimizada' ? 'bg-green-400 w-4' : 'bg-[#E91E8C] w-4') : 'bg-white/50'}`}
                                 />
                               ))}
                             </div>
@@ -1021,7 +1021,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                         onClick={() => setCurrentImageIndex(idx)}
                         className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
                           idx === safeIndex
-                            ? (viewMode === 'otimizada' ? 'border-green-500' : 'border-pink-500')
+                            ? (viewMode === 'otimizada' ? 'border-green-500' : 'border-[#E91E8C]')
                             : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')
                         }`}
                       >
@@ -1041,12 +1041,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                  <i className="fas fa-info-circle mr-2 text-pink-400"></i>Informações do Produto
+                  <i className="fas fa-info-circle mr-2 text-[#E91E8C]"></i>Informações do Produto
                 </h3>
                 {!editMode ? (
                   <button
                     onClick={() => setEditMode(true)}
-                    className="text-pink-400 text-xs font-medium hover:underline"
+                    className="text-[#E91E8C] text-xs font-medium hover:underline"
                   >
                     <i className="fas fa-pen mr-1"></i>Editar
                   </button>
@@ -1060,7 +1060,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      className="text-pink-400 text-xs font-medium hover:underline"
+                      className="text-[#E91E8C] text-xs font-medium hover:underline"
                     >
                       Salvar
                     </button>
@@ -1187,16 +1187,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             {isOptimized && (
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                 <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
-                  <i className="fas fa-magic mr-2 text-pink-400"></i>Usar Imagem Otimizada
+                  <i className="fas fa-magic mr-2 text-[#E91E8C]"></i>Usar Imagem Otimizada
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   {/* Montar Look */}
                   <button
                     onClick={() => handleNavigateToFeature('look-composer')}
                     disabled={!onNavigate}
-                    className={(theme === 'dark' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 hover:border-purple-500/50' : 'bg-gradient-to-r from-purple-100 to-pink-100 border-purple-200 hover:border-purple-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    className={(theme === 'dark' ? 'bg-gradient-to-r from-[#A855F7]/20 to-[#FF6B9D]/20 border-[#A855F7]/30 hover:border-[#A855F7]/50' : 'bg-gradient-to-r from-[#A855F7]/10 to-[#E91E8C]/10 border-[#A855F7]/20 hover:border-[#A855F7]/30') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-layer-group text-white text-xs"></i>
                     </div>
                     <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Montar Look</span>
@@ -1206,9 +1206,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   <button
                     onClick={() => handleNavigateToFeature('lifestyle')}
                     disabled={!onNavigate}
-                    className={(theme === 'dark' ? 'bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-orange-500/30 hover:border-orange-500/50' : 'bg-gradient-to-r from-orange-100 to-yellow-100 border-orange-200 hover:border-orange-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    className={(theme === 'dark' ? 'bg-gradient-to-r from-[#FF9F43]/20 to-yellow-500/20 border-orange-500/30 hover:border-orange-500/50' : 'bg-gradient-to-r from-[#FF9F43]/10 to-yellow-100 border-orange-200 hover:border-orange-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-500 to-yellow-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF9F43] to-yellow-500 flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-mountain-sun text-white text-xs"></i>
                     </div>
                     <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</span>
@@ -1243,14 +1243,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                         onClick={() => handleDownloadMainImage('png')}
                         className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-3 py-2 text-xs text-left flex items-center gap-2'}
                       >
-                        <i className="fas fa-file-image text-pink-400"></i>
+                        <i className="fas fa-file-image text-[#E91E8C]"></i>
                         PNG (Alta qualidade)
                       </button>
                       <button
                         onClick={() => handleDownloadMainImage('jpeg')}
                         className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white border-t border-neutral-700' : 'hover:bg-gray-50 text-gray-900 border-t border-gray-100') + ' w-full px-3 py-2 text-xs text-left flex items-center gap-2'}
                       >
-                        <i className="fas fa-file-image text-orange-400"></i>
+                        <i className="fas fa-file-image text-[#FF9F43]"></i>
                         JPEG (Arquivo menor)
                       </button>
                     </div>
@@ -1267,10 +1267,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           <div className="space-y-4">
 
             {/* Info do tipo de produto detectado */}
-            <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border'}>
+            <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/50/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/20') + ' rounded-xl p-4 border'}>
               <div className="flex items-center gap-3">
-                <div className={(theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-200') + ' w-10 h-10 rounded-lg flex items-center justify-center'}>
-                  <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' fas ' + (productType === 'footwear' ? 'fa-shoe-prints' : productType === 'accessory' ? 'fa-glasses' : 'fa-shirt')}></i>
+                <div className={(theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/20') + ' w-10 h-10 rounded-lg flex items-center justify-center'}>
+                  <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas ' + (productType === 'footwear' ? 'fa-shoe-prints' : productType === 'accessory' ? 'fa-glasses' : 'fa-shirt')}></i>
                 </div>
                 <div>
                   <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
@@ -1287,12 +1287,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                  <i className="fas fa-camera mr-2 text-pink-400"></i>Selecione os Ângulos
+                  <i className="fas fa-camera mr-2 text-[#E91E8C]"></i>Selecione os Ângulos
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={selectAllAngles}
-                    className={(theme === 'dark' ? 'text-pink-400 hover:text-pink-300' : 'text-pink-500 hover:text-pink-600') + ' text-[10px] font-medium'}
+                    className={(theme === 'dark' ? 'text-[#E91E8C] hover:text-[#E91E8C]' : 'text-[#E91E8C] hover:text-[#E91E8C]') + ' text-[10px] font-medium'}
                   >
                     Todos
                   </button>
@@ -1316,7 +1316,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                       onClick={() => toggleAngle(angle.id)}
                       className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
                         (isSelected
-                          ? 'bg-gradient-to-r from-pink-500/20 to-orange-500/20 border-pink-500 text-pink-400'
+                          ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/20 border-[#E91E8C] text-[#E91E8C]'
                           : (theme === 'dark'
                             ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
                             : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300')
@@ -1327,17 +1327,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                       <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
                         hasRef
                           ? 'bg-green-500/20 text-green-400'
-                          : 'bg-orange-500/20 text-orange-400'
+                          : 'bg-[#FF9F43]/20 text-[#FF9F43]'
                       }`}>
                         <i className={`fas ${hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
                       </div>
                       <i className={`fas ${angle.icon} text-xl`}></i>
                       <span className="text-xs font-medium">{angle.label}</span>
                       {isSelected && (
-                        <i className="fas fa-check-circle text-pink-400 text-sm"></i>
+                        <i className="fas fa-check-circle text-[#E91E8C] text-sm"></i>
                       )}
                       {!hasRef && !isSelected && (
-                        <span className={(theme === 'dark' ? 'text-orange-400/70' : 'text-orange-500') + " text-[10px]"}>Sem ref.</span>
+                        <span className={(theme === 'dark' ? 'text-[#FF9F43]/70' : 'text-[#FF9F43]') + " text-[10px]"}>Sem ref.</span>
                       )}
                     </button>
                   );
@@ -1353,8 +1353,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Com referência</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 rounded-full bg-orange-500/20 flex items-center justify-center">
-                    <i className="fas fa-exclamation text-orange-400 text-[8px]"></i>
+                  <div className="w-4 h-4 rounded-full bg-[#FF9F43]/20 flex items-center justify-center">
+                    <i className="fas fa-exclamation text-[#FF9F43] text-[8px]"></i>
                   </div>
                   <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Sem referência</span>
                 </div>
@@ -1366,7 +1366,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                    <i className="fas fa-tshirt mr-2 text-pink-400"></i>Estilo de Apresentação
+                    <i className="fas fa-tshirt mr-2 text-[#E91E8C]"></i>Estilo de Apresentação
                   </h3>
                   {/* Tooltip com exemplos visuais */}
                   <div className="relative">
@@ -1387,7 +1387,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                           {/* Ghost Mannequin Example */}
                           <div className="text-center">
                             <div
-                              className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme === 'dark' ? 'border-purple-500/50' : 'border-purple-300')}
+                              className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme === 'dark' ? 'border-[#A855F7]/50' : 'border-purple-300')}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setExpandedStyleImage({
@@ -1452,7 +1452,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                     onClick={() => setPresentationStyle('ghost-mannequin')}
                     className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
                       (presentationStyle === 'ghost-mannequin'
-                        ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500'
+                        ? 'bg-gradient-to-r from-[#A855F7]/20 to-[#FF6B9D]/20 border-[#A855F7]'
                         : (theme === 'dark'
                           ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
                           : 'bg-gray-50 border-gray-200 hover:border-gray-300')
@@ -1461,7 +1461,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   >
                     <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' +
                       (presentationStyle === 'ghost-mannequin'
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                        ? 'bg-gradient-to-r from-[#A855F7] to-[#FF6B9D]'
                         : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
                     }>
                       <i className={'fas fa-person text-xl ' + (presentationStyle === 'ghost-mannequin' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
@@ -1519,7 +1519,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             {/* Resumo de Créditos */}
             <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-4'}>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
-                <i className="fas fa-receipt mr-2 text-pink-400"></i>Resumo
+                <i className="fas fa-receipt mr-2 text-[#E91E8C]"></i>Resumo
               </h3>
 
               <div className="space-y-2">
@@ -1533,7 +1533,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>Créditos necessários</span>
-                  <span className="text-pink-400 text-sm font-bold">{creditsNeeded}</span>
+                  <span className="text-[#E91E8C] text-sm font-bold">{creditsNeeded}</span>
                 </div>
                 <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}></div>
                 <div className="flex items-center justify-between">
@@ -1557,10 +1557,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
               disabled={selectedAngles.length === 0 || isGenerating || userCredits < creditsNeeded || isAnyGenerationRunning}
               className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
                 (isGenerating
-                  ? 'bg-pink-600 cursor-wait'
+                  ? 'bg-[#E91E8C] cursor-wait'
                   : (selectedAngles.length === 0 || userCredits < creditsNeeded || isAnyGenerationRunning)
                     ? (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50'
-                    : 'bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 shadow-lg shadow-pink-500/25'
+                    : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 shadow-lg shadow-[#E91E8C]/20'
                 )
               }
             >
@@ -1642,7 +1642,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   {productImages.map((img, idx) => (
                     <div
                       key={`orig-${idx}`}
-                      className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700 hover:border-pink-500/50' : 'border-gray-200 hover:border-pink-300') + ' transition-all'}
+                      className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-200 hover:border-[#E91E8C]/40') + ' transition-all'}
                     >
                       <img
                         src={img.url}
@@ -1680,14 +1680,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + " relative z-10 w-full max-w-md rounded-2xl border overflow-hidden"}>
             {/* Header com ícone de aviso */}
             <div className="p-6 pb-4 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <i className="fas fa-image text-orange-400 text-2xl"></i>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FF9F43]/20 flex items-center justify-center">
+                <i className="fas fa-image text-[#FF9F43] text-2xl"></i>
               </div>
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-lg font-semibold mb-2"}>
                 Imagem de referência necessária
               </h3>
               <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
-                O ângulo <span className="text-orange-400 font-semibold">{angleLabels[angleWithoutRef]}</span> não
+                O ângulo <span className="text-[#FF9F43] font-semibold">{angleLabels[angleWithoutRef]}</span> não
                 possui imagem de referência cadastrada. Isso pode comprometer o resultado da criação.
               </p>
             </div>
@@ -1717,7 +1717,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
                   }}
                   disabled={uploadingRef}
                 />
-                <div className={`w-full px-4 py-3 bg-gradient-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 text-white rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
+                <div className={`w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#E91E8C] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
                   {uploadingRef ? (
                     <>
                       <i className="fas fa-spinner fa-spin"></i>
@@ -1796,7 +1796,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
             <div className="w-full max-w-xs mb-4">
               <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-pink-500 to-orange-400 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
                   style={{ width: `${currentProgress}%` }}
                 ></div>
               </div>

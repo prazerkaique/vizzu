@@ -229,7 +229,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* HEADER - Gradient Pink → Orange */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-3 sticky top-0 z-40 flex-shrink-0">
+      <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] px-4 py-3 sticky top-0 z-40 flex-shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -285,7 +285,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                         onClick={() => setCurrentView('front')}
                         className={'px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ' +
                           (currentView === 'front'
-                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                             : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                         }
                       >
@@ -295,7 +295,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                         onClick={() => setCurrentView('back')}
                         className={'px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ' +
                           (currentView === 'back'
-                            ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow-sm'
+                            ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
                             : isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                         }
                       >
@@ -363,7 +363,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
 
                     {/* Badge indicando tipo e view */}
                     <div className="absolute top-3 left-3 flex flex-col gap-1">
-                      <div className={'px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white')}>
+                      <div className={'px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>
                         {showOriginal ? 'Original' : 'Look Gerado'}
                       </div>
                       {hasBackImage && (
@@ -399,14 +399,14 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
             {/* Card - Composição do Look */}
             <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
               <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
-                <i className="fas fa-layer-group text-pink-400 text-[10px]"></i>
+                <i className="fas fa-layer-group text-[#E91E8C] text-[10px]"></i>
                 {lookMode === 'composer' ? 'Peças do Look' : 'Look Descrito'}
               </h3>
 
               {lookMode === 'composer' && lookPieces.length > 0 ? (
                 <div className="space-y-2">
                   {/* Peça principal (produto) */}
-                  <div className={'flex items-center gap-2 p-2 rounded-lg ' + (isDark ? 'bg-pink-500/10 border border-pink-500/20' : 'bg-pink-50 border border-pink-200')}>
+                  <div className={'flex items-center gap-2 p-2 rounded-lg ' + (isDark ? 'bg-[#E91E8C]/10 border border-[#E91E8C]/20' : 'bg-[#E91E8C]/10 border border-[#E91E8C]/20')}>
                     <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
                       {originalImage && (
                         <img src={originalImage} alt={product.name} className="w-full h-full object-cover" />
@@ -414,7 +414,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{product.name}</p>
-                      <p className="text-pink-400 text-[10px]">Peça Principal</p>
+                      <p className="text-[#E91E8C] text-[10px]">Peça Principal</p>
                     </div>
                   </div>
 
@@ -470,7 +470,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
             {/* Card Informações */}
             <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-3'}>
               <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
-                <i className="fas fa-chart-simple text-pink-400 text-[10px]"></i>
+                <i className="fas fa-chart-simple text-[#E91E8C] text-[10px]"></i>
                 Informações
               </h3>
 
@@ -520,7 +520,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
               className={'w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ' +
                 (isSaved
                   ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30'
-                  : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 shadow-lg shadow-pink-500/25'
+                  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 shadow-lg shadow-[#E91E8C]/20'
                 )
               }
             >
@@ -561,7 +561,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                     onClick={() => setExportQuality('high')}
                     className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
                       (exportQuality === 'high'
-                        ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
+                        ? 'bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30'
                         : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
                     }
                   >
@@ -570,13 +570,13 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                       <span className="font-medium">Alta Qualidade</span>
                       <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>PNG 2048px</span>
                     </div>
-                    {exportQuality === 'high' && <i className="fas fa-check ml-auto text-pink-400"></i>}
+                    {exportQuality === 'high' && <i className="fas fa-check ml-auto text-[#E91E8C]"></i>}
                   </button>
                   <button
                     onClick={() => setExportQuality('performance')}
                     className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
                       (exportQuality === 'performance'
-                        ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
+                        ? 'bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30'
                         : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
                     }
                   >
@@ -585,7 +585,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                       <span className="font-medium">Performance</span>
                       <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>JPEG 1024px</span>
                     </div>
-                    {exportQuality === 'performance' && <i className="fas fa-check ml-auto text-pink-400"></i>}
+                    {exportQuality === 'performance' && <i className="fas fa-check ml-auto text-[#E91E8C]"></i>}
                   </button>
                 </div>
               )}
@@ -606,7 +606,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                 {hasBackImage && (
                   <button
                     onClick={handleDownloadAll}
-                    className={(isDark ? 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 border-purple-200') + ' py-2.5 px-4 rounded-lg border transition-all flex items-center justify-center gap-2'}
+                    className={(isDark ? 'bg-purple-500/20 hover:bg-purple-500/30 border-[#A855F7]/30' : 'bg-purple-50 hover:bg-purple-100 border-[#A855F7]/20') + ' py-2.5 px-4 rounded-lg border transition-all flex items-center justify-center gap-2'}
                     title="Baixar frente e costas"
                   >
                     <i className="fas fa-images text-purple-400 text-sm"></i>
@@ -694,7 +694,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                   <button
                     onClick={() => setCurrentView('front')}
                     className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
-                      (currentView === 'front' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-white/70 hover:text-white')
+                      (currentView === 'front' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : 'text-white/70 hover:text-white')
                     }
                   >
                     <i className="fas fa-eye mr-1"></i>Frente
@@ -702,7 +702,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
                   <button
                     onClick={() => setCurrentView('back')}
                     className={'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
-                      (currentView === 'back' ? 'bg-gradient-to-r from-pink-500 to-orange-400 text-white' : 'text-white/70 hover:text-white')
+                      (currentView === 'back' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : 'text-white/70 hover:text-white')
                     }
                   >
                     <i className="fas fa-eye mr-1"></i>Costas
@@ -735,11 +735,11 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
             <div className="flex items-center justify-center gap-2 pb-4" onClick={e => e.stopPropagation()}>
               <button
                 onClick={() => setCurrentView('front')}
-                className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'front' ? 'bg-pink-500 scale-125' : 'bg-white/30 hover:bg-white/50')}
+                className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'front' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/30 hover:bg-white/50')}
               />
               <button
                 onClick={() => setCurrentView('back')}
-                className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'back' ? 'bg-pink-500 scale-125' : 'bg-white/30 hover:bg-white/50')}
+                className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'back' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/30 hover:bg-white/50')}
               />
             </div>
           )}
@@ -764,7 +764,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => confirmExit(true)}
-                className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-xl font-semibold text-sm hover:opacity-90"
+                className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm hover:opacity-90"
               >
                 <i className="fas fa-images mr-2"></i>Salvar e Sair
               </button>

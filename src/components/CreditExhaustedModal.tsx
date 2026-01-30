@@ -99,11 +99,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
   // CAMADA 1: Modal Compacto
   // ═══════════════════════════════════════════════════════════════
   const renderCompactModal = () => (
-    <div className={`relative w-full max-w-[420px] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'scale-95 opacity-0' : 'scale-100 opacity-100'} ${isDark ? 'bg-zinc-900/95 border border-zinc-700' : 'bg-white border border-gray-200'}`} style={{ backdropFilter: 'blur(20px)' }}>
+    <div className={`relative w-full max-w-[420px] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'scale-95 opacity-0' : 'scale-100 opacity-100'} ${isDark ? 'bg-white/95 border border-gray-200' : 'bg-white border border-gray-200'}`} style={{ backdropFilter: 'blur(20px)' }}>
       {/* Close button */}
       <button
         onClick={onClose}
-        className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-gray-100 text-gray-400'}`}
+        className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-gray-50 text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
       >
         <i className="fas fa-times"></i>
       </button>
@@ -112,11 +112,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
         {/* Ilustração/Ícone */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500/20 to-rose-500/20 flex items-center justify-center">
-              <i className="fas fa-coins text-3xl text-fuchsia-400"></i>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#E91E8C]/20 to-[#FF6B9D]/20 flex items-center justify-center">
+              <i className="fas fa-coins text-3xl text-[#E91E8C]"></i>
             </div>
             {/* Animação de moedas */}
-            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center animate-bounce">
+            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#E91E8C] flex items-center justify-center animate-bounce">
               <span className="text-white text-xs font-bold">0</span>
             </div>
           </div>
@@ -128,11 +128,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
         </h2>
 
         {/* Subtítulo */}
-        <p className={`text-sm text-center mb-4 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+        <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
           {isInsufficient ? (
-            <>Você tem <span className="text-fuchsia-400 font-semibold">{currentCredits}</span> créditos, mas precisa de <span className="text-fuchsia-400 font-semibold">{creditsNeeded}</span> para {actionText}.</>
+            <>Você tem <span className="text-[#E91E8C] font-semibold">{currentCredits}</span> créditos, mas precisa de <span className="text-[#E91E8C] font-semibold">{creditsNeeded}</span> para {actionText}.</>
           ) : (
-            <>Você precisa de <span className="text-fuchsia-400 font-semibold">{creditsNeeded}</span> créditos para {actionText}.</>
+            <>Você precisa de <span className="text-[#E91E8C] font-semibold">{creditsNeeded}</span> créditos para {actionText}.</>
           )}
         </p>
 
@@ -148,7 +148,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
         {/* Badge especial para plano atual */}
         {currentPlan.id === 'starter' && (
           <div className="flex justify-center mb-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-fuchsia-500/20 text-fuchsia-400">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#E91E8C]/20 text-[#E91E8C]">
               <i className="fas fa-gift"></i>
               Ganhe 400 créditos com upgrade
             </span>
@@ -177,7 +177,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
           {/* CTA Principal */}
           <button
             onClick={() => onBuyCredits(50)}
-            className="w-full py-3.5 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-fuchsia-500/25"
+            className="w-full py-3.5 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#E91E8C]/25"
           >
             <i className="fas fa-bolt mr-2"></i>
             Comprar 50 créditos - R$ {getCreditPackagePrice(50)}
@@ -187,7 +187,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
           {nextPlan ? (
             <button
               onClick={() => onUpgradePlan(nextPlan.id)}
-              className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-zinc-300 hover:border-fuchsia-500/50 hover:text-fuchsia-400' : 'border-gray-300 text-gray-700 hover:border-fuchsia-400 hover:text-fuchsia-500'}`}
+              className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#E91E8C]/50 hover:text-[#E91E8C]' : 'border-gray-300 text-gray-700 hover:border-[#E91E8C] hover:text-[#E91E8C]'}`}
             >
               <i className="fas fa-arrow-up mr-2"></i>
               Fazer upgrade pro {nextPlan.name} - {nextPlan.limit} créd/mês
@@ -195,7 +195,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
           ) : (
             <button
               onClick={() => onBuyCredits(100)}
-              className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-zinc-300 hover:border-fuchsia-500/50 hover:text-fuchsia-400' : 'border-gray-300 text-gray-700 hover:border-fuchsia-400 hover:text-fuchsia-500'}`}
+              className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#E91E8C]/50 hover:text-[#E91E8C]' : 'border-gray-300 text-gray-700 hover:border-[#E91E8C] hover:text-[#E91E8C]'}`}
             >
               <i className="fas fa-plus mr-2"></i>
               Comprar 100 créditos - R$ {getCreditPackagePrice(100)}
@@ -210,7 +210,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
               <button
                 key={amount}
                 onClick={() => onBuyCredits(amount)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isDark ? 'bg-zinc-800 text-zinc-400 hover:bg-fuchsia-500/20 hover:text-fuchsia-400 hover:ring-1 hover:ring-fuchsia-500/50' : 'bg-gray-100 text-gray-600 hover:bg-fuchsia-50 hover:text-fuchsia-500'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isDark ? 'bg-gray-50 text-gray-500 hover:bg-[#E91E8C]/20 hover:text-[#E91E8C] hover:ring-1 hover:ring-[#E91E8C]/50' : 'bg-gray-100 text-gray-600 hover:bg-[#E91E8C]/5 hover:text-[#E91E8C]'}`}
               >
                 {amount} créd. R${getCreditPackagePrice(amount)}
               </button>
@@ -229,7 +229,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
         {/* Link para ver todos os planos */}
         <button
           onClick={handleGoToPlans}
-          className="w-full mt-4 text-fuchsia-400 text-sm font-medium hover:text-fuchsia-300 transition-colors flex items-center justify-center gap-1"
+          className="w-full mt-4 text-[#E91E8C] text-sm font-medium hover:text-[#E91E8C] transition-colors flex items-center justify-center gap-1"
         >
           Ver todos os planos
           <i className="fas fa-arrow-right text-xs"></i>
@@ -242,19 +242,19 @@ export const CreditExhaustedModal: React.FC<Props> = ({
   // CAMADA 2: Modal Expandido (Planos)
   // ═══════════════════════════════════════════════════════════════
   const renderExpandedModal = () => (
-    <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} ${isDark ? 'bg-zinc-900/95 border border-zinc-700' : 'bg-white border border-gray-200'}`} style={{ backdropFilter: 'blur(20px)' }}>
+    <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} ${isDark ? 'bg-white/95 border border-gray-200' : 'bg-white border border-gray-200'}`} style={{ backdropFilter: 'blur(20px)' }}>
       {/* Header */}
-      <div className={`sticky top-0 z-10 flex items-center justify-between p-4 border-b ${isDark ? 'bg-zinc-900/95 border-zinc-800' : 'bg-white border-gray-200'}`}>
+      <div className={`sticky top-0 z-10 flex items-center justify-between p-4 border-b ${isDark ? 'bg-white/95 border-gray-200' : 'bg-white border-gray-200'}`}>
         <button
           onClick={handleBackToCompact}
-          className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+          className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
         >
           <i className="fas fa-arrow-left"></i>
           Voltar
         </button>
         <button
           onClick={onClose}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-gray-100 text-gray-400'}`}
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-gray-50 text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
         >
           <i className="fas fa-times"></i>
         </button>
@@ -266,23 +266,23 @@ export const CreditExhaustedModal: React.FC<Props> = ({
           <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Escolha o melhor plano para você
           </h2>
-          <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
+          <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
             Transforme suas fotos de produtos em imagens profissionais com IA
           </p>
         </div>
 
         {/* Toggle Mensal/Anual */}
         <div className="flex justify-center mb-8">
-          <div className={`inline-flex items-center gap-1 p-1 rounded-full ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}`}>
+          <div className={`inline-flex items-center gap-1 p-1 rounded-full ${isDark ? 'bg-gray-50' : 'bg-gray-100'}`}>
             <button
               onClick={() => onSetBillingPeriod('monthly')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${billingPeriod === 'monthly' ? 'bg-white text-gray-900 shadow' : isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${billingPeriod === 'monthly' ? 'bg-white text-gray-900 shadow' : isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
             >
               Mensal
             </button>
             <button
               onClick={() => onSetBillingPeriod('yearly')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${billingPeriod === 'yearly' ? 'bg-white text-gray-900 shadow' : isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${billingPeriod === 'yearly' ? 'bg-white text-gray-900 shadow' : isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
             >
               Anual
               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">-20%</span>
@@ -300,12 +300,12 @@ export const CreditExhaustedModal: React.FC<Props> = ({
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl p-5 transition-all ${isCurrentPlan ? 'ring-2 ring-fuchsia-500' : ''} ${isPremier ? 'ring-2 ring-amber-500' : ''} ${isDark ? 'bg-zinc-800/50 border border-zinc-700' : 'bg-gray-50 border border-gray-200'}`}
+                className={`relative rounded-2xl p-5 transition-all ${isCurrentPlan ? 'ring-2 ring-[#E91E8C]' : ''} ${isPremier ? 'ring-2 ring-amber-500' : ''} ${isDark ? 'bg-gray-50/50 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}
               >
                 {/* Badge */}
                 {isCurrentPlan && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-fuchsia-500 text-white uppercase">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#E91E8C] text-white uppercase">
                       Plano Atual
                     </span>
                   </div>
@@ -325,8 +325,8 @@ export const CreditExhaustedModal: React.FC<Props> = ({
                 </h3>
 
                 {/* Créditos */}
-                <p className={`text-sm mb-3 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
-                  <span className="text-fuchsia-400 font-semibold">{plan.limit}</span> créditos/mês
+                <p className={`text-sm mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  <span className="text-[#E91E8C] font-semibold">{plan.limit}</span> créditos/mês
                 </p>
 
                 {/* Preço */}
@@ -341,7 +341,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
                 <button
                   onClick={() => !isCurrentPlan && onUpgradePlan(plan.id)}
                   disabled={isCurrentPlan}
-                  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${isCurrentPlan ? isDark ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white hover:opacity-90 hover:-translate-y-0.5'}`}
+                  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${isCurrentPlan ? isDark ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white hover:opacity-90 hover:-translate-y-0.5'}`}
                 >
                   {isCurrentPlan ? 'Plano Atual' : plan.id === 'starter' ? 'Assinar' : 'Upgrade'}
                 </button>
@@ -349,7 +349,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
                 {/* Features */}
                 <div className="mt-4 space-y-2">
                   {plan.features.slice(0, 4).map((feature, idx) => (
-                    <div key={idx} className={`flex items-start gap-2 text-xs ${isDark ? 'text-zinc-400' : 'text-gray-600'}`}>
+                    <div key={idx} className={`flex items-start gap-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                       <i className="fas fa-check text-emerald-500 mt-0.5 text-[10px]"></i>
                       <span>{feature}</span>
                     </div>
@@ -362,7 +362,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
                 </div>
 
                 {/* Preço por crédito */}
-                <p className={`text-[10px] mt-3 pt-3 border-t ${isDark ? 'border-zinc-700 text-zinc-500' : 'border-gray-200 text-gray-400'}`}>
+                <p className={`text-[10px] mt-3 pt-3 border-t ${isDark ? 'border-gray-200 text-zinc-500' : 'border-gray-200 text-gray-400'}`}>
                   R$ {plan.creditPrice.toFixed(2).replace('.', ',')}/crédito
                 </p>
               </div>
@@ -371,16 +371,16 @@ export const CreditExhaustedModal: React.FC<Props> = ({
         </div>
 
         {/* Seção de Créditos Avulsos */}
-        <div className={`rounded-2xl p-5 ${isDark ? 'bg-zinc-800/30 border border-zinc-700' : 'bg-gray-50 border border-gray-200'}`}>
+        <div className={`rounded-2xl p-5 ${isDark ? 'bg-gray-50/30 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}>
           <div className="flex items-center gap-2 mb-4">
-            <i className="fas fa-credit-card text-fuchsia-400"></i>
+            <i className="fas fa-credit-card text-[#E91E8C]"></i>
             <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Comprar Créditos Avulsos
             </h3>
           </div>
 
-          <p className={`text-sm mb-4 ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>
-            Seu preço: <span className="text-fuchsia-400 font-semibold">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito</span> (baseado no plano {currentPlan.name})
+          <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            Seu preço: <span className="text-[#E91E8C] font-semibold">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito</span> (baseado no plano {currentPlan.name})
           </p>
 
           {/* Grid de pacotes */}
@@ -389,11 +389,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
               <button
                 key={amount}
                 onClick={() => setSelectedCredits(amount)}
-                className={`p-3 rounded-xl border-2 transition-all ${selectedCredits === amount ? 'border-fuchsia-500 bg-fuchsia-500/10' : isDark ? 'border-zinc-700 hover:border-zinc-600' : 'border-gray-200 hover:border-gray-300'}`}
+                className={`p-3 rounded-xl border-2 transition-all ${selectedCredits === amount ? 'border-[#E91E8C] bg-[#E91E8C]/10' : isDark ? 'border-gray-200 hover:border-zinc-600' : 'border-gray-200 hover:border-gray-300'}`}
               >
                 <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{amount}</p>
-                <p className={`text-xs ${isDark ? 'text-zinc-400' : 'text-gray-500'}`}>créditos</p>
-                <p className={`text-sm font-semibold mt-1 ${selectedCredits === amount ? 'text-fuchsia-400' : isDark ? 'text-zinc-300' : 'text-gray-700'}`}>
+                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>créditos</p>
+                <p className={`text-sm font-semibold mt-1 ${selectedCredits === amount ? 'text-[#E91E8C]' : isDark ? 'text-gray-600' : 'text-gray-700'}`}>
                   R$ {getCreditPackagePrice(amount)}
                 </p>
               </button>
@@ -402,7 +402,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
           <button
             onClick={() => onBuyCredits(selectedCredits)}
-            className="w-full py-3 bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all"
+            className="w-full py-3 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all"
           >
             <i className="fas fa-shopping-cart mr-2"></i>
             Comprar {selectedCredits} créditos - R$ {getCreditPackagePrice(selectedCredits)}

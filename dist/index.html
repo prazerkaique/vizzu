@@ -2,28 +2,33 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    
+
     <!-- Favicons -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
-    
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
+
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#ec4899" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F8F6F2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1A1A1A" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Vizzu - Transforme fotos de produtos em imagens profissionais com IA" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Vizzu" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    
+
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    
+
     <title>Vizzu - AI Visual Studio</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
       /* Safe area support for iPhone notch/dynamic island */
@@ -44,7 +49,7 @@
         -webkit-overflow-scrolling: touch;
         position: fixed;
         width: 100%;
-        background-color: #000;
+        background-color: #F8F6F2;
       }
       #root {
         height: 100%;
@@ -63,15 +68,15 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-BCky7enV.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-f2NV7NRi.css">
+    <script type="module" crossorigin src="/assets/index-CynhNMLw.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-C0L8USdD.css">
   </head>
   <body>
     <div id="root"></div>
-    
+
     <!-- Service Worker with aggressive cache clearing -->
     <script>
-      const APP_VERSION = 'v6';
+      const APP_VERSION = 'v7';
       const STORED_VERSION = localStorage.getItem('vizzu_version');
 
       // Se a versão mudou, limpa tudo

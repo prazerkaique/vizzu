@@ -33,28 +33,16 @@ export const MOOD_SEASONS = [
   { id: 'custom', label: 'Personalizado', icon: 'fa-pen' },
 ];
 
-export const COLOR_GRADING_TEMPERATURES = [
-  { id: 'warm', label: 'Warm', description: 'Tons dourados, aconchegantes' },
-  { id: 'cool', label: 'Cool', description: 'Tons azulados, nítidos' },
-  { id: 'neutral', label: 'Neutro', description: 'Equilibrado, sem cast' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
-];
-
-export const COLOR_GRADING_STYLES = [
-  { id: 'clean_natural', label: 'Clean/Natural', description: 'Cores reais e limpas', icon: 'fa-droplet' },
-  { id: 'filme_analogico', label: 'Filme Analógico', description: 'Look de película', icon: 'fa-film' },
-  { id: 'vintage_faded', label: 'Vintage Faded', description: 'Desbotado, retrô', icon: 'fa-clock-rotate-left' },
-  { id: 'moody_escuro', label: 'Moody/Escuro', description: 'Sombras profundas', icon: 'fa-moon' },
-  { id: 'vibrante', label: 'Vibrante', description: 'Saturado, impactante', icon: 'fa-palette' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
-];
-
-export const TEXTURE_GRAINS = [
-  { id: 'clean', label: 'Clean', description: 'Sem grão, nítido' },
-  { id: 'subtle', label: 'Sutil', description: 'Grão quase imperceptível' },
-  { id: 'film', label: 'Film', description: 'Grão de filme analógico' },
-  { id: 'heavy', label: 'Pesado', description: 'Grão forte, artístico' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir' },
+export const VISUAL_STYLES = [
+  { id: 'clean_natural', label: 'Clean Natural', description: 'Cores fiéis, sem grão, neutro. Ideal para catálogo.', icon: 'fa-droplet' },
+  { id: 'warm_soft', label: 'Warm & Soft', description: 'Tons dourados, leve desaturação, grão sutil.', icon: 'fa-sun' },
+  { id: 'cool_crisp', label: 'Cool & Crisp', description: 'Tons azulados, alto contraste, sem grão.', icon: 'fa-snowflake' },
+  { id: 'film_analog', label: 'Filme Analógico', description: 'Tons quentes, contraste suave, grão de película.', icon: 'fa-film' },
+  { id: 'vintage_faded', label: 'Vintage Faded', description: 'Baixo contraste, pretos lavados, grão moderado.', icon: 'fa-clock-rotate-left' },
+  { id: 'moody_dark', label: 'Moody / Dark', description: 'Sombras profundas, tons escuros, grão sutil.', icon: 'fa-moon' },
+  { id: 'vibrant_pop', label: 'Vibrante Pop', description: 'Saturação alta, cores vivas, sem grão.', icon: 'fa-palette' },
+  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir o melhor estilo.', icon: 'fa-wand-magic-sparkles' },
+  { id: 'custom', label: 'Personalizado', description: 'Descreva o estilo visual desejado.', icon: 'fa-pen' },
 ];
 
 export const RESOLUTIONS = [
@@ -67,14 +55,6 @@ export const LIGHTING_OPTIONS = [
   { id: 'golden_hour', label: 'Golden Hour', description: 'Tons quentes de pôr do sol', icon: 'fa-sun' },
   { id: 'leaf_shadows', label: 'Sombras de Folha', description: 'Luz filtrada por folhas', icon: 'fa-leaf' },
   { id: 'studio_soft', label: 'Estúdio Soft', description: 'Iluminação profissional softbox', icon: 'fa-lightbulb' },
-  { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
-];
-
-export const CAMERA_TYPES = [
-  { id: 'iphone', label: 'iPhone', description: 'Natural, autêntico', icon: 'fa-mobile-screen' },
-  { id: 'dslr', label: 'DSLR Pro', description: 'Qualidade profissional', icon: 'fa-camera' },
-  { id: 'film_35mm', label: 'Film 35mm', description: 'Estética analógica', icon: 'fa-film' },
-  { id: 'medium_format', label: 'Medium Format', description: 'Editorial high-end', icon: 'fa-expand' },
   { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
 ];
 
@@ -207,14 +187,12 @@ const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
   lighting: 'ai_choose',
   customLighting: '',
   lightingReference: null,
-  cameraType: 'ai_choose',
   lensModel: 'ai_choose',
   cameraAngle: 'ai_choose',
   depthOfField: 50,
-  colorGradingTemperature: 'ai_choose',
-  colorGradingStyle: 'ai_choose',
-  colorGradingReference: null,
-  textureGrain: 'ai_choose',
+  visualStyle: 'ai_choose',
+  customVisualStyle: '',
+  visualStyleReference: null,
 
   // Step 4 - Frame & Configs
   frameRatio: '4:5',
@@ -334,13 +312,10 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       productPresentation: template.product_presentation || 'ai_choose',
       productScale: (template.product_scale as CreativeStillWizardState['productScale']) || 'ai_choose',
       lighting: template.lighting,
-      cameraType: template.camera_type,
       lensModel: template.lens_model,
       cameraAngle: template.camera_angle,
       depthOfField: template.depth_of_field,
-      colorGradingTemperature: (template.color_grading_temperature as CreativeStillWizardState['colorGradingTemperature']) || 'ai_choose',
-      colorGradingStyle: template.color_grading_style || 'ai_choose',
-      textureGrain: (template.texture_grain as CreativeStillWizardState['textureGrain']) || 'ai_choose',
+      visualStyle: template.visual_style || 'ai_choose',
       frameRatio: template.frame_ratio,
       resolution: (template.resolution as CreativeStillWizardState['resolution']) || '2k',
       variationsCount: template.default_variations || 2,
@@ -392,14 +367,12 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           lighting: wizardState.lighting,
           customLighting: wizardState.customLighting,
           lightingReference: wizardState.lightingReference ? 'attached' : null,
-          cameraType: wizardState.cameraType,
           lensModel: wizardState.lensModel,
           cameraAngle: wizardState.cameraAngle,
           depthOfField: wizardState.depthOfField,
-          colorGradingTemperature: wizardState.colorGradingTemperature,
-          colorGradingStyle: wizardState.colorGradingStyle,
-          colorGradingReference: wizardState.colorGradingReference ? 'attached' : null,
-          textureGrain: wizardState.textureGrain,
+          visualStyle: wizardState.visualStyle,
+          customVisualStyle: wizardState.customVisualStyle,
+          visualStyleReference: wizardState.visualStyleReference ? 'attached' : null,
           frameRatio: wizardState.frameRatio,
           resolution: wizardState.resolution,
           variationsCount: wizardState.variationsCount,
@@ -610,7 +583,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   // ============================================================
   if (view === 'home') {
     return (
-      <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-[#F5F5F7]')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
+      <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-cream')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -620,7 +593,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                   <i className="fas fa-arrow-left"></i>
                 </button>
               )}
-              <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-400/20 border border-amber-500/30' : 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25')}>
+              <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-[#FF9F43]/15 border border-amber-500/30' : 'bg-gradient-to-r from-amber-500 to-[#FF9F43] shadow-lg shadow-amber-500/25')}>
                 <i className={'fas fa-palette text-sm ' + (isDark ? 'text-amber-400' : 'text-white')}></i>
               </div>
               <div>
@@ -641,7 +614,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
               className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400 shadow-sm')}
             >
               <div className="flex items-start gap-4">
-                <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-400/20' : 'bg-gradient-to-r from-amber-100 to-orange-100')}>
+                <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-[#FF9F43]/15' : 'bg-gradient-to-r from-amber-100 to-[#FF9F43]/10')}>
                   <i className={'fas fa-wand-magic-sparkles text-lg ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
                 </div>
                 <div>
@@ -733,7 +706,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                 {favorites.map(gen => (
                   <div
                     key={gen.id}
-                    className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-pink-500/50' : 'bg-white border border-gray-200 hover:border-pink-400 shadow-sm')}
+                    className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border border-gray-200 hover:border-[#E91E8C]/50 shadow-sm')}
                   >
                     <div className={'aspect-square flex items-center justify-center relative ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
                       {(() => {
@@ -748,7 +721,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                         );
                       })()}
                       <div className="absolute top-2 right-2">
-                        <i className="fas fa-heart text-pink-500 text-sm drop-shadow"></i>
+                        <i className="fas fa-heart text-[#E91E8C] text-sm drop-shadow"></i>
                       </div>
                     </div>
                     <div className="p-3">
@@ -812,13 +785,10 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             product_presentation: wizardState.productPresentation || null,
             product_scale: wizardState.productScale || null,
             lighting: wizardState.lighting,
-            camera_type: wizardState.cameraType,
             lens_model: wizardState.lensModel,
             camera_angle: wizardState.cameraAngle,
             depth_of_field: wizardState.depthOfField,
-            color_grading_temperature: wizardState.colorGradingTemperature,
-            color_grading_style: wizardState.colorGradingStyle,
-            texture_grain: wizardState.textureGrain,
+            visual_style: wizardState.visualStyle,
             frame_ratio: wizardState.frameRatio,
             resolution: wizardState.resolution,
             default_variations: wizardState.variationsCount,

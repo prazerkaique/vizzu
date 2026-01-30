@@ -308,14 +308,14 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <i className="fas fa-arrow-left text-sm"></i>
               </button>
             )}
-            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-pink-500/20 to-orange-400/20 border border-pink-500/30' : 'bg-gradient-to-r from-pink-500 to-orange-400 shadow-lg shadow-pink-500/25')}>
-              <i className={'fas fa-cube text-sm ' + (theme === 'dark' ? 'text-pink-400' : 'text-white')}></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] shadow-lg shadow-[#E91E8C]/20')}>
+              <i className={'fas fa-cube text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-white')}></i>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold'}>Vizzu Product Studio®</h1>
                 {currentPlan && (
-                  <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+                  <span className={(theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
                     {currentPlan.name}
                   </span>
                 )}
@@ -325,13 +325,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 shadow-sm')}>
-              <i className="fas fa-coins text-pink-400 text-xs"></i>
+              <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
               <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
             </div>
             {pendingProducts.length > 0 && (
               <button
                 onClick={handleNewProduct}
-                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
                 <i className="fas fa-plus"></i>
                 <span>Novo</span>
@@ -343,10 +343,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* CARD EXPLICATIVO - Logo abaixo do header */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={(theme === 'dark' ? 'bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-orange-500/10 border-pink-500/20' : 'bg-gradient-to-r from-pink-100 via-purple-100 to-orange-100 border-pink-200') + ' rounded-xl p-4 border mb-4'}>
+        <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/50/10 via-[#A855F7]/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-r from-[#E91E8C]/10 via-[#A855F7]/10 to-[#FF9F43]/10 border-[#E91E8C]/20') + ' rounded-xl p-4 border mb-4'}>
           <div className="flex items-start gap-4">
-            <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-pink-500/20' : 'bg-pink-200')}>
-              <i className={(theme === 'dark' ? 'text-pink-400' : 'text-pink-600') + ' fas fa-camera text-lg'}></i>
+            <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/20')}>
+              <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-camera text-lg'}></i>
             </div>
             <div className="flex-1">
               <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fotos profissionais de produto</h3>
@@ -355,7 +355,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
               </p>
               <div className="flex items-center gap-3 mt-2">
                 <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
-                  <i className="fas fa-coins text-pink-400 mr-1"></i>10 créditos por foto
+                  <i className="fas fa-coins text-[#E91E8C] mr-1"></i>10 créditos por foto
                 </span>
               </div>
             </div>
@@ -374,7 +374,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
             placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-pink-500/50' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-pink-400 shadow-sm') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
+            className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-[#E91E8C]/50' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#E91E8C]/50 shadow-sm') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
           />
           {searchTerm && (
             <button
@@ -398,7 +398,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
               <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-filter text-xs'}></i>
               <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar e ordenar</span>
               {hasActiveFilters && (
-                <span className="px-1.5 py-0.5 bg-pink-500 text-white text-[8px] rounded-full">{
+                <span className="px-1.5 py-0.5 bg-[#E91E8C]/100 text-white text-[8px] rounded-full">{
                   [filterCategory, filterCollection, filterColor, filterGender, sortBy !== 'recent' ? sortBy : ''].filter(Boolean).length
                 }</span>
               )}
@@ -412,7 +412,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                 <div className="flex justify-end mb-2">
                   <button
                     onClick={clearFilters}
-                    className="text-[10px] text-pink-500 hover:text-pink-400 font-medium"
+                    className="text-[10px] text-[#E91E8C] hover:text-[#E91E8C] font-medium"
                   >
                     Limpar filtros
                   </button>
@@ -547,16 +547,16 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
               </div>
               {/* Pendentes */}
               <div>
-                <p className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
+                <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-orange-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
                   <i className="fas fa-clock text-[8px]"></i> Pendentes
                 </p>
-                <p className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-600') + ' text-2xl font-bold'}>{pendingProducts.length}</p>
+                <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-orange-600') + ' text-2xl font-bold'}>{pendingProducts.length}</p>
               </div>
             </div>
             {currentPlan && (
               <div className="text-right">
                 <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
-                <span className={(theme === 'dark' ? 'bg-pink-500/20 text-pink-400' : 'bg-gradient-to-r from-pink-500 to-orange-400 text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
+                <span className={(theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
                   {currentPlan.name}
                 </span>
               </div>
@@ -674,13 +674,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                   className="w-full flex items-center justify-between mb-3 group"
                 >
                   <div className="flex items-center gap-2">
-                    <div className={(theme === 'dark' ? 'bg-orange-500/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
-                      <i className={(theme === 'dark' ? 'text-orange-400' : 'text-orange-500') + ' fas fa-clock text-[10px]'}></i>
+                    <div className={(theme === 'dark' ? 'bg-[#FF9F43]/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                      <i className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas fa-clock text-[10px]'}></i>
                     </div>
                     <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
                       Pendentes de otimização
                     </h2>
-                    <span className={(theme === 'dark' ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                    <span className={(theme === 'dark' ? 'bg-[#FF9F43]/20 text-[#FF9F43]' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
                       {pendingProducts.length > visiblePending
                         ? `${Math.min(visiblePending, pendingProducts.length)} de ${pendingProducts.length}`
                         : pendingProducts.length}
@@ -700,7 +700,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                           key={product.id}
                           data-product-id={product.id}
                           onClick={() => handleSelectProduct(product)}
-                          className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-pink-500/50' : 'bg-white border-gray-200 hover:border-pink-300 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                          className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border-gray-200 hover:border-[#E91E8C]/40 shadow-sm hover:shadow-md') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                         >
                           <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                             {productImage ? (
@@ -715,7 +715,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                               </div>
                             )}
                             <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                              <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
                                 <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
                               </button>
                             </div>
@@ -750,8 +750,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
           </>
         ) : (
           <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' rounded-xl border p-8 text-center'}>
-            <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-pink-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-pink-400') + ' fas fa-search text-xl'}></i>
+            <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-[#E91E8C]/15') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+              <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-[#E91E8C]') + ' fas fa-search text-xl'}></i>
             </div>
             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
               {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
@@ -769,7 +769,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
             ) : onImport && (
               <button
                 onClick={onImport}
-                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
+                className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity"
               >
                 <i className="fas fa-plus mr-1.5"></i>Importar produto
               </button>
@@ -810,7 +810,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                   placeholder="Buscar produto..."
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
-                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-pink-500/50'}
+                  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-[#E91E8C]/50'}
                   autoFocus
                 />
               </div>
@@ -852,7 +852,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                       <div
                         key={product.id}
                         onClick={() => handleSelectProductFromModal(product)}
-                        className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-pink-500/50' : 'bg-gray-50 border-gray-200 hover:border-pink-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+                        className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
                       >
                         <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
                           {productImage ? (
@@ -867,7 +867,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
                             </div>
                           )}
                           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="w-full py-1.5 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg font-medium text-[10px]">
+                            <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
                               <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
                             </button>
                           </div>

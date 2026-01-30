@@ -126,7 +126,7 @@ export const Resolution4KConfirmModal: React.FC<Resolution4KConfirmModalProps> =
               onChange={(e) => setDontAskAgain(e.target.checked)}
               className={`w-4 h-4 rounded border-2 appearance-none cursor-pointer transition-all ${
                 dontAskAgain
-                  ? 'bg-purple-500 border-purple-500'
+                  ? 'bg-purple-500 border-[#A855F7]'
                   : isDark
                     ? 'border-neutral-600 hover:border-neutral-500'
                     : 'border-gray-300 hover:border-gray-400'
@@ -158,7 +158,7 @@ export const Resolution4KConfirmModal: React.FC<Resolution4KConfirmModalProps> =
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 transition-all"
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-[#A855F7] to-[#FF6B9D] text-white hover:opacity-90 transition-all"
           >
             Usar 4K
           </button>
