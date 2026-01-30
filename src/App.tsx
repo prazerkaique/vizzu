@@ -3429,7 +3429,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  : <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-10" />
  }
  </button>
- {!sidebarCollapsed && <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
+ {!sidebarCollapsed && <span className={'text-[9px] -mt-1 font-serif italic ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
  title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
