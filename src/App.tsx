@@ -4647,7 +4647,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Barra de ações para produtos selecionados */}
  {selectedProducts.length > 0 && (
- <div className={(theme === 'dark' ? 'bg-white/10 border-white/15 backdrop-blur-xl' : 'bg-white/60 border-gray-200/60 backdrop-blur-xl shadow-sm') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
+ <div className={(theme === 'dark' ? 'bg-white/5 border-white/10 backdrop-blur-xl' : 'bg-white/40 border-gray-200/40 backdrop-blur-xl shadow-sm') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
  <div className="flex items-center gap-2">
  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
  <button onClick={() => setSelectedProducts([])} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs'}>
@@ -4735,7 +4735,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum produto</h3>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>Adicione seu primeiro produto</p>
- <button onClick={() => setShowImport(true)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-[#E91E8C]/100 text-white hover:bg-[#E91E8C]') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs'}>
+ <button onClick={() => setShowImport(true)} className={'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 mt-3 px-4 py-2 rounded-lg font-medium text-xs transition-opacity'}>
  <i className="fas fa-plus mr-1.5"></i>Adicionar
  </button>
  </div>
@@ -6223,7 +6223,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  <div className="flex items-center justify-between mb-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold font-serif'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
  <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
  <i className="fas fa-times text-xs"></i>
  </button>
@@ -6255,7 +6255,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  </div>
  ) : (
- <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C]/50 bg-neutral-800/50' : 'border-gray-300 hover:border-[#E91E8C]/50 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
  </div>
@@ -6294,11 +6294,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* DETALHE */}
  <div className="flex flex-col">
  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
- <i className="fas fa-magnifying-glass-plus text-purple-500 text-[8px]"></i>
+ <i className="fas fa-magnifying-glass-plus text-[#FF9F43] text-[8px]"></i>
  Detalhe
  </label>
  {selectedDetailImage ? (
- <div className={(theme === 'dark' ? 'border-[#A855F7]' : 'border-purple-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
+ <div className={(theme === 'dark' ? 'border-[#FF9F43]' : 'border-[#FF9F43]') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
  <img src={selectedDetailImage} alt="Detalhe" className="w-full h-full object-cover" />
  <div className="absolute top-1 right-1 flex gap-0.5">
  <button onClick={() => setShowPhotoSourcePicker('detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
@@ -6308,12 +6308,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className="fas fa-times text-[7px]"></i>
  </button>
  </div>
- <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-purple-500 text-white text-[7px] font-bold rounded-full">
+ <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-[#FF9F43] text-white text-[7px] font-bold rounded-full">
  <i className="fas fa-check mr-0.5"></i>OK
  </div>
  </div>
  ) : (
- <div onDrop={(e) => handleImageDrop(e, 'detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-[#A855F7]/50 bg-neutral-800/50' : 'border-gray-300 hover:border-purple-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <div onDrop={(e) => handleImageDrop(e, 'detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
  </div>
@@ -6322,8 +6322,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
 
  {/* Dica */}
- <div className={(theme === 'dark' ? 'bg-purple-500/10 border-[#A855F7]/30' : 'bg-purple-50 border-[#A855F7]/20') + ' rounded-lg p-2 mt-3 border'}>
- <p className={(theme === 'dark' ? 'text-purple-400' : 'text-purple-600') + ' text-[10px] flex items-start gap-1.5'}>
+ <div className={(theme === 'dark' ? 'bg-[#FF9F43]/10 border-[#FF9F43]/30' : 'bg-orange-50 border-[#FF9F43]/20') + ' rounded-lg p-2 mt-3 border'}>
+ <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' text-[10px] flex items-start gap-1.5'}>
  <i className="fas fa-magnifying-glass-plus mt-0.5"></i>
  <span><strong>Imagem de Detalhe:</strong> Importante para logos, estampas ou detalhes pequenos que precisam aparecer fielmente na IA.</span>
  </p>
@@ -6406,7 +6406,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Atributos condicionais por categoria */}
  {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
- <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-purple-50 border-[#A855F7]/20') + ' p-3 rounded-xl border'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-xl border'}>
  <div className="flex items-center gap-2 mb-2">
  <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-sliders text-xs'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
