@@ -3429,7 +3429,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  : <img src={theme === 'dark' ? '/logo-light.png' : '/logo.png'} alt="Vizzu" className="h-10" />
  }
  </button>
- {!sidebarCollapsed && <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio com IA para lojistas</span>}
+ {!sidebarCollapsed && <span className={'text-[9px] mt-1 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
  title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
@@ -3654,7 +3654,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div>
  <div className="flex items-center gap-2 mb-1">
  <h1 className={'text-xl font-extrabold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
- <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>{currentPlan.name}</span>
+ <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
  Bem-vindo de volta, <span className="font-medium">{user?.name?.split(' ')[0] || 'usuário'}</span>
@@ -3662,7 +3662,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  <button
  onClick={() => setCurrentPage('create')}
- className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity "
+ className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#373632] text-white rounded-xl text-sm font-medium hover:bg-[#373632]/85 transition-colors "
  >
  <i className="fas fa-plus text-xs"></i>
  Novo Projeto
@@ -3803,10 +3803,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => setCurrentPage('create')}
  className={'flex-shrink-0 w-24 cursor-pointer group'}
  >
- <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-[#E91E8C]/50 hover:bg-gray-100')}>
+ <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-[#373632]/30 hover:bg-gray-100')}>
  <div className="text-center">
- <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15')}>
- <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
+ <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-[#373632]/10')}>
+ <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/70')}></i>
  </div>
  </div>
  </div>
@@ -3949,11 +3949,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* DICA DO DIA + PLANO - Grid 2:1 */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  {/* Dica do dia - 2 colunas */}
- <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-gradient-to-r from-teal-500/10 via-cyan-500/10 to-emerald-500/10 border border-teal-500/20' : 'bg-gradient-to-r from-teal-50 via-cyan-50 to-emerald-50 border border-teal-200')}>
- <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+ <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
+ <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#373632]/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex items-center gap-4 w-full">
- <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-teal-500/20' : 'bg-teal-100')}>
- <i className={'fas fa-lightbulb text-lg ' + (theme === 'dark' ? 'text-teal-400' : 'text-teal-600')}></i>
+ <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/70')}>
+ <i className={'fas fa-lightbulb text-lg ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/70')}></i>
  </div>
  <div className="flex-1 min-w-0">
  <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
@@ -3965,15 +3965,15 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
 
  {/* Plano - 1 coluna */}
- <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-gradient-to-br from-[#A855F7]/40 via-[#E91E8C]/30 to-[#FF9F43]/40 border border-[#E91E8C]/20 backdrop-blur-xl' : 'bg-gradient-to-br from-[#A855F7] via-[#E91E8C] to-[#FF9F43]')}>
- <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+ <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#373632]')}>
+ <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex flex-col w-full">
  <div className="flex items-center gap-3 mb-2">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-white/20 backdrop-blur-sm')}>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/15')}>
  <i className="fas fa-crown text-white"></i>
  </div>
  <div className="flex-1 min-w-0">
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-white/70') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-white/60') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
  <p className="text-xl font-bold text-white">{currentPlan.name}</p>
  </div>
  </div>
