@@ -8,7 +8,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+        serif: ['"Inria Serif"', 'Georgia', 'serif'],
       },
       colors: {
         cream: '#f7f5f2',
