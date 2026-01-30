@@ -3421,7 +3421,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  >
  
  {/* DESKTOP SIDEBAR */}
- <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-16' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
+ <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-20' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
  <div className={'p-4 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
  <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
