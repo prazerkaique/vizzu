@@ -11,7 +11,7 @@ export default {
         serif: ['"Instrument Serif"', 'Georgia', 'serif'],
       },
       colors: {
-        cream: '#F8F6F2',
+        cream: '#f7f5f2',
         brand: {
           pink: '#E91E8C',
           orange: '#FF9F43',
