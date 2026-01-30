@@ -81,7 +81,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
  alt="Vizzu"
  className="h-16 w-auto mx-auto mb-4"
  />
- <p className="text-gray-500 text-sm">AI Visual Studio para e-commerce</p>
+ <p className="text-gray-500 text-sm font-serif italic">Estúdio de Bolso</p>
  </div>
 
  {/* Form Card */}
@@ -226,44 +226,32 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
  </div>
 
  {/* Right Side - Visual */}
- <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#E91E8C]/10 via-cream to-[#FF9F43]/10 items-center justify-center relative overflow-hidden">
- {/* Animated Background */}
- <div className="absolute inset-0">
- <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#E91E8C]/10 rounded-full blur-3xl animate-pulse" />
- <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF9F43]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
- </div>
-
+ <div className="hidden lg:flex w-1/2 bg-[#efebe6] items-center justify-center relative overflow-hidden">
  {/* Content */}
- <div className="relative z-10 text-center p-12">
- <div className="w-24 h-24 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-3xl flex items-center justify-center mx-auto mb-8 ">
- <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
- </svg>
- </div>
- <h2 className="text-4xl font-bold font-serif text-gray-900 mb-4">
- Transforme suas
+ <div className="relative z-10 text-left p-12 max-w-lg">
+ <h2 className="text-4xl font-extrabold text-[#373632] mb-4 leading-tight">
+ Foto de celular.
  <br />
- <span className="bg-gradient-to-r from-[#E91E8C] to-[#FF9F43] bg-clip-text text-transparent">
- fotos de produto
+ <span className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent">
+ Resultado de estúdio.
  </span>
  </h2>
- <p className="text-gray-500 text-lg max-w-md mx-auto">
- Use inteligência artificial para criar imagens profissionais de e-commerce em segundos
+ <p className="text-[#373632]/60 text-lg mb-10">
+ Crie fotos profissionais para sua loja em segundos. Sem estúdio, sem fotógrafo.
  </p>
 
- {/* Features */}
- <div className="mt-12 grid grid-cols-2 gap-4 max-w-sm mx-auto">
+ {/* Feature list */}
+ <div className="space-y-3">
  {[
- 'Remove fundos',
- 'Modelos IA',
- 'Cenários pro',
- 'Provador virtual'
+ 'Fotos de estúdio',
+ 'Provador virtual',
+ 'Modelos com IA',
+ 'Looks completos',
+ 'Stills criativos'
  ].map((feature, i) => (
- <div
- key={i}
- className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-gray-200/50 "
- >
- <p className="text-sm text-gray-700">{feature}</p>
+ <div key={i} className="flex items-center gap-3">
+ <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex-shrink-0" />
+ <span className="text-sm text-[#373632]/80">{feature}</span>
  </div>
  ))}
  </div>
