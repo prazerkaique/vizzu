@@ -3628,7 +3628,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-center gap-2">
  <button
  onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
- className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30' : 'bg-[#E91E8C]/10 text-[#E91E8C] border border-[#E91E8C]/20')}
+ className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200')}
  >
  <i className="fas fa-coins text-[10px]"></i>
  <span>{userCredits}</span>
@@ -3788,8 +3788,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
  <img src={creation.imageUrl} alt="" className="w-full h-full object-cover" />
  <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
- (creation.type === 'studio' ? 'bg-purple-500 text-white' :
- creation.type === 'provador' ? 'bg-[#E91E8C]/100 text-white' :
+ (creation.type === 'studio' ? 'bg-neutral-700 text-white' :
+ creation.type === 'provador' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :
  'bg-amber-500 text-white')}>
  {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : 'Look'}
  </div>
@@ -3921,7 +3921,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-center gap-3">
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Provador</span>
  <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
- <div className="h-full rounded-full bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] transition-all" style={{ width: `${provadorPercent}%` }} />
+ <div className="h-full rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all" style={{ width: `${provadorPercent}%` }} />
  </div>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{provadorPercent}%</span>
  </div>
@@ -4031,7 +4031,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
  <div className="flex items-center gap-2 mb-2">
- <span className="px-2 py-0.5 bg-[#E91E8C]/100 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
+ <span className="px-2 py-0.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[9px] font-bold rounded-full uppercase">IA</span>
  <span className="text-white/60 text-xs">10 créditos/foto</span>
  </div>
  <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Product Studio®</h3>
@@ -4481,7 +4481,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div
  key={model.id}
  onClick={() => setShowModelDetail(model)}
- className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border border-gray-100 ')}
+ className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-neutral-500' : 'bg-white border border-gray-100 ')}
  >
  {/* Image Carousel */}
  <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#E91E8C]/5 to-[#FF9F43]/5')}>
@@ -4493,7 +4493,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  />
  ) : (
  <div className="text-center">
- <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+ <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
  <i className="fas fa-user text-3xl text-white"></i>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
@@ -4625,7 +4625,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
  </select>
  {(filterCategoryGroup || filterCategory || filterColor || filterCollection) && (
- <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-[#E91E8C] hover:bg-[#E91E8C]/10 rounded-lg transition-colors">
+ <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-[#E91E8C] hover:bg-neutral-800/50 rounded-lg transition-colors">
  <i className="fas fa-times mr-1"></i>Limpar
  </button>
  )}
@@ -4807,14 +4807,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
  <div className={'divide-y ' + (theme === 'dark' ? 'divide-neutral-800' : 'divide-gray-100')}>
  {filteredClients.map(client => (
- <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-purple-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => { setProvadorClient(client); setCurrentPage('provador'); }}>
+ <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => { setProvadorClient(client); setCurrentPage('provador'); }}>
  <div className="flex items-center gap-3">
  <div className="relative">
  {getClientPhoto(client) ? (
  <img src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full object-cover" />
  ) : (
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-purple-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
  </div>
  )}
  {client.hasProvadorIA && (
@@ -4941,7 +4941,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  </div>
  <div className="text-right">
- <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white whitespace-nowrap">
+ <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white whitespace-nowrap">
  <i className="fas fa-crown text-[10px]"></i>
  {currentPlan.name}
  </span>
@@ -4957,7 +4957,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <span className={(billingPeriod === 'monthly' ? 'text-white' : 'text-neutral-500') + ' text-sm font-medium'}>Mensal</span>
  <button
  onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
- className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D]' : 'bg-gray-300') + ' relative w-14 h-7 rounded-full transition-colors'}
+ className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-gray-300') + ' relative w-14 h-7 rounded-full transition-colors'}
  >
  <div className={'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ' + (billingPeriod === 'yearly' ? 'translate-x-8' : 'translate-x-1')}></div>
  </button>
@@ -4981,9 +4981,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={
  'relative rounded-2xl p-5 transition-all ' +
  (isCurrentPlan
- ? 'bg-gradient-to-br from-[#E91E8C]/30 via-[#A855F7]/20 to-[#FF6B9D]/30 border-2 border-[#E91E8C] '
+ ? 'bg-gradient-to-br from-[#FF6B6B]/20 via-[#FF9F43]/15 to-neutral-900 border-2 border-[#FF9F43]'
  : isPro
- ? 'bg-gradient-to-br from-[#E91E8C]/30 via-[#A855F7]/20 to-neutral-900 border border-[#E91E8C]/30 hover:border-[#E91E8C]/60'
+ ? 'bg-gradient-to-br from-[#FF6B6B]/15 via-[#FF9F43]/10 to-neutral-900 border border-[#FF9F43]/30 hover:border-neutral-500'
  : isPremier
  ? 'bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-neutral-900 border border-amber-500/30 hover:border-amber-500/60'
  : 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 hover:border-neutral-600'
@@ -4993,7 +4993,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Badge */}
  {isCurrentPlan && (
  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
- <span className="px-4 py-1.5 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white text-[10px] font-bold rounded-full whitespace-nowrap">
+ <span className="px-4 py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-bold rounded-full whitespace-nowrap">
  ATUAL
  </span>
  </div>
@@ -5058,7 +5058,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  'w-full py-3 rounded-xl font-semibold text-sm transition-all ' +
  (isCurrentPlan
  ? 'bg-neutral-800 text-neutral-500 cursor-default'
- : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white hover:scale-[1.02]'
+ : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:scale-[1.02]'
  )
  }
  >
@@ -5597,13 +5597,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'create' }); }}
  onDragOver={handleDragOver}
  onDrop={(e) => handleClientPhotoDrop(e, photoType.id)}
- className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#E91E8C]/50 bg-[#E91E8C]/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-purple-300 hover:border-[#E91E8C]/50 hover:bg-purple-50'))}
+ className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#FF9F43]/50 bg-[#FF9F43]/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'border-gray-300 hover:border-neutral-500 hover:bg-gray-50'))}
  >
  {existingPhoto ? (
  <>
  <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
  <button onClick={(e) => { e.stopPropagation(); handleRemoveClientPhoto(photoType.id); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
- <div className="absolute bottom-0 left-0 right-0 bg-[#E91E8C]/100 text-white text-[8px] py-0.5 font-medium"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
+ <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] py-0.5 font-medium"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
  </>
  ) : (
  <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
@@ -5643,7 +5643,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Gênero *</label>
  <div className="flex gap-2">
- <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-[#E91E8C]/100 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-[#E91E8C]/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-[#E91E8C]/50')}`}>
+ <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-500' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-neutral-500')}`}>
  <i className="fas fa-venus mr-1.5"></i>Feminino
  </button>
  <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'male' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'male' ? 'bg-blue-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-blue-400')}`}>
@@ -5936,13 +5936,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'edit' }); }}
  onDragOver={handleDragOver}
  onDrop={(e) => handleEditClientPhotoDrop(e, photoType.id)}
- className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#E91E8C]/50 bg-[#E91E8C]/10' : 'border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800')}
+ className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#FF9F43]/50 bg-[#FF9F43]/10' : 'border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800')}
  >
  {existingPhoto ? (
  <>
  <img src={existingPhoto.base64} alt={photoType.label} className="w-full h-full object-cover" />
  <button onClick={(e) => { e.stopPropagation(); setEditClientPhotos(prev => prev.filter(p => p.type !== photoType.id)); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[9px] hover:bg-red-600"><i className="fas fa-times"></i></button>
- <div className="absolute bottom-0 left-0 right-0 bg-[#E91E8C]/100 text-white text-[8px] py-0.5 font-medium text-center"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
+ <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] py-0.5 font-medium text-center"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
  </>
  ) : (
  <div className="flex flex-col items-center justify-center h-full text-neutral-600">
@@ -5978,7 +5978,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div>
  <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-1 block">Gênero</label>
  <div className="flex gap-2">
- <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'female' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'female' ? 'bg-[#E91E8C]/100 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-[#E91E8C]/50'}`}>
+ <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'female' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'female' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-500'}`}>
  <i className="fas fa-venus mr-1.5"></i>Feminino
  </button>
  <button type="button" onClick={() => setEditingClient(prev => prev ? { ...prev, gender: 'male' } : null)} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${editingClient.gender === 'male' ? 'bg-blue-500 text-white' : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50'}`}>
@@ -6028,7 +6028,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : showPhotoSourcePicker === 'back' ? 'de costas' : 'de detalhe'}
  </h3>
  <div className="grid grid-cols-2 gap-3">
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-images text-[#E91E8C]"></i>
  </div>
@@ -6060,7 +6060,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  />
  </label>
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-camera text-[#FF9F43]"></i>
  </div>
@@ -6110,7 +6110,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  Adicionar foto - {PHOTO_TYPES.find(p => p.id === showClientPhotoSourcePicker.photoType)?.label}
  </h3>
  <div className="grid grid-cols-2 gap-3">
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-images text-[#E91E8C]"></i>
  </div>
@@ -6132,7 +6132,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  />
  </label>
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-camera text-[#FF9F43]"></i>
  </div>
@@ -6184,7 +6184,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <button
  key={index}
  onClick={() => handleSelectDetectedProduct(product)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50 hover:bg-[#E91E8C]/10') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
+ className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-neutral-500 hover:bg-neutral-800/50') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
  >
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' w-12 h-12 rounded-lg flex items-center justify-center'}>
  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-tshirt text-xl'}></i>
@@ -6250,7 +6250,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className="fas fa-times text-[7px]"></i>
  </button>
  </div>
- <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-[#E91E8C]/100 text-white text-[7px] font-bold rounded-full">
+ <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[7px] font-bold rounded-full">
  <i className="fas fa-check mr-0.5"></i>OK
  </div>
  </div>
@@ -6881,7 +6881,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'p-6 rounded-xl border-2 transition-all text-center ' + (
  newModel.gender === opt.id
  ? 'border-[#E91E8C]/50 bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15'
- : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-[#E91E8C]/40')
+ : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-neutral-500')
  )}
  >
  <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-[#E91E8C]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
@@ -7362,7 +7362,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Preview humanizado do modelo */}
  <div className={(theme === 'dark' ? 'bg-gradient-to-br from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-br from-[#E91E8C]/5 to-[#FF9F43]/5 border-[#E91E8C]/20') + ' rounded-xl p-4 border'}>
  <div className="flex items-start gap-3">
- <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+ <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
  <i className={'fas ' + (newModel.gender === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-white text-lg'}></i>
  </div>
  <div className="flex-1">
@@ -7604,7 +7604,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  ) : (
  <div className={'rounded-xl p-8 mb-4 text-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
- <div className={'w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center ' + (showModelDetail.gender === 'woman' ? 'bg-gradient-to-br from-[#E91E8C] to-[#FF6B9D]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+ <div className={'w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center ' + (showModelDetail.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
  <i className="fas fa-user text-3xl text-white"></i>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>

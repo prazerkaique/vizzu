@@ -602,7 +602,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <img
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-24 h-24 rounded-full object-cover border-4 border-[#E91E8C]/30"
+ className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
  />
  <button
  onClick={() => { setSelectedClient(null); onClientSelect(null); }}
@@ -657,14 +657,14 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => handleSelectClient(client)}
  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
  theme === 'dark'
- ? 'border-neutral-800 hover:border-[#E91E8C]/50 hover:bg-neutral-800'
- : 'border-gray-200 hover:border-[#E91E8C]/40 hover:bg-[#E91E8C]/10'
+ ? 'border-neutral-800 hover:border-neutral-600 hover:bg-neutral-800'
+ : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
  }`}
  >
  <img
  src={getClientPhoto(client) || ''}
  alt={client.firstName}
- className="w-12 h-12 rounded-full object-cover border-2 border-[#E91E8C]/20"
+ className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
  />
  <div className="flex-1 min-w-0">
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
@@ -731,7 +731,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <img
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-10 h-10 rounded-full object-cover border-2 border-[#E91E8C]/30"
+ className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
  />
  <div>
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
@@ -761,7 +761,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  key={photoType.id}
  className={`rounded-xl border overflow-hidden transition-all ${
  isSelected
- ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/20'
+ ? 'border-[#FF9F43] ring-2 ring-[#FF9F43]/20'
  : theme === 'dark'
  ? 'border-neutral-800'
  : 'border-gray-200'
@@ -772,7 +772,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  className={`flex items-center gap-4 p-4 transition-all ${
  !hasPhoto
  ? 'opacity-50 cursor-not-allowed'
- : 'cursor-pointer hover:bg-[#E91E8C]/100/5'
+ : 'cursor-pointer hover:bg-white/5'
  }`}
  >
  {hasPhoto && photoSrc ? (
@@ -801,7 +801,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {isSelected && (
- <div className="w-8 h-8 rounded-full bg-[#E91E8C]/100 flex items-center justify-center">
+ <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
  <i className="fas fa-check text-white text-xs"></i>
  </div>
  )}
@@ -818,8 +818,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => handleOpenPhotoOptions(photoType.id)}
  className={`w-full py-2.5 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-all ${
  theme === 'dark'
- ? 'bg-neutral-800 text-[#E91E8C] hover:bg-neutral-700'
- : 'bg-[#E91E8C]/10 text-[#E91E8C] hover:bg-[#E91E8C]/15'
+ ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+ : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
  }`}
  >
  <i className="fas fa-camera"></i>
@@ -961,7 +961,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
 
  {isUploadingPhoto && (
  <div className="flex items-center justify-center gap-2 py-2">
- <i className="fas fa-spinner fa-spin text-[#E91E8C]"></i>
+ <i className="fas fa-spinner fa-spin text-[#FF9F43]"></i>
  <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
  Processando...
  </span>
@@ -1002,7 +1002,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <span className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center text-white text-xs">3</span>
  Montar Look
  {Object.keys(lookComposition).length > 0 && (
- <span className="ml-auto text-xs text-[#E91E8C] bg-[#E91E8C]/20 px-2 py-1 rounded-full">
+ <span className="ml-auto text-xs text-[#FF9F43] bg-[#FF9F43]/15 px-2 py-1 rounded-full">
  {Object.keys(lookComposition).length} peca(s)
  </span>
  )}
@@ -1173,7 +1173,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => setShowBeforeAfter('before')}
  className={`px-2 py-1 font-medium transition-colors ${
  showBeforeAfter === 'before'
- ? 'bg-[#E91E8C]/100 text-white'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
  : theme === 'dark'
  ? 'text-white hover:bg-white/10'
  : 'text-gray-700 hover:bg-gray-200'
@@ -1185,7 +1185,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => setShowBeforeAfter('after')}
  className={`px-2 py-1 font-medium transition-colors ${
  showBeforeAfter === 'after'
- ? 'bg-[#E91E8C]/100 text-white'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
  : theme === 'dark'
  ? 'text-white hover:bg-white/10'
  : 'text-gray-700 hover:bg-gray-200'
@@ -1223,7 +1223,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  />
  <div className="absolute inset-0 flex items-center justify-center">
  <div className="text-center">
- <i className="fas fa-wand-magic-sparkles text-[#E91E8C] text-2xl mb-2"></i>
+ <i className="fas fa-wand-magic-sparkles text-[#FF9F43] text-2xl mb-2"></i>
  <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-xs`}>
  Clique em Criar
  </p>
@@ -1272,8 +1272,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => setSelectedSavedLook(look)}
  className={`w-12 h-16 object-cover rounded-lg cursor-pointer transition-all ${
  selectedSavedLook?.id === look.id
- ? 'ring-2 ring-[#E91E8C]'
- : 'hover:ring-2 hover:ring-[#E91E8C]/50'
+ ? 'ring-2 ring-[#FF9F43]'
+ : 'hover:ring-2 hover:ring-[#FF9F43]/50'
  }`}
  />
  <button
@@ -1302,7 +1302,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <img
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-10 h-10 rounded-full object-cover border-2 border-[#E91E8C]/30"
+ className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
  />
  <div className="flex-1 min-w-0">
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
@@ -1331,10 +1331,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  title="Gerar mensagem com IA"
  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
  isGeneratingAIMessage
- ? 'bg-[#E91E8C]/20 text-[#E91E8C]'
+ ? 'bg-[#FF9F43]/20 text-[#FF9F43]'
  : theme === 'dark'
- ? 'bg-neutral-700 text-[#E91E8C] hover:bg-neutral-600'
- : 'bg-[#E91E8C]/15 text-[#E91E8C] hover:bg-[#E91E8C]/20'
+ ? 'bg-neutral-700 text-[#FF9F43] hover:bg-neutral-600'
+ : 'bg-[#FF9F43]/10 text-[#FF9F43] hover:bg-[#FF9F43]/15'
  }`}
  >
  {isGeneratingAIMessage ? (
@@ -1488,10 +1488,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  )}
  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
  theme === 'dark'
- ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15 border border-[#E91E8C]/30'
- : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] '
+ ? 'bg-white/10 border border-white/15 backdrop-blur-xl'
+ : 'bg-white/60 border border-gray-200/60 shadow-sm backdrop-blur-xl'
  }`}>
- <i className={`fas fa-shirt text-lg ${theme === 'dark' ? 'text-[#E91E8C]' : 'text-white'}`}></i>
+ <i className={`fas fa-shirt text-lg ${theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]'}`}></i>
  </div>
  <div>
  <h1 className={`text-xl font-extrabold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
@@ -1506,7 +1506,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <span className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
  theme === 'dark'
  ? 'bg-neutral-900 border border-neutral-800 text-neutral-400'
- : 'bg-[#E91E8C]/15 text-[#E91E8C]'
+ : 'bg-gray-100 border border-gray-200 text-gray-500'
  }`}>
  3 cred.
  </span>
@@ -1585,7 +1585,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <img
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-12 h-12 rounded-full object-cover border-2 border-[#E91E8C]/30"
+ className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
  />
  <div className="flex-1 min-w-0">
  <p className="text-white text-sm font-medium truncate">
