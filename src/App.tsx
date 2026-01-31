@@ -3470,7 +3470,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={'p-4 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
  <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
- ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-10 w-10" />
+ ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-10 w-10" style={theme === 'dark' ? { filter: 'brightness(0) invert(1)' } : undefined} />
  : <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-16" />
  }
  </button>
