@@ -3522,12 +3522,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onTouchMove={handleTouchMove}
  onTouchEnd={handleTouchEnd}
  >
- {/* Swipe-back: fundo escuro que clareia conforme arrasta (simula página por baixo) */}
+ {/* Swipe-back: overlay sutil */}
  {isSwipeBack && swipeBackProgress > 0 && (
+ <div className="md:hidden fixed inset-0 z-[100] pointer-events-none">
  <div
- className="md:hidden fixed inset-0 z-[90] pointer-events-none"
- style={{ backgroundColor: `rgba(0,0,0,${0.4 * (1 - swipeBackProgress)})` }}
+ className="absolute left-0 top-0 bottom-0 bg-black/5 transition-none"
+ style={{ width: `${swipeBackProgress * 100}%` }}
  />
+ </div>
  )}
  
  {/* DESKTOP SIDEBAR */}
@@ -3724,13 +3726,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </aside>
 
  {/* MAIN CONTENT */}
- <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 md:pb-0 ' + (!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) ? 'pt-12 pb-16' : '') + (isSwipeBack && swipeBackProgress > 0 ? ' relative z-[95]' : '')} style={{ overscrollBehavior: 'contain', ...(isSwipeBack && swipeBackProgress > 0 ? { transform: `translateX(${swipeBackProgress * 100}%)`, boxShadow: '-10px 0 30px rgba(0,0,0,0.15)' } : {}) }}>
+ <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 md:pb-0 ' + (!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) ? 'pt-12 pb-16' : '')} style={{ overscrollBehavior: 'contain' }}>
 
  {/* MOBILE TOP HEADER - Esconde quando está dentro das features de criação */}
  {!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) && (
  <div
  className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-cream/95 border-gray-200 backdrop-blur-sm')}
- style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))', ...(isSwipeBack && swipeBackProgress > 0 ? { transform: `translateX(${swipeBackProgress * 100}%)` } : {}) }}
+ style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
  >
  <button onClick={() => navigateTo('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
  <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-11" />
@@ -5614,7 +5616,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {!['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage) && (
  <nav
  className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 ')}
- style={isSwipeBack && swipeBackProgress > 0 ? { transform: `translateX(${swipeBackProgress * 100}%)` } : undefined}
  >
  <div className="flex items-center justify-around">
  <button onClick={() => navigateTo('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
