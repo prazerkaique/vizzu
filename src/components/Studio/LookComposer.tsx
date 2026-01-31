@@ -295,7 +295,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
 
  return (
  <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200 ') + ' rounded-lg border p-4'}>
- <div className="flex items-center justify-between mb-4">
+ <div className="flex items-center justify-between mb-6">
  <h4 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium'}>
  <i className="fas fa-layer-group text-neutral-400 mr-1.5"></i>Composição de Look
  </h4>
