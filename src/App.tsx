@@ -189,6 +189,24 @@ function App() {
  const saved = localStorage.getItem('vizzu_currentPage');
  return (saved as Page) || 'dashboard';
  });
+ const [pageHistory, setPageHistory] = useState<Page[]>([]);
+
+ const navigateTo = (page: Page) => {
+ if (page === currentPage) return;
+ setPageHistory(prev => [...prev, currentPage]);
+ setCurrentPage(page);
+ };
+
+ const goBack = () => {
+ setPageHistory(prev => {
+ if (prev.length === 0) return prev;
+ const newHistory = [...prev];
+ const previousPage = newHistory.pop()!;
+ setCurrentPage(previousPage);
+ return newHistory;
+ });
+ };
+
  const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -381,21 +399,63 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  // Swipe navigation - estados para navegação por gestos
  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
+ const [swipeBackProgress, setSwipeBackProgress] = useState(0);
+ const [isSwipeBack, setIsSwipeBack] = useState(false);
 
  // Páginas principais para navegação por swipe (ordem da bottom nav)
  const SWIPE_PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
 
+ const EDGE_ZONE = 30; // pixels da borda esquerda para ativar swipe-back
+ const SWIPE_BACK_THRESHOLD = 0.3; // 30% da tela para confirmar
+
  // Handlers de touch para swipe navigation
  const handleTouchStart = (e: React.TouchEvent) => {
+ const startX = e.targetTouches[0].clientX;
+ const startY = e.targetTouches[0].clientY;
  setTouchEnd(null);
- setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+ setTouchStart({ x: startX, y: startY });
+
+ // Detectar se começou na borda esquerda (swipe-back)
+ if (startX <= EDGE_ZONE && pageHistory.length > 0) {
+ setIsSwipeBack(true);
+ setSwipeBackProgress(0);
+ }
  };
 
  const handleTouchMove = (e: React.TouchEvent) => {
- setTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+ const currentX = e.targetTouches[0].clientX;
+ const currentY = e.targetTouches[0].clientY;
+ setTouchEnd({ x: currentX, y: currentY });
+
+ // Atualizar progresso do swipe-back
+ if (isSwipeBack && touchStart) {
+ const deltaX = currentX - touchStart.x;
+ const deltaY = Math.abs(currentY - touchStart.y);
+ // Cancelar se movimento vertical for maior que horizontal
+ if (deltaY > Math.abs(deltaX) && deltaX < 50) {
+ setIsSwipeBack(false);
+ setSwipeBackProgress(0);
+ return;
+ }
+ const screenWidth = window.innerWidth;
+ const progress = Math.max(0, Math.min(1, deltaX / screenWidth));
+ setSwipeBackProgress(progress);
+ }
  };
 
  const handleTouchEnd = () => {
+ // Swipe-back da borda esquerda
+ if (isSwipeBack) {
+ if (swipeBackProgress >= SWIPE_BACK_THRESHOLD) {
+ goBack();
+ }
+ setIsSwipeBack(false);
+ setSwipeBackProgress(0);
+ setTouchStart(null);
+ setTouchEnd(null);
+ return;
+ }
+
  if (!touchStart || !touchEnd) return;
 
  const distanceX = touchStart.x - touchEnd.x;
@@ -416,11 +476,9 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const isSwipeRight = distanceX < 0;
 
  if (isSwipeLeft && currentIndex < SWIPE_PAGES.length - 1) {
- // Swipe para esquerda = avançar
- setCurrentPage(SWIPE_PAGES[currentIndex + 1]);
+ navigateTo(SWIPE_PAGES[currentIndex + 1]);
  } else if (isSwipeRight && currentIndex > 0) {
- // Swipe para direita = voltar
- setCurrentPage(SWIPE_PAGES[currentIndex - 1]);
+ navigateTo(SWIPE_PAGES[currentIndex - 1]);
  }
 
  setTouchStart(null);
@@ -1223,7 +1281,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  useEffect(() => {
  if (lastCreatedProductId && products.length > 0) {
  // Ir para Produtos para ver o produto
- setCurrentPage('products');
+ navigateTo('products');
 
  // Pequeno delay para o DOM renderizar
  setTimeout(() => {
@@ -2159,11 +2217,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  if (createClientFromProvador) {
  // Se veio do Provador, selecionar o cliente e voltar para lá
  setProvadorClient(client);
- setCurrentPage('provador');
+ navigateTo('provador');
  setCreateClientFromProvador(false);
  } else {
  // Se não veio do Provador, ir para lista de clientes
- setCurrentPage('clients');
+ navigateTo('clients');
  }
  } catch (error) {
  console.error('Erro ao salvar cliente:', error);
@@ -3464,11 +3522,28 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onTouchMove={handleTouchMove}
  onTouchEnd={handleTouchEnd}
  >
+ {/* Swipe-back indicator */}
+ {isSwipeBack && swipeBackProgress > 0 && (
+ <div className="md:hidden fixed inset-0 z-[100] pointer-events-none">
+ <div
+ className="absolute left-0 top-0 bottom-0 bg-black/10 transition-none"
+ style={{ width: `${swipeBackProgress * 100}%` }}
+ />
+ <div
+ className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-none"
+ style={{ left: `${Math.min(swipeBackProgress * 100, 20)}%`, opacity: Math.min(swipeBackProgress * 3, 1) }}
+ >
+ <div className={'w-10 h-10 rounded-full flex items-center justify-center shadow-lg ' + (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-900')}>
+ <i className="fas fa-chevron-left text-sm"></i>
+ </div>
+ </div>
+ </div>
+ )}
  
  {/* DESKTOP SIDEBAR */}
  <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-20' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
  <div className={'p-4 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
- <button onClick={() => setCurrentPage('dashboard')} className="hover:opacity-80 transition-opacity">
+ <button onClick={() => navigateTo('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
  ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-10 w-10" style={theme === 'dark' ? { filter: 'brightness(0) invert(1)' } : undefined} />
  : <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-16" />
@@ -3486,7 +3561,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <nav className="flex-1 p-2 space-y-1">
  {/* Dashboard */}
  <button
- onClick={() => setCurrentPage('dashboard')}
+ onClick={() => navigateTo('dashboard')}
  title="Dashboard"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
@@ -3501,7 +3576,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Produtos */}
  <button
- onClick={() => setCurrentPage('products')}
+ onClick={() => navigateTo('products')}
  title="Produtos"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
@@ -3517,7 +3592,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Botão CRIAR - Destacado no Centro */}
  <div className="py-2">
  <button
- onClick={() => setCurrentPage('create')}
+ onClick={() => navigateTo('create')}
  title="Criar"
  className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
  (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio'
@@ -3532,7 +3607,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Modelos */}
  <button
- onClick={() => setCurrentPage('models')}
+ onClick={() => navigateTo('models')}
  title="Modelos"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
@@ -3547,7 +3622,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Clientes */}
  <button
- onClick={() => setCurrentPage('clients')}
+ onClick={() => navigateTo('clients')}
  title="Clientes"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
@@ -3566,7 +3641,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <>
  <div className="flex items-center justify-between mb-1.5">
  <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60')}>Créditos</span>
- <button onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-[#E91E8C] hover:text-[#E91E8C]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
+ <button onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-[#E91E8C] hover:text-[#E91E8C]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
  <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
@@ -3580,7 +3655,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Configurações com Dropdown */}
  <div className="relative">
  <button
- onClick={() => sidebarCollapsed ? (setCurrentPage('settings'), setSettingsTab('profile')) : setShowSettingsDropdown(!showSettingsDropdown)}
+ onClick={() => sidebarCollapsed ? (navigateTo('settings'), setSettingsTab('profile')) : setShowSettingsDropdown(!showSettingsDropdown)}
  title="Configurações"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : 'justify-between') + ' ' +
@@ -3605,38 +3680,38 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {showSettingsDropdown && !sidebarCollapsed && (
  <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-[#e5e6ea]') + ' absolute bottom-full mb-1 left-0 right-0 rounded-xl border overflow-hidden z-50'}>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
  </button>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('appearance'); setShowSettingsDropdown(false); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('appearance'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-palette w-4 text-[10px] text-center"></i>Aparência
  </button>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('company'); setShowSettingsDropdown(false); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('company'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-building w-4 text-[10px] text-center"></i>Empresa
  </button>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
  </button>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
  </button>
  <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
@@ -3667,19 +3742,19 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-cream/95 border-gray-200 backdrop-blur-sm')}
  style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
  >
- <button onClick={() => setCurrentPage('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
+ <button onClick={() => navigateTo('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
  <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-11" />
  </button>
  <div className="flex items-center gap-2">
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200')}
  >
  <i className="fas fa-coins text-[10px]"></i>
  <span>{userCredits}</span>
  </button>
  <button
- onClick={() => setCurrentPage('settings')}
+ onClick={() => navigateTo('settings')}
  className={'w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-cog text-sm"></i>
@@ -3706,7 +3781,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </p>
  </div>
  <button
- onClick={() => setCurrentPage('create')}
+ onClick={() => navigateTo('create')}
  className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity "
  >
  <i className="fas fa-plus text-xs"></i>
@@ -3810,7 +3885,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  {sortedCreations.length > 0 && (
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('history'); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('history'); }}
  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
  >
  Ver todas <i className="fas fa-arrow-right ml-1"></i>
@@ -3824,9 +3899,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div
  key={creation.id}
  onClick={() => {
- if (creation.type === 'studio') setCurrentPage('product-studio');
- else if (creation.type === 'provador') setCurrentPage('provador');
- else setCurrentPage('look-composer');
+ if (creation.type === 'studio') navigateTo('product-studio');
+ else if (creation.type === 'provador') navigateTo('provador');
+ else navigateTo('look-composer');
  }}
  className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
  >
@@ -3845,7 +3920,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Card + Nova Criação */}
  <div
- onClick={() => setCurrentPage('create')}
+ onClick={() => navigateTo('create')}
  className={'flex-shrink-0 w-24 cursor-pointer group'}
  >
  <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-[#373632]/30 hover:bg-gray-100')}>
@@ -4016,7 +4091,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-xs mb-2'}>{userCredits}/{currentPlan.limit} créditos</p>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90')}
  >
  Upgrade <i className="fas fa-arrow-right text-[10px]"></i>
@@ -4067,7 +4142,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {/* Card 1: Vizzu Product Studio */}
  <div
- onClick={() => setCurrentPage('product-studio')}
+ onClick={() => navigateTo('product-studio')}
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
@@ -4087,7 +4162,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className="fas fa-cube text-white text-lg"></i>
  </div>
  <button
- onClick={(e) => { e.stopPropagation(); setCurrentPage('product-studio'); }}
+ onClick={(e) => { e.stopPropagation(); navigateTo('product-studio'); }}
  className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
  >
  Acessar <i className="fas fa-arrow-right text-xs"></i>
@@ -4119,7 +4194,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className="fas fa-play text-white ml-1"></i>
  </div>
  <button
- onClick={(e) => { e.stopPropagation(); setCurrentPage('provador'); }}
+ onClick={(e) => { e.stopPropagation(); navigateTo('provador'); }}
  className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
  >
  Acessar <i className="fas fa-arrow-right text-xs"></i>
@@ -4131,7 +4206,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Card 3: Look Completo */}
  <div
- onClick={() => setCurrentPage('look-composer')}
+ onClick={() => navigateTo('look-composer')}
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
@@ -4151,7 +4226,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className="fas fa-vest-patches text-white text-lg"></i>
  </div>
  <button
- onClick={(e) => { e.stopPropagation(); setCurrentPage('look-composer'); }}
+ onClick={(e) => { e.stopPropagation(); navigateTo('look-composer'); }}
  className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
  >
  Acessar <i className="fas fa-arrow-right text-xs"></i>
@@ -4163,7 +4238,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* Card 4: Still Criativo */}
  <div
- onClick={() => setCurrentPage('creative-still')}
+ onClick={() => navigateTo('creative-still')}
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
@@ -4183,7 +4258,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <i className="fas fa-palette text-white text-lg"></i>
  </div>
  <button
- onClick={(e) => { e.stopPropagation(); setCurrentPage('creative-still'); }}
+ onClick={(e) => { e.stopPropagation(); navigateTo('creative-still'); }}
  className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm font-bold rounded-lg flex items-center gap-2 transition-all border border-white/30"
  >
  Acessar <i className="fas fa-arrow-right text-xs"></i>
@@ -4231,7 +4306,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  </div>
  <button
- onClick={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
  >
  Comprar mais
@@ -4265,11 +4340,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onSetProgress={setProductStudioProgress}
  onSetLoadingText={setProductStudioLoadingText}
  isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
- onNavigate={(page) => setCurrentPage(page)}
+ onNavigate={(page) => navigateTo(page)}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
- onBack={() => setCurrentPage('create')}
- onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onBack={goBack}
+ onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  />
  </Suspense>
  </div>
@@ -4308,9 +4383,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onSetMinimized={setProvadorMinimized}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
- onBack={() => setCurrentPage('create')}
+ onBack={goBack}
  currentPlan={currentPlan}
- onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  />
  </Suspense>
  </div>
@@ -4350,8 +4425,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
- onBack={() => setCurrentPage('create')}
- onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onBack={goBack}
+ onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  />
  </Suspense>
  </div>
@@ -4368,8 +4443,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onAddHistoryLog={handleAddHistoryLog}
  onCheckCredits={checkCreditsAndShowModal}
  currentPlan={currentPlan}
- onBack={() => setCurrentPage('create')}
- onOpenPlanModal={() => { setCurrentPage('settings'); setSettingsTab('plan'); }}
+ onBack={goBack}
+ onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
  />
@@ -4852,7 +4927,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
  <div className={'divide-y ' + (theme === 'dark' ? 'divide-neutral-800' : 'divide-gray-100')}>
  {filteredClients.map(client => (
- <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => { setProvadorClient(client); setCurrentPage('provador'); }}>
+ <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => { setProvadorClient(client); navigateTo('provador'); }}>
  <div className="flex items-center gap-3">
  <div className="relative">
  {getClientPhoto(client) ? (
@@ -5551,26 +5626,26 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 ')}
  >
  <div className="flex items-center justify-around">
- <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-home text-sm"></i>
  <span className="text-[9px] font-medium">Home</span>
  </button>
- <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-box text-sm"></i>
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
  {/* Botão CRIAR - Central destacado */}
- <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
+ <button onClick={() => navigateTo('create')} className="relative -mt-5">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-[#373632]')}>
  <img src="/vizzu-icon-white.png" alt="Vizzu" className="h-[38px] w-auto" />
  </div>
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
- <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-user-tie text-sm"></i>
  <span className="text-[9px] font-medium">Modelos</span>
  </button>
- <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-users text-sm"></i>
  <span className="text-[9px] font-medium">Clientes</span>
  </button>
@@ -5605,7 +5680,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}</h3>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{showVideoTutorial === 'studio' ? 'Transforme suas fotos de produto em imagens profissionais' : 'Vista seus clientes virtualmente e aumente suas vendas'}</p>
  </div>
- <button onClick={() => { setShowVideoTutorial(null); setCurrentPage(showVideoTutorial); }} className={'px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-[#A855F7] via-indigo-500 to-[#A855F7]' : 'bg-gradient-to-r from-[#E91E8C] via-[#FF6B9D] to-[#FF9F43]')}>
+ <button onClick={() => { setShowVideoTutorial(null); navigateTo(showVideoTutorial); }} className={'px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-[#A855F7] via-indigo-500 to-[#A855F7]' : 'bg-gradient-to-r from-[#E91E8C] via-[#FF6B9D] to-[#FF9F43]')}>
  <i className="fas fa-rocket"></i>Começar Agora<i className="fas fa-arrow-right text-sm"></i>
  </button>
  </div>
@@ -5735,7 +5810,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* CLIENT DETAIL MODAL */}
  {showClientDetail && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowClientDetail(null)}>
- <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet cursor-pointer" onClick={(e) => { e.stopPropagation(); setProvadorClient(showClientDetail); setShowClientDetail(null); setCurrentPage('provador'); }}>
+ <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet cursor-pointer" onClick={(e) => { e.stopPropagation(); setProvadorClient(showClientDetail); setShowClientDetail(null); navigateTo('provador'); }}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
  <div className="bg-gray-300 w-10 h-1 rounded-full"></div>
@@ -6670,7 +6745,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setProductForCreation(showProductDetail);
  setShowProductDetail(null);
- setCurrentPage('product-studio');
+ navigateTo('product-studio');
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
@@ -6686,7 +6761,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setProductForCreation(showProductDetail);
  setShowProductDetail(null);
- setCurrentPage('provador');
+ navigateTo('provador');
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
@@ -6702,7 +6777,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setProductForCreation(showProductDetail);
  setShowProductDetail(null);
- setCurrentPage('look-composer');
+ navigateTo('look-composer');
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
@@ -6718,7 +6793,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setProductForCreation(showProductDetail);
  setShowProductDetail(null);
- setCurrentPage('lifestyle');
+ navigateTo('lifestyle');
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
@@ -7531,7 +7606,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setShowCreateDropdown(false);
  setShowCreateModel(false);
- setCurrentPage('product-studio');
+ navigateTo('product-studio');
  // TODO: Pass model to Studio Ready
  }}
  className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
@@ -7548,7 +7623,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setShowCreateDropdown(false);
  setShowCreateModel(false);
- setCurrentPage('lifestyle');
+ navigateTo('lifestyle');
  // TODO: Pass model to Cenário Criativo
  }}
  className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
@@ -7565,7 +7640,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  setShowCreateDropdown(false);
  setShowCreateModel(false);
- setCurrentPage('look-composer');
+ navigateTo('look-composer');
  // TODO: Pass model to Look Composer
  }}
  className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
