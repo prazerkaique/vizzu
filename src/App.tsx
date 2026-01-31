@@ -3522,15 +3522,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onTouchMove={handleTouchMove}
  onTouchEnd={handleTouchEnd}
  >
- {/* Swipe-back: overlay sutil */}
- {isSwipeBack && swipeBackProgress > 0 && (
- <div className="md:hidden fixed inset-0 z-[100] pointer-events-none">
- <div
- className="absolute left-0 top-0 bottom-0 bg-black/5 transition-none"
- style={{ width: `${swipeBackProgress * 100}%` }}
- />
- </div>
- )}
  
  {/* DESKTOP SIDEBAR */}
  <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-20' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
