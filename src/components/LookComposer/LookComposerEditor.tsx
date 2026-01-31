@@ -2366,7 +2366,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* MODAL DE LOADING - Com steps e thumbnails */}
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
- <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/60'}`}></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/30'}`}></div>
  <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
  {/* Animação de loading com gradiente */}
  <div className="w-24 h-24 mb-4 flex items-center justify-center">

@@ -1541,7 +1541,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
- <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/60'}`}></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/30'}`}></div>
 
  {/* Container do conteudo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
