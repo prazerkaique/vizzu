@@ -5561,7 +5561,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </button>
  {/* Botão CRIAR - Central destacado */}
  <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
- <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-[#373632] scale-110' : 'bg-[#373632]')}>
+ <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-[#373632]')}>
  <img src="/vizzu-icon-white.png" alt="Vizzu" className="h-[38px] w-auto" />
  </div>
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
