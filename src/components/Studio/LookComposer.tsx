@@ -307,8 +307,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  )}
  </div>
 
- {/* Slots compactos em linha */}
- <div className="flex gap-1.5 overflow-x-auto pb-2">
+ {/* Slots compactos em grid — garante visibilidade no mobile */}
+ <div className="grid grid-cols-6 gap-1.5 pb-2">
  {SLOTS.map(slot => {
  const item = composition[slot.id];
  const isLocked = lockedSlots.includes(slot.id);
@@ -326,7 +326,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  onTouchEnd={handleTouchEnd}
  onTouchMove={handleTouchEnd}
  tabIndex={isLocked ? -1 : 0}
- className={`flex-shrink-0 w-14 h-16 rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-200 ${
+ className={`h-16 rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-200 ${
  isLocked
  ? 'cursor-not-allowed opacity-60 border-neutral-500/50 ' + (theme === 'dark' ? 'bg-neutral-800/30' : 'bg-neutral-800/30')
  : isDragging === slot.id

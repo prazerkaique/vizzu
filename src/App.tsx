@@ -199,7 +199,13 @@ function App() {
 
  const goBack = () => {
  setPageHistory(prev => {
- if (prev.length === 0) return prev;
+ if (prev.length === 0) {
+ // Sem histórico (ex: app reaberto) — volta para o dashboard como fallback
+ if (currentPage !== 'dashboard') {
+ setCurrentPage('dashboard');
+ }
+ return prev;
+ }
  const newHistory = [...prev];
  const previousPage = newHistory.pop()!;
  setCurrentPage(previousPage);
@@ -416,7 +422,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  setTouchStart({ x: startX, y: startY });
 
  // Detectar se começou na borda esquerda (swipe-back)
- if (startX <= EDGE_ZONE && pageHistory.length > 0) {
+ // Ativa mesmo sem histórico — goBack() faz fallback para dashboard
+ if (startX <= EDGE_ZONE && currentPage !== 'dashboard') {
  setIsSwipeBack(true);
  setSwipeBackProgress(0);
  }
@@ -3033,40 +3040,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  };
 
  const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string, look: LookComposition) => {
- // Emojis para cada tipo de peça
- const lookEmojis: Record<string, string> = {
- head: '🧢',
- top: '👕',
- bottom: '👖',
- feet: '👟',
- accessory1: '💼',
- accessory2: '⌚',
- };
-
- // Formatar os itens do look
- const formatLookItems = () => {
- const items: string[] = [];
- const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
-
- lookKeys.forEach(key => {
- const item = look[key];
- if (item && item.name) {
- const emoji = lookEmojis[key] || '👔';
- // Por enquanto preço fictício - no futuro virá do produto
- const price = 'Consulte';
- items.push(`${emoji} ${item.name} — ${price}`);
- }
- });
-
- return items.join('\n');
- };
-
- // Monta a mensagem final com os produtos
- const baseMessage = message.replace('{nome}', client.firstName);
- const lookItemsFormatted = formatLookItems();
- const finalMessage = lookItemsFormatted
- ? `${baseMessage}\n\n${lookItemsFormatted}`
- : baseMessage;
+ // A mensagem já vem formatada do wizard (com nome do cliente e itens do look)
+ const finalMessage = message;
 
  // Confirmação antes de enviar
  const confirmMessage = `Deseja enviar um WhatsApp para ${client.firstName} ${client.lastName}?\n\nMensagem:\n"${finalMessage.substring(0, 200)}${finalMessage.length > 200 ? '...' : ''}"`;
