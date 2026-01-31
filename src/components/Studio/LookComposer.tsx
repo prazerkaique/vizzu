@@ -15,14 +15,14 @@ interface Props {
  onImageUpload?: (slot: keyof LookComposition, image: string) => void;
 }
 
-// Mapeamento de slots para categorias de produtos
+// Mapeamento de slots para categorias de produtos (case-insensitive, singular e plural)
 const SLOT_CATEGORY_MAP: Record<string, string[]> = {
- head: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Acessórios'],
- top: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Bodies'],
- bottom: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'],
- feet: ['Tênis', 'Sandálias', 'Botas', 'Calçados'],
- accessory1: ['Acessórios', 'Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias'],
- accessory2: ['Acessórios', 'Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias'],
+ head: ['Bonés', 'Boné', 'Chapéus', 'Chapéu', 'Tiaras', 'Tiara', 'Lenços', 'Lenço', 'Gorro', 'Gorros', 'Touca', 'Toucas', 'Boina', 'Turbante'],
+ top: ['Camisetas', 'Camiseta', 'Blusas', 'Blusa', 'Regatas', 'Regata', 'Tops', 'Top', 'Camisas', 'Camisa', 'Jaquetas', 'Jaqueta', 'Casacos', 'Casaco', 'Blazers', 'Blazer', 'Moletons', 'Moletom', 'Bodies', 'Body', 'Cropped', 'Croppeds', 'Colete', 'Coletes', 'Suéter', 'Cardigan', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto'],
+ bottom: ['Calças', 'Calça', 'Shorts', 'Short', 'Bermudas', 'Bermuda', 'Saias', 'Saia', 'Leggings', 'Legging', 'Shorts Fitness'],
+ feet: ['Tênis', 'Sandálias', 'Sandália', 'Botas', 'Bota', 'Calçados', 'Calçado', 'Sapato', 'Sapatos', 'Chinelo', 'Chinelos', 'Sapatilha', 'Sapatilhas'],
+ accessory1: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Mochila', 'Mochilas', 'Carteira', 'Carteiras'],
+ accessory2: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Colar', 'Colares', 'Brinco', 'Brincos', 'Pulseira', 'Pulseiras', 'Anel', 'Anéis'],
 };
 
 const SLOTS = [
@@ -93,7 +93,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  if (expandedSlot) {
  const allowedCategories = SLOT_CATEGORY_MAP[expandedSlot] || [];
  if (allowedCategories.length > 0) {
- filtered = filtered.filter(p => allowedCategories.includes(p.category));
+ const allowed = allowedCategories.map(c => c.toLowerCase());
+ filtered = filtered.filter(p => allowed.includes((p.category || '').toLowerCase()));
  }
  }
 
@@ -467,7 +468,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  <div ref={productsGridRef} className="p-3 max-h-64 overflow-y-auto">
  {filtered.length > 0 ? (
  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
- {filtered.slice(0, 30).map(p => (
+ {filtered.map(p => (
  <div
  key={p.id}
  onClick={() => selectProduct(expandedSlot, p)}
@@ -498,9 +499,9 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  )}
  </div>
 
- {filtered.length > 30 && (
+ {filtered.length > 0 && (
  <div className={`px-3 py-2 border-t text-center ${theme === 'dark' ? 'border-neutral-800 text-neutral-500' : 'border-neutral-500/10 text-gray-500'}`}>
- <span className="text-[10px]">Mostrando 30 de {filtered.length} produtos</span>
+ <span className="text-[10px]">{filtered.length} produto{filtered.length > 1 ? 's' : ''}</span>
  </div>
  )}
  </div>
