@@ -896,7 +896,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  </div>
  <div className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
- <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
+ <i className="fas fa-coins text-[#FF9F43] text-xs"></i>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
  </div>
  </div>
@@ -987,7 +987,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <button
  key={idx}
  onClick={() => setCurrentImageIndex(idx)}
- className={`w-2 h-2 rounded-full transition-all ${idx === safeIndex ? (viewMode === 'otimizada' ? 'bg-green-400 w-4' : 'bg-[#E91E8C] w-4') : 'bg-white/50'}`}
+ className={`w-2 h-2 rounded-full transition-all ${idx === safeIndex ? (viewMode === 'otimizada' ? 'bg-green-400 w-4' : 'bg-[#FF9F43] w-4') : 'bg-white/50'}`}
  />
  ))}
  </div>
@@ -1021,7 +1021,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={() => setCurrentImageIndex(idx)}
  className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
  idx === safeIndex
- ? (viewMode === 'otimizada' ? 'border-green-500' : 'border-[#E91E8C]')
+ ? (viewMode === 'otimizada' ? 'border-green-500' : 'border-[#FF9F43]')
  : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')
  }`}
  >
@@ -1041,12 +1041,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
- <i className="fas fa-info-circle mr-2 text-[#E91E8C]"></i>Informações do Produto
+ <i className="fas fa-info-circle mr-2 text-[#FF9F43]"></i>Informações do Produto
  </h3>
  {!editMode ? (
  <button
  onClick={() => setEditMode(true)}
- className="text-[#E91E8C] text-xs font-medium hover:underline"
+ className="text-[#FF9F43] text-xs font-medium hover:underline"
  >
  <i className="fas fa-pen mr-1"></i>Editar
  </button>
@@ -1060,7 +1060,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </button>
  <button
  onClick={handleSaveEdit}
- className="text-[#E91E8C] text-xs font-medium hover:underline"
+ className="text-[#FF9F43] text-xs font-medium hover:underline"
  >
  Salvar
  </button>
@@ -1187,14 +1187,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {isOptimized && (
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
- <i className="fas fa-magic mr-2 text-[#E91E8C]"></i>Usar Imagem Otimizada
+ <i className="fas fa-magic mr-2 text-[#FF9F43]"></i>Usar Imagem Otimizada
  </h3>
  <div className="grid grid-cols-2 gap-2">
  {/* Montar Look */}
  <button
  onClick={() => handleNavigateToFeature('look-composer')}
  disabled={!onNavigate}
- className={(theme === 'dark' ? 'bg-gradient-to-r from-[#A855F7]/20 to-[#FF6B9D]/20 border-[#A855F7]/30 hover:border-[#A855F7]/50' : 'bg-gradient-to-r from-[#A855F7]/10 to-[#E91E8C]/10 border-[#A855F7]/20 hover:border-[#A855F7]/30') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+ className={(theme === 'dark' ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white/60 border-gray-200/60 hover:border-gray-300') + ' p-3 rounded-xl border transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-xl'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
@@ -1243,7 +1243,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={() => handleDownloadMainImage('png')}
  className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-3 py-2 text-xs text-left flex items-center gap-2'}
  >
- <i className="fas fa-file-image text-[#E91E8C]"></i>
+ <i className="fas fa-file-image text-[#FF9F43]"></i>
  PNG (Alta qualidade)
  </button>
  <button
@@ -1267,10 +1267,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className="space-y-4">
 
  {/* Info do tipo de produto detectado */}
- <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/50/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/20') + ' rounded-xl p-4 border'}>
+ <div className={(theme === 'dark' ? 'bg-gradient-to-r from-white/5 to-[#FF9F43]/10 border-[#FF9F43]/20' : 'bg-gradient-to-r from-gray-100 to-[#FF9F43]/10 border-[#FF9F43]/20') + ' rounded-xl p-4 border'}>
  <div className="flex items-center gap-3">
- <div className={(theme === 'dark' ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/20') + ' w-10 h-10 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas ' + (productType === 'footwear' ? 'fa-shoe-prints' : productType === 'accessory' ? 'fa-glasses' : 'fa-shirt')}></i>
+ <div className={(theme === 'dark' ? 'bg-[#FF9F43]/20' : 'bg-[#FF9F43]/20') + ' w-10 h-10 rounded-lg flex items-center justify-center'}>
+ <i className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas ' + (productType === 'footwear' ? 'fa-shoe-prints' : productType === 'accessory' ? 'fa-glasses' : 'fa-shirt')}></i>
  </div>
  <div>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
@@ -1287,12 +1287,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
- <i className="fas fa-camera mr-2 text-[#E91E8C]"></i>Selecione os Ângulos
+ <i className="fas fa-camera mr-2 text-[#FF9F43]"></i>Selecione os Ângulos
  </h3>
  <div className="flex gap-2">
  <button
  onClick={selectAllAngles}
- className={(theme === 'dark' ? 'text-[#E91E8C] hover:text-[#E91E8C]' : 'text-[#E91E8C] hover:text-[#E91E8C]') + ' text-[10px] font-medium'}
+ className={(theme === 'dark' ? 'text-[#FF9F43] hover:text-[#FF9F43]' : 'text-[#FF9F43] hover:text-[#FF9F43]') + ' text-[10px] font-medium'}
  >
  Todos
  </button>
@@ -1316,7 +1316,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={() => toggleAngle(angle.id)}
  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
  (isSelected
- ? 'bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/20 border-[#E91E8C] text-[#E91E8C]'
+ ? 'bg-gradient-to-r from-[#FF9F43]/15 to-[#FF9F43]/20 border-[#FF9F43] text-[#FF9F43]'
  : (theme === 'dark'
  ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
  : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300')
@@ -1334,7 +1334,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <i className={`fas ${angle.icon} text-xl`}></i>
  <span className="text-xs font-medium">{angle.label}</span>
  {isSelected && (
- <i className="fas fa-check-circle text-[#E91E8C] text-sm"></i>
+ <i className="fas fa-check-circle text-[#FF9F43] text-sm"></i>
  )}
  {!hasRef && !isSelected && (
  <span className={(theme === 'dark' ? 'text-[#FF9F43]/70' : 'text-[#FF9F43]') + " text-[10px]"}>Sem ref.</span>
@@ -1366,7 +1366,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
- <i className="fas fa-tshirt mr-2 text-[#E91E8C]"></i>Estilo de Apresentação
+ <i className="fas fa-tshirt mr-2 text-[#FF9F43]"></i>Estilo de Apresentação
  </h3>
  {/* Tooltip com exemplos visuais */}
  <div className="relative">
@@ -1387,7 +1387,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Ghost Mannequin Example */}
  <div className="text-center">
  <div
- className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme === 'dark' ? 'border-[#A855F7]/50' : 'border-purple-300')}
+ className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme === 'dark' ? 'border-neutral-500' : 'border-gray-300')}
  onClick={(e) => {
  e.stopPropagation();
  setExpandedStyleImage({
@@ -1405,7 +1405,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <i className="fas fa-search-plus text-white text-lg"></i>
  </div>
  </div>
- <span className="text-purple-400 text-xs font-semibold">Ghost Mannequin</span>
+ <span className="text-neutral-400 text-xs font-semibold">Ghost Mannequin</span>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
  Vestido em corpo invisível
  </p>
@@ -1452,7 +1452,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={() => setPresentationStyle('ghost-mannequin')}
  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
  (presentationStyle === 'ghost-mannequin'
- ? 'bg-gradient-to-r from-[#A855F7]/20 to-[#FF6B9D]/20 border-[#A855F7]'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 border-[#FF9F43]'
  : (theme === 'dark'
  ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
  : 'bg-gray-50 border-gray-200 hover:border-gray-300')
@@ -1461,16 +1461,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  >
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' +
  (presentationStyle === 'ghost-mannequin'
- ? 'bg-gradient-to-r from-[#A855F7] to-[#FF6B9D]'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
  : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
  }>
  <i className={'fas fa-person text-xl ' + (presentationStyle === 'ghost-mannequin' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
  </div>
- <span className={(presentationStyle === 'ghost-mannequin' ? 'text-purple-400' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-xs font-medium'}>
+ <span className={(presentationStyle === 'ghost-mannequin' ? 'text-neutral-400' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-xs font-medium'}>
  Ghost Mannequin
  </span>
  {presentationStyle === 'ghost-mannequin' && (
- <i className="fas fa-check-circle text-purple-400 text-sm"></i>
+ <i className="fas fa-check-circle text-neutral-400 text-sm"></i>
  )}
  </button>
 
@@ -1519,7 +1519,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Resumo de Créditos */}
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
- <i className="fas fa-receipt mr-2 text-[#E91E8C]"></i>Resumo
+ <i className="fas fa-receipt mr-2 text-[#FF9F43]"></i>Resumo
  </h3>
 
  <div className="space-y-2">
@@ -1533,7 +1533,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  <div className="flex items-center justify-between">
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>Créditos necessários</span>
- <span className="text-[#E91E8C] text-sm font-bold">{creditsNeeded}</span>
+ <span className="text-[#FF9F43] text-sm font-bold">{creditsNeeded}</span>
  </div>
  <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}></div>
  <div className="flex items-center justify-between">
@@ -1557,7 +1557,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  disabled={selectedAngles.length === 0 || isGenerating || userCredits < creditsNeeded || isAnyGenerationRunning}
  className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
  (isGenerating
- ? 'bg-[#E91E8C] cursor-wait'
+ ? 'bg-[#FF9F43] cursor-wait'
  : (selectedAngles.length === 0 || userCredits < creditsNeeded || isAnyGenerationRunning)
  ? (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50'
  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 '
@@ -1642,7 +1642,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {productImages.map((img, idx) => (
  <div
  key={`orig-${idx}`}
- className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-200 hover:border-[#E91E8C]/40') + ' transition-all'}
+ className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500' : 'border-gray-200 hover:border-gray-400') + ' transition-all'}
  >
  <img
  src={img.url}
@@ -1717,7 +1717,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }}
  disabled={uploadingRef}
  />
- <div className={`w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#E91E8C] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
+ <div className={`w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5555] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
  {uploadingRef ? (
  <>
  <i className="fas fa-spinner fa-spin"></i>
