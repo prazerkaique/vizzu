@@ -6378,7 +6378,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
 
  {/* OVERLAY DE ANÁLISE IA - Tela imersiva de loading */}
  {isAnalyzingImage && (
- <div className="absolute inset-0 z-50 bg-neutral-900/70 backdrop-blur-xl border border-white/10 flex flex-col items-center justify-center rounded-2xl">
+ <div className={`absolute inset-0 z-50 backdrop-blur-2xl flex flex-col items-center justify-center rounded-2xl ${theme === 'dark' ? 'bg-neutral-900/70 border border-white/10' : 'bg-white/30 border border-gray-200/40'}`}>
  {/* Animação central */}
  <div className="relative mb-6">
  {/* Círculo externo pulsante */}
@@ -6390,27 +6390,27 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
 
  {/* Texto */}
- <h3 className="text-white text-lg font-semibold mb-2 font-serif">Analisando imagem...</h3>
- <p className="text-neutral-300 text-sm text-center px-8 mb-4">
+ <h3 className={`text-lg font-semibold mb-2 font-serif ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Analisando imagem...</h3>
+ <p className={`text-sm text-center px-8 mb-4 ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-500'}`}>
  Nossa IA está identificando o produto, cor, marca e categoria
  </p>
 
  {/* Barra de progresso animada */}
- <div className="w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
+ <div className={`w-48 h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-white/20' : 'bg-gray-200'}`}>
  <div className="h-full w-1/2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full animate-loading"></div>
  </div>
 
  {/* Lista de detecções */}
  <div className="mt-6 space-y-2 text-center">
- <div className="flex items-center gap-2 text-neutral-300 text-xs">
+ <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
  <i className="fas fa-check-circle text-green-400"></i>
  <span>Tipo de produto</span>
  </div>
- <div className="flex items-center gap-2 text-neutral-300 text-xs">
+ <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
  <i className="fas fa-spinner fa-spin text-[#FF9F43]"></i>
  <span>Cor e padrão</span>
  </div>
- <div className="flex items-center gap-2 text-neutral-400/50 text-xs">
+ <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-400/50' : 'text-gray-400'}`}>
  <i className="fas fa-circle text-[#FF9F43]/30"></i>
  <span>Marca e caimento</span>
  </div>
