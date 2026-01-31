@@ -294,13 +294,13 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  };
 
  return (
- <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-[#A855F7]/20 ') + ' rounded-lg border p-3'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200 ') + ' rounded-lg border p-3'}>
  <div className="flex items-center justify-between mb-2">
  <h4 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium'}>
- <i className="fas fa-layer-group text-[#E91E8C] mr-1.5"></i>Composição de Look
+ <i className="fas fa-layer-group text-neutral-400 mr-1.5"></i>Composição de Look
  </h4>
  {Object.keys(composition).length > 0 && (
- <span className="text-[9px] font-medium text-[#E91E8C] bg-[#E91E8C]/20 px-1.5 py-0.5 rounded-full">
+ <span className="text-[9px] font-medium text-neutral-400 bg-neutral-700/30 px-1.5 py-0.5 rounded-full">
  {Object.keys(composition).length} itens
  </span>
  )}
@@ -327,20 +327,20 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  tabIndex={isLocked ? -1 : 0}
  className={`flex-shrink-0 w-14 h-16 rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-200 ${
  isLocked
- ? 'cursor-not-allowed opacity-60 border-[#E91E8C]/50 ' + (theme === 'dark' ? 'bg-[#E91E8C]/10' : 'bg-[#E91E8C]/10')
+ ? 'cursor-not-allowed opacity-60 border-neutral-500/50 ' + (theme === 'dark' ? 'bg-neutral-800/30' : 'bg-neutral-800/30')
  : isDragging === slot.id
- ? 'border-[#E91E8C] bg-[#E91E8C]/20 scale-110 cursor-pointer'
+ ? 'border-neutral-500 bg-neutral-700/30 scale-110 cursor-pointer'
  : item
- ? 'border-[#E91E8C] cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-[#E91E8C]/10')
+ ? 'border-neutral-500 cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-neutral-800/30')
  : isExpanded
- ? 'border-[#E91E8C] bg-[#E91E8C]/20 scale-105 cursor-pointer ring-2 ring-[#E91E8C]/50'
- : 'cursor-pointer border-dashed ' + (theme === 'dark' ? 'border-neutral-600 bg-neutral-900/50 hover:border-[#E91E8C]/50 hover:bg-neutral-800' : 'border-purple-300 bg-purple-50/50 hover:border-[#E91E8C]/50')
+ ? 'border-neutral-500 bg-neutral-700/30 scale-105 cursor-pointer ring-2 ring-neutral-500/50'
+ : 'cursor-pointer border-dashed ' + (theme === 'dark' ? 'border-neutral-600 bg-neutral-900/50 hover:border-neutral-500/50 hover:bg-neutral-800' : 'border-gray-300 bg-gray-50/50 hover:border-neutral-500/50')
  }`}
  >
  {isLocked ? (
  <>
- <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-lock text-xs'}></i>
- <span className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' text-[6px] font-medium text-center px-0.5 mt-0.5'}>
+ <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-neutral-400') + ' fas fa-lock text-xs'}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-neutral-400') + ' text-[6px] font-medium text-center px-0.5 mt-0.5'}>
  {lockedMessage}
  </span>
  </>
@@ -360,11 +360,11 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  ) : (
  <>
  {isDragging === slot.id ? (
- <i className="fas fa-download text-[#E91E8C] text-sm animate-bounce"></i>
+ <i className="fas fa-download text-neutral-400 text-sm animate-bounce"></i>
  ) : (
- <slot.Icon size={16} weight="duotone" className={isExpanded ? 'text-[#E91E8C]' : (theme === 'dark' ? 'text-neutral-500' : 'text-purple-400')} />
+ <slot.Icon size={16} weight="light" className={isExpanded ? 'text-neutral-400' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')} />
  )}
- <span className={'text-[7px] font-medium mt-0.5 ' + (isDragging === slot.id || isExpanded ? 'text-[#E91E8C]' : (theme === 'dark' ? 'text-neutral-500' : 'text-purple-500'))}>
+ <span className={'text-[7px] font-medium mt-0.5 ' + (isDragging === slot.id || isExpanded ? 'text-neutral-400' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>
  {isDragging === slot.id ? 'Soltar' : slot.label}
  </span>
  </>
@@ -377,27 +377,27 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  {/* Modal expandido para selecionar produto */}
  {expandedSlot && (
  <div className={`mt-2 rounded-xl border overflow-hidden transition-all duration-300 animate-in slide-in-from-top-2 ${
- theme === 'dark' ? 'bg-neutral-900 border-[#E91E8C]/30' : 'bg-white border-[#E91E8C]/20 '
+ theme === 'dark' ? 'bg-neutral-900 border-neutral-500/30' : 'bg-white border-neutral-500/20 '
  }`}>
  {/* Header do modal */}
- <div className={`p-3 border-b ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-[#E91E8C]/10 bg-[#E91E8C]/10'}`}>
+ <div className={`p-3 border-b ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-neutral-500/10 bg-neutral-800/30'}`}>
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-2">
  {(() => {
  const SlotIcon = SLOTS.find(s => s.id === expandedSlot)?.Icon || TShirt;
- return <SlotIcon size={20} weight="duotone" className="text-[#E91E8C]" />;
+ return <SlotIcon size={20} weight="light" className="text-neutral-400" />;
  })()}
  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  {SLOTS.find(s => s.id === expandedSlot)?.label}
  </span>
- <span className={`text-xs px-2 py-0.5 rounded-full ${theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-[#E91E8C]/15 text-[#E91E8C]'}`}>
+ <span className={`text-xs px-2 py-0.5 rounded-full ${theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-100 text-neutral-400'}`}>
  {filtered.length} produtos
  </span>
  </div>
  <button
  onClick={() => setExpandedSlot(null)}
  className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
- theme === 'dark' ? 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600 hover:text-white' : 'bg-[#E91E8C]/15 text-[#E91E8C] hover:bg-[#E91E8C]/20'
+ theme === 'dark' ? 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600 hover:text-white' : 'bg-gray-100 text-neutral-400 hover:bg-neutral-700/30'
  }`}
  >
  <i className="fas fa-times text-xs"></i>
@@ -419,7 +419,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  onChange={(e) => setSearch(e.target.value)}
  placeholder="Buscar..."
  className={`w-full pl-7 pr-8 py-2 text-xs border rounded-lg ${
- theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-[#E91E8C]/20 text-gray-900 placeholder-gray-400'
+ theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-neutral-500/20 text-gray-900 placeholder-gray-400'
  }`}
  />
  <button
@@ -435,7 +435,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  <button
  onClick={() => { setIsSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
  className={`px-3 py-2 rounded-lg border flex items-center gap-2 ${
- theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-[#E91E8C]/50' : 'bg-white border-[#E91E8C]/20 text-gray-500 hover:border-[#E91E8C]/50'
+ theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-500/50' : 'bg-white border-neutral-500/20 text-gray-500 hover:border-neutral-500/50'
  }`}
  >
  <i className="fas fa-search text-[10px]"></i>
@@ -451,7 +451,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  value={selectedCollection}
  onChange={(e) => setSelectedCollection(e.target.value)}
  className={`px-2 py-2 text-xs border rounded-lg ${
- theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-[#E91E8C]/20 text-gray-900'
+ theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-neutral-500/20 text-gray-900'
  }`}
  >
  <option value="">Todas</option>
@@ -472,7 +472,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  key={p.id}
  onClick={() => selectProduct(expandedSlot, p)}
  className={`aspect-square rounded-lg border overflow-hidden cursor-pointer relative group transition-all hover:scale-105 ${
- theme === 'dark' ? 'border-neutral-700 hover:border-[#E91E8C] bg-neutral-800' : 'border-gray-200 hover:border-[#E91E8C]/50 bg-white'
+ theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800' : 'border-gray-200 hover:border-neutral-500/50 bg-white'
  }`}
  >
  <img src={getOptimizedProductImage(p)} alt={p.name} className="w-full h-full object-contain p-1" />
@@ -481,8 +481,8 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  }`}>
  {p.name}
  </div>
- <div className="absolute inset-0 bg-[#E91E8C]/100/0 group-hover:bg-[#E91E8C]/10 transition-colors flex items-center justify-center">
- <i className="fas fa-plus text-[#E91E8C] opacity-0 group-hover:opacity-100 transition-opacity text-lg"></i>
+ <div className="absolute inset-0 bg-neutral-800/300/0 group-hover:bg-neutral-800/30 transition-colors flex items-center justify-center">
+ <i className="fas fa-plus text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity text-lg"></i>
  </div>
  </div>
  ))}
@@ -499,7 +499,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  </div>
 
  {filtered.length > 30 && (
- <div className={`px-3 py-2 border-t text-center ${theme === 'dark' ? 'border-neutral-800 text-neutral-500' : 'border-[#E91E8C]/10 text-gray-500'}`}>
+ <div className={`px-3 py-2 border-t text-center ${theme === 'dark' ? 'border-neutral-800 text-neutral-500' : 'border-neutral-500/10 text-gray-500'}`}>
  <span className="text-[10px]">Mostrando 30 de {filtered.length} produtos</span>
  </div>
  )}
@@ -575,7 +575,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
 
  {isProcessingImage && (
  <div className="flex items-center justify-center gap-2 py-3">
- <i className="fas fa-spinner fa-spin text-[#E91E8C]"></i>
+ <i className="fas fa-spinner fa-spin text-neutral-400"></i>
  <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>Processando...</span>
  </div>
  )}

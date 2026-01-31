@@ -549,7 +549,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  ${isActive
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white scale-105 '
  : isComplete
- ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+ ? theme === 'dark' ? 'bg-white/5 text-neutral-300 border border-white/10' : 'bg-white/60 text-gray-600 border border-gray-200/50'
  : canNavigate
  ? theme === 'dark'
  ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
@@ -565,7 +565,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  isActive
  ? 'bg-white/20'
  : isComplete
- ? 'bg-green-500 text-white'
+ ? 'bg-white/10 text-green-400'
  : theme === 'dark'
  ? 'bg-neutral-700'
  : 'bg-gray-200'
@@ -761,7 +761,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  key={photoType.id}
  className={`rounded-xl border overflow-hidden transition-all ${
  isSelected
- ? 'border-[#FF9F43] ring-2 ring-[#FF9F43]/20'
+ ? theme === 'dark' ? 'border-neutral-400 ring-1 ring-neutral-400/20' : 'border-gray-400 ring-1 ring-gray-400/20'
  : theme === 'dark'
  ? 'border-neutral-800'
  : 'border-gray-200'
@@ -801,8 +801,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {isSelected && (
- <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
- <i className="fas fa-check text-white text-xs"></i>
+ <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl flex items-center justify-center">
+ <i className="fas fa-check text-green-400 text-xs"></i>
  </div>
  )}
 
@@ -1015,7 +1015,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Preview lateral do cliente */}
  <div className="flex">
  {/* Preview da foto do cliente (sempre visivel) */}
- <div className={`w-1/3 p-3 border-r ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-100 bg-gray-50'}`}>
+ <div className={`w-1/4 p-3 border-r ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-100 bg-gray-50'}`}>
  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] font-medium uppercase tracking-wide mb-2`}>
  Cliente
  </p>
@@ -1495,7 +1495,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  <div>
  <h1 className={`text-xl font-extrabold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
- Vizzu Provador
+ Vizzu Provador<sup className="text-[10px] font-normal ml-0.5">®</sup>
  </h1>
  <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm font-serif italic`}>
  Vista seus clientes virtualmente
