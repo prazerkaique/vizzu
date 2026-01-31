@@ -406,7 +406,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const SWIPE_PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
 
  const EDGE_ZONE = 30; // pixels da borda esquerda para ativar swipe-back
- const SWIPE_BACK_THRESHOLD = 0.3; // 30% da tela para confirmar
+ const SWIPE_BACK_THRESHOLD = 0.15; // 15% da tela para confirmar (similar ao iOS)
 
  // Handlers de touch para swipe navigation
  const handleTouchStart = (e: React.TouchEvent) => {
@@ -3526,17 +3526,9 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {isSwipeBack && swipeBackProgress > 0 && (
  <div className="md:hidden fixed inset-0 z-[100] pointer-events-none">
  <div
- className="absolute left-0 top-0 bottom-0 bg-black/10 transition-none"
+ className="absolute left-0 top-0 bottom-0 bg-black/5 transition-none"
  style={{ width: `${swipeBackProgress * 100}%` }}
  />
- <div
- className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-none"
- style={{ left: `${Math.min(swipeBackProgress * 100, 20)}%`, opacity: Math.min(swipeBackProgress * 3, 1) }}
- >
- <div className={'w-10 h-10 rounded-full flex items-center justify-center shadow-lg ' + (theme === 'dark' ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-900')}>
- <i className="fas fa-chevron-left text-sm"></i>
- </div>
- </div>
  </div>
  )}
  
