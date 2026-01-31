@@ -1541,7 +1541,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
- <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/60'}`}></div>
 
  {/* Container do conteudo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
@@ -1556,42 +1556,42 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {/* Titulo */}
- <h2 className="text-white text-xl md:text-2xl font-bold font-serif mb-2 text-center">
+ <h2 className={`text-xl md:text-2xl font-bold font-serif mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  Criando seu look...
  </h2>
 
  {/* Frase de loading dinamica */}
- <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px]">
+ <p className={`text-sm mb-6 text-center min-h-[20px] ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
  {loadingText}
  </p>
 
  {/* Barra de progresso */}
  <div className="w-full max-w-xs mb-4">
- <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+ <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all duration-300"
  style={{ width: `${Math.min(generationProgress, 100)}%` }}
  ></div>
  </div>
- <p className="text-white text-sm font-medium text-center mt-2">
+ <p className={`text-sm font-medium text-center mt-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  {Math.round(Math.min(generationProgress, 100))}%
  </p>
  </div>
 
  {/* Info do cliente */}
  {selectedClient && (
- <div className="bg-neutral-900/80 rounded-xl p-4 border border-neutral-800 mb-6 w-full max-w-xs">
+ <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="flex items-center gap-3">
  <img
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+ className={`w-12 h-12 rounded-full object-cover border-2 ${theme === 'dark' ? 'border-white/20' : 'border-gray-200'}`}
  />
  <div className="flex-1 min-w-0">
- <p className="text-white text-sm font-medium truncate">
+ <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  {selectedClient.firstName} {selectedClient.lastName}
  </p>
- <p className="text-neutral-500 text-xs">
+ <p className={`text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {Object.keys(lookComposition).length} peca(s) selecionada(s)
  </p>
  </div>
@@ -1602,7 +1602,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Botao Minimizar */}
  <button
  onClick={() => onSetMinimized(true)}
- className="flex items-center gap-2 px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors"
+ className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
  >
  <i className="fas fa-minus"></i>
  <span>Minimizar e continuar navegando</span>

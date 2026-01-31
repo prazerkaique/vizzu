@@ -1767,7 +1767,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
- <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/60'}`}></div>
 
  {/* Container do conteúdo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
@@ -1783,30 +1783,30 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
 
  {/* Título */}
- <h2 className="text-white text-2xl font-bold font-serif mb-2 text-center">
+ <h2 className={`text-2xl font-bold font-serif mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  Criando suas fotos...
  </h2>
 
  {/* Frase de loading */}
- <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px] transition-all duration-300">
+ <p className={`text-sm mb-6 text-center min-h-[20px] transition-all duration-300 ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
  {currentLoadingText}
  </p>
 
  {/* Barra de progresso */}
  <div className="w-full max-w-xs mb-4">
- <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+ <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${currentProgress}%` }}
  ></div>
  </div>
- <p className="text-white text-sm font-medium text-center mt-2">
+ <p className={`text-sm font-medium text-center mt-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  {currentProgress}%
  </p>
  </div>
 
  {/* Info do produto sendo gerado */}
- <div className="bg-neutral-900/80 rounded-xl p-4 border border-neutral-800 mb-6 w-full max-w-xs">
+ <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
  <img
@@ -1816,8 +1816,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  />
  </div>
  <div className="flex-1 min-w-0">
- <p className="text-white text-sm font-medium truncate">{product.name}</p>
- <p className="text-neutral-500 text-xs">
+ <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
+ <p className={`text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {selectedAngles.length} foto{selectedAngles.length > 1 ? 's' : ''} • {creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''}
  </p>
  </div>
@@ -1827,13 +1827,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Botão Minimizar */}
  <button
  onClick={handleMinimize}
- className="flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-all"
+ className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
  >
  <i className="fas fa-minus"></i>
  <span>Minimizar e continuar navegando</span>
  </button>
 
- <p className="text-neutral-600 text-xs mt-3 text-center">
+ <p className={`text-xs mt-3 text-center ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}>
  A geração continuará em segundo plano
  </p>
  </div>

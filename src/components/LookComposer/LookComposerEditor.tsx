@@ -2366,23 +2366,23 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* MODAL DE LOADING - Com steps e thumbnails */}
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
- <div className="absolute inset-0 bg-black/90 backdrop-blur-xl"></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/60'}`}></div>
  <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
  {/* Animação de loading com gradiente */}
  <div className="w-24 h-24 mb-4 flex items-center justify-center">
- <div className="w-16 h-16 rounded-full border-4 border-[#A855F7]/30 border-t-purple-500 animate-spin"></div>
+ <div className={`w-16 h-16 rounded-full border-4 animate-spin ${theme === 'dark' ? 'border-neutral-700 border-t-neutral-400' : 'border-gray-200 border-t-gray-500'}`}></div>
  </div>
 
  {/* Header */}
- <h2 className="text-white text-xl font-bold font-serif mb-1 text-center">
+ <h2 className={`text-xl font-bold font-serif mb-1 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  {viewsMode === 'front-back' ? 'Criando 2 imagens...' : 'Criando seu look...'}
  </h2>
- <p className="text-neutral-500 text-xs mb-5 text-center">
+ <p className={`text-xs mb-5 text-center ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {viewsMode === 'front-back' && currentProgress >= 48 ? 'Gerando imagem de costas' : 'Vestindo cada peça com IA'}
  </p>
 
  {/* Steps List - Grid 2 colunas */}
- <div className="w-full max-w-md bg-neutral-900/80 rounded-2xl p-4 mb-5 border border-neutral-800">
+ <div className={`w-full max-w-md rounded-2xl p-4 mb-5 border ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="grid grid-cols-2 gap-3">
  {loadingSteps.map((step, index) => {
  const isCompleted = index < currentGenerationStep;
@@ -2407,8 +2407,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  isCompleted
  ? 'bg-green-500'
  : isCurrent
- ? 'bg-[#E91E8C]/100 animate-pulse'
- : 'bg-neutral-700'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] animate-pulse'
+ : theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
  }`}>
  {isCompleted ? (
  <i className="fas fa-check text-white text-[10px]"></i>
@@ -2425,8 +2425,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  isCompleted
  ? 'border-green-500/50'
  : isCurrent
- ? 'border-[#E91E8C]'
- : 'border-neutral-700'
+ ? 'border-[#FF9F43]'
+ : theme === 'dark' ? 'border-neutral-700' : 'border-gray-200'
  }`}>
  <img
  src={step.thumbnail}
@@ -2439,14 +2439,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  isCompleted
  ? 'border-green-500/50 bg-green-500/10'
  : isCurrent
- ? 'border-[#E91E8C] bg-[#E91E8C]/10'
- : 'border-neutral-700 bg-neutral-800'
+ ? 'border-[#FF9F43] bg-[#FF9F43]/10'
+ : theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-gray-50'
  }`}>
  <i className={`fas ${
  step.type === 'setup' ? 'fa-user' :
  step.type === 'finalize' ? 'fa-wand-magic-sparkles' : 'fa-shirt'
  } ${
- isCompleted ? 'text-green-400' : isCurrent ? 'text-[#E91E8C]' : 'text-neutral-500'
+ isCompleted ? 'text-green-400' : isCurrent ? 'text-[#FF9F43]' : theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'
  } text-xs`}></i>
  </div>
  )}
@@ -2456,8 +2456,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  isCompleted
  ? 'text-green-400'
  : isCurrent
- ? 'text-white'
- : 'text-neutral-500'
+ ? theme === 'dark' ? 'text-white' : 'text-gray-900'
+ : theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'
  }`}>
  {displayLabel}
  </span>
@@ -2469,26 +2469,26 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  {/* Progress Bar */}
  <div className="w-full max-w-md mb-5">
- <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+ <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${currentProgress}%` }}
  ></div>
  </div>
  <div className="flex justify-between items-center mt-2">
- <span className="text-neutral-500 text-xs">
+ <span className={`text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {viewsMode === 'front-back'
  ? currentProgress < 48 ? 'Imagem de frente' : 'Imagem de costas'
  : 'Processando'}
  </span>
- <span className="text-white text-sm font-bold">{currentProgress}%</span>
+ <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{currentProgress}%</span>
  </div>
  </div>
 
  {/* Minimize Button */}
  <button
  onClick={handleMinimize}
- className="flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-medium transition-all border border-neutral-700"
+ className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-white/80 hover:bg-white text-gray-700 border border-gray-200/60 shadow-sm'}`}
  >
  <i className="fas fa-minus"></i>
  <span>Minimizar e continuar navegando</span>

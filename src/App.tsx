@@ -312,6 +312,51 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const [lookComposerProgress, setLookComposerProgress] = useState(0);
  const [lookComposerLoadingText, setLookComposerLoadingText] = useState('');
 
+ // Draggable minimized bar position
+ const [minimizedBarPos, setMinimizedBarPos] = useState<{ x: number; y: number }>({ x: -1, y: -1 });
+ const dragRef = React.useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean }>({ startX: 0, startY: 0, startPosX: 0, startPosY: 0, dragging: false });
+
+ const getMinimizedPos = React.useCallback(() => {
+ if (minimizedBarPos.x === -1) return { right: 24, bottom: 24 };
+ return { left: minimizedBarPos.x, top: minimizedBarPos.y };
+ }, [minimizedBarPos]);
+
+ const handleDragStart = React.useCallback((e: React.MouseEvent | React.TouchEvent) => {
+ const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+ const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+ const el = (e.currentTarget as HTMLElement);
+ const rect = el.getBoundingClientRect();
+ dragRef.current = { startX: clientX, startY: clientY, startPosX: rect.left, startPosY: rect.top, dragging: false };
+
+ const handleMove = (ev: MouseEvent | TouchEvent) => {
+ const cx = 'touches' in ev ? ev.touches[0].clientX : ev.clientX;
+ const cy = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
+ const dx = cx - dragRef.current.startX;
+ const dy = cy - dragRef.current.startY;
+ if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragRef.current.dragging = true;
+ if (dragRef.current.dragging) {
+ ev.preventDefault();
+ const newX = Math.max(0, Math.min(window.innerWidth - 300, dragRef.current.startPosX + dx));
+ const newY = Math.max(0, Math.min(window.innerHeight - 80, dragRef.current.startPosY + dy));
+ setMinimizedBarPos({ x: newX, y: newY });
+ }
+ };
+ const handleEnd = () => {
+ window.removeEventListener('mousemove', handleMove);
+ window.removeEventListener('mouseup', handleEnd);
+ window.removeEventListener('touchmove', handleMove);
+ window.removeEventListener('touchend', handleEnd);
+ };
+ window.addEventListener('mousemove', handleMove);
+ window.addEventListener('mouseup', handleEnd);
+ window.addEventListener('touchmove', handleMove, { passive: false });
+ window.addEventListener('touchend', handleEnd);
+ }, []);
+
+ const handleMinimizedClick = React.useCallback((restoreFn: () => void) => {
+ if (!dragRef.current.dragging) restoreFn();
+ }, []);
+
  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
  const saved = localStorage.getItem('vizzu_theme');
  return (saved as 'dark' | 'light') || 'light';
@@ -7768,10 +7813,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Product Studio - Minimizado */}
  {isGeneratingProductStudio && productStudioMinimized && (
  <div
- className="fixed bottom-6 right-6 z-50 cursor-pointer"
- onClick={() => setProductStudioMinimized(false)}
+ className="fixed z-50 cursor-grab active:cursor-grabbing select-none touch-none"
+ style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
+ onMouseDown={handleDragStart}
+ onTouchStart={handleDragStart}
+ onClick={() => handleMinimizedClick(() => setProductStudioMinimized(false))}
  >
- <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px]">
+ <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0">
  <DotLottieReact
  src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
@@ -7802,10 +7850,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Look Composer - Minimizado */}
  {isGeneratingLookComposer && lookComposerMinimized && (
  <div
- className="fixed bottom-6 right-6 z-50 cursor-pointer"
- onClick={() => setLookComposerMinimized(false)}
+ className="fixed z-50 cursor-grab active:cursor-grabbing select-none touch-none"
+ style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
+ onMouseDown={handleDragStart}
+ onTouchStart={handleDragStart}
+ onClick={() => handleMinimizedClick(() => setLookComposerMinimized(false))}
  >
- <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl p-4 flex items-center gap-4 min-w-[280px]">
+ <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0">
  <DotLottieReact
  src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
@@ -7836,10 +7887,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  {/* Vizzu Provador - Minimizado */}
  {isGeneratingProvador && provadorMinimized && (
  <div
- className="fixed bottom-6 right-6 z-50 cursor-pointer"
- onClick={() => setProvadorMinimized(false)}
+ className="fixed z-50 cursor-grab active:cursor-grabbing select-none touch-none"
+ style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
+ onMouseDown={handleDragStart}
+ onTouchStart={handleDragStart}
+ onClick={() => handleMinimizedClick(() => setProvadorMinimized(false))}
  >
- <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px]">
+ <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0">
  <DotLottieReact
  src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
