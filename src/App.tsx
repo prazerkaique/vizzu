@@ -5551,26 +5551,26 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 ')}
  >
  <div className="flex items-center justify-around">
- <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => setCurrentPage('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-home text-sm"></i>
  <span className="text-[9px] font-medium">Home</span>
  </button>
- <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => setCurrentPage('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-box text-sm"></i>
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
  {/* Botão CRIAR - Central destacado */}
  <button onClick={() => setCurrentPage('create')} className="relative -mt-5">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-all ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]')}>
- <i className="fas fa-wand-magic-sparkles text-white text-lg"></i>
+ <img src="/Logo2White.png" alt="Vizzu" className="h-5 w-auto" />
  </div>
- <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+ <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
- <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => setCurrentPage('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-user-tie text-sm"></i>
  <span className="text-[9px] font-medium">Modelos</span>
  </button>
- <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-[#E91E8C]') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => setCurrentPage('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-users text-sm"></i>
  <span className="text-[9px] font-medium">Clientes</span>
  </button>
