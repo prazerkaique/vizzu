@@ -3,6 +3,7 @@ import { Product, LookComposition } from '../../types';
 import { BaseballCap, TShirt, Pants, Sneaker, Watch, Handbag } from '@phosphor-icons/react';
 import heic2any from 'heic2any';
 import { compressImage, formatFileSize } from '../../utils/imageCompression';
+import { OptimizedImage } from '../OptimizedImage';
 
 interface Props {
  products: Product[];
@@ -347,7 +348,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  </>
  ) : item ? (
  <>
- <img src={item.image} alt={item.name} className="w-full h-full object-contain p-0.5" />
+ <OptimizedImage src={item.image} alt={item.name} className="w-full h-full p-0.5" size="thumb" objectFit="contain" />
  <button
  onClick={(e) => removeSlot(slot.id, e)}
  className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white rounded-bl-lg flex items-center justify-center text-[8px]"
@@ -476,7 +477,7 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800' : 'border-gray-200 hover:border-neutral-500/50 bg-white'
  }`}
  >
- <img src={getOptimizedProductImage(p)} alt={p.name} className="w-full h-full object-contain p-1" />
+ <OptimizedImage src={getOptimizedProductImage(p)} alt={p.name} className="w-full h-full p-1" size="thumb" objectFit="contain" />
  <div className={`absolute inset-x-0 bottom-0 text-white text-[8px] p-1 truncate transition-opacity ${
  theme === 'dark' ? 'bg-gradient-to-t from-black/90 to-transparent' : 'bg-gradient-to-t from-black/80 to-transparent'
  }`}>

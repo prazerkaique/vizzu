@@ -2429,10 +2429,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ? 'border-[#FF9F43]'
  : theme === 'dark' ? 'border-neutral-700' : 'border-gray-200'
  }`}>
- <img
+ <OptimizedImage
  src={step.thumbnail}
  alt={step.label}
- className="w-full h-full object-cover"
+ className="w-full h-full"
+ size="thumb"
  />
  </div>
  ) : (
