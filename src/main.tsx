@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { UIProvider } from './contexts/UIContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { HistoryProvider } from './contexts/HistoryContext'
@@ -11,18 +12,20 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <UIProvider>
-      <AuthProvider>
-        <HistoryProvider>
-          <ProductsProvider>
-            <ClientsProvider>
-              <GenerationProvider>
-                <App />
-              </GenerationProvider>
-            </ClientsProvider>
-          </ProductsProvider>
-        </HistoryProvider>
-      </AuthProvider>
-    </UIProvider>
+    <ErrorBoundary>
+      <UIProvider>
+        <AuthProvider>
+          <HistoryProvider>
+            <ProductsProvider>
+              <ClientsProvider>
+                <GenerationProvider>
+                  <App />
+                </GenerationProvider>
+              </ClientsProvider>
+            </ProductsProvider>
+          </HistoryProvider>
+        </AuthProvider>
+      </UIProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

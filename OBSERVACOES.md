@@ -7,20 +7,45 @@ Atualizado em: 2026-02-01
 
 ## URGENTE (fazer antes de ter clientes pagantes)
 
-### 1. Segurança — Chaves de API expostas no client
-- **Gemini API Key** está no código do front-end (`VITE_GEMINI_API_KEY`). Qualquer pessoa pode abrir o DevTools e ver a chave.
-- **URLs do n8n** (webhooks) são visíveis no bundle. Alguém poderia chamar os endpoints diretamente.
-- **Solução**: Mover chamadas de IA para o backend (n8n já faz isso parcialmente). A chave do Gemini nunca deve estar no front.
+### ~~1. Segurança — Chaves de API expostas no client~~ RESOLVIDO
+- ~~Gemini API Key estava no front-end~~ → Removido `geminiService.ts` e dependência `@google/generative-ai`. Chamadas de IA vão pelo n8n (backend).
+- **URLs do n8n** (webhooks) são visíveis no bundle via proxy config. Risco baixo pois os endpoints validam user_id, mas algo a considerar quando escalar.
 - **Nota**: A chave ANON do Supabase no front é normal (é projetada para ser pública), MAS depende de RLS estar ativo.
 
 ### 2. Segurança — Row Level Security (RLS) do Supabase
 - O código filtra dados por `user_id` no front-end, mas se o RLS não estiver habilitado nas tabelas do Supabase, qualquer usuário autenticado pode ver os dados de outros.
-- **Verificar**: Supabase Dashboard → cada tabela → RLS deve estar ON com policy tipo `auth.uid() = user_id`.
-- **Tabelas críticas**: `products`, `product_images`, `clients`, `client_looks`, `generations`, `credit_transactions`.
+- **Como verificar**: Supabase Dashboard → Table Editor → clicar na tabela → aba "RLS" → deve estar **Enabled** com policy `auth.uid() = user_id`
 
-### 3. Error Boundary — App crasha inteiro
-- Hoje se qualquer componente React der erro, a tela fica em branco.
-- **Solução**: Adicionar um `<ErrorBoundary>` no `main.tsx` que mostra uma tela de "algo deu errado" com botão de recarregar.
+**Checklist de tabelas (verificar TODAS no dashboard):**
+- [ ] `products` — dados dos produtos
+- [ ] `product_images` — imagens dos produtos
+- [ ] `clients` — dados dos clientes
+- [ ] `client_photos` — fotos dos clientes
+- [ ] `client_looks` — looks gerados no Provador
+- [ ] `saved_models` — modelos salvos
+- [ ] `generations` — histórico de gerações (polling)
+- [ ] `history_logs` — logs de atividade
+- [ ] `users` — dados do usuário
+- [ ] `creative_still_templates` — templates do Still Criativo
+- [ ] `creative_still_generations` — gerações do Still Criativo
+
+**Policy SQL exemplo** (para cada tabela):
+```sql
+ALTER TABLE nome_da_tabela ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can only see own data" ON nome_da_tabela
+  FOR ALL USING (auth.uid() = user_id);
+```
+
+**Storage buckets (verificar policies):**
+- [ ] `products`
+- [ ] `client-looks`
+- [ ] `client-photos`
+- [ ] `model-images`
+- [ ] `model-references`
+
+### ~~3. Error Boundary~~ RESOLVIDO
+- ~~App crashava inteiro com tela branca~~ → `ErrorBoundary` adicionado em `main.tsx`. Mostra tela amigável com botões "Recarregar" e "Ir para Dashboard".
 
 ---
 
