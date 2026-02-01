@@ -562,7 +562,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
           <div className="flex items-center gap-3">
            <div className="relative">
             {getClientPhoto(client) ? (
-             <OptimizedImage src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full" size="thumb" objectFit="cover" />
+             <OptimizedImage src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full" size="thumb" />
             ) : (
              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
               <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
@@ -732,7 +732,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        </button>
        <div className="relative inline-block">
         {getClientPhoto(showClientDetail) ? (
-         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full border-2 border-neutral-600 mx-auto" size="thumb" objectFit="cover" />
+         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full border-2 border-neutral-600 mx-auto" size="thumb" />
         ) : (
          <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center mx-auto">
           <span className="text-xl font-medium text-neutral-400">{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
@@ -842,7 +842,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        {/* Info do cliente */}
        <div className="flex items-center gap-3">
         {getClientPhoto(showWhatsAppLookModal) ? (
-         <OptimizedImage src={getClientPhoto(showWhatsAppLookModal)} alt="" className="w-10 h-10 rounded-full border border-neutral-700" size="thumb" objectFit="cover" />
+         <OptimizedImage src={getClientPhoto(showWhatsAppLookModal)} alt="" className="w-10 h-10 rounded-full border border-neutral-700" size="thumb" />
         ) : (
          <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
           <span className="text-sm text-neutral-400">{showWhatsAppLookModal.firstName[0]}</span>

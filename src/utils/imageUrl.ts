@@ -34,7 +34,7 @@ function toTransformUrl(url: string, width: number, quality: number): string {
     return url.replace(
       '/storage/v1/object/public/',
       '/storage/v1/render/image/public/'
-    ) + `?width=${width}&quality=${quality}`;
+    ) + `?width=${width}&quality=${quality}&resize=contain`;
   }
 
   // Not a Supabase storage URL — return as-is

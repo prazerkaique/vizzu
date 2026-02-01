@@ -1449,7 +1449,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  {(model.images?.front || model.referenceImageUrl) ? (
- <OptimizedImage src={model.images?.front || model.referenceImageUrl || ''} alt={model.name} className="w-full aspect-square" size="thumb" objectFit="cover" />
+ <OptimizedImage src={model.images?.front || model.referenceImageUrl || ''} alt={model.name} className="w-full aspect-square" size="thumb" />
  ) : (
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full aspect-square flex items-center justify-center'}>
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user text-2xl'}></i>
@@ -1793,7 +1793,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-palette text-2xl'} style={{ color: solidColor === '#ffffff' ? '#9ca3af' : '#ffffff' }}></i>
  </div>
  ) : (
- <OptimizedImage src={bg.url} alt={bg.name} className="w-full h-20" size="thumb" objectFit="cover" />
+ <OptimizedImage src={bg.url} alt={bg.name} className="w-full h-20" size="thumb" />
  )}
  <div className={(isDark ? 'bg-black/70' : 'bg-white/90') + ' absolute inset-x-0 bottom-0 py-1.5 px-2 flex items-center gap-1.5'}>
  <i className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' fas ' + (bg.icon || 'fa-image') + ' text-[10px]'}></i>
@@ -1920,7 +1920,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ) : bg.base64 ? (
  <img src={bg.base64} alt={bg.name} className="w-full h-20 object-cover" />
  ) : bg.url ? (
- <OptimizedImage src={bg.url} alt={bg.name} className="w-full h-20" size="thumb" objectFit="cover" />
+ <OptimizedImage src={bg.url} alt={bg.name} className="w-full h-20" size="thumb" />
  ) : (
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-20 flex items-center justify-center'}>
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-pen text-xl'}></i>

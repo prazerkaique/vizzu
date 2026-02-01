@@ -339,7 +339,6 @@ export const Studio: React.FC<StudioProps> = ({
  className="w-full h-full rounded-full"
  imgStyle={{ objectPosition: 'top' }}
  size="thumb"
- objectFit="cover"
  />
  ) : (
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
