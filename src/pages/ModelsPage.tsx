@@ -1471,8 +1471,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <OptimizedImage
  src={imgUrl}
  alt={type === 'front' ? 'Frente' : 'Costas'}
- className="w-full h-full object-cover"
+ className="w-full h-full"
  size="preview"
+ objectFit="cover"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">

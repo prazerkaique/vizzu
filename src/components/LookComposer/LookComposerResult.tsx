@@ -433,7 +433,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div className={'flex items-center gap-2 p-2 rounded-lg ' + (isDark ? 'bg-[#E91E8C]/10 border border-[#E91E8C]/20' : 'bg-[#E91E8C]/10 border border-[#E91E8C]/20')}>
  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
  {originalImage && (
- <OptimizedImage src={originalImage} alt={product.name} className="w-full h-full object-cover" size="thumb" />
+ <OptimizedImage src={originalImage} alt={product.name} className="w-full h-full" size="thumb" />
  )}
  </div>
  <div className="flex-1 min-w-0">
@@ -447,7 +447,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div key={slot} className={'flex items-center gap-2 p-2 rounded-lg ' + (isDark ? 'bg-neutral-800' : 'bg-gray-50')}>
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-200') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden'}>
  {item.image ? (
- <OptimizedImage src={item.image} alt={item.name} className="w-full h-full object-cover" size="thumb" />
+ <OptimizedImage src={item.image} alt={item.name} className="w-full h-full" size="thumb" />
  ) : (
  <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas ' + (SLOT_ICONS[slot] || 'fa-shirt')}></i>
  )}
@@ -503,7 +503,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div className="flex items-center gap-2">
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden'}>
  {selectedModel.images?.front ? (
- <OptimizedImage src={selectedModel.images.front} alt={selectedModel.name} className="w-full h-full object-cover" size="thumb" />
+ <OptimizedImage src={selectedModel.images.front} alt={selectedModel.name} className="w-full h-full" size="thumb" objectFit="cover" />
  ) : (
  <i className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-user text-[10px]'}></i>
  )}

@@ -295,7 +295,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  >
  <div className={'aspect-[4/5] flex items-center justify-center ' + (isDark ? 'bg-neutral-900' : 'bg-gray-100')}>
  {url ? (
- <OptimizedImage src={url} alt={`Variação ${vNum}`} className="w-full h-full object-cover" size="preview" />
+ <OptimizedImage src={url} alt={`Variação ${vNum}`} className="w-full h-full" size="preview" />
  ) : (
  <div className="text-center">
  <i className={'fas fa-image text-4xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>

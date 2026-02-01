@@ -600,10 +600,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {selectedClient ? (
  <div className="text-center">
  <div className="relative inline-block mb-3">
- <img
+ <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
+ className="w-24 h-24 rounded-full border-4 border-white/20"
+ size="thumb"
+ objectFit="cover"
  />
  <button
  onClick={() => { setSelectedClient(null); onClientSelect(null); }}
@@ -662,10 +664,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
  }`}
  >
- <img
+ <OptimizedImage
  src={getClientPhoto(client) || ''}
  alt={client.firstName}
- className="w-12 h-12 rounded-full object-cover border-2 border-white/20"
+ className="w-12 h-12 rounded-full border-2 border-white/20"
+ size="thumb"
+ objectFit="cover"
  />
  <div className="flex-1 min-w-0">
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
@@ -729,10 +733,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {selectedClient && (
  <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-gray-100 bg-gray-50'}`}>
  <div className="flex items-center gap-3">
- <img
+ <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+ className="w-10 h-10 rounded-full border-2 border-white/20"
+ size="thumb"
+ objectFit="cover"
  />
  <div>
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
@@ -777,10 +783,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  }`}
  >
  {hasPhoto && photoSrc ? (
- <img
+ <OptimizedImage
  src={photoSrc}
  alt={photoType.label}
- className="w-16 h-16 rounded-xl object-cover"
+ className="w-16 h-16 rounded-xl"
+ size="thumb"
  />
  ) : (
  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
@@ -1154,8 +1161,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <OptimizedImage
  src={selectedSavedLook.imageUrl}
  alt="Look salvo"
- className="w-full h-full object-cover"
+ className="w-full h-full"
  size="preview"
+ objectFit="cover"
  />
  <button
  onClick={() => setSelectedSavedLook(null)}
@@ -1272,12 +1280,13 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  src={look.imageUrl}
  alt="Look"
  onClick={() => setSelectedSavedLook(look)}
- className={`w-12 h-16 object-cover rounded-lg cursor-pointer transition-all ${
+ className={`w-12 h-16 rounded-lg cursor-pointer transition-all ${
  selectedSavedLook?.id === look.id
  ? 'ring-2 ring-[#FF9F43]'
  : 'hover:ring-2 hover:ring-[#FF9F43]/50'
  }`}
  size="thumb"
+ objectFit="cover"
  />
  <button
  onClick={(e) => {
@@ -1302,10 +1311,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <div className={`flex items-center gap-3 p-3 rounded-xl mb-4 ${
  theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50'
  }`}>
- <img
+ <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+ className="w-10 h-10 rounded-full border-2 border-white/20"
+ size="thumb"
+ objectFit="cover"
  />
  <div className="flex-1 min-w-0">
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
@@ -1585,10 +1596,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {selectedClient && (
  <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="flex items-center gap-3">
- <img
+ <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className={`w-12 h-12 rounded-full object-cover border-2 ${theme === 'dark' ? 'border-white/20' : 'border-gray-200'}`}
+ className={`w-12 h-12 rounded-full border-2 ${theme === 'dark' ? 'border-white/20' : 'border-gray-200'}`}
+ size="thumb"
+ objectFit="cover"
  />
  <div className="flex-1 min-w-0">
  <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
