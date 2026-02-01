@@ -11,7 +11,7 @@
 | 5 | ClientsContext (CRUD, fotos, looks) | Concluido |
 | 6 | GenerationContext (estados de geracao global) | Adiado (apos extrair pages) |
 | 7 | Extrair DashboardPage | Concluido |
-| 8 | Extrair ProductsPage + modals | Pendente |
+| 8 | Extrair ProductsPage + modals | Concluido |
 | 9 | Extrair ClientsPage + modals | Pendente |
 | 10 | Extrair ModelsPage + wizard | Pendente |
 | 11 | Extrair SettingsPage + abas | Pendente |
