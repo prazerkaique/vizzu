@@ -9,7 +9,7 @@
 | 3 | HistoryContext (logs, persistencia) | Concluido |
 | 4 | ProductsContext (CRUD, filtros, helpers) | Concluido |
 | 5 | ClientsContext (CRUD, fotos, looks) | Concluido |
-| 6 | GenerationContext (estados de geracao global) | Adiado (apos extrair pages) |
+| 6 | GenerationContext (estados de geracao global) | Concluido |
 | 7 | Extrair DashboardPage | Concluido |
 | 8 | Extrair ProductsPage + modals | Concluido |
 | 9 | Extrair ClientsPage + modals | Concluido |
@@ -222,17 +222,17 @@ Extrair do App.tsx:
 
 Criar: `src/contexts/ClientsContext.tsx`
 
-### Passo 6: Criar GenerationContext
+### Passo 6: Criar GenerationContext ✅ Concluido
 **Risco: Medio** | **Impacto: Medio**
 
-Extrair do App.tsx:
-- Estados de geracao: `isGeneratingProductStudio`, `productStudioMinimized`, `productStudioProgress`, `productStudioLoadingText` (linhas 328-331)
-- Idem para LookComposer (linhas 334-337)
-- Idem para Provador (linhas 310-313)
-- `minimizedBarPos`, `dragRef`, `handleDragStart`, `getMinimizedPos`, `handleMinimizedClick` (linhas 340-382)
-- `minimizedModals` (linha 545)
-
-Criar: `src/contexts/GenerationContext.tsx`
+Criado `src/contexts/GenerationContext.tsx` (~145 linhas) com:
+- 12 estados de geração (isGenerating/minimized/progress/loadingText para ProductStudio, LookComposer, Provador)
+- PROVADOR_LOADING_PHRASES + useEffect de progresso/frases
+- minimizedModals state + closeMinimizedModal
+- Valores computados: isAnyGenerationRunning, provadorLoadingText
+- AppLayout.tsx agora usa useGeneration() em vez de receber 14 props
+- restoreModal permanece no App.tsx (depende de setShowCreateModel local)
+- App.tsx: 841 → 760 linhas (-81)
 
 ### Passo 7: Extrair DashboardPage
 **Risco: Baixo** | **Impacto: Alto**

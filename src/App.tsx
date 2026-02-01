@@ -16,6 +16,7 @@ import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
 import { useClients } from './contexts/ClientsContext';
 import { useCredits, PLANS } from './hooks/useCredits';
+import { useGeneration } from './contexts/GenerationContext';
 import { supabase } from './services/supabaseClient';
 import { generateProvador, sendWhatsAppMessage } from './lib/api/studio';
 import { smartDownload } from './utils/downloadHelper';
@@ -52,21 +53,6 @@ const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
  { id: '3', name: 'Novidades', message: 'Oi {nome}! 👋\n\nChegou novidade que combina com você:', isDefault: false },
 ];
 
-// Frases de loading do Provador - ícones neutros, mensagens engajantes
-const PROVADOR_LOADING_PHRASES = [
- { text: 'Analisando a foto do cliente...', icon: 'fa-camera' },
- { text: 'Identificando medidas e proporções...', icon: 'fa-ruler' },
- { text: 'Preparando as peças selecionadas...', icon: 'fa-shirt' },
- { text: 'Ajustando caimento e modelagem...', icon: 'fa-scissors' },
- { text: 'Combinando cores e texturas...', icon: 'fa-palette' },
- { text: 'Aplicando iluminação natural...', icon: 'fa-sun' },
- { text: 'Refinando detalhes do look...', icon: 'fa-wand-magic-sparkles' },
- { text: 'Criando composição final...', icon: 'fa-layer-group' },
- { text: 'Nossa IA está caprichando...', icon: 'fa-sparkles' },
- { text: 'Quase pronto, aguarde mais um pouco...', icon: 'fa-hourglass-half' },
- { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
-];
-
 function App() {
  // UI state from context
  const { theme, currentPage, navigateTo, goBack, setSettingsTab, showToast, showVideoTutorial, setShowVideoTutorial } = useUI();
@@ -82,40 +68,35 @@ function App() {
  const [productForCreation, setProductForCreation] = useState<Product | null>(null);
  const [showCreateClient, setShowCreateClient] = useState(false);
 
+ // Generation states from context
+ const {
+   isGeneratingProductStudio, setIsGeneratingProductStudio,
+   productStudioMinimized, setProductStudioMinimized,
+   productStudioProgress, setProductStudioProgress,
+   productStudioLoadingText, setProductStudioLoadingText,
+   isGeneratingLookComposer, setIsGeneratingLookComposer,
+   lookComposerMinimized, setLookComposerMinimized,
+   lookComposerProgress, setLookComposerProgress,
+   lookComposerLoadingText, setLookComposerLoadingText,
+   isGeneratingProvador, setIsGeneratingProvador,
+   provadorMinimized, setProvadorMinimized,
+   provadorProgress, setProvadorProgress,
+   provadorLoadingIndex, setProvadorLoadingIndex,
+   provadorLoadingText,
+   isAnyGenerationRunning,
+   minimizedModals, setMinimizedModals,
+   closeMinimizedModal,
+ } = useGeneration();
+
  const [provadorClient, setProvadorClient] = useState<Client | null>(null);
- const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
- const [provadorMinimized, setProvadorMinimized] = useState(false);
- const [provadorLoadingIndex, setProvadorLoadingIndex] = useState(0);
- const [provadorProgress, setProvadorProgress] = useState(0);
  const [createClientFromProvador, setCreateClientFromProvador] = useState(false);
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
- // Product Studio - estados de geração em background
- const [isGeneratingProductStudio, setIsGeneratingProductStudio] = useState(false);
- const [productStudioMinimized, setProductStudioMinimized] = useState(false);
- const [productStudioProgress, setProductStudioProgress] = useState(0);
- const [productStudioLoadingText, setProductStudioLoadingText] = useState('');
-
- // Look Composer - estados de geração em background
- const [isGeneratingLookComposer, setIsGeneratingLookComposer] = useState(false);
- const [lookComposerMinimized, setLookComposerMinimized] = useState(false);
- const [lookComposerProgress, setLookComposerProgress] = useState(0);
- const [lookComposerLoadingText, setLookComposerLoadingText] = useState('');
 
  const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
 
  // Saved Models (shared with LookComposer)
  const [savedModels, setSavedModels] = useState<SavedModel[]>([]);
  const [showCreateModel, setShowCreateModel] = useState(false);
- // Minimized Modals System
- type MinimizedModal = {
- id: string;
- title: string;
- icon: string;
- type: 'createModel' | 'modelDetail' | 'createProduct' | 'productDetail' | 'createClient' | 'clientDetail';
- progress?: number; // For showing progress in mini window
- };
- const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
-
  const restoreModal = (modalId: string) => {
  const modal = minimizedModals.find(m => m.id === modalId);
  if (modal) {
@@ -124,10 +105,6 @@ function App() {
  if (modal.type === 'createModel') setShowCreateModel(true);
  // For detail modals, we'd need to store the detail object too
  }
- };
-
- const closeMinimizedModal = (modalId: string) => {
- setMinimizedModals(prev => prev.filter(m => m.id !== modalId));
  };
 
  // Credit Exhausted Modal
@@ -229,50 +206,6 @@ function App() {
  prevUserIdRef.current = null;
  }
  }, [user]);
-
- // Controlar frases e progresso do loading do Provador
- // Tempo médio de geração: ~75 segundos (1:15)
- useEffect(() => {
- if (!isGeneratingProvador) {
- setProvadorLoadingIndex(0);
- setProvadorProgress(0);
- return;
- }
-
- // Atualizar frase a cada 7 segundos (11 frases em ~77 segundos)
- const phraseInterval = setInterval(() => {
- setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
- }, 7000);
-
- // Progresso calibrado para ~75 segundos até 100%
- // 0-50%: rápido (primeiros ~20s)
- // 50-80%: médio (próximos ~30s)
- // 80-100%: lento (últimos ~25s)
- const progressInterval = setInterval(() => {
- setProvadorProgress(prev => {
- if (prev >= 100) return 100; // Para em 100%
-
- let increment: number;
- if (prev < 50) {
- // 0-50% em ~20s (40 intervalos de 500ms) = 1.25% por intervalo
- increment = 1.25;
- } else if (prev < 80) {
- // 50-80% em ~30s (60 intervalos) = 0.5% por intervalo
- increment = 0.5;
- } else {
- // 80-100% em ~25s (50 intervalos) = 0.4% por intervalo
- increment = 0.4;
- }
-
- return Math.min(100, prev + increment);
- });
- }, 500);
-
- return () => {
- clearInterval(phraseInterval);
- clearInterval(progressInterval);
- };
- }, [isGeneratingProvador]);
 
  // Fechar modais com Esc
  useEffect(() => {
@@ -461,7 +394,7 @@ function App() {
 
  // Animacao de loading
  const loadingInterval = setInterval(() => {
- setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
+ setProvadorLoadingIndex(prev => (prev + 1) % 11);
  }, 3000);
 
  const progressInterval = setInterval(() => {
@@ -647,21 +580,7 @@ function App() {
  <AppLayout
  userCredits={userCredits}
  currentPlan={currentPlan}
- isGeneratingProductStudio={isGeneratingProductStudio}
- productStudioMinimized={productStudioMinimized}
- productStudioProgress={productStudioProgress}
- setProductStudioMinimized={setProductStudioMinimized}
- isGeneratingLookComposer={isGeneratingLookComposer}
- lookComposerMinimized={lookComposerMinimized}
- lookComposerProgress={lookComposerProgress}
- setLookComposerMinimized={setLookComposerMinimized}
- isGeneratingProvador={isGeneratingProvador}
- provadorMinimized={provadorMinimized}
- provadorProgress={provadorProgress}
- setProvadorMinimized={setProvadorMinimized}
- minimizedModals={minimizedModals}
  restoreModal={restoreModal}
- closeMinimizedModal={closeMinimizedModal}
  onLogout={handleLogout}
  >
  {currentPage === 'dashboard' && <DashboardPage />}
@@ -690,7 +609,7 @@ function App() {
  onSetMinimized={setProductStudioMinimized}
  onSetProgress={setProductStudioProgress}
  onSetLoadingText={setProductStudioLoadingText}
- isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+ isAnyGenerationRunning={isAnyGenerationRunning}
  onNavigate={(page) => navigateTo(page)}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
@@ -732,7 +651,7 @@ function App() {
  isGenerating={isGeneratingProvador}
  isMinimized={provadorMinimized}
  generationProgress={provadorProgress}
- loadingText={PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...'}
+ loadingText={provadorLoadingText}
  onSetMinimized={setProvadorMinimized}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
@@ -776,7 +695,7 @@ function App() {
  onSetMinimized={setLookComposerMinimized}
  onSetProgress={setLookComposerProgress}
  onSetLoadingText={setLookComposerLoadingText}
- isAnyGenerationRunning={isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer}
+ isAnyGenerationRunning={isAnyGenerationRunning}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
  onBack={goBack}

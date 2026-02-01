@@ -2,38 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useUI, type Page } from '../../contexts/UIContext';
 import { useAuth } from '../../contexts/AuthContext';
-
-type MinimizedModal = {
- id: string;
- title: string;
- icon: string;
- type: 'createModel' | 'modelDetail' | 'createProduct' | 'productDetail' | 'createClient' | 'clientDetail';
- progress?: number;
-};
+import { useGeneration } from '../../contexts/GenerationContext';
 
 interface AppLayoutProps {
  children: React.ReactNode;
- // Credits (sidebar + mobile header)
  userCredits: number;
  currentPlan: any;
- // Generation minimized bars
- isGeneratingProductStudio: boolean;
- productStudioMinimized: boolean;
- productStudioProgress: number;
- setProductStudioMinimized: (v: boolean) => void;
- isGeneratingLookComposer: boolean;
- lookComposerMinimized: boolean;
- lookComposerProgress: number;
- setLookComposerMinimized: (v: boolean) => void;
- isGeneratingProvador: boolean;
- provadorMinimized: boolean;
- provadorProgress: number;
- setProvadorMinimized: (v: boolean) => void;
- // Minimized modals (legacy)
- minimizedModals: MinimizedModal[];
  restoreModal: (id: string) => void;
- closeMinimizedModal: (id: string) => void;
- // Logout
  onLogout: () => void;
 }
 
@@ -41,25 +16,17 @@ export function AppLayout({
  children,
  userCredits,
  currentPlan,
- isGeneratingProductStudio,
- productStudioMinimized,
- productStudioProgress,
- setProductStudioMinimized,
- isGeneratingLookComposer,
- lookComposerMinimized,
- lookComposerProgress,
- setLookComposerMinimized,
- isGeneratingProvador,
- provadorMinimized,
- provadorProgress,
- setProvadorMinimized,
- minimizedModals,
  restoreModal,
- closeMinimizedModal,
  onLogout,
 }: AppLayoutProps) {
  const { theme, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
  const { user } = useAuth();
+ const {
+   isGeneratingProductStudio, productStudioMinimized, productStudioProgress, setProductStudioMinimized,
+   isGeneratingLookComposer, lookComposerMinimized, lookComposerProgress, setLookComposerMinimized,
+   isGeneratingProvador, provadorMinimized, provadorProgress, setProvadorMinimized,
+   minimizedModals, closeMinimizedModal,
+ } = useGeneration();
 
  // Draggable minimized bar position
  const [minimizedBarPos, setMinimizedBarPos] = useState<{ x: number; y: number }>({ x: -1, y: -1 });
