@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Disable text selection & long-press callout (app feel) */
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Allow selection in inputs/textareas where user needs to type/paste */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
