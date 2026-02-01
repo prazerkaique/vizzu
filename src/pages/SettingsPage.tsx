@@ -241,40 +241,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  return (
  <div>
  {/* Header */}
- <div className="text-center mb-6">
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1 font-serif'}>Planos e Preços</h2>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Escolha o plano ideal para seu negócio</p>
+ <div className="text-center mb-8">
+ <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold mb-2 font-serif'}>Planos e Preços</h2>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-base'}>Escolha o plano ideal para seu negócio</p>
  </div>
 
- {/* Status atual de creditos */}
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white/80 backdrop-blur-xl border-gray-200') + ' border rounded-2xl p-5 mb-6'}>
- <div className="flex items-center justify-between mb-4">
+ {/* Status atual de creditos — compacto */}
+ <div className="max-w-md mx-auto mb-8">
+ <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white/80 backdrop-blur-xl border-gray-200') + ' border rounded-2xl p-4'}>
+ <div className="flex items-center justify-between mb-3">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
- <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}></i>
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
+ <i className={'fas fa-coins text-xs ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}></i>
  </div>
  <div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wider font-medium'}>Créditos disponíveis</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>{userCredits.toLocaleString()}</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits.toLocaleString()}</p>
  </div>
  </div>
- <div className="text-right">
- <span className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-300' : 'bg-gray-100 border-gray-200 text-gray-700') + ' inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border'}>
- <i className="fas fa-crown text-[10px] text-[#FF9F43]"></i>
+ <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
+ <i className="fas fa-crown text-[8px]"></i>
  {currentPlan.name}
  </span>
  </div>
- </div>
- <div className="flex items-center justify-between mb-1.5">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{currentPlan.limit} créditos/mês no plano</span>
+ <div className="flex items-center justify-between mb-1">
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{currentPlan.limit} créditos/mês</span>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Renova em {daysUntilRenewal} dias</span>
  </div>
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' h-2 rounded-full overflow-hidden'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' h-1.5 rounded-full overflow-hidden'}>
  <div className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all" style={{ width: Math.min(100, Math.max(3, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
  </div>
  {userCredits > currentPlan.limit && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1.5'}>Inclui {(userCredits - currentPlan.limit).toLocaleString()} créditos extras</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1'}>Inclui {(userCredits - currentPlan.limit).toLocaleString()} créditos extras</p>
  )}
+ </div>
  </div>
 
  {/* Toggle Mensal/Anual */}
@@ -282,7 +282,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <span className={(billingPeriod === 'monthly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>Mensal</span>
  <button
  onClick={() => onSetBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
- className={((billingPeriod === 'yearly' ? 'bg-[#FF9F43]' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'))) + ' relative w-12 h-6 rounded-full transition-colors'}
+ className={((billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'))) + ' relative w-12 h-6 rounded-full transition-colors'}
  >
  <div className={'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ' + (billingPeriod === 'yearly' ? 'translate-x-7' : 'translate-x-1')}></div>
  </button>
@@ -293,7 +293,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Social proof */}
- <div className="flex items-center justify-center gap-4 mb-6">
+ <div className="flex items-center justify-center gap-4 mb-8">
  <div className="flex -space-x-2">
  {[1,2,3,4].map(i => (
  <div key={i} className={(theme === 'dark' ? 'bg-neutral-700 border-neutral-900' : 'bg-gray-200 border-white') + ' w-6 h-6 rounded-full border-2 flex items-center justify-center'}>
@@ -315,7 +315,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const features = PLAN_FEATURES[plan.id] || { included: [], excluded: [] };
  const persona = PLAN_PERSONA[plan.id] || '';
  const annualSavings = isTrial ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
- const perCredit = isTrial ? null : (price / plan.limit).toFixed(2).replace('.', ',');
+ // Features da tabela comparativa para este plano
+ const planIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === plan.id);
 
  return (
  <div
@@ -323,17 +324,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={
  'relative rounded-2xl p-5 transition-all flex flex-col ' +
  (isCurrentPlan
- ? (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-[#FF9F43]/60' : 'bg-white border-2 border-[#FF9F43]/60 shadow-sm')
+ ? (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-transparent' : 'bg-white border-2 border-transparent shadow-sm') + ' ' + 'bg-clip-padding' + ' ' + 'outline outline-2 outline-[#FF9F43]'
  : isTrial
  ? (theme === 'dark' ? 'bg-neutral-900/40 backdrop-blur-xl border border-dashed border-neutral-700' : 'bg-gray-50/80 border border-dashed border-gray-300')
  : (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 hover:border-neutral-600' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
  )
  }
+ style={isCurrentPlan ? { borderImage: 'linear-gradient(to right, #FF6B6B, #FF9F43) 1', borderImageSlice: 1 } : undefined}
  >
  {/* Badge */}
  {isCurrentPlan && (
  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
- <span className="px-3 py-1 bg-[#FF9F43] text-white text-[10px] font-bold rounded-full whitespace-nowrap">
+ <span className="px-3 py-1 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-bold rounded-full whitespace-nowrap">
  SEU PLANO
  </span>
  </div>
@@ -355,15 +357,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  <div className="pt-1 flex flex-col flex-1">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{plan.name}</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-3'}>{persona}</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>{persona}</p>
+
+ {/* Gerações em destaque */}
+ <div className="mb-3">
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-extrabold'}>{plan.limit}</span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs ml-1'}>gerações{isTrial ? '' : '/mês'}</span>
+ </div>
 
  {/* Preço */}
  <div className="mb-1">
  {isTrial ? (
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>Grátis</span>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Grátis</span>
  ) : (
  <>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>
  R$ {price.toFixed(2).replace('.', ',')}
  </span>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>/mês</span>
@@ -378,20 +386,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  Economize R$ {annualSavings.toLocaleString('pt-BR')}/ano
  </p>
  ) : (
- <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{plan.limit} gerações (uso único)</span>}</div>
+ <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}</div>
  )}
 
- {/* Custo por imagem */}
- {!isTrial && (
- <div className={(theme === 'dark' ? 'bg-neutral-800/60 border-neutral-700/50' : 'bg-gray-50 border-gray-100') + ' rounded-lg p-2 mb-3 border'}>
- <div className="flex items-center justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>{plan.limit} gerações &middot; R$ {perCredit}/img</span>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Extra: R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
- </div>
- </div>
- )}
-
- {/* Features incluídas */}
+ {/* Features incluídas (colapsado) */}
  <ul className="space-y-1.5 mb-3 flex-1">
  {features.included.map((feature, i) => (
  <li key={i} className="flex items-start gap-2 text-[11px]">
@@ -399,19 +397,43 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feature}</span>
  </li>
  ))}
- </ul>
-
- {/* Features não incluídas */}
- {features.excluded.length > 0 && (
- <ul className="space-y-1 mb-4">
- {features.excluded.map((feature, i) => (
- <li key={i} className="flex items-start gap-2 text-[10px]">
- <i className={'fas fa-minus text-[8px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-neutral-700' : 'text-gray-300')}></i>
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feature}</span>
+ {features.excluded.slice(0, 2).map((feature, i) => (
+ <li key={'ex-' + i} className="flex items-start gap-2 text-[11px]">
+ <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' line-through'}>{feature}</span>
  </li>
  ))}
  </ul>
+
+ {/* Accordion: Ver todos os recursos */}
+ <details className="group mb-3">
+ <summary className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' text-[10px] cursor-pointer flex items-center gap-1 select-none'}>
+ <i className="fas fa-chevron-down text-[7px] transition-transform group-open:rotate-180"></i>
+ Ver todos os recursos
+ </summary>
+ <div className="mt-2 space-y-1">
+ {COMPARISON_FEATURES.map((feat, i) => {
+ const val = feat.values[planIndex];
+ return (
+ <div key={i} className="flex items-center justify-between text-[10px] py-0.5">
+ <span className={theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}>{feat.name}</span>
+ {typeof val === 'boolean' ? (
+ val ? <i className={'fas fa-check text-[8px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={'fas fa-xmark text-[8px] ' + (theme === 'dark' ? 'text-red-500/60' : 'text-red-400/60')}></i>
+ ) : (
+ <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>{val}</span>
  )}
+ </div>
+ );
+ })}
+ {/* Crédito extra no final do accordion */}
+ {!isTrial && (
+ <div className={'flex items-center justify-between text-[10px] py-1 mt-1 border-t ' + (theme === 'dark' ? 'border-neutral-800 text-neutral-400' : 'border-gray-100 text-gray-500')}>
+ <span>Crédito extra</span>
+ <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
+ </div>
+ )}
+ </div>
+ </details>
 
  <button
  onClick={() => {
@@ -448,52 +470,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Boleto</span>
  </div>
  <i className={'fas fa-lock text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
- </div>
-
- {/* Tabela comparativa */}
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl overflow-hidden mb-8'}>
- <button
- onClick={(e) => {
- const el = (e.currentTarget as HTMLElement).nextElementSibling;
- if (el) el.classList.toggle('hidden');
- const icon = (e.currentTarget as HTMLElement).querySelector('.chevron-icon');
- if (icon) icon.classList.toggle('rotate-180');
- }}
- className={'w-full flex items-center justify-between p-4 text-left ' + (theme === 'dark' ? 'text-white hover:bg-neutral-800/50' : 'text-gray-900 hover:bg-gray-50')}
- >
- <span className="font-semibold text-sm">Comparar todos os recursos</span>
- <i className="chevron-icon fas fa-chevron-down text-xs transition-transform"></i>
- </button>
- <div className="hidden">
- <div className="overflow-x-auto">
- <table className="w-full text-[11px]">
- <thead>
- <tr className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-100') + ' border-b'}>
- <th className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-left py-2 px-4 font-medium'}>Recurso</th>
- {ALL_DISPLAY_PLANS.map(p => (
- <th key={p.id} className={((currentPlan.id === p.id ? (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') : (theme === 'dark' ? 'text-neutral-300' : 'text-gray-700'))) + ' text-center py-2 px-2 font-semibold'}>{p.name}</th>
- ))}
- </tr>
- </thead>
- <tbody>
- {COMPARISON_FEATURES.map((feat, i) => (
- <tr key={i} className={(theme === 'dark' ? 'border-neutral-800/50' : 'border-gray-50') + ' border-b last:border-0'}>
- <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' py-2 px-4'}>{feat.name}</td>
- {feat.values.map((val, j) => (
- <td key={j} className="text-center py-2 px-2">
- {typeof val === 'boolean' ? (
- val ? <i className={'fas fa-check text-[9px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-minus text-[9px]'}></i>
- ) : (
- <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-700'}>{val}</span>
- )}
- </td>
- ))}
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
  </div>
 
  {/* Secao: Compre Creditos Adicionais */}
