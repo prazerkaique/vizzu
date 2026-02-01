@@ -130,20 +130,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className={settingsTab === 'plan' ? '' : 'max-w-xl'}>
  {settingsTab === 'plan' && (() => {
  const ALL_FEATURES = [
- { id: 'studio', name: 'Vizzu Studio', plans: ['starter', 'pro', 'premier'] },
- { id: 'provador', name: 'Vizzu Provador', plans: ['starter', 'pro', 'premier'] },
- { id: 'dashboard', name: 'Dashboard', plans: ['starter', 'pro', 'premier'] },
- { id: 'fundo-estudio', name: 'Fundo de Estudio', plans: ['starter', 'pro', 'premier'] },
- { id: 'cenario', name: 'Cenario Criativo', plans: ['starter', 'pro', 'premier'] },
- { id: 'reels', name: 'Fotos para Reels e Stories', plans: ['starter', 'pro', 'premier'] },
- { id: 'modelo-ia', name: 'Modelo IA Feito sob medida', plans: ['starter', 'pro', 'premier'] },
- { id: 'legendas', name: 'Gerador de Legendas IA', plans: ['starter', 'pro', 'premier'] },
- { id: 'catalogo', name: 'Catalogo Virtual + WhatsApp', plans: ['starter', 'pro', 'premier'] },
- { id: 'atendente-receptivo', name: 'Atendente Receptivo WhatsApp', plans: ['starter', 'pro', 'premier'] },
- { id: 'videos', name: 'Geracao de Videos para Instagram', plans: ['pro', 'premier'] },
- { id: 'agente-whatsapp', name: 'Agente Ativo de WhatsApp', plans: ['pro', 'premier'] },
- { id: 'ecommerce', name: 'Integracao com e-commerces', plans: ['premier'] },
- { id: 'suporte', name: 'Suporte prioritario', plans: ['premier'] },
+ { id: 'studio', name: 'Vizzu Studio', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'provador', name: 'Vizzu Provador', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'dashboard', name: 'Dashboard', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'fundo-estudio', name: 'Fundo de Estúdio', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'cenario', name: 'Cenário Criativo', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'reels', name: 'Fotos para Reels e Stories', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'modelo-ia', name: 'Modelo IA Feito sob medida', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'legendas', name: 'Gerador de Legendas IA', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'catalogo', name: 'Catálogo Virtual + WhatsApp', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: 'atendente-receptivo', name: 'Atendente Receptivo WhatsApp', plans: ['basic', 'pro', 'premier', 'enterprise'] },
+ { id: '4k', name: 'Geração em 4K', plans: ['pro', 'premier', 'enterprise'] },
+ { id: 'videos', name: 'Geração de Vídeos para Instagram', plans: ['pro', 'premier', 'enterprise'] },
+ { id: 'agente-whatsapp', name: 'Agente Ativo de WhatsApp', plans: ['pro', 'premier', 'enterprise'] },
+ { id: 'ecommerce', name: 'Integração com e-commerces', plans: ['premier', 'enterprise'] },
+ { id: 'suporte', name: 'Suporte prioritário', plans: ['premier', 'enterprise'] },
  ];
 
  return (
@@ -194,12 +195,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Cards dos Planos */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
  {PLANS.map(plan => {
  const isCurrentPlan = currentPlan.id === plan.id;
  const price = billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly;
  const isPro = plan.id === 'pro';
  const isPremier = plan.id === 'premier';
+ const isEnterprise = plan.id === 'enterprise';
 
  return (
  <div
@@ -212,6 +214,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ? 'bg-gradient-to-br from-[#FF6B6B]/15 via-[#FF9F43]/10 to-neutral-900 border border-[#FF9F43]/30 hover:border-neutral-500'
  : isPremier
  ? 'bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-neutral-900 border border-amber-500/30 hover:border-amber-500/60'
+ : isEnterprise
+ ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-neutral-900 border border-purple-500/30 hover:border-purple-500/60'
  : 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 hover:border-neutral-600'
  )
  }
@@ -235,7 +239,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
  <span className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white text-[10px] font-bold rounded-full flex items-center gap-1 whitespace-nowrap">
  <i className="fas fa-star text-[8px]"></i>
- COMPLETO
+ MELHOR VALOR
+ </span>
+ </div>
+ )}
+ {isEnterprise && !isCurrentPlan && (
+ <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+ <span className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1 whitespace-nowrap">
+ <i className="fas fa-building text-[8px]"></i>
+ ENTERPRISE
  </span>
  </div>
  )}
@@ -288,7 +300,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )
  }
  >
- {isCurrentPlan ? 'Plano Atual' : 'Escolher Plano'}
+ {isCurrentPlan ? 'Plano Atual' : plan.priceMonthly > currentPlan.priceMonthly ? 'Fazer upgrade' : 'Mudar para este plano'}
  </button>
  </div>
  </div>
