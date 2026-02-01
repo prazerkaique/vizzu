@@ -5,6 +5,7 @@ import { useProducts } from '../contexts/ProductsContext';
 import { useClients } from '../contexts/ClientsContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export function DashboardPage() {
  const { theme, navigateTo, setSettingsTab } = useUI();
@@ -168,7 +169,7 @@ export function DashboardPage() {
  className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
  >
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
- <img src={creation.imageUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
+ <OptimizedImage src={creation.imageUrl} size="thumb" alt="" className="w-full h-full" />
  <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
  (creation.type === 'studio' ? 'bg-neutral-700 text-white' :
  creation.type === 'provador' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :

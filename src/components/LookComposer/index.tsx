@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
 import { smartDownload } from '../../utils/downloadHelper';
@@ -849,17 +850,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- {productImage ? (
- <img
- src={productImage}
- alt={product.name}
- className="w-full h-full object-cover group-hover:scale-105 transition-transform"
- />
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
- </div>
- )}
+ <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  {isOptimized && (
  <div className="absolute top-2 left-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center" title="Otimizado no Product Studio">
  <i className="fas fa-cube text-[10px]"></i>

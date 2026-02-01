@@ -8,6 +8,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { BulkImportModal } from '../components/BulkImportModal';
 import { analyzeProductImage } from '../lib/api/studio';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES } from '../types';
+import { OptimizedImage } from '../components/OptimizedImage';
 import heic2any from 'heic2any';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
 
@@ -638,7 +639,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  }}
  >
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
- <img src={getProductDisplayImage(product)} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
+ <OptimizedImage src={getProductDisplayImage(product)} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform pointer-events-none" />
  {/* Badge de produto otimizado */}
  {isProductOptimized(product) && (
  <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[7px] font-bold rounded-full flex items-center gap-1 pointer-events-none">
@@ -1193,7 +1194,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="grid grid-cols-4 gap-2">
  {getOptimizedImages(showProductDetail).map((img, idx) => (
  <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative group'}>
- <img src={img.url} alt={`Otimizada ${img.angle}`} loading="lazy" className="w-full aspect-square object-cover" />
+ <OptimizedImage src={img.url} size="preview" alt={`Otimizada ${img.angle}`} className="w-full aspect-square" />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
  <p className="text-white text-[7px] font-medium text-center capitalize">
  {img.angle === 'front' ? 'Frente' : img.angle === 'back' ? 'Costas' : img.angle === 'side-left' ? 'Lat. Esq.' : img.angle === 'side-right' ? 'Lat. Dir.' : img.angle}
@@ -1220,7 +1221,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="grid grid-cols-4 gap-2">
  {getOriginalImages(showProductDetail).map((img, idx) => (
  <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative'}>
- <img src={img.url} alt={img.label} loading="lazy" className="w-full aspect-square object-cover" />
+ <OptimizedImage src={img.url} size="preview" alt={img.label} className="w-full aspect-square" />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
  <p className="text-white text-[7px] font-medium text-center">{img.label}</p>
  </div>
