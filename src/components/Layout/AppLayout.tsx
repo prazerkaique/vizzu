@@ -271,7 +271,7 @@ export function AppLayout({
 
  {/* DESKTOP SIDEBAR */}
  <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-20' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
- <div className={'p-4 border-b flex flex-col items-center ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
+ <div className={'p-4 border-b flex flex-col items-center relative ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
  <button onClick={() => navigateTo('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
  ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-10 w-10" style={theme === 'dark' ? { filter: 'brightness(0) invert(1)' } : undefined} />
@@ -282,9 +282,9 @@ export function AppLayout({
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
  title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
- className={'mt-2 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-[#373632]/50 hover:text-[#373632] hover:bg-white/60')}
+ className={'absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full flex items-center justify-center transition-colors z-10 border ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-800' : 'bg-white border-gray-200 text-[#373632]/50 hover:text-[#373632] shadow-sm')}
  >
- <i className={'far ' + (sidebarCollapsed ? 'fa-bars' : 'fa-angles-left') + ' text-[11px]'}></i>
+ <i className={'fas ' + (sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left') + ' text-[9px]'}></i>
  </button>
  </div>
  <nav className="flex-1 p-2 space-y-1">

@@ -34,6 +34,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
 
+ const [showComparison, setShowComparison] = useState(false);
+
  // Company Settings
  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
  const saved = localStorage.getItem('vizzu_company_settings');
@@ -405,35 +407,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </ul>
 
- {/* Accordion: Ver todos os recursos */}
- <details className="group mb-3">
- <summary className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' text-[10px] cursor-pointer flex items-center gap-1 select-none'}>
- <i className="fas fa-chevron-down text-[7px] transition-transform group-open:rotate-180"></i>
- Ver todos os recursos
- </summary>
- <div className="mt-2 space-y-1">
- {COMPARISON_FEATURES.map((feat, i) => {
- const val = feat.values[planIndex];
- return (
- <div key={i} className="flex items-center justify-between text-[10px] py-0.5">
- <span className={theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}>{feat.name}</span>
- {typeof val === 'boolean' ? (
- val ? <i className={'fas fa-check text-[8px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={'fas fa-xmark text-[8px] ' + (theme === 'dark' ? 'text-red-500/60' : 'text-red-400/60')}></i>
- ) : (
- <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>{val}</span>
- )}
- </div>
- );
- })}
- {/* Crédito extra no final do accordion */}
- {!isTrial && (
- <div className={'flex items-center justify-between text-[10px] py-1 mt-1 border-t ' + (theme === 'dark' ? 'border-neutral-800 text-neutral-400' : 'border-gray-100 text-gray-500')}>
- <span>Crédito extra</span>
- <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
- </div>
- )}
- </div>
- </details>
 
  <button
  onClick={() => {
@@ -460,6 +433,65 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  );
  })}
  </div>
+
+ {/* Botão Ver todos os recursos + Tabela comparativa compartilhada */}
+ <div className="text-center mb-6">
+ <button
+ onClick={() => setShowComparison(!showComparison)}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-neutral-200' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium flex items-center gap-1.5 mx-auto transition-colors'}
+ >
+ <i className={'fas fa-chevron-down text-[8px] transition-transform ' + (showComparison ? 'rotate-180' : '')}></i>
+ {showComparison ? 'Ocultar comparação' : 'Ver todos os recursos de todos os planos'}
+ </button>
+ </div>
+
+ {showComparison && (
+ <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-8 overflow-x-auto'}>
+ <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Comparação completa</h4>
+ <table className="w-full text-[11px]">
+ <thead>
+ <tr className={'border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+ <th className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-left py-2 pr-3 font-medium'}>Recurso</th>
+ {ALL_DISPLAY_PLANS.map(p => (
+ <th key={p.id} className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-center py-2 px-2 font-semibold whitespace-nowrap'}>
+ {p.name}
+ {currentPlan.id === p.id && <i className="fas fa-circle text-[4px] ml-1 text-[#FF9F43] align-middle"></i>}
+ </th>
+ ))}
+ </tr>
+ </thead>
+ <tbody>
+ {COMPARISON_FEATURES.filter(f => f.name !== 'Gerações/mês').map((feat, i) => (
+ <tr key={i} className={'border-b last:border-0 ' + (theme === 'dark' ? 'border-neutral-800/50' : 'border-gray-50')}>
+ <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1.5 pr-3'}>{feat.name}</td>
+ {feat.values.map((val, j) => (
+ <td key={j} className="text-center py-1.5 px-2">
+ {typeof val === 'boolean' ? (
+ val ? <i className={'fas fa-check text-[9px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={'fas fa-xmark text-[9px] ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
+ ) : (
+ <span className={(theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') + ' font-medium'}>{val}</span>
+ )}
+ </td>
+ ))}
+ </tr>
+ ))}
+ {/* Crédito extra como última linha */}
+ <tr className={'border-t ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+ <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1.5 pr-3 font-medium'}>Crédito extra</td>
+ {ALL_DISPLAY_PLANS.map(p => (
+ <td key={p.id} className="text-center py-1.5 px-2">
+ {p.id === 'trial' ? (
+ <span className={theme === 'dark' ? 'text-neutral-600' : 'text-gray-300'}>—</span>
+ ) : (
+ <span className={(theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') + ' font-medium'}>R$ {p.creditPrice.toFixed(2).replace('.', ',')}</span>
+ )}
+ </td>
+ ))}
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ )}
 
  {/* Meios de pagamento */}
  <div className="flex items-center justify-center gap-3 mb-8">
