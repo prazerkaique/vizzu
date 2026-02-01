@@ -15,9 +15,9 @@
 export type ImageSize = 'thumb' | 'preview' | 'display' | 'full';
 
 const SIZE_CONFIG: Record<ImageSize, { width: number; quality: number } | null> = {
-  thumb:   { width: 256,  quality: 75 },
-  preview: { width: 512,  quality: 80 },
-  display: { width: 1024, quality: 85 },
+  thumb:   { width: 400,  quality: 75 },
+  preview: { width: 800,  quality: 80 },
+  display: { width: 1280, quality: 85 },
   full:    null,
 };
 
