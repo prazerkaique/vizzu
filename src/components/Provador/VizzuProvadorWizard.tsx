@@ -11,6 +11,7 @@ import {
 } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { compressImage, formatFileSize } from '../../utils/imageCompression';
+import { OptimizedImage } from '../OptimizedImage';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
@@ -1150,10 +1151,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  ) : selectedSavedLook ? (
  <>
- <img
+ <OptimizedImage
  src={selectedSavedLook.imageUrl}
  alt="Look salvo"
  className="w-full h-full object-cover"
+ size="preview"
  />
  <button
  onClick={() => setSelectedSavedLook(null)}
@@ -1266,7 +1268,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <div className="flex gap-1.5 overflow-x-auto pb-1">
  {clientLooks.map((look) => (
  <div key={look.id} className="relative flex-shrink-0 group">
- <img
+ <OptimizedImage
  src={look.imageUrl}
  alt="Look"
  onClick={() => setSelectedSavedLook(look)}
@@ -1275,6 +1277,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  ? 'ring-2 ring-[#FF9F43]'
  : 'hover:ring-2 hover:ring-[#FF9F43]/50'
  }`}
+ size="thumb"
  />
  <button
  onClick={(e) => {

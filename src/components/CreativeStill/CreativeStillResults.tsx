@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
+import { OptimizedImage } from '../OptimizedImage';
 
 const lottieColorStyles = `
  @keyframes stillColorCycle {
@@ -293,7 +294,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  >
  <div className={'aspect-[4/5] flex items-center justify-center ' + (isDark ? 'bg-neutral-900' : 'bg-gray-100')}>
  {url ? (
- <img src={url} alt={`Variação ${vNum}`} className="w-full h-full object-cover" />
+ <OptimizedImage src={url} alt={`Variação ${vNum}`} className="w-full h-full object-cover" size="preview" />
  ) : (
  <div className="text-center">
  <i className={'fas fa-image text-4xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>

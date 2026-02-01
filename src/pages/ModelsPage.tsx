@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabaseClient';
 import { generateModelImages } from '../lib/api/studio';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 // Componente de carrossel para cards de modelos
 const ModelCardCarousel: React.FC<{
@@ -1476,10 +1477,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  return (
  <div key={type} className={'aspect-[3/4] rounded-xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
  {imgUrl ? (
- <img
+ <OptimizedImage
  src={imgUrl}
  alt={type === 'front' ? 'Frente' : 'Costas'}
  className="w-full h-full object-cover"
+ size="preview"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
