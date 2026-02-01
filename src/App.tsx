@@ -12,6 +12,7 @@ const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => 
 
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
 import { useUI, type Page, type SettingsTab } from './contexts/UIContext';
+import { useAuth } from './contexts/AuthContext';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
@@ -185,8 +186,8 @@ function App() {
  // UI state from context
  const { theme, setTheme, currentPage, navigateTo, goBack, settingsTab, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, showToast, successNotification, setSuccessNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
 
- const [isAuthenticated, setIsAuthenticated] = useState(false);
- const [user, setUser] = useState<User | null>(null);
+ // Auth state from context
+ const { user, isAuthenticated, login, loginDemo, logout } = useAuth();
  const [products, setProducts] = useState<Product[]>([]);
  const [showImport, setShowImport] = useState(false);
  const [showCreateProduct, setShowCreateProduct] = useState(false);
@@ -1108,79 +1109,20 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  return;
 };
 
- // Check for existing Supabase session on mount
+ // Auth session + onAuthStateChange moved to AuthContext
+ // Load user data when user changes (triggered by AuthContext)
+ const prevUserIdRef = useRef<string | null>(null);
  useEffect(() => {
- supabase.auth.getSession().then(({ data: { session } }) => {
- if (session?.user) {
- const userId = session.user.id;
- const userEmail = session.user.email;
-
- // Verificar se é um usuário diferente do último logado
- const lastUserId = localStorage.getItem('vizzu_last_user_id');
- if (lastUserId && lastUserId !== userId) {
- // Limpar dados locais do usuário anterior
- localStorage.removeItem('vizzu_clients');
- localStorage.removeItem('vizzu_history');
- localStorage.removeItem('vizzu_company_settings');
- localStorage.removeItem('vizzu_credits_data');
+ if (user && user.id !== prevUserIdRef.current) {
+ prevUserIdRef.current = user.id;
+ loadUserProducts(user.id);
+ loadUserClients(user.id);
+ loadUserHistory(user.id);
+ loadUserCompanySettings(user.id);
+ } else if (!user) {
+ prevUserIdRef.current = null;
  }
- localStorage.setItem('vizzu_last_user_id', userId);
-
- setUser({
- id: userId,
- name: session.user.user_metadata?.full_name || 'Usuário',
- email: userEmail || '',
- avatar: session.user.user_metadata?.avatar_url || '',
- plan: 'Free'
- });
- setIsAuthenticated(true);
- // Carregar todos os dados do usuário
- loadUserProducts(userId);
- loadUserClients(userId);
- loadUserHistory(userId);
- loadUserCompanySettings(userId);
- // Nota: savedModels carrega automaticamente via useEffect quando user muda
- }
- });
-
- const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
- if (session?.user) {
- const userId = session.user.id;
- const userEmail = session.user.email;
-
- // Verificar se é um usuário diferente
- const lastUserId = localStorage.getItem('vizzu_last_user_id');
- if (lastUserId && lastUserId !== userId) {
- // Usuário diferente - limpar dados locais antigos
- localStorage.removeItem('vizzu_clients');
- localStorage.removeItem('vizzu_history');
- localStorage.removeItem('vizzu_company_settings');
- localStorage.removeItem('vizzu_credits_data');
- }
- localStorage.setItem('vizzu_last_user_id', userId);
-
- setUser({
- id: userId,
- name: session.user.user_metadata?.full_name || 'Usuário',
- email: userEmail || '',
- avatar: session.user.user_metadata?.avatar_url || '',
- plan: 'Free'
- });
- setIsAuthenticated(true);
- // Carregar todos os dados do usuário
- loadUserProducts(userId);
- loadUserClients(userId);
- loadUserHistory(userId);
- loadUserCompanySettings(userId);
- // Nota: savedModels carrega automaticamente via useEffect quando user muda
- } else {
- setUser(null);
- setIsAuthenticated(false);
- }
- });
-
- return () => subscription.unsubscribe();
- }, []);
+ }, [user]);
 
  // currentPage + theme persistence moved to UIContext
 
@@ -2852,10 +2794,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  window.open('https://wa.me/' + fullPhone + '?text=' + encodedMessage, '_blank');
  };
 
- const handleLogout = async () => { 
- await supabase.auth.signOut(); 
- setUser(null);
- setIsAuthenticated(false);
+ const handleLogout = async () => {
+ await logout();
  setProducts([]);
  };
  
@@ -3428,27 +3368,13 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  // ═══════════════════════════════════════════════════════════════
  if (!isAuthenticated) {
  return (
- <AuthPage 
+ <AuthPage
  onLogin={(userData) => {
- setUser({
- id: (userData as any).id || '1',
- email: userData.email,
- name: userData.name,
- avatar: userData.avatar || '',
- plan: 'Free'
- } as User);
- setIsAuthenticated(true);
+ login(userData as any);
  }}
  onDemoMode={() => {
- setUser({
- id: 'demo',
- email: 'demo@vizzu.com.br',
- name: 'Usuário Demo',
- avatar: '',
- plan: 'Free'
- } as User);
+ loginDemo();
  setCredits(50);
- setIsAuthenticated(true);
  }}
  />
  );
