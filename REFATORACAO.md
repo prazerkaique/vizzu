@@ -9,7 +9,7 @@
 | 3 | HistoryContext (logs, persistencia) | Concluido |
 | 4 | ProductsContext (CRUD, filtros, helpers) | Concluido |
 | 5 | ClientsContext (CRUD, fotos, looks) | Concluido |
-| 6 | GenerationContext (estados de geracao global) | Pendente |
+| 6 | GenerationContext (estados de geracao global) | Adiado (apos extrair pages) |
 | 7 | Extrair DashboardPage | Pendente |
 | 8 | Extrair ProductsPage + modals | Pendente |
 | 9 | Extrair ClientsPage + modals | Pendente |
