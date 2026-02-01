@@ -10,6 +10,7 @@ interface AppLayoutProps {
  currentPlan: any;
  restoreModal: (id: string) => void;
  onLogout: () => void;
+ renderSwipePage?: (page: Page) => React.ReactNode;
 }
 
 export function AppLayout({
@@ -18,6 +19,7 @@ export function AppLayout({
  currentPlan,
  restoreModal,
  onLogout,
+ renderSwipePage,
 }: AppLayoutProps) {
  const { theme, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
  const { user } = useAuth();
@@ -83,88 +85,188 @@ export function AppLayout({
  return () => mediaQuery.removeEventListener('change', checkPWA);
  }, []);
 
- // Swipe navigation
- const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
- const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
- const [swipeBackProgress, setSwipeBackProgress] = useState(0);
- const [isSwipeBack, setIsSwipeBack] = useState(false);
-
+ // ── Instagram-style swipe navigation (PWA only) ──
  const SWIPE_PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
- const EDGE_ZONE = 30;
- const SWIPE_BACK_THRESHOLD = 0.10;
+ const mainContentRef = useRef<HTMLDivElement>(null);
+ const adjacentContentRef = useRef<HTMLDivElement>(null);
+ const [swipeAdjacentPage, setSwipeAdjacentPage] = useState<Page | null>(null);
 
- const handleTouchStart = (e: React.TouchEvent) => {
- if (!isPWA) return;
- const startX = e.targetTouches[0].clientX;
- const startY = e.targetTouches[0].clientY;
- setTouchEnd(null);
- setTouchStart({ x: startX, y: startY });
- if (startX <= EDGE_ZONE && currentPage !== 'dashboard') {
- setIsSwipeBack(true);
- setSwipeBackProgress(0);
- }
- };
+ // Stable refs for event handler closures
+ const currentPageRef = useRef(currentPage);
+ currentPageRef.current = currentPage;
+ const isPWARef = useRef(isPWA);
+ isPWARef.current = isPWA;
+ const navigateToRef = useRef(navigateTo);
+ navigateToRef.current = navigateTo;
+ const goBackRef = useRef(goBack);
+ goBackRef.current = goBack;
 
- const handleTouchMove = (e: React.TouchEvent) => {
- const currentX = e.targetTouches[0].clientX;
- const currentY = e.targetTouches[0].clientY;
- setTouchEnd({ x: currentX, y: currentY });
- if (isSwipeBack && touchStart) {
- const deltaX = currentX - touchStart.x;
- const deltaY = Math.abs(currentY - touchStart.y);
- if (deltaY > Math.abs(deltaX) && deltaX < 50) {
- setIsSwipeBack(false);
- setSwipeBackProgress(0);
- return;
- }
- const screenWidth = window.innerWidth;
- const progress = Math.max(0, Math.min(1, deltaX / screenWidth));
- setSwipeBackProgress(progress);
- }
- };
+ const swipeTrack = useRef<{
+   active: boolean; startX: number; startY: number; startTime: number;
+   decided: boolean; isHorizontal: boolean; isEdgeBack: boolean;
+   direction: 'left' | 'right' | null; lastX: number; adjacentPage: Page | null;
+ }>({ active: false, startX: 0, startY: 0, startTime: 0, decided: false, isHorizontal: false, isEdgeBack: false, direction: null, lastX: 0, adjacentPage: null });
 
- const handleTouchEnd = () => {
- if (isSwipeBack) {
- if (swipeBackProgress >= SWIPE_BACK_THRESHOLD) {
- goBack();
- }
- setIsSwipeBack(false);
- setSwipeBackProgress(0);
- setTouchStart(null);
- setTouchEnd(null);
- return;
- }
- if (!touchStart || !touchEnd) return;
- const distanceX = touchStart.x - touchEnd.x;
- const distanceY = touchStart.y - touchEnd.y;
- const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
- const minSwipeDistance = 80;
- const isMainPage = SWIPE_PAGES.includes(currentPage);
- if (!isMainPage || !isHorizontalSwipe || Math.abs(distanceX) < minSwipeDistance) {
- setTouchStart(null);
- setTouchEnd(null);
- return;
- }
- const currentIndex = SWIPE_PAGES.indexOf(currentPage);
- const isSwipeLeft = distanceX > 0;
- const isSwipeRight = distanceX < 0;
- if (isSwipeLeft && currentIndex < SWIPE_PAGES.length - 1) {
- navigateTo(SWIPE_PAGES[currentIndex + 1]);
- } else if (isSwipeRight && currentIndex > 0) {
- navigateTo(SWIPE_PAGES[currentIndex - 1]);
- }
- setTouchStart(null);
- setTouchEnd(null);
- };
+ useEffect(() => {
+   const el = document.getElementById('swipe-root');
+   if (!el) return;
+
+   const EDGE_ZONE = 30;
+   const DECISION_PX = 10;
+   const THRESHOLD = 0.3;
+   const VELOCITY = 500;
+   const TRANSITION = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)';
+   const PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
+
+   const getAdjacentPage = (dir: 'left' | 'right'): Page | null => {
+     const idx = PAGES.indexOf(currentPageRef.current);
+     if (idx === -1) return null;
+     if (dir === 'left' && idx < PAGES.length - 1) return PAGES[idx + 1];
+     if (dir === 'right' && idx > 0) return PAGES[idx - 1];
+     return null;
+   };
+
+   const onStart = (e: TouchEvent) => {
+     if (!isPWARef.current) return;
+     const t = e.touches[0];
+     const isMain = PAGES.includes(currentPageRef.current);
+     swipeTrack.current = {
+       active: true, startX: t.clientX, startY: t.clientY, startTime: Date.now(),
+       decided: false, isHorizontal: false,
+       isEdgeBack: !isMain && t.clientX <= EDGE_ZONE,
+       direction: null, lastX: t.clientX, adjacentPage: null,
+     };
+   };
+
+   const onMove = (e: TouchEvent) => {
+     const s = swipeTrack.current;
+     if (!s.active) return;
+     const t = e.touches[0];
+     const dx = t.clientX - s.startX;
+     const dy = t.clientY - s.startY;
+     s.lastX = t.clientX;
+
+     // Edge swipe back (sub-pages)
+     if (s.isEdgeBack) {
+       if (Math.abs(dy) > Math.abs(dx) && dx < 50) { s.active = false; return; }
+       e.preventDefault();
+       return;
+     }
+
+     // Direction decision
+     if (!s.decided) {
+       if (Math.abs(dx) > DECISION_PX || Math.abs(dy) > DECISION_PX) {
+         s.decided = true;
+         s.isHorizontal = Math.abs(dx) > Math.abs(dy);
+         if (s.isHorizontal) {
+           s.direction = dx < 0 ? 'left' : 'right';
+           const adj = getAdjacentPage(s.direction);
+           if (!adj) { s.active = false; return; }
+           s.adjacentPage = adj;
+           setSwipeAdjacentPage(adj);
+           e.preventDefault();
+         } else {
+           s.active = false;
+         }
+       }
+       return;
+     }
+
+     if (!s.isHorizontal) return;
+     e.preventDefault();
+
+     const screenW = window.innerWidth;
+     let offset = dx / screenW;
+     if (s.direction === 'left') offset = Math.max(-1, Math.min(0, offset));
+     else offset = Math.min(1, Math.max(0, offset));
+
+     if (mainContentRef.current) {
+       mainContentRef.current.style.transition = 'none';
+       mainContentRef.current.style.transform = `translateX(${offset * 100}%)`;
+     }
+     if (adjacentContentRef.current) {
+       const base = s.direction === 'left' ? 100 : -100;
+       adjacentContentRef.current.style.transition = 'none';
+       adjacentContentRef.current.style.transform = `translateX(${base + offset * 100}%)`;
+     }
+   };
+
+   const onEnd = () => {
+     const s = swipeTrack.current;
+
+     // Edge swipe back
+     if (s.isEdgeBack) {
+       const progress = Math.max(0, (s.lastX - s.startX) / window.innerWidth);
+       if (progress >= 0.10) goBackRef.current();
+       s.active = false;
+       return;
+     }
+
+     if (!s.active || !s.decided || !s.isHorizontal || !s.adjacentPage) {
+       s.active = false;
+       setSwipeAdjacentPage(null);
+       if (mainContentRef.current) { mainContentRef.current.style.transition = 'none'; mainContentRef.current.style.transform = ''; }
+       return;
+     }
+
+     const dx = s.lastX - s.startX;
+     const elapsed = Math.max(0.01, (Date.now() - s.startTime) / 1000);
+     const velocity = Math.abs(dx) / elapsed;
+     const ratio = Math.abs(dx) / window.innerWidth;
+     const shouldNav = ratio > THRESHOLD || velocity > VELOCITY;
+     const target = s.adjacentPage;
+     const dir = s.direction;
+
+     if (shouldNav && target) {
+       if (mainContentRef.current) {
+         mainContentRef.current.style.transition = TRANSITION;
+         mainContentRef.current.style.transform = dir === 'left' ? 'translateX(-100%)' : 'translateX(100%)';
+       }
+       if (adjacentContentRef.current) {
+         adjacentContentRef.current.style.transition = TRANSITION;
+         adjacentContentRef.current.style.transform = 'translateX(0%)';
+       }
+       setTimeout(() => {
+         navigateToRef.current(target);
+         requestAnimationFrame(() => {
+           setSwipeAdjacentPage(null);
+           if (mainContentRef.current) { mainContentRef.current.style.transition = 'none'; mainContentRef.current.style.transform = ''; }
+         });
+       }, 300);
+     } else {
+       if (mainContentRef.current) {
+         mainContentRef.current.style.transition = TRANSITION;
+         mainContentRef.current.style.transform = 'translateX(0%)';
+       }
+       if (adjacentContentRef.current) {
+         adjacentContentRef.current.style.transition = TRANSITION;
+         adjacentContentRef.current.style.transform = `translateX(${dir === 'left' ? '100' : '-100'}%)`;
+       }
+       setTimeout(() => {
+         setSwipeAdjacentPage(null);
+         if (mainContentRef.current) { mainContentRef.current.style.transition = 'none'; mainContentRef.current.style.transform = ''; }
+       }, 300);
+     }
+
+     s.active = false;
+   };
+
+   el.addEventListener('touchstart', onStart, { passive: true });
+   el.addEventListener('touchmove', onMove, { passive: false });
+   el.addEventListener('touchend', onEnd, { passive: true });
+   return () => {
+     el.removeEventListener('touchstart', onStart);
+     el.removeEventListener('touchmove', onMove);
+     el.removeEventListener('touchend', onEnd);
+   };
+ }, []);
 
  const isCreationPage = ['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage);
 
  return (
  <div
+ id="swipe-root"
  className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-cream')}
- onTouchStart={handleTouchStart}
- onTouchMove={handleTouchMove}
- onTouchEnd={handleTouchEnd}
  >
 
  {/* DESKTOP SIDEBAR */}
@@ -390,7 +492,16 @@ export function AppLayout({
  </div>
  )}
 
- {children}
+ <div className="flex-1 relative overflow-hidden">
+   <div ref={mainContentRef} className="absolute inset-0 flex flex-col" style={{ willChange: swipeAdjacentPage ? 'transform' : 'auto' }}>
+     {children}
+   </div>
+   {swipeAdjacentPage && renderSwipePage && (
+     <div ref={adjacentContentRef} className="absolute inset-0 flex flex-col overflow-y-auto" style={{ willChange: 'transform' }}>
+       {renderSwipePage(swipeAdjacentPage)}
+     </div>
+   )}
+ </div>
  </main>
 
  {/* MOBILE BOTTOM NAVIGATION */}

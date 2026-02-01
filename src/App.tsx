@@ -10,7 +10,7 @@ const VizzuProvadorWizard = lazy(() => import('./components/Provador/VizzuProvad
 const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
 
 import { Product, Client, ClientPhoto, ClientLook, WhatsAppTemplate, LookComposition, SavedModel } from './types';
-import { useUI } from './contexts/UIContext';
+import { useUI, type Page } from './contexts/UIContext';
 import { useAuth } from './contexts/AuthContext';
 import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
@@ -576,12 +576,25 @@ function App() {
  );
  }
 
+ // Renderiza página para swipe adjacente (Instagram-style)
+ const renderSwipePage = (page: Page): React.ReactNode => {
+   switch (page) {
+     case 'dashboard': return <DashboardPage />;
+     case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
+     case 'create': return <CreateHubPage userCredits={userCredits} />;
+     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} />;
+     case 'clients': return <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />;
+     default: return null;
+   }
+ };
+
  return (
  <AppLayout
  userCredits={userCredits}
  currentPlan={currentPlan}
  restoreModal={restoreModal}
  onLogout={handleLogout}
+ renderSwipePage={renderSwipePage}
  >
  {currentPage === 'dashboard' && <DashboardPage />}
  {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
