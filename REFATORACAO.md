@@ -14,8 +14,8 @@
 | 8 | Extrair ProductsPage + modals | Concluido |
 | 9 | Extrair ClientsPage + modals | Concluido |
 | 10 | Extrair ModelsPage + wizard | Concluido |
-| 11 | Extrair SettingsPage + abas | Pendente |
-| 12 | Extrair CreateHubPage | Pendente |
+| 11 | Extrair SettingsPage + abas | Concluido |
+| 12 | Extrair CreateHubPage | Concluido |
 | 13 | Extrair Layout (Sidebar, MobileNav, Header) | Pendente |
 | 14 | Simplificar App.tsx final | Pendente |
 
