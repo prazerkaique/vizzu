@@ -48,35 +48,42 @@ O que falta e:
 No Stripe Dashboard, va em **Product Catalog > Add product**.
 Crie cada produto conforme abaixo:
 
-#### Produto 1: Vizzu Starter
-- **Nome**: Vizzu Starter
-- **Descricao**: 30 geracoes/mes, resolucao 2K, ate 5.000 produtos
+#### Produto 1: Vizzu Basic
+- **Nome**: Vizzu Basic
+- **Descricao**: 40 geracoes/mes, resolucao 2K, ate 5.000 produtos
 - Adicionar **2 precos**:
-  - Preco mensal: R$ 97,00 / mes (Recurring > Monthly)
-  - Preco anual: R$ 967,00 / ano (Recurring > Yearly) — equivale a R$ 80,58/mes
+  - Preco mensal: R$ 127,00 / mes (Recurring > Monthly)
+  - Preco anual: R$ 1.218,96 / ano (Recurring > Yearly) — equivale a R$ 101,58/mes (20% desconto)
 
 #### Produto 2: Vizzu Pro
 - **Nome**: Vizzu Pro
-- **Descricao**: 100 geracoes/mes, resolucao 4K, ate 10.000 produtos
+- **Descricao**: 100 geracoes/mes, resolucao 2K + 4K, ate 10.000 produtos
 - Adicionar **2 precos**:
-  - Preco mensal: R$ 247,00 / mes
-  - Preco anual: R$ 2.460,00 / ano — equivale a R$ 205,00/mes
+  - Preco mensal: R$ 187,00 / mes
+  - Preco anual: R$ 1.794,96 / ano — equivale a R$ 149,58/mes (20% desconto)
 
-#### Produto 3: Vizzu Business
-- **Nome**: Vizzu Business
-- **Descricao**: 250 geracoes/mes, resolucao 4K, ate 50.000 produtos
+#### Produto 3: Vizzu Premier
+- **Nome**: Vizzu Premier
+- **Descricao**: 200 geracoes/mes, resolucao 4K, ate 50.000 produtos
 - Adicionar **2 precos**:
-  - Preco mensal: R$ 447,00 / mes
-  - Preco anual: R$ 4.452,00 / ano — equivale a R$ 371,00/mes
+  - Preco mensal: R$ 327,00 / mes
+  - Preco anual: R$ 3.138,96 / ano — equivale a R$ 261,58/mes (20% desconto)
 
-#### Produto 4: Creditos Avulsos
+#### Produto 4: Vizzu Enterprise
+- **Nome**: Vizzu Enterprise
+- **Descricao**: 400 geracoes/mes, resolucao 4K, produtos ilimitados, API dedicada
+- Adicionar **2 precos**:
+  - Preco mensal: R$ 677,00 / mes
+  - Preco anual: R$ 6.498,96 / ano — equivale a R$ 541,58/mes (20% desconto)
+
+#### Produto 5: Creditos Avulsos
 - **Nome**: Vizzu Creditos
 - **Descricao**: Pacote de creditos avulsos
 - Adicionar **4 precos** (one-time, NAO recurring):
-  - 50 creditos: preco variavel conforme plano do usuario (usar o menor: R$ 125,00)
-  - 100 creditos: R$ 250,00
-  - 200 creditos: R$ 500,00
-  - 500 creditos: R$ 1.250,00
+  - 10 creditos: preco variavel conforme plano (Basic R$ 35, Pro R$ 30, Premier R$ 25, Enterprise R$ 20)
+  - 25 creditos: preco variavel conforme plano
+  - 50 creditos: preco variavel conforme plano
+  - 100 creditos: preco variavel conforme plano
 
 > **Dica**: Cada preco criado gera um `price_id` (ex: `price_1Abc123...`).
 > Anote todos os IDs — voce vai usa-los no N8N.
@@ -88,16 +95,18 @@ Crie uma tabela assim para referencia:
 ```
 PLANO           | PERIODO  | PRICE ID
 ----------------|----------|------------------
-Starter         | Mensal   | price_xxx...
-Starter         | Anual    | price_xxx...
+Basic           | Mensal   | price_xxx...
+Basic           | Anual    | price_xxx...
 Pro             | Mensal   | price_xxx...
 Pro             | Anual    | price_xxx...
-Business        | Mensal   | price_xxx...
-Business        | Anual    | price_xxx...
+Premier         | Mensal   | price_xxx...
+Premier         | Anual    | price_xxx...
+Enterprise      | Mensal   | price_xxx...
+Enterprise      | Anual    | price_xxx...
+Creditos 10     | Unico    | price_xxx...
+Creditos 25     | Unico    | price_xxx...
 Creditos 50     | Unico    | price_xxx...
 Creditos 100    | Unico    | price_xxx...
-Creditos 200    | Unico    | price_xxx...
-Creditos 500    | Unico    | price_xxx...
 ```
 
 ---
@@ -113,7 +122,7 @@ Rode cada bloco separadamente.
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  plan_id TEXT NOT NULL DEFAULT 'free',
+  plan_id TEXT NOT NULL DEFAULT 'trial',
   status TEXT NOT NULL DEFAULT 'active'
     CHECK (status IN ('active', 'canceled', 'past_due', 'trialing', 'unpaid')),
   billing_period TEXT NOT NULL DEFAULT 'monthly'
@@ -218,7 +227,7 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'users' AND column_name = 'plan_id'
   ) THEN
-    ALTER TABLE users ADD COLUMN plan_id TEXT DEFAULT 'free';
+    ALTER TABLE users ADD COLUMN plan_id TEXT DEFAULT 'trial';
   END IF;
 END $$;
 ```
@@ -338,7 +347,7 @@ Switch por event.type:
   |
   |-- customer.subscription.deleted
   |     -> Atualizar subscription status para 'canceled'
-  |     -> Mudar plan_id para 'free' na tabela users
+  |     -> Mudar plan_id para 'trial' na tabela users
 ```
 
 **Nodes N8N necessarios**:
@@ -414,7 +423,7 @@ O Stripe tem cartoes de teste:
 [ ] 5. Configurar webhook handler no N8N (stripe-webhook)
 [ ] 6. Registrar webhook endpoint no Stripe
 [ ] 7. Adicionar VITE_N8N_WEBHOOK_URL no Vercel
-[ ] 8. Testar assinatura Starter com cartao de teste
+[ ] 8. Testar assinatura Basic com cartao de teste
 [ ] 9. Verificar se creditos foram adicionados no Supabase
 [ ] 10. Testar compra de creditos avulsos
 [ ] 11. Testar renovacao (Stripe CLI: stripe trigger invoice.payment_succeeded)
@@ -503,4 +512,4 @@ Frontend recarrega dados
 | `src/pages/SettingsPage.tsx` | Tela de planos e upgrade | Pronto (toast "nao implementado" some quando N8N responder) |
 | N8N workflows | Backend de pagamento | **A CRIAR** |
 | Supabase tabelas | subscriptions, user_credits, credit_transactions | **A CRIAR** (SQL acima) |
-| Stripe products | 4 planos + creditos avulsos | **A CRIAR** (passo 2) |
+| Stripe products | 4 planos (Basic/Pro/Premier/Enterprise) + creditos avulsos (10/25/50/100) | **A CRIAR** (passo 2) |
