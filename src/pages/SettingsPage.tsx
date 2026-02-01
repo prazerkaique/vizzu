@@ -34,8 +34,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
 
- const [showComparison, setShowComparison] = useState(false);
-
  // Company Settings
  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
  const saved = localStorage.getItem('vizzu_company_settings');
@@ -326,13 +324,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={
  'relative rounded-2xl p-5 transition-all flex flex-col ' +
  (isCurrentPlan
- ? (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-transparent' : 'bg-white border-2 border-transparent shadow-sm') + ' ' + 'bg-clip-padding' + ' ' + 'outline outline-2 outline-[#FF9F43]'
+ ? (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-[#FF9F43]' : 'bg-white border-2 border-[#FF9F43] shadow-sm')
  : isTrial
  ? (theme === 'dark' ? 'bg-neutral-900/40 backdrop-blur-xl border border-dashed border-neutral-700' : 'bg-gray-50/80 border border-dashed border-gray-300')
  : (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 hover:border-neutral-600' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
  )
  }
- style={isCurrentPlan ? { borderImage: 'linear-gradient(to right, #FF6B6B, #FF9F43) 1', borderImageSlice: 1 } : undefined}
  >
  {/* Badge */}
  {isCurrentPlan && (
@@ -407,6 +404,74 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </ul>
 
+ {/* Accordion: comparação completa de todos os planos */}
+ {(() => {
+ // Nomes das features já visíveis no card colapsado
+ const visibleNames = new Set([
+ ...features.included,
+ ...features.excluded.slice(0, 2),
+ ]);
+ // Filtrar: sem "Gerações/mês" (já em destaque) e sem features já visíveis
+ const expandedFeatures = COMPARISON_FEATURES.filter(feat => {
+ if (feat.name === 'Gerações/mês') return false;
+ for (const shown of visibleNames) {
+ if (feat.name === shown || shown.includes(feat.name) || feat.name.includes(shown)) return false;
+ }
+ return true;
+ });
+ if (expandedFeatures.length === 0) return null;
+ return (
+ <details className="group mb-3">
+ <summary className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' text-[10px] cursor-pointer flex items-center gap-1 select-none'}>
+ <i className="fas fa-chevron-down text-[7px] transition-transform group-open:rotate-180"></i>
+ Ver todos os recursos
+ </summary>
+ <div className="mt-2 overflow-x-auto">
+ <table className="w-full text-[9px]">
+ <thead>
+ <tr className={'border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+ <th className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-left py-1 pr-1 font-medium'}></th>
+ {ALL_DISPLAY_PLANS.map(p => (
+ <th key={p.id} className={(p.id === plan.id ? (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF6B6B]') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-center py-1 px-0.5 font-semibold'}>
+ {p.name.slice(0, 3)}
+ </th>
+ ))}
+ </tr>
+ </thead>
+ <tbody>
+ {expandedFeatures.map((feat, i) => (
+ <tr key={i} className={'border-b last:border-0 ' + (theme === 'dark' ? 'border-neutral-800/30' : 'border-gray-50')}>
+ <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1 pr-1 whitespace-nowrap'}>{feat.name}</td>
+ {feat.values.map((val, j) => (
+ <td key={j} className="text-center py-1 px-0.5">
+ {typeof val === 'boolean' ? (
+ val ? <i className={'fas fa-check text-[7px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={'fas fa-xmark text-[7px] ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
+ ) : (
+ <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' font-medium'}>{val}</span>
+ )}
+ </td>
+ ))}
+ </tr>
+ ))}
+ {/* Crédito extra */}
+ <tr className={'border-t ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+ <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1 pr-1 font-medium'}>Cred. extra</td>
+ {ALL_DISPLAY_PLANS.map(p => (
+ <td key={p.id} className="text-center py-1 px-0.5">
+ {p.id === 'trial' ? (
+ <span className={theme === 'dark' ? 'text-neutral-600' : 'text-gray-300'}>—</span>
+ ) : (
+ <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' font-medium'}>R${p.creditPrice.toFixed(0)}</span>
+ )}
+ </td>
+ ))}
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ </details>
+ );
+ })()}
 
  <button
  onClick={() => {
@@ -433,65 +498,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  );
  })}
  </div>
-
- {/* Botão Ver todos os recursos + Tabela comparativa compartilhada */}
- <div className="text-center mb-6">
- <button
- onClick={() => setShowComparison(!showComparison)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-neutral-200' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium flex items-center gap-1.5 mx-auto transition-colors'}
- >
- <i className={'fas fa-chevron-down text-[8px] transition-transform ' + (showComparison ? 'rotate-180' : '')}></i>
- {showComparison ? 'Ocultar comparação' : 'Ver todos os recursos de todos os planos'}
- </button>
- </div>
-
- {showComparison && (
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-8 overflow-x-auto'}>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Comparação completa</h4>
- <table className="w-full text-[11px]">
- <thead>
- <tr className={'border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <th className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-left py-2 pr-3 font-medium'}>Recurso</th>
- {ALL_DISPLAY_PLANS.map(p => (
- <th key={p.id} className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-center py-2 px-2 font-semibold whitespace-nowrap'}>
- {p.name}
- {currentPlan.id === p.id && <i className="fas fa-circle text-[4px] ml-1 text-[#FF9F43] align-middle"></i>}
- </th>
- ))}
- </tr>
- </thead>
- <tbody>
- {COMPARISON_FEATURES.filter(f => f.name !== 'Gerações/mês').map((feat, i) => (
- <tr key={i} className={'border-b last:border-0 ' + (theme === 'dark' ? 'border-neutral-800/50' : 'border-gray-50')}>
- <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1.5 pr-3'}>{feat.name}</td>
- {feat.values.map((val, j) => (
- <td key={j} className="text-center py-1.5 px-2">
- {typeof val === 'boolean' ? (
- val ? <i className={'fas fa-check text-[9px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={'fas fa-xmark text-[9px] ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
- ) : (
- <span className={(theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') + ' font-medium'}>{val}</span>
- )}
- </td>
- ))}
- </tr>
- ))}
- {/* Crédito extra como última linha */}
- <tr className={'border-t ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
- <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1.5 pr-3 font-medium'}>Crédito extra</td>
- {ALL_DISPLAY_PLANS.map(p => (
- <td key={p.id} className="text-center py-1.5 px-2">
- {p.id === 'trial' ? (
- <span className={theme === 'dark' ? 'text-neutral-600' : 'text-gray-300'}>—</span>
- ) : (
- <span className={(theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') + ' font-medium'}>R$ {p.creditPrice.toFixed(2).replace('.', ',')}</span>
- )}
- </td>
- ))}
- </tr>
- </tbody>
- </table>
- </div>
- )}
 
  {/* Meios de pagamento */}
  <div className="flex items-center justify-center gap-3 mb-8">
