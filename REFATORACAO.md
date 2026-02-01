@@ -275,14 +275,18 @@ Inclui:
 Mover JSX de Models (linhas 4425-4654) + wizard + detail modal para:
 `src/pages/ModelsPage.tsx`
 
-### Passo 11: Extrair SettingsPage
+### Passo 11: Extrair SettingsPage ✅ Concluido
 **Risco: Baixo** | **Impacto: Medio**
 
-Mover JSX de Settings (linhas 4944-7656) para:
-`src/pages/SettingsPage.tsx`
+Movido JSX de Settings (~646 linhas) + companySettings state + dotLottieRef para:
+`src/pages/SettingsPage.tsx` (~660 linhas)
 
-Pode ser subdividido em componentes por aba:
-- ProfileTab, AppearanceTab, CompanyTab, PlanTab, IntegrationsTab, HistoryTab
+- 7 abas: profile, appearance, company, plan, integrations, history, tools
+- companySettings state + localStorage persistence movidos para SettingsPage
+- dotLottieRef/dotLottieRefCallback movidos para SettingsPage
+- Stubs loadUserCompanySettings/saveCompanySettingsToSupabase movidos para SettingsPage
+- Créditos/planos ficam no App.tsx (compartilhados) e passam como props
+- App.tsx: 2795 → 2105 linhas (-690)
 
 ### Passo 12: Extrair CreateHubPage
 **Risco: Baixo** | **Impacto: Baixo**
