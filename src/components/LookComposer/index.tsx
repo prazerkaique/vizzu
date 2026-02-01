@@ -718,7 +718,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  src={productImage}
  alt={pwl.product.name}
  className="w-full h-full group-hover:scale-105 transition-transform"
- size="thumb"
+ size="preview"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
@@ -853,7 +853,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
+ <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  {isOptimized && (
  <div className="absolute top-2 left-2 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center" title="Otimizado no Product Studio">
  <i className="fas fa-cube text-[10px]"></i>
@@ -1246,7 +1246,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  alt={look.productName}
  className="w-full h-full"
  objectFit="contain"
- size="thumb"
+ size="preview"
  />
  {/* Badge de quantidade de imagens */}
  {look.imageCount > 1 && (

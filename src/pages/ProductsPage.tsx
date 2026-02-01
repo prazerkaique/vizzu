@@ -639,7 +639,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  }}
  >
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
- <OptimizedImage src={getProductDisplayImage(product)} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform pointer-events-none" />
+ <OptimizedImage src={getProductDisplayImage(product)} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform pointer-events-none" />
  {/* Badge de produto otimizado */}
  {isProductOptimized(product) && (
  <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[7px] font-bold rounded-full flex items-center gap-1 pointer-events-none">

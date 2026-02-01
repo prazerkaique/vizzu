@@ -732,7 +732,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        </button>
        <div className="relative inline-block">
         {getClientPhoto(showClientDetail) ? (
-         <img src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full object-cover border-2 border-neutral-600 mx-auto" />
+         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full border-2 border-neutral-600 mx-auto" size="thumb" />
         ) : (
          <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center mx-auto">
           <span className="text-xl font-medium text-neutral-400">{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
@@ -798,7 +798,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
              alt="Look"
              className="w-full aspect-[3/4] rounded-lg border border-neutral-700 cursor-pointer hover:border-neutral-500 transition-colors"
              onClick={() => window.open(look.imageUrl, '_blank')}
-             size="thumb"
+             size="preview"
             />
             <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">
              {new Date(look.createdAt).toLocaleDateString('pt-BR')}
@@ -842,7 +842,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        {/* Info do cliente */}
        <div className="flex items-center gap-3">
         {getClientPhoto(showWhatsAppLookModal) ? (
-         <img src={getClientPhoto(showWhatsAppLookModal)} alt="" className="w-10 h-10 rounded-full object-cover border border-neutral-700" />
+         <OptimizedImage src={getClientPhoto(showWhatsAppLookModal)} alt="" className="w-10 h-10 rounded-full border border-neutral-700" size="thumb" />
         ) : (
          <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
           <span className="text-sm text-neutral-400">{showWhatsAppLookModal.firstName[0]}</span>
@@ -874,10 +874,12 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
               : 'border-neutral-700 hover:border-neutral-600'
             }`}
            >
-            <img
+            <OptimizedImage
              src={look.imageUrl}
              alt="Look"
-             className={`w-full ${clientDetailLooks.length === 1 ? 'object-contain max-h-[300px] bg-neutral-800' : 'object-cover aspect-[3/4]'}`}
+             className={`w-full ${clientDetailLooks.length === 1 ? 'max-h-[300px] bg-neutral-800' : 'aspect-[3/4]'}`}
+             objectFit={clientDetailLooks.length === 1 ? 'contain' : 'cover'}
+             size="preview"
             />
             {selectedLookForWhatsApp?.id === look.id && (
              <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
