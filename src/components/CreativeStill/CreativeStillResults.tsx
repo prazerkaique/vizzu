@@ -144,7 +144,7 @@ export const CreativeStillResults: React.FC<Props> = ({
 
  {/* Título */}
  <h2 className="text-white text-2xl font-bold font-serif mb-2 text-center">
- Criando seu Still Criativo®...
+ Criando seu Vizzu Still Criativo®...
  </h2>
 
  {/* Frase de loading */}
@@ -270,7 +270,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  <div>
  <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Resultado</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
- {wizardState.mainProduct?.name || 'Still Criativo'} · {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'}
+ {wizardState.mainProduct?.name || 'Vizzu Still Criativo'} · {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'}
  </p>
  </div>
  </div>
