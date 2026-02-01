@@ -182,7 +182,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  },
  premier: {
  included: [
- 'Tudo do Pro, mais:',
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de imagens 2K / 4K',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ 'Modelos IA personalizados',
  'Integração e-commerce',
  'Suporte prioritário',
  ],
@@ -190,10 +197,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  },
  enterprise: {
  included: [
- 'Tudo do Premier, mais:',
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de imagens 2K / 4K',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ 'Modelos IA personalizados',
+ 'Integração e-commerce',
+ 'Suporte prioritário VIP',
  'Produtos ilimitados',
  'API dedicada',
- 'Suporte prioritário VIP',
  ],
  excluded: [],
  },
@@ -388,15 +403,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}</div>
  )}
 
- {/* Features incluídas (colapsado) */}
+ {/* Features (colapsado: até 5 incluídas + 2 excluídas) */}
+ {(() => {
+ const MAX_COLLAPSED = 5;
+ const shownIncluded = features.included.slice(0, MAX_COLLAPSED);
+ const hiddenIncluded = features.included.slice(MAX_COLLAPSED);
+ const shownExcluded = features.excluded.slice(0, 2);
+ const hiddenExcluded = features.excluded.slice(2);
+ const hasHidden = hiddenIncluded.length > 0 || hiddenExcluded.length > 0;
+
+ return (
+ <>
  <ul className="space-y-1.5 mb-3 flex-1">
- {features.included.map((feature, i) => (
+ {shownIncluded.map((feature, i) => (
  <li key={i} className="flex items-start gap-2 text-[11px]">
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
  <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feature}</span>
  </li>
  ))}
- {features.excluded.slice(0, 2).map((feature, i) => (
+ {shownExcluded.map((feature, i) => (
  <li key={'ex-' + i} className="flex items-start gap-2 text-[11px]">
  <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
  <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' line-through'}>{feature}</span>
@@ -404,72 +429,35 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </ul>
 
- {/* Accordion: comparação completa de todos os planos */}
- {(() => {
- // Nomes das features já visíveis no card colapsado
- const visibleNames = new Set([
- ...features.included,
- ...features.excluded.slice(0, 2),
- ]);
- // Filtrar: sem "Gerações/mês" (já em destaque) e sem features já visíveis
- const expandedFeatures = COMPARISON_FEATURES.filter(feat => {
- if (feat.name === 'Gerações/mês') return false;
- for (const shown of visibleNames) {
- if (feat.name === shown || shown.includes(feat.name) || feat.name.includes(shown)) return false;
- }
- return true;
- });
- if (expandedFeatures.length === 0) return null;
- return (
+ {hasHidden && (
  <details className="group mb-3">
  <summary className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' text-[10px] cursor-pointer flex items-center gap-1 select-none'}>
  <i className="fas fa-chevron-down text-[7px] transition-transform group-open:rotate-180"></i>
- Ver todos os recursos
+ Ver tudo
  </summary>
- <div className="mt-2 overflow-x-auto">
- <table className="w-full text-[9px]">
- <thead>
- <tr className={'border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <th className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-left py-1 pr-1 font-medium'}></th>
- {ALL_DISPLAY_PLANS.map(p => (
- <th key={p.id} className={(p.id === plan.id ? (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF6B6B]') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-center py-1 px-0.5 font-semibold'}>
- {p.name.slice(0, 3)}
- </th>
+ <ul className="mt-2 space-y-1">
+ {hiddenIncluded.map((feature, i) => (
+ <li key={'hi-' + i} className="flex items-start gap-2 text-[11px]">
+ <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
+ <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feature}</span>
+ </li>
  ))}
- </tr>
- </thead>
- <tbody>
- {expandedFeatures.map((feat, i) => (
- <tr key={i} className={'border-b last:border-0 ' + (theme === 'dark' ? 'border-neutral-800/30' : 'border-gray-50')}>
- <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1 pr-1 whitespace-nowrap'}>{feat.name}</td>
- {feat.values.map((val, j) => (
- <td key={j} className="text-center py-1 px-0.5">
- {typeof val === 'boolean' ? (
- val ? <i className={'fas fa-check text-[7px] ' + (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-500')}></i> : <i className={'fas fa-xmark text-[7px] ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
- ) : (
- <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' font-medium'}>{val}</span>
+ {hiddenExcluded.map((feature, i) => (
+ <li key={'he-' + i} className="flex items-start gap-2 text-[11px]">
+ <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' line-through'}>{feature}</span>
+ </li>
+ ))}
+ {!isTrial && (
+ <li className={'flex items-center justify-between text-[10px] pt-1 mt-1 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+ <span className={theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}>Crédito extra</span>
+ <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
+ </li>
  )}
- </td>
- ))}
- </tr>
- ))}
- {/* Crédito extra */}
- <tr className={'border-t ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
- <td className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' py-1 pr-1 font-medium'}>Cred. extra</td>
- {ALL_DISPLAY_PLANS.map(p => (
- <td key={p.id} className="text-center py-1 px-0.5">
- {p.id === 'trial' ? (
- <span className={theme === 'dark' ? 'text-neutral-600' : 'text-gray-300'}>—</span>
- ) : (
- <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' font-medium'}>R${p.creditPrice.toFixed(0)}</span>
- )}
- </td>
- ))}
- </tr>
- </tbody>
- </table>
- </div>
+ </ul>
  </details>
+ )}
+ </>
  );
  })()}
 
