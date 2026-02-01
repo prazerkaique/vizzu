@@ -356,7 +356,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  </p>
  <div className="flex items-center gap-3 mt-2">
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
- <i className="fas fa-coins text-[#FF9F43] mr-1"></i>10 créditos por foto
+ <i className="fas fa-coins text-[#FF9F43] mr-1"></i>1 crédito por foto
  </span>
  </div>
  </div>

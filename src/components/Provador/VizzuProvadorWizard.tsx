@@ -1516,7 +1516,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  ? 'bg-neutral-900 border border-neutral-800 text-neutral-400'
  : 'bg-gray-100 border border-gray-200 text-gray-500'
  }`}>
- 3 cred.
+ 1 cred.
  </span>
  {(selectedClient || Object.keys(lookComposition).length > 0) && (
  <button

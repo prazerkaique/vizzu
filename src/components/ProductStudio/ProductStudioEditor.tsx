@@ -1550,7 +1550,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-lg p-3 mt-3'}>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
  <i className="fas fa-info-circle mr-1"></i>
- 10 créditos por foto{resolution === '4k' ? ' (x2 para 4K)' : ''}.
+ 1 crédito por foto{resolution === '4k' ? ' (x2 para 4K)' : ''}.
  </p>
  </div>
  </div>

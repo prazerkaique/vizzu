@@ -1539,13 +1539,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onClick={() => setLookMode('composer')}
  className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'composer' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
- Suas Peças <span className="opacity-60">(20 créditos)</span>
+ Suas Peças <span className="opacity-60">(1 crédito)</span>
  </button>
  <button
  onClick={() => setLookMode('describe')}
  className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
- Composição Genérica <span className="opacity-60">(10 créditos)</span>
+ Composição Genérica <span className="opacity-60">(1 crédito)</span>
  </button>
  </div>
 

@@ -752,7 +752,7 @@ const handleSave = async () => {
  {/* Frente */}
  <div className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${currentView === 'front' && viewMode === 'original' ? 'border-[#E91E8C]' : isDark ? 'border-neutral-700' : 'border-gray-200'}`} onClick={() => { setCurrentView('front'); setViewMode('original'); }}>
  {originals.front ? (
- <img src={originals.front.base64 || originals.front.url} alt="Frente" className="w-full h-full object-cover" />
+ <OptimizedImage src={originals.front.base64 || originals.front.url} alt="Frente" className="w-full h-full" size="thumb" />
  ) : (
  <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-100'}`}>
  <i className={`fas fa-image text-xs ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
@@ -764,7 +764,7 @@ const handleSave = async () => {
  {/* Costas */}
  <div className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${currentView === 'back' && viewMode === 'original' ? 'border-[#E91E8C]' : isDark ? 'border-neutral-700' : 'border-gray-200'} ${!originals.back ? 'opacity-40' : ''}`} onClick={() => { if (originals.back) { setCurrentView('back'); setViewMode('original'); } }}>
  {originals.back ? (
- <img src={originals.back.base64 || originals.back.url} alt="Costas" className="w-full h-full object-cover" />
+ <OptimizedImage src={originals.back.base64 || originals.back.url} alt="Costas" className="w-full h-full" size="thumb" />
  ) : (
  <div className={`w-full h-full flex items-center justify-center border-2 border-dashed ${isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-300 bg-gray-100'}`}>
  <i className={`fas fa-plus text-xs ${isDark ? 'text-neutral-600' : 'text-gray-400'}`}></i>
@@ -1353,8 +1353,8 @@ const handleSave = async () => {
  {step === 'look' && (
  <div className="space-y-3">
  <div className="flex gap-1 mb-2">
- <button onClick={() => setLookMode('describe')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'describe' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Descrever <span className="opacity-60">(10 créditos)</span></button>
- <button onClick={() => setLookMode('composer')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'composer' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Composer <span className="opacity-60">(20 créditos)</span></button>
+ <button onClick={() => setLookMode('describe')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'describe' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Descrever <span className="opacity-60">(1 crédito)</span></button>
+ <button onClick={() => setLookMode('composer')} className={`flex-1 py-1.5 rounded-lg text-xs font-medium ${lookMode === 'composer' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}>Composer <span className="opacity-60">(1 crédito)</span></button>
  </div>
 
  {lookMode === 'describe' ? (

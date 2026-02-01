@@ -56,7 +56,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div>
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-    <span className="text-white/60 text-xs">10 créditos/foto</span>
+    <span className="text-white/60 text-xs">1 crédito/foto</span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Product Studio®</h3>
     <p className="text-white/70 text-sm">Fotos profissionais do produto em múltiplos ângulos com fundo cinza de estúdio</p>
@@ -88,7 +88,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div>
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
-    <span className="text-white/60 text-xs">10 créditos</span>
+    <span className="text-white/60 text-xs">1 crédito</span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Provador®</h3>
     <p className="text-white/70 text-sm">Vista seu cliente com suas roupas. Prova virtual pelo WhatsApp</p>
@@ -120,7 +120,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div>
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-indigo-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
-    <span className="text-white/60 text-xs">10-20 créditos</span>
+    <span className="text-white/60 text-xs">1 crédito</span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Look Composer®</h3>
     <p className="text-white/70 text-sm">Crie looks com modelos virtuais em fundo studio ou cenário personalizado</p>
@@ -152,7 +152,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div>
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
-    <span className="text-white/60 text-xs">2 créditos</span>
+    <span className="text-white/60 text-xs">1 crédito</span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Still Criativo®</h3>
     <p className="text-white/70 text-sm">Composições artísticas de produto. Fotos estilo still life para Instagram</p>
