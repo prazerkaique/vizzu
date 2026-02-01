@@ -24,17 +24,17 @@ export interface Plan {
 
 export const PLANS: Plan[] = [
   {
-    id: 'starter',
-    name: 'Starter',
-    limit: 30,
+    id: 'basic',
+    name: 'Basic',
+    limit: 40,
     productLimit: 5000,
-    priceMonthly: 97,
-    priceYearly: 80.58, // ~17% desconto
-    creditPrice: 3.90,
+    priceMonthly: 127,
+    priceYearly: 101.58, // 20% desconto
+    creditPrice: 3.50,
     maxResolution: '2k',
     hasWatermark: false,
     features: [
-      '30 gerações/mês',
+      '40 gerações/mês',
       'Até 5.000 produtos',
       'Resolução 2K',
       'Vizzu Product Studio',
@@ -56,9 +56,9 @@ export const PLANS: Plan[] = [
     name: 'Pro',
     limit: 100,
     productLimit: 10000,
-    priceMonthly: 247,
-    priceYearly: 205.01, // ~17% desconto
-    creditPrice: 3.50,
+    priceMonthly: 187,
+    priceYearly: 149.58, // 20% desconto
+    creditPrice: 3.00,
     maxResolution: '4k',
     hasWatermark: false,
     badge: 'MAIS POPULAR',
@@ -67,27 +67,28 @@ export const PLANS: Plan[] = [
       '100 gerações/mês',
       'Até 10.000 produtos',
       'Resolução 2K + 4K',
-      'Tudo do Starter, mais:',
+      'Tudo do Basic, mais:',
+      'Geração em 4K',
       'Geração de Vídeos Instagram',
       'Agente Ativo WhatsApp',
-      '4K consome 2 gerações'
+      '4K consome 2 créditos'
     ],
     highlight: true
   },
   {
-    id: 'business',
-    name: 'Business',
-    limit: 250,
+    id: 'premier',
+    name: 'Premier',
+    limit: 200,
     productLimit: 50000,
-    priceMonthly: 447,
-    priceYearly: 371.01, // ~17% desconto
-    creditPrice: 3.00,
+    priceMonthly: 327,
+    priceYearly: 261.58, // 20% desconto
+    creditPrice: 2.50,
     maxResolution: '4k',
     hasWatermark: false,
-    badge: 'PARA EMPRESAS',
+    badge: 'MELHOR VALOR',
     badgeColor: 'amber',
     features: [
-      '250 gerações/mês',
+      '200 gerações/mês',
       'Até 50.000 produtos',
       'Resolução 2K + 4K',
       'Tudo do Pro, mais:',
@@ -96,26 +97,25 @@ export const PLANS: Plan[] = [
     ]
   },
   {
-    id: 'scale',
-    name: 'Scale',
-    limit: 500,
+    id: 'enterprise',
+    name: 'Enterprise',
+    limit: 400,
     productLimit: -1, // Ilimitado
-    priceMonthly: 0, // Sob consulta
-    priceYearly: 0,
-    creditPrice: 2.50,
+    priceMonthly: 677,
+    priceYearly: 541.58, // 20% desconto
+    creditPrice: 2.00,
     maxResolution: '4k',
     hasWatermark: false,
     badge: 'ENTERPRISE',
     badgeColor: 'purple',
     features: [
-      '500+ gerações/mês',
+      '400 gerações/mês',
       'Produtos ilimitados',
       'Resolução 2K + 4K',
-      'Tudo do Business, mais:',
+      'Tudo do Premier, mais:',
       'API Dedicada',
       'Account Manager',
-      'Suporte VIP',
-      'Preço sob consulta'
+      'Suporte VIP'
     ]
   }
 ];
@@ -141,25 +141,26 @@ export const getGenerationCost = (resolution: '2k' | '4k'): number => {
 };
 
 export const FREE_PLAN: Plan = {
-  id: 'free',
-  name: 'Free',
+  id: 'trial',
+  name: 'Trial',
   limit: 5,
   productLimit: 50,
   priceMonthly: 0,
   priceYearly: 0,
-  creditPrice: 4.90, // Preço para compras avulsas (usuário free)
+  creditPrice: 0, // Trial não pode comprar avulso
   maxResolution: '2k',
   hasWatermark: true,
   features: [
-    '5 gerações para testar',
+    '5 gerações para testar (uso único)',
     'Até 50 produtos',
     'Resolução 2K',
     'Marca d\'água nas imagens',
+    'Não renova mensalmente',
     'Todas as ferramentas básicas'
   ]
 };
 
-export const CREDIT_PACKAGES = [50, 100, 200, 500];
+export const CREDIT_PACKAGES = [10, 25, 50, 100];
 
 // ═══════════════════════════════════════════════════════════════
 // LOCAL STORAGE (FALLBACK)
@@ -182,7 +183,7 @@ const getStoredData = (): LocalCreditsData => {
   } catch (e) {
     console.error('Error reading credits data:', e);
   }
-  return { credits: 800, planId: 'pro', billingPeriod: 'monthly' };
+  return { credits: 100, planId: 'pro', billingPeriod: 'monthly' };
 };
 
 const saveLocalData = (data: LocalCreditsData) => {
