@@ -33,11 +33,12 @@ const ModelCardCarousel: React.FC<{
  return (
  <div className="relative w-full h-full" onClick={onCardClick}>
  {/* Imagem atual */}
- <img
+ <OptimizedImage
  src={images[currentIndex].src}
  alt={`${modelName} - ${images[currentIndex].label}`}
- className="w-full h-full object-cover"
- style={images[currentIndex].key === 'face' ? { objectPosition: 'top' } : undefined}
+ className="w-full h-full"
+ imgStyle={images[currentIndex].key === 'face' ? { objectPosition: 'top' } : undefined}
+ size="preview"
  />
 
  {/* Setas de navegação */}
@@ -1202,22 +1203,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div key={type} className="text-center">
  <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
  {imgUrl ? (
- <img
+ <OptimizedImage
  src={imgUrl}
  alt={type}
- className="w-full h-full object-contain"
- loading="eager"
- decoding="async"
- onError={(e) => {
- const target = e.target as HTMLImageElement;
- const retryCount = parseInt(target.dataset.retry || '0');
- if (retryCount < 3) {
- target.dataset.retry = String(retryCount + 1);
- setTimeout(() => {
- target.src = imgUrl + '?retry=' + Date.now();
- }, 1000 * (retryCount + 1));
- }
- }}
+ className="w-full h-full"
+ objectFit="contain"
+ size="preview"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">

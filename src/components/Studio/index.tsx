@@ -333,11 +333,12 @@ export const Studio: React.FC<StudioProps> = ({
  <div className={'w-14 h-14 md:w-18 md:h-18 rounded-full p-[2px] transition-all ' + (isSelected ? 'bg-gradient-to-r from-[#E91E8C]/50 via-[#A855F7] to-[#FF9F43] ring-2 ring-[#E91E8C] ring-offset-2 ring-offset-black' : 'bg-gradient-to-r from-[#E91E8C]/50/50 via-[#A855F7]/50 to-[#FF9F43]/50 hover:from-[#E91E8C]/50 hover:via-[#A855F7] hover:to-[#FF9F43]')}>
  <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' w-full h-full rounded-full p-[1px]'}>
  {modelImage ? (
- <img
+ <OptimizedImage
  src={modelImage}
  alt={model.name}
- className="w-full h-full rounded-full object-cover"
- style={{ objectPosition: 'top' }}
+ className="w-full h-full rounded-full"
+ imgStyle={{ objectPosition: 'top' }}
+ size="thumb"
  />
  ) : (
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-full rounded-full flex items-center justify-center'}>
@@ -382,11 +383,12 @@ export const Studio: React.FC<StudioProps> = ({
  <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/50/10 to-[#A855F7]/50/10 border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#E91E8C]/5 to-[#A855F7]/5 border-[#E91E8C]/20') + ' rounded-xl p-3 border mb-4'}>
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 rounded-xl overflow-hidden">
- <img
+ <OptimizedImage
  src={selectedModel.images?.front || selectedModel.images?.face}
  alt={selectedModel.name}
- className="w-full h-full object-cover"
- style={{ objectPosition: 'top' }}
+ className="w-full h-full"
+ imgStyle={{ objectPosition: 'top' }}
+ size="thumb"
  />
  </div>
  <div className="flex-1">
