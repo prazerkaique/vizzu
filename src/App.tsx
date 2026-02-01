@@ -15,6 +15,7 @@ import { useUI, type Page, type SettingsTab } from './contexts/UIContext';
 import { useAuth } from './contexts/AuthContext';
 import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
+import { useClients } from './contexts/ClientsContext';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
@@ -194,6 +195,8 @@ function App() {
  const { historyLogs, setHistoryLogs, addHistoryLog, loadUserHistory } = useHistory();
  // Products from context
  const { products, setProducts, loadUserProducts, updateProduct: handleUpdateProduct, deleteProduct: handleDeleteProduct, deleteSelectedProducts, isProductOptimized, getProductDisplayImage, getOptimizedImages, getOriginalImages } = useProducts();
+ // Clients from context
+ const { clients, setClients, clientLooks, setClientLooks, loadUserClients, saveClientToSupabase, deleteClientFromSupabase, uploadClientPhoto, saveClientPhotoToDb, loadClientPhotos, getClientPhoto } = useClients();
  const [showImport, setShowImport] = useState(false);
  const [showCreateProduct, setShowCreateProduct] = useState(false);
  const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
@@ -231,29 +234,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const [detectedProducts, setDetectedProducts] = useState<Array<{ type: string; color: string; pattern: string; material?: string; gender?: string; suggestedName?: string; confidence: number }>>([]);
  const [showProductSelector, setShowProductSelector] = useState(false);
  
- const [clients, setClients] = useState<Client[]>(() => {
- const saved = localStorage.getItem('vizzu_clients');
- if (saved) {
- try {
- const parsed = JSON.parse(saved);
- // Migrar IDs antigos (client-timestamp) para UUID
- const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
- let needsMigration = false;
- const migrated = parsed.map((client: Client) => {
- if (!isValidUUID(client.id)) {
- needsMigration = true;
- return { ...client, id: crypto.randomUUID() };
- }
- return client;
- });
- if (needsMigration) {
- localStorage.setItem('vizzu_clients', JSON.stringify(migrated));
- }
- return migrated;
- } catch { }
- }
- return [];
- });
+ // clients from ClientsContext
  // historyLogs from HistoryContext
  const [showCreateClient, setShowCreateClient] = useState(false);
  const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
@@ -287,7 +268,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const [provadorStep, setProvadorStep] = useState<1 | 2 | 3 | 4>(1);
  const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
  const [provadorLookSearch, setProvadorLookSearch] = useState('');
- const [clientLooks, setClientLooks] = useState<ClientLook[]>([]);
+ // clientLooks from ClientsContext
  const [savingLook, setSavingLook] = useState(false);
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
  const [showStudioPicker, setShowStudioPicker] = useState(false);
@@ -574,22 +555,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  }
  }, [companySettings, user?.id]);
 
- // Persistir clientes (sem fotos - fotos vêm do Supabase Storage)
- useEffect(() => {
- try {
- // Salvar clientes sem as fotos (fotos são carregadas do Supabase)
- const clientsWithoutPhotos = clients.map(c => ({
- ...c,
- photo: undefined,
- photos: []
- }));
- localStorage.setItem('vizzu_clients', JSON.stringify(clientsWithoutPhotos));
- } catch (e) {
- console.warn('Não foi possível salvar clientes no localStorage:', e);
- }
- }, [clients]);
-
- // history persistence moved to HistoryContext
+ // clients + history persistence moved to their contexts
 
  const clientPhotoInputRef = useRef<HTMLInputElement>(null);
  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -728,146 +694,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
 
 // loadUserProducts moved to ProductsContext
 
-// Função para carregar clientes do usuário do Supabase
-const loadUserClients = async (userId: string) => {
- try {
- // Buscar clientes
- const { data: clientsData, error } = await supabase
- .from('clients')
- .select('*')
- .eq('user_id', userId);
-
- if (error) {
- // Tabela pode não existir ainda - usar apenas localStorage
- return;
- }
-
- // Buscar fotos de todos os clientes
- const { data: photosData } = await supabase
- .from('client_photos')
- .select('*')
- .eq('user_id', userId);
-
- // Mapear fotos por client_id
- const photosByClient: Record<string, ClientPhoto[]> = {};
- if (photosData) {
- for (const p of photosData) {
- if (!photosByClient[p.client_id]) {
- photosByClient[p.client_id] = [];
- }
- photosByClient[p.client_id].push({
- type: p.type as ClientPhoto['type'],
- base64: p.url, // Usamos URL em vez de base64
- createdAt: p.created_at
- });
- }
- }
-
- // Pegar clientes locais para possível sincronização
- const localClients: Client[] = JSON.parse(localStorage.getItem('vizzu_clients') || '[]');
-
- if (clientsData && clientsData.length > 0) {
- const formattedClients: Client[] = clientsData.map(c => {
- const clientPhotos = photosByClient[c.id] || [];
- return {
- id: c.id,
- firstName: c.first_name,
- lastName: c.last_name,
- whatsapp: c.whatsapp,
- email: c.email || undefined,
- gender: c.gender || undefined,
- photo: clientPhotos[0]?.base64 || undefined,
- photos: clientPhotos,
- hasProvadorIA: clientPhotos.length > 0 || c.has_provador_ia || false,
- notes: c.notes || undefined,
- tags: c.tags || [],
- createdAt: c.created_at,
- updatedAt: c.updated_at || undefined,
- lastContactAt: c.last_contact_at || undefined,
- totalOrders: c.total_orders || 0,
- status: c.status || 'active',
- };
- });
-
- // Sincronizar clientes locais que não estão no servidor
- const serverIds = new Set(formattedClients.map(c => c.id));
- const localOnly = localClients.filter(c => !serverIds.has(c.id));
- localOnly.forEach(localClient => {
- saveClientToSupabase(localClient, userId);
- });
-
- // IMPORTANTE: Substituir estado local com dados do servidor + locais sincronizados
- setClients([...formattedClients, ...localOnly]);
- } else {
- // Servidor vazio - sincronizar locais para o servidor
- const validLocalClients = localClients;
- if (validLocalClients.length > 0) {
- for (const client of validLocalClients) {
- await saveClientToSupabase(client, userId);
- }
- // Manter os clientes locais já que foram sincronizados
- } else {
- // Servidor vazio e local vazio - limpar estado
- setClients([]);
- }
- }
- } catch (error) {
- console.error('Erro ao carregar clientes:', error);
- }
-};
-
-// Função para salvar cliente no Supabase
-const saveClientToSupabase = async (client: Client, userId: string) => {
- try {
- // Validar se o ID é UUID válido (evita erro no Supabase)
- const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(client.id);
- if (!isValidUUID) {
- console.warn('ID de cliente inválido (não é UUID), ignorando sync:', client.id);
- return;
- }
- // Nota: fotos são salvas na tabela client_photos separadamente
- const { error } = await supabase
- .from('clients')
- .upsert({
- id: client.id,
- user_id: userId,
- first_name: client.firstName,
- last_name: client.lastName,
- whatsapp: client.whatsapp,
- email: client.email || null,
- gender: client.gender || null,
- has_provador_ia: client.hasProvadorIA || false,
- notes: client.notes || null,
- created_at: client.createdAt,
- updated_at: client.updatedAt || null,
- last_contact_at: client.lastContactAt || null,
- total_orders: client.totalOrders || 0,
- status: client.status,
- }, { onConflict: 'id' });
-
- if (error) {
- console.error('Erro ao salvar cliente no Supabase:', error.message, error);
- }
- } catch (err) {
- console.error('Erro inesperado ao salvar cliente:', err);
- }
-};
-
-// Função para deletar cliente do Supabase
-const deleteClientFromSupabase = async (clientId: string) => {
- try {
- const { error } = await supabase
- .from('clients')
- .delete()
- .eq('id', clientId);
-
- if (error) {
- // Silently ignore - table may not exist
- }
- } catch {
- // Silently ignore
- }
-};
+// loadUserClients, saveClientToSupabase, deleteClientFromSupabase moved to ClientsContext
 
 // ═══════════════════════════════════════════════════════════════
 // SINCRONIZAÇÃO DE HISTÓRICO
@@ -1582,92 +1409,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  setNewClient(prev => ({ ...prev, photos: prev.photos.filter(p => p.type !== type) }));
  };
 
- // Upload de foto do cliente para o Storage
- const uploadClientPhoto = async (userId: string, clientId: string, photo: ClientPhoto): Promise<{ url: string; storagePath: string } | null> => {
- try {
- // Converter base64 para blob
- const base64Data = photo.base64.replace(/^data:image\/\w+;base64,/, '');
- const byteCharacters = atob(base64Data);
- const byteNumbers = new Array(byteCharacters.length);
- for (let i = 0; i < byteCharacters.length; i++) {
- byteNumbers[i] = byteCharacters.charCodeAt(i);
- }
- const byteArray = new Uint8Array(byteNumbers);
-
- // Detectar tipo da imagem
- const mimeType = photo.base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
- const extension = mimeType.split('/')[1] || 'jpg';
- const blob = new Blob([byteArray], { type: mimeType });
-
- // Caminho: userId/clientId/tipo.ext
- const storagePath = `${userId}/${clientId}/${photo.type}.${extension}`;
-
- // Upload para o Storage
- const { error: uploadError } = await supabase.storage
- .from('client-photos')
- .upload(storagePath, blob, { upsert: true });
-
- if (uploadError) {
- console.error('Erro no upload da foto:', uploadError.message, uploadError);
- showToast('Erro ao fazer upload da foto: ' + uploadError.message, 'error');
- return null;
- }
-
- // Obter URL pública
- const { data: urlData } = supabase.storage
- .from('client-photos')
- .getPublicUrl(storagePath);
-
- return { url: urlData.publicUrl, storagePath };
- } catch (error) {
- console.error('Erro ao fazer upload da foto:', error);
- return null;
- }
- };
-
- // Salvar referência da foto no banco
- const saveClientPhotoToDb = async (userId: string, clientId: string, photo: ClientPhoto, url: string, storagePath: string) => {
- try {
- const { error } = await supabase
- .from('client_photos')
- .upsert({
- client_id: clientId,
- user_id: userId,
- type: photo.type,
- storage_path: storagePath,
- url: url
- }, { onConflict: 'client_id,type' });
-
- if (error) {
- console.error('Erro ao salvar foto no banco:', error.message, error);
- showToast('Erro ao salvar foto do cliente', 'error');
- }
- } catch (err) {
- console.error('Erro inesperado ao salvar foto:', err);
- showToast('Erro ao salvar foto do cliente', 'error');
- }
- };
-
- // Carregar fotos do cliente do Storage
- const loadClientPhotos = async (clientId: string): Promise<ClientPhoto[]> => {
- try {
- const { data, error } = await supabase
- .from('client_photos')
- .select('*')
- .eq('client_id', clientId);
-
- if (error || !data) return [];
-
- return data.map(p => ({
- type: p.type as ClientPhoto['type'],
- base64: p.url, // Usamos a URL em vez de base64
- createdAt: p.created_at
- }));
- } catch (error) {
- console.error('Erro ao carregar fotos:', error);
- return [];
- }
- };
+ // uploadClientPhoto, saveClientPhotoToDb, loadClientPhotos moved to ClientsContext
 
  const handleCreateClient = async () => {
  if (!newClient.firstName || !newClient.lastName || !newClient.whatsapp) {
@@ -1780,14 +1522,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }
  };
 
- const getClientPhoto = (client: Client, type?: ClientPhoto['type']): string | undefined => {
- if (type && client.photos) {
- const photo = client.photos.find(p => p.type === type);
- if (photo) return photo.base64;
- }
- if (client.photos?.length) return client.photos[0].base64;
- return client.photo;
- };
+ // getClientPhoto moved to ClientsContext
 
  // Função para iniciar edição de cliente
  const startEditingClient = (client: Client) => {

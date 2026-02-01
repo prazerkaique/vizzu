@@ -8,7 +8,7 @@
 | 2 | AuthContext (user, session, login/logout) | Concluido |
 | 3 | HistoryContext (logs, persistencia) | Concluido |
 | 4 | ProductsContext (CRUD, filtros, helpers) | Concluido |
-| 5 | ClientsContext (CRUD, fotos, looks) | Pendente |
+| 5 | ClientsContext (CRUD, fotos, looks) | Concluido |
 | 6 | GenerationContext (estados de geracao global) | Pendente |
 | 7 | Extrair DashboardPage | Pendente |
 | 8 | Extrair ProductsPage + modals | Pendente |
