@@ -45,7 +45,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  theme = 'dark',
 }) => {
  const [layer, setLayer] = useState<1 | 2>(1);
- const [selectedCredits, setSelectedCredits] = useState<number>(50);
+ const [selectedCredits, setSelectedCredits] = useState<number>(10);
  const [isAnimating, setIsAnimating] = useState(false);
 
  const isDark = theme === 'dark';
@@ -146,11 +146,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
 
  {/* Badge especial para plano atual */}
- {currentPlan.id === 'starter' && (
+ {currentPlan.id === 'basic' && nextPlan && (
  <div className="flex justify-center mb-4">
  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#E91E8C]/20 text-[#E91E8C]">
  <i className="fas fa-gift"></i>
- Ganhe 400 créditos com upgrade
+ Ganhe {nextPlan.limit - currentPlan.limit} créditos extras com upgrade
  </span>
  </div>
  )}
@@ -176,11 +176,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <div className="space-y-3">
  {/* CTA Principal */}
  <button
- onClick={() => onBuyCredits(50)}
+ onClick={() => onBuyCredits(10)}
  className="w-full py-3.5 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5 "
  >
  <i className="fas fa-bolt mr-2"></i>
- Comprar 50 créditos - R$ {getCreditPackagePrice(50)}
+ Comprar 10 créditos - R$ {getCreditPackagePrice(10)}
  </button>
 
  {/* CTA Secundário */}
@@ -194,19 +194,19 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </button>
  ) : (
  <button
- onClick={() => onBuyCredits(100)}
+ onClick={() => onBuyCredits(25)}
  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#E91E8C]/50 hover:text-[#E91E8C]' : 'border-gray-300 text-gray-700 hover:border-[#E91E8C] hover:text-[#E91E8C]'}`}
  >
  <i className="fas fa-plus mr-2"></i>
- Comprar 100 créditos - R$ {getCreditPackagePrice(100)}
+ Comprar 25 créditos - R$ {getCreditPackagePrice(25)}
  </button>
  )}
  </div>
 
  {/* Chips de créditos rápidos (para Pro e Premier) */}
- {(currentPlan.id === 'pro' || currentPlan.id === 'premier') && (
+ {(currentPlan.id === 'pro' || currentPlan.id === 'premier' || currentPlan.id === 'enterprise') && (
  <div className="flex gap-2 justify-center mt-4">
- {[50, 100, 200].map(amount => (
+ {[10, 25, 50].map(amount => (
  <button
  key={amount}
  onClick={() => onBuyCredits(amount)}
@@ -219,7 +219,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  )}
 
  {/* Info de economia (para Starter) */}
- {currentPlan.id === 'starter' && nextPlan && (
+ {currentPlan.id === 'basic' && nextPlan && (
  <p className={`text-[10px] text-center mt-4 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
  <i className="fas fa-info-circle mr-1"></i>
  No plano {nextPlan.name} você paga R$ {nextPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito (economia de {Math.round((1 - nextPlan.creditPrice / currentPlan.creditPrice) * 100)}%)
@@ -291,7 +291,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
 
  {/* Cards de Planos */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
  {PLANS.map((plan) => {
  const isCurrentPlan = plan.id === currentPlan.id;
  const isPremier = plan.id === 'premier';
@@ -343,7 +343,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  disabled={isCurrentPlan}
  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${isCurrentPlan ? isDark ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white hover:opacity-90 hover:-translate-y-0.5'}`}
  >
- {isCurrentPlan ? 'Plano Atual' : plan.id === 'starter' ? 'Assinar' : 'Upgrade'}
+ {isCurrentPlan ? 'Plano Atual' : plan.priceMonthly > currentPlan.priceMonthly ? 'Fazer upgrade' : 'Mudar plano'}
  </button>
 
  {/* Features */}
