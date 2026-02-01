@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog } from '../../types';
 import { ProductStudioEditor } from './ProductStudioEditor';
 import { Plan } from '../../hooks/useCredits';
@@ -609,17 +610,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-green-500/50' : 'bg-white border-gray-200 hover:border-green-300 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- {productImage ? (
- <img
- src={productImage}
- alt={product.name}
- className="w-full h-full object-cover group-hover:scale-105 transition-transform"
- />
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
- </div>
- )}
+ <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  {/* Tag Otimizado */}
  <div className="absolute top-2 left-2 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1 ">
  <i className="fas fa-sparkles text-[6px]"></i>
@@ -703,17 +694,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-gray-400' : 'bg-white border-gray-200 hover:border-gray-400 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- {productImage ? (
- <img
- src={productImage}
- alt={product.name}
- className="w-full h-full object-cover group-hover:scale-105 transition-transform"
- />
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
- </div>
- )}
+ <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
  <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
@@ -855,17 +836,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-gray-400' : 'bg-gray-50 border-gray-200 hover:border-gray-400') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- {productImage ? (
- <img
- src={productImage}
- alt={product.name}
- className="w-full h-full object-cover group-hover:scale-105 transition-transform"
- />
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
- </div>
- )}
+ <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
  <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar

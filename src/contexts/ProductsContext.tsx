@@ -4,6 +4,7 @@ import { supabase } from '../services/supabaseClient';
 import { useAuth } from './AuthContext';
 import { useUI } from './UIContext';
 import { useHistory } from './HistoryContext';
+import { type ImageSize } from '../utils/imageUrl';
 
 interface ProductsContextType {
   products: Product[];
@@ -13,7 +14,7 @@ interface ProductsContextType {
   deleteProduct: (product: Product) => Promise<void>;
   deleteSelectedProducts: (selectedIds: string[], onDone?: () => void) => Promise<void>;
   isProductOptimized: (product: Product) => boolean;
-  getProductDisplayImage: (product: Product) => string | undefined;
+  getProductDisplayImage: (product: Product, size?: ImageSize) => string | undefined;
   getOptimizedImages: (product: Product) => { url: string; angle: string }[];
   getOriginalImages: (product: Product) => { url: string; label: string }[];
 }
