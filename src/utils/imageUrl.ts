@@ -1,187 +1,70 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * VIZZU - Sistema de Thumbnails Client-Side
+ * VIZZU - Sistema de Thumbnails Server-Side (Supabase Pro)
  * ═══════════════════════════════════════════════════════════════
  *
- * Redimensiona imagens via Canvas e cacheia no IndexedDB.
- * Na primeira carga, baixa a original e gera o thumbnail.
- * Nas próximas, serve direto do cache (instantâneo).
+ * Usa Supabase Image Transformation para servir thumbnails
+ * diretamente do servidor. O browser nunca baixa a imagem
+ * original para grids e listagens.
  *
- * Quando migrar pro Supabase Pro, basta trocar a implementação
- * interna de getImageUrl() para usar /render/image/ na URL.
+ * URLs Supabase storage:
+ *   /storage/v1/object/public/{bucket}/{path}       → original
+ *   /storage/v1/render/image/public/{bucket}/{path}  → transformed
  */
 
 export type ImageSize = 'thumb' | 'preview' | 'display' | 'full';
 
 const SIZE_CONFIG: Record<ImageSize, { width: number; quality: number } | null> = {
-  thumb:   { width: 256,  quality: 0.75 },
-  preview: { width: 512,  quality: 0.80 },
-  display: { width: 1024, quality: 0.85 },
+  thumb:   { width: 256,  quality: 75 },
+  preview: { width: 512,  quality: 80 },
+  display: { width: 1024, quality: 85 },
   full:    null,
 };
 
-// ── IndexedDB Cache ──
-
-const DB_NAME = 'vizzu-thumbs';
-const DB_VERSION = 1;
-const STORE_NAME = 'images';
-
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function getCached(key: string): Promise<string | null> {
-  try {
-    const db = await openDB();
-    return new Promise((resolve) => {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const req = store.get(key);
-      req.onsuccess = () => resolve(req.result ?? null);
-      req.onerror = () => resolve(null);
-    });
-  } catch {
-    return null;
-  }
-}
-
-async function setCache(key: string, value: string): Promise<void> {
-  try {
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(value, key);
-  } catch {
-    // Silently fail - cache is optional
-  }
-}
-
-// ── Canvas Resize ──
-
-function resizeImage(
-  img: HTMLImageElement,
-  maxWidth: number,
-  quality: number
-): string {
-  let { width, height } = img;
-
-  if (width <= maxWidth) {
-    // Image already smaller, just re-encode as WebP
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(img, 0, 0);
-    return canvas.toDataURL('image/webp', quality);
-  }
-
-  const ratio = maxWidth / width;
-  width = maxWidth;
-  height = Math.round(height * ratio);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, 0, 0, width, height);
-  return canvas.toDataURL('image/webp', quality);
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
-// ── In-flight request dedup ──
-
-const pendingRequests = new Map<string, Promise<string>>();
-
-// ── Public API ──
-
 /**
- * Retorna uma URL otimizada para o tamanho solicitado.
- * - 'full': retorna a URL original sem modificação
- * - 'thumb'/'preview'/'display': redimensiona via Canvas e cacheia no IndexedDB
- *
- * Na primeira chamada, retorna a URL original (para exibir algo imediato)
- * e inicia o processamento em background. Use getOptimizedImageUrl() para
- * obter a versão otimizada de forma assíncrona.
+ * Converte uma URL de storage Supabase para usar Image Transformation.
+ * Se a URL não for do Supabase storage, retorna a original.
  */
-export function getImageUrl(url: string | undefined, size: ImageSize = 'full'): string | undefined {
-  if (!url) return undefined;
-  if (size === 'full') return url;
-  return url; // Synchronous: returns original, async version handles optimization
+function toTransformUrl(url: string, width: number, quality: number): string {
+  // Supabase storage public URL pattern:
+  //   https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+  // Transform URL pattern:
+  //   https://{project}.supabase.co/storage/v1/render/image/public/{bucket}/{path}?width=X&quality=Y
+  if (url.includes('/storage/v1/object/public/')) {
+    return url.replace(
+      '/storage/v1/object/public/',
+      '/storage/v1/render/image/public/'
+    ) + `?width=${width}&quality=${quality}`;
+  }
+
+  // Not a Supabase storage URL — return as-is
+  return url;
 }
 
 /**
- * Versão assíncrona que retorna o thumbnail cacheado ou o gera.
- * Retorna a URL original como fallback se algo falhar.
+ * Retorna a URL otimizada para o tamanho solicitado (síncrono).
+ * Para URLs Supabase, usa Image Transformation server-side.
+ * Para outras URLs (base64, blob, externas), retorna a original.
  */
-export async function getOptimizedImageUrl(
+export function getOptimizedImageUrl(
   url: string | undefined,
   size: ImageSize = 'thumb'
-): Promise<string | undefined> {
+): string | undefined {
   if (!url) return undefined;
   if (size === 'full') return url;
 
-  // Skip optimization for base64 and blob URLs (already local)
+  // Skip for base64 and blob URLs (already local)
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
 
   const config = SIZE_CONFIG[size];
   if (!config) return url;
 
-  const cacheKey = `${size}:${url}`;
-
-  // Check cache first
-  const cached = await getCached(cacheKey);
-  if (cached) return cached;
-
-  // Dedup: if already processing this exact request, wait for it
-  const pending = pendingRequests.get(cacheKey);
-  if (pending) return pending;
-
-  const promise = (async () => {
-    try {
-      const img = await loadImage(url);
-      const resized = resizeImage(img, config.width, config.quality);
-      await setCache(cacheKey, resized);
-      return resized;
-    } catch {
-      return url; // Fallback to original on any error
-    } finally {
-      pendingRequests.delete(cacheKey);
-    }
-  })();
-
-  pendingRequests.set(cacheKey, promise);
-  return promise;
+  return toTransformUrl(url, config.width, config.quality);
 }
 
 /**
- * Limpa o cache de thumbnails (útil para liberar espaço).
+ * Alias síncrono — mantido para compatibilidade.
  */
-export async function clearThumbnailCache(): Promise<void> {
-  try {
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).clear();
-  } catch {
-    // Silently fail
-  }
+export function getImageUrl(url: string | undefined, size: ImageSize = 'full'): string | undefined {
+  return getOptimizedImageUrl(url, size);
 }

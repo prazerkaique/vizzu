@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { getOptimizedImageUrl, type ImageSize } from '../utils/imageUrl';
 
 interface OptimizedImageProps {
@@ -15,7 +15,7 @@ interface OptimizedImageProps {
 /**
  * Componente de imagem otimizada com:
  * - Placeholder pulse enquanto carrega
- * - Thumbnail via Canvas + cache IndexedDB
+ * - Thumbnail server-side via Supabase Image Transformation
  * - Fade-in suave quando a imagem fica pronta
  */
 export function OptimizedImage({
@@ -28,36 +28,10 @@ export function OptimizedImage({
   objectFit = 'cover',
   imgStyle,
 }: OptimizedImageProps) {
-  const [optimizedSrc, setOptimizedSrc] = useState<string | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    setLoaded(false);
-    setError(false);
-    setOptimizedSrc(undefined);
-
-    if (!src) return;
-
-    if (size === 'full') {
-      setOptimizedSrc(src);
-      return;
-    }
-
-    // Start with original URL for immediate display
-    setOptimizedSrc(src);
-
-    // Then optimize in background
-    getOptimizedImageUrl(src, size).then((url) => {
-      if (mountedRef.current && url) {
-        setOptimizedSrc(url);
-      }
-    });
-
-    return () => { mountedRef.current = false; };
-  }, [src, size]);
+  const optimizedSrc = getOptimizedImageUrl(src, size);
 
   if (!src || error) {
     return (
