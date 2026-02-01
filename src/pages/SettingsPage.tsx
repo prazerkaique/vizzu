@@ -3,7 +3,7 @@ import { CompanySettings } from '../types';
 import { useUI, type SettingsTab } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
-import { PLANS, CREDIT_PACKAGES } from '../hooks/useCredits';
+import { PLANS, CREDIT_PACKAGES, FREE_PLAN } from '../hooks/useCredits';
 import { ImageMigrationPanel } from '../components/Admin/ImageMigrationPanel';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
@@ -129,40 +129,79 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* Conteúdo da Seção */}
  <div className={settingsTab === 'plan' ? '' : 'max-w-xl'}>
  {settingsTab === 'plan' && (() => {
- // Features resumidas por plano (para os cards)
- const PLAN_HIGHLIGHTS: Record<string, string[]> = {
- basic: [
- '40 gerações/mês',
- 'Resolução 2K',
- 'Até 5.000 produtos',
- 'Todas as ferramentas',
+ // Features por plano — o que INCLUI
+ const PLAN_FEATURES: Record<string, { included: string[]; excluded: string[] }> = {
+ trial: {
+ included: [
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Geração de imagens 2K',
+ ],
+ excluded: [
+ 'Vizzu Provador®',
+ 'Geração 4K',
  'Modelos IA personalizados',
+ 'Agente WhatsApp',
+ 'Integração e-commerce',
+ 'Suporte prioritário',
+ 'Imagens sem marca d\'água',
  ],
- pro: [
- '100 gerações/mês',
- 'Resolução 2K + 4K',
- 'Até 10.000 produtos',
- 'Geração de vídeos',
- 'Agente ativo WhatsApp',
+ },
+ basic: {
+ included: [
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de imagens 2K',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
  ],
- premier: [
- '200 gerações/mês',
- 'Resolução 4K',
- 'Até 50.000 produtos',
+ excluded: [
+ 'Geração 4K',
+ 'Modelos IA personalizados',
  'Integração e-commerce',
  'Suporte prioritário',
  ],
- enterprise: [
- '400 gerações/mês',
- 'Resolução 4K',
- 'Produtos ilimitados',
- 'API dedicada',
+ },
+ pro: {
+ included: [
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de imagens 2K / 4K',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ 'Modelos IA personalizados',
+ ],
+ excluded: [
+ 'Integração e-commerce',
+ ],
+ },
+ premier: {
+ included: [
+ 'Tudo do Pro, mais:',
+ 'Integração e-commerce',
  'Suporte prioritário',
  ],
+ excluded: [],
+ },
+ enterprise: {
+ included: [
+ 'Tudo do Premier, mais:',
+ 'Produtos ilimitados',
+ 'API dedicada',
+ 'Suporte prioritário VIP',
+ ],
+ excluded: [],
+ },
  };
 
  // Subtítulo orientado a persona
  const PLAN_PERSONA: Record<string, string> = {
+ trial: 'Teste grátis, sem compromisso',
  basic: 'Para quem está começando',
  pro: 'Para criadores e freelancers',
  premier: 'Para equipes de marketing',
@@ -171,28 +210,33 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  // CTAs diferenciados
  const PLAN_CTA: Record<string, string> = {
+ trial: 'Testar grátis',
  basic: 'Começar agora',
  pro: 'Escolher Pro',
  premier: 'Desbloquear Premier',
  enterprise: 'Falar com especialista',
  };
 
- // Matriz completa para tabela comparativa
+ // Matriz completa para tabela comparativa (Free, Basic, Pro, Premier, Enterprise)
  const COMPARISON_FEATURES = [
- { name: 'Gerações/mês', values: ['40', '100', '200', '400'] },
- { name: 'Resolução máxima', values: ['2K', '4K', '4K', '4K'] },
- { name: 'Limite de produtos', values: ['5.000', '10.000', '50.000', 'Ilimitado'] },
- { name: 'Vizzu Studio', values: [true, true, true, true] },
- { name: 'Vizzu Provador', values: [true, true, true, true] },
- { name: 'Modelo IA personalizado', values: [true, true, true, true] },
- { name: 'Legendas IA', values: [true, true, true, true] },
- { name: 'Catálogo + WhatsApp', values: [true, true, true, true] },
- { name: 'Geração em 4K', values: [false, true, true, true] },
- { name: 'Geração de vídeos', values: [false, true, true, true] },
- { name: 'Agente ativo WhatsApp', values: [false, true, true, true] },
- { name: 'Integração e-commerce', values: [false, false, true, true] },
- { name: 'Suporte prioritário', values: [false, false, true, true] },
+ { name: 'Gerações/mês', values: ['5', '40', '100', '200', '400'] },
+ { name: 'Resolução máxima', values: ['2K', '2K', '4K', '4K', '4K'] },
+ { name: 'Limite de produtos', values: ['50', '5.000', '10.000', '50.000', 'Ilimitado'] },
+ { name: 'Vizzu Product Studio®', values: [true, true, true, true, true] },
+ { name: 'Vizzu Look Composer®', values: [true, true, true, true, true] },
+ { name: 'Vizzu Still Criativo®', values: [true, true, true, true, true] },
+ { name: 'Vizzu Provador®', values: [false, true, true, true, true] },
+ { name: 'Imagens sem marca d\'água', values: [false, true, true, true, true] },
+ { name: 'Agente WhatsApp', values: [false, true, true, true, true] },
+ { name: 'Geração de imagens 4K', values: [false, false, true, true, true] },
+ { name: 'Modelos IA personalizados', values: [false, false, true, true, true] },
+ { name: 'Integração e-commerce', values: [false, false, false, true, true] },
+ { name: 'Suporte prioritário', values: [false, false, false, true, true] },
+ { name: 'API dedicada', values: [false, false, false, false, true] },
  ];
+
+ // Todos os planos incluindo Free para renderização
+ const ALL_DISPLAY_PLANS = [FREE_PLAN, ...PLANS];
 
  return (
  <div>
@@ -261,24 +305,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Cards dos Planos */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
- {PLANS.map(plan => {
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+ {ALL_DISPLAY_PLANS.map(plan => {
  const isCurrentPlan = currentPlan.id === plan.id;
- const price = billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly;
+ const isTrial = plan.id === 'trial';
+ const price = isTrial ? 0 : (billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly);
  const isPro = plan.id === 'pro';
  const isPremier = plan.id === 'premier';
- const highlights = PLAN_HIGHLIGHTS[plan.id] || [];
+ const features = PLAN_FEATURES[plan.id] || { included: [], excluded: [] };
  const persona = PLAN_PERSONA[plan.id] || '';
- const annualSavings = Math.round((plan.priceMonthly - plan.priceYearly) * 12);
- const perCredit = (price / plan.limit).toFixed(2).replace('.', ',');
+ const annualSavings = isTrial ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
+ const perCredit = isTrial ? null : (price / plan.limit).toFixed(2).replace('.', ',');
 
  return (
  <div
  key={plan.id}
  className={
- 'relative rounded-2xl p-4 transition-all flex flex-col ' +
+ 'relative rounded-2xl p-5 transition-all flex flex-col ' +
  (isCurrentPlan
  ? (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-[#FF9F43]/60' : 'bg-white border-2 border-[#FF9F43]/60 shadow-sm')
+ : isTrial
+ ? (theme === 'dark' ? 'bg-neutral-900/40 backdrop-blur-xl border border-dashed border-neutral-700' : 'bg-gray-50/80 border border-dashed border-gray-300')
  : (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 hover:border-neutral-600' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
  )
  }
@@ -306,44 +353,65 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  )}
 
- <div className="pt-2 flex flex-col flex-1">
+ <div className="pt-1 flex flex-col flex-1">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{plan.name}</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>{persona}</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-3'}>{persona}</p>
 
+ {/* Preço */}
  <div className="mb-1">
+ {isTrial ? (
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>Grátis</span>
+ ) : (
+ <>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>
  R$ {price.toFixed(2).replace('.', ',')}
  </span>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>/mês</span>
+ </>
+ )}
  </div>
 
  {/* Economia anual */}
- {billingPeriod === 'yearly' && (
- <p className={(theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') + ' text-[10px] font-medium mb-2'}>
+ {!isTrial && billingPeriod === 'yearly' ? (
+ <p className={(theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') + ' text-[10px] font-medium mb-3'}>
  <i className="fas fa-tag text-[8px] mr-1"></i>
  Economize R$ {annualSavings.toLocaleString('pt-BR')}/ano
  </p>
- )}
- {billingPeriod === 'monthly' && (
- <div className="mb-2 h-[14px]"></div>
+ ) : (
+ <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{plan.limit} gerações (uso único)</span>}</div>
  )}
 
- {/* Custo por imagem + crédito extra */}
+ {/* Custo por imagem */}
+ {!isTrial && (
  <div className={(theme === 'dark' ? 'bg-neutral-800/60 border-neutral-700/50' : 'bg-gray-50 border-gray-100') + ' rounded-lg p-2 mb-3 border'}>
  <div className="flex items-center justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>R$ {perCredit}/imagem</span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>{plan.limit} gerações &middot; R$ {perCredit}/img</span>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Extra: R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
  </div>
  </div>
+ )}
 
- <ul className="space-y-1.5 mb-4 flex-1">
- {highlights.map((feature, i) => (
- <li key={i} className="flex items-center gap-2 text-[11px]">
- <i className={'fas fa-check text-[9px] ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}></i>
+ {/* Features incluídas */}
+ <ul className="space-y-1.5 mb-3 flex-1">
+ {features.included.map((feature, i) => (
+ <li key={i} className="flex items-start gap-2 text-[11px]">
+ <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
  <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feature}</span>
  </li>
  ))}
  </ul>
+
+ {/* Features não incluídas */}
+ {features.excluded.length > 0 && (
+ <ul className="space-y-1 mb-4">
+ {features.excluded.map((feature, i) => (
+ <li key={i} className="flex items-start gap-2 text-[10px]">
+ <i className={'fas fa-minus text-[8px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-neutral-700' : 'text-gray-300')}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feature}</span>
+ </li>
+ ))}
+ </ul>
+ )}
 
  <button
  onClick={() => {
@@ -357,6 +425,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
  : isPro
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+ : isTrial
+ ? (theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300')
  : (theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white')
  )
  }
@@ -400,8 +470,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <thead>
  <tr className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-100') + ' border-b'}>
  <th className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-left py-2 px-4 font-medium'}>Recurso</th>
- {PLANS.map(p => (
- <th key={p.id} className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-center py-2 px-2 font-semibold'}>{p.name}</th>
+ {ALL_DISPLAY_PLANS.map(p => (
+ <th key={p.id} className={((currentPlan.id === p.id ? (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') : (theme === 'dark' ? 'text-neutral-300' : 'text-gray-700'))) + ' text-center py-2 px-2 font-semibold'}>{p.name}</th>
  ))}
  </tr>
  </thead>
