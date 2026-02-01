@@ -11,6 +11,7 @@ import { smartDownload } from '../../utils/downloadHelper';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
+import { OptimizedImage } from '../OptimizedImage';
 
 // Estilos CSS para animação de cor no Lottie (lilás → rosa → laranja)
 // Usa steps discretos para evitar passar pelo verde
@@ -1025,10 +1026,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  : (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')
  }`}
  >
- <img
+ <OptimizedImage
  src={(img as any).url}
  alt=""
  className="w-full h-full object-cover"
+ size="thumb"
  />
  </button>
  ))}
@@ -1396,10 +1398,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  });
  }}
  >
- <img
+ <OptimizedImage
  src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png"
  alt="Ghost Mannequin"
  className="w-full h-32 object-cover"
+ size="thumb"
  />
  <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
  <i className="fas fa-search-plus text-white text-lg"></i>
@@ -1422,10 +1425,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  });
  }}
  >
- <img
+ <OptimizedImage
  src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png"
  alt="Flat Lay"
  className="w-full h-32 object-cover"
+ size="thumb"
  />
  <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
  <i className="fas fa-search-plus text-white text-lg"></i>
@@ -1605,10 +1609,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  key={`gen-${idx}`}
  className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700 hover:border-green-500/50' : 'border-gray-200 hover:border-green-300') + ' transition-all'}
  >
- <img
+ <OptimizedImage
  src={img.url}
  alt={`${img.angle} view`}
  className="w-full aspect-square object-cover"
+ size="preview"
  />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
  <span className="text-white text-[10px] font-medium capitalize">{img.angle}</span>
@@ -1644,10 +1649,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  key={`orig-${idx}`}
  className={'relative rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500' : 'border-gray-200 hover:border-gray-400') + ' transition-all'}
  >
- <img
+ <OptimizedImage
  src={img.url}
  alt={img.type}
  className="w-full aspect-square object-cover"
+ size="preview"
  />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
  <span className="text-white text-[10px] font-medium">{img.type}</span>
@@ -1809,10 +1815,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
- <img
+ <OptimizedImage
  src={productImages[0]?.url || ''}
  alt={product.name}
  className="w-full h-full object-cover"
+ size="thumb"
  />
  </div>
  <div className="flex-1 min-w-0">

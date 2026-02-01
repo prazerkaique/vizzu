@@ -8,6 +8,7 @@ import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from 
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
 import { LookComposerResult } from './LookComposerResult';
+import { OptimizedImage } from '../OptimizedImage';
 import { supabase } from '../../services/supabaseClient';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
@@ -1385,7 +1386,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onClick={() => setCurrentImageIndex(idx)}
  title={img.type}
  >
- <img src={img.url} alt={img.type} className="w-full h-full object-cover" />
+ <OptimizedImage src={img.url} alt={img.type} className="w-full h-full object-cover" size="thumb" />
  </div>
  ))}
  </div>
@@ -1448,7 +1449,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  {(model.images?.front || model.referenceImageUrl) ? (
- <img src={model.images?.front || model.referenceImageUrl} alt={model.name} className="w-full aspect-square object-cover" />
+ <OptimizedImage src={model.images?.front || model.referenceImageUrl || ''} alt={model.name} className="w-full aspect-square object-cover" size="thumb" />
  ) : (
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full aspect-square flex items-center justify-center'}>
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user text-2xl'}></i>
@@ -1792,7 +1793,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-palette text-2xl'} style={{ color: solidColor === '#ffffff' ? '#9ca3af' : '#ffffff' }}></i>
  </div>
  ) : (
- <img src={bg.url} alt={bg.name} className="w-full h-20 object-cover" />
+ <OptimizedImage src={bg.url} alt={bg.name} className="w-full h-20 object-cover" size="thumb" />
  )}
  <div className={(isDark ? 'bg-black/70' : 'bg-white/90') + ' absolute inset-x-0 bottom-0 py-1.5 px-2 flex items-center gap-1.5'}>
  <i className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' fas ' + (bg.icon || 'fa-image') + ' text-[10px]'}></i>
@@ -1919,7 +1920,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ) : bg.base64 ? (
  <img src={bg.base64} alt={bg.name} className="w-full h-20 object-cover" />
  ) : bg.url ? (
- <img src={bg.url} alt={bg.name} className="w-full h-20 object-cover" />
+ <OptimizedImage src={bg.url} alt={bg.name} className="w-full h-20 object-cover" size="thumb" />
  ) : (
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full h-20 flex items-center justify-center'}>
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-pen text-xl'}></i>

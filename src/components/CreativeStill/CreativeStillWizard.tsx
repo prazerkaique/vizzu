@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { OptimizedImage } from '../OptimizedImage';
 import {
  Product,
  CreativeStillWizardState,
@@ -382,7 +383,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  <div className={'rounded-xl p-4 flex items-center gap-4 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
  <div className={'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
  {getProductImageUrl(wizardState.mainProduct) ? (
- <img src={getProductImageUrl(wizardState.mainProduct)} alt="" className="w-full h-full object-cover" />
+ <OptimizedImage src={getProductImageUrl(wizardState.mainProduct) || ''} alt="" className="w-full h-full object-cover" size="thumb" />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
  <i className={'fas fa-image ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
@@ -582,7 +583,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  <div key={i} className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
  {el.product_image_url ? (
  <div className={'w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
- <img src={el.product_image_url} alt="" className="w-full h-full object-cover" />
+ <OptimizedImage src={el.product_image_url || ''} alt="" className="w-full h-full object-cover" size="thumb" />
  </div>
  ) : (
  <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
@@ -1240,13 +1241,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-gray-50 border-gray-200 hover:border-amber-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- {productImage ? (
- <img src={productImage} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
- </div>
- )}
+ <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
  <i className="fas fa-check mr-1"></i>Selecionar
@@ -1365,13 +1360,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-gray-50 border-gray-200 hover:border-amber-300') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- {productImage ? (
- <img src={productImage} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
- ) : (
- <div className="w-full h-full flex items-center justify-center">
- <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
- </div>
- )}
+ <OptimizedImage src={productImage} size="thumb" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
  <i className="fas fa-plus mr-1"></i>Adicionar
