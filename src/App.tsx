@@ -2756,7 +2756,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="far fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
+ <i className="fas fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
  </button>
 
  {/* Produtos */}
@@ -2771,7 +2771,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="far fa-box w-4 text-[10px]"></i>{!sidebarCollapsed && 'Produtos'}
+ <i className="fas fa-box w-4 text-[10px]"></i>{!sidebarCollapsed && 'Produtos'}
  </button>
 
  {/* Botão CRIAR - Destacado no Centro */}
@@ -2786,7 +2786,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="far fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
+ <i className="fas fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
  </button>
  </div>
 
@@ -2802,7 +2802,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="far fa-user-tie w-4 text-[10px]"></i>{!sidebarCollapsed && 'Modelos'}
+ <i className="fas fa-user-tie w-4 text-[10px]"></i>{!sidebarCollapsed && 'Modelos'}
  </button>
 
  {/* Clientes */}
@@ -2817,7 +2817,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="far fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
+ <i className="fas fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
  </button>
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
@@ -2851,11 +2851,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }
  >
  {sidebarCollapsed ? (
- <i className="far fa-cog w-4 text-[10px]"></i>
+ <i className="fas fa-cog w-4 text-[10px]"></i>
  ) : (
  <>
  <span className="flex items-center gap-2.5">
- <i className="far fa-cog w-4 text-[10px]"></i>Configurações
+ <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
  </span>
  <i className={'fas fa-chevron-' + (showSettingsDropdown ? 'down' : 'up') + ' text-[8px] opacity-60'}></i>
  </>
@@ -2868,38 +2868,38 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => { navigateTo('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-user w-4 text-[10px] text-center"></i>Perfil
+ <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('appearance'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-palette w-4 text-[10px] text-center"></i>Aparência
+ <i className="fas fa-palette w-4 text-[10px] text-center"></i>Aparência
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('company'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-building w-4 text-[10px] text-center"></i>Empresa
+ <i className="fas fa-building w-4 text-[10px] text-center"></i>Empresa
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
+ <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-plug w-4 text-[10px] text-center"></i>Integrações
+ <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
  </button>
  <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
+ <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
  </button>
  </div>
  )}
@@ -2935,14 +2935,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200')}
  >
- <i className="far fa-coins text-[10px]"></i>
+ <i className="fas fa-coins text-[10px]"></i>
  <span>{userCredits}</span>
  </button>
  <button
  onClick={() => navigateTo('settings')}
  className={'w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')}
  >
- <i className="far fa-cog text-sm"></i>
+ <i className="fas fa-cog text-sm"></i>
  </button>
  </div>
  </div>
@@ -3934,7 +3934,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </p>
  {filteredProducts.length > 0 && (
  <button onClick={selectAllProducts} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] flex items-center gap-1'}>
- <i className={`far fa-${selectedProducts.length === filteredProducts.length ? 'check-square' : 'square'} text-xs`}></i>
+ <i className={`fas fa-${selectedProducts.length === filteredProducts.length ? 'check-square' : 'square'} text-xs`}></i>
  {selectedProducts.length === filteredProducts.length ? 'Desmarcar todos' : 'Selecionar todos'}
  </button>
  )}
@@ -4803,11 +4803,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  >
  <div className="flex items-center justify-around">
  <button onClick={() => navigateTo('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="far fa-home text-sm"></i>
+ <i className="fas fa-home text-sm"></i>
  <span className="text-[9px] font-medium">Home</span>
  </button>
  <button onClick={() => navigateTo('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="far fa-box text-sm"></i>
+ <i className="fas fa-box text-sm"></i>
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
  {/* Botão CRIAR - Central destacado */}
@@ -4818,11 +4818,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
  <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="far fa-user-tie text-sm"></i>
+ <i className="fas fa-user-tie text-sm"></i>
  <span className="text-[9px] font-medium">Modelos</span>
  </button>
  <button onClick={() => navigateTo('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="far fa-users text-sm"></i>
+ <i className="fas fa-users text-sm"></i>
  <span className="text-[9px] font-medium">Clientes</span>
  </button>
  </div>
