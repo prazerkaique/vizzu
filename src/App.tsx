@@ -13,6 +13,7 @@ const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => 
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
 import { useUI, type Page, type SettingsTab } from './contexts/UIContext';
 import { useAuth } from './contexts/AuthContext';
+import { useHistory } from './contexts/HistoryContext';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
@@ -188,6 +189,8 @@ function App() {
 
  // Auth state from context
  const { user, isAuthenticated, login, loginDemo, logout } = useAuth();
+ // History from context
+ const { historyLogs, setHistoryLogs, addHistoryLog, loadUserHistory } = useHistory();
  const [products, setProducts] = useState<Product[]>([]);
  const [showImport, setShowImport] = useState(false);
  const [showCreateProduct, setShowCreateProduct] = useState(false);
@@ -249,13 +252,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  }
  return [];
  });
- const [historyLogs, setHistoryLogs] = useState<HistoryLog[]>(() => {
- const saved = localStorage.getItem('vizzu_history');
- if (saved) {
- try { return JSON.parse(saved); } catch { }
- }
- return [];
- });
+ // historyLogs from HistoryContext
  const [showCreateClient, setShowCreateClient] = useState(false);
  const [showClientDetail, setShowClientDetail] = useState<Client | null>(null);
  const [clientDetailLooks, setClientDetailLooks] = useState<ClientLook[]>([]);
@@ -590,10 +587,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  }
  }, [clients]);
 
- // Persistir histórico
- useEffect(() => {
- localStorage.setItem('vizzu_history', JSON.stringify(historyLogs));
- }, [historyLogs]);
+ // history persistence moved to HistoryContext
 
  const clientPhotoInputRef = useRef<HTMLInputElement>(null);
  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -650,7 +644,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  } else if (result.success) {
  // Modo demo/offline - créditos adicionados localmente
  setShowCreditModal(false);
- handleAddHistoryLog('Créditos adicionados', `${amount} créditos foram adicionados à sua conta`, 'success', [], 'system', 0);
+ addHistoryLog('Créditos adicionados', `${amount} créditos foram adicionados à sua conta`, 'success', [], 'system', 0);
  showToast(`${amount} créditos adicionados!`, 'success');
  } else {
  showToast(result.error || 'Erro ao processar compra', 'error');
@@ -676,7 +670,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  // Modo demo/offline - plano alterado localmente
  setShowCreditModal(false);
  if (plan) {
- handleAddHistoryLog('Plano atualizado', `Você fez upgrade para o plano ${plan.name}`, 'success', [], 'system', 0);
+ addHistoryLog('Plano atualizado', `Você fez upgrade para o plano ${plan.name}`, 'success', [], 'system', 0);
  showToast(`Upgrade para ${plan.name} realizado!`, 'success');
  }
  } else {
@@ -1021,76 +1015,7 @@ const deleteClientFromSupabase = async (clientId: string) => {
 // SINCRONIZAÇÃO DE HISTÓRICO
 // ═══════════════════════════════════════════════════════════════
 
-const loadUserHistory = async (userId: string) => {
- try {
- const { data: historyData, error } = await supabase
- .from('history_logs')
- .select('*')
- .eq('user_id', userId)
- .order('created_at', { ascending: false })
- .limit(100);
-
- if (error) {
- // Tabela pode não existir ainda - usar apenas localStorage
- return;
- }
-
- const localHistory: HistoryLog[] = JSON.parse(localStorage.getItem('vizzu_history') || '[]');
-
- if (historyData && historyData.length > 0) {
- const formattedHistory: HistoryLog[] = historyData.map(h => ({
- id: h.id,
- date: h.date,
- action: h.action,
- details: h.details,
- status: h.status,
- method: h.method,
- cost: h.cost || 0,
- itemsCount: h.items_count || 0,
- createdAt: h.created_at ? new Date(h.created_at) : undefined,
- }));
-
- // Substituir estado com dados do servidor
- setHistoryLogs(formattedHistory);
- } else {
- // Servidor vazio - sincronizar locais
- if (localHistory.length > 0) {
- for (const log of localHistory.slice(0, 50)) {
- await saveHistoryToSupabase(log, userId);
- }
- } else {
- setHistoryLogs([]);
- }
- }
- } catch (error) {
- console.error('Erro ao carregar histórico:', error);
- }
-};
-
-const saveHistoryToSupabase = async (log: HistoryLog, userId: string) => {
- try {
- const { error } = await supabase
- .from('history_logs')
- .upsert({
- id: log.id,
- user_id: userId,
- date: log.date || new Date().toISOString(),
- action: log.action,
- details: log.details,
- status: log.status,
- method: log.method,
- cost: log.cost || 0,
- items_count: log.itemsCount || log.items?.length || log.products?.length || 0,
- created_at: log.createdAt instanceof Date ? log.createdAt.toISOString() : (log.createdAt || new Date().toISOString()),
- }, { onConflict: 'id' });
-
- if (error) {
- // Silently ignore - table may not exist
- }
- } catch {
- // Silently ignore
- }
-};
+// loadUserHistory + saveHistoryToSupabase moved to HistoryContext
 
 // ═══════════════════════════════════════════════════════════════
 // SINCRONIZAÇÃO DE CONFIGURAÇÕES DA EMPRESA
@@ -1387,7 +1312,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  }
 
  showToast(`"${product.name}" foi excluído`, 'success');
- handleAddHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
+ addHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
  } catch (e) {
  console.error('Erro ao deletar produto:', e);
  showToast('Erro ao excluir produto', 'error');
@@ -1433,7 +1358,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  }
 
  showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
- handleAddHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
+ addHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
  } catch (e) {
  console.error('Erro ao deletar produtos:', e);
  showToast('Erro ao excluir produtos', 'error');
@@ -1474,7 +1399,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  setCredits(result.credits_remaining);
  }
  loadUserProducts(user.id);
- handleAddHistoryLog('Imagem gerada', `Studio Ready para "${product.name}"`, 'success', [product], 'ai', 1);
+ addHistoryLog('Imagem gerada', `Studio Ready para "${product.name}"`, 'success', [product], 'ai', 1);
  return {
  image: result.generation.image_url,
  generationId: result.generation.id,
@@ -1504,7 +1429,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  setCredits(result.credits_remaining);
  }
  loadUserProducts(user.id);
- handleAddHistoryLog('Imagem gerada', `Cenário Criativo para "${product.name}"`, 'success', [product], 'ai', 1);
+ addHistoryLog('Imagem gerada', `Cenário Criativo para "${product.name}"`, 'success', [product], 'ai', 1);
  return {
  image: result.generation.image_url,
  generationId: result.generation.id,
@@ -1541,7 +1466,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  setCredits(result.credits_remaining);
  }
  loadUserProducts(user.id);
- handleAddHistoryLog('Imagem gerada', `Modelo IA para "${product.name}"`, 'success', [product], 'ai', 3);
+ addHistoryLog('Imagem gerada', `Modelo IA para "${product.name}"`, 'success', [product], 'ai', 3);
  return {
  image: result.generation.image_url,
  generationId: result.generation.id,
@@ -1866,7 +1791,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  }
 
  // Log no histórico
- handleAddHistoryLog('Produto criado', `"${newProduct.name}" foi adicionado ao catálogo`, 'success', [], 'manual', 0);
+ addHistoryLog('Produto criado', `"${newProduct.name}" foi adicionado ao catálogo`, 'success', [], 'manual', 0);
  } else {
  alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
  }
@@ -1948,7 +1873,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  setProductAttributes({});
 
  showToast('Produto atualizado com sucesso!', 'success');
- handleAddHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
+ addHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
  } else {
  alert('Erro ao atualizar produto: ' + (data.error || 'Tente novamente'));
  }
@@ -2119,7 +2044,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }
 
  // Log no histórico
- handleAddHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
+ addHistoryLog('Cliente cadastrado', `${client.firstName} ${client.lastName} foi adicionado`, 'success', [], 'manual', 0);
 
  // Fechar modal e limpar formulário
  setShowCreateClient(false);
@@ -2157,7 +2082,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  deleteClientFromSupabase(clientId);
 
  if (client) {
- handleAddHistoryLog('Cliente excluído', `${client.firstName} ${client.lastName} foi removido`, 'success', [], 'manual', 0);
+ addHistoryLog('Cliente excluído', `${client.firstName} ${client.lastName} foi removido`, 'success', [], 'manual', 0);
  }
  }
  };
@@ -2929,7 +2854,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  if (result.credits_remaining !== undefined) {
  setCredits(result.credits_remaining);
  }
- handleAddHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', 3);
+ addHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', 3);
  return result.generation.image_url;
  } else {
  throw new Error(result.message || 'Erro ao gerar imagem');
@@ -3150,26 +3075,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }
  };
 
- const handleAddHistoryLog = (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => {
- const newLog: HistoryLog = {
- id: `log-${Date.now()}`,
- date: new Date().toISOString(),
- action,
- details,
- status,
- items,
- method,
- cost,
- itemsCount: items.length,
- createdAt: new Date(),
- };
- setHistoryLogs(prev => [newLog, ...prev].slice(0, 100)); // Mantém últimos 100 registros
-
- // Sincronizar com Supabase se usuário estiver logado
- if (user?.id) {
- saveHistoryToSupabase(newLog, user.id);
- }
- };
+ // addHistoryLog moved to HistoryContext as addHistoryLog
 
  // Função para processar imagem (converte HEIC se necessário + comprime)
  const processImageFile = async (file: File): Promise<string> => {
@@ -3253,7 +3159,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  setCredits(result.credits_remaining);
  }
  setProvadorStep(4);
- handleAddHistoryLog('Provador gerado', `Look para ${provadorClient.firstName}`, 'success', [], 'ai', 3);
+ addHistoryLog('Provador gerado', `Look para ${provadorClient.firstName}`, 'success', [], 'ai', 3);
  } else {
  throw new Error(result.message || 'Erro ao gerar imagem');
  }
@@ -4160,7 +4066,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  userCredits={userCredits}
  onUpdateProduct={handleUpdateProduct}
  onDeductCredits={handleDeductCredits}
- onAddHistoryLog={handleAddHistoryLog}
+ onAddHistoryLog={addHistoryLog}
  onImport={() => setShowImport(true)}
  currentPlan={currentPlan}
  theme={theme}
@@ -4237,7 +4143,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  userCredits={userCredits}
  onUpdateProduct={handleUpdateProduct}
  onDeductCredits={handleDeductCredits}
- onAddHistoryLog={handleAddHistoryLog}
+ onAddHistoryLog={addHistoryLog}
  onImport={() => setShowImport(true)}
  currentPlan={currentPlan}
  theme={theme}
@@ -4281,7 +4187,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  userCredits={userCredits}
  userId={user?.id}
  onDeductCredits={handleDeductCredits}
- onAddHistoryLog={handleAddHistoryLog}
+ onAddHistoryLog={addHistoryLog}
  onCheckCredits={checkCreditsAndShowModal}
  currentPlan={currentPlan}
  onBack={goBack}

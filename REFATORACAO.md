@@ -6,7 +6,7 @@
 |-------|-----------|--------|
 | 1 | UIContext (theme, navigation, toast, sidebar) | Concluido |
 | 2 | AuthContext (user, session, login/logout) | Concluido |
-| 3 | HistoryContext (logs, persistencia) | Pendente |
+| 3 | HistoryContext (logs, persistencia) | Concluido |
 | 4 | ProductsContext (CRUD, filtros, helpers) | Pendente |
 | 5 | ClientsContext (CRUD, fotos, looks) | Pendente |
 | 6 | GenerationContext (estados de geracao global) | Pendente |
