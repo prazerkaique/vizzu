@@ -288,11 +288,15 @@ Movido JSX de Settings (~646 linhas) + companySettings state + dotLottieRef para
 - Créditos/planos ficam no App.tsx (compartilhados) e passam como props
 - App.tsx: 2795 → 2105 linhas (-690)
 
-### Passo 12: Extrair CreateHubPage
+### Passo 12: Extrair CreateHubPage ✅ Concluido
 **Risco: Baixo** | **Impacto: Baixo**
 
-Mover JSX do hub de criacao (linhas 4070-4280) para:
-`src/pages/CreateHubPage.tsx`
+Movido JSX do hub de criação (~212 linhas) para:
+`src/pages/CreateHubPage.tsx` (~210 linhas)
+
+- 4 cards (Product Studio, Provador, Look Completo, Still Criativo) + banner "em breve" + barra créditos
+- Quase 100% presentacional — só 1 prop (userCredits), resto via useUI()
+- App.tsx: 2105 → 1895 linhas (-210)
 
 ### Passo 13: Extrair Layout (Sidebar + MobileNav + Header)
 **Risco: Baixo** | **Impacto: Medio**
