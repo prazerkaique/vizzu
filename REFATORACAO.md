@@ -4,7 +4,7 @@
 
 | Passo | Descricao | Status |
 |-------|-----------|--------|
-| 1 | UIContext (theme, navigation, toast, sidebar) | Pendente |
+| 1 | UIContext (theme, navigation, toast, sidebar) | Concluido |
 | 2 | AuthContext (user, session, login/logout) | Pendente |
 | 3 | HistoryContext (logs, persistencia) | Pendente |
 | 4 | ProductsContext (CRUD, filtros, helpers) | Pendente |

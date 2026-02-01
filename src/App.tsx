@@ -11,6 +11,7 @@ const VizzuProvadorWizard = lazy(() => import('./components/Provador/VizzuProvad
 const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
 
 import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, CompanySettings, SavedModel, MODEL_OPTIONS } from './types';
+import { useUI, type Page, type SettingsTab } from './contexts/UIContext';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
@@ -101,8 +102,7 @@ const PROVADOR_LOADING_PHRASES = [
  { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
-type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations' | 'history' | 'tools';
+// Page and SettingsTab types imported from UIContext
 
 // Componente de carrossel para cards de modelos
 const ModelCardCarousel: React.FC<{
@@ -182,42 +182,12 @@ const ModelCardCarousel: React.FC<{
 };
 
 function App() {
+ // UI state from context
+ const { theme, setTheme, currentPage, navigateTo, goBack, settingsTab, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, showToast, successNotification, setSuccessNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
+
  const [isAuthenticated, setIsAuthenticated] = useState(false);
  const [user, setUser] = useState<User | null>(null);
  const [products, setProducts] = useState<Product[]>([]);
- const [currentPage, setCurrentPage] = useState<Page>(() => {
- const saved = localStorage.getItem('vizzu_currentPage');
- return (saved as Page) || 'dashboard';
- });
- const [pageHistory, setPageHistory] = useState<Page[]>([]);
-
- const navigateTo = (page: Page) => {
- if (page === currentPage) return;
- setPageHistory(prev => [...prev, currentPage]);
- setCurrentPage(page);
- };
-
- const goBack = () => {
- setPageHistory(prev => {
- if (prev.length === 0) {
- // Sem histórico (ex: app reaberto) — volta para o dashboard como fallback
- if (currentPage !== 'dashboard') {
- setCurrentPage('dashboard');
- }
- return prev;
- }
- const newHistory = [...prev];
- const previousPage = newHistory.pop()!;
- setCurrentPage(previousPage);
- return newHistory;
- });
- };
-
- const [settingsTab, setSettingsTab] = useState<SettingsTab>('profile');
- const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
- const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
- return localStorage.getItem('vizzu_sidebar') === 'collapsed';
- });
  const [showImport, setShowImport] = useState(false);
  const [showCreateProduct, setShowCreateProduct] = useState(false);
  const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
@@ -229,7 +199,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'detail' | null>(null);
  const [showConfirmNoDetail, setShowConfirmNoDetail] = useState(false);
- const [successNotification, setSuccessNotification] = useState<string | null>(null);
+ // successNotification from UIContext
  const [showBulkImport, setShowBulkImport] = useState(false);
  const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -245,8 +215,8 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const [showDeleteProductsModal, setShowDeleteProductsModal] = useState(false);
  const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
  const [productForCreation, setProductForCreation] = useState<Product | null>(null);
- const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
- 
+ // toast from UIContext
+
  const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
  const [productAttributes, setProductAttributes] = useState<ProductAttributes>({});
 
@@ -322,7 +292,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
  const [showStudioPicker, setShowStudioPicker] = useState(false);
  const [showAddProductHint, setShowAddProductHint] = useState(false);
- const [showVideoTutorial, setShowVideoTutorial] = useState<'studio' | 'provador' | null>(null);
+ // showVideoTutorial from UIContext
 
  // Product Studio - estados de geração em background
  const [isGeneratingProductStudio, setIsGeneratingProductStudio] = useState(false);
@@ -381,10 +351,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  if (!dragRef.current.dragging) restoreFn();
  }, []);
 
- const [theme, setTheme] = useState<'dark' | 'light'>(() => {
- const saved = localStorage.getItem('vizzu_theme');
- return (saved as 'dark' | 'light') || 'light';
- });
+ // theme from UIContext
 
  // Detecta se está rodando como PWA standalone (sem UI do browser)
  const [isPWA, setIsPWA] = useState(false);
@@ -596,10 +563,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  };
  });
 
- // Persistir sidebar collapsed state
- useEffect(() => {
- localStorage.setItem('vizzu_sidebar', sidebarCollapsed ? 'collapsed' : 'expanded');
- }, [sidebarCollapsed]);
+ // sidebar persistence moved to UIContext
 
  // Persistir company settings (localStorage + Supabase)
  useEffect(() => {
@@ -681,18 +645,18 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  window.open(result.checkoutUrl, '_blank');
  setShowCreditModal(false);
  // Toast informando sobre redirecionamento
- setToast({ type: 'info', message: 'Redirecionando para pagamento...' });
+ showToast('Redirecionando para pagamento...', 'info');
  } else if (result.success) {
  // Modo demo/offline - créditos adicionados localmente
  setShowCreditModal(false);
  handleAddHistoryLog('Créditos adicionados', `${amount} créditos foram adicionados à sua conta`, 'success', [], 'system', 0);
- setToast({ type: 'success', message: `${amount} créditos adicionados!` });
+ showToast(`${amount} créditos adicionados!`, 'success');
  } else {
- setToast({ type: 'error', message: result.error || 'Erro ao processar compra' });
+ showToast(result.error || 'Erro ao processar compra', 'error');
  }
  } catch (e: any) {
  console.error('Error buying credits:', e);
- setToast({ type: 'error', message: 'Erro ao processar compra' });
+ showToast('Erro ao processar compra', 'error');
  }
  };
 
@@ -706,20 +670,20 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  // Redirecionar para checkout de assinatura
  window.open(result.checkoutUrl, '_blank');
  setShowCreditModal(false);
- setToast({ type: 'info', message: 'Redirecionando para pagamento...' });
+ showToast('Redirecionando para pagamento...', 'info');
  } else if (result.success) {
  // Modo demo/offline - plano alterado localmente
  setShowCreditModal(false);
  if (plan) {
  handleAddHistoryLog('Plano atualizado', `Você fez upgrade para o plano ${plan.name}`, 'success', [], 'system', 0);
- setToast({ type: 'success', message: `Upgrade para ${plan.name} realizado!` });
+ showToast(`Upgrade para ${plan.name} realizado!`, 'success');
  }
  } else {
- setToast({ type: 'error', message: result.error || 'Erro ao processar upgrade' });
+ showToast(result.error || 'Erro ao processar upgrade', 'error');
  }
  } catch (e: any) {
  console.error('Error upgrading plan:', e);
- setToast({ type: 'error', message: 'Erro ao processar upgrade' });
+ showToast('Erro ao processar upgrade', 'error');
  }
  };
 
@@ -1218,20 +1182,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  return () => subscription.unsubscribe();
  }, []);
 
- // Persistir página atual no localStorage
- useEffect(() => {
- localStorage.setItem('vizzu_currentPage', currentPage);
- }, [currentPage]);
-
- // Persistir tema no localStorage e atualizar theme-color para PWA
- useEffect(() => {
- localStorage.setItem('vizzu_theme', theme);
- // Atualiza a cor do tema na status bar do PWA/mobile
- const themeColorMeta = document.querySelector('meta[name="theme-color"]:not([media])') || document.querySelector('meta[name="theme-color"]');
- if (themeColorMeta) {
- themeColorMeta.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#F8F6F2');
- }
- }, [theme]);
+ // currentPage + theme persistence moved to UIContext
 
  // Controlar frases e progresso do loading do Provador
  // Tempo médio de geração: ~75 segundos (1:15)
@@ -1396,13 +1347,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  return images;
  };
 
- // Função para mostrar toast
- const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
- const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
- if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
- setToast({ message, type });
- toastTimerRef.current = setTimeout(() => setToast(null), 3000);
- };
+ // showToast from UIContext
 
  // Função para toggle seleção de produto
  const toggleProductSelection = (productId: string) => {
