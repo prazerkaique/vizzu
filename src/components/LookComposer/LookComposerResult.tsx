@@ -503,7 +503,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div className="flex items-center gap-2">
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-7 h-7 rounded-lg flex items-center justify-center overflow-hidden'}>
  {selectedModel.images?.front ? (
- <OptimizedImage src={selectedModel.images.front} alt={selectedModel.name} className="w-full h-full" size="thumb" objectFit="cover" />
+ <OptimizedImage src={selectedModel.images.front} alt={selectedModel.name} className="w-full h-full" size="thumb" />
  ) : (
  <i className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-user text-[10px]'}></i>
  )}

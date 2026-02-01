@@ -605,7 +605,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt={selectedClient.firstName}
  className="w-24 h-24 rounded-full border-4 border-white/20"
  size="thumb"
- objectFit="cover"
  />
  <button
  onClick={() => { setSelectedClient(null); onClientSelect(null); }}
@@ -669,7 +668,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt={client.firstName}
  className="w-12 h-12 rounded-full border-2 border-white/20"
  size="thumb"
- objectFit="cover"
  />
  <div className="flex-1 min-w-0">
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
@@ -738,7 +736,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt={selectedClient.firstName}
  className="w-10 h-10 rounded-full border-2 border-white/20"
  size="thumb"
- objectFit="cover"
  />
  <div>
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
@@ -1163,7 +1160,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt="Look salvo"
  className="w-full h-full"
  size="preview"
- objectFit="cover"
  />
  <button
  onClick={() => setSelectedSavedLook(null)}
@@ -1286,7 +1282,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  : 'hover:ring-2 hover:ring-[#FF9F43]/50'
  }`}
  size="thumb"
- objectFit="cover"
  />
  <button
  onClick={(e) => {
@@ -1316,7 +1311,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt={selectedClient.firstName}
  className="w-10 h-10 rounded-full border-2 border-white/20"
  size="thumb"
- objectFit="cover"
  />
  <div className="flex-1 min-w-0">
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
@@ -1601,7 +1595,6 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt={selectedClient.firstName}
  className={`w-12 h-12 rounded-full border-2 ${theme === 'dark' ? 'border-white/20' : 'border-gray-200'}`}
  size="thumb"
- objectFit="cover"
  />
  <div className="flex-1 min-w-0">
  <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
