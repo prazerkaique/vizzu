@@ -25,7 +25,7 @@ export function OptimizedImage({
   className = '',
   style,
   onClick,
-  objectFit = 'cover',
+  objectFit = 'contain',
   imgStyle,
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);

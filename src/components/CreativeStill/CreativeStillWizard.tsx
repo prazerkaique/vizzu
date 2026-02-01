@@ -383,7 +383,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  <div className={'rounded-xl p-4 flex items-center gap-4 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
  <div className={'w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
  {getProductImageUrl(wizardState.mainProduct) ? (
- <OptimizedImage src={getProductImageUrl(wizardState.mainProduct) || ''} alt="" className="w-full h-full object-cover" size="thumb" />
+ <OptimizedImage src={getProductImageUrl(wizardState.mainProduct) || ''} alt="" className="w-full h-full" size="thumb" />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
  <i className={'fas fa-image ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
@@ -583,7 +583,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  <div key={i} className={'rounded-lg p-3 flex items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
  {el.product_image_url ? (
  <div className={'w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
- <OptimizedImage src={el.product_image_url || ''} alt="" className="w-full h-full object-cover" size="thumb" />
+ <OptimizedImage src={el.product_image_url || ''} alt="" className="w-full h-full" size="thumb" />
  </div>
  ) : (
  <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
