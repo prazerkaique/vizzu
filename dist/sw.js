@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vizzu-v10';
+const CACHE_NAME = 'vizzu-v11';
 const OFFLINE_URL = '/';
 
 const STATIC_ASSETS = [
@@ -51,7 +51,7 @@ self.addEventListener('fetch', (event) => {
 
   // Imagens do Supabase Storage — stale-while-revalidate
   // Serve do cache imediatamente, mas atualiza em background
-  if (event.request.url.includes('supabase') && event.request.url.includes('/storage/v1/object/')) {
+  if (event.request.url.includes('supabase') && (event.request.url.includes('/storage/v1/object/') || event.request.url.includes('/storage/v1/render/image/'))) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(event.request).then((cachedResponse) => {

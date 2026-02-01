@@ -582,7 +582,7 @@ function App() {
      case 'dashboard': return <DashboardPage />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
-     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} />;
+     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} />;
      case 'clients': return <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />;
      default: return null;
    }
@@ -741,7 +741,7 @@ function App() {
  )}
 
  {/* MODELS */}
- {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} />}
+ {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} />}
 
  {/* PRODUCTS */}
  {currentPage === 'products' && <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />}

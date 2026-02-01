@@ -85,11 +85,56 @@ const ModelCardCarousel: React.FC<{
  );
 };
 
+// Custo de criação de modelo IA
+const MODEL_CREATION_COST = 2;
+
+// 4 modelos pré-definidos gratuitos
+const DEFAULT_MODELS: SavedModel[] = [
+  {
+    id: 'default-woman-1', userId: 'system', name: 'Sofia',
+    gender: 'woman', ethnicity: 'latina', skinTone: 'medium',
+    bodyType: 'slim', ageRange: '25-30', height: 'average',
+    hairColor: 'dark-brown', hairStyle: 'straight', eyeColor: 'brown',
+    expression: 'natural-smile',
+    images: { front: '/models/sofia-front.webp', back: '/models/sofia-back.webp' },
+    status: 'ready', createdAt: '2025-01-01',
+  },
+  {
+    id: 'default-woman-2', userId: 'system', name: 'Valentina',
+    gender: 'woman', ethnicity: 'caucasian', skinTone: 'light',
+    bodyType: 'average', ageRange: '20-25', height: 'tall',
+    hairColor: 'blonde', hairStyle: 'wavy', eyeColor: 'blue',
+    expression: 'natural-smile',
+    images: { front: '/models/valentina-front.webp', back: '/models/valentina-back.webp' },
+    status: 'ready', createdAt: '2025-01-01',
+  },
+  {
+    id: 'default-man-1', userId: 'system', name: 'Lucas',
+    gender: 'man', ethnicity: 'latina', skinTone: 'medium',
+    bodyType: 'athletic', ageRange: '25-30', height: 'tall',
+    hairColor: 'dark-brown', hairStyle: 'short', eyeColor: 'brown',
+    expression: 'neutral',
+    images: { front: '/models/lucas-front.webp', back: '/models/lucas-back.webp' },
+    status: 'ready', createdAt: '2025-01-01',
+  },
+  {
+    id: 'default-man-2', userId: 'system', name: 'Rafael',
+    gender: 'man', ethnicity: 'afro', skinTone: 'dark',
+    bodyType: 'athletic', ageRange: '25-30', height: 'tall',
+    hairColor: 'black', hairStyle: 'short', eyeColor: 'brown',
+    expression: 'natural-smile',
+    images: { front: '/models/rafael-front.webp', back: '/models/rafael-back.webp' },
+    status: 'ready', createdAt: '2025-01-01',
+  },
+];
+
 interface ModelsPageProps {
  savedModels: SavedModel[];
  setSavedModels: React.Dispatch<React.SetStateAction<SavedModel[]>>;
  showCreateModel: boolean;
  setShowCreateModel: (v: boolean) => void;
+ userCredits?: number;
+ onDeductCredits?: (amount: number, reason: string) => boolean;
 }
 
 export const ModelsPage: React.FC<ModelsPageProps> = ({
@@ -97,7 +142,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setSavedModels,
  showCreateModel,
  setShowCreateModel,
+ userCredits = 0,
+ onDeductCredits,
 }) => {
+ // Combinar modelos default + do usuário
+ const allModels = [...DEFAULT_MODELS, ...savedModels];
+ const isDefaultModel = (id: string) => id.startsWith('default-');
  const { theme, navigateTo } = useUI();
  const { user } = useAuth();
 
@@ -311,6 +361,15 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const generateModelPreview = async () => {
  if (!user || !newModel.name.trim()) return;
 
+ // Verificar e debitar créditos (2 créditos para criar modelo)
+ if (onDeductCredits) {
+ const success = onDeductCredits(MODEL_CREATION_COST, 'Criar Modelo IA');
+ if (!success) {
+ alert('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.');
+ return;
+ }
+ }
+
  setGeneratingModelImages(true);
  setModelPreviewImages(null);
  setModelGenerationProgress(0);
@@ -499,7 +558,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  <div className="flex items-center gap-2">
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
- {savedModels.length}/{getModelLimit()} modelos
+ {savedModels.length}/{getModelLimit()} modelos criados
  </span>
  <button
  onClick={() => { resetModelWizard(); setShowCreateModel(true); }}
@@ -594,8 +653,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
 
- {/* Empty State */}
- {savedModels.length === 0 ? (
+ {/* Empty State (only show if no user models AND no defaults) */}
+ {allModels.length === 0 ? (
  <div className={'rounded-2xl p-12 text-center ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 ')}>
  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 flex items-center justify-center">
  <i className="fas fa-user-tie text-3xl text-[#E91E8C]"></i>
@@ -614,7 +673,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  ) : (
  /* Models Grid - Vertical Cards */
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
- {savedModels
+ {allModels
  .filter(model => {
  if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
  if (modelFilterGender && model.gender !== modelFilterGender) return false;
@@ -673,6 +732,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}>
  {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
  </div>
+ {/* Badge Gratuito para modelos default */}
+ {isDefaultModel(model.id) && (
+ <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-400 backdrop-blur-sm">
+ Gratuito
+ </div>
+ )}
  </div>
  {/* Info */}
  <div className="p-3">
@@ -696,7 +761,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}
 
  {/* Nenhum resultado com filtros */}
- {savedModels.length > 0 && savedModels.filter(model => {
+ {allModels.length > 0 && allModels.filter(model => {
  if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
  if (modelFilterGender && model.gender !== modelFilterGender) return false;
  if (modelFilterSkinTone && model.skinTone !== modelFilterSkinTone) return false;
@@ -1550,6 +1615,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  {/* Footer */}
  <div className={'p-4 border-t flex gap-2 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+ {!isDefaultModel(showModelDetail.id) && (
+ <>
  <button
  onClick={() => {
  if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
@@ -1592,6 +1659,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  >
  <i className="fas fa-edit mr-2"></i>Editar
  </button>
+ </>
+ )}
+ {isDefaultModel(showModelDetail.id) && (
+ <span className={(theme === 'dark' ? 'text-blue-400' : 'text-blue-500') + ' text-xs flex items-center px-2'}>
+ <i className="fas fa-info-circle mr-1.5"></i>Modelo gratuito pré-definido
+ </span>
+ )}
  <button
  onClick={() => setShowModelDetail(null)}
  className="flex-1 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium"
