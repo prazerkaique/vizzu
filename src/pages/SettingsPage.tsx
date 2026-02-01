@@ -80,7 +80,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  return (
  <div className="flex-1 overflow-y-auto p-4 md:p-6">
- <div className="max-w-2xl mx-auto">
+ <div className={settingsTab === 'plan' ? 'max-w-7xl mx-auto' : 'max-w-2xl mx-auto'}>
  {/* Header com Dropdown */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
