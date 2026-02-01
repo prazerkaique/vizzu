@@ -9,6 +9,7 @@ interface OptimizedImageProps {
   style?: React.CSSProperties;
   onClick?: () => void;
   objectFit?: 'cover' | 'contain';
+  imgStyle?: React.CSSProperties;
 }
 
 /**
@@ -25,6 +26,7 @@ export function OptimizedImage({
   style,
   onClick,
   objectFit = 'cover',
+  imgStyle,
 }: OptimizedImageProps) {
   const [optimizedSrc, setOptimizedSrc] = useState<string | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
@@ -84,6 +86,7 @@ export function OptimizedImage({
           (objectFit === 'contain' ? 'object-contain ' : 'object-cover ') +
           (loaded ? 'opacity-100' : 'opacity-0')
         }
+        style={imgStyle}
       />
     </div>
   );
