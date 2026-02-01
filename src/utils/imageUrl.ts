@@ -140,6 +140,9 @@ export async function getOptimizedImageUrl(
   if (!url) return undefined;
   if (size === 'full') return url;
 
+  // Skip optimization for base64 and blob URLs (already local)
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+
   const config = SIZE_CONFIG[size];
   if (!config) return url;
 

@@ -8,6 +8,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { supabase } from '../services/supabaseClient';
 import { sendWhatsAppMessage } from '../lib/api/studio';
 import heic2any from 'heic2any';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
  { id: 'frente', label: 'Frente', icon: 'fa-user' },
@@ -561,7 +562,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
           <div className="flex items-center gap-3">
            <div className="relative">
             {getClientPhoto(client) ? (
-             <img src={getClientPhoto(client)} alt={client.firstName} loading="lazy" className="w-10 h-10 rounded-full object-cover" />
+             <OptimizedImage src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full" size="thumb" />
             ) : (
              <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
               <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
@@ -792,12 +793,12 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
          <div className="grid grid-cols-4 gap-2">
           {clientDetailLooks.map(look => (
            <div key={look.id} className="relative group">
-            <img
+            <OptimizedImage
              src={look.imageUrl}
              alt="Look"
-             loading="lazy"
-             className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-neutral-500 transition-colors"
-             onClick={(e) => { e.stopPropagation(); window.open(look.imageUrl, '_blank'); }}
+             className="w-full aspect-[3/4] rounded-lg border border-neutral-700 cursor-pointer hover:border-neutral-500 transition-colors"
+             onClick={() => window.open(look.imageUrl, '_blank')}
+             size="thumb"
             />
             <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">
              {new Date(look.createdAt).toLocaleDateString('pt-BR')}

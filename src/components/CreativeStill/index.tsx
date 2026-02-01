@@ -9,6 +9,7 @@ import { supabase } from '../../services/supabaseClient';
 import { Plan } from '../../hooks/useCredits';
 import { CreativeStillWizard } from './CreativeStillWizard';
 import { CreativeStillResults } from './CreativeStillResults';
+import { OptimizedImage } from '../OptimizedImage';
 
 // ============================================================
 // CONSTANTES
@@ -663,7 +664,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  ? urls[gen.selected_variation - 1]
  : urls[0] || null;
  return displayUrl ? (
- <img src={displayUrl} alt="" className="w-full h-full object-cover" />
+ <OptimizedImage src={displayUrl} alt="" className="w-full h-full" size="thumb" />
  ) : (
  <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
  );
@@ -715,7 +716,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  ? urls[gen.selected_variation - 1]
  : urls[0] || null;
  return displayUrl ? (
- <img src={displayUrl} alt="" className="w-full h-full object-cover" />
+ <OptimizedImage src={displayUrl} alt="" className="w-full h-full" size="thumb" />
  ) : (
  <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
  );
