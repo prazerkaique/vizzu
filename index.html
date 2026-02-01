@@ -73,41 +73,49 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- Service Worker with aggressive cache clearing -->
+    <!-- Service Worker with cache clearing -->
     <script>
-      const APP_VERSION = 'v7';
+      const APP_VERSION = 'v9';
       const STORED_VERSION = localStorage.getItem('vizzu_version');
 
-      // Se a versão mudou, limpa tudo
+      // Se a versão mudou, limpa caches e recarrega
       if (STORED_VERSION !== APP_VERSION) {
-        console.log('Nova versão detectada, limpando cache...');
+        console.log('Nova versão detectada (' + APP_VERSION + '), limpando cache...');
+
+        const cleanupTasks = [];
 
         // Limpa todos os caches
         if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => {
-              caches.delete(name);
-              console.log('Cache deletado:', name);
-            });
-          });
+          cleanupTasks.push(
+            caches.keys().then(names =>
+              Promise.all(names.map(name => {
+                console.log('Cache deletado:', name);
+                return caches.delete(name);
+              }))
+            )
+          );
         }
 
         // Desregistra todos os Service Workers
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(reg => {
-              reg.unregister();
-              console.log('SW desregistrado');
-            });
-          });
+          cleanupTasks.push(
+            navigator.serviceWorker.getRegistrations().then(registrations =>
+              Promise.all(registrations.map(reg => {
+                console.log('SW desregistrado');
+                return reg.unregister();
+              }))
+            )
+          );
         }
 
         // Salva nova versão
         localStorage.setItem('vizzu_version', APP_VERSION);
 
-        // Reload após limpeza (só se não for primeiro acesso)
+        // Aguarda limpeza completa e recarrega (só se não for primeiro acesso)
         if (STORED_VERSION) {
-          setTimeout(() => window.location.reload(true), 500);
+          Promise.all(cleanupTasks).finally(() => {
+            window.location.reload();
+          });
         }
       }
 

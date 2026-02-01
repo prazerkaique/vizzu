@@ -1,16 +1,22 @@
-const CACHE_NAME = 'vizzu-v8';
+const CACHE_NAME = 'vizzu-v9';
 const OFFLINE_URL = '/';
 
 const STATIC_ASSETS = [
   '/logo.png',
   '/favicon.png',
-  '/manifest.json'
+  '/manifest.json',
+  '/banner-product-studio.webp',
+  '/banner-provador.webp',
+  '/banner-look-composer.webp',
+  '/banner-still-criativo.webp'
 ];
+
+// Tempo máximo de cache para imagens do Supabase Storage (24h)
+const SUPABASE_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Cachear cada arquivo individualmente, ignorando erros
       return Promise.allSettled(
         STATIC_ASSETS.map(url =>
           fetch(url)
@@ -19,14 +25,11 @@ self.addEventListener('install', (event) => {
                 return cache.put(url, response);
               }
             })
-            .catch(() => {
-              // Ignorar erros silenciosamente
-            })
+            .catch(() => {})
         )
       );
     })
   );
-  // Força ativação imediata
   self.skipWaiting();
 });
 
@@ -40,28 +43,27 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Assume controle de todas as páginas imediatamente
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // CACHEAR imagens do Supabase Storage (economiza egress!)
+  // Imagens do Supabase Storage — stale-while-revalidate
+  // Serve do cache imediatamente, mas atualiza em background
   if (event.request.url.includes('supabase') && event.request.url.includes('/storage/v1/object/')) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse; // Retorna do cache local (0 egress)
-        }
-        return fetch(event.request).then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return response;
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(event.request).then((cachedResponse) => {
+          const fetchPromise = fetch(event.request).then((networkResponse) => {
+            if (networkResponse.ok) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          }).catch(() => cachedResponse);
+
+          // Retorna cache se disponível, senão espera a rede
+          return cachedResponse || fetchPromise;
         });
       })
     );
@@ -79,7 +81,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Para HTML, CSS e JS - SEMPRE buscar da rede primeiro (network-first)
+  // HTML, CSS, JS — network-first
   if (
     event.request.mode === 'navigate' ||
     url.pathname.endsWith('.html') ||
@@ -90,7 +92,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Atualiza o cache com a nova versão
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -100,7 +101,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Se offline, usa o cache
           return caches.match(event.request).then((cached) => {
             return cached || caches.match(OFFLINE_URL);
           });
@@ -109,7 +109,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para outros assets (imagens, fontes) - cache-first
+  // Outros assets (imagens locais, fontes) — cache-first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -127,7 +127,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Fallback para navegação
           if (event.request.mode === 'navigate') {
             return caches.match(OFFLINE_URL);
           }

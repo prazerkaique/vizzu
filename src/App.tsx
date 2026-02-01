@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
 import { BulkImportModal } from './components/BulkImportModal';
@@ -723,36 +723,47 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  }
  };
 
- const filteredProducts = products
+ const filteredProducts = useMemo(() => products
  .filter(product => {
  const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
- // Filtro de categoria principal (grupo)
  const categoryGroup = getCategoryGroupBySubcategory(product.category);
  const matchesCategoryGroup = !filterCategoryGroup || categoryGroup?.id === filterCategoryGroup;
- // Filtro de subcategoria
  const matchesCategory = !filterCategory || product.category === filterCategory;
  const matchesColor = !filterColor || product.color === filterColor;
  const matchesCollection = !filterCollection || product.collection === filterCollection;
  return matchesSearch && matchesCategoryGroup && matchesCategory && matchesColor && matchesCollection;
  })
  .sort((a, b) => {
- // Ordenar por data de criação (mais recentes primeiro)
  const dateA = new Date(a.createdAt || 0).getTime();
  const dateB = new Date(b.createdAt || 0).getTime();
  return dateB - dateA;
- });
+ }), [products, debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
 
  // Reset paginação quando filtros mudam
  useEffect(() => {
  setVisibleProductsCount(20);
  }, [debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
 
- const filteredClients = clients.filter(client => {
+ const filteredClients = useMemo(() => clients.filter(client => {
  const fullName = (client.firstName + ' ' + client.lastName).toLowerCase();
  return fullName.includes(debouncedClientSearchTerm.toLowerCase()) || client.whatsapp.includes(debouncedClientSearchTerm) || (client.email && client.email.toLowerCase().includes(debouncedClientSearchTerm.toLowerCase()));
- });
- 
- const clientsWithProvador = clients.filter(c => c.hasProvadorIA && (c.photos?.length || c.photo));
+ }), [clients, debouncedClientSearchTerm]);
+
+ const clientsWithProvador = useMemo(() => clients.filter(c => c.hasProvadorIA && (c.photos?.length || c.photo)), [clients]);
+
+ const dashboardStats = useMemo(() => {
+ const optimizedProducts = products.filter(p => {
+ const gen = (p as any).generatedImages;
+ return gen?.productStudio?.some((s: any) => s.images?.length > 0);
+ }).length;
+ const looksGenerated = products.reduce((total, p) => {
+ const gen = (p as any).generatedImages;
+ const modeloIA = gen?.modeloIA?.length || 0;
+ const cenario = gen?.cenarioCriativo?.length || 0;
+ return total + modeloIA + cenario;
+ }, 0) + clientLooks.length;
+ return { optimizedProducts, looksGenerated };
+ }, [products, clientLooks]);
 
 // Função para carregar produtos do usuário do Supabase
 const loadUserProducts = async (userId: string) => {
@@ -1018,10 +1029,10 @@ const saveClientToSupabase = async (client: Client, userId: string) => {
  }, { onConflict: 'id' });
 
  if (error) {
- // Silently ignore - table may not exist
+ console.error('Erro ao salvar cliente no Supabase:', error.message, error);
  }
- } catch {
- // Silently ignore
+ } catch (err) {
+ console.error('Erro inesperado ao salvar cliente:', err);
  }
 };
 
@@ -1287,17 +1298,16 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  // Scroll automático para produto recém-criado
  useEffect(() => {
  if (lastCreatedProductId && products.length > 0) {
- // Ir para Produtos para ver o produto
  navigateTo('products');
 
- // Pequeno delay para o DOM renderizar
- setTimeout(() => {
+ const timer = setTimeout(() => {
  const productElement = document.querySelector(`[data-product-id="${lastCreatedProductId}"]`);
  if (productElement) {
  productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
  }
  setLastCreatedProductId(null);
  }, 300);
+ return () => clearTimeout(timer);
  }
  }, [lastCreatedProductId, products]);
 
@@ -1387,9 +1397,11 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  };
 
  // Função para mostrar toast
+ const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+ if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
  setToast({ message, type });
- setTimeout(() => setToast(null), 3000);
+ toastTimerRef.current = setTimeout(() => setToast(null), 3000);
  };
 
  // Função para toggle seleção de produto
@@ -2091,7 +2103,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  .upload(storagePath, blob, { upsert: true });
 
  if (uploadError) {
- console.error('Erro no upload:', uploadError);
+ console.error('Erro no upload da foto:', uploadError.message, uploadError);
+ showToast('Erro ao fazer upload da foto: ' + uploadError.message, 'error');
  return null;
  }
 
@@ -2121,10 +2134,12 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }, { onConflict: 'client_id,type' });
 
  if (error) {
- // Silently ignore
+ console.error('Erro ao salvar foto no banco:', error.message, error);
+ showToast('Erro ao salvar foto do cliente', 'error');
  }
- } catch {
- // Silently ignore
+ } catch (err) {
+ console.error('Erro inesperado ao salvar foto:', err);
+ showToast('Erro ao salvar foto do cliente', 'error');
  }
  };
 
@@ -2186,17 +2201,20 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  // Salvar cliente no banco
  await saveClientToSupabase(client, user.id);
 
- // Upload das fotos para o Storage
+ // Upload das fotos para o Storage (em paralelo para maior velocidade)
  if (photosToUpload.length > 0) {
- const uploadedPhotos: ClientPhoto[] = [];
-
- for (const photo of photosToUpload) {
+ const uploadResults = await Promise.all(
+ photosToUpload.map(async (photo) => {
  const result = await uploadClientPhoto(user.id, clientId, photo);
  if (result) {
  await saveClientPhotoToDb(user.id, clientId, photo, result.url, result.storagePath);
- uploadedPhotos.push({ ...photo, base64: result.url });
+ return { ...photo, base64: result.url } as ClientPhoto;
  }
- }
+ return null;
+ })
+ );
+
+ const uploadedPhotos = uploadResults.filter((p): p is ClientPhoto => p !== null);
 
  // Atualizar cliente com URLs das fotos
  if (uploadedPhotos.length > 0) {
@@ -2205,6 +2223,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  ? { ...c, photos: uploadedPhotos, photo: uploadedPhotos[0]?.base64 }
  : c
  ));
+ }
+
+ if (uploadedPhotos.length < photosToUpload.length) {
+ showToast(`${photosToUpload.length - uploadedPhotos.length} foto(s) não foram salvas. Verifique o console.`, 'error');
  }
  }
  }
@@ -3513,7 +3535,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
  className={'mt-2 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-[#373632]/50 hover:text-[#373632] hover:bg-white/60')}
  >
- <i className={'fas ' + (sidebarCollapsed ? 'fa-bars' : 'fa-angles-left') + ' text-[11px]'}></i>
+ <i className={'far ' + (sidebarCollapsed ? 'fa-bars' : 'fa-angles-left') + ' text-[11px]'}></i>
  </button>
  </div>
  <nav className="flex-1 p-2 space-y-1">
@@ -3529,7 +3551,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="fas fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
+ <i className="far fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
  </button>
 
  {/* Produtos */}
@@ -3544,7 +3566,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="fas fa-box w-4 text-[10px]"></i>{!sidebarCollapsed && 'Produtos'}
+ <i className="far fa-box w-4 text-[10px]"></i>{!sidebarCollapsed && 'Produtos'}
  </button>
 
  {/* Botão CRIAR - Destacado no Centro */}
@@ -3559,7 +3581,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="fas fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
+ <i className="far fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
  </button>
  </div>
 
@@ -3575,7 +3597,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="fas fa-user-tie w-4 text-[10px]"></i>{!sidebarCollapsed && 'Modelos'}
+ <i className="far fa-user-tie w-4 text-[10px]"></i>{!sidebarCollapsed && 'Modelos'}
  </button>
 
  {/* Clientes */}
@@ -3590,7 +3612,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  )
  }
  >
- <i className="fas fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
+ <i className="far fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
  </button>
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
@@ -3624,11 +3646,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }
  >
  {sidebarCollapsed ? (
- <i className="fas fa-cog w-4 text-[10px]"></i>
+ <i className="far fa-cog w-4 text-[10px]"></i>
  ) : (
  <>
  <span className="flex items-center gap-2.5">
- <i className="fas fa-cog w-4 text-[10px]"></i>Configurações
+ <i className="far fa-cog w-4 text-[10px]"></i>Configurações
  </span>
  <i className={'fas fa-chevron-' + (showSettingsDropdown ? 'down' : 'up') + ' text-[8px] opacity-60'}></i>
  </>
@@ -3641,38 +3663,38 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => { navigateTo('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
+ <i className="far fa-user w-4 text-[10px] text-center"></i>Perfil
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('appearance'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-palette w-4 text-[10px] text-center"></i>Aparência
+ <i className="far fa-palette w-4 text-[10px] text-center"></i>Aparência
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('company'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-building w-4 text-[10px] text-center"></i>Empresa
+ <i className="far fa-building w-4 text-[10px] text-center"></i>Empresa
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
+ <i className="far fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
+ <i className="far fa-plug w-4 text-[10px] text-center"></i>Integrações
  </button>
  <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
+ <i className="far fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
  </button>
  </div>
  )}
@@ -3708,14 +3730,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200')}
  >
- <i className="fas fa-coins text-[10px]"></i>
+ <i className="far fa-coins text-[10px]"></i>
  <span>{userCredits}</span>
  </button>
  <button
  onClick={() => navigateTo('settings')}
  className={'w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')}
  >
- <i className="fas fa-cog text-sm"></i>
+ <i className="far fa-cog text-sm"></i>
  </button>
  </div>
  </div>
@@ -3864,7 +3886,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
  >
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
- <img src={creation.imageUrl} alt="" className="w-full h-full object-cover" />
+ <img src={creation.imageUrl} alt="" loading="lazy" className="w-full h-full object-cover" />
  <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
  (creation.type === 'studio' ? 'bg-neutral-700 text-white' :
  creation.type === 'provador' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :
@@ -3906,21 +3928,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  })()}
 
  {/* STATS GRID - 4 Cards */}
- {(() => {
- // Calcular estatísticas
- const optimizedProducts = products.filter(p => {
- const gen = (p as any).generatedImages;
- return gen?.productStudio?.some((s: any) => s.images?.length > 0);
- }).length;
-
- const looksGenerated = products.reduce((total, p) => {
- const gen = (p as any).generatedImages;
- const modeloIA = gen?.modeloIA?.length || 0;
- const cenario = gen?.cenarioCriativo?.length || 0;
- return total + modeloIA + cenario;
- }, 0) + clientLooks.length;
-
- return (
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
  {/* Produtos Cadastrados */}
  <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
@@ -3936,7 +3943,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-start justify-between mb-2">
  <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#A855F7]' : 'text-[#A855F7]')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{optimizedProducts}</p>
+ <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos otimizados</p>
  </div>
 
@@ -3945,7 +3952,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-start justify-between mb-2">
  <i className={'fas fa-shirt text-sm ' + (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{looksGenerated}</p>
+ <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.looksGenerated}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Looks gerados</p>
  </div>
 
@@ -3958,8 +3965,6 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
  </div>
  </div>
- );
- })()}
 
  {/* USO DE CRÉDITOS - Dados reais */}
  {(() => {
@@ -4104,7 +4109,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-product-studio.png)' }}></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-product-studio.webp)' }}></div>
  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
@@ -4136,7 +4141,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-provador.png)' }}></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-provador.webp)' }}></div>
  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
@@ -4168,7 +4173,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-look-composer.png)' }}></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-look-composer.webp)' }}></div>
  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
@@ -4200,7 +4205,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
  style={{ minHeight: '240px', height: 'auto' }}
  >
- <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-still-criativo.png)' }}></div>
+ <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-still-criativo.webp)' }}></div>
  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/30 group-hover:to-black/10 transition-all duration-300"></div>
  <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
  <div>
@@ -4275,7 +4280,8 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  </div>
  )}
 
- {/* PRODUCT STUDIO - Mantém montado para preservar estado */}
+ {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}
+ {(currentPage === 'product-studio' || isGeneratingProductStudio) && (
  <div style={{ display: currentPage === 'product-studio' ? 'contents' : 'none' }}>
  <Suspense fallback={<LoadingSkeleton theme={theme} />}>
  <ProductStudio
@@ -4306,8 +4312,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  />
  </Suspense>
  </div>
+ )}
 
- {/* PROVADOR - Mantém montado para preservar estado */}
+ {/* PROVADOR - Monta quando ativo ou gerando */}
+ {(currentPage === 'provador' || isGeneratingProvador) && (
  <div style={{ display: currentPage === 'provador' ? 'contents' : 'none' }}>
  <Suspense fallback={<LoadingSkeleton theme={theme} />}>
  <VizzuProvadorWizard
@@ -4347,8 +4355,10 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  />
  </Suspense>
  </div>
+ )}
 
- {/* LOOK COMPOSER - Mantém montado para preservar estado */}
+ {/* LOOK COMPOSER - Monta quando ativo ou gerando */}
+ {(currentPage === 'look-composer' || isGeneratingLookComposer) && (
  <div style={{ display: currentPage === 'look-composer' ? 'contents' : 'none' }}>
  <Suspense fallback={<LoadingSkeleton theme={theme} />}>
  <VizzuLookComposer
@@ -4388,9 +4398,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  />
  </Suspense>
  </div>
+ )}
 
- {/* STILL CRIATIVO - Mantém montado para preservar estado */}
- <div style={{ display: currentPage === 'creative-still' ? 'contents' : 'none' }}>
+ {/* STILL CRIATIVO - Monta apenas quando ativo */}
+ {currentPage === 'creative-still' && (
+ <div style={{ display: 'contents' }}>
  <Suspense fallback={<LoadingSkeleton theme={theme} />}>
  <CreativeStill
  theme={theme}
@@ -4408,6 +4420,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  />
  </Suspense>
  </div>
+ )}
 
  {/* MODELS */}
  {currentPage === 'models' && (
@@ -4761,7 +4774,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  }}
  >
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
- <img src={getProductDisplayImage(product)} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
+ <img src={getProductDisplayImage(product)} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform pointer-events-none" />
  {/* Badge de produto otimizado */}
  {isProductOptimized(product) && (
  <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[7px] font-bold rounded-full flex items-center gap-1 pointer-events-none">
@@ -4889,7 +4902,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex items-center gap-3">
  <div className="relative">
  {getClientPhoto(client) ? (
- <img src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full object-cover" />
+ <img src={getClientPhoto(client)} alt={client.firstName} loading="lazy" className="w-10 h-10 rounded-full object-cover" />
  ) : (
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
@@ -5585,11 +5598,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  >
  <div className="flex items-center justify-around">
  <button onClick={() => navigateTo('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="fas fa-home text-sm"></i>
+ <i className="far fa-home text-sm"></i>
  <span className="text-[9px] font-medium">Home</span>
  </button>
  <button onClick={() => navigateTo('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="fas fa-box text-sm"></i>
+ <i className="far fa-box text-sm"></i>
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
  {/* Botão CRIAR - Central destacado */}
@@ -5600,11 +5613,11 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
  <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="fas fa-user-tie text-sm"></i>
+ <i className="far fa-user-tie text-sm"></i>
  <span className="text-[9px] font-medium">Modelos</span>
  </button>
  <button onClick={() => navigateTo('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="fas fa-users text-sm"></i>
+ <i className="far fa-users text-sm"></i>
  <span className="text-[9px] font-medium">Clientes</span>
  </button>
  </div>
@@ -5801,7 +5814,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="flex gap-2">
  {showClientDetail.photos.map(photo => (
  <div key={photo.type} className="relative">
- <img src={photo.base64} alt={photo.type} className="w-14 h-14 rounded-lg object-cover" />
+ <img src={photo.base64} alt={photo.type} loading="lazy" className="w-14 h-14 rounded-lg object-cover" />
  <span className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[7px] py-0.5 text-center font-medium capitalize">{photo.type}</span>
  </div>
  ))}
@@ -5843,6 +5856,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <img
  src={look.imageUrl}
  alt="Look"
+ loading="lazy"
  className="w-full aspect-[3/4] object-cover rounded-lg border border-neutral-700 cursor-pointer hover:border-neutral-500 transition-colors"
  onClick={(e) => { e.stopPropagation(); window.open(look.imageUrl, '_blank'); }}
  />
@@ -6654,7 +6668,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="grid grid-cols-4 gap-2">
  {getOptimizedImages(showProductDetail).map((img, idx) => (
  <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative group'}>
- <img src={img.url} alt={`Otimizada ${img.angle}`} className="w-full aspect-square object-cover" />
+ <img src={img.url} alt={`Otimizada ${img.angle}`} loading="lazy" className="w-full aspect-square object-cover" />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
  <p className="text-white text-[7px] font-medium text-center capitalize">
  {img.angle === 'front' ? 'Frente' : img.angle === 'back' ? 'Costas' : img.angle === 'side-left' ? 'Lat. Esq.' : img.angle === 'side-right' ? 'Lat. Dir.' : img.angle}
@@ -6681,7 +6695,7 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  <div className="grid grid-cols-4 gap-2">
  {getOriginalImages(showProductDetail).map((img, idx) => (
  <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative'}>
- <img src={img.url} alt={img.label} className="w-full aspect-square object-cover" />
+ <img src={img.url} alt={img.label} loading="lazy" className="w-full aspect-square object-cover" />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
  <p className="text-white text-[7px] font-medium text-center">{img.label}</p>
  </div>
