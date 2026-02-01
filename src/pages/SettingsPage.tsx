@@ -34,6 +34,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
 
+ const [expandAllFeatures, setExpandAllFeatures] = useState(false);
+
  // Company Settings
  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
  const saved = localStorage.getItem('vizzu_company_settings');
@@ -429,13 +431,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </ul>
 
- {hasHidden && (
- <details className="group mb-3">
- <summary className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' text-[10px] cursor-pointer flex items-center gap-1 select-none'}>
- <i className="fas fa-chevron-down text-[7px] transition-transform group-open:rotate-180"></i>
- Ver tudo
- </summary>
- <ul className="mt-2 space-y-1">
+ {hasHidden && expandAllFeatures && (
+ <ul className="space-y-1 mb-3">
  {hiddenIncluded.map((feature, i) => (
  <li key={'hi-' + i} className="flex items-start gap-2 text-[11px]">
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
@@ -455,7 +452,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </li>
  )}
  </ul>
- </details>
  )}
  </>
  );
@@ -485,6 +481,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  );
  })}
+ </div>
+
+ {/* Toggle Ver tudo / Ver menos — compartilhado */}
+ <div className="text-center mb-6">
+ <button
+ onClick={() => setExpandAllFeatures(!expandAllFeatures)}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-neutral-200' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium inline-flex items-center gap-1.5 transition-colors'}
+ >
+ <i className={'fas fa-chevron-down text-[8px] transition-transform ' + (expandAllFeatures ? 'rotate-180' : '')}></i>
+ {expandAllFeatures ? 'Ver menos' : 'Ver tudo'}
+ </button>
  </div>
 
  {/* Meios de pagamento */}
