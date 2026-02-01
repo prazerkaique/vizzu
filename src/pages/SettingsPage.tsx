@@ -152,19 +152,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* Header */}
  <div className="text-center mb-6">
  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold mb-1 font-serif'}>Escolha o plano ideal para seu negocio</h2>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>Transforme suas fotos de produtos em imagens profissionais com IA</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>Gere fotos profissionais de produtos com IA</p>
  </div>
 
  {/* Status atual de creditos */}
- <div className="bg-gradient-to-br from-[#E91E8C]/20 via-[#A855F7]/15 to-[#FF6B9D]/20 border border-[#E91E8C]/30 rounded-2xl p-5 mb-6 backdrop-blur-sm">
+ <div className={(theme === 'dark' ? 'bg-gradient-to-br from-[#E91E8C]/20 via-[#A855F7]/15 to-[#FF6B9D]/20 border-[#E91E8C]/30' : 'bg-gradient-to-br from-[#E91E8C]/10 via-[#A855F7]/5 to-[#FF6B9D]/10 border-[#E91E8C]/20') + ' border rounded-2xl p-5 mb-6 backdrop-blur-sm'}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-4">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-coins text-lg ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <p className="text-[#E91E8C] text-[10px] uppercase tracking-wider font-medium">Seus Creditos</p>
- <p className="text-white text-3xl font-bold">{userCredits} <span className="text-base font-normal text-neutral-400">/ {currentPlan.limit}</span></p>
+ <p className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' text-[10px] uppercase tracking-wider font-medium'}>Creditos Disponiveis</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>{userCredits.toLocaleString()}</p>
  </div>
  </div>
  <div className="text-right">
@@ -174,21 +174,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </span>
  </div>
  </div>
- <div className="bg-neutral-900/50 h-3 rounded-full overflow-hidden">
- <div className="h-full bg-gradient-to-r from-[#E91E8C] via-[#A855F7] to-[#FF6B9D] rounded-full transition-all " style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+ <div className="flex items-center justify-between mb-1.5">
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>Plano mensal: {currentPlan.limit} creditos/mes</span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>Renova em {daysUntilRenewal} dias</span>
  </div>
+ <div className={(theme === 'dark' ? 'bg-neutral-900/50' : 'bg-gray-200/60') + ' h-3 rounded-full overflow-hidden'}>
+ <div className="h-full bg-gradient-to-r from-[#E91E8C] via-[#A855F7] to-[#FF6B9D] rounded-full transition-all" style={{ width: Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
+ </div>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1.5'}>{userCredits > currentPlan.limit ? `Inclui ${(userCredits - currentPlan.limit).toLocaleString()} creditos extras` : `${Math.max(0, currentPlan.limit - userCredits)} de ${currentPlan.limit} creditos do plano usados`}</p>
  </div>
 
  {/* Toggle Mensal/Anual */}
  <div className="flex items-center justify-center gap-3 mb-6">
- <span className={(billingPeriod === 'monthly' ? 'text-white' : 'text-neutral-500') + ' text-sm font-medium'}>Mensal</span>
+ <span className={(billingPeriod === 'monthly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>Mensal</span>
  <button
  onClick={() => onSetBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
- className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-gray-300') + ' relative w-14 h-7 rounded-full transition-colors'}
+ className={(billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300')) + ' relative w-14 h-7 rounded-full transition-colors'}
  >
- <div className={'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ' + (billingPeriod === 'yearly' ? 'translate-x-8' : 'translate-x-1')}></div>
+ <div className={'absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ' + (billingPeriod === 'yearly' ? 'translate-x-8' : 'translate-x-1')}></div>
  </button>
- <span className={(billingPeriod === 'yearly' ? 'text-white' : 'text-neutral-500') + ' text-sm font-medium flex items-center gap-2'}>
+ <span className={(billingPeriod === 'yearly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium flex items-center gap-2'}>
  Anual
  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">-20%</span>
  </span>
@@ -209,14 +214,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={
  'relative rounded-2xl p-5 transition-all ' +
  (isCurrentPlan
- ? 'bg-gradient-to-br from-[#FF6B6B]/20 via-[#FF9F43]/15 to-neutral-900 border-2 border-[#FF9F43]'
+ ? (theme === 'dark' ? 'bg-gradient-to-br from-[#FF6B6B]/20 via-[#FF9F43]/15 to-neutral-900 border-2 border-[#FF9F43]' : 'bg-gradient-to-br from-[#FF6B6B]/10 via-[#FF9F43]/5 to-white border-2 border-[#FF9F43]')
  : isPro
- ? 'bg-gradient-to-br from-[#FF6B6B]/15 via-[#FF9F43]/10 to-neutral-900 border border-[#FF9F43]/30 hover:border-neutral-500'
+ ? (theme === 'dark' ? 'bg-gradient-to-br from-[#FF6B6B]/15 via-[#FF9F43]/10 to-neutral-900 border border-[#FF9F43]/30 hover:border-neutral-500' : 'bg-gradient-to-br from-[#FF6B6B]/5 via-[#FF9F43]/5 to-white border border-[#FF9F43]/30 hover:border-[#FF9F43]/60 shadow-sm')
  : isPremier
- ? 'bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-neutral-900 border border-amber-500/30 hover:border-amber-500/60'
+ ? (theme === 'dark' ? 'bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-neutral-900 border border-amber-500/30 hover:border-amber-500/60' : 'bg-gradient-to-br from-amber-50 via-orange-50 to-white border border-amber-300/40 hover:border-amber-400/60 shadow-sm')
  : isEnterprise
- ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-neutral-900 border border-purple-500/30 hover:border-purple-500/60'
- : 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 hover:border-neutral-600'
+ ? (theme === 'dark' ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-neutral-900 border border-purple-500/30 hover:border-purple-500/60' : 'bg-gradient-to-br from-purple-50 via-indigo-50 to-white border border-purple-300/40 hover:border-purple-400/60 shadow-sm')
+ : (theme === 'dark' ? 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 hover:border-neutral-600' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
  )
  }
  >
@@ -231,7 +236,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {isPro && !isCurrentPlan && (
  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
  <span className="px-4 py-1.5 bg-gradient-to-r from-[#E91E8C] to-[#A855F7] text-white text-[10px] font-bold rounded-full whitespace-nowrap">
- POPULAR
+ MAIS POPULAR
  </span>
  </div>
  )}
@@ -243,31 +248,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </span>
  </div>
  )}
- {isEnterprise && !isCurrentPlan && (
- <div className="absolute -top-3 left-1/2 -translate-x-1/2">
- <span className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1 whitespace-nowrap">
- <i className="fas fa-building text-[8px]"></i>
- ENTERPRISE
- </span>
- </div>
- )}
 
  <div className="pt-3">
- <h3 className="text-white text-xl font-bold font-serif">{plan.name}</h3>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold font-serif'}>{plan.name}</h3>
  <div className="mt-3 mb-4">
- <span className="text-white text-3xl font-bold">
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold'}>
  R$ {price.toFixed(2).replace('.', ',')}
  </span>
- <span className="text-neutral-500 text-sm">/mes</span>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-sm'}>/mes</span>
  </div>
 
- <div className="bg-neutral-900/50 rounded-xl p-3 mb-4 border border-neutral-800">
+ <div className={(theme === 'dark' ? 'bg-neutral-900/50 border-neutral-800' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-3 mb-4 border'}>
  <div className="flex items-center gap-2">
  <i className="fas fa-bolt text-amber-400"></i>
- <span className="text-white font-bold text-xl">{plan.limit}</span>
- <span className="text-neutral-400 text-xs">creditos/mes</span>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-xl'}>{plan.limit}</span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>creditos/mes</span>
  </div>
- <p className="text-neutral-500 text-[10px] mt-1">R$ {plan.creditPrice.toFixed(2).replace('.', ',')} por credito extra</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')} por credito extra</p>
  </div>
 
  <ul className="space-y-2 mb-4">
@@ -278,9 +275,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {hasFeature ? (
  <i className="fas fa-check text-emerald-400 mt-0.5 text-[9px]"></i>
  ) : (
- <i className="fas fa-times text-red-500 mt-0.5 text-[9px]"></i>
+ <i className={'fas fa-times mt-0.5 text-[9px] ' + (theme === 'dark' ? 'text-red-500' : 'text-red-400')}></i>
  )}
- <span className={hasFeature ? 'text-neutral-300' : 'text-neutral-600 line-through'}>{feature.name}</span>
+ <span className={hasFeature ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-600 line-through' : 'text-gray-300 line-through')}>{feature.name}</span>
  </li>
  );
  })}
@@ -295,7 +292,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={
  'w-full py-3 rounded-xl font-semibold text-sm transition-all ' +
  (isCurrentPlan
- ? 'bg-neutral-800 text-neutral-500 cursor-default'
+ ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:scale-[1.02]'
  )
  }
@@ -309,14 +306,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Secao: Compre Creditos Adicionais */}
- <div className="bg-gradient-to-br from-amber-900/20 via-orange-900/10 to-neutral-900 border border-amber-500/20 rounded-2xl p-5 mb-6">
+ <div className={(theme === 'dark' ? 'bg-gradient-to-br from-amber-900/20 via-orange-900/10 to-neutral-900 border-amber-500/20' : 'bg-gradient-to-br from-amber-50 via-orange-50 to-white border-amber-200/60') + ' border rounded-2xl p-5 mb-6'}>
  <div className="flex items-center gap-3 mb-4">
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-coins ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h4 className="text-white font-semibold">Compre Creditos Adicionais</h4>
- <p className="text-neutral-400 text-xs">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por credito no seu plano</p>
+ <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>Compre Creditos Adicionais</h4>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por credito no seu plano</p>
  </div>
  </div>
 
@@ -325,13 +322,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <button
  key={amount}
  onClick={() => showToast('Checkout Stripe nao implementado. Configure os webhooks do n8n.', 'info')}
- className="bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-700 hover:border-amber-500/50 rounded-xl p-4 transition-all hover:scale-[1.02] group"
+ className={(theme === 'dark' ? 'bg-neutral-900/80 hover:bg-neutral-800 border-neutral-700 hover:border-amber-500/50' : 'bg-white hover:bg-amber-50 border-gray-200 hover:border-amber-400/50') + ' border rounded-xl p-4 transition-all hover:scale-[1.02] group'}
  >
  <div className="flex items-center justify-center gap-2 mb-2">
  <i className="fas fa-bolt text-amber-400 group-hover:scale-110 transition-transform"></i>
- <span className="text-white font-bold text-2xl">{amount}</span>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-2xl'}>{amount}</span>
  </div>
- <p className="text-neutral-500 text-[10px] mb-1">creditos</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-1'}>creditos</p>
  <p className="text-amber-400 font-bold text-sm">
  R$ {(amount * currentPlan.creditPrice).toFixed(2).replace('.', ',')}
  </p>
@@ -341,26 +338,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* FAQ */}
- <div className="bg-gradient-to-br from-neutral-800/50 to-neutral-900 border border-neutral-700 rounded-2xl p-5">
+ <div className={(theme === 'dark' ? 'bg-gradient-to-br from-neutral-800/50 to-neutral-900 border-neutral-700' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5'}>
  <details className="group">
- <summary className="text-white hover:text-neutral-300 font-medium text-sm cursor-pointer flex items-center justify-between">
+ <summary className={(theme === 'dark' ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-600') + ' font-medium text-sm cursor-pointer flex items-center justify-between'}>
  <span className="flex items-center gap-2">
  <i className="fas fa-circle-question text-[#E91E8C]"></i>
  Perguntas Frequentes
  </span>
  <i className="fas fa-chevron-down text-xs transition-transform group-open:rotate-180"></i>
  </summary>
- <div className="text-neutral-400 mt-4 space-y-3 text-xs">
+ <div className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' mt-4 space-y-3 text-xs'}>
  <div>
- <p className="text-white font-medium mb-1">O que sao creditos?</p>
- <p>Creditos sao usados para gerar imagens com IA. Cada foto gerada consome 10 creditos.</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>O que sao creditos?</p>
+ <p>Creditos sao usados para gerar imagens com IA. Cada foto gerada consome 1 credito (2 creditos para resolucao 4K).</p>
  </div>
  <div>
- <p className="text-white font-medium mb-1">Posso mudar de plano?</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Posso mudar de plano?</p>
  <p>Sim! Voce pode fazer upgrade ou downgrade a qualquer momento. O valor e ajustado proporcionalmente.</p>
  </div>
  <div>
- <p className="text-white font-medium mb-1">Os creditos acumulam?</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Os creditos acumulam?</p>
  <p>Creditos nao utilizados nao acumulam para o proximo mes, mas creditos comprados avulso nao expiram.</p>
  </div>
  </div>
@@ -368,7 +365,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Footer */}
- <p className="text-neutral-500 text-center text-xs mt-6">
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-center text-xs mt-6'}>
  Precisa de mais? <a href="#" className="text-[#E91E8C] hover:underline">Entre em contato</a> para planos personalizados.
  </p>
  </div>

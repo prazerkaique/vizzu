@@ -374,7 +374,7 @@ export function AppLayout({
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
  <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
- <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full'} style={{ width: Math.min(100, (userCredits / currentPlan.limit) * 100) + '%' }}></div>
+ <div className={((userCredits <= currentPlan.limit * 0.2 ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full')} style={{ width: Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
  </div>
  </>
  ) : (

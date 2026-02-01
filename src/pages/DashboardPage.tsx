@@ -339,7 +339,7 @@ export function DashboardPage() {
  <p className={(theme === 'dark' ? 'text-white' : 'text-[#373632]') + ' text-xl font-bold'}>{currentPlan.name}</p>
  </div>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-xs mb-2'}>{userCredits}/{currentPlan.limit} créditos</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-xs mb-2'}>{userCredits.toLocaleString()} créditos disponíveis</p>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90')}
