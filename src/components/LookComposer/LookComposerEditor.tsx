@@ -691,9 +691,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return !!(selectedModel.images?.back);
  }, [selectedModel]);
 
- // Calcular créditos (10 por imagem, 20 se composer)
+ // Calcular créditos (1 por imagem)
  const calculateCredits = (): number => {
- const baseCredits = lookMode === 'composer' ? 20 : 10;
+ const baseCredits = 1;
  // Se for frente e costas, dobra os créditos
  const viewsMultiplier = viewsMode === 'front-back' ? 2 : 1;
  // Multiplicar por custo de resolução

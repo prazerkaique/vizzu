@@ -354,9 +354,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  'detail': 'Detalhe',
  };
 
- // Calcular créditos: 10 créditos por foto * multiplicador de resolução
+ // Calcular créditos: 1 crédito por foto * multiplicador de resolução
  const calculateCredits = (numAngles: number): number => {
- const baseCredits = numAngles * 10;
+ const baseCredits = numAngles * 1;
  return baseCredits * RESOLUTION_COST[resolution];
  };
 

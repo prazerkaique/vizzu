@@ -379,9 +379,9 @@ function App() {
  ): Promise<string | null> => {
  if (!client || !user || Object.keys(look).length === 0) return null;
 
- // Calcular créditos baseado na resolução (3 base * multiplicador)
+ // Calcular créditos baseado na resolução (1 base * multiplicador)
  const resolutionMultiplier = resolution === '4k' ? 2 : 1;
- const creditsNeeded = 3 * resolutionMultiplier;
+ const creditsNeeded = 1 * resolutionMultiplier;
 
  // Verificar creditos
  if (!checkCreditsAndShowModal(creditsNeeded, 'provador')) {

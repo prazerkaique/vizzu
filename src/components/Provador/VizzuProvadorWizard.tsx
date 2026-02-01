@@ -157,8 +157,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  // Verificar se plano permite 4K
  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
 
- // Custo base do Provador: 3 créditos (multiplicado por resolução)
- const BASE_PROVADOR_CREDITS = 3;
+ // Custo base do Provador: 1 crédito (multiplicado por resolução)
+ const BASE_PROVADOR_CREDITS = 1;
  const creditsNeeded = BASE_PROVADOR_CREDITS * RESOLUTION_COST[resolution];
 
  // Refs
