@@ -305,7 +305,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Cards dos Planos */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+ <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
  {ALL_DISPLAY_PLANS.map(plan => {
  const isCurrentPlan = currentPlan.id === plan.id;
  const isTrial = plan.id === 'trial';
