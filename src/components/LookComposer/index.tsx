@@ -576,10 +576,12 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className="aspect-[3/4] relative overflow-hidden bg-neutral-900">
- <img
+ <OptimizedImage
  src={displayImage}
  alt={look.productName}
- className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+ className="w-full h-full group-hover:scale-105 transition-transform"
+ objectFit="contain"
+ size="preview"
  />
 
  {/* Badge de quantidade de imagens */}
@@ -712,10 +714,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
  {productImage ? (
- <img
+ <OptimizedImage
  src={productImage}
  alt={pwl.product.name}
- className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+ className="w-full h-full group-hover:scale-105 transition-transform"
+ size="thumb"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
@@ -987,10 +990,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div className="flex items-center gap-3">
  {selectedLook.metadata?.modelThumbnail ? (
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-12 h-12 rounded-lg overflow-hidden flex-shrink-0'}>
- <img
+ <OptimizedImage
  src={selectedLook.metadata.modelThumbnail}
  alt={selectedLook.metadata.modelName}
- className="w-full h-full object-cover"
+ className="w-full h-full"
+ size="thumb"
  />
  </div>
  ) : (
@@ -1019,7 +1023,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div key={idx} className={(isDark ? 'bg-neutral-700/50' : 'bg-gray-100') + ' rounded-lg p-2 flex items-center gap-3'}>
  {itemImage ? (
  <div className={(isDark ? 'bg-neutral-600' : 'bg-gray-200') + ' w-10 h-10 rounded-lg overflow-hidden flex-shrink-0'}>
- <img src={itemImage} alt={item.name || item.slot} className="w-full h-full object-contain" />
+ <OptimizedImage src={itemImage} alt={item.name || item.slot} className="w-full h-full" objectFit="contain" size="thumb" />
  </div>
  ) : (
  <div className={(isDark ? 'bg-neutral-600' : 'bg-gray-200') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
@@ -1119,7 +1123,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div className="flex items-center gap-3">
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-12 h-12 rounded-lg overflow-hidden'}>
  {getProductImage(selectedProductForModal.product) ? (
- <img src={getProductImage(selectedProductForModal.product)} alt="" className="w-full h-full object-cover" />
+ <OptimizedImage src={getProductImage(selectedProductForModal.product)} alt="" className="w-full h-full" size="thumb" />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image'}></i>
@@ -1237,10 +1241,12 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onClick={() => { setModalSelectedLook(look); setModalSelectedView('front'); }}
  className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-[#E91E8C] ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative group/thumb'}
  >
- <img
+ <OptimizedImage
  src={thumbImage}
  alt={look.productName}
- className="w-full h-full object-contain"
+ className="w-full h-full"
+ objectFit="contain"
+ size="thumb"
  />
  {/* Badge de quantidade de imagens */}
  {look.imageCount > 1 && (
@@ -1321,7 +1327,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div key={p.id} className={(isDark ? 'bg-neutral-700/50' : 'bg-gray-100') + ' rounded-lg p-2 flex items-center gap-3'}>
  <div className={(isDark ? 'bg-neutral-600' : 'bg-gray-200') + ' w-10 h-10 rounded-lg overflow-hidden flex-shrink-0'}>
  {getProductImage(p) ? (
- <img src={getProductImage(p)} alt="" className="w-full h-full object-cover" />
+ <OptimizedImage src={getProductImage(p)} alt="" className="w-full h-full" size="thumb" />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
  <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-image text-xs'}></i>

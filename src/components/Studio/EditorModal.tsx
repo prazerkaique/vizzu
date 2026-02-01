@@ -7,6 +7,7 @@ import { Product, ProductImage, SavedModelProfile, LookComposition, Client, Gene
 import { optimizeImage } from '../../utils/imageOptimizer';
 import { LookComposer } from './LookComposer';
 import { deleteGeneration, generateCaption } from '../../lib/api/studio';
+import { OptimizedImage } from '../OptimizedImage';
 
 interface Props {
  product: Product;
@@ -790,7 +791,7 @@ const handleSave = async () => {
  <div className="flex gap-2 overflow-x-auto pb-1">
  {getFilteredGeneratedImages().map(gen => (
  <div key={gen.id} className={`group/thumb relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 cursor-pointer ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-200 hover:border-[#E91E8C]/40'}`} onClick={() => { setGenImg({ front: gen.images.front, back: gen.images.back || null }); setIsFromHistory(true); setViewMode('result'); setCurrentView('front'); }}>
- <img src={gen.images.front} alt="Gerada" className="w-full h-full object-cover" />
+ <OptimizedImage src={gen.images.front} alt="Gerada" className="w-full h-full" size="thumb" />
  <span className={`absolute bottom-0.5 left-0.5 px-1 py-0.5 text-[7px] font-bold rounded ${gen.tool === 'studio' ? 'bg-blue-500 text-white' : gen.tool === 'cenario' ? 'bg-purple-500 text-white' : 'bg-[#E91E8C]/100 text-white'}`}>
  {gen.tool === 'studio' ? 'S' : gen.tool === 'cenario' ? 'C' : 'IA'}
  </span>
@@ -1333,7 +1334,7 @@ const handleSave = async () => {
  <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
  {savedModels.map(m => (
  <div key={m.id} onClick={() => setSelModelId(m.id)} className={`relative rounded-lg overflow-hidden cursor-pointer border-2 ${selModelId === m.id ? 'border-[#E91E8C]' : isDark ? 'border-neutral-700' : 'border-gray-200'}`}>
- <img src={m.referenceImage} alt={m.name} className="w-full aspect-square object-cover" />
+ <OptimizedImage src={m.referenceImage} alt={m.name} className="w-full aspect-square" size="thumb" />
  <div className={`absolute inset-x-0 bottom-0 p-1 ${isDark ? 'bg-black/70' : 'bg-white/90'}`}>
  <p className={`text-[8px] font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{m.name}</p>
  </div>

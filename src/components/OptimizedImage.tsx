@@ -8,6 +8,7 @@ interface OptimizedImageProps {
   className?: string;
   style?: React.CSSProperties;
   onClick?: () => void;
+  objectFit?: 'cover' | 'contain';
 }
 
 /**
@@ -23,6 +24,7 @@ export function OptimizedImage({
   className = '',
   style,
   onClick,
+  objectFit = 'cover',
 }: OptimizedImageProps) {
   const [optimizedSrc, setOptimizedSrc] = useState<string | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
@@ -78,7 +80,8 @@ export function OptimizedImage({
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
         className={
-          'w-full h-full object-cover transition-opacity duration-300 ' +
+          'w-full h-full transition-opacity duration-300 ' +
+          (objectFit === 'contain' ? 'object-contain ' : 'object-cover ') +
           (loaded ? 'opacity-100' : 'opacity-0')
         }
       />

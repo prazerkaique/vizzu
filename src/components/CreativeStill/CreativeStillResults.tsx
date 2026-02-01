@@ -172,10 +172,11 @@ export const CreativeStillResults: React.FC<Props> = ({
  <div className="flex items-center gap-3">
  {wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url ? (
  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
- <img
+ <OptimizedImage
  src={wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url || ''}
  alt={wizardState.mainProduct.name}
- className="w-full h-full object-cover"
+ className="w-full h-full"
+ size="thumb"
  />
  </div>
  ) : (

@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { VisualStudioGeneration } from '../../types';
 import { smartDownload } from '../../utils/downloadHelper';
+import { OptimizedImage } from '../OptimizedImage';
 
 interface Props {
  generations: VisualStudioGeneration[];
@@ -81,11 +82,12 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  return (
  <div key={gen.id} className="group relative">
  <div className="aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
- <img
+ <OptimizedImage
  src={gen.generatedImage}
  alt={gen.productName || 'Generated'}
- className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+ className="w-full h-full cursor-pointer hover:scale-105 transition-transform"
  onClick={() => setZoomImage(gen.generatedImage)}
+ size="thumb"
  />
  </div>
  

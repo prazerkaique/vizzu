@@ -5,6 +5,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, SavedModelProfile, SavedModel, HistoryLog } from '../../types';
 import { EditorModal } from './EditorModal';
+import { OptimizedImage } from '../OptimizedImage';
 
 interface StudioProps {
  products: Product[];
@@ -447,10 +448,11 @@ export const Studio: React.FC<StudioProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border-gray-200 hover:border-[#E91E8C]/40 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- <img
+ <OptimizedImage
  src={product.images[0]?.base64 || product.images[0]?.url}
  alt={product.name}
- className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+ className="w-full h-full group-hover:scale-105 transition-transform"
+ size="thumb"
  />
  {(product as any).generatedImages && (product as any).generatedImages.length > 0 && (
  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1">
