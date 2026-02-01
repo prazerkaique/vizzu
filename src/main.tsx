@@ -4,6 +4,7 @@ import App from './App'
 import { UIProvider } from './contexts/UIContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { HistoryProvider } from './contexts/HistoryContext'
+import { ProductsProvider } from './contexts/ProductsContext'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <UIProvider>
       <AuthProvider>
         <HistoryProvider>
-          <App />
+          <ProductsProvider>
+            <App />
+          </ProductsProvider>
         </HistoryProvider>
       </AuthProvider>
     </UIProvider>

@@ -14,6 +14,7 @@ import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection,
 import { useUI, type Page, type SettingsTab } from './contexts/UIContext';
 import { useAuth } from './contexts/AuthContext';
 import { useHistory } from './contexts/HistoryContext';
+import { useProducts } from './contexts/ProductsContext';
 import { useCredits, PLANS, CREDIT_PACKAGES } from './hooks/useCredits';
 import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
@@ -191,7 +192,8 @@ function App() {
  const { user, isAuthenticated, login, loginDemo, logout } = useAuth();
  // History from context
  const { historyLogs, setHistoryLogs, addHistoryLog, loadUserHistory } = useHistory();
- const [products, setProducts] = useState<Product[]>([]);
+ // Products from context
+ const { products, setProducts, loadUserProducts, updateProduct: handleUpdateProduct, deleteProduct: handleDeleteProduct, deleteSelectedProducts, isProductOptimized, getProductDisplayImage, getOptimizedImages, getOriginalImages } = useProducts();
  const [showImport, setShowImport] = useState(false);
  const [showCreateProduct, setShowCreateProduct] = useState(false);
  const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
@@ -724,151 +726,7 @@ const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('f
  return { optimizedProducts, looksGenerated };
  }, [products, clientLooks]);
 
-// Função para carregar produtos do usuário do Supabase
-const loadUserProducts = async (userId: string) => {
- try {
- const { data: productsData, error } = await supabase
- .from('products')
- .select(`
- *,
- product_images (*)
- `)
- .eq('user_id', userId);
- 
- if (error) throw error;
- 
- if (productsData && productsData.length > 0) {
- const formattedProducts: Product[] = productsData.map(p => {
- const allImages = p.product_images || [];
- 
- // Separar imagens originais das geradas (excluir tipos gerados)
- const generatedTypes = ['studio_ready', 'cenario_criativo', 'modelo_ia', 'product_studio'];
- const originalImages = allImages.filter((img: any) =>
- !generatedTypes.includes(img.type)
- );
- 
- const generatedStudio = allImages.filter((img: any) => img.type === 'studio_ready');
- const generatedCenario = allImages.filter((img: any) => img.type === 'cenario_criativo');
- const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
- const generatedProductStudio = allImages.filter((img: any) => img.type === 'product_studio');
-
-
- // Formatar imagens originais para o array images
- const formattedOriginalImages = originalImages.map((img: any) => ({
- id: img.id,
- name: img.file_name,
- url: img.url,
- base64: img.url,
- type: img.type === 'original' ? 'front' : img.type
- }));
-
- // Construir objeto originalImages por ângulo (para ProductStudio)
- const originalImagesObj: any = {};
- originalImages.forEach((img: any) => {
- const angle = img.angle || (img.type === 'original' ? 'front' : img.type);
- if (angle && !originalImagesObj[angle]) {
- originalImagesObj[angle] = {
- id: img.id,
- url: img.url,
- storagePath: img.storage_path
- };
- }
- });
-
- // Se não tiver front, usar a primeira imagem do array
- if (!originalImagesObj.front && formattedOriginalImages.length > 0) {
- originalImagesObj.front = {
- id: formattedOriginalImages[0].id,
- url: formattedOriginalImages[0].url
- };
- }
-
- // Agrupar imagens do Product Studio por generation_id para criar sessões
- const productStudioSessions: Record<string, any[]> = {};
- generatedProductStudio.forEach((img: any) => {
- const sessionId = img.generation_id || `session-${img.created_at?.split('T')[0] || 'unknown'}`;
- if (!productStudioSessions[sessionId]) {
- productStudioSessions[sessionId] = [];
- }
- productStudioSessions[sessionId].push(img);
- });
-
- // Formatar sessões do Product Studio
- const formattedProductStudio = Object.entries(productStudioSessions).map(([sessionId, images]) => ({
- id: sessionId,
- productId: p.id,
- images: images.map((img: any) => ({
- id: img.id,
- url: img.url,
- angle: img.angle || 'front',
- createdAt: img.created_at
- })),
- status: 'ready' as const,
- createdAt: images[0]?.created_at || new Date().toISOString()
- }));
-
- // Formatar imagens geradas para generatedImages
- const generatedImages = {
- studioReady: generatedStudio.map((img: any) => ({
- id: img.id,
- createdAt: img.created_at,
- tool: 'studio' as const,
- images: { front: img.url, back: undefined },
- metadata: img.metadata || {}
- })),
- cenarioCriativo: generatedCenario.map((img: any) => ({
- id: img.id,
- createdAt: img.created_at,
- tool: 'cenario' as const,
- images: { front: img.url, back: undefined },
- metadata: img.metadata || {}
- })),
- modeloIA: generatedModelo.map((img: any) => {
- // Parse metadata se for string (vem do Supabase como JSON stringificado)
- const metadata = typeof img.metadata === 'string'
- ? JSON.parse(img.metadata)
- : (img.metadata || {});
- return {
- id: img.id,
- createdAt: img.created_at,
- tool: 'lifestyle' as const,
- images: {
- front: img.url,
- back: metadata?.backImageUrl || undefined
- },
- metadata: metadata
- };
- }),
- productStudio: formattedProductStudio
- };
- 
- return {
- id: p.id,
- sku: p.sku,
- name: p.name,
- description: p.description,
- category: p.category,
- brand: p.brand,
- color: p.color,
- fit: p.fit,
- collection: p.collection,
- attributes: p.attributes || {},
- images: formattedOriginalImages,
- originalImages: originalImagesObj,
- generatedImages: generatedImages,
- createdAt: p.created_at,
- updatedAt: p.updated_at
- };
- });
- 
- setProducts(formattedProducts);
- } else {
- setProducts([]);
- }
- } catch (error) {
- console.error('Erro ao carregar produtos:', error);
- }
-};
+// loadUserProducts moved to ProductsContext
 
 // Função para carregar clientes do usuário do Supabase
 const loadUserClients = async (userId: string) => {
@@ -1129,89 +987,10 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  }
  }, [lastCreatedProductId, products]);
 
- const handleUpdateProduct = (productId: string, updates: Partial<Product>) => { 
- setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p)); 
- };
- 
+ // handleUpdateProduct, isProductOptimized, getProductDisplayImage, getOptimizedImages, getOriginalImages moved to ProductsContext
+
  const handleDeductCredits = (amount: number, reason: string): boolean => {
  return deductCredits(amount, reason);
- };
-
- // Verificar se o produto está otimizado (tem fotos do Product Studio)
- const isProductOptimized = (product: Product): boolean => {
- const sessions = product.generatedImages?.productStudio || [];
- return sessions.some(session => session.images && session.images.length > 0);
- };
-
- // Obter a melhor imagem do produto (prioriza foto otimizada)
- const getProductDisplayImage = (product: Product): string | undefined => {
- const sessions = product.generatedImages?.productStudio || [];
-
- // Se tem imagens otimizadas, priorizar
- if (sessions.length > 0) {
- // Primeiro, procurar imagem de frente
- for (const session of sessions) {
- if (session.images) {
- const frontImage = session.images.find(img => img.angle === 'front');
- if (frontImage?.url) return frontImage.url;
- }
- }
- // Se não tem frente, pegar a primeira disponível
- for (const session of sessions) {
- if (session.images?.[0]?.url) return session.images[0].url;
- }
- }
-
- // Fallback para imagem original
- if (product.originalImages?.front?.url) return product.originalImages.front.url;
- if (product.images?.[0]?.url) return product.images[0].url;
- if (product.images?.[0]?.base64) return product.images[0].base64;
- return undefined;
- };
-
- // Obter todas as imagens otimizadas do produto
- const getOptimizedImages = (product: Product): { url: string; angle: string }[] => {
- const sessions = product.generatedImages?.productStudio || [];
- const images: { url: string; angle: string }[] = [];
-
- sessions.forEach(session => {
- if (session.images) {
- session.images.forEach(img => {
- if (img.url) {
- images.push({ url: img.url, angle: img.angle });
- }
- });
- }
- });
-
- return images;
- };
-
- // Obter as imagens originais do produto
- const getOriginalImages = (product: Product): { url: string; label: string }[] => {
- const images: { url: string; label: string }[] = [];
-
- if (product.originalImages?.front?.url) {
- images.push({ url: product.originalImages.front.url, label: 'Frente' });
- }
- if (product.originalImages?.back?.url) {
- images.push({ url: product.originalImages.back.url, label: 'Costas' });
- }
- if (product.originalImages?.detail?.url) {
- images.push({ url: product.originalImages.detail.url, label: 'Detalhe' });
- }
-
- // Fallback para o array legado se não tem originalImages
- if (images.length === 0 && product.images) {
- product.images.forEach((img, idx) => {
- const url = img.url || img.base64;
- if (url) {
- images.push({ url, label: idx === 0 ? 'Frente' : `Imagem ${idx + 1}` });
- }
- });
- }
-
- return images;
  };
 
  // showToast from UIContext
@@ -1277,93 +1056,7 @@ const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId
  }
  };
 
- // Função para deletar um produto
- const handleDeleteProduct = async (product: Product) => {
- // Remover do estado local imediatamente (UX responsiva)
- setProducts(prev => prev.filter(p => p.id !== product.id));
- setSelectedProducts(prev => prev.filter(id => id !== product.id));
-
- // Deletar do Supabase
- try {
- // Primeiro deletar as imagens do produto
- const { error: imagesError } = await supabase
- .from('product_images')
- .delete()
- .eq('product_id', product.id);
-
- if (imagesError) {
- console.error('Erro ao deletar imagens:', imagesError);
- }
-
- // Depois deletar o produto
- const { error } = await supabase
- .from('products')
- .delete()
- .eq('id', product.id);
-
- if (error) {
- console.error('Erro ao deletar produto:', error);
- showToast('Erro ao excluir produto do servidor', 'error');
- // Recarregar produtos em caso de erro
- if (user?.id) {
- loadUserProducts(user.id);
- }
- return;
- }
-
- showToast(`"${product.name}" foi excluído`, 'success');
- addHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
- } catch (e) {
- console.error('Erro ao deletar produto:', e);
- showToast('Erro ao excluir produto', 'error');
- }
- };
-
- // Função para deletar produtos selecionados
- const handleDeleteSelectedProducts = async () => {
- const count = selectedProducts.length;
- const productsToDelete = products.filter(p => selectedProducts.includes(p.id));
-
- // Remover do estado local imediatamente (UX responsiva)
- setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
- setSelectedProducts([]);
- setShowDeleteProductsModal(false);
-
- // Deletar do Supabase
- try {
- // Primeiro deletar as imagens dos produtos
- const { error: imagesError } = await supabase
- .from('product_images')
- .delete()
- .in('product_id', selectedProducts);
-
- if (imagesError) {
- console.error('Erro ao deletar imagens:', imagesError);
- }
-
- // Depois deletar os produtos
- const { error } = await supabase
- .from('products')
- .delete()
- .in('id', selectedProducts);
-
- if (error) {
- console.error('Erro ao deletar produtos:', error);
- showToast('Erro ao excluir produtos do servidor', 'error');
- // Recarregar produtos em caso de erro
- if (user?.id) {
- loadUserProducts(user.id);
- }
- return;
- }
-
- showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
- addHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
- } catch (e) {
- console.error('Erro ao deletar produtos:', e);
- showToast('Erro ao excluir produtos', 'error');
- }
- };
+ // handleDeleteProduct + handleDeleteSelectedProducts moved to ProductsContext
 
  // Função para gerar imagens com IA via n8n
  const handleGenerateImage = async (
@@ -6649,10 +6342,14 @@ const handleRemoveClientPhoto = (type: ClientPhoto['type']) => {
  onClick={() => {
  if (deleteProductTarget) {
  handleDeleteProduct(deleteProductTarget);
+ setSelectedProducts(prev => prev.filter(id => id !== deleteProductTarget.id));
  setShowDeleteProductsModal(false);
  setDeleteProductTarget(null);
  } else {
- handleDeleteSelectedProducts();
+ deleteSelectedProducts(selectedProducts, () => {
+ setSelectedProducts([]);
+ setShowDeleteProductsModal(false);
+ });
  }
  }}
  className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
