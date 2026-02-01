@@ -108,7 +108,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
     </div>
 
-    {/* Card 3: Look Completo */}
+    {/* Card 3: Vizzu Look Composer */}
     <div
     onClick={() => navigateTo('look-composer')}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
@@ -122,7 +122,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <span className="px-2 py-0.5 bg-indigo-500 text-white text-[9px] font-bold rounded-full uppercase">IA</span>
     <span className="text-white/60 text-xs">10-20 créditos</span>
     </div>
-    <h3 className="text-xl font-bold text-white mb-1 font-serif">Look Completo®</h3>
+    <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Look Composer®</h3>
     <p className="text-white/70 text-sm">Crie looks com modelos virtuais em fundo studio ou cenário personalizado</p>
     </div>
     <div className="flex items-center justify-between">
@@ -140,7 +140,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
     </div>
 
-    {/* Card 4: Still Criativo */}
+    {/* Card 4: Vizzu Still Criativo */}
     <div
     onClick={() => navigateTo('creative-still')}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
@@ -154,7 +154,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase">Novo</span>
     <span className="text-white/60 text-xs">2 créditos</span>
     </div>
-    <h3 className="text-xl font-bold text-white mb-1 font-serif">Still Criativo®</h3>
+    <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Still Criativo®</h3>
     <p className="text-white/70 text-sm">Composições artísticas de produto. Fotos estilo still life para Instagram</p>
     </div>
     <div className="flex items-center justify-between">

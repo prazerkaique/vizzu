@@ -49,7 +49,7 @@ const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Prom
 
 const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
  { id: '1', name: 'Provador Virtual', message: 'Oi {nome}! 😍\n\nMontei esse look especial pra você:', isDefault: true },
- { id: '2', name: 'Look Completo', message: 'Oi {nome}! ✨\n\nOlha só o que separei pra você:', isDefault: false },
+ { id: '2', name: 'Look Composer', message: 'Oi {nome}! ✨\n\nOlha só o que separei pra você:', isDefault: false },
  { id: '3', name: 'Novidades', message: 'Oi {nome}! 👋\n\nChegou novidade que combina com você:', isDefault: false },
 ];
 

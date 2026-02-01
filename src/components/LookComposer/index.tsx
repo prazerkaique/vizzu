@@ -506,7 +506,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {onBack && (
  <button
  onClick={onBack}
- className={'w-10 h-10 rounded-xl flex items-center justify-center transition-colors ' + (isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700')}
+ className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}
  >
  <i className="fas fa-arrow-left text-sm"></i>
  </button>

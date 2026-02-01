@@ -212,36 +212,40 @@ export function DashboardPage() {
  {/* STATS GRID - 4 Cards */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
  {/* Produtos Cadastrados */}
- <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
  <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
  </div>
 
  {/* Produtos Otimizados */}
- <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
  <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#A855F7]' : 'text-[#A855F7]')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos otimizados</p>
  </div>
 
  {/* Looks Gerados */}
- <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div onClick={() => navigateTo('look-composer')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
  <i className={'fas fa-shirt text-sm ' + (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.looksGenerated}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Looks gerados</p>
  </div>
 
  {/* Clientes Cadastrados */}
- <div className={'rounded-xl p-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
  <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-[#4ADE80]' : 'text-[#4ADE80]')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>

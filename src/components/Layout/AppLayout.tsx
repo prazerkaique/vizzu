@@ -94,6 +94,7 @@ export function AppLayout({
  const SWIPE_BACK_THRESHOLD = 0.10;
 
  const handleTouchStart = (e: React.TouchEvent) => {
+ if (!isPWA) return;
  const startX = e.targetTouches[0].clientX;
  const startY = e.targetTouches[0].clientY;
  setTouchEnd(null);

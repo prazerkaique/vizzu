@@ -288,7 +288,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  setFavorites((genData as (CreativeStillGeneration & { is_favorite?: boolean })[]).filter(g => g.is_favorite));
  }
  } catch (err) {
- console.error('Erro ao carregar dados do Still Criativo:', err);
+ console.error('Erro ao carregar dados do Vizzu Still Criativo:', err);
  } finally {
  setLoadingTemplates(false);
  }
@@ -589,15 +589,15 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
  {onBack && (
- <button onClick={onBack} className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' p-2 -ml-2 rounded-lg transition-colors'}>
- <i className="fas fa-arrow-left"></i>
+ <button onClick={onBack} className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}>
+ <i className="fas fa-arrow-left text-sm"></i>
  </button>
  )}
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-palette text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Still Criativo®</h1>
+ <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Still Criativo®</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
  </div>
  </div>

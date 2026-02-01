@@ -1269,7 +1269,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Vista seus clientes</p>
  </button>
 
- {/* Look Completo */}
+ {/* Vizzu Look Composer */}
  <button
  onClick={() => {
  setProductForCreation(showProductDetail);
@@ -1281,7 +1281,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center mb-2 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Look Completo&reg;</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Vizzu Look Composer&reg;</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Monte combinações</p>
  </button>
 
