@@ -17,7 +17,7 @@
 | 11 | Extrair SettingsPage + abas | Concluido |
 | 12 | Extrair CreateHubPage | Concluido |
 | 13 | Extrair Layout (Sidebar, MobileNav, Header) | Concluido |
-| 14 | Simplificar App.tsx final | Pendente |
+| 14 | Simplificar App.tsx final | Concluido |
 
 **Branch**: `refactor/app-split`
 **Backup**: branch `Correcoes` (estado pre-otimizacao)
@@ -313,31 +313,18 @@ Movido para `src/components/Layout/AppLayout.tsx` (~570 linhas):
 
 App.tsx: 1895 → 1280 linhas (-615)
 
-### Passo 14: Simplificar App.tsx
+### Passo 14: Simplificar App.tsx ✅ Concluido
 **Risco: Baixo** | **Impacto: Final**
 
-App.tsx final fica:
-```tsx
-function App() {
-  return (
-    <AuthProvider>
-      <UIProvider>
-        <ProductsProvider>
-          <ClientsProvider>
-            <HistoryProvider>
-              <GenerationProvider>
-                <Layout>
-                  <PageRouter />
-                </Layout>
-              </GenerationProvider>
-            </HistoryProvider>
-          </ClientsProvider>
-        </ProductsProvider>
-      </UIProvider>
-    </AuthProvider>
-  );
-}
-```
+Limpeza de código morto no App.tsx:
+- Removidas funções não usadas: handleGenerateImage, processImageFile, handleProvadorReset, handleProvadorSendWhatsApp (old), handleProvadorGenerate (old), minimizeModal, handleSendWhatsApp
+- Removidos estados não usados: showClientPicker, selectedTemplate, provadorStep, provadorLookFilter, provadorLookSearch, showStudioPicker, showAddProductHint, clientPhotoInputRef, provadorPhotoType, provadorLook, provadorMessage, provadorGeneratedImage, savingLook
+- Removidos imports não usados: generateStudioReady, generateCenario, generateModeloIA, generateModelImages, analyzeProductImage, BulkImportModal, useDebounce, heic2any, compressImage/formatFileSize, CATEGORY_GROUPS, CATEGORIES, getCategoryGroupBySubcategory, COLORS, useMemo
+- Limpeza de destructuring não usado de useProducts/useClients (deleteSelectedProducts, isProductOptimized, getProductDisplayImage, etc.)
+- Removidos ~60 comentários stale "moved to X" e separadores decorativos
+- App.tsx: 1280 → 841 linhas (-439)
+
+**Resultado final da refatoração: App.tsx de ~8000 → 841 linhas (-89.5%)**
 
 ---
 

@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
-import { BulkImportModal } from './components/BulkImportModal';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 
 // Lazy loading dos componentes pesados (carrega só quando acessar)
@@ -10,19 +9,16 @@ const ProductStudio = lazy(() => import('./components/ProductStudio').then(m => 
 const VizzuProvadorWizard = lazy(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
 const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
 
-import { Product, User, HistoryLog, Client, ClientPhoto, ClientLook, Collection, WhatsAppTemplate, LookComposition, ProductAttributes, CATEGORY_ATTRIBUTES, SavedModel } from './types';
+import { Product, Client, ClientPhoto, ClientLook, WhatsAppTemplate, LookComposition, SavedModel } from './types';
 import { useUI } from './contexts/UIContext';
 import { useAuth } from './contexts/AuthContext';
 import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
 import { useClients } from './contexts/ClientsContext';
 import { useCredits, PLANS } from './hooks/useCredits';
-import { useDebounce } from './hooks/useDebounce';
 import { supabase } from './services/supabaseClient';
-import { generateStudioReady, generateCenario, generateModeloIA, generateProvador, generateModelImages, sendWhatsAppMessage, analyzeProductImage } from './lib/api/studio';
-import heic2any from 'heic2any';
+import { generateProvador, sendWhatsAppMessage } from './lib/api/studio';
 import { smartDownload } from './utils/downloadHelper';
-import { compressImage, formatFileSize, COMPRESSION_ENABLED } from './utils/imageCompression';
 import { runFullMigration, runProductMigration, runStorageMigration } from './utils/imageMigration';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -48,43 +44,7 @@ window.vizzu = {
  comprimirStorage: runStorageMigration,
 };
 
-
-const CATEGORY_GROUPS = [
- { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
- { id: 'parte-de-cima', label: 'Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
- { id: 'parte-de-baixo', label: 'Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
- { id: 'pecas-inteiras', label: 'Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
- { id: 'calcados', label: 'Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
- { id: 'acessorios', label: 'Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
-];
-const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
-// Helper para encontrar categoria pai de uma subcategoria
-const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
 const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
-const COLORS = [
- // Básicas
- 'Preto', 'Branco', 'Cinza', 'Cinza Claro', 'Cinza Escuro', 'Chumbo',
- // Azuis
- 'Azul', 'Azul Claro', 'Azul Marinho', 'Azul Royal', 'Azul Bebê', 'Azul Petróleo', 'Turquesa', 'Ciano',
- // Verdes
- 'Verde', 'Verde Claro', 'Verde Escuro', 'Verde Militar', 'Verde Musgo', 'Oliva', 'Menta', 'Esmeralda',
- // Vermelhos e Rosas
- 'Vermelho', 'Vermelho Escuro', 'Vinho', 'Bordô', 'Marsala', 'Coral', 'Salmão',
- 'Rosa', 'Rosa Claro', 'Rosa Pink', 'Rosa Bebê', 'Rosa Chá', 'Fúcsia', 'Magenta',
- // Amarelos e Laranjas
- 'Amarelo', 'Amarelo Claro', 'Amarelo Ouro', 'Mostarda', 'Laranja', 'Laranja Queimado', 'Terracota', 'Pêssego',
- // Marrons e Neutros
- 'Marrom', 'Marrom Claro', 'Marrom Escuro', 'Chocolate', 'Café', 'Caramelo', 'Castanho',
- 'Bege', 'Creme', 'Areia', 'Nude', 'Off-White', 'Cru',
- // Roxos
- 'Roxo', 'Lilás', 'Lavanda', 'Violeta', 'Uva', 'Berinjela', 'Púrpura',
- // Metálicos
- 'Dourado', 'Prateado', 'Bronze', 'Cobre', 'Rose Gold', 'Champagne',
- // Especiais
- 'Estampado', 'Multicolor', 'Tie-dye', 'Degradê', 'Animal Print', 'Floral', 'Xadrez', 'Listrado'
-];
-
-// PHOTO_TYPES moved to ClientsPage
 
 const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
  { id: '1', name: 'Provador Virtual', message: 'Oi {nome}! 😍\n\nMontei esse look especial pra você:', isDefault: true },
@@ -107,10 +67,6 @@ const PROVADOR_LOADING_PHRASES = [
  { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
-// Page and SettingsTab types imported from UIContext
-
-// ModelCardCarousel moved to ModelsPage
-
 function App() {
  // UI state from context
  const { theme, currentPage, navigateTo, goBack, setSettingsTab, showToast, showVideoTutorial, setShowVideoTutorial } = useUI();
@@ -120,43 +76,19 @@ function App() {
  // History from context
  const { addHistoryLog, loadUserHistory } = useHistory();
  // Products from context
- const { products, setProducts, loadUserProducts, updateProduct: handleUpdateProduct, deleteProduct: handleDeleteProduct, deleteSelectedProducts, isProductOptimized, getProductDisplayImage, getOptimizedImages, getOriginalImages } = useProducts();
+ const { products, setProducts, loadUserProducts, updateProduct: handleUpdateProduct } = useProducts();
  // Clients from context
- const { clients, setClients, clientLooks, setClientLooks, loadUserClients, saveClientToSupabase, deleteClientFromSupabase, uploadClientPhoto, saveClientPhotoToDb, loadClientPhotos, getClientPhoto } = useClients();
- // Product states moved to ProductsPage
+ const { clients, setClients, clientLooks, setClientLooks, loadUserClients, saveClientToSupabase, getClientPhoto } = useClients();
  const [productForCreation, setProductForCreation] = useState<Product | null>(null);
- 
- // clients from ClientsContext
- // historyLogs from HistoryContext
  const [showCreateClient, setShowCreateClient] = useState(false);
- // showClientDetail, clientDetailLooks, showWhatsAppLookModal, selectedLookForWhatsApp,
- // whatsAppLookMessage, isSendingWhatsAppLook, editingClient, editClientPhotos,
- // clientSearchTerm, debouncedClientSearchTerm, newClient, uploadingPhotoType,
- // processingClientPhoto, showClientPhotoSourcePicker, isSavingClient
- // all moved to ClientsPage
 
  const [provadorClient, setProvadorClient] = useState<Client | null>(null);
- const [provadorPhotoType, setProvadorPhotoType] = useState<ClientPhoto['type']>('frente');
- const [provadorLook, setProvadorLook] = useState<LookComposition>({});
- const [provadorMessage, setProvadorMessage] = useState(DEFAULT_WHATSAPP_TEMPLATES[0].message);
- const [provadorGeneratedImage, setProvadorGeneratedImage] = useState<string | null>(null);
  const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
  const [provadorMinimized, setProvadorMinimized] = useState(false);
  const [provadorLoadingIndex, setProvadorLoadingIndex] = useState(0);
  const [provadorProgress, setProvadorProgress] = useState(0);
- const [showClientPicker, setShowClientPicker] = useState(false);
  const [createClientFromProvador, setCreateClientFromProvador] = useState(false);
- const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(DEFAULT_WHATSAPP_TEMPLATES[0]);
- const [provadorStep, setProvadorStep] = useState<1 | 2 | 3 | 4>(1);
- const [provadorLookFilter, setProvadorLookFilter] = useState<string>('');
- const [provadorLookSearch, setProvadorLookSearch] = useState('');
- // clientLooks from ClientsContext
- const [savingLook, setSavingLook] = useState(false);
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
- const [showStudioPicker, setShowStudioPicker] = useState(false);
- const [showAddProductHint, setShowAddProductHint] = useState(false);
- // showVideoTutorial from UIContext
-
  // Product Studio - estados de geração em background
  const [isGeneratingProductStudio, setIsGeneratingProductStudio] = useState(false);
  const [productStudioMinimized, setProductStudioMinimized] = useState(false);
@@ -169,16 +101,11 @@ function App() {
  const [lookComposerProgress, setLookComposerProgress] = useState(0);
  const [lookComposerLoadingText, setLookComposerLoadingText] = useState('');
 
- 
  const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
 
  // Saved Models (shared with LookComposer)
  const [savedModels, setSavedModels] = useState<SavedModel[]>([]);
  const [showCreateModel, setShowCreateModel] = useState(false);
- // showModelDetail, editingModel, modelWizardStep, newModel, savingModel,
- // generatingModelImages, modelGenerationProgress, modelGenerationStep,
- // modelPreviewImages, showCreateDropdown, modelFilter* all moved to ModelsPage
-
  // Minimized Modals System
  type MinimizedModal = {
  id: string;
@@ -188,16 +115,6 @@ function App() {
  progress?: number; // For showing progress in mini window
  };
  const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
-
- const minimizeModal = (modal: MinimizedModal) => {
- setMinimizedModals(prev => [...prev.filter(m => m.id !== modal.id), modal]);
- // Hide the original modal
- if (modal.type === 'createModel') setShowCreateModel(false);
- // modelDetail modal moved to ModelsPage
- // createProduct and productDetail modals moved to ProductsPage
- if (modal.type === 'createClient') setShowCreateClient(false);
- // clientDetail modal moved to ClientsPage
- };
 
  const restoreModal = (modalId: string) => {
  const modal = minimizedModals.find(m => m.id === modalId);
@@ -220,16 +137,6 @@ function App() {
  actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic';
  }>({ creditsNeeded: 1, actionContext: 'generic' });
 
-
- // sidebar persistence moved to UIContext
-
-
- // clients + history persistence moved to their contexts
-
- const clientPhotoInputRef = useRef<HTMLInputElement>(null);
- // longPressTimer, longPressProductId moved to ProductsPage
-
-
  // Hook de créditos com integração ao backend
  const {
  userCredits,
@@ -240,11 +147,8 @@ function App() {
  deductCredits,
  purchaseCredits,
  upgradePlan,
- addCredits,
- applyPlanChange,
  setBillingPeriod,
  setCredits,
- refresh: refreshCredits,
  } = useCredits({ userId: user?.id, enableBackend: true });
 
  // Função para verificar créditos e mostrar modal se insuficientes
@@ -313,29 +217,6 @@ function App() {
  }
  };
 
- // filteredProducts, visibleProductsCount reset moved to ProductsPage
-
- // filteredClients, clientsWithProvador moved to ClientsPage
-
-// dashboardStats moved to DashboardPage
-
-// loadUserProducts moved to ProductsContext
-
-// loadUserClients, saveClientToSupabase, deleteClientFromSupabase moved to ClientsContext
-
-// ═══════════════════════════════════════════════════════════════
-// SINCRONIZAÇÃO DE HISTÓRICO
-// ═══════════════════════════════════════════════════════════════
-
-// loadUserHistory + saveHistoryToSupabase moved to HistoryContext
-
-// ═══════════════════════════════════════════════════════════════
-// SINCRONIZAÇÃO DE CONFIGURAÇÕES DA EMPRESA
-// ═══════════════════════════════════════════════════════════════
-
-
-
- // Auth session + onAuthStateChange moved to AuthContext
  // Load user data when user changes (triggered by AuthContext)
  const prevUserIdRef = useRef<string | null>(null);
  useEffect(() => {
@@ -348,8 +229,6 @@ function App() {
  prevUserIdRef.current = null;
  }
  }, [user]);
-
- // currentPage + theme persistence moved to UIContext
 
  // Controlar frases e progresso do loading do Provador
  // Tempo médio de geração: ~75 segundos (1:15)
@@ -395,166 +274,22 @@ function App() {
  };
  }, [isGeneratingProvador]);
 
- // Fechar modais com Esc (product modals moved to ProductsPage)
+ // Fechar modais com Esc
  useEffect(() => {
  const handleEsc = (e: KeyboardEvent) => {
  if (e.key === 'Escape') {
- // showCreateClient, showClientDetail ESC moved to ClientsPage
- if (showClientPicker) setShowClientPicker(false);
- else if (showVideoTutorial) setShowVideoTutorial(null);
+ if (showVideoTutorial) setShowVideoTutorial(null);
  }
  };
  window.addEventListener('keydown', handleEsc);
  return () => window.removeEventListener('keydown', handleEsc);
- }, [showClientPicker, showVideoTutorial]);
-
- // Scroll automático para produto recém-criado moved to ProductsPage
-
- // handleUpdateProduct, isProductOptimized, getProductDisplayImage, getOptimizedImages, getOriginalImages moved to ProductsContext
+ }, [showVideoTutorial]);
 
  const handleDeductCredits = (amount: number, reason: string): boolean => {
  return deductCredits(amount, reason);
  };
 
- // showToast from UIContext
-
- // toggleProductSelection, longPress, selectAllProducts moved to ProductsPage
- // handleDeleteProduct + handleDeleteSelectedProducts moved to ProductsContext
-
- // Função para gerar imagens com IA via n8n
- const handleGenerateImage = async (
- product: Product, 
- toolType: 'studio' | 'cenario' | 'lifestyle' | 'provador' | 'refine',
- prompt?: string,
- opts?: any
- ): Promise<{ image: string | null; generationId: string | null }> => {
- if (!user?.id) {
- throw new Error('Usuário não autenticado');
- }
-
- // Pegar a imagem selecionada (passada em opts ou primeira por padrão)
- const selectedImage = opts?.selectedImage || product.images[0];
- 
- if (!selectedImage?.id) {
- throw new Error('Imagem não encontrada. Certifique-se de que o produto tem imagens.');
- }
-
- try {
- // ═══════════════════════════════════════════════════════════
- // STUDIO READY - Fundo branco profissional
- // ═══════════════════════════════════════════════════════════
- if (toolType === 'studio') {
- const result = await generateStudioReady({
- productId: product.id,
- userId: user.id,
- imageId: selectedImage.id,
- });
-
- if (result.success && result.generation) {
- if (result.credits_remaining !== undefined) {
- setCredits(result.credits_remaining);
- }
- loadUserProducts(user.id);
- addHistoryLog('Imagem gerada', `Studio Ready para "${product.name}"`, 'success', [product], 'ai', 1);
- return {
- image: result.generation.image_url,
- generationId: result.generation.id,
- };
- }
-
- throw new Error(result.message || 'Erro ao gerar imagem');
- }
-
- // ═══════════════════════════════════════════════════════════
- // CENÁRIO CRIATIVO - Ambiente personalizado
- // ═══════════════════════════════════════════════════════════
- if (toolType === 'cenario') {
- if (!prompt) {
- throw new Error('Prompt do cenário é obrigatório');
- }
-
- const result = await generateCenario({
- productId: product.id,
- userId: user.id,
- imageId: selectedImage.id,
- prompt: prompt,
- });
-
- if (result.success && result.generation) {
- if (result.credits_remaining !== undefined) {
- setCredits(result.credits_remaining);
- }
- loadUserProducts(user.id);
- addHistoryLog('Imagem gerada', `Cenário Criativo para "${product.name}"`, 'success', [product], 'ai', 1);
- return {
- image: result.generation.image_url,
- generationId: result.generation.id,
- };
- }
- 
- throw new Error(result.message || 'Erro ao gerar cenário');
- }
-
- // ═══════════════════════════════════════════════════════════
- // MODELO IA (LIFESTYLE) - Modelo humano usando produto
- // ═══════════════════════════════════════════════════════════
- if (toolType === 'lifestyle') {
- const result = await generateModeloIA({
- productId: product.id,
- userId: user.id,
- imageId: selectedImage.id,
- imageUrl: selectedImage.url || selectedImage.base64,
- modelPrompt: opts?.modelPrompt || prompt || 'Professional model',
- clothingPrompt: opts?.clothingPrompt,
- posePrompt: opts?.posePrompt,
- referenceImage: opts?.referenceImage,
- productCategory: product.category || 'clothing',
- productDescription: product.description,
- productAttributes: product.attributes, // Atributos específicos (caimento, tamanho, etc.)
- lookItems: opts?.lookItems,
- productNotes: opts?.productNotes, // Observações adicionais do produto
- modelDetails: opts?.modelDetails, // Detalhes do modelo
- onProgress: opts?.onProgress, // Callback de progresso (opcional)
- });
-
- if (result.success && result.generation) {
- if (result.credits_remaining !== undefined) {
- setCredits(result.credits_remaining);
- }
- loadUserProducts(user.id);
- addHistoryLog('Imagem gerada', `Modelo IA para "${product.name}"`, 'success', [product], 'ai', 3);
- return {
- image: result.generation.image_url,
- generationId: result.generation.id,
- };
- }
-
- throw new Error(result.message || 'Erro ao gerar modelo');
- }
-
- // TODO: Implementar provador e refine
- throw new Error(`Ferramenta "${toolType}" ainda não implementada no backend`);
-
- } catch (error: any) {
- console.error('Erro na geração:', error);
- throw error;
- }
- };
-
- // handleFileSelect moved to ProductsPage
- // handleImageDrop, handleDragOver, analyzeProductImageWithAI, applyDetectedProduct,
- // handleSelectDetectedProduct, handleCreateProduct, startEditProduct, handleSaveEditedProduct
- // all moved to ProductsPage
-
- // handleDragOver, handleRemoveClientPhoto moved to ClientsPage
- // uploadClientPhoto, saveClientPhotoToDb, loadClientPhotos moved to ClientsContext
-
- // handleCreateClient, handleDeleteClient, startEditingClient, processEditClientPhoto,
- // saveEditingClient all moved to ClientsPage
- // (function bodies removed - see ClientsPage)
- // ═══════════════════════════════════════════════════════════════
  // CLIENT LOOKS - Funções para gerenciar looks salvos
- // ═══════════════════════════════════════════════════════════════
 
  const loadClientLooks = async (clientId: string) => {
  if (!user) return;
@@ -588,7 +323,6 @@ function App() {
  const saveClientLook = async (client: Client, imageUrl: string, lookItems: LookComposition) => {
  if (!user || !client) return null;
 
- setSavingLook(true);
  try {
  // Fazer download da imagem e converter para blob
  const response = await fetch(imageUrl);
@@ -649,8 +383,6 @@ function App() {
  console.error('Erro ao salvar look:', error);
  alert('Erro ao salvar look. Tente novamente.');
  return null;
- } finally {
- setSavingLook(false);
  }
  };
 
@@ -695,76 +427,17 @@ function App() {
  }
  }, [provadorClient?.id]);
 
-
  // Handler para salvar modelo a partir do LookComposer
  const handleSaveModel = (model: SavedModel) => {
  setSavedModels(prev => [...prev, model]);
- };
-
- // formatWhatsApp moved to ClientsPage
-
- const handleSendWhatsApp = (client: Client, message: string) => {
- const phone = client.whatsapp.replace(/\D/g, '');
- const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
- const encodedMessage = encodeURIComponent(message);
- window.open('https://wa.me/' + fullPhone + '?text=' + encodedMessage, '_blank');
  };
 
  const handleLogout = async () => {
  await logout();
  setProducts([]);
  };
- 
- const handleProvadorSendWhatsApp = async () => {
- if (!provadorClient) return;
 
- // Pegar a URL da imagem (gerada ou look salvo)
- const imageUrl = provadorGeneratedImage || selectedSavedLook?.imageUrl;
- const message = provadorMessage.replace('{nome}', provadorClient.firstName);
-
- // Se tem imagem, tenta compartilhar com Web Share API
- if (imageUrl) {
- try {
- // Baixa a imagem como blob
- const response = await fetch(imageUrl);
- const blob = await response.blob();
- const file = new File([blob], 'look.png', { type: 'image/png' });
-
- // Verifica se o dispositivo suporta compartilhar arquivos
- if (navigator.canShare?.({ files: [file] })) {
- await navigator.share({
- files: [file],
- text: message
- });
- return; // Sucesso - não precisa do fallback
- }
- } catch {
- // User cancelled or error - use fallback
- }
-
- // Fallback: WhatsApp com texto + link da imagem
- const phone = provadorClient.whatsapp?.replace(/\D/g, '') || '';
- const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
- const fullMessage = message + '\n\n' + imageUrl;
- window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
- } else {
- // Sem imagem - envia só o texto
- handleSendWhatsApp(provadorClient, message);
- }
- };
- 
- const handleProvadorReset = () => {
- setProvadorClient(null);
- setProvadorPhotoType('frente');
- setProvadorLook({});
- setProvadorGeneratedImage(null);
- setProvadorMessage(DEFAULT_WHATSAPP_TEMPLATES[0].message);
- setProvadorStep(1);
- setProvadorLookFilter('');
- setProvadorLookSearch('');
- };
-
- // Funcoes auxiliares para o novo VizzuProvadorWizard
+ // Provador generation + WhatsApp handlers
  const handleProvadorGenerateForWizard = async (
  client: Client,
  photoType: ClientPhoto['type'],
@@ -936,7 +609,6 @@ function App() {
  return messages[Math.floor(Math.random() * messages.length)];
  };
 
-
  const handleUpdateClientForProvador = async (client: Client) => {
  // Atualizar no estado local
  setClients(prev => prev.map(c => c.id === client.id ? client : c));
@@ -955,105 +627,8 @@ function App() {
  }
  };
 
- // addHistoryLog moved to HistoryContext as addHistoryLog
+ // AUTH CHECK
 
- // Função para processar imagem (converte HEIC se necessário + comprime)
- const processImageFile = async (file: File): Promise<string> => {
- try {
- let processedFile: File | Blob = file;
-
- // Converter HEIC/HEIF para PNG se necessário
- if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
- const convertedBlob = await heic2any({
- blob: file,
- toType: 'image/png',
- quality: 0.9
- });
- processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
- }
-
- // Comprimir imagem para reduzir consumo de banda
- const result = await compressImage(processedFile);
-
- // Log de economia (apenas em desenvolvimento)
- if (result.wasCompressed && result.savings > 0) {
- console.info(`[Compressão] ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${result.savings}% menor)`);
- }
-
- return result.base64;
- } catch (error) {
- throw error;
- }
- };
- const handleProvadorGenerate = async () => {
- if (!provadorClient || !user || Object.keys(provadorLook).length === 0) return;
-
- // Verificar créditos
- if (!checkCreditsAndShowModal(10, 'provador')) {
- return;
- }
-
- setIsGeneratingProvador(true);
- try {
- // Obter foto do cliente
- const clientPhotoBase64 = getClientPhoto(provadorClient, provadorPhotoType) || '';
- if (!clientPhotoBase64) {
- throw new Error('Foto do cliente não encontrada');
- }
-
- // Remover prefixo data:image/... se existir
- const base64Clean = clientPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
-
- // Montar lookComposition no formato esperado pelo backend
- const lookCompositionPayload: Record<string, { productId: string; imageId?: string; imageUrl: string; name: string; category: string; attributes?: Record<string, string> }> = {};
-
- for (const [slot, item] of Object.entries(provadorLook)) {
- if (item) {
- // Buscar produto para obter categoria e attributes
- const product = products.find(p => p.id === item.productId);
- lookCompositionPayload[slot] = {
- productId: item.productId || '',
- imageId: item.imageId,
- imageUrl: item.image,
- name: item.name,
- category: product?.category || 'roupa',
- attributes: product?.attributes || {}
- };
- }
- }
-
- const result = await generateProvador({
- userId: user.id,
- clientId: provadorClient.id,
- clientName: `${provadorClient.firstName} ${provadorClient.lastName}`,
- clientPhoto: {
- type: provadorPhotoType,
- base64: base64Clean
- },
- lookComposition: lookCompositionPayload
- });
-
- if (result.success && result.generation) {
- setProvadorGeneratedImage(result.generation.image_url);
- if (result.credits_remaining !== undefined) {
- setCredits(result.credits_remaining);
- }
- setProvadorStep(4);
- addHistoryLog('Provador gerado', `Look para ${provadorClient.firstName}`, 'success', [], 'ai', 3);
- } else {
- throw new Error(result.message || 'Erro ao gerar imagem');
- }
- } catch (error: any) {
- console.error('Erro no Provador:', error);
- alert(error.message || 'Erro ao gerar imagem');
- } finally {
- setIsGeneratingProvador(false);
- }
- };
-
- // ═══════════════════════════════════════════════════════════════
- // AUTH CHECK - Show AuthPage if not authenticated
- // ═══════════════════════════════════════════════════════════════
  if (!isAuthenticated) {
  return (
  <AuthPage
@@ -1068,9 +643,6 @@ function App() {
  );
  }
 
- // ═══════════════════════════════════════════════════════════════
- // MAIN LAYOUT - SUNO STYLE
- // ═══════════════════════════════════════════════════════════════
  return (
  <AppLayout
  userCredits={userCredits}
@@ -1092,16 +664,8 @@ function App() {
  closeMinimizedModal={closeMinimizedModal}
  onLogout={handleLogout}
  >
-
-
- {/* ═══════════════════════════════════════════════════════════════ */}
- {/* DASHBOARD */}
- {/* ═══════════════════════════════════════════════════════════════ */}
  {currentPage === 'dashboard' && <DashboardPage />}
-
- {/* PÁGINA VIZZU CREATION - Hub de Features */}
-        {/* CREATE HUB */}
-        {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
+ {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
 
  {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}
  {(currentPage === 'product-studio' || isGeneratingProductStudio) && (
@@ -1253,10 +817,7 @@ function App() {
  {/* CLIENTS */}
  {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />}
 
-        {/* SETTINGS */}
-        {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onLogout={handleLogout} />}
-
-
+ {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onLogout={handleLogout} />}
 
  {/* Modal de Créditos Esgotados */}
  <CreditExhaustedModal
