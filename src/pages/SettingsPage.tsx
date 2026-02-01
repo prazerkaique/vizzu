@@ -161,6 +161,22 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ],
  };
 
+ // Subtítulo orientado a persona
+ const PLAN_PERSONA: Record<string, string> = {
+ basic: 'Para quem está começando',
+ pro: 'Para criadores e freelancers',
+ premier: 'Para equipes de marketing',
+ enterprise: 'Para operações de alto volume',
+ };
+
+ // CTAs diferenciados
+ const PLAN_CTA: Record<string, string> = {
+ basic: 'Começar agora',
+ pro: 'Escolher Pro',
+ premier: 'Desbloquear Premier',
+ enterprise: 'Falar com especialista',
+ };
+
  // Matriz completa para tabela comparativa
  const COMPARISON_FEATURES = [
  { name: 'Gerações/mês', values: ['40', '100', '200', '400'] },
@@ -232,6 +248,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </span>
  </div>
 
+ {/* Social proof */}
+ <div className="flex items-center justify-center gap-4 mb-6">
+ <div className="flex -space-x-2">
+ {[1,2,3,4].map(i => (
+ <div key={i} className={(theme === 'dark' ? 'bg-neutral-700 border-neutral-900' : 'bg-gray-200 border-white') + ' w-6 h-6 rounded-full border-2 flex items-center justify-center'}>
+ <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-400') + ' fas fa-user text-[7px]'}></i>
+ </div>
+ ))}
+ </div>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Usado por <span className={theme === 'dark' ? 'text-white font-medium' : 'text-gray-900 font-medium'}>+500 criadores</span> no Brasil</p>
+ </div>
+
  {/* Cards dos Planos */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
  {PLANS.map(plan => {
@@ -240,6 +268,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const isPro = plan.id === 'pro';
  const isPremier = plan.id === 'premier';
  const highlights = PLAN_HIGHLIGHTS[plan.id] || [];
+ const persona = PLAN_PERSONA[plan.id] || '';
+ const annualSavings = Math.round((plan.priceMonthly - plan.priceYearly) * 12);
+ const perCredit = (price / plan.limit).toFixed(2).replace('.', ',');
 
  return (
  <div
@@ -277,14 +308,33 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  <div className="pt-2 flex flex-col flex-1">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{plan.name}</h3>
- <div className="mt-2 mb-3">
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>{persona}</p>
+
+ <div className="mb-1">
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>
  R$ {price.toFixed(2).replace('.', ',')}
  </span>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>/mês</span>
  </div>
 
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-3'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')} por crédito extra</p>
+ {/* Economia anual */}
+ {billingPeriod === 'yearly' && (
+ <p className={(theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') + ' text-[10px] font-medium mb-2'}>
+ <i className="fas fa-tag text-[8px] mr-1"></i>
+ Economize R$ {annualSavings.toLocaleString('pt-BR')}/ano
+ </p>
+ )}
+ {billingPeriod === 'monthly' && (
+ <div className="mb-2 h-[14px]"></div>
+ )}
+
+ {/* Custo por imagem + crédito extra */}
+ <div className={(theme === 'dark' ? 'bg-neutral-800/60 border-neutral-700/50' : 'bg-gray-50 border-gray-100') + ' rounded-lg p-2 mb-3 border'}>
+ <div className="flex items-center justify-between">
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>R$ {perCredit}/imagem</span>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Extra: R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
+ </div>
+ </div>
 
  <ul className="space-y-1.5 mb-4 flex-1">
  {highlights.map((feature, i) => (
@@ -305,16 +355,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  'w-full py-2.5 rounded-xl font-semibold text-sm transition-all ' +
  (isCurrentPlan
  ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
- : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+ : isPro
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+ : (theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white')
  )
  }
  >
- {isCurrentPlan ? 'Plano atual' : plan.priceMonthly > currentPlan.priceMonthly ? 'Fazer upgrade' : 'Mudar plano'}
+ {isCurrentPlan ? 'Plano atual' : PLAN_CTA[plan.id] || 'Assinar'}
  </button>
  </div>
  </div>
  );
  })}
+ </div>
+
+ {/* Meios de pagamento */}
+ <div className="flex items-center justify-center gap-3 mb-8">
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Pagamento seguro via</span>
+ <div className="flex items-center gap-2">
+ <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Pix</span>
+ <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Cartão</span>
+ <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Boleto</span>
+ </div>
+ <i className={'fas fa-lock text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
 
  {/* Tabela comparativa */}
