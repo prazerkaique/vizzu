@@ -16,7 +16,7 @@
 | 10 | Extrair ModelsPage + wizard | Concluido |
 | 11 | Extrair SettingsPage + abas | Concluido |
 | 12 | Extrair CreateHubPage | Concluido |
-| 13 | Extrair Layout (Sidebar, MobileNav, Header) | Pendente |
+| 13 | Extrair Layout (Sidebar, MobileNav, Header) | Concluido |
 | 14 | Simplificar App.tsx final | Pendente |
 
 **Branch**: `refactor/app-split`
@@ -298,15 +298,20 @@ Movido JSX do hub de criação (~212 linhas) para:
 - Quase 100% presentacional — só 1 prop (userCredits), resto via useUI()
 - App.tsx: 2105 → 1895 linhas (-210)
 
-### Passo 13: Extrair Layout (Sidebar + MobileNav + Header)
+### Passo 13: Extrair Layout (Sidebar + MobileNav + Header) ✅ Concluido
 **Risco: Baixo** | **Impacto: Medio**
 
-Mover para:
-- `src/components/Layout/Sidebar.tsx` (linhas 3523-3714)
-- `src/components/Layout/MobileHeader.tsx` (linhas 3717-3744)
-- `src/components/Layout/MobileBottomNav.tsx` (linhas 5593-5625)
-- `src/components/Layout/MinimizedBars.tsx` (linhas 7860-7969)
-- `src/components/Layout/index.tsx` (combina tudo)
+Movido para `src/components/Layout/AppLayout.tsx` (~570 linhas):
+- Desktop Sidebar (navegação, créditos, avatar, dropdown settings)
+- Mobile Header (logo, créditos, gear icon)
+- Mobile Bottom Nav (5 botões, botão criar central)
+- Video Tutorial Modal
+- Success Notification + Toast
+- Minimized Generation Bars (3x, draggable)
+- Minimized Modals (legacy floating windows)
+- Swipe navigation handlers + iPWA detection
+
+App.tsx: 1895 → 1280 linhas (-615)
 
 ### Passo 14: Simplificar App.tsx
 **Risco: Baixo** | **Impacto: Final**
