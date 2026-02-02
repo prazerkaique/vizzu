@@ -293,8 +293,8 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
 
  {/* Cards de Planos */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
- {plans.map((plan) => {
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+ {plans.filter(p => p.id !== 'enterprise').map((plan) => {
  const isCurrentPlan = plan.id === currentPlan.id;
  const isPremier = plan.id === 'premier';
  const price = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;

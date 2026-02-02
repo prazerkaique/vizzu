@@ -337,12 +337,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
  {ALL_DISPLAY_PLANS.map(plan => {
  const isCurrentPlan = currentPlan.id === plan.id;
- const isTrial = plan.id === 'trial';
- const price = isTrial ? 0 : (billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly);
+ const isTrial = plan.id === 'free';
+ const isEnterprise = plan.id === 'enterprise';
+ const price = (isTrial || isEnterprise) ? 0 : (billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly);
  const isPro = plan.id === 'pro';
  const isPremier = plan.id === 'premier';
  const persona = PLAN_PERSONA[plan.id] || '';
- const annualSavings = isTrial ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
+ const annualSavings = (isTrial || isEnterprise) ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
  const included = PLAN_INCLUDED[plan.id] || new Set();
 
  // Features na ordem mestre — todas listadas, mesma ordem em todos os cards
@@ -385,6 +386,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </span>
  </div>
  )}
+ {isEnterprise && !isCurrentPlan && (
+ <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+ <span className={(theme === 'dark' ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white') + ' px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap'}>
+ ENTERPRISE
+ </span>
+ </div>
+ )}
 
  <div className="pt-1 flex flex-col flex-1">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{plan.name}</h3>
@@ -392,13 +400,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  {/* Gerações em destaque */}
  <div className="mb-3">
+ {isEnterprise ? (
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-extrabold'}>Sob consulta</span>
+ ) : (
+ <>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-extrabold'}>{plan.limit}</span>
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs ml-1'}>gerações{isTrial ? '' : '/mês'}</span>
+ </>
+ )}
  </div>
 
  {/* Preço */}
  <div className="mb-1">
- {isTrial ? (
+ {isEnterprise ? (
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Personalizado</span>
+ ) : isTrial ? (
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Grátis</span>
  ) : (
  <>
@@ -411,13 +427,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Economia anual */}
- {!isTrial && billingPeriod === 'yearly' ? (
+ {!isTrial && !isEnterprise && billingPeriod === 'yearly' ? (
  <p className={(theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') + ' text-[10px] font-medium mb-3'}>
  <i className="fas fa-tag text-[8px] mr-1"></i>
  Economize R$ {annualSavings.toLocaleString('pt-BR')}/ano
  </p>
  ) : (
- <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}</div>
+ <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}{isEnterprise && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Valores sob medida para sua operação</span>}</div>
  )}
 
  {/* Features — mesma ordem em todos os cards */}
@@ -432,7 +448,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
  </li>
  ))}
- {expandAllFeatures && !isTrial && (
+ {expandAllFeatures && !isTrial && !isEnterprise && (
  <li className={'flex items-center justify-between text-[10px] pt-1 mt-1 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
  <span className={theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}>Crédito extra</span>
  <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
@@ -442,9 +458,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  <button
  onClick={() => {
- if (!isCurrentPlan) {
- showToast('Checkout Stripe não implementado. Configure os webhooks do N8N.', 'info');
+ if (isCurrentPlan) return;
+ if (isEnterprise) {
+ window.open('https://wa.me/5544991534082?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Enterprise%20da%20Vizzu.', '_blank');
+ return;
  }
+ showToast('Checkout Stripe não implementado. Configure os webhooks do N8N.', 'info');
  }}
  className={
  'w-full py-2.5 rounded-xl font-semibold text-sm transition-all ' +
@@ -458,7 +477,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )
  }
  >
- {isCurrentPlan ? 'Plano atual' : PLAN_CTA[plan.id] || 'Assinar'}
+ {isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{PLAN_CTA[plan.id] || 'Falar conosco'}</>) : PLAN_CTA[plan.id] || 'Assinar'}
  </button>
  </div>
  </div>
