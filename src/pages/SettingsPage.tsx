@@ -134,22 +134,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
  </div>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Senha</label>
- <input type="password" defaultValue="••••••••" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nova Senha</label>
+ <input type="password" id="new-password" name="newPassword" autoComplete="new-password" placeholder="Mínimo 6 caracteres" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} />
  </div>
  <div className="flex items-end">
  <button
  onClick={async () => {
- const email = user?.email;
- if (!email) { showToast('Nenhum email encontrado.', 'error'); return; }
+ const newPw = (document.getElementById('new-password') as HTMLInputElement)?.value;
+ if (!newPw || newPw.length < 6) { showToast('A senha precisa ter no mínimo 6 caracteres.', 'error'); return; }
  try {
- const { error } = await supabase.auth.resetPasswordForEmail(email, {
- redirectTo: window.location.origin + '/reset-password',
- });
+ const { error } = await supabase.auth.updateUser({ password: newPw });
  if (error) throw error;
- showToast('Email de redefinição enviado para ' + email, 'success');
+ (document.getElementById('new-password') as HTMLInputElement).value = '';
+ showToast('Senha alterada com sucesso!', 'success');
  } catch (e: any) {
- showToast(e.message || 'Erro ao enviar email.', 'error');
+ showToast(e.message || 'Erro ao alterar senha.', 'error');
  }
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors'}
@@ -421,10 +420,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const annualSavings = isTrial ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
  const included = PLAN_INCLUDED[plan.id] || new Set();
 
- // Features na ordem mestre — só mostra incluídas (sem ✗)
- const visibleFeatures = MASTER_FEATURES.filter(f => included.has(f));
- const collapsedFeatures = visibleFeatures.slice(0, MAX_COLLAPSED);
- const hiddenFeatures = visibleFeatures.slice(MAX_COLLAPSED);
+ // Features na ordem mestre — todas listadas, mesma ordem em todos os cards
+ const allFeatures = MASTER_FEATURES.map(f => ({ name: f, has: included.has(f) }));
+ const collapsedFeatures = allFeatures.slice(0, MAX_COLLAPSED);
+ const hiddenFeatures = allFeatures.slice(MAX_COLLAPSED);
 
  return (
  <div
@@ -496,33 +495,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}</div>
  )}
 
- {/* Features — só incluídas */}
+ {/* Features — mesma ordem em todos os cards */}
  <ul className="space-y-1.5 mb-3 flex-1">
- {collapsedFeatures.map((feat, i) => (
+ {(expandAllFeatures ? allFeatures : collapsedFeatures).map((feat, i) => (
  <li key={i} className="flex items-start gap-2 text-[11px]">
+ {feat.has ? (
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
- <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feat}</span>
+ ) : (
+ <span className="w-[9px] shrink-0"></span>
+ )}
+ <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
  </li>
  ))}
- </ul>
-
- {/* Expandido */}
- {hiddenFeatures.length > 0 && expandAllFeatures && (
- <ul className="space-y-1.5 mb-3">
- {hiddenFeatures.map((feat, i) => (
- <li key={'h-' + i} className="flex items-start gap-2 text-[11px]">
- <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
- <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feat}</span>
- </li>
- ))}
- {!isTrial && (
+ {expandAllFeatures && !isTrial && (
  <li className={'flex items-center justify-between text-[10px] pt-1 mt-1 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
  <span className={theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}>Crédito extra</span>
  <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
  </li>
  )}
  </ul>
- )}
 
  <button
  onClick={() => {
