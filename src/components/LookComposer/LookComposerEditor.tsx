@@ -151,7 +151,7 @@ interface SavedBackground {
 }
 
 type Step = 'product' | 'model' | 'look' | 'pose' | 'background' | 'views';
-type ModelTab = 'create' | 'saved';
+type ModelTab = 'generated' | 'presets' | 'create';
 type LookMode = 'composer' | 'describe';
 type BackgroundType = 'studio' | 'custom' | 'prompt';
 type BackgroundMode = 'preset' | 'upload' | 'prompt' | 'saved';
@@ -249,7 +249,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  const [currentStep, setCurrentStep] = useState<Step>('product');
 
  // Estado do modelo
- const [modelTab, setModelTab] = useState<ModelTab>('saved');
+ const [modelTab, setModelTab] = useState<ModelTab>('generated');
+
+ // Separar modelos gerados (custom) dos pré-definidos (default)
+ const generatedModels = useMemo(() => savedModels.filter(m => !m.id.startsWith('default-')), [savedModels]);
+ const presetModels = useMemo(() => savedModels.filter(m => m.id.startsWith('default-')), [savedModels]);
  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
  // Estado do look
@@ -947,7 +951,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }
 
  // Validações
- if (!selectedModel && modelTab === 'saved') {
+ if (!selectedModel && modelTab !== 'create') {
  alert('Selecione um modelo para continuar.');
  return;
  }
@@ -1479,10 +1483,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* Tabs */}
  <div className="flex gap-1">
  <button
- onClick={() => setModelTab('saved')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'saved' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ onClick={() => setModelTab('generated')}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'generated' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
- <i className="fas fa-bookmark mr-1"></i>Salvos ({savedModels.length})
+ <i className="fas fa-wand-magic-sparkles mr-1"></i>Gerados ({generatedModels.length})
+ </button>
+ <button
+ onClick={() => setModelTab('presets')}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'presets' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ >
+ <i className="fas fa-users mr-1"></i>Pré-definidos ({presetModels.length})
  </button>
  <button
  onClick={() => setModelTab('create')}
@@ -1492,11 +1502,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </button>
  </div>
 
- {modelTab === 'saved' ? (
+ {modelTab === 'generated' ? (
  <div className="space-y-3">
- {savedModels.length > 0 ? (
+ {generatedModels.length > 0 ? (
  <div className="grid grid-cols-3 gap-2">
- {savedModels.map(model => (
+ {generatedModels.map(model => (
  <div
  key={model.id}
  onClick={() => setSelectedModelId(model.id)}
@@ -1523,7 +1533,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ) : (
  <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-6 text-center'}>
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user-slash text-3xl mb-3'}></i>
- <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-2'}>Nenhum modelo salvo</p>
+ <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-2'}>Nenhum modelo gerado</p>
  <button
  onClick={() => setModelTab('create')}
  className="text-[#E91E8C] text-xs font-medium hover:underline"
@@ -1533,9 +1543,37 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
  )}
  </div>
+ ) : modelTab === 'presets' ? (
+ <div className="space-y-3">
+ <div className="grid grid-cols-3 gap-2">
+ {presetModels.map(model => (
+ <div
+ key={model.id}
+ onClick={() => setSelectedModelId(model.id)}
+ className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+ >
+ {(model.images?.front || model.referenceImageUrl) ? (
+ <OptimizedImage src={model.images?.front || model.referenceImageUrl || ''} alt={model.name} className="w-full aspect-square" size="thumb" />
+ ) : (
+ <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' w-full aspect-square flex items-center justify-center'}>
+ <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-user text-2xl'}></i>
+ </div>
+ )}
+ <div className={(isDark ? 'bg-black/70' : 'bg-white/90') + ' absolute inset-x-0 bottom-0 p-2'}>
+ <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{model.name}</p>
+ </div>
+ {selectedModelId === model.id && (
+ <div className="absolute top-2 right-2 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
+ <i className="fas fa-check text-white text-[8px]"></i>
+ </div>
+ )}
+ </div>
+ ))}
+ </div>
+ </div>
  ) : (
  <div className="space-y-3">
- {savedModels.length >= modelLimit ? (
+ {generatedModels.length >= modelLimit ? (
  // Limite atingido
  <div className={(isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-4 border'}>
  <div className="flex items-start gap-3">
@@ -1545,7 +1583,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div>
  <h4 className={(isDark ? 'text-amber-400' : 'text-amber-700') + ' font-semibold text-sm mb-1'}>Limite de modelos atingido</h4>
  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
- Você já possui {savedModels.length}/{modelLimit} modelo{modelLimit > 1 ? 's' : ''} criado{modelLimit > 1 ? 's' : ''}.
+ Você já possui {generatedModels.length}/{modelLimit} modelo{modelLimit > 1 ? 's' : ''} criado{modelLimit > 1 ? 's' : ''}.
  Para criar um novo, acesse a área de <strong>Modelos</strong> e exclua um existente.
  </p>
  </div>
@@ -1565,7 +1603,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <i className="fas fa-wand-magic-sparkles mr-2"></i>Criar Novo Modelo
  </button>
  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] text-center'}>
- {savedModels.length}/{modelLimit} modelos criados
+ {generatedModels.length}/{modelLimit} modelos criados
  </p>
  </>
  )}
