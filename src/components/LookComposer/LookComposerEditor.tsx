@@ -1271,6 +1271,60 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }
  };
 
+ // Persistir imagem gerada na tabela product_images (Supabase)
+ const metadata = {
+ prompt: lookMode === 'describe' ? clothingPrompt : undefined,
+ orientation: 'vertical',
+ lookItems: lookItems,
+ viewsMode: viewsMode,
+ modelId: selectedModel?.id,
+ modelName: selectedModel?.name,
+ modelThumbnail: selectedModel?.images?.front || selectedModel?.referenceImageUrl,
+ backImageUrl: backImageUrlResult || undefined
+ };
+
+ if (userId) {
+ const { error: insertFrontError } = await supabase
+ .from('product_images')
+ .insert({
+ product_id: product.id,
+ user_id: userId,
+ type: 'modelo_ia',
+ angle: 'front',
+ url: frontImageUrl,
+ file_name: `look_composer_front_${frontGenerationId}.png`,
+ mime_type: 'image/png',
+ is_primary: false,
+ generation_id: frontGenerationId,
+ metadata: JSON.stringify(metadata)
+ });
+
+ if (insertFrontError) {
+ console.error('Erro ao salvar imagem front no banco:', insertFrontError);
+ }
+
+ if (backImageUrlResult) {
+ const { error: insertBackError } = await supabase
+ .from('product_images')
+ .insert({
+ product_id: product.id,
+ user_id: userId,
+ type: 'modelo_ia',
+ angle: 'back',
+ url: backImageUrlResult,
+ file_name: `look_composer_back_${frontGenerationId}.png`,
+ mime_type: 'image/png',
+ is_primary: false,
+ generation_id: frontGenerationId,
+ metadata: JSON.stringify(metadata)
+ });
+
+ if (insertBackError) {
+ console.error('Erro ao salvar imagem back no banco:', insertBackError);
+ }
+ }
+ }
+
  const currentGenerated = product.generatedImages || {
  studioReady: [],
  cenarioCriativo: [],

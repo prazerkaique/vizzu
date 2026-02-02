@@ -25,7 +25,7 @@ import { runFullMigration, runProductMigration, runStorageMigration } from './ut
 import { DashboardPage } from './pages/DashboardPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ClientsPage } from './pages/ClientsPage';
-import { ModelsPage } from './pages/ModelsPage';
+import { ModelsPage, DEFAULT_MODELS } from './pages/ModelsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CreateHubPage } from './pages/CreateHubPage';
 import { AppLayout } from './components/Layout/AppLayout';
@@ -695,7 +695,7 @@ function App() {
  theme={theme}
  onCheckCredits={checkCreditsAndShowModal}
  userId={user?.id}
- savedModels={savedModels}
+ savedModels={[...DEFAULT_MODELS, ...savedModels]}
  onSaveModel={handleSaveModel}
  onOpenCreateModel={() => {
  const plan = user?.plan || 'free';

@@ -89,7 +89,7 @@ const ModelCardCarousel: React.FC<{
 const MODEL_CREATION_COST = 2;
 
 // 4 modelos pré-definidos gratuitos
-const DEFAULT_MODELS: SavedModel[] = [
+export const DEFAULT_MODELS: SavedModel[] = [
   {
     id: 'default-woman-1', userId: 'system', name: 'Sofia',
     gender: 'woman', ethnicity: 'latina', skinTone: 'medium',
