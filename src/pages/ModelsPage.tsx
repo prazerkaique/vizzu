@@ -381,8 +381,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  let currentProgress = 0;
  const progressInterval = setInterval(() => {
- currentProgress += Math.random() * 2 + 0.5;
- if (currentProgress < 50) {
+ currentProgress += Math.random() * 0.8 + 0.2;
+ if (currentProgress < 45) {
  setModelGenerationStep('front');
  } else if (currentProgress < 95) {
  setModelGenerationStep('back');

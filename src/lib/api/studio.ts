@@ -803,26 +803,34 @@ interface GenerateModelImagesResponse {
  * Custo: 0 créditos (custo é ao usar o modelo no Studio)
  */
 export async function generateModelImages(params: GenerateModelImagesParams): Promise<GenerateModelImagesResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/generate-model-images`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      modelId: params.modelId,
-      userId: params.userId,
-      modelProfile: params.modelProfile,
-      prompt: params.prompt, // Prompt otimizado para Flux 2.0
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 240000); // 4 minutos
 
-  const data = await response.json();
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/generate-model-images`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        modelId: params.modelId,
+        userId: params.userId,
+        modelProfile: params.modelProfile,
+        prompt: params.prompt,
+      }),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar imagens do modelo');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Erro ao gerar imagens do modelo');
+    }
+
+    return data;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return data;
 }
 
 // ═══════════════════════════════════════════════════════════════
