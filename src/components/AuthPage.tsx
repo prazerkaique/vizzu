@@ -169,7 +169,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                  </p>
                  <button
                    onClick={() => { setResetSent(false); setIsForgotPassword(false); setError(''); }}
-                   className="text-[#E91E8C] hover:text-[#E91E8C]/80 text-sm transition-colors"
+                   className="text-[#FF6B6B] hover:text-[#FF6B6B]/80 text-sm transition-colors"
                  >
                    Voltar ao login
                  </button>
@@ -189,7 +189,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                        type="email"
                        value={email}
                        onChange={(e) => setEmail(e.target.value)}
-                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
+                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#FF6B6B] focus:outline-none transition-colors"
                        placeholder="seu@email.com"
                        required
                      />
@@ -211,7 +211,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                  <button
                    type="button"
                    onClick={() => { setIsForgotPassword(false); setError(''); }}
-                   className="w-full text-center text-[#E91E8C] hover:text-[#E91E8C]/80 text-sm transition-colors"
+                   className="w-full text-center text-[#FF6B6B] hover:text-[#FF6B6B]/80 text-sm transition-colors"
                  >
                    Voltar ao login
                  </button>
@@ -231,7 +231,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                  </p>
                  <button
                    onClick={() => { setMagicLinkSent(false); setIsMagicLink(false); setError(''); }}
-                   className="text-[#E91E8C] hover:text-[#E91E8C]/80 text-sm transition-colors"
+                   className="text-[#FF6B6B] hover:text-[#FF6B6B]/80 text-sm transition-colors"
                  >
                    Voltar ao login
                  </button>
@@ -248,7 +248,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                        type="email"
                        value={email}
                        onChange={(e) => setEmail(e.target.value)}
-                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
+                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#FF6B6B] focus:outline-none transition-colors"
                        placeholder="seu@email.com"
                        required
                      />
@@ -270,7 +270,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                  <button
                    type="button"
                    onClick={() => { setIsMagicLink(false); setError(''); }}
-                   className="w-full text-center text-[#E91E8C] hover:text-[#E91E8C]/80 text-sm transition-colors"
+                   className="w-full text-center text-[#FF6B6B] hover:text-[#FF6B6B]/80 text-sm transition-colors"
                  >
                    Voltar ao login com senha
                  </button>
@@ -293,7 +293,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                          autoComplete="name"
                          value={name}
                          onChange={(e) => setName(e.target.value)}
-                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
+                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#FF6B6B] focus:outline-none transition-colors"
                          placeholder="Seu nome"
                          required={isSignUp}
                        />
@@ -314,7 +314,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                        autoComplete="email"
                        value={email}
                        onChange={(e) => setEmail(e.target.value)}
-                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
+                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#FF6B6B] focus:outline-none transition-colors"
                        placeholder="seu@email.com"
                        required
                      />
@@ -334,7 +334,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                        autoComplete={isSignUp ? "new-password" : "current-password"}
                        value={password}
                        onChange={(e) => setPassword(e.target.value)}
-                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#E91E8C] focus:outline-none transition-colors"
+                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#FF6B6B] focus:outline-none transition-colors"
                        placeholder="••••••••"
                        required
                      />
@@ -346,7 +346,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                      <button
                        type="button"
                        onClick={() => { setIsForgotPassword(true); setError(''); }}
-                       className="text-xs text-gray-400 hover:text-[#E91E8C] transition-colors"
+                       className="text-xs text-gray-400 hover:text-[#FF6B6B] transition-colors"
                      >
                        Esqueci minha senha
                      </button>
@@ -395,7 +395,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
                      setIsSignUp(!isSignUp);
                      setError('');
                    }}
-                   className="text-[#E91E8C] hover:text-[#E91E8C]/80 text-sm transition-colors"
+                   className="text-[#FF6B6B] hover:text-[#FF6B6B]/80 text-sm transition-colors"
                  >
                    {isSignUp ? 'Já tem conta? Entrar' : (
                      <span>

@@ -114,11 +114,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* Ilustração/Ícone */}
  <div className="flex justify-center mb-6">
  <div className="relative">
- <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#E91E8C]/20 to-[#FF6B9D]/20 flex items-center justify-center">
- <i className="fas fa-coins text-3xl text-[#E91E8C]"></i>
+ <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B6B]/20 to-[#FF6B9D]/20 flex items-center justify-center">
+ <i className="fas fa-coins text-3xl text-[#FF6B6B]"></i>
  </div>
  {/* Animação de moedas */}
- <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#E91E8C] flex items-center justify-center animate-bounce">
+ <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#FF6B6B] flex items-center justify-center animate-bounce">
  <span className="text-white text-xs font-bold">0</span>
  </div>
  </div>
@@ -132,9 +132,9 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* Subtítulo */}
  <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
  {isInsufficient ? (
- <>Você tem <span className="text-[#E91E8C] font-semibold">{currentCredits}</span> créditos, mas precisa de <span className="text-[#E91E8C] font-semibold">{creditsNeeded}</span> para {actionText}.</>
+ <>Você tem <span className="text-[#FF6B6B] font-semibold">{currentCredits}</span> créditos, mas precisa de <span className="text-[#FF6B6B] font-semibold">{creditsNeeded}</span> para {actionText}.</>
  ) : (
- <>Você precisa de <span className="text-[#E91E8C] font-semibold">{creditsNeeded}</span> créditos para {actionText}.</>
+ <>Você precisa de <span className="text-[#FF6B6B] font-semibold">{creditsNeeded}</span> créditos para {actionText}.</>
  )}
  </p>
 
@@ -150,7 +150,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* Badge especial para plano atual */}
  {currentPlan.id === 'basic' && nextPlan && (
  <div className="flex justify-center mb-4">
- <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#E91E8C]/20 text-[#E91E8C]">
+ <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#FF6B6B]/20 text-[#FF6B6B]">
  <i className="fas fa-gift"></i>
  Ganhe {nextPlan.limit - currentPlan.limit} créditos extras com upgrade
  </span>
@@ -179,7 +179,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* CTA Principal */}
  <button
  onClick={() => onBuyCredits(10)}
- className="w-full py-3.5 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5 "
+ className="w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5 "
  >
  <i className="fas fa-bolt mr-2"></i>
  Comprar 10 créditos - R$ {getCreditPackagePrice(10)}
@@ -189,7 +189,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {nextPlan ? (
  <button
  onClick={() => onUpgradePlan(nextPlan.id)}
- className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#E91E8C]/50 hover:text-[#E91E8C]' : 'border-gray-300 text-gray-700 hover:border-[#E91E8C] hover:text-[#E91E8C]'}`}
+ className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
  >
  <i className="fas fa-arrow-up mr-2"></i>
  Fazer upgrade pro {nextPlan.name} - {nextPlan.limit} créd/mês
@@ -197,7 +197,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  ) : (
  <button
  onClick={() => onBuyCredits(25)}
- className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#E91E8C]/50 hover:text-[#E91E8C]' : 'border-gray-300 text-gray-700 hover:border-[#E91E8C] hover:text-[#E91E8C]'}`}
+ className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
  >
  <i className="fas fa-plus mr-2"></i>
  Comprar 25 créditos - R$ {getCreditPackagePrice(25)}
@@ -212,7 +212,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <button
  key={amount}
  onClick={() => onBuyCredits(amount)}
- className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isDark ? 'bg-gray-50 text-gray-500 hover:bg-[#E91E8C]/20 hover:text-[#E91E8C] hover:ring-1 hover:ring-[#E91E8C]/50' : 'bg-gray-100 text-gray-600 hover:bg-[#E91E8C]/5 hover:text-[#E91E8C]'}`}
+ className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isDark ? 'bg-gray-50 text-gray-500 hover:bg-[#FF6B6B]/20 hover:text-[#FF6B6B] hover:ring-1 hover:ring-[#FF6B6B]/50' : 'bg-gray-100 text-gray-600 hover:bg-[#FF6B6B]/5 hover:text-[#FF6B6B]'}`}
  >
  {amount} créd. R${getCreditPackagePrice(amount)}
  </button>
@@ -231,7 +231,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* Link para ver todos os planos */}
  <button
  onClick={handleGoToPlans}
- className="w-full mt-4 text-[#E91E8C] text-sm font-medium hover:text-[#E91E8C] transition-colors flex items-center justify-center gap-1"
+ className="w-full mt-4 text-[#FF6B6B] text-sm font-medium hover:text-[#FF6B6B] transition-colors flex items-center justify-center gap-1"
  >
  Ver todos os planos
  <i className="fas fa-arrow-right text-xs"></i>
@@ -302,12 +302,12 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  return (
  <div
  key={plan.id}
- className={`relative rounded-2xl p-5 transition-all ${isCurrentPlan ? 'ring-2 ring-[#E91E8C]' : ''} ${isPremier ? 'ring-2 ring-amber-500' : ''} ${isDark ? 'bg-gray-50/50 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}
+ className={`relative rounded-2xl p-5 transition-all ${isCurrentPlan ? 'ring-2 ring-[#FF6B6B]' : ''} ${isPremier ? 'ring-2 ring-amber-500' : ''} ${isDark ? 'bg-gray-50/50 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}
  >
  {/* Badge */}
  {isCurrentPlan && (
  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
- <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#E91E8C] text-white uppercase">
+ <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#FF6B6B] text-white uppercase">
  Plano Atual
  </span>
  </div>
@@ -328,7 +328,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  {/* Créditos */}
  <p className={`text-sm mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- <span className="text-[#E91E8C] font-semibold">{plan.limit}</span> créditos/mês
+ <span className="text-[#FF6B6B] font-semibold">{plan.limit}</span> créditos/mês
  </p>
 
  {/* Preço */}
@@ -343,7 +343,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <button
  onClick={() => !isCurrentPlan && onUpgradePlan(plan.id)}
  disabled={isCurrentPlan}
- className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${isCurrentPlan ? isDark ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white hover:opacity-90 hover:-translate-y-0.5'}`}
+ className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${isCurrentPlan ? isDark ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF6B9D] text-white hover:opacity-90 hover:-translate-y-0.5'}`}
  >
  {isCurrentPlan ? 'Plano Atual' : plan.priceMonthly > currentPlan.priceMonthly ? 'Fazer upgrade' : 'Mudar plano'}
  </button>
@@ -375,14 +375,14 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* Seção de Créditos Avulsos */}
  <div className={`rounded-2xl p-5 ${isDark ? 'bg-gray-50/30 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}>
  <div className="flex items-center gap-2 mb-4">
- <i className="fas fa-credit-card text-[#E91E8C]"></i>
+ <i className="fas fa-credit-card text-[#FF6B6B]"></i>
  <h3 className={`text-lg font-bold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>
  Comprar Créditos Avulsos
  </h3>
  </div>
 
  <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- Seu preço: <span className="text-[#E91E8C] font-semibold">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito</span> (baseado no plano {currentPlan.name})
+ Seu preço: <span className="text-[#FF6B6B] font-semibold">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito</span> (baseado no plano {currentPlan.name})
  </p>
 
  {/* Grid de pacotes */}
@@ -391,11 +391,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <button
  key={amount}
  onClick={() => setSelectedCredits(amount)}
- className={`p-3 rounded-xl border-2 transition-all ${selectedCredits === amount ? 'border-[#E91E8C] bg-[#E91E8C]/10' : isDark ? 'border-gray-200 hover:border-zinc-600' : 'border-gray-200 hover:border-gray-300'}`}
+ className={`p-3 rounded-xl border-2 transition-all ${selectedCredits === amount ? 'border-[#FF6B6B] bg-[#FF6B6B]/10' : isDark ? 'border-gray-200 hover:border-zinc-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{amount}</p>
  <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>créditos</p>
- <p className={`text-sm font-semibold mt-1 ${selectedCredits === amount ? 'text-[#E91E8C]' : isDark ? 'text-gray-600' : 'text-gray-700'}`}>
+ <p className={`text-sm font-semibold mt-1 ${selectedCredits === amount ? 'text-[#FF6B6B]' : isDark ? 'text-gray-600' : 'text-gray-700'}`}>
  R$ {getCreditPackagePrice(amount)}
  </p>
  </button>
@@ -404,7 +404,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  <button
  onClick={() => onBuyCredits(selectedCredits)}
- className="w-full py-3 bg-gradient-to-r from-[#E91E8C] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all"
+ className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all"
  >
  <i className="fas fa-shopping-cart mr-2"></i>
  Comprar {selectedCredits} créditos - R$ {getCreditPackagePrice(selectedCredits)}

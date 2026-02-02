@@ -707,7 +707,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  {favorites.map(gen => (
  <div
  key={gen.id}
- className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-[#E91E8C]/50' : 'bg-white border border-gray-200 hover:border-[#E91E8C]/50 ')}
+ className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-[#FF6B6B]/50' : 'bg-white border border-gray-200 hover:border-[#FF6B6B]/50 ')}
  >
  <div className={'aspect-square flex items-center justify-center relative ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
  {(() => {
@@ -722,7 +722,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  );
  })()}
  <div className="absolute top-2 right-2">
- <i className="fas fa-heart text-[#E91E8C] text-sm drop-"></i>
+ <i className="fas fa-heart text-[#FF6B6B] text-sm drop-"></i>
  </div>
  </div>
  <div className="p-3">

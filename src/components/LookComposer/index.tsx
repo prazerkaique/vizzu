@@ -519,7 +519,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div className="flex items-center gap-2 flex-wrap">
  <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-base sm:text-lg font-extrabold truncate'}>Vizzu Look Composer®</h1>
  {currentPlan && (
- <span className={(isDark ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide shrink-0'}>
+ <span className={(isDark ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide shrink-0'}>
  {currentPlan.name}
  </span>
  )}
@@ -529,7 +529,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
  <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
- <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
+ <i className="fas fa-coins text-[#FF6B6B] text-xs"></i>
  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
  </div>
  <button
@@ -573,7 +573,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div
  key={look.id}
  onClick={() => { setSelectedLook(look); setSelectedLookView('front'); }}
- className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+ className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#FF6B6B]/50' : 'bg-gray-50 border-gray-200 hover:border-[#FF6B6B]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className="aspect-[3/4] relative overflow-hidden bg-neutral-900">
  <OptimizedImage
@@ -600,7 +600,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onClick={(e) => setCardView(look.id, 'front', e)}
  className={'absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
  (currentView === 'front'
- ? 'bg-[#E91E8C]/100 text-white'
+ ? 'bg-[#FF6B6B]/100 text-white'
  : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
  }
  >
@@ -611,7 +611,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onClick={(e) => setCardView(look.id, 'back', e)}
  className={'absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
  (currentView === 'back'
- ? 'bg-[#E91E8C]/100 text-white'
+ ? 'bg-[#FF6B6B]/100 text-white'
  : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
  }
  >
@@ -626,13 +626,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <button
  onClick={(e) => setCardView(look.id, 'front', e)}
  className={'w-1.5 h-1.5 rounded-full transition-all ' +
- (currentView === 'front' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
+ (currentView === 'front' ? 'bg-[#FF6B6B]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
  }
  />
  <button
  onClick={(e) => setCardView(look.id, 'back', e)}
  className={'w-1.5 h-1.5 rounded-full transition-all ' +
- (currentView === 'back' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
+ (currentView === 'back' ? 'bg-[#FF6B6B]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
  }
  />
  </div>
@@ -729,7 +729,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
  {/* Badge de quantidade de looks */}
  {pwl.looks.length > 0 && (
- <div className="px-2 py-1 bg-[#E91E8C]/100 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.looks.length} look${pwl.looks.length > 1 ? 's' : ''} criado${pwl.looks.length > 1 ? 's' : ''}`}>
+ <div className="px-2 py-1 bg-[#FF6B6B]/100 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.looks.length} look${pwl.looks.length > 1 ? 's' : ''} criado${pwl.looks.length > 1 ? 's' : ''}`}>
  <i className="fas fa-layer-group text-[8px]"></i>
  {pwl.looks.length}
  </div>
@@ -801,7 +801,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  placeholder="Buscar produto..."
  value={productSearchTerm}
  onChange={(e) => setProductSearchTerm(e.target.value)}
- className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-[#E91E8C]/50'}
+ className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-[#FF6B6B]/50'}
  autoFocus
  />
  </div>
@@ -850,7 +850,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div
  key={product.id}
  onClick={() => handleSelectProductForNewLook(product)}
- className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+ className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#FF6B6B]/50' : 'bg-gray-50 border-gray-200 hover:border-[#FF6B6B]/40') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
@@ -985,7 +985,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {selectedLook.metadata?.modelName && (
  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
- <i className="fas fa-user mr-2 text-[#E91E8C]"></i>Modelo
+ <i className="fas fa-user mr-2 text-[#FF6B6B]"></i>Modelo
  </h3>
  <div className="flex items-center gap-3">
  {selectedLook.metadata?.modelThumbnail ? (
@@ -1239,7 +1239,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div
  key={look.id}
  onClick={() => { setModalSelectedLook(look); setModalSelectedView('front'); }}
- className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-[#E91E8C] ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative group/thumb'}
+ className={(modalSelectedLook?.id === look.id ? 'ring-2 ring-[#FF6B6B] ' : '') + (isDark ? 'bg-neutral-700 hover:bg-neutral-600' : 'bg-gray-100 hover:bg-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-all aspect-[3/4] relative group/thumb'}
  >
  <OptimizedImage
  src={thumbImage}
@@ -1267,13 +1267,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <button
  onClick={(e) => setCardView(`modal-${look.id}`, 'front', e)}
  className={'w-1.5 h-1.5 rounded-full transition-all ' +
- (thumbView === 'front' ? 'bg-[#E91E8C]/100' : 'bg-white/50 hover:bg-white/80')
+ (thumbView === 'front' ? 'bg-[#FF6B6B]/100' : 'bg-white/50 hover:bg-white/80')
  }
  />
  <button
  onClick={(e) => setCardView(`modal-${look.id}`, 'back', e)}
  className={'w-1.5 h-1.5 rounded-full transition-all ' +
- (thumbView === 'back' ? 'bg-[#E91E8C]/100' : 'bg-white/50 hover:bg-white/80')
+ (thumbView === 'back' ? 'bg-[#FF6B6B]/100' : 'bg-white/50 hover:bg-white/80')
  }
  />
  </div>

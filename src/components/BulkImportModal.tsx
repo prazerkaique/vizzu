@@ -569,7 +569,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                       value={spreadsheetUrl}
                       onChange={(e) => setSpreadsheetUrl(e.target.value)}
                       placeholder="https://docs.google.com/spreadsheets/d/..."
-                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-[#E91E8C]/50`}
+                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/50`}
                     />
                   </div>
 
@@ -582,7 +582,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                       value={driveFolder}
                       onChange={(e) => setDriveFolder(e.target.value)}
                       placeholder="https://drive.google.com/drive/folders/..."
-                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-[#E91E8C]/50`}
+                      className={`w-full px-4 py-3 ${bgMuted} ${textPrimary} rounded-xl border ${borderColor} text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/50`}
                     />
                     <p className={`${textMuted} text-[10px] mt-1.5`}>
                       Se as imagens estão em uma pasta do Drive, cole o link aqui
@@ -642,7 +642,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
 
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-300 hover:border-[#E91E8C]/50'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
+                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-[#FF6B6B]/50' : 'border-gray-300 hover:border-[#FF6B6B]/50'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
                   >
                     {xmlFileName ? (
                       <>
@@ -711,7 +711,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
 
                   <div
                     onClick={() => zipInputRef.current?.click()}
-                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-300 hover:border-[#E91E8C]/50'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
+                    className={`border-2 border-dashed ${isDark ? 'border-neutral-700 hover:border-[#FF6B6B]/50' : 'border-gray-300 hover:border-[#FF6B6B]/50'} rounded-xl p-8 text-center cursor-pointer transition-all ${bgMuted}`}
                   >
                     {zipFileName ? (
                       <>
@@ -783,7 +783,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                   onClick={toggleAll}
                   className={`${textSecondary} text-xs hover:${textPrimary} transition-colors flex items-center gap-2`}
                 >
-                  <i className={`${parsedProducts.every(p => p.selected) ? 'fas fa-check-square text-[#E91E8C]' : 'far fa-square'}`}></i>
+                  <i className={`${parsedProducts.every(p => p.selected) ? 'fas fa-check-square text-[#FF6B6B]' : 'far fa-square'}`}></i>
                   Selecionar todos
                 </button>
                 <span className={`${textMuted} text-xs`}>
@@ -796,7 +796,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                 {parsedProducts.map((product) => (
                   <div
                     key={product.id}
-                    className={`p-3 rounded-xl border ${borderColor} ${product.selected ? (isDark ? 'bg-[#E91E8C]/10 border-[#E91E8C]/30' : 'bg-[#E91E8C]/10 border-[#E91E8C]/20') : bgMuted} transition-all`}
+                    className={`p-3 rounded-xl border ${borderColor} ${product.selected ? (isDark ? 'bg-[#FF6B6B]/10 border-[#FF6B6B]/30' : 'bg-[#FF6B6B]/10 border-[#FF6B6B]/20') : bgMuted} transition-all`}
                   >
                     <div className="flex items-start gap-3">
                       {/* Checkbox */}
@@ -804,7 +804,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                         onClick={() => toggleProduct(product.id)}
                         className="mt-1 shrink-0"
                       >
-                        <i className={`${product.selected ? 'fas fa-check-square text-[#E91E8C]' : `far fa-square ${textMuted}`} text-lg`}></i>
+                        <i className={`${product.selected ? 'fas fa-check-square text-[#FF6B6B]' : `far fa-square ${textMuted}`} text-lg`}></i>
                       </button>
 
                       {/* Image preview */}
@@ -975,7 +975,7 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
         {isLoading && step === 'configure' && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <div className={`${bgCard} rounded-xl p-6 text-center`}>
-              <i className="fas fa-spinner animate-spin text-[#E91E8C] text-2xl mb-3"></i>
+              <i className="fas fa-spinner animate-spin text-[#FF6B6B] text-2xl mb-3"></i>
               <p className={`${textPrimary} text-sm`}>Processando arquivo...</p>
             </div>
           </div>

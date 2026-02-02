@@ -143,7 +143,7 @@ export function DashboardPage() {
  <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
- <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
+ <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]')}></i>
  <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
  </div>
  {sortedCreations.length > 0 && (
@@ -215,7 +215,7 @@ export function DashboardPage() {
  {/* Produtos Cadastrados */}
  <div onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
  <div className="flex items-start justify-between mb-2">
- <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]')}></i>
+ <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]')}></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>

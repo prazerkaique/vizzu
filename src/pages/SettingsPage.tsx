@@ -660,7 +660,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
  </span>
  {log.cost > 0 && (
- <span className="text-[#E91E8C]">
+ <span className="text-[#FF6B6B]">
  <i className="fas fa-coins mr-1"></i>
  {log.cost} crédito{log.cost !== 1 ? 's' : ''}
  </span>

@@ -617,7 +617,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
       <div className="p-4 space-y-4">
        <div>
         <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 block'}>
-         <i className="fas fa-camera text-[#E91E8C] mr-1"></i>Fotos para Provador IA
+         <i className="fas fa-camera text-[#FF6B6B] mr-1"></i>Fotos para Provador IA
         </label>
         <div className="grid grid-cols-3 gap-2">
          {PHOTO_TYPES.map(photoType => {
@@ -655,7 +655,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
          </div>
         )}
         {!processingClientPhoto && newClient.photos.length > 0 && (
-         <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-[#E91E8C]/10 text-[#E91E8C] rounded-lg">
+         <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 bg-[#FF6B6B]/10 text-[#FF6B6B] rounded-lg">
           <i className="fas fa-check text-[10px]"></i>
           <span className="text-[10px] font-medium">Provador IA ativado - {newClient.photos.length} foto(s)</span>
          </div>
@@ -766,7 +766,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
          {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
         </span>
         {showClientDetail.hasProvadorIA && (
-         <span className="px-2 py-1 bg-[#E91E8C]/20 text-[#E91E8C] rounded-full text-[10px] font-medium">
+         <span className="px-2 py-1 bg-[#FF6B6B]/20 text-[#FF6B6B] rounded-full text-[10px] font-medium">
           <i className="fas fa-camera mr-1"></i>Vizzu Provador®
          </span>
         )}
@@ -787,7 +787,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        {clientDetailLooks.length > 0 && (
         <div>
          <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-          <i className="fas fa-images text-[#E91E8C]"></i>
+          <i className="fas fa-images text-[#FF6B6B]"></i>
           Looks Gerados ({clientDetailLooks.length})
          </p>
          <div className="grid grid-cols-4 gap-2">
@@ -959,7 +959,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        {/* Fotos */}
        <div>
         <label className="text-neutral-500 text-[9px] font-medium uppercase tracking-wide mb-2 block">
-         <i className="fas fa-camera text-[#E91E8C] mr-1"></i>Fotos para Provador IA
+         <i className="fas fa-camera text-[#FF6B6B] mr-1"></i>Fotos para Provador IA
         </label>
         <div className="grid grid-cols-3 gap-2">
          {PHOTO_TYPES.map(photoType => {
@@ -1062,8 +1062,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
       </h3>
       <div className="grid grid-cols-2 gap-3">
        <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-        <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
-         <i className="fas fa-images text-[#E91E8C]"></i>
+        <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+         <i className="fas fa-images text-[#FF6B6B]"></i>
         </div>
         <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
         <input

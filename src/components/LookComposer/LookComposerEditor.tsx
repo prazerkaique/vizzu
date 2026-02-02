@@ -1420,8 +1420,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return (
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-4">
- <div className={(isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-shirt text-sm'}></i>
+ <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-shirt text-sm'}></i>
  </div>
  <div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Peça Principal</h3>
@@ -1438,7 +1438,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  key={idx}
  className={`w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-colors ${
  currentImageIndex === idx
- ? (isDark ? 'border-[#E91E8C]' : 'border-[#E91E8C]/50')
+ ? (isDark ? 'border-[#FF6B6B]' : 'border-[#FF6B6B]/50')
  : 'border-transparent'
  }`}
  onClick={() => setCurrentImageIndex(idx)}
@@ -1471,8 +1471,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return (
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-4">
- <div className={(isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-user text-sm'}></i>
+ <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-user text-sm'}></i>
  </div>
  <div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Modelo IA</h3>
@@ -1484,19 +1484,19 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="flex gap-1">
  <button
  onClick={() => setModelTab('generated')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'generated' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'generated' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  <i className="fas fa-wand-magic-sparkles mr-1"></i>Gerados ({generatedModels.length})
  </button>
  <button
  onClick={() => setModelTab('presets')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'presets' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'presets' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  <i className="fas fa-users mr-1"></i>Pré-definidos ({presetModels.length})
  </button>
  <button
  onClick={() => setModelTab('create')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'create' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${modelTab === 'create' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  <i className="fas fa-plus mr-1"></i>Criar Novo
  </button>
@@ -1510,7 +1510,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div
  key={model.id}
  onClick={() => setSelectedModelId(model.id)}
- className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+ className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  {(model.images?.front || model.referenceImageUrl) ? (
  <OptimizedImage src={model.images?.front || model.referenceImageUrl || ''} alt={model.name} className="w-full aspect-square" size="thumb" />
@@ -1523,7 +1523,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{model.name}</p>
  </div>
  {selectedModelId === model.id && (
- <div className="absolute top-2 right-2 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
+ <div className="absolute top-2 right-2 w-5 h-5 bg-[#FF6B6B]/100 rounded-full flex items-center justify-center">
  <i className="fas fa-check text-white text-[8px]"></i>
  </div>
  )}
@@ -1536,7 +1536,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-2'}>Nenhum modelo gerado</p>
  <button
  onClick={() => setModelTab('create')}
- className="text-[#E91E8C] text-xs font-medium hover:underline"
+ className="text-[#FF6B6B] text-xs font-medium hover:underline"
  >
  Criar primeiro modelo
  </button>
@@ -1550,7 +1550,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div
  key={model.id}
  onClick={() => setSelectedModelId(model.id)}
- className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+ className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedModelId === model.id ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  {(model.images?.front || model.referenceImageUrl) ? (
  <OptimizedImage src={model.images?.front || model.referenceImageUrl || ''} alt={model.name} className="w-full aspect-square" size="thumb" />
@@ -1563,7 +1563,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{model.name}</p>
  </div>
  {selectedModelId === model.id && (
- <div className="absolute top-2 right-2 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
+ <div className="absolute top-2 right-2 w-5 h-5 bg-[#FF6B6B]/100 rounded-full flex items-center justify-center">
  <i className="fas fa-check text-white text-[8px]"></i>
  </div>
  )}
@@ -1616,8 +1616,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return (
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-4">
- <div className={(isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-layer-group text-sm'}></i>
+ <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-layer-group text-sm'}></i>
  </div>
  <div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Monte o Look</h3>
@@ -1629,13 +1629,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="flex gap-1">
  <button
  onClick={() => setLookMode('composer')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'composer' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'composer' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  Suas Peças <span className="opacity-60">(1 crédito)</span>
  </button>
  <button
  onClick={() => setLookMode('describe')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  Composição Genérica <span className="opacity-60">(1 crédito)</span>
  </button>
@@ -1703,8 +1703,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return (
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-4">
- <div className={(isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-person-walking text-sm'}></i>
+ <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-person-walking text-sm'}></i>
  </div>
  <div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Pose do Modelo</h3>
@@ -1717,10 +1717,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* Pose Padrão */}
  <div
  onClick={() => setPoseMode('default')}
- className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${poseMode === 'default' ? 'border-[#E91E8C] ' + (isDark ? 'bg-[#E91E8C]/10' : 'bg-[#E91E8C]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+ className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${poseMode === 'default' ? 'border-[#FF6B6B] ' + (isDark ? 'bg-[#FF6B6B]/10' : 'bg-[#FF6B6B]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
  >
  <div className="flex items-center gap-3">
- <div className={(poseMode === 'default' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+ <div className={(poseMode === 'default' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
  <i className="fas fa-person"></i>
  </div>
  <div className="flex-1">
@@ -1728,7 +1728,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Pose natural de catálogo, em pé de frente</p>
  </div>
  {poseMode === 'default' && (
- <i className="fas fa-check-circle text-[#E91E8C]"></i>
+ <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  )}
  </div>
  </div>
@@ -1736,10 +1736,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* Pose Personalizada */}
  <div
  onClick={() => setPoseMode('custom')}
- className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${poseMode === 'custom' ? 'border-[#E91E8C] ' + (isDark ? 'bg-[#E91E8C]/10' : 'bg-[#E91E8C]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+ className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${poseMode === 'custom' ? 'border-[#FF6B6B] ' + (isDark ? 'bg-[#FF6B6B]/10' : 'bg-[#FF6B6B]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
  >
  <div className="flex items-center gap-3">
- <div className={(poseMode === 'custom' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+ <div className={(poseMode === 'custom' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
  <i className="fas fa-pen-fancy"></i>
  </div>
  <div className="flex-1">
@@ -1747,7 +1747,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Escreva um prompt descrevendo a pose desejada</p>
  </div>
  {poseMode === 'custom' && (
- <i className="fas fa-check-circle text-[#E91E8C]"></i>
+ <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  )}
  </div>
  </div>
@@ -1800,8 +1800,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return (
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-4">
- <div className={(isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-image text-sm'}></i>
+ <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-image text-sm'}></i>
  </div>
  <div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Escolha o Fundo</h3>
@@ -1813,13 +1813,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="flex gap-1">
  <button
  onClick={() => setBackgroundType('studio')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${backgroundType === 'studio' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${backgroundType === 'studio' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  <i className="fas fa-store mr-1"></i>Estúdio
  </button>
  <button
  onClick={() => setBackgroundType('custom')}
- className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${backgroundType === 'custom' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
+ className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${backgroundType === 'custom' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
  <i className="fas fa-image mr-1"></i>Personalizado
  </button>
@@ -1875,7 +1875,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div
  key={bg.id}
  onClick={() => { setSelectedPreset(bg.id); setCustomBackground(null); }}
- className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedPreset === bg.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+ className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${selectedPreset === bg.id ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  {bg.id === 'solid-color' ? (
  <div
@@ -1892,7 +1892,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium'}>{bg.name}</p>
  </div>
  {selectedPreset === bg.id && (
- <div className="absolute top-2 right-2 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
+ <div className="absolute top-2 right-2 w-5 h-5 bg-[#FF6B6B]/100 rounded-full flex items-center justify-center">
  <i className="fas fa-check text-white text-[8px]"></i>
  </div>
  )}
@@ -1927,7 +1927,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <button
  key={color}
  onClick={() => setSolidColor(color)}
- className={'w-6 h-6 rounded-full border-2 transition-all ' + (solidColor === color ? 'border-[#E91E8C] scale-110' : isDark ? 'border-neutral-600' : 'border-gray-300')}
+ className={'w-6 h-6 rounded-full border-2 transition-all ' + (solidColor === color ? 'border-[#FF6B6B] scale-110' : isDark ? 'border-neutral-600' : 'border-gray-300')}
  style={{ backgroundColor: color }}
  />
  ))}
@@ -1943,7 +1943,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onClick={() => setShowBackgroundSourcePicker(true)}
  onDragOver={handleBackgroundDragOver}
  onDrop={handleBackgroundDrop}
- className={`block w-full py-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${isDark ? 'border-neutral-700 hover:border-[#E91E8C]/50' : 'border-gray-300 hover:border-[#E91E8C]/50'}`}
+ className={`block w-full py-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${isDark ? 'border-neutral-700 hover:border-[#FF6B6B]/50' : 'border-gray-300 hover:border-[#FF6B6B]/50'}`}
  >
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-cloud-upload-alt text-3xl mb-2'}></i>
  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm font-medium'}>Clique para enviar</p>
@@ -1952,7 +1952,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
 
  {customBackground && (
- <div className="relative rounded-xl overflow-hidden border-2 border-[#E91E8C]">
+ <div className="relative rounded-xl overflow-hidden border-2 border-[#FF6B6B]">
  <img src={customBackground} alt="Fundo personalizado" className="w-full h-32 object-cover" />
  <button
  onClick={() => setCustomBackground(null)}
@@ -2005,7 +2005,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div
  key={bg.id}
  onClick={() => { setSelectedPreset(bg.id); setCustomBackground(null); }}
- className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all group ${selectedPreset === bg.id ? 'border-[#E91E8C] ring-2 ring-[#E91E8C]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
+ className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all group ${selectedPreset === bg.id ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/30' : isDark ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-300'}`}
  >
  {bg.color ? (
  <div className="w-full h-20" style={{ backgroundColor: bg.color }}></div>
@@ -2022,7 +2022,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{bg.name}</p>
  </div>
  {selectedPreset === bg.id && (
- <div className="absolute top-2 right-2 w-5 h-5 bg-[#E91E8C]/100 rounded-full flex items-center justify-center">
+ <div className="absolute top-2 right-2 w-5 h-5 bg-[#FF6B6B]/100 rounded-full flex items-center justify-center">
  <i className="fas fa-check text-white text-[8px]"></i>
  </div>
  )}
@@ -2065,8 +2065,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return (
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-4">
- <div className={(isDark ? 'bg-[#E91E8C]/20' : 'bg-[#E91E8C]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
- <i className={(isDark ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-clone text-sm'}></i>
+ <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/15') + ' w-8 h-8 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-clone text-sm'}></i>
  </div>
  <div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Ângulos do Look</h3>
@@ -2078,10 +2078,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* Só Frente */}
  <div
  onClick={() => setViewsMode('front')}
- className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${viewsMode === 'front' ? 'border-[#E91E8C] ' + (isDark ? 'bg-[#E91E8C]/10' : 'bg-[#E91E8C]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+ className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${viewsMode === 'front' ? 'border-[#FF6B6B] ' + (isDark ? 'bg-[#FF6B6B]/10' : 'bg-[#FF6B6B]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
  >
  <div className="flex items-center gap-3">
- <div className={(viewsMode === 'front' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+ <div className={(viewsMode === 'front' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
  <i className="fas fa-image"></i>
  </div>
  <div className="flex-1">
@@ -2089,10 +2089,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera uma imagem frontal do look</p>
  </div>
  <div className="text-right">
- <span className="text-[#E91E8C] font-semibold text-sm">{lookMode === 'composer' ? 20 : 10} créditos</span>
+ <span className="text-[#FF6B6B] font-semibold text-sm">{lookMode === 'composer' ? 20 : 10} créditos</span>
  </div>
  {viewsMode === 'front' && (
- <i className="fas fa-check-circle text-[#E91E8C]"></i>
+ <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  )}
  </div>
  </div>
@@ -2100,10 +2100,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* Frente e Costas */}
  <div
  onClick={() => setViewsMode('front-back')}
- className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${viewsMode === 'front-back' ? 'border-[#E91E8C] ' + (isDark ? 'bg-[#E91E8C]/10' : 'bg-[#E91E8C]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
+ className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${viewsMode === 'front-back' ? 'border-[#FF6B6B] ' + (isDark ? 'bg-[#FF6B6B]/10' : 'bg-[#FF6B6B]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'}`}
  >
  <div className="flex items-center gap-3">
- <div className={(viewsMode === 'front-back' ? 'bg-[#E91E8C]/100 text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
+ <div className={(viewsMode === 'front-back' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-10 h-10 rounded-lg flex items-center justify-center transition-colors'}>
  <i className="fas fa-clone"></i>
  </div>
  <div className="flex-1">
@@ -2111,10 +2111,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera duas imagens: vista frontal e traseira</p>
  </div>
  <div className="text-right">
- <span className="text-[#E91E8C] font-semibold text-sm">{(lookMode === 'composer' ? 20 : 10) * 2} créditos</span>
+ <span className="text-[#FF6B6B] font-semibold text-sm">{(lookMode === 'composer' ? 20 : 10) * 2} créditos</span>
  </div>
  {viewsMode === 'front-back' && (
- <i className="fas fa-check-circle text-[#E91E8C]"></i>
+ <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  )}
  </div>
  </div>
@@ -2247,7 +2247,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className={'h-px my-2 ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}></div>
  <div className="flex justify-between font-medium">
  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500')}>Créditos</span>
- <span className="text-[#E91E8C]">{creditsNeeded}{resolution === '4k' ? ' (4K)' : ''}</span>
+ <span className="text-[#FF6B6B]">{creditsNeeded}{resolution === '4k' ? ' (4K)' : ''}</span>
  </div>
  </div>
  </div>
@@ -2302,7 +2302,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
  </div>
  <div className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
- <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
+ <i className="fas fa-coins text-[#FF6B6B] text-xs"></i>
  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
  </div>
  </div>
@@ -2325,7 +2325,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isActive ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white ' : isPast ? 'bg-green-500 text-white' : isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400'}`}>
  {isPast ? <i className="fas fa-check"></i> : <i className={`fas ${step.icon}`}></i>}
  </div>
- <span className={`text-[10px] font-medium ${isActive ? 'text-[#E91E8C]' : isPast ? (isDark ? 'text-green-400' : 'text-green-600') : isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
+ <span className={`text-[10px] font-medium ${isActive ? 'text-[#FF6B6B]' : isPast ? (isDark ? 'text-green-400' : 'text-green-600') : isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
  {step.label}
  </span>
  </button>
@@ -2439,7 +2439,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <button
  onClick={handleGenerate}
  disabled={isGenerating || isAnyGenerationRunning || !canProceed('views')}
- className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-[#E91E8C] cursor-wait' : !canProceed('views') ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
+ className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-[#FF6B6B] cursor-wait' : !canProceed('views') ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
  >
  {isGenerating ? (
  <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando{viewsMode === 'front-back' ? ' 2 imagens' : ''}...</>
@@ -2599,8 +2599,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowSaveBackgroundModal(false)}></div>
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 '}>
  <div className="text-center mb-4">
- <div className="w-12 h-12 rounded-full bg-[#E91E8C]/20 flex items-center justify-center mx-auto mb-3">
- <i className="fas fa-bookmark text-[#E91E8C] text-xl"></i>
+ <div className="w-12 h-12 rounded-full bg-[#FF6B6B]/20 flex items-center justify-center mx-auto mb-3">
+ <i className="fas fa-bookmark text-[#FF6B6B] text-xl"></i>
  </div>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-base font-bold font-serif'}>Salvar Fundo</h3>
  <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-1'}>Dê um nome para este fundo</p>
@@ -2646,9 +2646,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  Adicionar fundo personalizado
  </h3>
  <div className="grid grid-cols-2 gap-3">
- <label className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
- <div className={(isDark ? 'bg-neutral-700' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
- <i className="fas fa-images text-[#E91E8C]"></i>
+ <label className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#FF6B6B]/50' : 'bg-gray-50 border-gray-200 hover:border-[#FF6B6B]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(isDark ? 'bg-neutral-700' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <i className="fas fa-images text-[#FF6B6B]"></i>
  </div>
  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
  <input
@@ -2663,7 +2663,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }}
  />
  </label>
- <label className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#E91E8C]/50' : 'bg-gray-50 border-gray-200 hover:border-[#E91E8C]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <label className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#FF6B6B]/50' : 'bg-gray-50 border-gray-200 hover:border-[#FF6B6B]/50') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
  <div className={(isDark ? 'bg-neutral-700' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-camera text-[#FF9F43]"></i>
  </div>

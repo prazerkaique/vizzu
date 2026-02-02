@@ -423,14 +423,14 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  {/* Card - Composição do Look */}
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
- <i className="fas fa-layer-group text-[#E91E8C] text-[10px]"></i>
+ <i className="fas fa-layer-group text-[#FF6B6B] text-[10px]"></i>
  {lookMode === 'composer' ? 'Peças do Look' : 'Look Descrito'}
  </h3>
 
  {lookMode === 'composer' && lookPieces.length > 0 ? (
  <div className="space-y-2">
  {/* Peça principal (produto) */}
- <div className={'flex items-center gap-2 p-2 rounded-lg ' + (isDark ? 'bg-[#E91E8C]/10 border border-[#E91E8C]/20' : 'bg-[#E91E8C]/10 border border-[#E91E8C]/20')}>
+ <div className={'flex items-center gap-2 p-2 rounded-lg ' + (isDark ? 'bg-[#FF6B6B]/10 border border-[#FF6B6B]/20' : 'bg-[#FF6B6B]/10 border border-[#FF6B6B]/20')}>
  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
  {originalImage && (
  <OptimizedImage src={originalImage} alt={product.name} className="w-full h-full" size="thumb" />
@@ -438,7 +438,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </div>
  <div className="flex-1 min-w-0">
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{product.name}</p>
- <p className="text-[#E91E8C] text-[10px]">Peça Principal</p>
+ <p className="text-[#FF6B6B] text-[10px]">Peça Principal</p>
  </div>
  </div>
 
@@ -494,7 +494,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  {/* Card Informações */}
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
- <i className="fas fa-chart-simple text-[#E91E8C] text-[10px]"></i>
+ <i className="fas fa-chart-simple text-[#FF6B6B] text-[10px]"></i>
  Informações
  </h3>
 
@@ -585,7 +585,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  onClick={() => setExportQuality('high')}
  className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
  (exportQuality === 'high'
- ? 'bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30'
+ ? 'bg-[#FF6B6B]/20 text-[#FF6B6B] border border-[#FF6B6B]/30'
  : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
  }
  >
@@ -594,13 +594,13 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <span className="font-medium">Alta Qualidade</span>
  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>PNG 2048px</span>
  </div>
- {exportQuality === 'high' && <i className="fas fa-check ml-auto text-[#E91E8C]"></i>}
+ {exportQuality === 'high' && <i className="fas fa-check ml-auto text-[#FF6B6B]"></i>}
  </button>
  <button
  onClick={() => setExportQuality('performance')}
  className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
  (exportQuality === 'performance'
- ? 'bg-[#E91E8C]/20 text-[#E91E8C] border border-[#E91E8C]/30'
+ ? 'bg-[#FF6B6B]/20 text-[#FF6B6B] border border-[#FF6B6B]/30'
  : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
  }
  >
@@ -609,7 +609,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <span className="font-medium">Performance</span>
  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>JPEG 1024px</span>
  </div>
- {exportQuality === 'performance' && <i className="fas fa-check ml-auto text-[#E91E8C]"></i>}
+ {exportQuality === 'performance' && <i className="fas fa-check ml-auto text-[#FF6B6B]"></i>}
  </button>
  </div>
  )}
@@ -759,11 +759,11 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div className="flex items-center justify-center gap-2 pb-4" onClick={e => e.stopPropagation()}>
  <button
  onClick={() => setCurrentView('front')}
- className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'front' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/30 hover:bg-white/50')}
+ className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'front' ? 'bg-[#FF6B6B]/100 scale-125' : 'bg-white/30 hover:bg-white/50')}
  />
  <button
  onClick={() => setCurrentView('back')}
- className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'back' ? 'bg-[#E91E8C]/100 scale-125' : 'bg-white/30 hover:bg-white/50')}
+ className={'w-2.5 h-2.5 rounded-full transition-all ' + (currentView === 'back' ? 'bg-[#FF6B6B]/100 scale-125' : 'bg-white/30 hover:bg-white/50')}
  />
  </div>
  )}

@@ -581,7 +581,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
  </select>
  {(filterCategoryGroup || filterCategory || filterColor || filterCollection) && (
- <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-[#E91E8C] hover:bg-neutral-800/50 rounded-lg transition-colors">
+ <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-[#FF6B6B] hover:bg-neutral-800/50 rounded-lg transition-colors">
  <i className="fas fa-times mr-1"></i>Limpar
  </button>
  )}
@@ -709,8 +709,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </h3>
  <div className="grid grid-cols-2 gap-3">
  <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#E91E8C]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
- <i className="fas fa-images text-[#E91E8C]"></i>
+ <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <i className="fas fa-images text-[#FF6B6B]"></i>
  </div>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
  <input
@@ -854,11 +854,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* FRENTE */}
  <div className="flex flex-col">
  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
- <i className="fas fa-image text-[#E91E8C] text-[8px]"></i>
- Frente <span className="text-[#E91E8C]">*</span>
+ <i className="fas fa-image text-[#FF6B6B] text-[8px]"></i>
+ Frente <span className="text-[#FF6B6B]">*</span>
  </label>
  {selectedFrontImage ? (
- <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#E91E8C]">
+ <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#FF6B6B]">
  <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
  <div className="absolute top-1 right-1 flex gap-0.5">
  <button onClick={() => setShowPhotoSourcePicker('front')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
@@ -1026,7 +1026,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
  <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-xl border'}>
  <div className="flex items-center gap-2 mb-2">
- <i className={(theme === 'dark' ? 'text-[#E91E8C]' : 'text-[#E91E8C]') + ' fas fa-sliders text-xs'}></i>
+ <i className={(theme === 'dark' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-sliders text-xs'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
  </div>
  <div className={`grid gap-3 ${CATEGORY_ATTRIBUTES[newProduct.category].length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -1234,7 +1234,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Seção "Deseja criar?" */}
  <div className={'mt-5 pt-4 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
- <i className="fas fa-wand-magic-sparkles text-[#E91E8C] mr-2"></i>
+ <i className="fas fa-wand-magic-sparkles text-[#FF6B6B] mr-2"></i>
  Deseja criar?
  </p>
  <div className="grid grid-cols-2 gap-2">

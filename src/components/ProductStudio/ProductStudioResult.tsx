@@ -412,7 +412,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {/* Card Informações */}
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
- <i className="fas fa-chart-simple text-[#E91E8C] text-[10px]"></i>
+ <i className="fas fa-chart-simple text-[#FF6B6B] text-[10px]"></i>
  Informações
  </h3>
 

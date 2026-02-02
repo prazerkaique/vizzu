@@ -27,7 +27,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  const getTypeLabel = (type: string) => {
  switch (type) {
  case 'studio': return { label: 'Studio', color: 'bg-purple-100 text-purple-700', icon: 'fa-store' };
- case 'cenario': return { label: 'Cenário', color: 'bg-[#E91E8C]/15 text-[#E91E8C]', icon: 'fa-film' };
+ case 'cenario': return { label: 'Cenário', color: 'bg-[#FF6B6B]/15 text-[#FF6B6B]', icon: 'fa-film' };
  case 'lifestyle': return { label: 'Modelo', color: 'bg-orange-100 text-orange-700', icon: 'fa-user' };
  case 'refine': return { label: 'Refinado', color: 'bg-blue-100 text-blue-700', icon: 'fa-magic' };
  default: return { label: type, color: 'bg-slate-100 text-slate-700', icon: 'fa-image' };

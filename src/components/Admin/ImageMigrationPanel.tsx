@@ -231,7 +231,7 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
               <div className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Erros</div>
             </div>
             <div className={`p-2 rounded-lg text-center ${isDark ? 'bg-neutral-800' : 'bg-gray-50'}`}>
-              <div className="text-[#E91E8C] text-lg font-bold">{formatFileSize(progress.totalSavings)}</div>
+              <div className="text-[#FF6B6B] text-lg font-bold">{formatFileSize(progress.totalSavings)}</div>
               <div className={`text-[10px] ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>Economizado</div>
             </div>
           </div>

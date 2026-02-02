@@ -198,6 +198,47 @@ function App() {
  }
  };
 
+ // Load saved models from Supabase
+ const loadSavedModels = async (userId: string) => {
+ try {
+ const { data, error } = await supabase
+ .from('saved_models')
+ .select('*')
+ .eq('user_id', userId)
+ .order('created_at', { ascending: false });
+
+ if (error) throw error;
+
+ const models: SavedModel[] = (data || []).map((m: any) => ({
+ id: m.id,
+ userId: m.user_id,
+ name: m.name,
+ gender: m.gender,
+ ethnicity: m.ethnicity,
+ skinTone: m.skin_tone,
+ bodyType: m.body_type,
+ ageRange: m.age_range,
+ height: m.height,
+ hairColor: m.hair_color,
+ hairStyle: m.hair_style,
+ eyeColor: m.eye_color,
+ expression: m.expression,
+ bustSize: m.bust_size,
+ waistType: m.waist_type,
+ referenceImageUrl: m.reference_image_url,
+ referenceStoragePath: m.reference_storage_path,
+ images: typeof m.images === 'string' ? JSON.parse(m.images) : (m.images || {}),
+ status: m.status,
+ createdAt: m.created_at,
+ updatedAt: m.updated_at,
+ }));
+
+ setSavedModels(models);
+ } catch (error) {
+ console.error('Erro ao carregar modelos:', error);
+ }
+ };
+
  // Load user data when user changes (triggered by AuthContext)
  const prevUserIdRef = useRef<string | null>(null);
  useEffect(() => {
@@ -206,6 +247,7 @@ function App() {
  loadUserProducts(user.id);
  loadUserClients(user.id);
  loadUserHistory(user.id);
+ loadSavedModels(user.id);
  } else if (!user) {
  prevUserIdRef.current = null;
  }

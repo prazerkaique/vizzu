@@ -154,6 +154,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  // Model states
  const [showModelDetail, setShowModelDetail] = useState<SavedModel | null>(null);
  const [editingModel, setEditingModel] = useState<SavedModel | null>(null);
+ const [renamingModel, setRenamingModel] = useState<SavedModel | null>(null);
+ const [renameValue, setRenameValue] = useState('');
+ const [savingRename, setSavingRename] = useState(false);
  const [modelWizardStep, setModelWizardStep] = useState<1 | 2 | 3 | 4 | 5>(1);
  const [newModel, setNewModel] = useState({
  name: '',
@@ -200,7 +203,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  useEffect(() => {
  const handleEsc = (e: KeyboardEvent) => {
  if (e.key === 'Escape') {
- if (showCreateModel) { setShowCreateModel(false); setEditingModel(null); }
+ if (renamingModel) setRenamingModel(null);
+ else if (showCreateModel) { setShowCreateModel(false); setEditingModel(null); }
  else if (showModelDetail) setShowModelDetail(null);
  }
  };
@@ -656,8 +660,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Empty State (only show if no user models AND no defaults) */}
  {allModels.length === 0 ? (
  <div className={'rounded-2xl p-12 text-center ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 ')}>
- <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 flex items-center justify-center">
- <i className="fas fa-user-tie text-3xl text-[#E91E8C]"></i>
+ <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 flex items-center justify-center">
+ <i className="fas fa-user-tie text-3xl text-[#FF6B6B]"></i>
  </div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Nenhum modelo criado</h3>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
@@ -694,7 +698,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-neutral-500' : 'bg-white border border-gray-100 ')}
  >
  {/* Image Carousel */}
- <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#E91E8C]/5 to-[#FF9F43]/5')}>
+ <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5')}>
  {images.length > 0 ? (
  <ModelCardCarousel
  images={images}
@@ -838,11 +842,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  onClick={() => setNewModel({ ...newModel, gender: opt.id as 'woman' | 'man' })}
  className={'p-6 rounded-xl border-2 transition-all text-center ' + (
  newModel.gender === opt.id
- ? 'border-[#E91E8C]/50 bg-gradient-to-r from-[#E91E8C]/15 to-[#FF9F43]/15'
+ ? 'border-[#FF6B6B]/50 bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15'
  : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-neutral-500')
  )}
  >
- <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-[#E91E8C]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
+ <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-[#FF6B6B]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>{opt.label}</p>
  </button>
  ))}
@@ -924,7 +928,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Altura - Slider (3 opções) */}
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
- Altura: <span className="text-[#E91E8C]">{MODEL_OPTIONS.height.find(h => h.id === newModel.height)?.label}</span>
+ Altura: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.height.find(h => h.id === newModel.height)?.label}</span>
  </label>
  <input
  type="range"
@@ -938,7 +942,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:h-5
  [&::-webkit-slider-thumb]:rounded-full
  [&::-webkit-slider-thumb]:bg-gradient-to-r
- [&::-webkit-slider-thumb]:from-[#E91E8C]
+ [&::-webkit-slider-thumb]:from-[#FF6B6B]
  [&::-webkit-slider-thumb]:to-[#FF9F43]
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
@@ -1014,7 +1018,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Tamanho do Cabelo - Slider */}
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
- Tamanho do Cabelo: <span className="text-[#E91E8C]">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
+ Tamanho do Cabelo: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
  </label>
  <input
  type="range"
@@ -1028,7 +1032,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:h-5
  [&::-webkit-slider-thumb]:rounded-full
  [&::-webkit-slider-thumb]:bg-gradient-to-r
- [&::-webkit-slider-thumb]:from-[#E91E8C]
+ [&::-webkit-slider-thumb]:from-[#FF6B6B]
  [&::-webkit-slider-thumb]:to-[#FF9F43]
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
@@ -1112,7 +1116,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {newModel.gender === 'woman' && (
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
- Tamanho do Busto: <span className="text-[#E91E8C]">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
+ Tamanho do Busto: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
  </label>
  <input
  type="range"
@@ -1126,7 +1130,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:h-5
  [&::-webkit-slider-thumb]:rounded-full
  [&::-webkit-slider-thumb]:bg-gradient-to-r
- [&::-webkit-slider-thumb]:from-[#E91E8C]
+ [&::-webkit-slider-thumb]:from-[#FF6B6B]
  [&::-webkit-slider-thumb]:to-[#FF9F43]
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
@@ -1142,7 +1146,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Tipo de Cintura - Slider (3 opções) */}
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
- Tipo de Cintura: <span className="text-[#E91E8C]">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
+ Tipo de Cintura: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
  </label>
  <input
  type="range"
@@ -1156,7 +1160,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:h-5
  [&::-webkit-slider-thumb]:rounded-full
  [&::-webkit-slider-thumb]:bg-gradient-to-r
- [&::-webkit-slider-thumb]:from-[#E91E8C]
+ [&::-webkit-slider-thumb]:from-[#FF6B6B]
  [&::-webkit-slider-thumb]:to-[#FF9F43]
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
@@ -1215,7 +1219,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  return (
  <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
- isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#E91E8C]/100' : (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300')
+ isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300')
  }`}>
  {isCompleted ? (
  <i className="fas fa-check text-white text-xs"></i>
@@ -1308,33 +1312,33 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
 
  {/* Preview humanizado do modelo */}
- <div className={(theme === 'dark' ? 'bg-gradient-to-br from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/20' : 'bg-gradient-to-br from-[#E91E8C]/5 to-[#FF9F43]/5 border-[#E91E8C]/20') + ' rounded-xl p-4 border'}>
+ <div className={(theme === 'dark' ? 'bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF6B6B]/20' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5 border-[#FF6B6B]/20') + ' rounded-xl p-4 border'}>
  <div className="flex items-start gap-3">
  <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
  <i className={'fas ' + (newModel.gender === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-white text-lg'}></i>
  </div>
  <div className="flex-1">
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
- <i className="fas fa-sparkles text-[#E91E8C] mr-1"></i>O que será gerado
+ <i className="fas fa-sparkles text-[#FF6B6B] mr-1"></i>O que será gerado
  </p>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
  {newModel.name || (newModel.gender === 'woman' ? 'Ela' : 'Ele')} terá{' '}
- <span className="text-[#E91E8C] font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>
+ <span className="text-[#FF6B6B] font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>
  {newModel.hairLength === 'bald' ? (
- <> e será <span className="text-[#E91E8C] font-medium">careca</span>.</>
+ <> e será <span className="text-[#FF6B6B] font-medium">careca</span>.</>
  ) : (
- <>, cabelo <span className="text-[#E91E8C] font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
- <span className="text-[#E91E8C] font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
- e <span className="text-[#E91E8C] font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.</>
+ <>, cabelo <span className="text-[#FF6B6B] font-medium">{getModelLabel('hairColor', newModel.hairColor).toLowerCase()}</span>{' '}
+ <span className="text-[#FF6B6B] font-medium">{getModelLabel('hairLength', newModel.hairLength).toLowerCase()}</span>{' '}
+ e <span className="text-[#FF6B6B] font-medium">{getModelLabel('hairStyle', newModel.hairStyle).toLowerCase()}</span>.</>
  )}{' '}
- Corpo <span className="text-[#E91E8C] font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
- pele <span className="text-[#E91E8C] font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
- estatura <span className="text-[#E91E8C] font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}
- e cintura <span className="text-[#E91E8C] font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
+ Corpo <span className="text-[#FF6B6B] font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
+ pele <span className="text-[#FF6B6B] font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
+ estatura <span className="text-[#FF6B6B] font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}
+ e cintura <span className="text-[#FF6B6B] font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
  {newModel.gender === 'woman' && (
- <>, busto <span className="text-[#E91E8C] font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
+ <>, busto <span className="text-[#FF6B6B] font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
  )}.{' '}
- Expressão <span className="text-[#E91E8C] font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
+ Expressão <span className="text-[#FF6B6B] font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
  </p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
  <i className="fas fa-camera mr-1"></i>
@@ -1630,34 +1634,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </button>
  <button
  onClick={() => {
- setNewModel({
- name: showModelDetail.name,
- gender: showModelDetail.gender,
- ethnicity: showModelDetail.ethnicity,
- skinTone: showModelDetail.skinTone,
- bodyType: showModelDetail.bodyType,
- ageRange: showModelDetail.ageRange,
- height: showModelDetail.height,
- hairColor: showModelDetail.hairColor,
- hairStyle: showModelDetail.hairStyle,
- hairLength: (showModelDetail as any).hairLength || 'medium',
- eyeColor: showModelDetail.eyeColor,
- expression: showModelDetail.expression,
- bustSize: showModelDetail.bustSize || 'medium',
- waistType: showModelDetail.waistType || 'medium',
- referenceImage: showModelDetail.referenceImageUrl || null,
- physicalNotes: (showModelDetail as any).physicalNotes || '',
- hairNotes: (showModelDetail as any).hairNotes || '',
- skinNotes: (showModelDetail as any).skinNotes || '',
- });
- setEditingModel(showModelDetail);
- setModelWizardStep(1);
+ setRenameValue(showModelDetail.name);
+ setRenamingModel(showModelDetail);
  setShowModelDetail(null);
- setShowCreateModel(true);
  }}
  className={(theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100') + ' px-4 py-2 rounded-lg text-sm font-medium transition-colors'}
  >
- <i className="fas fa-edit mr-2"></i>Editar
+ <i className="fas fa-edit mr-2"></i>Renomear
  </button>
  </>
  )}
@@ -1671,6 +1654,60 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className="flex-1 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium"
  >
  Fechar
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+ {/* RENAME MODEL MODAL */}
+ {renamingModel && (
+ <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setRenamingModel(null)}>
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-sm p-6'} onClick={(e) => e.stopPropagation()}>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Renomear Modelo</h3>
+ <input
+ type="text"
+ value={renameValue}
+ onChange={(e) => setRenameValue(e.target.value)}
+ onKeyDown={(e) => {
+ if (e.key === 'Enter' && renameValue.trim() && !savingRename) {
+ (async () => {
+ setSavingRename(true);
+ try {
+ const { error } = await supabase.from('saved_models').update({ name: renameValue.trim() }).eq('id', renamingModel.id);
+ if (error) throw error;
+ await loadSavedModels();
+ setRenamingModel(null);
+ } catch (err) { console.error('Erro ao renomear:', err); }
+ finally { setSavingRename(false); }
+ })();
+ }
+ }}
+ className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/50'}
+ placeholder="Nome do modelo"
+ autoFocus
+ />
+ <div className="flex gap-3 mt-4">
+ <button
+ onClick={() => setRenamingModel(null)}
+ className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors'}
+ >
+ Cancelar
+ </button>
+ <button
+ disabled={!renameValue.trim() || savingRename}
+ onClick={async () => {
+ setSavingRename(true);
+ try {
+ const { error } = await supabase.from('saved_models').update({ name: renameValue.trim() }).eq('id', renamingModel.id);
+ if (error) throw error;
+ await loadSavedModels();
+ setRenamingModel(null);
+ } catch (err) { console.error('Erro ao renomear:', err); }
+ finally { setSavingRename(false); }
+ }}
+ className={'flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ' + (!renameValue.trim() || savingRename ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90')}
+ >
+ {savingRename ? 'Salvando...' : 'Salvar'}
  </button>
  </div>
  </div>
