@@ -300,8 +300,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
  }
 
- // Comprimir imagem para reduzir consumo de banda
- const result = await compressImage(processedFile);
+ // Comprimir imagem para reduzir consumo de banda (force: fotos de cliente podem ser grandes)
+ const result = await compressImage(processedFile, { force: true });
 
  if (result.wasCompressed && result.savings > 0) {
  console.info(`[Compressão] ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (${result.savings}% menor)`);

@@ -21,23 +21,27 @@ import imageCompression from 'browser-image-compression';
 // CONFIGURAÇÕES - AJUSTE AQUI SE NECESSÁRIO
 // ═══════════════════════════════════════════════════════════════
 
-/** Ativar/desativar compressão globalmente */
-export const COMPRESSION_ENABLED = true;
+/** Ativar/desativar compressão globalmente
+ * DESATIVADO: imagens de produto precisam ir em alta qualidade pro Gemini.
+ * Thumbnails são geradas server-side pelo Supabase Image Transformation.
+ * Para comprimir (ex: provador), use { force: true } nas options.
+ */
+export const COMPRESSION_ENABLED = false;
 
 /** Qualidade da imagem (0.1 a 1.0) - 0.85 = ótimo balanço qualidade/tamanho */
 export const COMPRESSION_QUALITY = 0.85;
 
 /** Tamanho máximo em MB (imagens maiores serão reduzidas) */
-export const MAX_SIZE_MB = 1;
+export const MAX_SIZE_MB = 5;
 
 /** Largura máxima em pixels (mantém proporção) */
-export const MAX_WIDTH_PX = 1920;
+export const MAX_WIDTH_PX = 4096;
 
 /** Altura máxima em pixels (mantém proporção) */
-export const MAX_HEIGHT_PX = 1920;
+export const MAX_HEIGHT_PX = 4096;
 
 /** Usar WebP quando possível (mais eficiente que JPEG) */
-export const USE_WEBP = true;
+export const USE_WEBP = false;
 
 // ═══════════════════════════════════════════════════════════════
 // TIPOS
