@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { PLANS, CREDIT_PACKAGES, FREE_PLAN } from '../hooks/useCredits';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { supabase } from '../services/supabaseClient';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -68,7 +69,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  return (
  <div className="flex-1 overflow-y-auto p-4 md:p-6">
- <div className={settingsTab === 'plan' ? 'max-w-7xl mx-auto' : 'max-w-3xl mx-auto'}>
+ <div className={settingsTab === 'plan' ? 'max-w-7xl mx-auto' : 'max-w-5xl mx-auto'}>
  {/* Header */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
@@ -138,7 +139,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  <div className="flex items-end">
  <button
- onClick={() => showToast('Email de redefinição de senha enviado.', 'info')}
+ onClick={async () => {
+ const email = user?.email;
+ if (!email) { showToast('Nenhum email encontrado.', 'error'); return; }
+ try {
+ const { error } = await supabase.auth.resetPasswordForEmail(email, {
+ redirectTo: window.location.origin + '/reset-password',
+ });
+ if (error) throw error;
+ showToast('Email de redefinição enviado para ' + email, 'success');
+ } catch (e: any) {
+ showToast(e.message || 'Erro ao enviar email.', 'error');
+ }
+ }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors'}
  >
  Alterar Senha
@@ -408,12 +421,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const annualSavings = isTrial ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
  const included = PLAN_INCLUDED[plan.id] || new Set();
 
- // Features na ordem mestre
- const allFeatures = MASTER_FEATURES.map(f => ({ name: f, has: included.has(f) }));
- // Trial: só mostra incluídas
- const visibleFeatures = isTrial
- ? allFeatures.filter(f => f.has)
- : allFeatures;
+ // Features na ordem mestre — só mostra incluídas (sem ✗)
+ const visibleFeatures = MASTER_FEATURES.filter(f => included.has(f));
  const collapsedFeatures = visibleFeatures.slice(0, MAX_COLLAPSED);
  const hiddenFeatures = visibleFeatures.slice(MAX_COLLAPSED);
 
@@ -487,16 +496,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}</div>
  )}
 
- {/* Features — mesma ordem, ✓ ou ✗ */}
+ {/* Features — só incluídas */}
  <ul className="space-y-1.5 mb-3 flex-1">
  {collapsedFeatures.map((feat, i) => (
  <li key={i} className="flex items-start gap-2 text-[11px]">
- {feat.has ? (
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
- ) : (
- <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/40' : 'text-red-400/40')}></i>
- )}
- <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
+ <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feat}</span>
  </li>
  ))}
  </ul>
@@ -506,12 +511,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <ul className="space-y-1.5 mb-3">
  {hiddenFeatures.map((feat, i) => (
  <li key={'h-' + i} className="flex items-start gap-2 text-[11px]">
- {feat.has ? (
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
- ) : (
- <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/40' : 'text-red-400/40')}></i>
- )}
- <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
+ <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feat}</span>
  </li>
  ))}
  {!isTrial && (
