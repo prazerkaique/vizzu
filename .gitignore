@@ -56,6 +56,7 @@ n8n/
 n8n-*.json
 n8n-*.js
 n8n-workflows/
+n8n-versao-final/
 **/n8n-*.json
 **/n8n-*.cjs
 

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2, ProductPresentationStyle } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
@@ -13,19 +13,6 @@ import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, g
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import { OptimizedImage } from '../OptimizedImage';
 
-// Estilos CSS para animação de cor no Lottie (lilás → rosa → laranja)
-// Usa steps discretos para evitar passar pelo verde
-const lottieColorStyles = `
- @keyframes colorCycle {
- 0%, 100% { filter: sepia(1) saturate(3) hue-rotate(260deg) brightness(1.1); } /* Lilás */
- 33% { filter: sepia(1) saturate(3) hue-rotate(300deg) brightness(1.1); } /* Rosa */
- 66% { filter: sepia(1) saturate(2.5) hue-rotate(330deg) brightness(1.2); } /* Laranja */
- }
-
- .vizzu-lottie-gradient {
- animation: colorCycle 3s ease-in-out infinite;
- }
-`;
 
 interface ProductStudioEditorProps {
  product: Product;
@@ -734,19 +721,20 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const setProgress = onSetProgress || setLocalProgress;
 
  setGenerating(true);
- setProgress(10);
+ setProgress(0);
  setPhraseIndex(0);
 
  try {
- // Simular progresso enquanto a API processa (progressivo e suave)
- let currentProg = 10;
+ // Progresso linear de 0 a 95% em 90 segundos (1.5 min)
+ const totalDuration = 90000; // 90 segundos em ms
+ const intervalMs = 1000; // atualiza a cada 1 segundo
+ const maxProgress = 95; // para em 95% até a API responder
+ let elapsed = 0;
  const progressInterval = setInterval(() => {
- // Incremento fixo que desacelera conforme se aproxima de 90%
- const remaining = 90 - currentProg;
- const increment = Math.max(remaining * 0.08, 0.5);
- currentProg = Math.min(currentProg + increment, 90);
- setProgress(Math.round(currentProg));
- }, 1000);
+ elapsed += intervalMs;
+ const progress = Math.min(Math.round((elapsed / totalDuration) * maxProgress), maxProgress);
+ setProgress(progress);
+ }, intervalMs);
 
  // Montar objeto de referências (excluindo front que já vai no imageId)
  const referenceImages: Record<string, string> = {};
@@ -1777,14 +1765,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  {/* Container do conteúdo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
- {/* Animação Lottie com degradê de cores (lilás → laranja → rosa) */}
- <style>{lottieColorStyles}</style>
- <div className="w-64 h-64 mb-6 vizzu-lottie-gradient">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+ {/* Motion personalizado em loop (crop lateral via CSS para esconder watermark) */}
+ <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden">
+ <video
+ src="/Scene-1.mp4"
+ autoPlay
  loop
- autoplay
- style={{ width: '100%', height: '100%' }}
+ muted
+ playsInline
+ className="h-full object-cover"
+ style={{ width: '140%', marginLeft: '-20%' }}
  />
  </div>
 

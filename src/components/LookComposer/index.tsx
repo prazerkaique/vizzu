@@ -502,24 +502,24 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* HEADER */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div className="flex items-center justify-between mb-6">
- <div className="flex items-center gap-3">
+ <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+ <div className="flex items-center gap-3 min-w-0">
  {onBack && (
  <button
  onClick={onBack}
- className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}
+ className={'w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}
  >
  <i className="fas fa-arrow-left text-sm"></i>
  </button>
  )}
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <div className={'w-10 h-10 shrink-0 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-layer-group text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
- <div>
- <div className="flex items-center gap-2">
- <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Vizzu Look Composer®</h1>
+ <div className="min-w-0">
+ <div className="flex items-center gap-2 flex-wrap">
+ <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-base sm:text-lg font-extrabold truncate'}>Vizzu Look Composer®</h1>
  {currentPlan && (
- <span className={(isDark ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+ <span className={(isDark ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide shrink-0'}>
  {currentPlan.name}
  </span>
  )}
@@ -527,16 +527,16 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Seus looks criados com modelo IA</p>
  </div>
  </div>
- <div className="flex items-center gap-2">
+ <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
  <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
  <i className="fas fa-coins text-[#E91E8C] text-xs"></i>
  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
  </div>
  <button
  onClick={handleNewLook}
- className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-sm hover:opacity-90 transition-opacity "
+ className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-xs sm:text-sm hover:opacity-90 transition-opacity"
  >
- <i className="fas fa-plus"></i>
+ <i className="fas fa-plus text-xs"></i>
  <span>Novo Look</span>
  </button>
  </div>
