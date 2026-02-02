@@ -191,6 +191,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const [modelFilterAge, setModelFilterAge] = useState<string>('');
  const [modelFilterBodyType, setModelFilterBodyType] = useState<string>('');
  const [modelFilterSearch, setModelFilterSearch] = useState<string>('');
+ const [pendingModelBanner, setPendingModelBanner] = useState<string | null>(null);
 
  // Quando showCreateModel muda para true (de fora, ex: LookComposer), reset wizard
  useEffect(() => {
@@ -262,6 +263,45 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  if (user) {
  loadSavedModels();
  }
+ }, [user?.id]);
+
+ // Verificar se há geração pendente (F5 / saiu da página)
+ useEffect(() => {
+ if (!user) return;
+ const pending = localStorage.getItem('vizzu_pending_model');
+ if (!pending) return;
+ try {
+ const data = JSON.parse(pending);
+ // Se passou mais de 5 minutos, descartar
+ if (Date.now() - data.startTime > 300000) {
+ localStorage.removeItem('vizzu_pending_model');
+ return;
+ }
+ setPendingModelBanner(data.modelName || 'Modelo');
+ // Polling: verificar se o modelo ficou ready no Supabase
+ const pollInterval = setInterval(async () => {
+ try {
+ const { data: model } = await supabase
+ .from('saved_models')
+ .select('status')
+ .eq('id', data.modelId)
+ .single();
+ if (model?.status === 'ready') {
+ clearInterval(pollInterval);
+ localStorage.removeItem('vizzu_pending_model');
+ setPendingModelBanner(null);
+ await loadSavedModels();
+ }
+ } catch (e) { /* silencioso */ }
+ }, 5000);
+ // Limpar após 5 minutos
+ const timeout = setTimeout(() => {
+ clearInterval(pollInterval);
+ localStorage.removeItem('vizzu_pending_model');
+ setPendingModelBanner(null);
+ }, 300000);
+ return () => { clearInterval(pollInterval); clearTimeout(timeout); };
+ } catch (e) { localStorage.removeItem('vizzu_pending_model'); }
  }, [user?.id]);
 
  const getModelLimit = () => {
@@ -379,24 +419,33 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setModelGenerationProgress(0);
  setModelGenerationStep('front');
 
- let currentProgress = 0;
+ const modelId = 'preview-' + Date.now();
+
+ // Salvar no localStorage para sobreviver F5
+ localStorage.setItem('vizzu_pending_model', JSON.stringify({
+ modelId,
+ modelName: newModel.name.trim(),
+ startTime: Date.now(),
+ }));
+
+ // Progress linear: 100 segundos para chegar a 95%
+ const totalDuration = 100; // segundos
+ let elapsed = 0;
  const progressInterval = setInterval(() => {
- currentProgress += Math.random() * 0.8 + 0.2;
- if (currentProgress < 45) {
+ elapsed++;
+ const progress = Math.min(Math.round((elapsed / totalDuration) * 95), 95);
+ if (elapsed < totalDuration * 0.45) {
  setModelGenerationStep('front');
- } else if (currentProgress < 95) {
+ } else {
  setModelGenerationStep('back');
  }
- if (currentProgress >= 95) {
- currentProgress = 95;
- clearInterval(progressInterval);
- }
- setModelGenerationProgress(Math.round(currentProgress));
+ setModelGenerationProgress(progress);
+ if (progress >= 95) clearInterval(progressInterval);
  }, 1000);
 
  try {
  const result = await generateModelImages({
- modelId: 'preview-' + Date.now(),
+ modelId,
  userId: user.id,
  modelProfile: {
  name: newModel.name.trim(),
@@ -423,6 +472,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  clearInterval(progressInterval);
  setModelGenerationProgress(100);
  setModelGenerationStep('done');
+ localStorage.removeItem('vizzu_pending_model');
 
  if (result.success && result.model?.images) {
  setModelPreviewImages(result.model.images);
@@ -431,6 +481,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }
  } catch (error) {
  clearInterval(progressInterval);
+ localStorage.removeItem('vizzu_pending_model');
  console.error('Erro ao gerar preview:', error);
  alert('Erro ao gerar preview do modelo. Tente novamente.');
  } finally {
@@ -675,7 +726,18 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </button>
  </div>
  ) : (
- /* Models Grid - Vertical Cards */
+ <>
+ {/* Banner de geração pendente */}
+ {pendingModelBanner && (
+ <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700') + ' border rounded-xl p-4 mb-4 flex items-center gap-3'}>
+ <div className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full flex-shrink-0"></div>
+ <div>
+ <p className="font-medium text-sm">Modelo "{pendingModelBanner}" está sendo gerado</p>
+ <p className="text-xs opacity-75">Quando finalizar, ele aparecerá automaticamente na lista.</p>
+ </div>
+ </div>
+ )}
+ {/* Models Grid - Vertical Cards */}
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
  {allModels
  .filter(model => {
@@ -762,7 +824,6 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  );
  })}
  </div>
- )}
 
  {/* Nenhum resultado com filtros */}
  {allModels.length > 0 && allModels.filter(model => {
@@ -777,6 +838,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-filter text-3xl mb-3'}></i>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Nenhum modelo encontrado com os filtros selecionados</p>
  </div>
+ )}
+ </>
  )}
  </div>
  </div>
