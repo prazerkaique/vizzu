@@ -134,87 +134,30 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
  </div>
  </div>
- {/* Alterar Senha — seção dedicada */}
+ {/* Alterar Senha — via email */}
  <div className={'mt-5 pt-5 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-xs mb-3'}>Alterar Senha</h4>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nova Senha</label>
- <input
- type="password"
- id="new-password"
- name="newPassword"
- autoComplete="new-password"
- placeholder="Mínimo 8 caracteres"
- onChange={(e) => {
- const v = e.target.value;
- const bar = document.getElementById('pw-strength-bar');
- const label = document.getElementById('pw-strength-label');
- if (!bar || !label) return;
- let score = 0;
- if (v.length >= 8) score++;
- if (/[A-Z]/.test(v)) score++;
- if (/[0-9]/.test(v)) score++;
- if (/[^A-Za-z0-9]/.test(v)) score++;
- const configs = [
- { w: '0%', color: '', text: '' },
- { w: '25%', color: 'bg-red-500', text: 'Fraca' },
- { w: '50%', color: 'bg-yellow-500', text: 'Razoável' },
- { w: '75%', color: 'bg-emerald-400', text: 'Boa' },
- { w: '100%', color: 'bg-emerald-500', text: 'Forte' },
- ];
- const c = v.length === 0 ? configs[0] : configs[score] || configs[1];
- bar.style.width = c.w;
- bar.className = 'h-full rounded-full transition-all ' + c.color;
- label.textContent = c.text;
- }}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
- />
- <div className="mt-1.5 flex items-center gap-2">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-1 flex-1 rounded-full overflow-hidden'}>
- <div id="pw-strength-bar" className="h-full rounded-full transition-all" style={{ width: '0%' }}></div>
- </div>
- <span id="pw-strength-label" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] w-14 text-right'}></span>
- </div>
- </div>
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Confirmar Senha</label>
- <input
- type="password"
- id="confirm-password"
- name="confirmPassword"
- autoComplete="new-password"
- placeholder="Repita a nova senha"
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
- />
- </div>
- </div>
+ <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-xs mb-2'}>Alterar Senha</h4>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
+ Para sua segurança, a troca de senha é feita por email.
+ </p>
  <button
  onClick={async () => {
- const newPw = (document.getElementById('new-password') as HTMLInputElement)?.value;
- const confirmPw = (document.getElementById('confirm-password') as HTMLInputElement)?.value;
- if (!newPw || newPw.length < 8) { showToast('A senha precisa ter no mínimo 8 caracteres.', 'error'); return; }
- if (!/[A-Z]/.test(newPw)) { showToast('A senha precisa ter pelo menos uma letra maiúscula.', 'error'); return; }
- if (!/[0-9]/.test(newPw)) { showToast('A senha precisa ter pelo menos um número.', 'error'); return; }
- if (newPw !== confirmPw) { showToast('As senhas não coincidem.', 'error'); return; }
  try {
- const { error } = await supabase.auth.updateUser({ password: newPw });
+ const userEmail = user?.email;
+ if (!userEmail) { showToast('Email do usuário não encontrado.', 'error'); return; }
+ const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+ redirectTo: window.location.origin
+ });
  if (error) throw error;
- (document.getElementById('new-password') as HTMLInputElement).value = '';
- (document.getElementById('confirm-password') as HTMLInputElement).value = '';
- const bar = document.getElementById('pw-strength-bar');
- const label = document.getElementById('pw-strength-label');
- if (bar) { bar.style.width = '0%'; bar.className = 'h-full rounded-full transition-all'; }
- if (label) label.textContent = '';
- showToast('Senha alterada com sucesso!', 'success');
+ showToast('Email de redefinição enviado! Verifique sua caixa de entrada.', 'success');
  } catch (e: any) {
- showToast(e.message || 'Erro ao alterar senha.', 'error');
+ showToast(e.message || 'Erro ao enviar email de redefinição.', 'error');
  }
  }}
- className="mt-3 px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+ className="px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
  >
- <i className="fas fa-lock text-[10px]"></i>
- Alterar Senha
+ <i className="fas fa-envelope text-[10px]"></i>
+ Enviar email de redefinição
  </button>
  </div>
  </div>
