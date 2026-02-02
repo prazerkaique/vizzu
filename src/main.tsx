@@ -8,6 +8,7 @@ import { HistoryProvider } from './contexts/HistoryContext'
 import { ProductsProvider } from './contexts/ProductsContext'
 import { ClientsProvider } from './contexts/ClientsContext'
 import { GenerationProvider } from './contexts/GenerationContext'
+import { PlansProvider } from './contexts/PlansContext'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <UIProvider>
         <AuthProvider>
+          <PlansProvider>
           <HistoryProvider>
             <ProductsProvider>
               <ClientsProvider>
@@ -24,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               </ClientsProvider>
             </ProductsProvider>
           </HistoryProvider>
+          </PlansProvider>
         </AuthProvider>
       </UIProvider>
     </ErrorBoundary>

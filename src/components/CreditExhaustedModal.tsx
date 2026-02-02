@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect } from 'react';
-import { Plan, PLANS, CREDIT_PACKAGES } from '../hooks/useCredits';
+import { Plan, CREDIT_PACKAGES } from '../hooks/useCredits';
+import { usePlans } from '../contexts/PlansContext';
 
 interface Props {
  isOpen: boolean;
@@ -48,6 +49,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  const [selectedCredits, setSelectedCredits] = useState<number>(10);
  const [isAnimating, setIsAnimating] = useState(false);
 
+ const { plans } = usePlans();
  const isDark = theme === 'dark';
  const isInsufficient = currentCredits > 0 && currentCredits < creditsNeeded;
  const isZero = currentCredits === 0;
@@ -72,8 +74,8 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  // Encontrar próximo plano para upgrade
  const getNextPlan = () => {
- const planIndex = PLANS.findIndex(p => p.id === currentPlan.id);
- return planIndex < PLANS.length - 1 ? PLANS[planIndex + 1] : null;
+ const planIndex = plans.findIndex(p => p.id === currentPlan.id);
+ return planIndex < plans.length - 1 ? plans[planIndex + 1] : null;
  };
 
  const nextPlan = getNextPlan();
@@ -292,7 +294,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  {/* Cards de Planos */}
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
- {PLANS.map((plan) => {
+ {plans.map((plan) => {
  const isCurrentPlan = plan.id === currentPlan.id;
  const isPremier = plan.id === 'premier';
  const price = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;

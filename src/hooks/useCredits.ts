@@ -1,127 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getUserBilling, createCheckoutSession, buyCredits, changePlan, calculateDaysUntilRenewal, UserSubscription, UserCredits } from '../lib/api/billing';
+import { createCheckoutSession, buyCredits, changePlan, calculateDaysUntilRenewal, UserSubscription, UserCredits } from '../lib/api/billing';
 import { supabase } from '../services/supabaseClient';
+import { usePlans } from '../contexts/PlansContext';
+
+// Re-exportar tipos e constantes de planDefaults para compatibilidade
+export type { Plan } from './planDefaults';
+export { PLANS, FREE_PLAN, CREDIT_PACKAGES } from './planDefaults';
 
 // ═══════════════════════════════════════════════════════════════
-// TIPOS E CONSTANTES
+// CONSTANTES DE LÓGICA (permanecem no frontend)
 // ═══════════════════════════════════════════════════════════════
-
-export interface Plan {
-  id: string;
-  name: string;
-  limit: number; // Gerações por mês
-  productLimit: number; // Limite de produtos no catálogo
-  priceMonthly: number;
-  priceYearly: number;
-  creditPrice: number; // Preço por geração avulsa
-  maxResolution: '2k' | '4k'; // Resolução máxima permitida
-  hasWatermark: boolean;
-  badge?: string;
-  badgeColor?: string;
-  features: string[];
-  highlight?: boolean;
-}
-
-export const PLANS: Plan[] = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    limit: 40,
-    productLimit: 5000,
-    priceMonthly: 127,
-    priceYearly: 107,
-    creditPrice: 3.50,
-    maxResolution: '2k',
-    hasWatermark: false,
-    features: [
-      '40 gerações/mês',
-      'Até 5.000 produtos',
-      'Resolução 2K',
-      'Vizzu Product Studio',
-      'Vizzu Provador',
-      'Look Composer',
-      'Fundo de Estúdio',
-      'Cenário Criativo',
-      'Modelo IA sob medida',
-      'Dashboard',
-      'Fotos para Reels e Stories',
-      'Gerador de Legendas IA',
-      'Catálogo Virtual + WhatsApp',
-      'Atendente Receptivo WhatsApp',
-      'Suporte por Email'
-    ]
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    limit: 100,
-    productLimit: 10000,
-    priceMonthly: 187,
-    priceYearly: 157,
-    creditPrice: 3.00,
-    maxResolution: '4k',
-    hasWatermark: false,
-    badge: 'MAIS POPULAR',
-    badgeColor: 'fuchsia',
-    features: [
-      '100 gerações/mês',
-      'Até 10.000 produtos',
-      'Resolução 2K + 4K',
-      'Tudo do Basic, mais:',
-      'Geração em 4K',
-      'Geração de Vídeos Instagram',
-      'Agente Ativo WhatsApp',
-      '4K consome 2 créditos'
-    ],
-    highlight: true
-  },
-  {
-    id: 'premier',
-    name: 'Premier',
-    limit: 200,
-    productLimit: 50000,
-    priceMonthly: 327,
-    priceYearly: 267,
-    creditPrice: 2.50,
-    maxResolution: '4k',
-    hasWatermark: false,
-    badge: 'MELHOR VALOR',
-    badgeColor: 'amber',
-    features: [
-      '200 gerações/mês',
-      'Até 50.000 produtos',
-      'Resolução 2K + 4K',
-      'Tudo do Pro, mais:',
-      'Integração E-commerce',
-      'Suporte Prioritário'
-    ]
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    limit: 400,
-    productLimit: -1, // Ilimitado
-    priceMonthly: 677,
-    priceYearly: 547,
-    creditPrice: 2.00,
-    maxResolution: '4k',
-    hasWatermark: false,
-    badge: 'ENTERPRISE',
-    badgeColor: 'purple',
-    features: [
-      '400 gerações/mês',
-      'Produtos ilimitados',
-      'Resolução 2K + 4K',
-      'Tudo do Premier, mais:',
-      'API Dedicada',
-      'Account Manager',
-      'Suporte VIP'
-    ]
-  }
-];
-
-// Plano padrão para usuários não autenticados ou em fallback
-const DEFAULT_PLAN = PLANS[1]; // Pro
 
 // Custo em gerações por resolução
 export const RESOLUTION_COST: Record<string, number> = {
@@ -130,7 +18,7 @@ export const RESOLUTION_COST: Record<string, number> = {
 };
 
 // Helper para verificar se plano permite resolução
-export const canUseResolution = (plan: Plan, resolution: '2k' | '4k'): boolean => {
+export const canUseResolution = (plan: { maxResolution: '2k' | '4k' }, resolution: '2k' | '4k'): boolean => {
   if (resolution === '2k') return true;
   return plan.maxResolution === '4k';
 };
@@ -139,28 +27,6 @@ export const canUseResolution = (plan: Plan, resolution: '2k' | '4k'): boolean =
 export const getGenerationCost = (resolution: '2k' | '4k'): number => {
   return RESOLUTION_COST[resolution] || 1;
 };
-
-export const FREE_PLAN: Plan = {
-  id: 'trial',
-  name: 'Trial',
-  limit: 5,
-  productLimit: 50,
-  priceMonthly: 0,
-  priceYearly: 0,
-  creditPrice: 0, // Trial não pode comprar avulso
-  maxResolution: '2k',
-  hasWatermark: true,
-  features: [
-    '5 gerações para testar (uso único)',
-    'Até 50 produtos',
-    'Resolução 2K',
-    'Marca d\'água nas imagens',
-    'Não renova mensalmente',
-    'Todas as ferramentas básicas'
-  ]
-};
-
-export const CREDIT_PACKAGES = [10, 25, 50, 100];
 
 // ═══════════════════════════════════════════════════════════════
 // LOCAL STORAGE (FALLBACK)
@@ -183,7 +49,7 @@ const getStoredData = (): LocalCreditsData => {
   } catch (e) {
     console.error('Error reading credits data:', e);
   }
-  return { credits: 100, planId: 'pro', billingPeriod: 'monthly' };
+  return { credits: 5, planId: 'free', billingPeriod: 'monthly' };
 };
 
 const saveLocalData = (data: LocalCreditsData) => {
@@ -200,11 +66,12 @@ const saveLocalData = (data: LocalCreditsData) => {
 
 interface UseCreditsOptions {
   userId?: string;
-  enableBackend?: boolean; // Se true, sincroniza com backend
+  enableBackend?: boolean;
 }
 
 export const useCredits = (options: UseCreditsOptions = {}) => {
   const { userId, enableBackend = true } = options;
+  const { allPlans, freePlan } = usePlans();
 
   // Estados
   const [localData, setLocalData] = useState<LocalCreditsData>(getStoredData);
@@ -214,10 +81,10 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
-  // Determinar plano atual
+  // Determinar plano atual (usa planos do Supabase via PlansContext)
   const currentPlan = subscription
-    ? PLANS.find(p => p.id === subscription.plan_id) || DEFAULT_PLAN
-    : PLANS.find(p => p.id === localData.planId) || DEFAULT_PLAN;
+    ? allPlans.find(p => p.id === subscription.plan_id) || freePlan
+    : allPlans.find(p => p.id === localData.planId) || freePlan;
 
   // Determinar créditos atuais
   const userCredits = creditsData?.balance ?? localData.credits;
@@ -239,43 +106,56 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     setError(null);
 
     try {
-      // Buscar créditos e plano direto da tabela users no Supabase
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('credits, plan_id')
-        .eq('id', userId)
+      // Buscar créditos da tabela user_credits
+      const { data: creditsRow, error: creditsError } = await supabase
+        .from('user_credits')
+        .select('*')
+        .eq('user_id', userId)
         .single();
 
-      if (userError) {
-        console.error('Error fetching user credits from Supabase:', userError);
-        throw userError;
+      // Buscar assinatura da tabela user_subscriptions
+      const { data: subRow, error: subError } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (creditsError && creditsError.code !== 'PGRST116') {
+        console.error('Error fetching user credits:', creditsError);
+        throw creditsError;
       }
 
-      if (userData) {
-        const credits = userData.credits ?? 0;
-        const planId = userData.plan_id ?? 'pro';
+      if (subError && subError.code !== 'PGRST116') {
+        console.error('Error fetching user subscription:', subError);
+        throw subError;
+      }
 
-        // Atualizar estado de créditos
+      if (creditsRow) {
         setCreditsData({
           user_id: userId,
-          balance: credits,
-          lifetime_purchased: 0,
-          lifetime_used: 0,
-          last_renewal_credits: 0,
-          updated_at: new Date().toISOString(),
+          balance: creditsRow.balance ?? 0,
+          lifetime_purchased: creditsRow.lifetime_purchased ?? 0,
+          lifetime_used: creditsRow.lifetime_used ?? 0,
+          last_renewal_credits: creditsRow.last_renewal_credits ?? 0,
+          updated_at: creditsRow.updated_at ?? new Date().toISOString(),
         });
 
-        // Sincronizar com localStorage
         setLocalData(prev => ({
           ...prev,
-          credits: credits,
-          planId: planId,
+          credits: creditsRow.balance ?? 0,
+        }));
+      }
+
+      if (subRow) {
+        setSubscription(subRow as UserSubscription);
+        setLocalData(prev => ({
+          ...prev,
+          planId: subRow.plan_id ?? 'free',
         }));
       }
     } catch (e: any) {
       console.error('Error loading billing data:', e);
       setError(e.message);
-      // Fallback para dados locais
     } finally {
       setIsLoading(false);
     }
@@ -297,7 +177,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
 
   const purchaseCredits = useCallback(async (amount: number): Promise<{ success: boolean; checkoutUrl?: string; error?: string }> => {
     if (!userId) {
-      // Modo offline/demo - adiciona localmente
       setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
       return { success: true };
     }
@@ -305,7 +184,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     setIsCheckoutLoading(true);
 
     try {
-      // Criar sessão de checkout
       const result = await createCheckoutSession({
         userId,
         type: 'credits',
@@ -313,7 +191,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
       });
 
       if (result.success && result.checkout?.url) {
-        // Redirecionar para checkout ou retornar URL
         return { success: true, checkoutUrl: result.checkout.url };
       } else {
         throw new Error('Não foi possível criar sessão de checkout');
@@ -326,10 +203,8 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     }
   }, [userId]);
 
-  // Versão que adiciona créditos diretamente (após confirmação de pagamento ou modo demo)
   const addCredits = useCallback(async (amount: number): Promise<boolean> => {
     if (!userId || !enableBackend) {
-      // Modo offline/demo
       setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
       return true;
     }
@@ -344,7 +219,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
       return false;
     } catch (e: any) {
       console.error('Error adding credits:', e);
-      // Fallback local em caso de erro
       setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
       return true;
     }
@@ -355,13 +229,12 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   // ═══════════════════════════════════════════════════════════════
 
   const upgradePlan = useCallback(async (planId: string): Promise<{ success: boolean; checkoutUrl?: string; error?: string }> => {
-    const newPlan = PLANS.find(p => p.id === planId);
+    const newPlan = allPlans.find(p => p.id === planId);
     if (!newPlan) {
       return { success: false, error: 'Plano não encontrado' };
     }
 
     if (!userId) {
-      // Modo offline/demo
       setLocalData(prev => ({
         ...prev,
         planId: newPlan.id,
@@ -373,7 +246,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     setIsCheckoutLoading(true);
 
     try {
-      // Criar sessão de checkout para assinatura
       const result = await createCheckoutSession({
         userId,
         type: 'subscription',
@@ -392,15 +264,13 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     } finally {
       setIsCheckoutLoading(false);
     }
-  }, [userId, localData.billingPeriod]);
+  }, [userId, localData.billingPeriod, allPlans]);
 
-  // Versão que altera plano diretamente (após confirmação de pagamento ou modo demo)
   const applyPlanChange = useCallback(async (planId: string): Promise<boolean> => {
-    const newPlan = PLANS.find(p => p.id === planId);
+    const newPlan = allPlans.find(p => p.id === planId);
     if (!newPlan) return false;
 
     if (!userId || !enableBackend) {
-      // Modo offline/demo
       setLocalData(prev => ({
         ...prev,
         planId: newPlan.id,
@@ -433,7 +303,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
       return false;
     } catch (e: any) {
       console.error('Error applying plan change:', e);
-      // Fallback local
       setLocalData(prev => ({
         ...prev,
         planId: newPlan.id,
@@ -441,7 +310,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
       }));
       return true;
     }
-  }, [userId, enableBackend, localData.billingPeriod]);
+  }, [userId, enableBackend, localData.billingPeriod, allPlans]);
 
   // ═══════════════════════════════════════════════════════════════
   // DEDUZIR CRÉDITOS
@@ -451,14 +320,10 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     const currentBalance = creditsData?.balance ?? localData.credits;
     if (currentBalance < amount) return false;
 
-    // Atualizar localmente imediatamente
     setLocalData(prev => ({ ...prev, credits: prev.credits - amount }));
     if (creditsData) {
       setCreditsData(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
     }
-
-    // A dedução no backend é feita pela API de geração de imagens
-    // que já deduz os créditos automaticamente
 
     return true;
   }, [creditsData, localData.credits]);
@@ -469,7 +334,6 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
 
   const setBillingPeriod = useCallback((period: 'monthly' | 'yearly') => {
     setLocalData(prev => ({ ...prev, billingPeriod: period }));
-    // O período só é efetivamente alterado na próxima renovação/checkout
   }, []);
 
   // ═══════════════════════════════════════════════════════════════
@@ -496,30 +360,21 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   // ═══════════════════════════════════════════════════════════════
 
   return {
-    // Dados
     userCredits,
     currentPlan,
     billingPeriod,
     daysUntilRenewal,
     subscription,
-
-    // Estados
     isLoading,
     isCheckoutLoading,
     error,
-
-    // Ações com checkout (retornam URL para pagamento)
     purchaseCredits,
     upgradePlan,
-
-    // Ações diretas (após confirmação de pagamento ou modo demo)
     addCredits,
     applyPlanChange,
     deductCredits,
     setBillingPeriod,
     setCredits,
-
-    // Utilitários
     refresh,
   };
 };

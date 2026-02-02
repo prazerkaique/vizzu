@@ -15,7 +15,8 @@ import { useAuth } from './contexts/AuthContext';
 import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
 import { useClients } from './contexts/ClientsContext';
-import { useCredits, PLANS } from './hooks/useCredits';
+import { useCredits } from './hooks/useCredits';
+import { usePlans } from './contexts/PlansContext';
 import { useGeneration } from './contexts/GenerationContext';
 import { supabase } from './services/supabaseClient';
 import { generateProvador, sendWhatsAppMessage } from './lib/api/studio';
@@ -128,6 +129,9 @@ function App() {
  setCredits,
  } = useCredits({ userId: user?.id, enableBackend: true });
 
+ // Plans from context
+ const { plans } = usePlans();
+
  // Função para verificar créditos e mostrar modal se insuficientes
  const checkCreditsAndShowModal = (
  creditsNeeded: number,
@@ -171,7 +175,7 @@ function App() {
  const handleUpgradePlanFromModal = async (planId: string) => {
  try {
  const result = await upgradePlan(planId);
- const plan = PLANS.find(p => p.id === planId);
+ const plan = plans.find(p => p.id === planId);
 
  if (result.checkoutUrl) {
  // Redirecionar para checkout de assinatura

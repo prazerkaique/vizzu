@@ -3,7 +3,8 @@ import { CompanySettings } from '../types';
 import { useUI, type SettingsTab } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
-import { PLANS, CREDIT_PACKAGES, FREE_PLAN } from '../hooks/useCredits';
+import { CREDIT_PACKAGES } from '../hooks/useCredits';
+import { usePlans } from '../contexts/PlansContext';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { supabase } from '../services/supabaseClient';
 
@@ -33,6 +34,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const { theme, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
+ const { allPlans, masterFeatures, planIncluded, planPersona, planCta } = usePlans();
 
  const [expandAllFeatures, setExpandAllFeatures] = useState(false);
 
@@ -253,92 +255,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  {/* ═══════ PLANOS & CRÉDITOS ═══════ */}
  {settingsTab === 'plan' && (() => {
- // Lista mestre de features — mesma ordem em todos os planos
- const MASTER_FEATURES = [
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de Imagens em 2K e 4K',
- 'Modelos IA personalizados',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- 'Integração e-commerce',
- 'Suporte prioritário',
- 'Produtos ilimitados',
- 'API dedicada',
- ];
-
- // Set de features incluídas por plano
- const PLAN_INCLUDED: Record<string, Set<string>> = {
- trial: new Set([
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- ]),
- basic: new Set([
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- ]),
- pro: new Set([
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de Imagens em 2K e 4K',
- 'Modelos IA personalizados',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- ]),
- premier: new Set([
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de Imagens em 2K e 4K',
- 'Modelos IA personalizados',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- 'Integração e-commerce',
- 'Suporte prioritário',
- ]),
- enterprise: new Set([
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de Imagens em 2K e 4K',
- 'Modelos IA personalizados',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- 'Integração e-commerce',
- 'Suporte prioritário',
- 'Produtos ilimitados',
- 'API dedicada',
- ]),
- };
-
- const PLAN_PERSONA: Record<string, string> = {
- trial: 'Teste grátis, sem compromisso',
- basic: 'Para quem está começando',
- pro: 'Para criadores e freelancers',
- premier: 'Para equipes de marketing',
- enterprise: 'Para operações de alto volume',
- };
-
- const PLAN_CTA: Record<string, string> = {
- trial: 'Testar grátis',
- basic: 'Começar agora',
- pro: 'Escolher Pro',
- premier: 'Desbloquear Premier',
- enterprise: 'Falar com especialista',
- };
-
- const ALL_DISPLAY_PLANS = [FREE_PLAN, ...PLANS];
+ // Dados dos planos vindos do Supabase via PlansContext
+ const MASTER_FEATURES = masterFeatures;
+ const PLAN_INCLUDED = planIncluded;
+ const PLAN_PERSONA = planPersona;
+ const PLAN_CTA = planCta;
+ const ALL_DISPLAY_PLANS = allPlans;
  const MAX_COLLAPSED = 5;
 
  return (
