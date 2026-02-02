@@ -1765,16 +1765,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  {/* Container do conteúdo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
- {/* Motion personalizado em loop (crop lateral via CSS para esconder watermark) */}
- <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden">
- <video
- src="/Scene-1.mp4"
- autoPlay
- loop
- muted
- playsInline
+ {/* Motion personalizado em loop (crop 20% cada lado para esconder watermark) */}
+ <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
+ <img
+ src="/Scene-1.gif"
+ alt=""
  className="h-full object-cover"
- style={{ width: '140%', marginLeft: '-20%' }}
+ style={{ width: '140%', maxWidth: 'none' }}
  />
  </div>
 
