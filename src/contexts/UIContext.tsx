@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 
 // Types (mesmos do App.tsx)
 export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
-export type SettingsTab = 'profile' | 'appearance' | 'company' | 'plan' | 'integrations' | 'history' | 'tools';
+export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history';
 
 interface Toast {
   message: string;

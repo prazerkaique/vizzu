@@ -4,7 +4,6 @@ import { useUI, type SettingsTab } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { PLANS, CREDIT_PACKAGES, FREE_PLAN } from '../hooks/useCredits';
-import { ImageMigrationPanel } from '../components/Admin/ImageMigrationPanel';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface SettingsPageProps {
@@ -56,23 +55,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  };
  });
 
- // Persistir company settings (localStorage + Supabase)
+ // Persistir company settings
  useEffect(() => {
  localStorage.setItem('vizzu_company_settings', JSON.stringify(companySettings));
- if (user?.id && companySettings.name) {
- saveCompanySettingsToSupabase(companySettings, user.id);
- }
- }, [companySettings, user?.id]);
-
- const loadUserCompanySettings = async (_userId: string) => {
- // TODO: Tabela company_settings não existe no Supabase ainda
- return;
- };
-
- const saveCompanySettingsToSupabase = async (_settings: CompanySettings, _userId: string) => {
- // TODO: Tabela company_settings não existe no Supabase ainda
- return;
- };
+ }, [companySettings]);
 
  // Lottie Theme Toggle
  const dotLottieRef = useRef<any>(null);
@@ -82,8 +68,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  return (
  <div className="flex-1 overflow-y-auto p-4 md:p-6">
- <div className={settingsTab === 'plan' ? 'max-w-7xl mx-auto' : 'max-w-2xl mx-auto'}>
- {/* Header com Dropdown */}
+ <div className={settingsTab === 'plan' ? 'max-w-7xl mx-auto' : 'max-w-3xl mx-auto'}>
+ {/* Header */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
@@ -100,16 +86,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </button>
  </div>
 
- {/* Tabs de navegação - Mobile */}
- <div className="flex gap-1 overflow-x-auto pb-4 -mx-4 px-4 md:hidden scrollbar-hide">
+ {/* Tabs */}
+ <div className="flex gap-1 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
  {[
  { id: 'profile' as SettingsTab, label: 'Perfil', icon: 'fa-user' },
- { id: 'appearance' as SettingsTab, label: 'Aparência', icon: 'fa-palette' },
- { id: 'company' as SettingsTab, label: 'Empresa', icon: 'fa-building' },
- { id: 'plan' as SettingsTab, label: 'Planos', icon: 'fa-credit-card' },
+ { id: 'plan' as SettingsTab, label: 'Planos & Créditos', icon: 'fa-credit-card' },
  { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
- { id: 'tools' as SettingsTab, label: 'Ferramentas', icon: 'fa-wrench' },
  ].map(tab => (
  <button
  key={tab.id}
@@ -118,7 +101,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  settingsTab === tab.id
  ? theme === 'dark' ? 'bg-neutral-700 text-white' : 'bg-gray-900 text-white'
  : theme === 'dark'
- ? 'bg-neutral-800 text-neutral-400 hover:bg-gray-300'
+ ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
  }`}
  >
@@ -128,95 +111,202 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </div>
 
- {/* Conteúdo da Seção */}
- <div className={settingsTab === 'plan' ? '' : 'max-w-xl'}>
+ {/* ═══════ PERFIL (unificado) ═══════ */}
+ {settingsTab === 'profile' && (
+ <div className="space-y-4">
+ {/* Dados pessoais */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Dados Pessoais</h3>
+ <div className="flex items-center gap-3 mb-5">
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
+ {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
+ </div>
+ <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
+ </div>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div>
+ <label htmlFor="profile-name" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
+ <input type="text" id="profile-name" name="profileName" autoComplete="name" defaultValue={user?.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} />
+ </div>
+ <div>
+ <label htmlFor="profile-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
+ <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
+ </div>
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Senha</label>
+ <input type="password" defaultValue="••••••••" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
+ </div>
+ <div className="flex items-end">
+ <button
+ onClick={() => showToast('Email de redefinição de senha enviado.', 'info')}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors'}
+ >
+ Alterar Senha
+ </button>
+ </div>
+ </div>
+ </div>
+
+ {/* Empresa */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Empresa</h3>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome da Empresa</label>
+ <input
+ type="text"
+ value={companySettings.name}
+ onChange={(e) => setCompanySettings({ ...companySettings, name: e.target.value })}
+ className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
+ placeholder="Sua Loja"
+ />
+ </div>
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Instagram</label>
+ <input
+ type="text"
+ value={companySettings.instagram || ''}
+ onChange={(e) => setCompanySettings({ ...companySettings, instagram: e.target.value })}
+ className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
+ placeholder="@sualoja"
+ />
+ </div>
+ </div>
+ </div>
+
+ {/* Plano atual + CTA */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Plano Atual</h3>
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-3">
+ <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
+ <i className="fas fa-crown text-[9px]"></i>
+ {currentPlan.name}
+ </span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{currentPlan.limit} gerações/mês</span>
+ </div>
+ <button
+ onClick={() => setSettingsTab('plan')}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white') + ' px-4 py-2 rounded-lg text-xs font-semibold transition-colors'}
+ >
+ Trocar Plano
+ </button>
+ </div>
+ </div>
+
+ {/* Tema */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <div className="flex items-center justify-between">
+ <div>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Tema</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-0.5'}>
+ {theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}
+ </p>
+ </div>
+ <div
+ onClick={() => {
+ setTheme(theme === 'dark' ? 'light' : 'dark');
+ if (dotLottieRef.current) {
+ dotLottieRef.current.postStateMachineEvent('OnPointerDown');
+ }
+ }}
+ className="cursor-pointer hover:scale-110 transition-transform"
+ style={{ width: 80, height: 80 }}
+ >
+ <DotLottieReact
+ dotLottieRefCallback={dotLottieRefCallback}
+ src="https://lottie.host/97eaa266-6a0b-45c7-917f-97933914029a/GtkUp9Odq8.lottie"
+ autoplay
+ useFrameInterpolation
+ stateMachineId="StateMachine1"
+ style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+ />
+ </div>
+ </div>
+ </div>
+
+ {/* Salvar */}
+ <button
+ onClick={() => showToast('Configurações salvas!', 'success')}
+ className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+ >
+ <i className="fas fa-check"></i>
+ Salvar Configurações
+ </button>
+ </div>
+ )}
+
+ {/* ═══════ PLANOS & CRÉDITOS ═══════ */}
  {settingsTab === 'plan' && (() => {
- // Features por plano — o que INCLUI
- const PLAN_FEATURES: Record<string, { included: string[]; excluded: string[] }> = {
- trial: {
- included: [
+ // Lista mestre de features — mesma ordem em todos os planos
+ const MASTER_FEATURES = [
  'Vizzu Product Studio®',
  'Vizzu Look Composer®',
  'Vizzu Still Criativo®',
- 'Geração de imagens 2K',
- ],
- excluded: [
  'Vizzu Provador®',
- 'Geração 4K',
+ 'Geração de Imagens em 2K e 4K',
  'Modelos IA personalizados',
  'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
  'Integração e-commerce',
  'Suporte prioritário',
- 'Imagens sem marca d\'água',
- ],
- },
- basic: {
- included: [
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de imagens 2K',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- ],
- excluded: [
- 'Geração 4K',
- 'Modelos IA personalizados',
- 'Integração e-commerce',
- 'Suporte prioritário',
- ],
- },
- pro: {
- included: [
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de imagens 2K / 4K',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- 'Modelos IA personalizados',
- ],
- excluded: [
- 'Integração e-commerce',
- ],
- },
- premier: {
- included: [
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de imagens 2K / 4K',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- 'Modelos IA personalizados',
- 'Integração e-commerce',
- 'Suporte prioritário',
- ],
- excluded: [],
- },
- enterprise: {
- included: [
- 'Vizzu Product Studio®',
- 'Vizzu Look Composer®',
- 'Vizzu Still Criativo®',
- 'Vizzu Provador®',
- 'Geração de imagens 2K / 4K',
- 'Agente WhatsApp',
- 'Imagens sem marca d\'água',
- 'Modelos IA personalizados',
- 'Integração e-commerce',
- 'Suporte prioritário VIP',
  'Produtos ilimitados',
  'API dedicada',
- ],
- excluded: [],
- },
+ ];
+
+ // Set de features incluídas por plano
+ const PLAN_INCLUDED: Record<string, Set<string>> = {
+ trial: new Set([
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ ]),
+ basic: new Set([
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ ]),
+ pro: new Set([
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de Imagens em 2K e 4K',
+ 'Modelos IA personalizados',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ ]),
+ premier: new Set([
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de Imagens em 2K e 4K',
+ 'Modelos IA personalizados',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ 'Integração e-commerce',
+ 'Suporte prioritário',
+ ]),
+ enterprise: new Set([
+ 'Vizzu Product Studio®',
+ 'Vizzu Look Composer®',
+ 'Vizzu Still Criativo®',
+ 'Vizzu Provador®',
+ 'Geração de Imagens em 2K e 4K',
+ 'Modelos IA personalizados',
+ 'Agente WhatsApp',
+ 'Imagens sem marca d\'água',
+ 'Integração e-commerce',
+ 'Suporte prioritário',
+ 'Produtos ilimitados',
+ 'API dedicada',
+ ]),
  };
 
- // Subtítulo orientado a persona
  const PLAN_PERSONA: Record<string, string> = {
  trial: 'Teste grátis, sem compromisso',
  basic: 'Para quem está começando',
@@ -225,7 +315,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  enterprise: 'Para operações de alto volume',
  };
 
- // CTAs diferenciados
  const PLAN_CTA: Record<string, string> = {
  trial: 'Testar grátis',
  basic: 'Começar agora',
@@ -234,26 +323,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  enterprise: 'Falar com especialista',
  };
 
- // Matriz completa para tabela comparativa (Free, Basic, Pro, Premier, Enterprise)
- const COMPARISON_FEATURES = [
- { name: 'Gerações/mês', values: ['5', '40', '100', '200', '400'] },
- { name: 'Resolução máxima', values: ['2K', '2K', '4K', '4K', '4K'] },
- { name: 'Limite de produtos', values: ['50', '5.000', '10.000', '50.000', 'Ilimitado'] },
- { name: 'Vizzu Product Studio®', values: [true, true, true, true, true] },
- { name: 'Vizzu Look Composer®', values: [true, true, true, true, true] },
- { name: 'Vizzu Still Criativo®', values: [true, true, true, true, true] },
- { name: 'Vizzu Provador®', values: [false, true, true, true, true] },
- { name: 'Imagens sem marca d\'água', values: [false, true, true, true, true] },
- { name: 'Agente WhatsApp', values: [false, true, true, true, true] },
- { name: 'Geração de imagens 4K', values: [false, false, true, true, true] },
- { name: 'Modelos IA personalizados', values: [false, false, true, true, true] },
- { name: 'Integração e-commerce', values: [false, false, false, true, true] },
- { name: 'Suporte prioritário', values: [false, false, false, true, true] },
- { name: 'API dedicada', values: [false, false, false, false, true] },
- ];
-
- // Todos os planos incluindo Free para renderização
  const ALL_DISPLAY_PLANS = [FREE_PLAN, ...PLANS];
+ const MAX_COLLAPSED = 5;
 
  return (
  <div>
@@ -263,34 +334,39 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-base'}>Escolha o plano ideal para seu negócio</p>
  </div>
 
- {/* Status atual de creditos — compacto */}
- <div className="max-w-md mx-auto mb-8">
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white/80 backdrop-blur-xl border-gray-200') + ' border rounded-2xl p-4'}>
- <div className="flex items-center justify-between mb-3">
- <div className="flex items-center gap-3">
- <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
- <i className={'fas fa-coins text-xs ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}></i>
+ {/* Card de assinatura atual */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white/80 backdrop-blur-xl border-gray-200') + ' border rounded-2xl p-5 mb-8 max-w-2xl mx-auto'}>
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Plano Atual</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{currentPlan.name}</p>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wider font-medium'}>Créditos disponíveis</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits.toLocaleString()}</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Período de Cobrança</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{billingPeriod === 'yearly' ? 'Anual' : 'Mensal'}</p>
+ </div>
+ <div>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Próxima Cobrança</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>
+ {(() => {
+ const d = new Date();
+ d.setDate(d.getDate() + daysUntilRenewal);
+ return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+ })()}
+ </p>
+ </div>
+ <div>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Créditos Restantes</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{userCredits.toLocaleString()}</p>
  </div>
  </div>
- <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
- <i className="fas fa-crown text-[8px]"></i>
- {currentPlan.name}
- </span>
- </div>
- <div className="flex items-center justify-between mb-1">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{currentPlan.limit} créditos/mês</span>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Renova em {daysUntilRenewal} dias</span>
- </div>
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' h-1.5 rounded-full overflow-hidden'}>
- <div className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all" style={{ width: Math.min(100, Math.max(3, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
- </div>
- {userCredits > currentPlan.limit && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1'}>Inclui {(userCredits - currentPlan.limit).toLocaleString()} créditos extras</p>
- )}
+ <div className={'mt-4 pt-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+ <button
+ onClick={() => showToast('Entre em contato para cancelar sua assinatura.', 'info')}
+ className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs transition-colors'}
+ >
+ Cancelar assinatura
+ </button>
  </div>
  </div>
 
@@ -303,9 +379,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  >
  <div className={'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ' + (billingPeriod === 'yearly' ? 'translate-x-7' : 'translate-x-1')}></div>
  </button>
- <span className={(billingPeriod === 'yearly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium flex items-center gap-2'}>
+ <span className={(billingPeriod === 'yearly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>
  Anual
- <span className={(theme === 'dark' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-50 text-emerald-600') + ' px-1.5 py-0.5 text-[10px] font-bold rounded'}>-20%</span>
  </span>
  </div>
 
@@ -322,18 +397,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Cards dos Planos */}
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+ <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
  {ALL_DISPLAY_PLANS.map(plan => {
  const isCurrentPlan = currentPlan.id === plan.id;
  const isTrial = plan.id === 'trial';
  const price = isTrial ? 0 : (billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly);
  const isPro = plan.id === 'pro';
  const isPremier = plan.id === 'premier';
- const features = PLAN_FEATURES[plan.id] || { included: [], excluded: [] };
  const persona = PLAN_PERSONA[plan.id] || '';
  const annualSavings = isTrial ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
- // Features da tabela comparativa para este plano
- const planIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === plan.id);
+ const included = PLAN_INCLUDED[plan.id] || new Set();
+
+ // Features na ordem mestre
+ const allFeatures = MASTER_FEATURES.map(f => ({ name: f, has: included.has(f) }));
+ // Trial: só mostra incluídas
+ const visibleFeatures = isTrial
+ ? allFeatures.filter(f => f.has)
+ : allFeatures;
+ const collapsedFeatures = visibleFeatures.slice(0, MAX_COLLAPSED);
+ const hiddenFeatures = visibleFeatures.slice(MAX_COLLAPSED);
 
  return (
  <div
@@ -388,7 +470,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ) : (
  <>
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>
- R$ {price.toFixed(2).replace('.', ',')}
+ R$ {Number.isInteger(price) ? price : price.toFixed(2).replace('.', ',')}
  </span>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>/mês</span>
  </>
@@ -405,44 +487,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}</div>
  )}
 
- {/* Features (colapsado: até 5 incluídas + 2 excluídas) */}
- {(() => {
- const MAX_COLLAPSED = 5;
- const shownIncluded = features.included.slice(0, MAX_COLLAPSED);
- const hiddenIncluded = features.included.slice(MAX_COLLAPSED);
- const shownExcluded = features.excluded.slice(0, 2);
- const hiddenExcluded = features.excluded.slice(2);
- const hasHidden = hiddenIncluded.length > 0 || hiddenExcluded.length > 0;
-
- return (
- <>
+ {/* Features — mesma ordem, ✓ ou ✗ */}
  <ul className="space-y-1.5 mb-3 flex-1">
- {shownIncluded.map((feature, i) => (
+ {collapsedFeatures.map((feat, i) => (
  <li key={i} className="flex items-start gap-2 text-[11px]">
+ {feat.has ? (
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
- <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feature}</span>
- </li>
- ))}
- {shownExcluded.map((feature, i) => (
- <li key={'ex-' + i} className="flex items-start gap-2 text-[11px]">
- <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' line-through'}>{feature}</span>
+ ) : (
+ <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/40' : 'text-red-400/40')}></i>
+ )}
+ <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
  </li>
  ))}
  </ul>
 
- {hasHidden && expandAllFeatures && (
- <ul className="space-y-1 mb-3">
- {hiddenIncluded.map((feature, i) => (
- <li key={'hi-' + i} className="flex items-start gap-2 text-[11px]">
+ {/* Expandido */}
+ {hiddenFeatures.length > 0 && expandAllFeatures && (
+ <ul className="space-y-1.5 mb-3">
+ {hiddenFeatures.map((feat, i) => (
+ <li key={'h-' + i} className="flex items-start gap-2 text-[11px]">
+ {feat.has ? (
  <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
- <span className={theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}>{feature}</span>
- </li>
- ))}
- {hiddenExcluded.map((feature, i) => (
- <li key={'he-' + i} className="flex items-start gap-2 text-[11px]">
- <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/50' : 'text-red-400/50')}></i>
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' line-through'}>{feature}</span>
+ ) : (
+ <i className={'fas fa-xmark text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-red-500/40' : 'text-red-400/40')}></i>
+ )}
+ <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
  </li>
  ))}
  {!isTrial && (
@@ -453,9 +522,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  </ul>
  )}
- </>
- );
- })()}
 
  <button
  onClick={() => {
@@ -483,7 +549,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  })}
  </div>
 
- {/* Toggle Ver tudo / Ver menos — compartilhado */}
+ {/* Toggle Ver tudo / Ver menos */}
  <div className="text-center mb-6">
  <button
  onClick={() => setExpandAllFeatures(!expandAllFeatures)}
@@ -505,7 +571,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <i className={'fas fa-lock text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
 
- {/* Secao: Compre Creditos Adicionais */}
+ {/* Créditos adicionais */}
  <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-6'}>
  <div className="flex items-center gap-3 mb-4">
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
@@ -516,7 +582,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por crédito no plano {currentPlan.name}</p>
  </div>
  </div>
-
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
  {CREDIT_PACKAGES.map(amount => (
  <button
@@ -566,236 +631,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  );
  })()}
 
- {settingsTab === 'profile' && (
- <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4 font-serif'}>Perfil</h3>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
- <div className="flex items-center gap-3 mb-5">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
- {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
- </div>
- <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
- </div>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
- <div>
- <label htmlFor="profile-name" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
- <input type="text" id="profile-name" name="profileName" autoComplete="name" defaultValue={user?.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
- </div>
- <div>
- <label htmlFor="profile-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
- <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2 border rounded-lg text-sm'} disabled />
- </div>
- </div>
- </div>
- </div>
- )}
-
- {settingsTab === 'appearance' && (
- <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4 font-serif'}>Aparência</h3>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
- <div className="flex items-center justify-between">
- <div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Tema</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-0.5'}>
- {theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}
- </p>
- </div>
- <div
- onClick={() => {
- setTheme(theme === 'dark' ? 'light' : 'dark');
- if (dotLottieRef.current) {
- dotLottieRef.current.postStateMachineEvent('OnPointerDown');
- }
- }}
- className="cursor-pointer hover:scale-110 transition-transform"
- style={{ width: 80, height: 80 }}
- >
- <DotLottieReact
- dotLottieRefCallback={dotLottieRefCallback}
- src="https://lottie.host/97eaa266-6a0b-45c7-917f-97933914029a/GtkUp9Odq8.lottie"
- autoplay
- useFrameInterpolation
- stateMachineId="StateMachine1"
- style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
- />
- </div>
- </div>
- </div>
- </div>
- )}
-
- {settingsTab === 'company' && (
- <div className="space-y-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Empresa</h3>
-
- {/* Dados Básicos */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-3 flex items-center gap-2'}>
- <i className="fas fa-building text-[#E91E8C] text-xs"></i>
- Dados Básicos
- </h4>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome da Empresa</label>
- <input
- type="text"
- value={companySettings.name}
- onChange={(e) => setCompanySettings({ ...companySettings, name: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
- placeholder="Sua Loja"
- />
- </div>
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Instagram</label>
- <input
- type="text"
- value={companySettings.instagram || ''}
- onChange={(e) => setCompanySettings({ ...companySettings, instagram: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
- placeholder="@sualoja"
- />
- </div>
- </div>
- </div>
-
- {/* Configurações de Legenda IA */}
- <div className={(theme === 'dark' ? 'bg-gradient-to-r from-[#E91E8C]/10 to-[#FF9F43]/10 border-[#E91E8C]/30' : 'bg-gradient-to-r from-[#E91E8C]/5 to-[#FF9F43]/5 border-[#E91E8C]/20') + ' rounded-xl border p-4'}>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1 flex items-center gap-2'}>
- <i className="fas fa-wand-magic-sparkles text-[#E91E8C] text-xs"></i>
- Gerador de Legendas IA
- </h4>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-4'}>Configure como a IA vai gerar legendas para suas postagens</p>
-
- <div className="space-y-4">
- {/* Público Alvo */}
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Público Alvo</label>
- <input
- type="text"
- value={companySettings.targetAudience}
- onChange={(e) => setCompanySettings({ ...companySettings, targetAudience: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
- placeholder="Ex: Mulheres 25-45 anos, classe B/C, que gostam de moda casual"
- />
- </div>
-
- {/* Tom de Voz */}
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Tom de Voz</label>
- <div className="grid grid-cols-5 gap-2">
- {[
- { id: 'formal', label: 'Formal', icon: '👔' },
- { id: 'casual', label: 'Casual', icon: '😊' },
- { id: 'divertido', label: 'Divertido', icon: '🎉' },
- { id: 'luxo', label: 'Luxo', icon: '✨' },
- { id: 'jovem', label: 'Jovem', icon: '🔥' },
- ].map(tone => (
- <button
- key={tone.id}
- onClick={() => setCompanySettings({ ...companySettings, voiceTone: tone.id as any })}
- className={`p-2 rounded-lg border text-center transition-all ${
- companySettings.voiceTone === tone.id
- ? 'border-[#E91E8C] bg-[#E91E8C]/20 text-[#E91E8C]'
- : theme === 'dark'
- ? 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:border-neutral-600'
- : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
- }`}
- >
- <span className="text-lg block mb-0.5">{tone.icon}</span>
- <span className="text-[10px] font-medium">{tone.label}</span>
- </button>
- ))}
- </div>
- </div>
-
- {/* Exemplos de Tom */}
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
- Exemplos de Como Você Fala
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
- </label>
- <textarea
- value={companySettings.voiceExamples || ''}
- onChange={(e) => setCompanySettings({ ...companySettings, voiceExamples: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'}
- rows={2}
- placeholder="Cole aqui algumas legendas que você já usou e gostou..."
- />
- </div>
-
- {/* Hashtags */}
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Hashtags Favoritas</label>
- <input
- type="text"
- value={companySettings.hashtags.join(' ')}
- onChange={(e) => setCompanySettings({ ...companySettings, hashtags: e.target.value.split(' ').filter(h => h.startsWith('#') || h === '') })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
- placeholder="#moda #fashion #lookdodia #ootd"
- />
- <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-1'}>Separe as hashtags por espaço</p>
- </div>
-
- {/* Tamanho e Emojis */}
- <div className="grid grid-cols-2 gap-3">
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Tamanho da Legenda</label>
- <select
- value={companySettings.captionStyle}
- onChange={(e) => setCompanySettings({ ...companySettings, captionStyle: e.target.value as any })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
- >
- <option value="curta">Curta (1-2 linhas)</option>
- <option value="media">Média (3-5 linhas)</option>
- <option value="longa">Longa (storytelling)</option>
- </select>
- </div>
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Usar Emojis?</label>
- <button
- onClick={() => setCompanySettings({ ...companySettings, emojisEnabled: !companySettings.emojisEnabled })}
- className={`w-full px-3 py-2 border rounded-lg text-sm font-medium transition-all ${
- companySettings.emojisEnabled
- ? 'border-[#E91E8C] bg-[#E91E8C]/20 text-[#E91E8C]'
- : theme === 'dark'
- ? 'border-neutral-700 bg-neutral-800 text-neutral-400'
- : 'border-gray-200 bg-white text-gray-500'
- }`}
- >
- {companySettings.emojisEnabled ? '✅ Sim, usar emojis' : '❌ Não usar'}
- </button>
- </div>
- </div>
-
- {/* Call to Action */}
- <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
- Call to Action Padrão
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
- </label>
- <input
- type="text"
- value={companySettings.callToAction || ''}
- onChange={(e) => setCompanySettings({ ...companySettings, callToAction: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
- placeholder="Ex: Compre pelo link na bio! | Chama no direct 💬"
- />
- </div>
- </div>
- </div>
-
- {/* Botão Salvar */}
- <button
- onClick={() => showToast('Configurações salvas!', 'success')}
- className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
- >
- <i className="fas fa-check"></i>
- Salvar Configurações
- </button>
- </div>
- )}
-
+ {/* ═══════ INTEGRAÇÕES ═══════ */}
  {settingsTab === 'integrations' && (
  <div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4 font-serif'}>Integrações</h3>
@@ -805,7 +641,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  { icon: 'fab fa-wordpress', name: 'WooCommerce', desc: 'Loja WordPress' },
  { icon: 'fas fa-store', name: 'VTEX', desc: 'VTEX IO' },
  ].map(item => (
- <div key={item.name} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 flex items-center justify-between'}>
+ <div key={item.name} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between'}>
  <div className="flex items-center gap-3">
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' ' + item.icon + ' text-sm'}></i>
@@ -815,13 +651,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.desc}</p>
  </div>
  </div>
- <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors'}>Conectar</button>
+ <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors'}>Conectar</button>
  </div>
  ))}
  </div>
  </div>
  )}
 
+ {/* ═══════ HISTÓRICO ═══════ */}
  {settingsTab === 'history' && (
  <div>
  <div className="flex items-center justify-between mb-4">
@@ -839,9 +676,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>{historyLogs.length} atividades registradas</p>
 
  {historyLogs.length === 0 ? (
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-8 text-center'}>
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-clock-rotate-left text-xl'}></i>
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+ <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-clock-rotate-left text-xl'}></i>
  </div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
@@ -867,7 +704,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const date = log.date ? new Date(log.date) : new Date();
 
  return (
- <div key={log.id} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300 ') + ' rounded-xl border p-4 transition-colors'}>
+ <div key={log.id} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300') + ' rounded-xl border p-4 transition-colors'}>
  <div className="flex items-start gap-3">
  <div className={status.bg + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
  <i className={'fas ' + status.icon + ' ' + status.color}></i>
@@ -908,19 +745,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  </div>
  )}
-
- {settingsTab === 'tools' && (
- <div>
- <div className="flex items-center justify-between mb-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Ferramentas</h3>
- </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Ferramentas de administração e manutenção</p>
-
- {/* Painel de Migração de Imagens */}
- <ImageMigrationPanel userId={user?.id} theme={theme} />
- </div>
- )}
- </div>
  </div>
  </div>
  );

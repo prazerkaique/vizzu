@@ -29,7 +29,7 @@ export const PLANS: Plan[] = [
     limit: 40,
     productLimit: 5000,
     priceMonthly: 127,
-    priceYearly: 101.58, // 20% desconto
+    priceYearly: 107,
     creditPrice: 3.50,
     maxResolution: '2k',
     hasWatermark: false,
@@ -57,7 +57,7 @@ export const PLANS: Plan[] = [
     limit: 100,
     productLimit: 10000,
     priceMonthly: 187,
-    priceYearly: 149.58, // 20% desconto
+    priceYearly: 157,
     creditPrice: 3.00,
     maxResolution: '4k',
     hasWatermark: false,
@@ -81,7 +81,7 @@ export const PLANS: Plan[] = [
     limit: 200,
     productLimit: 50000,
     priceMonthly: 327,
-    priceYearly: 261.58, // 20% desconto
+    priceYearly: 267,
     creditPrice: 2.50,
     maxResolution: '4k',
     hasWatermark: false,
@@ -102,7 +102,7 @@ export const PLANS: Plan[] = [
     limit: 400,
     productLimit: -1, // Ilimitado
     priceMonthly: 677,
-    priceYearly: 541.58, // 20% desconto
+    priceYearly: 547,
     creditPrice: 2.00,
     maxResolution: '4k',
     hasWatermark: false,
