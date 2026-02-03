@@ -317,11 +317,14 @@ function App() {
  const total = newStills.length + newLooks.length;
 
  if (total > 0) {
+ // Determinar para onde navegar ao clicar "Ver"
+ const targetPage = newStills.length > 0 ? 'creative-still' : 'provador';
  showToast(
  total === 1
  ? 'A criação da imagem foi concluída em segundo plano.'
  : `${total} criações foram concluídas em segundo plano.`,
- 'success'
+ 'success',
+ { label: 'Ver', onClick: () => navigateTo(targetPage as any) }
  );
 
  // Marcar como notificados

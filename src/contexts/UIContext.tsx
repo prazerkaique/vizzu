@@ -4,9 +4,15 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
 export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history';
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   message: string;
   type: 'success' | 'error' | 'info';
+  action?: ToastAction;
 }
 
 interface UIContextType {
@@ -31,7 +37,7 @@ interface UIContextType {
 
   // Toast
   toast: Toast | null;
-  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info', action?: ToastAction) => void;
 
   // Success notification
   successNotification: string | null;
@@ -91,10 +97,10 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   // Toast
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success', action?: ToastAction) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ message, type });
-    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+    setToast({ message, type, action });
+    toastTimerRef.current = setTimeout(() => setToast(null), action ? 6000 : 3000);
   }, []);
 
   // Success notification

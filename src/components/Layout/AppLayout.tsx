@@ -776,6 +776,11 @@ export function AppLayout({
  'fa-info-circle'
  } text-sm`}></i>
  <span className="text-sm font-medium">{toast.message}</span>
+ {toast.action && (
+ <button onClick={() => { toast.action!.onClick(); }} className="ml-2 px-2.5 py-0.5 bg-white/20 rounded-lg text-xs font-semibold hover:bg-white/30 transition-colors whitespace-nowrap">
+ {toast.action.label} <i className="fas fa-arrow-right text-[9px] ml-1"></i>
+ </button>
+ )}
  </div>
  </div>
  )}
