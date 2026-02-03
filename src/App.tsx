@@ -285,6 +285,64 @@ function App() {
  }
  }, [user]);
 
+ // Checar gerações concluídas em segundo plano ao abrir o app
+ useEffect(() => {
+ if (!user?.id) return;
+
+ const checkBackgroundGenerations = async () => {
+ try {
+ // Buscar IDs já notificados do localStorage
+ const notifiedKey = `vizzu_bg_notified_${user.id}`;
+ const notifiedIds: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+
+ // Creative Still completados nas últimas 24h
+ const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+ const { data: stills } = await supabase
+ .from('creative_still_generations')
+ .select('id, created_at')
+ .eq('user_id', user.id)
+ .eq('status', 'completed')
+ .gte('created_at', since);
+
+ // Provador (client_looks) completados nas últimas 24h
+ const { data: looks } = await supabase
+ .from('client_looks')
+ .select('id, created_at')
+ .eq('user_id', user.id)
+ .gte('created_at', since);
+
+ // Filtrar apenas os que não foram notificados
+ const newStills = (stills || []).filter(s => !notifiedIds.includes(`still-${s.id}`));
+ const newLooks = (looks || []).filter(l => !notifiedIds.includes(`look-${l.id}`));
+ const total = newStills.length + newLooks.length;
+
+ if (total > 0) {
+ showToast(
+ total === 1
+ ? 'A criação da imagem foi concluída em segundo plano.'
+ : `${total} criações foram concluídas em segundo plano.`,
+ 'success'
+ );
+
+ // Marcar como notificados
+ const newNotified = [
+ ...notifiedIds,
+ ...newStills.map(s => `still-${s.id}`),
+ ...newLooks.map(l => `look-${l.id}`),
+ ];
+ // Manter apenas últimos 200 para não crescer infinitamente
+ localStorage.setItem(notifiedKey, JSON.stringify(newNotified.slice(-200)));
+ }
+ } catch (e) {
+ console.error('Erro ao checar gerações em background:', e);
+ }
+ };
+
+ // Pequeno delay para não competir com o carregamento inicial
+ const timeout = setTimeout(checkBackgroundGenerations, 3000);
+ return () => clearTimeout(timeout);
+ }, [user?.id]);
+
  // Fechar modais com Esc
  useEffect(() => {
  const handleEsc = (e: KeyboardEvent) => {
@@ -335,6 +393,10 @@ function App() {
  if (!user || !client) return null;
 
  try {
+ // Evitar duplicatas — checar se já existe look com essa imagem
+ const existing = clientLooks.find(l => l.imageUrl === imageUrl || l.imageUrl?.includes(imageUrl.split('/').pop() || '__none__'));
+ if (existing) return existing;
+
  // Fazer download da imagem e converter para blob
  const response = await fetch(imageUrl);
  if (!response.ok) {
@@ -530,7 +592,14 @@ function App() {
  setCredits(result.credits_remaining);
  }
  addHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', 3);
- return result.generation.image_url;
+
+ // Auto-salvar look no Supabase para não perder se o app fechar
+ const imageUrl = result.generation.image_url;
+ saveClientLook(client, imageUrl, look).catch(err =>
+ console.error('Erro ao auto-salvar look:', err)
+ );
+
+ return imageUrl;
  } else {
  throw new Error(result.message || 'Erro ao gerar imagem');
  }

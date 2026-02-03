@@ -535,6 +535,14 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  onSetProgress?.(100);
  setCurrentGeneration(result);
 
+ // Marcar como notificado (para não exibir toast de "concluído em segundo plano" no próximo startup)
+ try {
+ const notifiedKey = `vizzu_bg_notified_${userId}`;
+ const notified: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ notified.push(`still-${generationId}`);
+ localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+ } catch {}
+
  // Recarregar lista
  loadData();
 
