@@ -2,7 +2,7 @@
 // VIZZU - Product Studio Editor (Página 2)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2, ProductPresentationStyle } from '../../lib/api/studio';
@@ -12,6 +12,46 @@ import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import { OptimizedImage } from '../OptimizedImage';
+import { supabase } from '../../services/supabaseClient';
+
+// ═══════════════════════════════════════════════════════════════
+// PENDING GENERATION (sobrevive ao F5 / fechamento do app)
+// ═══════════════════════════════════════════════════════════════
+const PENDING_PS_KEY = 'vizzu-pending-product-studio';
+
+interface PendingProductStudioGeneration {
+  productId: string;
+  productName: string;
+  userId: string;
+  startTime: number;
+  angles: string[];
+}
+
+const savePendingPSGeneration = (data: PendingProductStudioGeneration) => {
+  try {
+    localStorage.setItem(PENDING_PS_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Erro ao salvar geração pendente PS:', e);
+  }
+};
+
+const getPendingPSGeneration = (): PendingProductStudioGeneration | null => {
+  try {
+    const stored = localStorage.getItem(PENDING_PS_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.error('Erro ao ler geração pendente PS:', e);
+  }
+  return null;
+};
+
+const clearPendingPSGeneration = () => {
+  try {
+    localStorage.removeItem(PENDING_PS_KEY);
+  } catch (e) {
+    console.error('Erro ao limpar geração pendente PS:', e);
+  }
+};
 
 
 interface ProductStudioEditorProps {
@@ -170,6 +210,115 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
  const currentProgress = onSetProgress ? generationProgress : localProgress;
  const currentLoadingText = onSetLoadingText ? generationText : localLoadingText;
+
+ // ═══════════════════════════════════════════════════════════════
+ // VERIFICAR GERAÇÃO PENDENTE AO CARREGAR (sobrevive ao F5)
+ // ═══════════════════════════════════════════════════════════════
+ const checkPendingPSGeneration = useCallback(async () => {
+ const pending = getPendingPSGeneration();
+ if (!pending || !userId || pending.productId !== product.id) return;
+
+ // Expirar após 10 minutos
+ const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
+ if (elapsedMinutes > 10) {
+ clearPendingPSGeneration();
+ return;
+ }
+
+ // Verificar se há geração completada no Supabase
+ const { data: generation, error } = await supabase
+ .from('generations')
+ .select('id, status, output_urls')
+ .eq('user_id', userId)
+ .eq('product_id', pending.productId)
+ .order('created_at', { ascending: false })
+ .limit(1)
+ .single();
+
+ if (error) return 'polling';
+
+ if (generation?.status === 'completed' && generation?.output_urls) {
+ clearPendingPSGeneration();
+ // Converter output_urls para ProductStudioImage[]
+ const urls = generation.output_urls as Array<{ angle: string; url: string; id?: string }>;
+ const newImages: ProductStudioImage[] = urls.map((item, idx) => ({
+ id: item.id || `${generation.id}-${idx}`,
+ url: item.url,
+ angle: (item.angle || 'front') as ProductStudioAngle,
+ createdAt: new Date().toISOString()
+ }));
+
+ const sessionId = generation.id;
+ const newSession: ProductStudioSession = {
+ id: sessionId,
+ productId: product.id,
+ images: newImages,
+ status: 'ready',
+ createdAt: new Date().toISOString()
+ };
+
+ // Salvar no produto
+ const currentGenerated = product.generatedImages || {
+ studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
+ };
+ onUpdateProduct(product.id, {
+ generatedImages: {
+ ...currentGenerated,
+ productStudio: [...(currentGenerated.productStudio || []), newSession]
+ }
+ });
+
+ // Marcar como notificado
+ const notifiedKey = `vizzu_bg_notified_${userId}`;
+ const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ notified.push(`ps-${generation.id}`);
+ localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+
+ setCurrentSession(newSession);
+ setShowResult(true);
+ return 'completed';
+ }
+
+ return 'polling';
+ }, [userId, product.id]);
+
+ // Polling de geração pendente ao montar
+ useEffect(() => {
+ const pending = getPendingPSGeneration();
+ if (!pending || !userId || pending.productId !== product.id) return;
+
+ const setGenerating = onSetGenerating || setLocalIsGenerating;
+ const setProgress = onSetProgress || setLocalProgress;
+
+ setGenerating(true);
+
+ // Calcular progresso estimado
+ const elapsedMs = Date.now() - pending.startTime;
+ const estimatedDurationMs = 90 * 1000;
+ const estimatedProgress = Math.min(95, Math.floor((elapsedMs / estimatedDurationMs) * 100));
+ setProgress(estimatedProgress);
+
+ // Polling a cada 5 segundos
+ const interval = setInterval(async () => {
+ const result = await checkPendingPSGeneration();
+ if (result === 'completed') {
+ clearInterval(interval);
+ setGenerating(false);
+ setProgress(0);
+ if (onSetMinimized) onSetMinimized(false);
+ }
+ }, 5000);
+
+ // Progresso linear enquanto polling
+ const progressInterval = setInterval(() => {
+ setProgress(prev => Math.min(95, prev + 1));
+ }, 3000);
+
+ return () => {
+ clearInterval(interval);
+ clearInterval(progressInterval);
+ };
+ }, [userId, product.id]);
 
  // Rotacionar frases de loading
  useEffect(() => {
@@ -724,6 +873,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setProgress(0);
  setPhraseIndex(0);
 
+ // Salvar geração pendente no localStorage (sobrevive ao F5 / fechamento)
+ savePendingPSGeneration({
+ productId: product.id,
+ productName: product.name,
+ userId: userId!,
+ startTime: Date.now(),
+ angles: selectedAngles,
+ });
+
  try {
  // Progresso linear de 0 a 95% em 90 segundos (1.5 min)
  const totalDuration = 90000; // 90 segundos em ms
@@ -766,6 +924,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  });
 
  clearInterval(progressInterval);
+ clearPendingPSGeneration();
  setProgress(95);
 
  if (!response.success || !response.results) {
@@ -818,6 +977,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  });
 
+ // Marcar como notificado (para não mostrar toast no startup check)
+ if (userId) {
+ const notifiedKey = `vizzu_bg_notified_${userId}`;
+ const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ notified.push(`ps-${sessionId}`);
+ localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+ }
+
  // Mostrar página de resultado
  setCurrentSession(newSession);
  setShowResult(true);
@@ -826,6 +993,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setSelectedAngles([]);
 
  } catch (error) {
+ clearPendingPSGeneration();
  console.error('Erro ao gerar imagens:', error);
  alert(`Erro ao gerar imagens: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
  if (onAddHistoryLog) {

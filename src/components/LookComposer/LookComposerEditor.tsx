@@ -367,6 +367,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  if (generation?.image_url && generation.status === 'completed') {
  clearPendingGeneration();
+ // Marcar como notificado para não duplicar toast no startup check
+ if (userId) {
+ const notifiedKey = `vizzu_bg_notified_${userId}`;
+ const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ notified.push(`lc-${generation.id}`);
+ localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+ }
  setGeneratedImageUrl(generation.image_url);
  setGeneratedBackImageUrl(generation.back_image_url || null);
  setGenerationId(generation.id);
@@ -1375,6 +1382,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  // Limpar estado pendente - geração concluída com sucesso
  clearPendingGeneration();
+
+ // Marcar como notificado para não duplicar toast no startup check
+ if (userId && frontGenerationId) {
+ const notifiedKey = `vizzu_bg_notified_${userId}`;
+ const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ notified.push(`lc-${frontGenerationId}`);
+ localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+ }
 
  // Mostrar tela de resultado
  setGeneratedImageUrl(frontImageUrl);

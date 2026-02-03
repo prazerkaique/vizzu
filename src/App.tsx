@@ -311,14 +311,49 @@ function App() {
  .eq('user_id', user.id)
  .gte('created_at', since);
 
+ // Product Studio (generations com output_urls) completados nas últimas 24h
+ const { data: psGenerations } = await supabase
+ .from('generations')
+ .select('id, created_at')
+ .eq('user_id', user.id)
+ .eq('status', 'completed')
+ .not('output_urls', 'is', null)
+ .gte('created_at', since);
+
+ // Look Composer (generations com output_image_url, type modelo_ia) completados nas últimas 24h
+ const { data: lcGenerations } = await supabase
+ .from('generations')
+ .select('id, created_at')
+ .eq('user_id', user.id)
+ .eq('status', 'completed')
+ .eq('type', 'modelo_ia')
+ .not('output_image_url', 'is', null)
+ .gte('created_at', since);
+
+ // Provador (generations com output_image_url, type provador) completados nas últimas 24h
+ const { data: provGenerations } = await supabase
+ .from('generations')
+ .select('id, created_at')
+ .eq('user_id', user.id)
+ .eq('status', 'completed')
+ .eq('type', 'provador')
+ .not('output_image_url', 'is', null)
+ .gte('created_at', since);
+
  // Filtrar apenas os que não foram notificados
  const newStills = (stills || []).filter(s => !notifiedIds.includes(`still-${s.id}`));
  const newLooks = (looks || []).filter(l => !notifiedIds.includes(`look-${l.id}`));
- const total = newStills.length + newLooks.length;
+ const newPS = (psGenerations || []).filter(g => !notifiedIds.includes(`ps-${g.id}`));
+ const newLC = (lcGenerations || []).filter(g => !notifiedIds.includes(`lc-${g.id}`));
+ const newProv = (provGenerations || []).filter(g => !notifiedIds.includes(`prov-${g.id}`));
+ const total = newStills.length + newLooks.length + newPS.length + newLC.length + newProv.length;
 
  if (total > 0) {
  // Determinar para onde navegar ao clicar "Ver"
- const targetPage = newStills.length > 0 ? 'creative-still' : 'provador';
+ const targetPage = newStills.length > 0 ? 'creative-still'
+ : newPS.length > 0 ? 'product-studio'
+ : newLC.length > 0 ? 'look-composer'
+ : 'provador';
  showToast(
  total === 1
  ? 'A criação da imagem foi concluída em segundo plano.'
@@ -332,6 +367,9 @@ function App() {
  ...notifiedIds,
  ...newStills.map(s => `still-${s.id}`),
  ...newLooks.map(l => `look-${l.id}`),
+ ...newPS.map(g => `ps-${g.id}`),
+ ...newLC.map(g => `lc-${g.id}`),
+ ...newProv.map(g => `prov-${g.id}`),
  ];
  // Manter apenas últimos 200 para não crescer infinitamente
  localStorage.setItem(notifiedKey, JSON.stringify(newNotified.slice(-200)));
@@ -535,6 +573,18 @@ function App() {
  setProvadorProgress(0);
  setProvadorLoadingIndex(0);
 
+ // Salvar geração pendente no localStorage (sobrevive ao F5 / fechamento)
+ try {
+ localStorage.setItem('vizzu-pending-provador', JSON.stringify({
+ clientId: client.id,
+ clientName: `${client.firstName} ${client.lastName}`,
+ userId: user.id,
+ startTime: Date.now(),
+ }));
+ } catch (e) {
+ console.error('Erro ao salvar provador pendente:', e);
+ }
+
  // Animacao de loading
  const loadingInterval = setInterval(() => {
  setProvadorLoadingIndex(prev => (prev + 1) % 11);
@@ -602,6 +652,19 @@ function App() {
  console.error('Erro ao auto-salvar look:', err)
  );
 
+ // Limpar pendente e marcar como notificado
+ try {
+ localStorage.removeItem('vizzu-pending-provador');
+ if (result.generation.id) {
+ const notifiedKey = `vizzu_bg_notified_${user.id}`;
+ const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ notified.push(`prov-${result.generation.id}`);
+ localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+ }
+ } catch (e) {
+ console.error('Erro ao marcar provador notificado:', e);
+ }
+
  return imageUrl;
  } else {
  throw new Error(result.message || 'Erro ao gerar imagem');
@@ -609,6 +672,7 @@ function App() {
  } catch (error: any) {
  clearInterval(loadingInterval);
  clearInterval(progressInterval);
+ localStorage.removeItem('vizzu-pending-provador');
  console.error('Erro no Provador:', error);
  alert(error.message || 'Erro ao gerar imagem');
  return null;
