@@ -767,7 +767,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  if (lookMode === 'describe') {
  return describedLook.top !== '' || describedLook.bottom !== '' || describedLook.shoes !== '';
  }
- return Object.keys(lookComposition).length > 0;
+ // Modo composer: permite avançar mesmo sem itens complementares
+ // Slots vazios serão preenchidos com roupas genéricas pela IA
+ return true;
  case 'pose':
  // Pose padrão sempre OK, custom precisa de prompt
  return poseMode === 'default' || customPosePrompt.trim().length > 0;
