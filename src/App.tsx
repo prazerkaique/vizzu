@@ -154,14 +154,16 @@ function App() {
  // Handler para compra de créditos
  const handleBuyCredits = async (amount: number) => {
  try {
+ showToast('Preparando pagamento... Você será redirecionado em instantes.', 'info');
  const result = await purchaseCredits(amount);
 
  if (result.checkoutUrl) {
- // Redirecionar para checkout (Stripe/Mercado Pago)
- window.open(result.checkoutUrl, '_blank');
  setShowCreditModal(false);
- // Toast informando sobre redirecionamento
- showToast('Redirecionando para pagamento...', 'info');
+ // Tenta abrir em nova aba; se bloqueado (PWA), redireciona na mesma
+ const newWindow = window.open(result.checkoutUrl, '_blank');
+ if (!newWindow || newWindow.closed) {
+ window.location.href = result.checkoutUrl;
+ }
  } else if (result.success) {
  // Modo demo/offline - créditos adicionados localmente
  setShowCreditModal(false);
@@ -179,14 +181,17 @@ function App() {
  // Handler para upgrade de plano
  const handleUpgradePlanFromModal = async (planId: string) => {
  try {
+ showToast('Preparando pagamento... Você será redirecionado em instantes.', 'info');
  const result = await upgradePlan(planId);
  const plan = plans.find(p => p.id === planId);
 
  if (result.checkoutUrl) {
- // Redirecionar para checkout de assinatura
- window.open(result.checkoutUrl, '_blank');
  setShowCreditModal(false);
- showToast('Redirecionando para pagamento...', 'info');
+ // Tenta abrir em nova aba; se bloqueado (PWA), redireciona na mesma
+ const newWindow = window.open(result.checkoutUrl, '_blank');
+ if (!newWindow || newWindow.closed) {
+ window.location.href = result.checkoutUrl;
+ }
  } else if (result.success) {
  // Modo demo/offline - plano alterado localmente
  setShowCreditModal(false);
