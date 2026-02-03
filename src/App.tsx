@@ -85,6 +85,9 @@ function App() {
    provadorProgress, setProvadorProgress,
    provadorLoadingIndex, setProvadorLoadingIndex,
    provadorLoadingText,
+   isGeneratingCreativeStill, setIsGeneratingCreativeStill,
+   creativeStillMinimized, setCreativeStillMinimized,
+   creativeStillProgress, setCreativeStillProgress,
    isAnyGenerationRunning,
    minimizedModals, setMinimizedModals,
    closeMinimizedModal,
@@ -788,9 +791,9 @@ function App() {
  </div>
  )}
 
- {/* STILL CRIATIVO - Monta apenas quando ativo */}
- {currentPage === 'creative-still' && (
- <div style={{ display: 'contents' }}>
+ {/* STILL CRIATIVO - Monta quando ativo ou gerando */}
+ {(currentPage === 'creative-still' || isGeneratingCreativeStill) && (
+ <div style={{ display: currentPage === 'creative-still' ? 'contents' : 'none' }}>
  <Suspense fallback={<LoadingSkeleton theme={theme} />}>
  <CreativeStill
  theme={theme}
@@ -805,6 +808,10 @@ function App() {
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
+ onSetGenerating={setIsGeneratingCreativeStill}
+ onSetProgress={setCreativeStillProgress}
+ onSetMinimized={setCreativeStillMinimized}
+ isMinimized={creativeStillMinimized}
  />
  </Suspense>
  </div>

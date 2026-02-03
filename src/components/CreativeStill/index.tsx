@@ -220,6 +220,10 @@ export interface CreativeStillProps {
  onOpenPlanModal?: () => void;
  initialProduct?: Product | null;
  onClearInitialProduct?: () => void;
+ onSetGenerating?: (value: boolean) => void;
+ onSetProgress?: (value: number) => void;
+ onSetMinimized?: (value: boolean) => void;
+ isMinimized?: boolean;
 }
 
 // ============================================================
@@ -241,6 +245,10 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  onOpenPlanModal,
  initialProduct,
  onClearInitialProduct,
+ onSetGenerating,
+ onSetProgress,
+ onSetMinimized,
+ isMinimized,
 }) => {
  const [view, setView] = useState<View>('home');
  const [wizardState, setWizardState] = useState<CreativeStillWizardState>({ ...INITIAL_WIZARD_STATE });
@@ -331,7 +339,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still')) return;
 
  setIsGenerating(true);
+ onSetGenerating?.(true);
  setGenerationProgress(10);
+ onSetProgress?.(10);
  setLoadingText('');
  setView('results');
 
@@ -419,6 +429,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  if (insertError || !insertedGen) {
  console.error('Erro ao criar geração:', insertError);
  setIsGenerating(false);
+ onSetGenerating?.(false);
  setCurrentGeneration({
  id: crypto.randomUUID(),
  user_id: userId || '',
@@ -451,6 +462,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  const increment = Math.max(remaining * 0.08, 0.5);
  currentProg = Math.min(currentProg + increment, 90);
  setGenerationProgress(Math.round(currentProg));
+ onSetProgress?.(Math.round(currentProg));
  }, 1000);
 
  // Polling: verificar status a cada 3s até completar ou falhar (timeout 5min)
@@ -517,8 +529,10 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
  clearInterval(progressInterval);
  setGenerationProgress(95);
+ onSetProgress?.(95);
  await new Promise(resolve => setTimeout(resolve, 500));
  setGenerationProgress(100);
+ onSetProgress?.(100);
  setCurrentGeneration(result);
 
  // Recarregar lista
@@ -560,6 +574,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  });
  } finally {
  setIsGenerating(false);
+ onSetGenerating?.(false);
  }
  };
 
@@ -771,6 +786,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  loadingText={loadingText}
  onBackToHome={handleBackToHome}
  onGenerateAgain={handleGenerate}
+ onMinimize={() => onSetMinimized?.(true)}
+ isMinimized={isMinimized}
  onSaveTemplate={async (name: string) => {
  if (!userId) return;
  const { error } = await supabase

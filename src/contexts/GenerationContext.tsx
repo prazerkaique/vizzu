@@ -54,6 +54,14 @@ interface GenerationContextType {
  setProvadorLoadingIndex: React.Dispatch<React.SetStateAction<number>>;
  provadorLoadingText: string;
 
+ // Creative Still
+ isGeneratingCreativeStill: boolean;
+ setIsGeneratingCreativeStill: React.Dispatch<React.SetStateAction<boolean>>;
+ creativeStillMinimized: boolean;
+ setCreativeStillMinimized: React.Dispatch<React.SetStateAction<boolean>>;
+ creativeStillProgress: number;
+ setCreativeStillProgress: React.Dispatch<React.SetStateAction<number>>;
+
  // Computed
  isAnyGenerationRunning: boolean;
 
@@ -83,6 +91,11 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  const [provadorMinimized, setProvadorMinimized] = useState(false);
  const [provadorLoadingIndex, setProvadorLoadingIndex] = useState(0);
  const [provadorProgress, setProvadorProgress] = useState(0);
+
+ // Creative Still
+ const [isGeneratingCreativeStill, setIsGeneratingCreativeStill] = useState(false);
+ const [creativeStillMinimized, setCreativeStillMinimized] = useState(false);
+ const [creativeStillProgress, setCreativeStillProgress] = useState(0);
 
  // Minimized Modals
  const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
@@ -133,7 +146,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  }, [isGeneratingProvador]);
 
  const provadorLoadingText = PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...';
- const isAnyGenerationRunning = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer;
+ const isAnyGenerationRunning = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer || isGeneratingCreativeStill;
 
  return (
    <GenerationContext.Provider value={{
@@ -150,6 +163,9 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      provadorProgress, setProvadorProgress,
      provadorLoadingIndex, setProvadorLoadingIndex,
      provadorLoadingText,
+     isGeneratingCreativeStill, setIsGeneratingCreativeStill,
+     creativeStillMinimized, setCreativeStillMinimized,
+     creativeStillProgress, setCreativeStillProgress,
      isAnyGenerationRunning,
      minimizedModals, setMinimizedModals,
      closeMinimizedModal,

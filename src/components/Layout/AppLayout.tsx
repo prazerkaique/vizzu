@@ -27,6 +27,7 @@ export function AppLayout({
    isGeneratingProductStudio, productStudioMinimized, productStudioProgress, setProductStudioMinimized,
    isGeneratingLookComposer, lookComposerMinimized, lookComposerProgress, setLookComposerMinimized,
    isGeneratingProvador, provadorMinimized, provadorProgress, setProvadorMinimized,
+   isGeneratingCreativeStill, creativeStillMinimized, creativeStillProgress, setCreativeStillMinimized,
    minimizedModals, closeMinimizedModal,
  } = useGeneration();
 
@@ -713,6 +714,43 @@ export function AppLayout({
  ></div>
  </div>
  <span className="text-white text-xs font-medium">{provadorProgress}%</span>
+ </div>
+ </div>
+ <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+ <i className="fas fa-expand"></i>
+ </button>
+ </div>
+ </div>
+ )}
+
+ {/* Vizzu Still Criativo - Minimizado */}
+ {isGeneratingCreativeStill && creativeStillMinimized && (
+ <div
+ className="fixed z-50 cursor-grab active:cursor-grabbing select-none touch-none"
+ style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
+ onMouseDown={handleDragStart}
+ onTouchStart={handleDragStart}
+ onClick={() => handleMinimizedClick(() => setCreativeStillMinimized(false))}
+ >
+ <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
+ <div className="w-10 h-10 flex-shrink-0">
+ <DotLottieReact
+ src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
+ loop
+ autoplay
+ style={{ width: '100%', height: '100%' }}
+ />
+ </div>
+ <div className="flex-1">
+ <p className="text-white text-sm font-medium">Still Criativo</p>
+ <div className="flex items-center gap-2 mt-1">
+ <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
+ <div
+ className="h-full bg-white rounded-full transition-all duration-500"
+ style={{ width: `${creativeStillProgress}%` }}
+ ></div>
+ </div>
+ <span className="text-white text-xs font-medium">{Math.round(creativeStillProgress)}%</span>
  </div>
  </div>
  <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">

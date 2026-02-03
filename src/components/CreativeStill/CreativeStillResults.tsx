@@ -37,6 +37,8 @@ interface Props {
  onBackToHome: () => void;
  onGenerateAgain: () => void;
  onSaveTemplate: (name: string) => Promise<void>;
+ onMinimize?: () => void;
+ isMinimized?: boolean;
 }
 
 /** Get the list of variation URLs from a generation, with retrocompat fallback */
@@ -66,6 +68,8 @@ export const CreativeStillResults: React.FC<Props> = ({
  onBackToHome,
  onGenerateAgain,
  onSaveTemplate,
+ onMinimize,
+ isMinimized,
 }) => {
  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
  const [showSaveModal, setShowSaveModal] = useState(false);
@@ -124,14 +128,25 @@ export const CreativeStillResults: React.FC<Props> = ({
  // ============================================================
  // LOADING STATE
  // ============================================================
- if (isGenerating) {
+ if (isGenerating && !isMinimized) {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
- <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+ <div className={'absolute inset-0 backdrop-blur-xl ' + (isDark ? 'bg-black/80' : 'bg-white/80')}></div>
 
  {/* Container do conteúdo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
+ {/* Botão minimizar */}
+ {onMinimize && (
+ <button
+ onClick={onMinimize}
+ className={'absolute top-2 right-2 w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15' : 'bg-black/5 border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-black/10')}
+ title="Minimizar"
+ >
+ <i className="fas fa-minus text-sm"></i>
+ </button>
+ )}
+
  {/* Animação Lottie com degradê de cores (âmbar → laranja) */}
  <style>{lottieColorStyles}</style>
  <div className="w-64 h-64 mb-6 vizzu-still-lottie-gradient">
@@ -144,31 +159,31 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
 
  {/* Título */}
- <h2 className="text-white text-2xl font-bold font-serif mb-2 text-center">
+ <h2 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-2xl font-bold font-serif mb-2 text-center'}>
  Criando seu Vizzu Still Criativo®...
  </h2>
 
  {/* Frase de loading */}
- <p className="text-neutral-400 text-sm mb-6 text-center min-h-[20px] transition-all duration-300">
+ <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-6 text-center min-h-[20px] transition-all duration-300'}>
  {LOADING_PHRASES[phraseIndex]}
  </p>
 
  {/* Barra de progresso */}
  <div className="w-full max-w-xs mb-4">
- <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
+ <div className={'h-2 rounded-full overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
  <div
  className="h-full bg-gradient-to-r from-amber-500 to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${progress}%` }}
  ></div>
  </div>
- <p className="text-white text-sm font-medium text-center mt-2">
+ <p className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-sm font-medium text-center mt-2'}>
  {progress}%
  </p>
  </div>
 
  {/* Info do produto sendo gerado */}
  {wizardState.mainProduct && (
- <div className="bg-neutral-900/80 rounded-xl p-4 border border-neutral-800 mb-6 w-full max-w-xs">
+ <div className={(isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border mb-6 w-full max-w-xs'}>
  <div className="flex items-center gap-3">
  {wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url ? (
  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
@@ -180,13 +195,13 @@ export const CreativeStillResults: React.FC<Props> = ({
  />
  </div>
  ) : (
- <div className="w-12 h-12 rounded-lg bg-neutral-800 flex items-center justify-center flex-shrink-0">
- <i className="fas fa-image text-neutral-600"></i>
+ <div className={'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
+ <i className={'fas fa-image ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
  </div>
  )}
  <div className="flex-1 min-w-0">
- <p className="text-white text-sm font-medium truncate">{wizardState.mainProduct.name}</p>
- <p className="text-neutral-500 text-xs">
+ <p className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-sm font-medium truncate'}>{wizardState.mainProduct.name}</p>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
  {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'} · {creditsUsed} {creditsUsed === 1 ? 'crédito' : 'créditos'}
  </p>
  </div>
@@ -194,7 +209,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
  )}
 
- <p className="text-neutral-600 text-xs text-center">
+ <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs text-center'}>
  A geração pode levar até 2 minutos
  </p>
  </div>
@@ -208,12 +223,11 @@ export const CreativeStillResults: React.FC<Props> = ({
  if (showReveal) {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
- <div className="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
+ <div className={'absolute inset-0 backdrop-blur-xl ' + (isDark ? 'bg-black/80' : 'bg-white/80')}></div>
  <div className="relative z-10 flex flex-col items-center justify-center">
  <div className="w-72 h-72">
  <DotLottieReact
  src="https://lottie.host/c73f7881-d168-4dee-be3a-3c73bd916083/vnLD4LVey6.lottie"
- loop
  autoplay
  style={{ width: '100%', height: '100%' }}
  />
