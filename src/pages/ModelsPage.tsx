@@ -256,6 +256,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  expression: m.expression,
  bustSize: m.bust_size,
  waistType: m.waist_type,
+ physicalNotes: m.physical_notes || undefined,
+ hairNotes: m.hair_notes || undefined,
+ skinNotes: m.skin_notes || undefined,
  referenceImageUrl: m.reference_image_url,
  referenceStoragePath: m.reference_storage_path,
  images: typeof m.images === 'string' ? JSON.parse(m.images) : (m.images || {}),
@@ -401,7 +404,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  const notes = [];
  if (newModel.physicalNotes) notes.push(`Physical: ${newModel.physicalNotes}`);
- if (newModel.hairNotes) notes.push(`Hair: ${newModel.hairNotes}`);
+ if (newModel.hairNotes) notes.push(`Face & Hair: ${newModel.hairNotes}`);
  if (newModel.skinNotes) notes.push(`Skin: ${newModel.skinNotes}`);
  if (notes.length > 0) prompt += `\n\n${notes.join('. ')}`;
 
@@ -523,6 +526,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  expression: newModel.expression,
  bust_size: newModel.gender === 'woman' ? newModel.bustSize : null,
  waist_type: newModel.gender === 'woman' ? newModel.waistType : null,
+ physical_notes: newModel.physicalNotes || null,
+ hair_notes: newModel.hairNotes || null,
+ skin_notes: newModel.skinNotes || null,
  reference_image_url: newModel.referenceImage,
  status: hasPreview ? 'ready' : 'draft',
  images: hasPreview ? modelPreviewImages : {},
@@ -1118,14 +1124,14 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
 
- {/* Observações do Cabelo (desabilitado se careca) */}
- <div className={'transition-opacity ' + (newModel.hairLength === 'bald' ? 'opacity-40 pointer-events-none' : '')}>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações do Cabelo <span className="text-neutral-500">(opcional)</span></label>
+ {/* Observações Rosto e Cabelo */}
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Rosto e Cabelo <span className="text-neutral-500">(opcional)</span></label>
  <input
  type="text"
  value={newModel.hairNotes}
  onChange={(e) => setNewModel({ ...newModel, hairNotes: e.target.value })}
- placeholder="Ex: Franja, mechas coloridas, raspado nas laterais..."
+ placeholder="Ex: Franja, mechas loiras, rosto oval, queixo marcado..."
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
  />
  </div>

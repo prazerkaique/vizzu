@@ -238,7 +238,6 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div className="w-72 h-72">
  <DotLottieReact
  src="https://lottie.host/c73f7881-d168-4dee-be3a-3c73bd916083/vnLD4LVey6.lottie"
- loop
  autoplay
  style={{ width: '100%', height: '100%' }}
  />

@@ -3,7 +3,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
 import { generateModeloIA } from '../../lib/api/studio';
@@ -1181,7 +1180,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  backgroundPrompt: backgroundPromptFinal,
  solidColor: solidColorFinal,
  sceneHint: sceneHintFinal,
- modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression` : '',
+ modelDetails: selectedModel ? [
+ `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression`,
+ selectedModel.physicalNotes ? `Physical: ${selectedModel.physicalNotes}` : '',
+ selectedModel.hairNotes ? `Face & Hair: ${selectedModel.hairNotes}` : '',
+ selectedModel.skinNotes ? `Skin: ${selectedModel.skinNotes}` : '',
+ ].filter(Boolean).join('. ') : '',
  viewsMode: 'front', // Sempre 'front' na primeira chamada
  // Resolução da imagem (2k ou 4k)
  resolution,
@@ -1232,7 +1236,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  backgroundPrompt: backgroundPromptFinal,
  solidColor: solidColorFinal,
  sceneHint: sceneHintFinal,
- modelDetails: selectedModel ? `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind` : 'back view, from behind',
+ modelDetails: selectedModel ? [
+ `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind`,
+ selectedModel.physicalNotes ? `Physical: ${selectedModel.physicalNotes}` : '',
+ selectedModel.hairNotes ? `Face & Hair: ${selectedModel.hairNotes}` : '',
+ selectedModel.skinNotes ? `Skin: ${selectedModel.skinNotes}` : '',
+ ].filter(Boolean).join('. ') : 'back view, from behind',
  viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
  // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
  isBackView: true,

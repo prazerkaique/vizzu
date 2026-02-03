@@ -308,6 +308,11 @@ export interface SavedModel {
   bustSize?: string;
   waistType?: string;
 
+  // Observações do usuário
+  physicalNotes?: string;
+  hairNotes?: string;
+  skinNotes?: string;
+
   // Imagem de referência (opcional)
   referenceImageUrl?: string;
   referenceStoragePath?: string;
