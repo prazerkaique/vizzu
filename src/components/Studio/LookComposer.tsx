@@ -16,11 +16,21 @@ interface Props {
  onImageUpload?: (slot: keyof LookComposition, image: string) => void;
 }
 
+// Categorias que ocupam tanto top quanto bottom (peças inteiras)
+const FULLPIECE_CATEGORIES = [
+ 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Macacao', 'Jardineira', 'Jardineiras',
+ 'Conjuntos', 'Conjunto', 'Jumpsuit',
+];
+
+const isFullpieceCategory = (category: string): boolean => {
+ return FULLPIECE_CATEGORIES.some(c => c.toLowerCase() === (category || '').toLowerCase());
+};
+
 // Mapeamento de slots para categorias de produtos (case-insensitive, singular e plural)
 const SLOT_CATEGORY_MAP: Record<string, string[]> = {
  head: ['Bonés', 'Boné', 'Chapéus', 'Chapéu', 'Tiaras', 'Tiara', 'Lenços', 'Lenço', 'Gorro', 'Gorros', 'Touca', 'Toucas', 'Boina', 'Turbante'],
  top: ['Camisetas', 'Camiseta', 'Blusas', 'Blusa', 'Regatas', 'Regata', 'Tops', 'Top', 'Camisas', 'Camisa', 'Jaquetas', 'Jaqueta', 'Casacos', 'Casaco', 'Blazers', 'Blazer', 'Moletons', 'Moletom', 'Bodies', 'Body', 'Cropped', 'Croppeds', 'Colete', 'Coletes', 'Suéter', 'Cardigan', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto'],
- bottom: ['Calças', 'Calça', 'Shorts', 'Short', 'Bermudas', 'Bermuda', 'Saias', 'Saia', 'Leggings', 'Legging', 'Shorts Fitness'],
+ bottom: ['Calças', 'Calça', 'Shorts', 'Short', 'Bermudas', 'Bermuda', 'Saias', 'Saia', 'Leggings', 'Legging', 'Shorts Fitness', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto', 'Jardineira', 'Jardineiras'],
  feet: ['Tênis', 'Sandálias', 'Sandália', 'Botas', 'Bota', 'Calçados', 'Calçado', 'Sapato', 'Sapatos', 'Chinelo', 'Chinelos', 'Sapatilha', 'Sapatilhas'],
  accessory1: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Mochila', 'Mochilas', 'Carteira', 'Carteiras'],
  accessory2: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Colar', 'Colares', 'Brinco', 'Brincos', 'Pulseira', 'Pulseiras', 'Anel', 'Anéis'],
@@ -122,16 +132,25 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  const selectProduct = (slot: keyof LookComposition, product: Product) => {
  // Usa imagem otimizada do Product Studio se disponível
  const img = getOptimizedProductImage(product);
- if (img) onChange({
- ...composition,
- [slot]: {
+ if (!img) return;
+
+ const item = {
  image: img,
  name: product.name,
  sku: product.sku,
  productId: product.id,
  imageId: product.images[0]?.id
+ };
+
+ const newComposition = { ...composition, [slot]: item };
+
+ // Peça inteira (vestido, macacão, conjunto): ocupa top + bottom
+ if ((slot === 'top' || slot === 'bottom') && isFullpieceCategory(product.category || '')) {
+ newComposition.top = item;
+ newComposition.bottom = item;
  }
- });
+
+ onChange(newComposition);
  setExpandedSlot(null);
  setSearch('');
  setIsSearchOpen(false);
@@ -140,7 +159,15 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  const removeSlot = (slot: keyof LookComposition, e: React.MouseEvent) => {
  e.stopPropagation();
  const c = { ...composition };
+
+ // Se é um fullpiece (top e bottom são o mesmo item), limpar ambos
+ if ((slot === 'top' || slot === 'bottom') && c.top && c.bottom && c.top.productId === c.bottom.productId && c.top.productId) {
+ delete c.top;
+ delete c.bottom;
+ } else {
  delete c[slot];
+ }
+
  onChange(c);
  };
 
@@ -315,20 +342,25 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  const isLocked = lockedSlots.includes(slot.id);
  const isExpanded = expandedSlot === slot.id;
 
+ // Detecta se este slot é o "escravo" de uma peça inteira (fullpiece)
+ // Bottom fica bloqueado quando top e bottom são o mesmo item (vestido/macacão)
+ const isFullpiecePaired = slot.id === 'bottom' && composition.top && composition.bottom
+ && composition.top.productId === composition.bottom.productId && !!composition.top.productId;
+
  return (
  <div
  key={slot.id}
- onClick={() => handleSlotClick(slot, item, isLocked)}
- onDragOver={(e) => !isLocked && handleDragOver(e, slot.id)}
+ onClick={() => !isFullpiecePaired && handleSlotClick(slot, item, isLocked)}
+ onDragOver={(e) => !isLocked && !isFullpiecePaired && handleDragOver(e, slot.id)}
  onDragLeave={handleDragLeave}
- onDrop={(e) => !isLocked && handleDrop(e, slot.id)}
- onPaste={(e) => !isLocked && handlePaste(e, slot.id)}
- onTouchStart={() => !isLocked && !item && handleTouchStart(slot.id)}
+ onDrop={(e) => !isLocked && !isFullpiecePaired && handleDrop(e, slot.id)}
+ onPaste={(e) => !isLocked && !isFullpiecePaired && handlePaste(e, slot.id)}
+ onTouchStart={() => !isLocked && !isFullpiecePaired && !item && handleTouchStart(slot.id)}
  onTouchEnd={handleTouchEnd}
  onTouchMove={handleTouchEnd}
- tabIndex={isLocked ? -1 : 0}
+ tabIndex={isLocked || isFullpiecePaired ? -1 : 0}
  className={`h-16 rounded-lg border flex flex-col items-center justify-center relative overflow-hidden transition-all duration-200 ${
- isLocked
+ isLocked || isFullpiecePaired
  ? 'cursor-not-allowed opacity-60 border-neutral-500/50 ' + (theme === 'dark' ? 'bg-neutral-800/30' : 'bg-neutral-800/30')
  : isDragging === slot.id
  ? 'border-neutral-500 bg-neutral-700/30 scale-110 cursor-pointer'
@@ -345,6 +377,13 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-neutral-400') + ' text-[6px] font-medium text-center px-0.5 mt-0.5'}>
  {lockedMessage}
  </span>
+ </>
+ ) : isFullpiecePaired && item ? (
+ <>
+ <OptimizedImage src={item.image} alt={item.name} className="w-full h-full p-0.5" size="thumb" objectFit="contain" />
+ <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-[6px] font-medium px-1 py-0.5 text-center truncate">
+ <i className="fas fa-link mr-0.5"></i>{slot.label}
+ </div>
  </>
  ) : item ? (
  <>

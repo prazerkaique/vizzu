@@ -178,24 +178,29 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  'Chapéu': 'head', 'Boné': 'head', 'Gorro': 'head', 'Touca': 'head', 'Boina': 'head', 'Turbante': 'head',
  'Camiseta': 'top', 'Camisa': 'top', 'Blusa': 'top', 'Top': 'top', 'Cropped': 'top', 'Regata': 'top',
  'Moletom': 'top', 'Suéter': 'top', 'Cardigan': 'top', 'Jaqueta': 'top', 'Blazer': 'top', 'Colete': 'top',
+ 'Vestido': 'top', 'Macacão': 'top', 'Conjunto': 'top', 'Jardineira': 'top',
  'Calça': 'bottom', 'Shorts': 'bottom', 'Bermuda': 'bottom', 'Saia': 'bottom', 'Legging': 'bottom',
  'Tênis': 'feet', 'Sapato': 'feet', 'Sandália': 'feet', 'Chinelo': 'feet', 'Bota': 'feet', 'Sapatilha': 'feet',
  'Bolsa': 'accessory1', 'Mochila': 'accessory1', 'Carteira': 'accessory1', 'Cinto': 'accessory1',
  'Óculos': 'accessory2', 'Relógio': 'accessory2', 'Colar': 'accessory2', 'Brinco': 'accessory2', 'Pulseira': 'accessory2',
  };
 
+ const FULLPIECE_CATS = ['Vestido', 'Vestidos', 'Macacão', 'Macacões', 'Conjunto', 'Conjuntos', 'Jardineira', 'Jardineiras'];
  const slot = categoryToSlot[initialProduct.category || ''] || 'top';
+ const isFullpiece = FULLPIECE_CATS.some(c => c.toLowerCase() === (initialProduct.category || '').toLowerCase());
  const imageUrl = initialProduct.images?.[0]?.url || initialProduct.images?.[0]?.base64 || '';
 
  if (imageUrl) {
- setLookComposition(prev => ({
- ...prev,
- [slot]: {
+ const item = {
  image: imageUrl,
  name: initialProduct.name,
  sku: initialProduct.sku,
  productId: initialProduct.id,
- }
+ };
+ setLookComposition(prev => ({
+ ...prev,
+ [slot]: item,
+ ...(isFullpiece ? { top: item, bottom: item } : {}),
  }));
  // Ir para o step 3 (Look) se já tiver cliente selecionado, senão vai para step 1
  if (selectedClient) {

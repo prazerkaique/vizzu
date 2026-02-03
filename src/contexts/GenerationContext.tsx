@@ -105,7 +105,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  };
 
  // Controlar frases e progresso do loading do Provador
- // Tempo médio de geração: ~75 segundos (1:15)
+ // Tempo médio de geração: ~120 segundos (2 minutos)
  useEffect(() => {
    if (!isGeneratingProvador) {
      setProvadorLoadingIndex(0);
@@ -113,26 +113,26 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      return;
    }
 
-   // Atualizar frase a cada 7 segundos (11 frases em ~77 segundos)
+   // Atualizar frase a cada 11 segundos (11 frases em ~121 segundos)
    const phraseInterval = setInterval(() => {
      setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
-   }, 7000);
+   }, 11000);
 
-   // Progresso calibrado para ~75 segundos até 100%
-   // 0-50%: rápido (primeiros ~20s)
-   // 50-80%: médio (próximos ~30s)
-   // 80-100%: lento (últimos ~25s)
+   // Progresso calibrado para ~120 segundos até 100%
+   // 0-50%: ~32s (50/0.78 * 0.5s)
+   // 50-80%: ~48s (30/0.31 * 0.5s)
+   // 80-100%: ~40s (20/0.25 * 0.5s)
    const progressInterval = setInterval(() => {
      setProvadorProgress(prev => {
        if (prev >= 100) return 100;
 
        let increment: number;
        if (prev < 50) {
-         increment = 1.25;
+         increment = 0.78;
        } else if (prev < 80) {
-         increment = 0.5;
+         increment = 0.31;
        } else {
-         increment = 0.4;
+         increment = 0.25;
        }
 
        return Math.min(100, prev + increment);
