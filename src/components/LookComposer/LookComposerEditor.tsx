@@ -353,7 +353,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // Verificar se a imagem já foi gerada no Supabase
  const { data: generation, error } = await supabase
  .from('generations')
- .select('id, output_image_url, status')
+ .select('id, output_image_url, status, error_message')
  .eq('user_id', userId)
  .eq('product_id', pending.productId)
  .order('created_at', { ascending: false })
@@ -363,6 +363,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  if (error) {
  // Continuar fazendo polling
  return 'polling';
+ }
+
+ // Geração falhou - parar polling e notificar
+ if (generation?.status === 'failed' || generation?.status === 'error') {
+ clearPendingGeneration();
+ const errorMsg = generation.error_message || 'Erro desconhecido na geração';
+ console.error('Geração falhou em background:', errorMsg);
+ return { status: 'failed', message: errorMsg };
  }
 
  if (generation?.output_image_url && generation.status === 'completed') {
@@ -440,6 +448,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setRestoredModelThumbnail(null);
  setGenerationStartTime(null);
  setTimerStep(0);
+ } else if (result && typeof result === 'object' && result.status === 'failed') {
+ clearInterval(pollInterval);
+ setGenerating(false);
+ setProgress(0);
+ setRestoredLookItems([]);
+ setRestoredProductThumbnail(null);
+ setRestoredModelThumbnail(null);
+ setGenerationStartTime(null);
+ setTimerStep(0);
+ alert(`Erro na geração: ${result.message}`);
  } else if (result === 'polling') {
  // Atualizar progresso estimado
  const newElapsedMs = Date.now() - pending.startTime;
@@ -454,6 +472,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  clearPendingGeneration();
  setGenerating(false);
  setProgress(0);
+ setRestoredLookItems([]);
+ setRestoredProductThumbnail(null);
+ setRestoredModelThumbnail(null);
+ setGenerationStartTime(null);
+ setTimerStep(0);
+ alert('A geração expirou após 5 minutos. Tente novamente.');
  }, 5 * 60 * 1000);
 
  return () => {
