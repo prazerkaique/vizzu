@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useProducts } from '../contexts/ProductsContext';
@@ -6,6 +6,7 @@ import { useClients } from '../contexts/ClientsContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { supabase } from '../services/supabaseClient';
 
 export function DashboardPage() {
  const { theme, navigateTo, setSettingsTab } = useUI();
@@ -14,6 +15,54 @@ export function DashboardPage() {
  const { clients, clientLooks } = useClients();
  const { historyLogs } = useHistory();
  const { userCredits, currentPlan } = useCredits({ userId: user?.id });
+
+ // Queries diretas para criações recentes (não dependem de contexto de outra página)
+ const [recentStills, setRecentStills] = useState<{ id: string; imageUrl: string; name: string; date: string }[]>([]);
+ const [recentProvadorLooks, setRecentProvadorLooks] = useState<{ id: string; imageUrl: string; clientId: string; date: string }[]>([]);
+
+ useEffect(() => {
+ if (!user?.id) return;
+
+ // Creative Still generations
+ supabase
+ .from('creative_still_generations')
+ .select('id, variation_urls, variation_1_url, variation_2_url, status, created_at, settings_snapshot')
+ .eq('user_id', user.id)
+ .eq('status', 'completed')
+ .order('created_at', { ascending: false })
+ .limit(10)
+ .then(({ data }) => {
+ if (data) {
+ setRecentStills(data.map((g: any) => {
+ const urls = g.variation_urls?.length ? g.variation_urls : [g.variation_1_url, g.variation_2_url].filter(Boolean);
+ return {
+ id: g.id,
+ imageUrl: urls[0] || '',
+ name: g.settings_snapshot?.product_name || 'Still Criativo',
+ date: g.created_at,
+ };
+ }).filter((s: any) => s.imageUrl));
+ }
+ });
+
+ // Client looks (Provador) - direto do banco, sem depender do contexto
+ supabase
+ .from('client_looks')
+ .select('id, image_url, client_id, created_at')
+ .eq('user_id', user.id)
+ .order('created_at', { ascending: false })
+ .limit(10)
+ .then(({ data }) => {
+ if (data) {
+ setRecentProvadorLooks(data.map((l: any) => ({
+ id: l.id,
+ imageUrl: l.image_url,
+ clientId: l.client_id,
+ date: l.created_at,
+ })).filter((l: any) => l.imageUrl));
+ }
+ });
+ }, [user?.id]);
 
  const dashboardStats = useMemo(() => {
  const optimizedProducts = products.filter(p => {
@@ -55,10 +104,10 @@ export function DashboardPage() {
  {/* ÚLTIMAS CRIAÇÕES */}
  {(() => {
  // Combinar fontes de imagens geradas
- const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look'; date: string }[] = [];
+ const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look' | 'still'; date: string }[] = [];
 
- // Adicionar looks do Provador
- clientLooks.forEach(look => {
+ // Adicionar looks do Provador (query direta)
+ recentProvadorLooks.forEach(look => {
  if (look.imageUrl) {
  const client = clients.find(c => c.id === look.clientId);
  recentCreations.push({
@@ -66,9 +115,20 @@ export function DashboardPage() {
  imageUrl: look.imageUrl,
  name: client ? `${client.firstName}` : 'Look',
  type: 'provador',
- date: look.createdAt
+ date: look.date
  });
  }
+ });
+
+ // Adicionar Still Criativo (query direta)
+ recentStills.forEach(still => {
+ recentCreations.push({
+ id: `still-${still.id}`,
+ imageUrl: still.imageUrl,
+ name: still.name,
+ type: 'still',
+ date: still.date
+ });
  });
 
  // Adicionar produtos com imagens geradas
@@ -164,6 +224,7 @@ export function DashboardPage() {
  onClick={() => {
  if (creation.type === 'studio') navigateTo('product-studio');
  else if (creation.type === 'provador') navigateTo('provador');
+ else if (creation.type === 'still') navigateTo('creative-still');
  else navigateTo('look-composer');
  }}
  className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
@@ -173,8 +234,9 @@ export function DashboardPage() {
  <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
  (creation.type === 'studio' ? 'bg-neutral-700 text-white' :
  creation.type === 'provador' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :
+ creation.type === 'still' ? 'bg-amber-600 text-white' :
  'bg-amber-500 text-white')}>
- {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : 'Look'}
+ {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : creation.type === 'still' ? 'Still' : 'Look'}
  </div>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{creation.name}</p>

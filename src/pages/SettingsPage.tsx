@@ -479,7 +479,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )
  }
  >
- {isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{PLAN_CTA[plan.id] || 'Falar conosco'}</>) : PLAN_CTA[plan.id] || 'Assinar'}
+ {isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{PLAN_CTA[plan.id] || 'Falar conosco'}</>) : (() => {
+ const currentIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === currentPlan.id);
+ const planIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === plan.id);
+ return planIndex < currentIndex ? 'Fazer downgrade' : (PLAN_CTA[plan.id] || 'Assinar');
+ })()}
  </button>
  </div>
  </div>

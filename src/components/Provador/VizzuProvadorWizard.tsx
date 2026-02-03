@@ -1516,12 +1516,13 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  </div>
  <div className="flex items-center gap-2">
- <span className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
+ <span className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 ${
  theme === 'dark'
  ? 'bg-neutral-900 border border-neutral-800 text-neutral-400'
  : 'bg-gray-100 border border-gray-200 text-gray-500'
  }`}>
- 1 cred.
+ <i className="fas fa-coins text-[10px]"></i>
+ {userCredits}
  </span>
  {(selectedClient || Object.keys(lookComposition).length > 0) && (
  <button

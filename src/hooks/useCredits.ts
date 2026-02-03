@@ -89,8 +89,9 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   // Determinar créditos atuais
   const userCredits = creditsData?.balance ?? localData.credits;
 
-  // Período de cobrança
-  const billingPeriod = subscription?.billing_period ?? localData.billingPeriod;
+  // Período de cobrança — override local tem prioridade (para visualização de preços)
+  const [billingPeriodOverride, setBillingPeriodOverride] = useState<'monthly' | 'yearly' | null>(null);
+  const billingPeriod = billingPeriodOverride ?? subscription?.billing_period ?? localData.billingPeriod;
 
   // Dias até renovação
   const daysUntilRenewal = subscription ? calculateDaysUntilRenewal(subscription) : 30;
@@ -351,6 +352,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   // ═══════════════════════════════════════════════════════════════
 
   const setBillingPeriod = useCallback((period: 'monthly' | 'yearly') => {
+    setBillingPeriodOverride(period);
     setLocalData(prev => ({ ...prev, billingPeriod: period }));
   }, []);
 
