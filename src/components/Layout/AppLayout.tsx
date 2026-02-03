@@ -60,6 +60,8 @@ export function AppLayout({
  window.removeEventListener('mouseup', handleEnd);
  window.removeEventListener('touchmove', handleMove);
  window.removeEventListener('touchend', handleEnd);
+ // Resetar dragging após um breve delay para que o onClick possa checar o estado
+ setTimeout(() => { dragRef.current.dragging = false; }, 50);
  };
  window.addEventListener('mousemove', handleMove);
  window.addEventListener('mouseup', handleEnd);
