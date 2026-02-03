@@ -20,6 +20,7 @@ import { usePlans } from './contexts/PlansContext';
 import { useGeneration } from './contexts/GenerationContext';
 import { supabase } from './services/supabaseClient';
 import { generateProvador, sendWhatsAppMessage } from './lib/api/studio';
+import { cancelSubscription } from './lib/api/billing';
 import { smartDownload } from './utils/downloadHelper';
 import { runFullMigration, runProductMigration, runStorageMigration } from './utils/imageMigration';
 import { DashboardPage } from './pages/DashboardPage';
@@ -127,6 +128,7 @@ function App() {
  upgradePlan,
  setBillingPeriod,
  setCredits,
+ refresh: refreshBilling,
  } = useCredits({ userId: user?.id, enableBackend: true });
 
  // Plans from context
@@ -195,6 +197,25 @@ function App() {
  } catch (e: any) {
  console.error('Error upgrading plan:', e);
  showToast('Erro ao processar upgrade', 'error');
+ }
+ };
+
+ // Handler para cancelar assinatura
+ const handleCancelSubscription = async () => {
+ if (!user?.id) return;
+ const confirmed = window.confirm('Tem certeza que deseja cancelar sua assinatura? Você continuará tendo acesso até o fim do período atual.');
+ if (!confirmed) return;
+ try {
+ const result = await cancelSubscription({ userId: user.id });
+ if (result.success) {
+ showToast('Assinatura será cancelada ao fim do período atual.', 'success');
+ refreshBilling();
+ } else {
+ showToast(result.error || 'Erro ao cancelar assinatura', 'error');
+ }
+ } catch (e: any) {
+ console.error('Error canceling subscription:', e);
+ showToast('Erro ao cancelar assinatura', 'error');
  }
  };
 
@@ -795,7 +816,7 @@ function App() {
  {/* CLIENTS */}
  {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />}
 
- {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onLogout={handleLogout} />}
+ {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
 
  {/* Modal de Créditos Esgotados */}
  <CreditExhaustedModal

@@ -74,7 +74,9 @@ self.addEventListener('fetch', (event) => {
   if (
     event.request.url.includes('supabase') ||
     event.request.url.includes('googleapis') ||
-    event.request.url.includes('generativelanguage')
+    event.request.url.includes('generativelanguage') ||
+    event.request.url.includes('n8nwebhook') ||
+    event.request.url.includes('stripe.com')
   ) {
     return;
   }

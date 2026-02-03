@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { createCheckoutSession, buyCredits, changePlan, calculateDaysUntilRenewal, UserSubscription, UserCredits } from '../lib/api/billing';
+import { createCheckoutSession, buyCredits, changePlan, calculateDaysUntilRenewal, useCredits as useCreditsApi, UserSubscription, UserCredits } from '../lib/api/billing';
 import { supabase } from '../services/supabaseClient';
 import { usePlans } from '../contexts/PlansContext';
 
@@ -316,17 +316,35 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   // DEDUZIR CRÉDITOS
   // ═══════════════════════════════════════════════════════════════
 
-  const deductCredits = useCallback((amount: number, _reason: string): boolean => {
+  const deductCredits = useCallback((amount: number, reason: string): boolean => {
     const currentBalance = creditsData?.balance ?? localData.credits;
     if (currentBalance < amount) return false;
 
+    // Atualização otimista (UI imediata)
     setLocalData(prev => ({ ...prev, credits: prev.credits - amount }));
     if (creditsData) {
       setCreditsData(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
     }
 
+    // Chamar backend N8N para registrar dedução (fire-and-forget)
+    if (userId && enableBackend) {
+      useCreditsApi({
+        userId,
+        amount,
+        description: reason,
+      }).then(result => {
+        if (result.success) {
+          // Sincronizar saldo real do backend
+          setCreditsData(prev => prev ? { ...prev, balance: result.new_balance } : null);
+          setLocalData(prev => ({ ...prev, credits: result.new_balance }));
+        }
+      }).catch(err => {
+        console.error('Error deducting credits on backend:', err);
+      });
+    }
+
     return true;
-  }, [creditsData, localData.credits]);
+  }, [creditsData, localData.credits, userId, enableBackend]);
 
   // ═══════════════════════════════════════════════════════════════
   // ALTERAR PERÍODO DE COBRANÇA

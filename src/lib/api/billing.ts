@@ -37,7 +37,7 @@ export interface UserCredits {
 export interface CreditTransaction {
   id: string;
   user_id: string;
-  type: 'purchase' | 'usage' | 'renewal' | 'refund' | 'bonus' | 'adjustment';
+  type: 'purchase' | 'usage' | 'plan_reset' | 'refund' | 'bonus';
   amount: number;
   balance_after: number;
   description: string;

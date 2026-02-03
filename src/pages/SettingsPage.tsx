@@ -17,6 +17,7 @@ interface SettingsPageProps {
  onBuyCredits: (amount: number) => void;
  onUpgradePlan: (planId: string) => void;
  onSetBillingPeriod: (period: string) => void;
+ onCancelSubscription: () => void;
  onLogout: () => void;
 }
 
@@ -29,6 +30,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onBuyCredits,
  onUpgradePlan,
  onSetBillingPeriod,
+ onCancelSubscription,
  onLogout,
 }) => {
  const { theme, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
@@ -299,7 +301,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  <div className={'mt-4 pt-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
  <button
- onClick={() => showToast('Entre em contato para cancelar sua assinatura.', 'info')}
+ onClick={onCancelSubscription}
  className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs transition-colors'}
  >
  Cancelar assinatura
@@ -463,7 +465,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  window.open('https://wa.me/5544991534082?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Enterprise%20da%20Vizzu.', '_blank');
  return;
  }
- showToast('Checkout Stripe não implementado. Configure os webhooks do N8N.', 'info');
+ onUpgradePlan(plan.id);
  }}
  className={
  'w-full py-2.5 rounded-xl font-semibold text-sm transition-all ' +
@@ -522,7 +524,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {CREDIT_PACKAGES.map(amount => (
  <button
  key={amount}
- onClick={() => showToast('Checkout Stripe não implementado. Configure os webhooks do N8N.', 'info')}
+ onClick={() => onBuyCredits(amount)}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300') + ' border rounded-xl p-3 transition-all text-center group'}
  >
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-xl'}>{amount}</p>
