@@ -692,7 +692,6 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Idade</option>
- <option value="child">Infantil (3-12)</option>
  <option value="teen">Adolescente (13-19)</option>
  <option value="young">18-25 anos</option>
  <option value="adult">26-35 anos</option>

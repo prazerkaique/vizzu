@@ -61,7 +61,7 @@ const MODEL_OPTS_V2 = {
  { id: 'man', label: 'Homem', icon: 'fa-mars' }
  ],
  ageRange: [
- { id: 'child', label: '8-12 anos' },
+ // { id: 'child', label: '8-12 anos' },  // Desativado temporariamente - IMAGE_SAFETY Gemini
  { id: 'teen', label: '13-17 anos' },
  { id: 'young', label: '18-25 anos' },
  { id: 'adult', label: '26-35 anos' },

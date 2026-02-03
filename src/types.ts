@@ -356,7 +356,7 @@ export const MODEL_OPTIONS = {
     { id: 'plus', label: 'Plus Size' },
   ],
   ageRange: [
-    { id: 'child', label: 'Infantil (3-12)' },
+    // { id: 'child', label: 'Infantil (3-12)' },  // Desativado temporariamente - IMAGE_SAFETY Gemini
     { id: 'teen', label: 'Adolescente (13-19)' },
     { id: 'young', label: 'Jovem (20-25)' },
     { id: 'adult', label: 'Adulto (25-35)' },
