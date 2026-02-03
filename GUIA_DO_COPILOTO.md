@@ -966,6 +966,34 @@ O prompt é construído no **frontend** em `ModelsPage.tsx > generateModelPrompt
 - [ ] PWA offline queue
 - [ ] Persistir observações de modelo no banco — **PARCIAL**: frontend já salva/lê `physical_notes`, `hair_notes`, `skin_notes` em `saved_models`. Falta rodar SQL no Supabase para criar as colunas (ver abaixo).
 
+### Checklist — Teste do fluxo Stripe (fazer no escritório)
+
+1. **Verificar webhook no Stripe Dashboard**
+   - Ir em Developers > Webhooks
+   - Deve ter um endpoint apontando para: `https://n8nwebhook.brainia.store/webhook/vizzu/stripe-webhook`
+   - Se não tiver, criar com os eventos: `checkout.session.completed`, `invoice.paid`, `customer.subscription.updated`, `customer.subscription.deleted`
+
+2. **Testar checkout pelo app**
+   - Abrir o app logado
+   - Ir em Configurações > Trocar plano (ou comprar créditos)
+   - Completar o checkout no Stripe usando o cartão de teste:
+     - Número: `4242 4242 4242 4242`
+     - Validade: qualquer data futura (ex: `12/30`)
+     - CVC: qualquer 3 dígitos (ex: `123`)
+     - Nome/endereço: qualquer coisa
+
+3. **Verificar se funcionou**
+   - Após pagar, o Stripe envia webhook pro N8N
+   - Checar no Supabase se `user_credits.balance` foi atualizado
+   - Checar se `user_subscriptions.plan_id` mudou para o plano comprado
+   - No app, dar F5 e verificar se os créditos e plano aparecem corretos
+
+4. **Testar cancelamento**
+   - Ir em Configurações > Cancelar assinatura
+   - Verificar se o status muda para `canceled` no banco
+
+> **Cartão de teste Stripe**: `4242 4242 4242 4242` | Validade: qualquer futura | CVC: qualquer 3 dígitos
+
 ### SQL pendente — Colunas de observação em `saved_models`
 
 ```sql
