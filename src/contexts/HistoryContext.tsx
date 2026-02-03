@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 interface HistoryContextType {
   historyLogs: HistoryLog[];
   setHistoryLogs: React.Dispatch<React.SetStateAction<HistoryLog[]>>;
-  addHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => void;
+  addHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string) => void;
   loadUserHistory: (userId: string) => Promise<void>;
 }
 
@@ -26,6 +26,7 @@ const saveHistoryToSupabase = async (log: HistoryLog, userId: string) => {
         method: log.method,
         cost: log.cost || 0,
         items_count: log.itemsCount || log.items?.length || log.products?.length || 0,
+        image_url: log.imageUrl || null,
         created_at: log.createdAt instanceof Date ? log.createdAt.toISOString() : (log.createdAt || new Date().toISOString()),
       }, { onConflict: 'id' });
 
@@ -78,6 +79,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
           method: h.method,
           cost: h.cost || 0,
           itemsCount: h.items_count || 0,
+          imageUrl: h.image_url || undefined,
           createdAt: h.created_at ? new Date(h.created_at) : undefined,
         }));
         setHistoryLogs(formattedHistory);
@@ -95,7 +97,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const addHistoryLog = useCallback((action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => {
+  const addHistoryLog = useCallback((action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string) => {
     const newLog: HistoryLog = {
       id: `log-${Date.now()}`,
       date: new Date().toISOString(),
@@ -106,6 +108,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
       method,
       cost,
       itemsCount: items.length,
+      imageUrl,
       createdAt: new Date(),
     };
     setHistoryLogs(prev => [newLog, ...prev].slice(0, 100));

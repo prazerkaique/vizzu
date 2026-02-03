@@ -155,10 +155,11 @@ export function DashboardPage() {
  // Modelo IA / Look Composer
  if (genImages?.modeloIA?.length > 0) {
  genImages.modeloIA.forEach((item: any) => {
- if (item.image_url || item.imageUrl) {
+ const imgUrl = item.images?.front || item.image_url || item.imageUrl;
+ if (imgUrl) {
  recentCreations.push({
  id: `look-${product.id}-${item.id}`,
- imageUrl: item.image_url || item.imageUrl,
+ imageUrl: imgUrl,
  name: product.name,
  type: 'look',
  date: item.createdAt || item.created_at || new Date().toISOString()
@@ -170,10 +171,11 @@ export function DashboardPage() {
  // Cenário Criativo
  if (genImages?.cenarioCriativo?.length > 0) {
  genImages.cenarioCriativo.forEach((item: any) => {
- if (item.image_url || item.imageUrl) {
+ const imgUrl = item.images?.front || item.image_url || item.imageUrl;
+ if (imgUrl) {
  recentCreations.push({
  id: `cenario-${product.id}-${item.id}`,
- imageUrl: item.image_url || item.imageUrl,
+ imageUrl: imgUrl,
  name: product.name,
  type: 'look',
  date: item.createdAt || item.created_at || new Date().toISOString()

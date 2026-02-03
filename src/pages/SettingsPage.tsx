@@ -677,6 +677,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {log.itemsCount} item{log.itemsCount !== 1 ? 's' : ''}
  </span>
  )}
+ {log.imageUrl && (
+ <a
+ href={log.imageUrl}
+ target="_blank"
+ rel="noopener noreferrer"
+ download
+ className="text-[#FF6B6B] hover:text-[#FF9F43] transition-colors"
+ onClick={(e) => e.stopPropagation()}
+ >
+ <i className="fas fa-download mr-1"></i>
+ Baixar imagem
+ </a>
+ )}
  </div>
  </div>
  </div>

@@ -368,7 +368,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  },
  bodyType: { 'slim': 'slim/slender', 'athletic': 'athletic/toned', 'average': 'average', 'curvy': 'curvy', 'plus': 'plus size' },
  ageRange: {
- 'baby': '0-2 years old baby', 'child': '3-12 years old child', 'teen': '13-19 years old teenager',
+ 'child': '3-12 years old child', 'teen': '13-19 years old teenager',
  'young': '20-25 years old young adult', 'adult': '25-35 years old adult', 'mature': '35-50 years old mature adult',
  'senior': '50-60 years old senior', 'elderly': '60+ years old elderly'
  },
@@ -395,8 +395,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const face = `${t('eyeColor', newModel.eyeColor)} eyes, ${t('expression', newModel.expression)} expression`;
 
  const bodyParts = [];
+ if (newModel.ageRange !== 'child') {
  if (newModel.gender === 'woman' && newModel.bustSize) bodyParts.push(t('bustSize', newModel.bustSize));
  if (newModel.waistType) bodyParts.push(t('waistType', newModel.waistType));
+ }
  const bodySpecifics = bodyParts.join(', ');
 
  let prompt = `${subject}. ${hair}. ${face}`;
@@ -475,8 +477,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  hairLength: newModel.hairLength,
  eyeColor: newModel.eyeColor,
  expression: newModel.expression,
- bustSize: newModel.gender === 'woman' ? newModel.bustSize : undefined,
- waistType: newModel.waistType,
+ bustSize: newModel.gender === 'woman' && newModel.ageRange !== 'child' ? newModel.bustSize : undefined,
+ waistType: newModel.ageRange !== 'child' ? newModel.waistType : undefined,
  physicalNotes: newModel.physicalNotes || undefined,
  hairNotes: newModel.hairNotes || undefined,
  skinNotes: newModel.skinNotes || undefined,
@@ -524,8 +526,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  hair_style: newModel.hairStyle,
  eye_color: newModel.eyeColor,
  expression: newModel.expression,
- bust_size: newModel.gender === 'woman' ? newModel.bustSize : null,
- waist_type: newModel.gender === 'woman' ? newModel.waistType : null,
+ bust_size: newModel.gender === 'woman' && newModel.ageRange !== 'child' ? newModel.bustSize : null,
+ waist_type: newModel.ageRange !== 'child' ? newModel.waistType : null,
  physical_notes: newModel.physicalNotes || null,
  hair_notes: newModel.hairNotes || null,
  skin_notes: newModel.skinNotes || null,
@@ -690,6 +692,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Idade</option>
+ <option value="child">Infantil (3-12)</option>
+ <option value="teen">Adolescente (13-19)</option>
  <option value="young">18-25 anos</option>
  <option value="adult">26-35 anos</option>
  <option value="mature">36-50 anos</option>
@@ -1193,8 +1197,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Step 4: Proporções */}
  {modelWizardStep === 4 && (
  <div className="space-y-4">
- {/* Tamanho do Busto - Slider (3 opções, só para mulheres) */}
- {newModel.gender === 'woman' && (
+ {/* Tamanho do Busto - Slider (3 opções, só para mulheres adultas) */}
+ {newModel.gender === 'woman' && newModel.ageRange !== 'child' && (
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
  Tamanho do Busto: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
@@ -1224,8 +1228,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  )}
 
- {/* Tipo de Cintura - Slider (3 opções) */}
- <div>
+ {/* Tipo de Cintura - Slider (3 opções, não para crianças) */}
+ {newModel.ageRange !== 'child' && <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
  Tipo de Cintura: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
  </label>
@@ -1251,10 +1255,20 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <span>Média</span>
  <span>Larga</span>
  </div>
+ </div>}
+
+ {/* Mensagem informativa para crianças */}
+ {newModel.ageRange === 'child' && (
+ <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
+ <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-child text-lg mb-2'}></i>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
+ Proporções corporais não se aplicam a modelos infantis.
+ </p>
  </div>
+ )}
 
  {/* Mensagem para homens */}
- {newModel.gender === 'man' && (
+ {newModel.gender === 'man' && newModel.ageRange !== 'child' && (
  <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
  <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-info-circle text-lg mb-2'}></i>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
@@ -1415,8 +1429,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  Corpo <span className="text-[#FF6B6B] font-medium">{getModelLabel('bodyType', newModel.bodyType).toLowerCase()}</span>,{' '}
  pele <span className="text-[#FF6B6B] font-medium">{getModelLabel('skinTone', newModel.skinTone).toLowerCase()}</span>,{' '}
  estatura <span className="text-[#FF6B6B] font-medium">{getModelLabel('height', newModel.height).toLowerCase()}</span>{' '}
- e cintura <span className="text-[#FF6B6B] font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span>
- {newModel.gender === 'woman' && (
+ {newModel.ageRange !== 'child' && (
+ <>e cintura <span className="text-[#FF6B6B] font-medium">{getModelLabel('waistType', newModel.waistType).toLowerCase()}</span></>
+ )}
+ {newModel.gender === 'woman' && newModel.ageRange !== 'child' && (
  <>, busto <span className="text-[#FF6B6B] font-medium">{getModelLabel('bustSize', newModel.bustSize).toLowerCase()}</span></>
  )}.{' '}
  Expressão <span className="text-[#FF6B6B] font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.

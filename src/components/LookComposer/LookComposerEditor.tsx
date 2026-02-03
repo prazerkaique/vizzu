@@ -19,7 +19,7 @@ interface LookComposerEditorProps {
  userCredits: number;
  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
  onDeductCredits: (amount: number, reason: string) => boolean;
- onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => void;
+ onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number, imageUrl?: string) => void;
  onBack: () => void;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
  theme?: 'dark' | 'light';
@@ -353,7 +353,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // Verificar se a imagem já foi gerada no Supabase
  const { data: generation, error } = await supabase
  .from('generations')
- .select('id, image_url, back_image_url, status')
+ .select('id, output_image_url, status')
  .eq('user_id', userId)
  .eq('product_id', pending.productId)
  .order('created_at', { ascending: false })
@@ -365,7 +365,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return 'polling';
  }
 
- if (generation?.image_url && generation.status === 'completed') {
+ if (generation?.output_image_url && generation.status === 'completed') {
  clearPendingGeneration();
  // Marcar como notificado para não duplicar toast no startup check
  if (userId) {
@@ -374,8 +374,18 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  notified.push(`lc-${generation.id}`);
  localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
  }
- setGeneratedImageUrl(generation.image_url);
- setGeneratedBackImageUrl(generation.back_image_url || null);
+ setGeneratedImageUrl(generation.output_image_url);
+
+ // Buscar imagem de costas (se existir) na tabela product_images
+ const { data: backImage } = await supabase
+ .from('product_images')
+ .select('url')
+ .eq('generation_id', generation.id)
+ .ilike('file_name', '%back%')
+ .limit(1)
+ .maybeSingle();
+
+ setGeneratedBackImageUrl(backImage?.url || null);
  setGenerationId(generation.id);
  setShowResult(true);
  return 'completed';
@@ -978,12 +988,21 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  try {
  // Construir prompt do modelo a partir do selectedModel
+ const ageRangeDescriptions: Record<string, string> = {
+ 'child': '3-12 years old child',
+ 'teen': '13-19 years old teenager',
+ 'young': '20-25 years old young adult',
+ 'adult': '25-35 years old adult',
+ 'mature': '35-50 years old mature adult',
+ 'senior': '50-60 years old senior',
+ 'elderly': '60+ years old elderly',
+ };
  const modelPromptParts: string[] = [];
  if (selectedModel) {
+ if (selectedModel.ageRange) modelPromptParts.push(ageRangeDescriptions[selectedModel.ageRange] || selectedModel.ageRange);
  modelPromptParts.push(selectedModel.gender === 'woman' ? 'female' : 'male');
  if (selectedModel.ethnicity) modelPromptParts.push(selectedModel.ethnicity);
- if (selectedModel.bodyType) modelPromptParts.push(selectedModel.bodyType);
- if (selectedModel.ageRange) modelPromptParts.push(selectedModel.ageRange);
+ if (selectedModel.ageRange !== 'child' && selectedModel.bodyType) modelPromptParts.push(selectedModel.bodyType);
  }
  const modelPrompt = modelPromptParts.join(' ') || 'female brazilian average adult';
 
@@ -1374,7 +1393,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  'success',
  [product],
  'ai',
- creditsNeeded
+ creditsNeeded,
+ frontImageUrl
  );
  }
 
@@ -1675,6 +1695,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  lockedSlots={lockedSlots}
  lockedMessage="Peça principal"
  />
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] text-center'}>
+ <i className="fas fa-info-circle mr-1"></i>
+ Slots vazios serão preenchidos com roupas genéricas pela IA
+ </p>
  </div>
  ) : (
  <div className="space-y-3">
