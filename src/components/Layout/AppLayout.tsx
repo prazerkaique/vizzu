@@ -3,6 +3,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useUI, type Page } from '../../contexts/UIContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGeneration } from '../../contexts/GenerationContext';
+import { LowCreditsBanner } from '../LowCreditsBanner';
 
 interface AppLayoutProps {
  children: React.ReactNode;
@@ -10,6 +11,7 @@ interface AppLayoutProps {
  currentPlan: any;
  restoreModal: (id: string) => void;
  onLogout: () => void;
+ onBuyCredits?: () => void;
  renderSwipePage?: (page: Page) => React.ReactNode;
 }
 
@@ -19,6 +21,7 @@ export function AppLayout({
  currentPlan,
  restoreModal,
  onLogout,
+ onBuyCredits,
  renderSwipePage,
 }: AppLayoutProps) {
  const { theme, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
@@ -455,6 +458,16 @@ export function AppLayout({
 
  {/* MAIN CONTENT */}
  <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 md:pb-0 ' + (!isCreationPage ? 'pt-12 pb-16' : '')} style={{ overscrollBehavior: 'contain' }}>
+
+ {/* LOW CREDITS BANNER */}
+ {!isCreationPage && onBuyCredits && (
+  <LowCreditsBanner
+   userCredits={userCredits}
+   currentPlanId={currentPlan?.id || 'free'}
+   theme={theme as 'dark' | 'light'}
+   onBuyCredits={onBuyCredits}
+  />
+ )}
 
  {/* MOBILE TOP HEADER */}
  {!isCreationPage && (

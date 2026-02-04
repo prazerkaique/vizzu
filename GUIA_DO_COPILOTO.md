@@ -744,9 +744,11 @@ Somente estes valores são aceitos (constraint `credit_transactions_type_check`)
 
 #### 6. Formato do workflow JSON
 - Gerar arquivo `.json` completo com nodes + connections
+- **SEMPRE salvar o JSON em `n8n-workflows/` (pasta gitignored)** — NUNCA colar JSON de workflow no chat. Os JSONs contêm API keys e secrets.
 - O dono importa no N8N via menu > Import from file
 - Sempre incluir `webhookId` fixo para manter URL estável
 - Sempre incluir nó de `Respond Error` para erros (desconectado no canvas, serve como referência)
+- Nomenclatura: `{número}-{nome-do-workflow}.json` (ex: `11-analyze-product.json`)
 
 #### 7. Body de HTTP Request — SEMPRE usar `specifyBody: "json"` com `jsonBody`
 - **NUNCA** usar `specifyBody: "string"` com `body` para enviar JSON ao Supabase

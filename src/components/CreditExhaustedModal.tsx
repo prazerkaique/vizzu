@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plan, CREDIT_PACKAGES } from '../hooks/useCredits';
 import { usePlans } from '../contexts/PlansContext';
+import { supabase } from '../services/supabaseClient';
 
 interface Props {
  isOpen: boolean;
@@ -48,18 +49,23 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  const [layer, setLayer] = useState<1 | 2>(1);
  const [selectedCredits, setSelectedCredits] = useState<number>(10);
  const [isAnimating, setIsAnimating] = useState(false);
+ const [generationsToday, setGenerationsToday] = useState<number | null>(null);
 
  const { plans } = usePlans();
  const isDark = theme === 'dark';
  const isInsufficient = currentCredits > 0 && currentCredits < creditsNeeded;
  const isZero = currentCredits === 0;
+ const isTrial = currentPlan.id === 'free';
 
- // Reset layer when modal opens
+ // Reset layer when modal opens + fetch social proof
  useEffect(() => {
  if (isOpen) {
  setLayer(1);
  setIsAnimating(true);
  setTimeout(() => setIsAnimating(false), 300);
+ supabase.rpc('count_generations_today').then(({ data }) => {
+  if (data !== null) setGenerationsToday(data);
+ });
  }
  }, [isOpen]);
 
@@ -126,19 +132,34 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  {/* Título */}
  <h2 className={`text-xl font-bold font-serif text-center mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
- {isInsufficient ? 'Créditos insuficientes' : 'Seus créditos acabaram'}
+ {isTrial && isZero
+  ? 'Gostou do que viu?'
+  : isInsufficient
+   ? 'Quase lá!'
+   : 'Recarregue e continue criando'}
  </h2>
 
  {/* Subtítulo */}
  <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- {isInsufficient ? (
- <>Você tem <span className="text-[#FF6B6B] font-semibold">{currentCredits}</span> créditos, mas precisa de <span className="text-[#FF6B6B] font-semibold">{creditsNeeded}</span> para {actionText}.</>
+ {isTrial && isZero ? (
+ <>Seu teste gratuito de 5 imagens acabou. Escolha um plano para continuar transformando seus produtos.</>
+ ) : isInsufficient ? (
+ <>Faltam <span className="text-[#FF6B6B] font-semibold">{creditsNeeded - currentCredits}</span> créditos para {actionText}. Recarregue e sua imagem fica pronta.</>
  ) : (
- <>Você precisa de <span className="text-[#FF6B6B] font-semibold">{creditsNeeded}</span> créditos para {actionText}.</>
+ <>Você precisa de <span className="text-[#FF6B6B] font-semibold">{creditsNeeded}</span> crédito{creditsNeeded !== 1 ? 's' : ''} para {actionText}.</>
  )}
  </p>
 
+ {/* Social proof */}
+ {generationsToday !== null && generationsToday > 10 && (
+ <div className={`text-center text-[10px] mb-3 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
+ <i className="fas fa-fire-alt mr-1 text-[#FF6B6B]"></i>
+ {generationsToday.toLocaleString('pt-BR')} imagens geradas hoje no Vizzu
+ </div>
+ )}
+
  {/* Saldo atual */}
+ {!isTrial && (
  <div className={`text-center text-xs mb-6 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
  <i className="fas fa-wallet mr-1.5"></i>
  Seu saldo atual: <span className="font-semibold">{currentCredits} créditos</span>
@@ -146,6 +167,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <span className="ml-1">· Renova em {daysUntilRenewal} dias</span>
  )}
  </div>
+ )}
 
  {/* Badge especial para plano atual */}
  {currentPlan.id === 'basic' && nextPlan && (
@@ -176,32 +198,50 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  {/* CTAs dinâmicos baseados no plano */}
  <div className="space-y-3">
- {/* CTA Principal */}
- <button
- onClick={() => onBuyCredits(10)}
- className="w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5 "
- >
- <i className="fas fa-bolt mr-2"></i>
- Comprar 10 créditos - R$ {getCreditPackagePrice(10)}
- </button>
-
- {/* CTA Secundário */}
- {nextPlan ? (
- <button
- onClick={() => onUpgradePlan(nextPlan.id)}
- className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
- >
- <i className="fas fa-arrow-up mr-2"></i>
- Fazer upgrade pro {nextPlan.name} - {nextPlan.limit} créd/mês
- </button>
+ {isTrial ? (
+ <>
+  {/* Trial: CTA principal é escolher plano */}
+  <button
+  onClick={handleGoToPlans}
+  className="w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5"
+  >
+  <i className="fas fa-rocket mr-2"></i>
+  Escolher meu plano
+  </button>
+  <p className={`text-[10px] text-center ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
+  A partir de R$ 107/mês no plano anual · Cancele quando quiser
+  </p>
+ </>
  ) : (
- <button
- onClick={() => onBuyCredits(25)}
- className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
- >
- <i className="fas fa-plus mr-2"></i>
- Comprar 25 créditos - R$ {getCreditPackagePrice(25)}
- </button>
+ <>
+  {/* CTA Principal */}
+  <button
+  onClick={() => onBuyCredits(10)}
+  className="w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5"
+  >
+  <i className="fas fa-bolt mr-2"></i>
+  Comprar 10 créditos - R$ {getCreditPackagePrice(10)}
+  </button>
+
+  {/* CTA Secundário */}
+  {nextPlan ? (
+  <button
+  onClick={() => onUpgradePlan(nextPlan.id)}
+  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
+  >
+  <i className="fas fa-arrow-up mr-2"></i>
+  Fazer upgrade pro {nextPlan.name} - {nextPlan.limit} créd/mês
+  </button>
+  ) : (
+  <button
+  onClick={() => onBuyCredits(25)}
+  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
+  >
+  <i className="fas fa-plus mr-2"></i>
+  Comprar 25 créditos - R$ {getCreditPackagePrice(25)}
+  </button>
+  )}
+ </>
  )}
  </div>
 

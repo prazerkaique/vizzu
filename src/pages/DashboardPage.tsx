@@ -233,11 +233,7 @@ export function DashboardPage() {
  >
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
  <OptimizedImage src={creation.imageUrl} size="thumb" alt="" className="w-full h-full" />
- <div className={'absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium ' +
- (creation.type === 'studio' ? 'bg-neutral-700 text-white' :
- creation.type === 'provador' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :
- creation.type === 'still' ? 'bg-amber-600 text-white' :
- 'bg-amber-500 text-white')}>
+ <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
  {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : creation.type === 'still' ? 'Still' : 'Look'}
  </div>
  </div>

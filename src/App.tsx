@@ -808,6 +808,7 @@ function App() {
  currentPlan={currentPlan}
  restoreModal={restoreModal}
  onLogout={handleLogout}
+ onBuyCredits={() => { setCreditModalContext({ creditsNeeded: 1, actionContext: 'generic' }); setShowCreditModal(true); }}
  renderSwipePage={renderSwipePage}
  >
  {currentPage === 'dashboard' && <DashboardPage />}
@@ -858,7 +859,7 @@ function App() {
  collections={COLLECTIONS}
  userCredits={userCredits}
  whatsappTemplates={whatsappTemplates}
- onCreateClient={() => { setCreateClientFromProvador(true); setShowCreateClient(true); }}
+ onCreateClient={() => { setCreateClientFromProvador(true); setShowCreateClient(true); navigateTo('clients'); }}
  onUpdateClient={handleUpdateClientForProvador}
  onClientSelect={(client) => {
  setProvadorClient(client);
