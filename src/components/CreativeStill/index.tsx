@@ -290,6 +290,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  .from('creative_still_generations')
  .select('*')
  .eq('user_id', userId)
+ .neq('status', 'failed')
  .order('created_at', { ascending: false })
  .limit(20);
  if (genData) {

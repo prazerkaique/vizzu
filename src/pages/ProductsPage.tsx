@@ -1286,20 +1286,20 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Monte combinações</p>
  </button>
 
- {/* Cenário Criativo */}
+ {/* Still Criativo */}
  <button
  onClick={() => {
  setProductForCreation(showProductDetail);
  setShowProductDetail(null);
- navigateTo('lifestyle');
+ navigateTo('creative-still');
  }}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' border rounded-xl p-3 text-left transition-all group'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center mb-2 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-mountain-sun text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <i className={'fas fa-gem text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Cenário Criativo</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Com ambiente</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Still Criativo</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px]'}>Foto editorial</p>
  </button>
  </div>
  </div>

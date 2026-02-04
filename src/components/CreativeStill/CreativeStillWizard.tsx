@@ -138,7 +138,7 @@ export const CreativeStillWizard: React.FC<Props> = ({
  onBack,
  userCredits,
 }) => {
- const [currentStep, setCurrentStep] = useState(1);
+ const [currentStep, setCurrentStep] = useState(wizardState.mainProduct ? 2 : 1);
  const [showProductModal, setShowProductModal] = useState(false);
  const [showAddElementModal, setShowAddElementModal] = useState(false);
  const [productSearchTerm, setProductSearchTerm] = useState('');
