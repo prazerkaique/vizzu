@@ -1,15 +1,17 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * VIZZU - Sistema de Thumbnails Server-Side (Supabase Pro)
+ * VIZZU - Sistema de Thumbnails via wsrv.nl (CDN gratuito)
  * ═══════════════════════════════════════════════════════════════
  *
- * Usa Supabase Image Transformation para servir thumbnails
- * diretamente do servidor. O browser nunca baixa a imagem
- * original para grids e listagens.
+ * Usa wsrv.nl para redimensionar imagens do Supabase Storage.
+ * As imagens originais ficam no Supabase; o wsrv.nl faz o resize
+ * sob demanda e cacheia na CDN global do Cloudflare.
  *
- * URLs Supabase storage:
- *   /storage/v1/object/public/{bucket}/{path}       → original
- *   /storage/v1/render/image/public/{bucket}/{path}  → transformed
+ * Isso elimina o uso de Supabase Image Transformations (limite
+ * de 100 imagens/mês no plano Pro) sem custo adicional.
+ *
+ * URL pattern:
+ *   https://wsrv.nl/?url={supabase_public_url}&w={width}&q={quality}&output=webp
  */
 
 export type ImageSize = 'thumb' | 'preview' | 'display' | 'full';
@@ -22,22 +24,14 @@ const SIZE_CONFIG: Record<ImageSize, { width: number; quality: number } | null> 
 };
 
 /**
- * Converte uma URL de storage Supabase para usar Image Transformation.
- * Se a URL não for do Supabase storage, retorna a original.
+ * Converte uma URL pública para usar wsrv.nl como proxy de resize.
+ * Se a URL não for http(s), retorna a original.
  */
 function toTransformUrl(url: string, width: number, quality: number): string {
-  // Supabase storage public URL pattern:
-  //   https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
-  // Transform URL pattern:
-  //   https://{project}.supabase.co/storage/v1/render/image/public/{bucket}/{path}?width=X&quality=Y
-  if (url.includes('/storage/v1/object/public/')) {
-    return url.replace(
-      '/storage/v1/object/public/',
-      '/storage/v1/render/image/public/'
-    ) + `?width=${width}&quality=${quality}&resize=contain`;
+  if (url.startsWith('http')) {
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&q=${quality}&fit=contain&output=webp`;
   }
 
-  // Not a Supabase storage URL — return as-is
   return url;
 }
 
