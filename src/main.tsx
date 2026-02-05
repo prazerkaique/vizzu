@@ -13,7 +13,8 @@ import { PlansProvider } from './contexts/PlansContext'
 import { ImageViewerProvider, ImageViewer } from './components/ImageViewer'
 import './index.css'
 
-const isReportPanel = window.location.hostname === 'report.vizzu.pro';
+const isReportPanel = window.location.hostname === 'report.vizzu.pro'
+  || new URLSearchParams(window.location.search).get('admin') === 'reports';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
