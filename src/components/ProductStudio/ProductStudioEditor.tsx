@@ -993,6 +993,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setSelectedAngles([]);
 
  } catch (error) {
+ // Se foi interrupção de rede (F5/fechamento), manter pending key — a geração pode estar rodando no servidor
+ const msg = error instanceof Error ? error.message : '';
+ const isNetworkAbort = msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError') || msg.includes('AbortError');
+
+ if (isNetworkAbort) {
+ console.warn('Geração interrompida por rede — pending mantido para polling');
+ } else {
  clearPendingPSGeneration();
  console.error('Erro ao gerar imagens:', error);
  alert(`Erro ao gerar imagens: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -1005,6 +1012,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  'ai',
  0
  );
+ }
  }
  } finally {
  const setGenerating = onSetGenerating || setLocalIsGenerating;

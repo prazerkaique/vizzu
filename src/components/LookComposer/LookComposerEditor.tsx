@@ -1012,6 +1012,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setGenerationStartTime(Date.now()); // Iniciar timer de 2 minutos
  setTimerStep(0);
 
+ let keepPendingOnError = false;
  try {
  // Construir prompt do modelo a partir do selectedModel
  const ageRangeDescriptions: Record<string, string> = {
@@ -1452,10 +1453,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return; // Não executar o finally ainda
 
  } catch (error) {
- console.error('Erro ao gerar:', error);
- // Limpar estado pendente em caso de erro
- clearPendingGeneration();
+ // Se foi interrupção de rede (F5/fechamento), manter pending key — a geração pode estar rodando no servidor
+ const msg = error instanceof Error ? error.message : '';
+ const isNetworkAbort = msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError') || msg.includes('AbortError');
 
+ if (isNetworkAbort) {
+ keepPendingOnError = true;
+ console.warn('Geração interrompida por rede — pending mantido para polling');
+ } else {
+ console.error('Erro ao gerar:', error);
+ clearPendingGeneration();
  if (onAddHistoryLog) {
  onAddHistoryLog(
  'Look Composer',
@@ -1467,12 +1474,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  );
  }
  alert(`Erro ao gerar look: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+ }
  } finally {
  const setGenerating = onSetGenerating || setLocalIsGenerating;
  const setProgress = onSetProgress || setLocalProgress;
  setGenerating(false);
  setProgress(0);
- clearPendingGeneration(); // Garantir limpeza
+ if (!keepPendingOnError) clearPendingGeneration();
  // Limpar estados restaurados (F5)
  setRestoredLookItems([]);
  setRestoredProductThumbnail(null);

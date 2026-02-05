@@ -812,9 +812,16 @@ function App() {
  } catch (error: any) {
  clearInterval(loadingInterval);
  clearInterval(progressInterval);
+ // Se foi interrupção de rede (F5/fechamento), manter pending key — a geração pode estar rodando no servidor
+ const msg = error?.message || '';
+ const isNetworkAbort = msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError') || msg.includes('AbortError');
+ if (isNetworkAbort) {
+ console.warn('Provador interrompido por rede — pending mantido para polling');
+ } else {
  localStorage.removeItem('vizzu-pending-provador');
  console.error('Erro no Provador:', error);
  alert(error.message || 'Erro ao gerar imagem');
+ }
  return null;
  } finally {
  setIsGeneratingProvador(false);
