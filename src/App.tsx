@@ -315,7 +315,7 @@ function App() {
  const notifiedIds: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
 
  // ─── 1. Checar gerações PENDENTES no localStorage ───
- const pendingInProgress: string[] = []; // páginas com gerações em andamento
+ const pendingInProgress: { page: string; name: string }[] = [];
 
  // Product Studio pendente
  const psPendingRaw = localStorage.getItem('vizzu-pending-product-studio');
@@ -336,7 +336,6 @@ function App() {
  .maybeSingle();
 
  if (gen?.status === 'completed' && gen?.output_urls) {
- // Já completou — limpar pendente, marcar notificado
  localStorage.removeItem('vizzu-pending-product-studio');
  if (!notifiedIds.includes(`ps-${gen.id}`)) {
  notifiedIds.push(`ps-${gen.id}`);
@@ -344,7 +343,7 @@ function App() {
  } else if (gen?.status === 'failed' || gen?.status === 'error') {
  localStorage.removeItem('vizzu-pending-product-studio');
  } else {
- pendingInProgress.push('product-studio');
+ pendingInProgress.push({ page: 'product-studio', name: psPending.productName || 'Product Studio' });
  }
  }
  } catch { localStorage.removeItem('vizzu-pending-product-studio'); }
@@ -377,7 +376,7 @@ function App() {
  } else if (gen?.status === 'failed' || gen?.status === 'error') {
  localStorage.removeItem('vizzu_pending_generation');
  } else {
- pendingInProgress.push('look-composer');
+ pendingInProgress.push({ page: 'look-composer', name: lcPending.productName || 'Look Composer' });
  }
  }
  } catch { localStorage.removeItem('vizzu_pending_generation'); }
@@ -409,7 +408,7 @@ function App() {
  } else if (gen?.status === 'failed' || gen?.status === 'error') {
  localStorage.removeItem('vizzu-pending-provador');
  } else {
- pendingInProgress.push('provador');
+ pendingInProgress.push({ page: 'provador', name: provPending.clientName || 'Provador' });
  }
  }
  } catch { localStorage.removeItem('vizzu-pending-provador'); }
@@ -417,14 +416,17 @@ function App() {
 
  // Toast para gerações EM ANDAMENTO
  if (pendingInProgress.length > 0) {
- const targetPage = pendingInProgress[0];
- showToast(
- pendingInProgress.length === 1
- ? 'Você tem uma geração em andamento...'
- : `Você tem ${pendingInProgress.length} gerações em andamento...`,
- 'info',
- { label: 'Ver', onClick: () => navigateTo(targetPage as any) }
- );
+ const first = pendingInProgress[0];
+ const toastMsg = pendingInProgress.length === 1
+ ? `Geração de "${first.name}" em andamento...`
+ : `${pendingInProgress.length} gerações em andamento...`;
+ showToast(toastMsg, 'info', {
+ label: 'Ver',
+ onClick: () => {
+ navigateTo(first.page as any);
+ showToast(`Abra "${first.name}" para ver o progresso`, 'info');
+ }
+ });
  }
 
  // ─── 2. Checar gerações CONCLUÍDAS nas últimas 24h ───
