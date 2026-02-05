@@ -3,6 +3,10 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
+import { useAuth } from '../../contexts/AuthContext';
+import { useUI } from '../../contexts/UIContext';
+import { ReportModal } from '../ReportModal';
+import { submitReport } from '../../lib/api/reports';
 
 const lottieColorStyles = `
  @keyframes stillColorCycle {
@@ -79,6 +83,11 @@ export const CreativeStillResults: React.FC<Props> = ({
  const [savingTemplate, setSavingTemplate] = useState(false);
  const [showReveal, setShowReveal] = useState(false);
  const [wasGenerating, setWasGenerating] = useState(false);
+ const [showReportModal, setShowReportModal] = useState(false);
+ const [reportVariationUrl, setReportVariationUrl] = useState<string | null>(null);
+
+ const { user } = useAuth();
+ const { showToast } = useUI();
 
  const isDark = theme === 'dark';
 
@@ -117,6 +126,27 @@ export const CreativeStillResults: React.FC<Props> = ({
  setTemplateName('');
  } finally {
  setSavingTemplate(false);
+ }
+ };
+
+ // Report
+ const handleReportSubmit = async (observation: string) => {
+ if (!user || !reportVariationUrl) return;
+ const result = await submitReport({
+ userId: user.id,
+ userEmail: user.email || '',
+ userName: user.name || user.email || '',
+ generationType: 'creative-still',
+ generationId: generation?.id,
+ productName: wizardState.mainProduct?.name || 'Still Criativo',
+ generatedImageUrl: reportVariationUrl,
+ originalImageUrl: wizardState.mainProduct?.originalImages?.front?.url || wizardState.mainProduct?.images?.[0]?.url || undefined,
+ observation,
+ });
+ if (result.success) {
+ showToast('Report enviado! Analisaremos em até 24h.', 'success');
+ } else {
+ throw new Error(result.error || 'Erro ao enviar report');
  }
  };
 
@@ -342,6 +372,12 @@ export const CreativeStillResults: React.FC<Props> = ({
  >
  <i className="fas fa-download mr-1"></i>Download
  </button>
+ <button
+ onClick={() => { setReportVariationUrl(url); setShowReportModal(true); }}
+ className={(isDark ? 'text-amber-400/70 hover:text-amber-400' : 'text-amber-500 hover:text-amber-600') + ' text-xs font-medium'}
+ >
+ <i className="fas fa-flag mr-1"></i>Report
+ </button>
  </div>
  )}
  </div>
@@ -372,6 +408,18 @@ export const CreativeStillResults: React.FC<Props> = ({
  </button>
  </div>
  </div>
+
+ {/* ============================================================ */}
+ {/* MODAL: Report */}
+ {/* ============================================================ */}
+ <ReportModal
+ isOpen={showReportModal}
+ onClose={() => { setShowReportModal(false); setReportVariationUrl(null); }}
+ onSubmit={handleReportSubmit}
+ generationType="creative-still"
+ productName={wizardState.mainProduct?.name}
+ theme={theme}
+ />
 
  {/* ============================================================ */}
  {/* MODAL: Salvar Template */}

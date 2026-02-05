@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vizzu-v14';
+const CACHE_NAME = 'vizzu-v15';
 const OFFLINE_URL = '/';
 
 const STATIC_ASSETS = [

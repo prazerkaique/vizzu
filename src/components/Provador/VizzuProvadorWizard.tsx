@@ -15,6 +15,10 @@ import { OptimizedImage } from '../OptimizedImage';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
+import { useAuth } from '../../contexts/AuthContext';
+import { useUI } from '../../contexts/UIContext';
+import { ReportModal } from '../ReportModal';
+import { submitReport } from '../../lib/api/reports';
 
 // ============================================================
 // TIPOS E CONSTANTES
@@ -35,7 +39,7 @@ interface Props {
  photoType: ClientPhoto['type'],
  look: LookComposition,
  resolution?: '2k' | '4k'
- ) => Promise<string | null>;
+ ) => Promise<{ imageUrl: string; generationId?: string } | null>;
  onSendWhatsApp: (
  client: Client,
  image: string,
@@ -125,6 +129,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  const [savingLook, setSavingLook] = useState(false);
  const [showReveal, setShowReveal] = useState(false);
  const [wasGeneratingProvador, setWasGeneratingProvador] = useState(false);
+ const [lastGenerationId, setLastGenerationId] = useState<string | null>(null);
+ const [showReportModal, setShowReportModal] = useState(false);
+
+ // Auth & UI para reports
+ const { user } = useAuth();
+ const { showToast } = useUI();
 
  // Reveal animation: generating → done transition
  useEffect(() => {
@@ -434,7 +444,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  const result = await onGenerate(selectedClient, selectedPhotoType, lookComposition, resolution);
 
  if (result) {
- setGeneratedImage(result);
+ setGeneratedImage(result.imageUrl);
+ setLastGenerationId(result.generationId || null);
  setShowBeforeAfter('after');
  }
  };
@@ -486,6 +497,27 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  console.error('Erro ao gerar mensagem IA:', error);
  } finally {
  setIsGeneratingAIMessage(false);
+ }
+ };
+
+ const handleReportSubmit = async (observation: string) => {
+ if (!user || !generatedImage) return;
+ const lookNames = Object.values(lookComposition).filter(Boolean).map(i => i!.name).join(', ');
+ const result = await submitReport({
+ userId: user.id,
+ userEmail: user.email || '',
+ userName: user.name || user.email || '',
+ generationType: 'provador',
+ generationId: lastGenerationId || undefined,
+ productName: lookNames || selectedClient?.firstName || 'Provador',
+ generatedImageUrl: generatedImage,
+ originalImageUrl: originalImage || undefined,
+ observation,
+ });
+ if (result.success) {
+ showToast('Report enviado! Analisaremos em até 24h.', 'success');
+ } else {
+ throw new Error(result.error || 'Erro ao enviar report');
  }
  };
 
@@ -1459,6 +1491,20 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </button>
  </div>
 
+ {/* Botao Report */}
+ {generatedImage && !selectedSavedLook && (
+ <button
+ onClick={() => setShowReportModal(true)}
+ className={`w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+ theme === 'dark'
+ ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-400'
+ : 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-600'
+ } border`}
+ >
+ <i className="fas fa-flag"></i>Reportar Problema
+ </button>
+ )}
+
  {/* Botao voltar */}
  <button
  onClick={() => setCurrentStep(3)}
@@ -1635,6 +1681,16 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  isOpen={show4KConfirmModal}
  onConfirm={handleConfirm4K}
  onCancel={handleCancel4K}
+ theme={theme}
+ />
+
+ {/* Modal de Report */}
+ <ReportModal
+ isOpen={showReportModal}
+ onClose={() => setShowReportModal(false)}
+ onSubmit={handleReportSubmit}
+ generationType="provador"
+ productName={selectedClient?.firstName || undefined}
  theme={theme}
  />
  </div>

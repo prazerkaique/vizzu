@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import { AdminReportsPage } from './pages/AdminReportsPage'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { UIProvider } from './contexts/UIContext'
 import { AuthProvider } from './contexts/AuthContext'
@@ -12,23 +13,29 @@ import { PlansProvider } from './contexts/PlansContext'
 import { ImageViewerProvider, ImageViewer } from './components/ImageViewer'
 import './index.css'
 
+const isReportPanel = window.location.hostname === 'report.vizzu.pro';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <UIProvider>
         <ImageViewerProvider>
         <AuthProvider>
-          <PlansProvider>
-          <HistoryProvider>
-            <ProductsProvider>
-              <ClientsProvider>
-                <GenerationProvider>
-                  <App />
-                </GenerationProvider>
-              </ClientsProvider>
-            </ProductsProvider>
-          </HistoryProvider>
-          </PlansProvider>
+          {isReportPanel ? (
+            <AdminReportsPage />
+          ) : (
+            <PlansProvider>
+            <HistoryProvider>
+              <ProductsProvider>
+                <ClientsProvider>
+                  <GenerationProvider>
+                    <App />
+                  </GenerationProvider>
+                </ClientsProvider>
+              </ProductsProvider>
+            </HistoryProvider>
+            </PlansProvider>
+          )}
         </AuthProvider>
         <ImageViewer />
         </ImageViewerProvider>

@@ -7,6 +7,10 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, ProductStudioSession, ProductStudioAngle } from '../../types';
 import { smartDownload } from '../../utils/downloadHelper';
 import { ZoomableImage } from '../ImageViewer';
+import { useAuth } from '../../contexts/AuthContext';
+import { useUI } from '../../contexts/UIContext';
+import { ReportModal } from '../ReportModal';
+import { submitReport } from '../../lib/api/reports';
 
 interface ProductStudioResultProps {
  product: Product;
@@ -69,6 +73,10 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  const [pendingAction, setPendingAction] = useState<'back' | null>(null);
  const [timeAgo, setTimeAgo] = useState('agora');
  const [showReveal, setShowReveal] = useState(true);
+ const [showReportModal, setShowReportModal] = useState(false);
+
+ const { user } = useAuth();
+ const { showToast } = useUI();
 
  // Reveal animation on mount
  useEffect(() => {
@@ -190,6 +198,27 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  shareTitle: 'Vizzu Product Studio',
  shareText: `${product.name} - ${ANGLE_LABELS[currentImage.angle]}`
  });
+ };
+
+ // Report
+ const handleReportSubmit = async (observation: string) => {
+ if (!user || !currentImage?.url) return;
+ const result = await submitReport({
+ userId: user.id,
+ userEmail: user.email || '',
+ userName: user.name || user.email || '',
+ generationType: 'product-studio',
+ generationId: session.id,
+ productName: product.name,
+ generatedImageUrl: currentImage.url,
+ originalImageUrl: originalImage || undefined,
+ observation,
+ });
+ if (result.success) {
+ showToast('Report enviado! Analisaremos em até 24h.', 'success');
+ } else {
+ throw new Error(result.error || 'Erro ao enviar report');
+ }
  };
 
  // Verificar ao sair
@@ -461,7 +490,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  Ações Rápidas
  </p>
 
- <div className="grid grid-cols-4 gap-2">
+ <div className="grid grid-cols-5 gap-2">
  {/* Baixar */}
  <button
  onClick={handleDownload}
@@ -487,6 +516,15 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  >
  <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-expand text-sm'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Ampliar</span>
+ </button>
+
+ {/* Report */}
+ <button
+ onClick={() => setShowReportModal(true)}
+ className={(theme === 'dark' ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 border-amber-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ >
+ <i className="fas fa-flag text-amber-400 text-sm"></i>
+ <span className="text-amber-400 text-[9px]">Report</span>
  </button>
 
  {/* Descartar */}
@@ -612,6 +650,18 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </div>
  </div>
  )}
+
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {/* MODAL - Report */}
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ <ReportModal
+ isOpen={showReportModal}
+ onClose={() => setShowReportModal(false)}
+ onSubmit={handleReportSubmit}
+ generationType="product-studio"
+ productName={product.name}
+ theme={theme}
+ />
 
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* MODAL - Confirmar Exclusão */}
