@@ -311,12 +311,125 @@ function App() {
 
  const checkBackgroundGenerations = async () => {
  try {
- // Buscar IDs já notificados do localStorage
  const notifiedKey = `vizzu_bg_notified_${user.id}`;
  const notifiedIds: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
 
- // Creative Still completados nas últimas 24h
+ // ─── 1. Checar gerações PENDENTES no localStorage ───
+ const pendingInProgress: string[] = []; // páginas com gerações em andamento
+
+ // Product Studio pendente
+ const psPendingRaw = localStorage.getItem('vizzu-pending-product-studio');
+ if (psPendingRaw) {
+ try {
+ const psPending = JSON.parse(psPendingRaw);
+ const elapsedMin = (Date.now() - psPending.startTime) / 1000 / 60;
+ if (elapsedMin > 10) {
+ localStorage.removeItem('vizzu-pending-product-studio');
+ } else {
+ const { data: gen } = await supabase
+ .from('generations')
+ .select('id, status, output_urls')
+ .eq('user_id', user.id)
+ .eq('product_id', psPending.productId)
+ .order('created_at', { ascending: false })
+ .limit(1)
+ .maybeSingle();
+
+ if (gen?.status === 'completed' && gen?.output_urls) {
+ // Já completou — limpar pendente, marcar notificado
+ localStorage.removeItem('vizzu-pending-product-studio');
+ if (!notifiedIds.includes(`ps-${gen.id}`)) {
+ notifiedIds.push(`ps-${gen.id}`);
+ }
+ } else if (gen?.status === 'failed' || gen?.status === 'error') {
+ localStorage.removeItem('vizzu-pending-product-studio');
+ } else {
+ pendingInProgress.push('product-studio');
+ }
+ }
+ } catch { localStorage.removeItem('vizzu-pending-product-studio'); }
+ }
+
+ // Look Composer pendente
+ const lcPendingRaw = localStorage.getItem('vizzu_pending_generation');
+ if (lcPendingRaw) {
+ try {
+ const lcPending = JSON.parse(lcPendingRaw);
+ const elapsedMin = (Date.now() - lcPending.startTime) / 1000 / 60;
+ if (elapsedMin > 5) {
+ localStorage.removeItem('vizzu_pending_generation');
+ } else {
+ const { data: gen } = await supabase
+ .from('generations')
+ .select('id, status, output_image_url')
+ .eq('user_id', user.id)
+ .eq('product_id', lcPending.productId)
+ .eq('type', 'modelo_ia')
+ .order('created_at', { ascending: false })
+ .limit(1)
+ .maybeSingle();
+
+ if (gen?.status === 'completed' && gen?.output_image_url) {
+ localStorage.removeItem('vizzu_pending_generation');
+ if (!notifiedIds.includes(`lc-${gen.id}`)) {
+ notifiedIds.push(`lc-${gen.id}`);
+ }
+ } else if (gen?.status === 'failed' || gen?.status === 'error') {
+ localStorage.removeItem('vizzu_pending_generation');
+ } else {
+ pendingInProgress.push('look-composer');
+ }
+ }
+ } catch { localStorage.removeItem('vizzu_pending_generation'); }
+ }
+
+ // Provador pendente
+ const provPendingRaw = localStorage.getItem('vizzu-pending-provador');
+ if (provPendingRaw) {
+ try {
+ const provPending = JSON.parse(provPendingRaw);
+ const elapsedMin = (Date.now() - provPending.startTime) / 1000 / 60;
+ if (elapsedMin > 10) {
+ localStorage.removeItem('vizzu-pending-provador');
+ } else {
+ const { data: gen } = await supabase
+ .from('generations')
+ .select('id, status, output_image_url')
+ .eq('user_id', user.id)
+ .eq('type', 'provador')
+ .order('created_at', { ascending: false })
+ .limit(1)
+ .maybeSingle();
+
+ if (gen?.status === 'completed' && gen?.output_image_url) {
+ localStorage.removeItem('vizzu-pending-provador');
+ if (!notifiedIds.includes(`prov-${gen.id}`)) {
+ notifiedIds.push(`prov-${gen.id}`);
+ }
+ } else if (gen?.status === 'failed' || gen?.status === 'error') {
+ localStorage.removeItem('vizzu-pending-provador');
+ } else {
+ pendingInProgress.push('provador');
+ }
+ }
+ } catch { localStorage.removeItem('vizzu-pending-provador'); }
+ }
+
+ // Toast para gerações EM ANDAMENTO
+ if (pendingInProgress.length > 0) {
+ const targetPage = pendingInProgress[0];
+ showToast(
+ pendingInProgress.length === 1
+ ? 'Você tem uma geração em andamento...'
+ : `Você tem ${pendingInProgress.length} gerações em andamento...`,
+ 'info',
+ { label: 'Ver', onClick: () => navigateTo(targetPage as any) }
+ );
+ }
+
+ // ─── 2. Checar gerações CONCLUÍDAS nas últimas 24h ───
  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
  const { data: stills } = await supabase
  .from('creative_still_generations')
  .select('id, created_at')
@@ -324,14 +437,12 @@ function App() {
  .eq('status', 'completed')
  .gte('created_at', since);
 
- // Provador (client_looks) completados nas últimas 24h
  const { data: looks } = await supabase
  .from('client_looks')
  .select('id, created_at')
  .eq('user_id', user.id)
  .gte('created_at', since);
 
- // Product Studio (generations com output_urls) completados nas últimas 24h
  const { data: psGenerations } = await supabase
  .from('generations')
  .select('id, created_at')
@@ -340,7 +451,6 @@ function App() {
  .not('output_urls', 'is', null)
  .gte('created_at', since);
 
- // Look Composer (generations com output_image_url, type modelo_ia) completados nas últimas 24h
  const { data: lcGenerations } = await supabase
  .from('generations')
  .select('id, created_at')
@@ -350,7 +460,6 @@ function App() {
  .not('output_image_url', 'is', null)
  .gte('created_at', since);
 
- // Provador (generations com output_image_url, type provador) completados nas últimas 24h
  const { data: provGenerations } = await supabase
  .from('generations')
  .select('id, created_at')
@@ -360,7 +469,7 @@ function App() {
  .not('output_image_url', 'is', null)
  .gte('created_at', since);
 
- // Filtrar apenas os que não foram notificados
+ // Filtrar apenas os que não foram notificados (inclui os marcados na etapa 1)
  const newStills = (stills || []).filter(s => !notifiedIds.includes(`still-${s.id}`));
  const newLooks = (looks || []).filter(l => !notifiedIds.includes(`look-${l.id}`));
  const newPS = (psGenerations || []).filter(g => !notifiedIds.includes(`ps-${g.id}`));
@@ -369,7 +478,6 @@ function App() {
  const total = newStills.length + newLooks.length + newPS.length + newLC.length + newProv.length;
 
  if (total > 0) {
- // Determinar para onde navegar ao clicar "Ver"
  const targetPage = newStills.length > 0 ? 'creative-still'
  : newPS.length > 0 ? 'product-studio'
  : newLC.length > 0 ? 'look-composer'
@@ -381,9 +489,10 @@ function App() {
  'success',
  { label: 'Ver', onClick: () => navigateTo(targetPage as any) }
  );
+ }
 
- // Marcar como notificados
- const newNotified = [
+ // Salvar todos os notificados (inclui os da etapa 1 + etapa 2)
+ const allNotified = [
  ...notifiedIds,
  ...newStills.map(s => `still-${s.id}`),
  ...newLooks.map(l => `look-${l.id}`),
@@ -392,8 +501,7 @@ function App() {
  ...newProv.map(g => `prov-${g.id}`),
  ];
  // Manter apenas últimos 200 para não crescer infinitamente
- localStorage.setItem(notifiedKey, JSON.stringify(newNotified.slice(-200)));
- }
+ localStorage.setItem(notifiedKey, JSON.stringify(allNotified.slice(-200)));
  } catch (e) {
  console.error('Erro ao checar gerações em background:', e);
  }
