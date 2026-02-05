@@ -3,11 +3,31 @@ import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 
-// Lazy loading dos componentes pesados (carrega só quando acessar)
-const VizzuLookComposer = lazy(() => import('./components/LookComposer').then(m => ({ default: m.LookComposer })));
-const ProductStudio = lazy(() => import('./components/ProductStudio').then(m => ({ default: m.ProductStudio })));
-const VizzuProvadorWizard = lazy(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
-const CreativeStill = lazy(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
+// Lazy loading com retry: se o chunk falhar (deploy novo invalidou hash),
+// recarrega a página UMA vez para buscar o manifest atualizado.
+function lazyRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+): React.LazyExoticComponent<T> {
+  return lazy(() =>
+    factory().catch(() => {
+      const key = 'vizzu_chunk_retry';
+      const lastRetry = sessionStorage.getItem(key);
+      const now = Date.now();
+      // Só faz reload se não tentou nos últimos 10s (evita loop infinito)
+      if (!lastRetry || now - Number(lastRetry) > 10000) {
+        sessionStorage.setItem(key, String(now));
+        window.location.reload();
+      }
+      // Fallback: retorna componente vazio enquanto recarrega
+      return { default: (() => null) as unknown as T };
+    })
+  );
+}
+
+const VizzuLookComposer = lazyRetry(() => import('./components/LookComposer').then(m => ({ default: m.LookComposer })));
+const ProductStudio = lazyRetry(() => import('./components/ProductStudio').then(m => ({ default: m.ProductStudio })));
+const VizzuProvadorWizard = lazyRetry(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
+const CreativeStill = lazyRetry(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
 
 import { Product, Client, ClientPhoto, ClientLook, WhatsAppTemplate, LookComposition, SavedModel } from './types';
 import { useUI, type Page } from './contexts/UIContext';
