@@ -66,7 +66,7 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
 
    try {
      if (isSignUp) {
-       const { error } = await supabase.auth.signUp({
+       const { data, error } = await supabase.auth.signUp({
          email,
          password,
          options: {
@@ -74,6 +74,14 @@ export function AuthPage({ onLogin, onDemoMode }: AuthPageProps) {
          }
        });
        if (error) throw error;
+
+       // Supabase retorna identities vazio quando o email já existe (sem dar erro)
+       if (data.user && data.user.identities?.length === 0) {
+         setError('Este email já possui uma conta. Faça login ou use "Esqueci minha senha".');
+         setIsSignUp(false);
+         return;
+       }
+
        setError('✓ Verifique seu email para confirmar o cadastro!');
        setIsSignUp(false);
      } else {
