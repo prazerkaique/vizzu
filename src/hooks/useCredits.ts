@@ -108,18 +108,43 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
 
     try {
       // Buscar créditos da tabela user_credits
-      const { data: creditsRow, error: creditsError } = await supabase
+      let { data: creditsRow, error: creditsError } = await supabase
         .from('user_credits')
         .select('*')
         .eq('user_id', userId)
         .single();
 
       // Buscar assinatura da tabela user_subscriptions
-      const { data: subRow, error: subError } = await supabase
+      let { data: subRow, error: subError } = await supabase
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', userId)
         .single();
+
+      // Fallback: se registros não existem (trigger falhou), cria automaticamente
+      const creditsMissing = !creditsRow && creditsError?.code === 'PGRST116';
+      const subMissing = !subRow && subError?.code === 'PGRST116';
+
+      if (creditsMissing || subMissing) {
+        console.warn('[useCredits] Registros ausentes para', userId, '— executando ensure_user_setup');
+        const { error: setupError } = await supabase.rpc('ensure_user_setup', { p_user_id: userId });
+
+        if (setupError) {
+          console.error('[useCredits] Erro no ensure_user_setup:', setupError);
+        } else {
+          // Refazer queries após criação dos registros
+          if (creditsMissing) {
+            const retry = await supabase.from('user_credits').select('*').eq('user_id', userId).single();
+            creditsRow = retry.data;
+            creditsError = retry.error;
+          }
+          if (subMissing) {
+            const retry = await supabase.from('user_subscriptions').select('*').eq('user_id', userId).single();
+            subRow = retry.data;
+            subError = retry.error;
+          }
+        }
+      }
 
       if (creditsError && creditsError.code !== 'PGRST116') {
         console.error('Error fetching user credits:', creditsError);
