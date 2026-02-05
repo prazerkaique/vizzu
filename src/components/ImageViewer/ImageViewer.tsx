@@ -3,7 +3,6 @@ import { useImageViewer } from './ImageViewerContext';
 import { ZoomableImage } from './ZoomableImage';
 import { getOptimizedImageUrl } from '../../utils/imageUrl';
 import { smartDownload } from '../../utils/downloadHelper';
-import { useSpringAnimation, SPRING } from '../../utils/springAnimation';
 
 export function ImageViewer() {
   const { state, closeViewer } = useImageViewer();
@@ -16,7 +15,6 @@ export function ImageViewer() {
   const [showUI, setShowUI] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
 
-  const springBg = useSpringAnimation();
   const closingRef = useRef(false);
 
   // Open animation
