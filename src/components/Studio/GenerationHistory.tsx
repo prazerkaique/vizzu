@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { VisualStudioGeneration } from '../../types';
 import { smartDownload } from '../../utils/downloadHelper';
 import { OptimizedImage } from '../OptimizedImage';
+import { useImageViewer } from '../ImageViewer';
 
 interface Props {
  generations: VisualStudioGeneration[];
@@ -15,7 +16,7 @@ interface Props {
 
 export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDelete }) => {
  const [isExpanded, setIsExpanded] = useState(true);
- const [zoomImage, setZoomImage] = useState<string | null>(null);
+ const { openViewer } = useImageViewer();
 
  const groupedByDate = generations.reduce((acc, gen) => {
  const date = new Date(gen.createdAt).toLocaleDateString('pt-BR');
@@ -86,7 +87,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  src={gen.generatedImage}
  alt={gen.productName || 'Generated'}
  className="w-full h-full cursor-pointer hover:scale-105 transition-transform"
- onClick={() => setZoomImage(gen.generatedImage)}
+ onClick={() => openViewer(gen.generatedImage, { alt: gen.productName || 'Geração' })}
  size="thumb"
  />
  </div>
@@ -112,7 +113,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  {/* Actions */}
  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center gap-2">
  <button
- onClick={() => setZoomImage(gen.generatedImage)}
+ onClick={() => openViewer(gen.generatedImage, { alt: gen.productName || 'Geração' })}
  className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100"
  title="Ver"
  >
@@ -150,23 +151,6 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  )}
  </div>
 
- {/* Zoom Modal */}
- {zoomImage && (
- <div 
- className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
- onClick={() => setZoomImage(null)}
- >
- <button className="absolute top-4 right-4 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white">
- <i className="fas fa-times text-xl"></i>
- </button>
- <img 
- src={zoomImage} 
- alt="Zoom" 
- className="max-w-full max-h-full rounded-lg "
- onClick={(e) => e.stopPropagation()}
- />
- </div>
- )}
  </>
  );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
+import { useImageViewer } from '../ImageViewer';
 
 const lottieColorStyles = `
  @keyframes stillColorCycle {
@@ -71,6 +72,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  onMinimize,
  isMinimized,
 }) => {
+ const { openViewer } = useImageViewer();
  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
  const [showSaveModal, setShowSaveModal] = useState(false);
  const [templateName, setTemplateName] = useState('');
@@ -327,12 +329,20 @@ export const CreativeStillResults: React.FC<Props> = ({
  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Variação {vNum}</span>
  </div>
  {url && (
+ <div className="flex items-center gap-3">
+ <button
+ onClick={() => openViewer(url, { alt: `Variação ${vNum}` })}
+ className={(isDark ? 'text-neutral-400 hover:text-neutral-300' : 'text-gray-500 hover:text-gray-600') + ' text-xs font-medium'}
+ >
+ <i className="fas fa-search-plus mr-1"></i>Zoom
+ </button>
  <button
  onClick={() => handleDownload(url, vNum)}
  className={(isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-500') + ' text-xs font-medium'}
  >
  <i className="fas fa-download mr-1"></i>Download
  </button>
+ </div>
  )}
  </div>
  </div>

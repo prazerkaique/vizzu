@@ -19,6 +19,13 @@ textarea,
   user-select: text;
 }
 
+/* Image Viewer - lock body scroll while open */
+body.image-viewer-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

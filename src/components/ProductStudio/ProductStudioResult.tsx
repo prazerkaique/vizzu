@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, ProductStudioSession, ProductStudioAngle } from '../../types';
 import { smartDownload } from '../../utils/downloadHelper';
+import { ZoomableImage } from '../ImageViewer';
 
 interface ProductStudioResultProps {
  product: Product;
@@ -543,13 +544,12 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </button>
  </div>
 
- {/* Imagem */}
- <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
- <img
- src={showOriginal ? originalImage : currentImage?.url}
+ {/* Imagem com Pinch-to-Zoom */}
+ <div className="flex-1 overflow-hidden" onClick={e => e.stopPropagation()}>
+ <ZoomableImage
+ src={(showOriginal ? originalImage : currentImage?.url) || ''}
  alt={product.name}
- className="max-w-full max-h-full object-contain"
- onClick={e => e.stopPropagation()}
+ className="w-full h-full"
  />
  </div>
 

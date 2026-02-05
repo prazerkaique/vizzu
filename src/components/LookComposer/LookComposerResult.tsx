@@ -7,6 +7,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, LookComposition, SavedModel } from '../../types';
 import { smartDownload, smartDownloadMultiple } from '../../utils/downloadHelper';
 import { OptimizedImage } from '../OptimizedImage';
+import { ZoomableImage } from '../ImageViewer';
 
 type ExportQuality = 'high' | 'performance';
 
@@ -743,13 +744,12 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </button>
  </div>
 
- {/* Imagem */}
- <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
- <img
- src={displayImage}
+ {/* Imagem com Pinch-to-Zoom */}
+ <div className="flex-1 overflow-hidden" onClick={e => e.stopPropagation()}>
+ <ZoomableImage
+ src={displayImage || ''}
  alt={product.name}
- className="max-w-full max-h-full object-contain"
- onClick={e => e.stopPropagation()}
+ className="w-full h-full"
  />
  </div>
 

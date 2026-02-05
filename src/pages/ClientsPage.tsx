@@ -9,6 +9,7 @@ import { supabase } from '../services/supabaseClient';
 import { sendWhatsAppMessage } from '../lib/api/studio';
 import heic2any from 'heic2any';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { useImageViewer } from '../components/ImageViewer';
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
  { id: 'frente', label: 'Frente', icon: 'fa-user' },
@@ -32,6 +33,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
  setProvadorClient,
 }) => {
  const { theme, navigateTo, showToast, successNotification, setSuccessNotification } = useUI();
+ const { openViewer } = useImageViewer();
  const { user } = useAuth();
  const { clients, setClients, saveClientToSupabase, deleteClientFromSupabase, uploadClientPhoto, saveClientPhotoToDb, getClientPhoto } = useClients();
  const { addHistoryLog } = useHistory();
@@ -796,8 +798,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
             <OptimizedImage
              src={look.imageUrl}
              alt="Look"
-             className="w-full aspect-[3/4] rounded-lg border border-neutral-700 cursor-pointer hover:border-neutral-500 transition-colors"
-             onClick={() => window.open(look.imageUrl, '_blank')}
+             className="w-full aspect-[3/4] rounded-lg border border-neutral-700 cursor-zoom-in hover:border-neutral-500 transition-colors"
+             onClick={() => openViewer(look.imageUrl, { alt: 'Look' })}
              size="preview"
             />
             <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">

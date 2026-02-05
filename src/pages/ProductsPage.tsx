@@ -9,6 +9,7 @@ import { BulkImportModal } from '../components/BulkImportModal';
 import { analyzeProductImage } from '../lib/api/studio';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES } from '../types';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { useImageViewer } from '../components/ImageViewer';
 import heic2any from 'heic2any';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
 
@@ -44,6 +45,7 @@ interface ProductsPageProps {
 }
 
 export function ProductsPage({ productForCreation, setProductForCreation }: ProductsPageProps) {
+  const { openViewer } = useImageViewer();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
   const [showOptimizedImage, setShowOptimizedImage] = useState(true);
@@ -1130,7 +1132,14 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  )}
 
  {/* Imagem principal */}
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden mb-4 relative'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl overflow-hidden mb-4 relative cursor-zoom-in'}
+ onClick={() => {
+ const imgSrc = isProductOptimized(showProductDetail) && showOptimizedImage
+ ? getProductDisplayImage(showProductDetail)
+ : (getOriginalImages(showProductDetail)[0]?.url || showProductDetail.images[0]?.base64 || showProductDetail.images[0]?.url);
+ if (imgSrc) openViewer(imgSrc, { alt: showProductDetail.name });
+ }}
+ >
  <img
  src={
  isProductOptimized(showProductDetail) && showOptimizedImage
@@ -1193,7 +1202,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </p>
  <div className="grid grid-cols-4 gap-2">
  {getOptimizedImages(showProductDetail).map((img, idx) => (
- <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative group'}>
+ <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative group cursor-zoom-in'}
+ onClick={() => openViewer(img.url, { alt: `Otimizada ${img.angle}` })}
+ >
  <OptimizedImage src={img.url} size="preview" alt={`Otimizada ${img.angle}`} className="w-full aspect-square" />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
  <p className="text-white text-[7px] font-medium text-center capitalize">
@@ -1220,7 +1231,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </p>
  <div className="grid grid-cols-4 gap-2">
  {getOriginalImages(showProductDetail).map((img, idx) => (
- <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative'}>
+ <div key={idx} className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-lg overflow-hidden relative cursor-zoom-in'}
+ onClick={() => openViewer(img.url, { alt: img.label })}
+ >
  <OptimizedImage src={img.url} size="preview" alt={img.label} className="w-full aspect-square" />
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
  <p className="text-white text-[7px] font-medium text-center">{img.label}</p>

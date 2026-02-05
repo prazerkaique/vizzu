@@ -9,12 +9,14 @@ import { ProductsProvider } from './contexts/ProductsContext'
 import { ClientsProvider } from './contexts/ClientsContext'
 import { GenerationProvider } from './contexts/GenerationContext'
 import { PlansProvider } from './contexts/PlansContext'
+import { ImageViewerProvider, ImageViewer } from './components/ImageViewer'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <UIProvider>
+        <ImageViewerProvider>
         <AuthProvider>
           <PlansProvider>
           <HistoryProvider>
@@ -28,6 +30,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </HistoryProvider>
           </PlansProvider>
         </AuthProvider>
+        <ImageViewer />
+        </ImageViewerProvider>
       </UIProvider>
     </ErrorBoundary>
   </React.StrictMode>,

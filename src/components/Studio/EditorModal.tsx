@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect } from 'react';
+import { useImageViewer } from '../ImageViewer';
 import { Product, ProductImage, SavedModelProfile, LookComposition, Client, GeneratedImageSet, CompanySettings, CATEGORY_ATTRIBUTES } from '../../types';
 import { optimizeImage } from '../../utils/imageOptimizer';
 import { LookComposer } from './LookComposer';
@@ -238,7 +239,7 @@ export const EditorModal: React.FC<Props> = ({
  const [newModelName, setNewModelName] = useState('');
  const [showRefine, setShowRefine] = useState(false);
  const [refinePrompt, setRefinePrompt] = useState('');
- const [zoom, setZoom] = useState<string|null>(null);
+ const { openViewer } = useImageViewer();
 
  // Delete Generation Modal
  const [showDeleteGenModal, setShowDeleteGenModal] = useState(false);
@@ -649,7 +650,7 @@ const handleSave = async () => {
  {/* Main Image */}
  <div className="absolute inset-0 flex items-center justify-center p-8">
  {displayImage ? (
- <img src={displayImage} alt={product.name} className="max-w-full max-h-full object-contain rounded-lg cursor-zoom-in" onClick={() => setZoom(displayImage)} />
+ <img src={displayImage} alt={product.name} className="max-w-full max-h-full object-contain rounded-lg cursor-zoom-in" onClick={() => openViewer(displayImage, { alt: product.name })} />
  ) : (
  <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <i className={`fas fa-image text-4xl ${isDark ? 'text-neutral-700' : 'text-gray-400'}`}></i>
@@ -1536,15 +1537,6 @@ const handleSave = async () => {
  {/* MODALS */}
  {/* ═══════════════════════════════════════════════════════════ */}
  
- {/* Zoom Modal */}
- {zoom && (
- <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4" onClick={() => setZoom(null)}>
- <img src={zoom} alt="Zoom" className="max-w-full max-h-full object-contain" />
- <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-times"></i>
- </button>
- </div>
- )}
 
  {/* Save Model Modal */}
  {showSaveModal && (
