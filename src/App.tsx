@@ -384,6 +384,18 @@ function App() {
  return () => clearTimeout(timeout);
  }, [user?.id]);
 
+ // Sincronizar créditos com Supabase quando uma geração termina
+ const wasGeneratingRef = useRef(false);
+ useEffect(() => {
+ if (isAnyGenerationRunning) {
+   wasGeneratingRef.current = true;
+ } else if (wasGeneratingRef.current) {
+   // Geração acabou de terminar — resincronizar saldo real
+   wasGeneratingRef.current = false;
+   setTimeout(() => refreshBilling(), 2000);
+ }
+ }, [isAnyGenerationRunning, refreshBilling]);
+
  // Fechar modais com Esc
  useEffect(() => {
  const handleEsc = (e: KeyboardEvent) => {

@@ -101,6 +101,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
+    // Limpar cache local para evitar dados de outra conta ao relogar
+    localStorage.removeItem('vizzu_credits_data');
+    localStorage.removeItem('vizzu_last_user_id');
+    localStorage.removeItem('vizzu_clients');
+    localStorage.removeItem('vizzu_history');
+    localStorage.removeItem('vizzu_company_settings');
     setUser(null);
     setIsAuthenticated(false);
   }, []);
