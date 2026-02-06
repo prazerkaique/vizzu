@@ -73,7 +73,13 @@ interface GenerationContextType {
 
 const GenerationContext = createContext<GenerationContextType | null>(null);
 
+// BroadcastChannel para sincronizar estado entre abas (v9 4.2)
+const GENERATION_CHANNEL = 'vizzu-generation-sync';
+
 export function GenerationProvider({ children }: { children: React.ReactNode }) {
+ // Geração em outra aba (recebido via BroadcastChannel)
+ const [otherTabGenerating, setOtherTabGenerating] = useState(false);
+
  // Product Studio
  const [isGeneratingProductStudio, setIsGeneratingProductStudio] = useState(false);
  const [productStudioMinimized, setProductStudioMinimized] = useState(false);
@@ -146,7 +152,39 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  }, [isGeneratingProvador]);
 
  const provadorLoadingText = PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...';
- const isAnyGenerationRunning = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer || isGeneratingCreativeStill;
+ const localGenerating = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer || isGeneratingCreativeStill;
+
+ // BroadcastChannel: sincronizar estado de geração entre abas
+ useEffect(() => {
+   if (typeof BroadcastChannel === 'undefined') return; // SSR/fallback
+
+   const channel = new BroadcastChannel(GENERATION_CHANNEL);
+
+   channel.onmessage = (event) => {
+     if (event.data?.type === 'generation_started') {
+       setOtherTabGenerating(true);
+     } else if (event.data?.type === 'generation_completed') {
+       setOtherTabGenerating(false);
+     }
+   };
+
+   return () => channel.close();
+ }, []);
+
+ // Broadcast quando estado de geração local muda
+ useEffect(() => {
+   if (typeof BroadcastChannel === 'undefined') return;
+
+   try {
+     const channel = new BroadcastChannel(GENERATION_CHANNEL);
+     channel.postMessage({
+       type: localGenerating ? 'generation_started' : 'generation_completed',
+     });
+     channel.close();
+   } catch { /* ignore */ }
+ }, [localGenerating]);
+
+ const isAnyGenerationRunning = localGenerating || otherTabGenerating;
 
  return (
    <GenerationContext.Provider value={{

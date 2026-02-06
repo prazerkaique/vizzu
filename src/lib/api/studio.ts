@@ -151,11 +151,29 @@ export interface ProductStudioV2Response {
   success: boolean;
   results?: ProductStudioV2Result[];
   generation_id?: string;
+  // v9: resposta imediata com status 'processing'
+  status?: 'processing' | 'completed' | 'partial' | 'failed';
+  angles?: string[];
   credits_used?: number;
   credits_remaining?: number;
   error?: string;
   message?: string;
   _serverTimeout?: boolean;
+}
+
+// Resultado do polling incremental por ângulo
+export interface StudioAngleStatus {
+  angle: string;
+  url?: string;
+  id?: string;
+  status: 'completed' | 'failed';
+  error?: string;
+}
+
+export interface StudioPollResult {
+  generationStatus: 'processing' | 'completed' | 'partial' | 'failed' | 'unknown';
+  completedAngles: StudioAngleStatus[];
+  error_message?: string;
 }
 
 /**
@@ -222,6 +240,149 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
   }
 
   return data;
+}
+
+/**
+ * Polling incremental para Product Studio v9
+ * Consulta generations.output_urls e status para acompanhar progresso por ângulo
+ */
+export async function pollStudioGeneration(generationId: string): Promise<StudioPollResult> {
+  let result = await supabase
+    .from('generations')
+    .select('id, status, output_urls, error_message')
+    .eq('id', generationId)
+    .single();
+
+  // Se erro de autenticação, tentar refresh do token
+  if (result.error) {
+    const errMsg = result.error.message || '';
+    if (errMsg.includes('JWT') || errMsg.includes('expired') || (result.error as any).code === 'PGRST301') {
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        return { generationStatus: 'unknown', completedAngles: [], error_message: 'Sessão expirada. Faça login novamente.' };
+      }
+      // Retry após refresh
+      result = await supabase
+        .from('generations')
+        .select('id, status, output_urls, error_message')
+        .eq('id', generationId)
+        .single();
+    }
+  }
+
+  const generation = result.data;
+  if (result.error || !generation) {
+    return { generationStatus: 'unknown', completedAngles: [] };
+  }
+
+  // output_urls é atualizado incrementalmente pelo v9
+  const outputUrls = generation.output_urls as StudioAngleStatus[] | null;
+  const completedAngles: StudioAngleStatus[] = [];
+
+  if (outputUrls && Array.isArray(outputUrls)) {
+    for (const item of outputUrls) {
+      completedAngles.push({
+        angle: item.angle,
+        url: item.url,
+        id: item.id,
+        status: item.status || 'completed',
+      });
+    }
+  }
+
+  // Mapear status da generation
+  let generationStatus: StudioPollResult['generationStatus'] = 'processing';
+  if (generation.status === 'completed') generationStatus = 'completed';
+  else if (generation.status === 'partial') generationStatus = 'partial';
+  else if (generation.status === 'failed' || generation.status === 'error') generationStatus = 'failed';
+  else if (generation.status === 'processing') generationStatus = 'processing';
+
+  return {
+    generationStatus,
+    completedAngles,
+    error_message: generation.error_message || undefined,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RETRY INDIVIDUAL DE ÂNGULO (v9 Fase 3)
+// ═══════════════════════════════════════════════════════════════
+
+interface RetryStudioAngleParams {
+  productId: string;
+  userId: string;
+  angle: string;
+  generationId: string;
+  frontStudioUrl: string;
+  presentationStyle?: ProductPresentationStyle;
+  fabricFinish?: FabricFinish;
+  productInfo?: {
+    name?: string;
+    category?: string;
+    description?: string;
+  };
+  resolution?: '2k' | '4k';
+}
+
+interface RetryStudioAngleResponse {
+  success: boolean;
+  url?: string;
+  id?: string;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Retry de um ângulo individual que falhou
+ * Chama /vizzu/studio/angle diretamente
+ * Custo: gratuito (créditos já debitados na geração original)
+ */
+export async function retryStudioAngle(params: RetryStudioAngleParams): Promise<RetryStudioAngleResponse> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/angle`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product_id: params.productId,
+        user_id: params.userId,
+        angle: params.angle,
+        generation_id: params.generationId,
+        front_studio_url: params.frontStudioUrl,
+        presentation_style: params.presentationStyle || 'ghost-mannequin',
+        product_name: params.productInfo?.name,
+        product_category: params.productInfo?.category,
+        product_description: params.productInfo?.description,
+        fabric_finish: params.fabricFinish || 'natural',
+        resolution: params.resolution || '2k',
+      }),
+    });
+
+    if (response.status === 502 || response.status === 504) {
+      return { success: false, error: 'Timeout do servidor. Tente novamente.' };
+    }
+
+    const text = await response.text();
+    if (!text) {
+      return { success: false, error: 'Resposta vazia do servidor.' };
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Erro ao regenerar ângulo.' };
+    }
+
+    return data;
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════

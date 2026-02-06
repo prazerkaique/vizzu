@@ -2,10 +2,10 @@
 // VIZZU - Product Studio Editor (Página 2)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
-import { generateProductStudioV2, ProductPresentationStyle, FabricFinish } from '../../lib/api/studio';
+import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, ProductPresentationStyle, FabricFinish, StudioAngleStatus } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 import { smartDownload } from '../../utils/downloadHelper';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
@@ -13,6 +13,9 @@ import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, g
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import { OptimizedImage } from '../OptimizedImage';
 import { supabase } from '../../services/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
+import { ReportModal } from '../ReportModal';
+import { submitReport } from '../../lib/api/reports';
 
 // ═══════════════════════════════════════════════════════════════
 // PENDING GENERATION (sobrevive ao F5 / fechamento do app)
@@ -25,6 +28,7 @@ interface PendingProductStudioGeneration {
   userId: string;
   startTime: number;
   angles: string[];
+  generationId?: string; // v9: ID da geração para polling incremental
 }
 
 const savePendingPSGeneration = (data: PendingProductStudioGeneration) => {
@@ -105,10 +109,10 @@ const CLOTHING_CATEGORIES = [
 ];
 
 // Categorias de calçados
-const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas'];
+const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'];
 
-// Categorias de acessórios
-const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Bolsas', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
+// Categorias de acessórios (inclui cabeça — sem ghost mannequin/flat lay)
+const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Bolsas', 'Mochilas', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
 // Ângulos por tipo de produto
 const ANGLES_CONFIG = {
@@ -210,6 +214,26 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Verificar se plano permite 4K
  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
 
+ // v9: Ângulos completados pelo polling incremental (atualizado em tempo real)
+ const [completedAngleStatuses, setCompletedAngleStatuses] = useState<StudioAngleStatus[]>([]);
+ const [generationFinalStatus, setGenerationFinalStatus] = useState<'processing' | 'completed' | 'partial' | 'failed' | null>(null);
+
+ // Lock instantâneo para prevenir clique duplo (v9 4.1)
+ const [isSubmitting, setIsSubmitting] = useState(false);
+
+ // v9 3.1: Retry individual de ângulos que falharam
+ const [retryAttempts, setRetryAttempts] = useState<Record<string, number>>({});
+ const [retryingAngle, setRetryingAngle] = useState<string | null>(null);
+ // v9 3.2: Report de problema
+ const [showReportModal, setShowReportModal] = useState(false);
+ const [reportAngle, setReportAngle] = useState<string | null>(null);
+ // Ref para status final (evitar stale closure no polling)
+ const generationFinalStatusRef = useRef<string | null>(null);
+ // ID da geração atual (sobrevive ao cleanup do polling)
+ const [currentGenerationId, setCurrentGenerationId] = useState<string | null>(null);
+
+ const { user: authUser } = useAuth();
+
  // Usar estado global se disponível, senão local
  const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
  const currentProgress = onSetProgress ? generationProgress : localProgress;
@@ -218,6 +242,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // ═══════════════════════════════════════════════════════════════
  // VERIFICAR GERAÇÃO PENDENTE AO CARREGAR (sobrevive ao F5)
  // ═══════════════════════════════════════════════════════════════
+ // Polling incremental v9: usa generationId direto
+ // Retorna 'polling' para continuar, 'completed' para parar (tudo pronto ou falha total)
  const checkPendingPSGeneration = useCallback(async (): Promise<'polling' | 'completed'> => {
  const pending = getPendingPSGeneration();
  if (!pending || !userId) return 'polling';
@@ -226,11 +252,85 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
  if (elapsedMinutes > 10) {
  clearPendingPSGeneration();
- return 'completed'; // Para parar o polling
+ generationFinalStatusRef.current = 'failed';
+ setGenerationFinalStatus('failed');
+ return 'completed';
  }
 
  try {
- // Buscar geração mais recente — aceitar qualquer status desde que tenha output_urls
+ // v9: polling por generationId (incremental)
+ if (pending.generationId) {
+ const pollResult = await pollStudioGeneration(pending.generationId);
+
+ // Atualizar ângulos completados (UI reflete em tempo real)
+ if (pollResult.completedAngles.length > 0) {
+   setCompletedAngleStatuses(pollResult.completedAngles);
+ }
+
+ // Calcular progresso real: ângulos prontos / total
+ const totalAngles = pending.angles.length;
+ const doneAngles = pollResult.completedAngles.filter(a => a.status === 'completed').length;
+ const realProgress = Math.round((doneAngles / totalAngles) * 95);
+ const setProgress = onSetProgress || setLocalProgress;
+ setProgress(Math.max(realProgress, 5)); // mínimo 5% enquanto processa
+
+ // Geração terminou (completed, partial, ou failed)?
+ if (pollResult.generationStatus === 'completed' || pollResult.generationStatus === 'partial' || pollResult.generationStatus === 'failed') {
+   generationFinalStatusRef.current = pollResult.generationStatus;
+   setGenerationFinalStatus(pollResult.generationStatus);
+   setCurrentGenerationId(pending.generationId || null);
+   clearPendingPSGeneration();
+
+   const successAngles = pollResult.completedAngles.filter(a => a.status === 'completed');
+
+   if (successAngles.length > 0) {
+     const newImages: ProductStudioImage[] = successAngles.map((item, idx) => ({
+       id: item.id || `${pending.generationId}-${idx}`,
+       url: item.url!,
+       angle: (item.angle || 'front') as ProductStudioAngle,
+       createdAt: new Date().toISOString()
+     }));
+
+     const sessionId = pending.generationId!;
+     const newSession: ProductStudioSession = {
+       id: sessionId,
+       productId: product.id,
+       images: newImages,
+       status: 'ready',
+       createdAt: new Date().toISOString()
+     };
+
+     const currentGenerated = product.generatedImages || {
+       studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
+     };
+     onUpdateProduct(product.id, {
+       generatedImages: {
+         ...currentGenerated,
+         productStudio: [...(currentGenerated.productStudio || []), newSession]
+       }
+     });
+
+     const notifiedKey = `vizzu_bg_notified_${userId}`;
+     const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+     notified.push(`ps-${sessionId}`);
+     localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+
+     setCurrentSession(newSession);
+
+     // Só mostrar resultado automaticamente se TODOS os ângulos geraram com sucesso
+     // Se parcial/falha, manter modal aberto para retry/report (v9 3.1)
+     if (pollResult.generationStatus === 'completed') {
+       setShowResult(true);
+     }
+   }
+
+   return 'completed';
+ }
+
+ return 'polling';
+ }
+
+ // Fallback v8: polling por user_id + product_id (sem generationId)
  const { data: generation, error } = await supabase
  .from('generations')
  .select('id, status, output_urls')
@@ -240,26 +340,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  .limit(1)
  .single();
 
- if (error || !generation) {
- console.log('[Polling] Sem geração encontrada, continuando...');
- return 'polling';
- }
+ if (error || !generation) return 'polling';
 
- // Aceitar se output_urls tem dados (independente do status)
  const hasResults = generation.output_urls &&
  (Array.isArray(generation.output_urls) ? generation.output_urls.length > 0 : true);
-
- if (!hasResults) {
- console.log('[Polling] Geração encontrada mas sem output_urls, status:', generation.status);
- return 'polling';
- }
-
- console.log('[Polling] Geração completa! Status:', generation.status, 'URLs:',
- Array.isArray(generation.output_urls) ? generation.output_urls.length : 'object');
+ if (!hasResults) return 'polling';
 
  clearPendingPSGeneration();
 
- // Converter output_urls para ProductStudioImage[]
  const urls = generation.output_urls as Array<{ angle: string; url: string; id?: string }>;
  const newImages: ProductStudioImage[] = (Array.isArray(urls) ? urls : []).map((item, idx) => ({
  id: item.id || `${generation.id}-${idx}`,
@@ -268,21 +356,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  createdAt: new Date().toISOString()
  }));
 
- if (newImages.length === 0) {
- console.warn('[Polling] output_urls não tem imagens válidas');
- return 'polling';
- }
+ if (newImages.length === 0) return 'polling';
 
- const sessionId = generation.id;
  const newSession: ProductStudioSession = {
- id: sessionId,
+ id: generation.id,
  productId: product.id,
  images: newImages,
  status: 'ready',
  createdAt: new Date().toISOString()
  };
 
- // Salvar no produto
  const currentGenerated = product.generatedImages || {
  studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
  };
@@ -293,7 +376,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  });
 
- // Marcar como notificado
  const notifiedKey = `vizzu_bg_notified_${userId}`;
  const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
  notified.push(`ps-${generation.id}`);
@@ -308,7 +390,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  }, [userId, product.id]);
 
- // Polling de geração pendente ao montar
+ // Polling de geração pendente ao montar (F5 / refresh durante geração)
  useEffect(() => {
  const pending = getPendingPSGeneration();
  if (!pending || !userId || pending.productId !== product.id) return;
@@ -317,33 +399,29 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const setProgress = onSetProgress || setLocalProgress;
 
  setGenerating(true);
+ setProgress(10);
 
- // Calcular progresso estimado (~60s por ângulo)
- const elapsedMs = Date.now() - pending.startTime;
- const angleCount = pending.angles?.length || 1;
- const estimatedDurationMs = Math.max(90, angleCount * 60) * 1000;
- const estimatedProgress = Math.min(95, Math.floor((elapsedMs / estimatedDurationMs) * 100));
- setProgress(estimatedProgress);
+ // Restaurar ângulos selecionados da geração pendente
+ if (pending.angles?.length > 0) {
+ setSelectedAngles(pending.angles as ProductStudioAngle[]);
+ }
 
- // Polling a cada 5 segundos
+ // Polling a cada 3s (v9 é mais rápido pois busca por generationId)
  const interval = setInterval(async () => {
  const result = await checkPendingPSGeneration();
  if (result === 'completed') {
  clearInterval(interval);
- setGenerating(false);
- setProgress(0);
- if (onSetMinimized) onSetMinimized(false);
+ setProgress(100);
+ setTimeout(() => {
+   setGenerating(false);
+   setProgress(0);
+   if (onSetMinimized) onSetMinimized(false);
+ }, 1000);
  }
- }, 5000);
-
- // Progresso linear enquanto polling
- const progressInterval = setInterval(() => {
- setProgress(prev => Math.min(95, prev + 1));
  }, 3000);
 
  return () => {
  clearInterval(interval);
- clearInterval(progressInterval);
  };
  }, [userId, product.id]);
 
@@ -367,11 +445,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }, [phraseIndex, isGenerating, onSetLoadingText]);
 
  // Determinar tipo de produto baseado na categoria
+ // Usa check POSITIVO: so mostra Ghost Mannequin/Flat Lay para roupas explicitamente listadas
+ // Categorias desconhecidas caem como 'accessory' (sem opcao de estilo) por seguranca
  const getProductType = (): 'clothing' | 'footwear' | 'accessory' => {
  const category = editedProduct.category || product.category || '';
+ if (CLOTHING_CATEGORIES.includes(category)) return 'clothing';
  if (FOOTWEAR_CATEGORIES.includes(category)) return 'footwear';
- if (ACCESSORY_CATEGORIES.includes(category)) return 'accessory';
- return 'clothing';
+ return 'accessory';
  };
 
  const productType = getProductType();
@@ -846,39 +926,81 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  };
 
+ // Iniciar polling incremental (usado tanto por v9 direto quanto por fallback)
+ const startIncrementalPolling = useCallback(() => {
+ const pollStart = Date.now();
+ const maxPollMs = 5 * 60 * 1000; // 5 minutos
+
+ const pollInterval = setInterval(async () => {
+ if (Date.now() - pollStart > maxPollMs) {
+   console.warn('[Studio] Polling timeout — parando após 5 minutos');
+   clearInterval(pollInterval);
+   clearPendingPSGeneration();
+   setGenerationFinalStatus('failed');
+   const setGen = onSetGenerating || setLocalIsGenerating;
+   const setProg = onSetProgress || setLocalProgress;
+   setGen(false);
+   setProg(0);
+   if (onSetMinimized) onSetMinimized(false);
+   return;
+ }
+ const result = await checkPendingPSGeneration();
+ if (result === 'completed') {
+   clearInterval(pollInterval);
+   const setGen = onSetGenerating || setLocalIsGenerating;
+   const setProg = onSetProgress || setLocalProgress;
+   setProg(100);
+
+   const hasFailed = generationFinalStatusRef.current === 'partial' || generationFinalStatusRef.current === 'failed';
+   if (hasFailed) {
+     // Manter modal aberto para retry/report (v9 3.1)
+     setIsSubmitting(false);
+   } else {
+     // Tudo OK — fechar após mostrar 100%
+     setTimeout(() => {
+       setGen(false);
+       setProg(0);
+       if (onSetMinimized) onSetMinimized(false);
+     }, 1000);
+   }
+ }
+ }, 3000); // v9: poll a cada 3s (mais rápido que v8)
+
+ return pollInterval;
+ }, [checkPendingPSGeneration, onSetGenerating, onSetMinimized, onSetProgress]);
+
  // Gerar imagens
  const handleGenerate = async () => {
  if (selectedAngles.length === 0) return;
 
+ // Lock instantâneo — previne clique duplo no MESMO tick
+ if (isSubmitting) return;
+ setIsSubmitting(true);
+
  // Verificar se há alguma geração rodando
  if (isAnyGenerationRunning) {
+ setIsSubmitting(false);
  alert('Aguarde a geração atual terminar antes de iniciar uma nova.');
  return;
  }
 
  // Verificar créditos
  if (onCheckCredits && !onCheckCredits(creditsNeeded, 'studio')) {
+ setIsSubmitting(false);
  return;
  }
 
  // Obter os IDs das imagens originais para TODOS os ângulos disponíveis
  const imageIds: Record<string, string | undefined> = {};
 
- // Função auxiliar para obter ID de uma imagem
  const getImageId = (img: { id?: string; url?: string } | undefined): string | undefined => {
  if (!img) return undefined;
- // Prioriza o ID, mas se não tiver, tenta extrair do URL ou usa a URL como fallback
  if (img.id) return img.id;
  return undefined;
  };
 
- // Front (obrigatório)
  imageIds.front = getImageId(product.originalImages?.front) || getImageId(product.images?.[0]);
-
- // Back
  imageIds.back = getImageId(product.originalImages?.back) || getImageId(product.images?.[1]);
-
- // Outros ângulos
  imageIds['side-left'] = getImageId(product.originalImages?.['side-left']);
  imageIds['side-right'] = getImageId(product.originalImages?.['side-right']);
  imageIds.top = getImageId(product.originalImages?.top);
@@ -887,6 +1009,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  imageIds['45-right'] = getImageId(product.originalImages?.['45-right']);
 
  if (!imageIds.front || !userId) {
+ setIsSubmitting(false);
  alert('Erro: Imagem frontal ou usuário não encontrado.');
  return;
  }
@@ -896,10 +1019,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const setProgress = onSetProgress || setLocalProgress;
 
  setGenerating(true);
- setProgress(0);
+ setProgress(5);
  setPhraseIndex(0);
+ setCompletedAngleStatuses([]);
+ setGenerationFinalStatus(null);
+ generationFinalStatusRef.current = null;
+ setRetryAttempts({});
+ setRetryingAngle(null);
+ setCurrentGenerationId(null);
 
- // Salvar geração pendente no localStorage (sobrevive ao F5 / fechamento)
+ // Salvar geração pendente (sem generationId por enquanto — será atualizado após resposta)
  savePendingPSGeneration({
  productId: product.id,
  productName: product.name,
@@ -908,22 +1037,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  angles: selectedAngles,
  });
 
- let waitingForPolling = false;
-
  try {
- // Progresso de 0 a 95% — duração baseada no número de ângulos
- // ~60s por ângulo (Gemini leva 60-180s por imagem)
- const totalDuration = Math.max(90000, selectedAngles.length * 60000);
- const intervalMs = 1000; // atualiza a cada 1 segundo
- const maxProgress = 95; // para em 95% até a API responder
- let elapsed = 0;
- const progressInterval = setInterval(() => {
- elapsed += intervalMs;
- const progress = Math.min(Math.round((elapsed / totalDuration) * maxProgress), maxProgress);
- setProgress(progress);
- }, intervalMs);
-
- // Montar objeto de referências (excluindo front que já vai no imageId)
+ // Montar objeto de referências
  const referenceImages: Record<string, string> = {};
  if (imageIds.back) referenceImages.back = imageIds.back;
  if (imageIds['side-left']) referenceImages['side-left'] = imageIds['side-left'];
@@ -933,80 +1048,73 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (imageIds.top) referenceImages.top = imageIds.top;
  if (imageIds.detail) referenceImages.detail = imageIds.detail;
 
- // Chamar a API real
+ // Chamar a API
  const response = await generateProductStudioV2({
  productId: product.id,
  userId: userId,
  imageId: imageIds.front!,
  referenceImages: Object.keys(referenceImages).length > 0 ? referenceImages : undefined,
  angles: selectedAngles,
- // Estilo de apresentação (Ghost Mannequin ou Flat Lay)
  presentationStyle,
- // Acabamento do tecido (só relevante para flat-lay)
  fabricFinish: presentationStyle === 'flat-lay' ? fabricFinish : 'natural',
- // Informações do produto para instruções do prompt
  productInfo: {
  name: product.name,
  category: product.category || editedProduct.category,
  description: product.description || editedProduct.description,
  },
- // Resolução da imagem (2k ou 4k)
  resolution,
  });
 
- clearInterval(progressInterval);
+ // ═══ v9: Resposta imediata com generation_id + status 'processing' ═══
+ if (response.success && response.generation_id && response.status === 'processing') {
+ console.log('[Studio v9] Resposta imediata! generation_id:', response.generation_id);
 
- // Se o webhook deu timeout (502/504), o workflow continua no servidor
- // Mantemos o pending e iniciamos polling para recuperar o resultado
+ // Atualizar pending com o generationId real
+ savePendingPSGeneration({
+   productId: product.id,
+   productName: product.name,
+   userId: userId!,
+   startTime: Date.now(),
+   angles: selectedAngles,
+   generationId: response.generation_id,
+ });
+
+ setProgress(10);
+
+ // Iniciar polling incremental
+ startIncrementalPolling();
+
+ // Log de histórico
+ if (onAddHistoryLog) {
+   onAddHistoryLog(
+     'Product Studio',
+     `Geração iniciada: ${selectedAngles.length} fotos de "${product.name}"`,
+     'success',
+     [product],
+     'ai',
+     response.credits_used || creditsNeeded
+   );
+ }
+
+ return; // Não limpar generating — polling cuida disso
+ }
+
+ // ═══ Fallback v8: webhook timeout (502/504) ═══
  if ((response as any)._serverTimeout) {
- console.warn('[Studio] Webhook timeout — iniciando polling para recuperar resultado');
- waitingForPolling = true;
-
- const pollStart = Date.now();
- const maxPollMs = 5 * 60 * 1000; // 5 minutos máximo de polling
-
- // Iniciar polling manualmente (o useEffect de mount não vai re-rodar)
- const pollInterval = setInterval(async () => {
- // Timeout máximo do polling
- if (Date.now() - pollStart > maxPollMs) {
- console.warn('[Studio] Polling timeout — parando após 5 minutos');
- clearInterval(pollInterval);
- clearInterval(pollProgressInterval);
- clearPendingPSGeneration();
- const setGen = onSetGenerating || setLocalIsGenerating;
- const setProg = onSetProgress || setLocalProgress;
- setGen(false);
- setProg(0);
- if (onSetMinimized) onSetMinimized(false);
- return;
- }
- const result = await checkPendingPSGeneration();
- if (result === 'completed') {
- clearInterval(pollInterval);
- clearInterval(pollProgressInterval);
- const setGen = onSetGenerating || setLocalIsGenerating;
- const setProg = onSetProgress || setLocalProgress;
- setGen(false);
- setProg(0);
- if (onSetMinimized) onSetMinimized(false);
- }
- }, 5000);
- // Progresso lento enquanto aguarda polling
- const pollProgressInterval = setInterval(() => {
- setProgress(prev => Math.min(95, prev + 1));
- }, 5000);
-
+ console.warn('[Studio v8] Webhook timeout — iniciando polling fallback');
+ startIncrementalPolling();
  return;
  }
 
+ // ═══ Fallback v8: resposta completa (todos os resultados de uma vez) ═══
  clearPendingPSGeneration();
- setProgress(95);
 
  if (!response.success || !response.results) {
  throw new Error(response.message || 'Erro ao gerar imagens');
  }
 
- // Converter resposta da API para ProductStudioImage[]
+ setProgress(95);
+
  const newImages: ProductStudioImage[] = response.results.map((result) => ({
  id: result.id,
  url: result.url,
@@ -1016,7 +1124,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  setProgress(100);
 
- // Log de histórico
  if (onAddHistoryLog) {
  onAddHistoryLog(
  'Product Studio',
@@ -1028,7 +1135,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  );
  }
 
- // Atualizar produto com as imagens geradas
  const sessionId = response.generation_id || `session-${Date.now()}`;
  const newSession: ProductStudioSession = {
  id: sessionId,
@@ -1039,10 +1145,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  };
 
  const currentGenerated = product.generatedImages || {
- studioReady: [],
- cenarioCriativo: [],
- modeloIA: [],
- productStudio: []
+ studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
  };
 
  onUpdateProduct(product.id, {
@@ -1052,7 +1155,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  });
 
- // Marcar como notificado (para não mostrar toast no startup check)
  if (userId) {
  const notifiedKey = `vizzu_bg_notified_${userId}`;
  const notified = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
@@ -1060,50 +1162,25 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
  }
 
- // Mostrar página de resultado
  setCurrentSession(newSession);
  setShowResult(true);
-
- // Limpar seleção após sucesso (front sempre fica)
  setSelectedAngles(['front']);
 
+ setIsSubmitting(false);
+ setGenerating(false);
+ setProgress(0);
+ if (onSetMinimized) onSetMinimized(false);
+
  } catch (error) {
- // Se foi interrupção de rede (F5/fechamento), manter pending key — a geração pode estar rodando no servidor
  const msg = error instanceof Error ? error.message : '';
  const isNetworkAbort = msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError') || msg.includes('AbortError');
 
  if (isNetworkAbort) {
- console.warn('Geração interrompida por rede — iniciando polling');
- waitingForPolling = true;
- const pollStart = Date.now();
- const maxPollMs = 5 * 60 * 1000;
- const pollInterval = setInterval(async () => {
- if (Date.now() - pollStart > maxPollMs) {
- clearInterval(pollInterval);
- clearInterval(pollProgressInterval);
- clearPendingPSGeneration();
- const setGen = onSetGenerating || setLocalIsGenerating;
- const setProg = onSetProgress || setLocalProgress;
- setGen(false);
- setProg(0);
- if (onSetMinimized) onSetMinimized(false);
- return;
- }
- const result = await checkPendingPSGeneration();
- if (result === 'completed') {
- clearInterval(pollInterval);
- clearInterval(pollProgressInterval);
- const setGen = onSetGenerating || setLocalIsGenerating;
- const setProg = onSetProgress || setLocalProgress;
- setGen(false);
- setProg(0);
- if (onSetMinimized) onSetMinimized(false);
- }
- }, 5000);
- const pollProgressInterval = setInterval(() => {
- setProgress(prev => Math.min(95, prev + 1));
- }, 5000);
+ // Rede caiu — workflow pode estar rodando, iniciar polling
+ console.warn('[Studio] Rede interrompida — iniciando polling fallback');
+ startIncrementalPolling();
  } else {
+ // Erro real — parar tudo
  clearPendingPSGeneration();
  console.error('Erro ao gerar imagens:', error);
  alert(`Erro ao gerar imagens: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
@@ -1117,17 +1194,187 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  0
  );
  }
- }
- } finally {
- // Se estamos esperando polling (502/504), manter o loading ativo
- if (!waitingForPolling) {
- const setGenerating = onSetGenerating || setLocalIsGenerating;
- const setProgress = onSetProgress || setLocalProgress;
+ setIsSubmitting(false);
  setGenerating(false);
  setProgress(0);
  if (onSetMinimized) onSetMinimized(false);
  }
  }
+ };
+
+ // ═══════════════════════════════════════════════════════════════
+ // v9 3.1: RETRY DE ÂNGULO INDIVIDUAL
+ // ═══════════════════════════════════════════════════════════════
+ const handleRetryAngle = async (angleId: string) => {
+   const frontAngle = completedAngleStatuses.find(a => a.angle === 'front' && a.status === 'completed');
+   if (!frontAngle?.url || !userId || !currentGenerationId) return;
+
+   setRetryingAngle(angleId);
+
+   try {
+     const result = await retryStudioAngle({
+       productId: product.id,
+       userId,
+       angle: angleId,
+       generationId: currentGenerationId,
+       frontStudioUrl: frontAngle.url,
+       presentationStyle,
+       fabricFinish: presentationStyle === 'flat-lay' ? fabricFinish : 'natural',
+       productInfo: {
+         name: product.name,
+         category: product.category || editedProduct.category,
+         description: product.description || editedProduct.description,
+       },
+       resolution,
+     });
+
+     if (result.success && result.url) {
+       // Sucesso! Atualizar estado do ângulo para verde
+       setCompletedAngleStatuses(prev =>
+         prev.map(a => a.angle === angleId
+           ? { ...a, status: 'completed' as const, url: result.url, id: result.id }
+           : a
+         )
+       );
+     } else {
+       // Falha — incrementar tentativas
+       setRetryAttempts(prev => ({ ...prev, [angleId]: (prev[angleId] || 0) + 1 }));
+     }
+   } catch {
+     setRetryAttempts(prev => ({ ...prev, [angleId]: (prev[angleId] || 0) + 1 }));
+   } finally {
+     setRetryingAngle(null);
+   }
+ };
+
+ // Detectar quando todos os ângulos ficam prontos (incluindo retries)
+ useEffect(() => {
+   if (!generationFinalStatus || generationFinalStatus === 'processing' || generationFinalStatus === 'completed') return;
+   if (completedAngleStatuses.length === 0) return;
+
+   const allCompleted = completedAngleStatuses.every(a => a.status === 'completed');
+   if (allCompleted) {
+     generationFinalStatusRef.current = 'completed';
+     setGenerationFinalStatus('completed');
+
+     // Rebuild session com todos os ângulos (incluindo retries)
+     const newImages: ProductStudioImage[] = completedAngleStatuses
+       .filter(a => a.status === 'completed' && a.url)
+       .map((item, idx) => ({
+         id: item.id || `${currentGenerationId}-${idx}`,
+         url: item.url!,
+         angle: (item.angle || 'front') as ProductStudioAngle,
+         createdAt: new Date().toISOString()
+       }));
+
+     if (newImages.length > 0 && currentGenerationId) {
+       const updatedSession: ProductStudioSession = {
+         id: currentGenerationId,
+         productId: product.id,
+         images: newImages,
+         status: 'ready',
+         createdAt: new Date().toISOString()
+       };
+
+       // Atualizar sessão no produto
+       const currentGenerated = product.generatedImages || {
+         studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
+       };
+       const existingIdx = (currentGenerated.productStudio || []).findIndex(s => s.id === currentGenerationId);
+       const updatedPS = [...(currentGenerated.productStudio || [])];
+       if (existingIdx >= 0) {
+         updatedPS[existingIdx] = updatedSession;
+       } else {
+         updatedPS.push(updatedSession);
+       }
+       onUpdateProduct(product.id, {
+         generatedImages: { ...currentGenerated, productStudio: updatedPS }
+       });
+
+       setCurrentSession(updatedSession);
+     }
+
+     // Auto-fechar após 1s
+     const setGen = onSetGenerating || setLocalIsGenerating;
+     const setProg = onSetProgress || setLocalProgress;
+     setTimeout(() => {
+       setShowResult(true);
+       setGen(false);
+       setProg(0);
+       if (onSetMinimized) onSetMinimized(false);
+     }, 1000);
+   }
+ }, [completedAngleStatuses, generationFinalStatus]);
+
+ // ═══════════════════════════════════════════════════════════════
+ // v9 3.2: REPORT DE PROBLEMA
+ // ═══════════════════════════════════════════════════════════════
+ const handleReportSubmit = async (observation: string) => {
+   if (!authUser || !reportAngle || !currentGenerationId) return;
+   const frontAngle = completedAngleStatuses.find(a => a.angle === 'front' && a.status === 'completed');
+   const result = await submitReport({
+     userId: authUser.id,
+     userEmail: authUser.email || '',
+     userName: authUser.name || authUser.email || '',
+     generationType: 'product-studio',
+     generationId: currentGenerationId,
+     productName: product.name,
+     generatedImageUrl: frontAngle?.url || product.images?.[0]?.url || '',
+     observation: `[Ângulo: ${reportAngle}] ${observation}`,
+   });
+   if (!result.success) {
+     throw new Error(result.error || 'Erro ao enviar report');
+   }
+ };
+
+ // Fechar modal de loading quando geração terminou com falhas
+ const handleCloseFailedGeneration = () => {
+   // Rebuild session com ângulos que tiveram sucesso (incluindo retries)
+   const successAngles = completedAngleStatuses.filter(a => a.status === 'completed' && a.url);
+   if (successAngles.length > 0 && currentGenerationId) {
+     const newImages: ProductStudioImage[] = successAngles.map((item, idx) => ({
+       id: item.id || `${currentGenerationId}-retry-${idx}`,
+       url: item.url!,
+       angle: (item.angle || 'front') as ProductStudioAngle,
+       createdAt: new Date().toISOString()
+     }));
+
+     const updatedSession: ProductStudioSession = {
+       id: currentGenerationId,
+       productId: product.id,
+       images: newImages,
+       status: 'ready',
+       createdAt: new Date().toISOString()
+     };
+
+     // Atualizar sessão no produto (pode ter mais imagens após retries)
+     const currentGenerated = product.generatedImages || {
+       studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
+     };
+     const existingIdx = (currentGenerated.productStudio || []).findIndex(s => s.id === currentGenerationId);
+     const updatedPS = [...(currentGenerated.productStudio || [])];
+     if (existingIdx >= 0) {
+       updatedPS[existingIdx] = updatedSession;
+     } else {
+       updatedPS.push(updatedSession);
+     }
+     onUpdateProduct(product.id, {
+       generatedImages: { ...currentGenerated, productStudio: updatedPS }
+     });
+
+     setCurrentSession(updatedSession);
+     setShowResult(true);
+   }
+
+   // Fechar loading
+   const setGen = onSetGenerating || setLocalIsGenerating;
+   const setProg = onSetProgress || setLocalProgress;
+   setGen(false);
+   setProg(0);
+   if (onSetMinimized) onSetMinimized(false);
+   setRetryAttempts({});
+   setRetryingAngle(null);
+   setIsSubmitting(false);
  };
 
  // ═══════════════════════════════════════════════════════════════
@@ -1900,7 +2147,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Botão Criar */}
  <button
  onClick={() => handleGenerate()}
- disabled={selectedAngles.length === 0 || isGenerating || userCredits < creditsNeeded || isAnyGenerationRunning}
+ disabled={selectedAngles.length === 0 || isGenerating || isSubmitting || userCredits < creditsNeeded || isAnyGenerationRunning}
  className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
  (isGenerating
  ? 'bg-[#FF9F43] cursor-wait'
@@ -2156,15 +2403,30 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className="w-full max-w-xs mb-6">
  <div className="flex flex-col gap-2">
  {selectedAngles.map((angleId, idx) => {
- // Calcular estado de cada ângulo baseado no progresso
- // Distribui o progresso entre os ângulos (cada um ocupa uma faixa)
- const angleCount = selectedAngles.length;
- const perAngle = 90 / angleCount; // até 90% (5% para finalização)
- const angleStart = idx * perAngle;
- const angleEnd = angleStart + perAngle;
- const isAngleDone = currentProgress >= angleEnd;
- const isAngleActive = currentProgress >= angleStart && currentProgress < angleEnd;
- const isAnglePending = currentProgress < angleStart;
+ // v9: usar estado REAL do polling incremental (se disponível)
+ const angleStatus = completedAngleStatuses.find(a => a.angle === angleId);
+ const isAngleDone = angleStatus?.status === 'completed';
+ const isAngleFailed = angleStatus?.status === 'failed' || (generationFinalStatus === 'failed' && !angleStatus);
+
+ // Se não temos dados reais, usa heurística baseada no progresso
+ // (para v8 fallback ou antes do primeiro poll retornar)
+ const hasRealData = completedAngleStatuses.length > 0;
+ let isAngleActive = false;
+ if (!hasRealData) {
+   const angleCount = selectedAngles.length;
+   const perAngle = 90 / angleCount;
+   const angleStart = idx * perAngle;
+   const angleEnd = angleStart + perAngle;
+   isAngleActive = currentProgress >= angleStart && currentProgress < angleEnd;
+ } else {
+   // Com dados reais: ativo = primeiro ângulo que ainda não completou/falhou
+   const firstPendingIdx = selectedAngles.findIndex(a => {
+     const s = completedAngleStatuses.find(cs => cs.angle === a);
+     return !s || (s.status !== 'completed' && s.status !== 'failed');
+   });
+   isAngleActive = !isAngleDone && !isAngleFailed && idx === firstPendingIdx;
+ }
+
  const config = availableAngles.find(a => a.id === angleId);
  const label = config?.label || angleLabels[angleId] || angleId;
  const icon = config?.icon || 'fa-image';
@@ -2175,6 +2437,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-500 ${
  isAngleDone
  ? (theme === 'dark' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200')
+ : isAngleFailed
+ ? (theme === 'dark' ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200')
  : isAngleActive
  ? (theme === 'dark' ? 'bg-white/10 border-white/20' : 'bg-white border-gray-300 shadow-sm')
  : (theme === 'dark' ? 'bg-neutral-900/50 border-neutral-800/50' : 'bg-gray-50/50 border-gray-200/50')
@@ -2184,27 +2448,68 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all duration-500 ${
  isAngleDone
  ? 'bg-green-500/20 text-green-400'
+ : isAngleFailed
+ ? 'bg-red-500/20 text-red-400'
  : isAngleActive
  ? 'bg-gradient-to-br from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF9F43]'
  : (theme === 'dark' ? 'bg-neutral-800 text-neutral-600' : 'bg-gray-200 text-gray-400')
  }`}>
- <i className={`fas ${isAngleDone ? 'fa-check' : icon}`}></i>
+ <i className={`fas ${isAngleDone ? 'fa-check' : isAngleFailed ? 'fa-times' : icon}`}></i>
  </div>
 
- {/* Label */}
- <span className={`text-sm font-medium flex-1 transition-all duration-500 ${
+ {/* Label + thumbnail */}
+ <div className="flex-1 min-w-0">
+ <span className={`text-sm font-medium transition-all duration-500 ${
  isAngleDone
  ? (theme === 'dark' ? 'text-green-400' : 'text-green-600')
+ : isAngleFailed
+ ? (theme === 'dark' ? 'text-red-400' : 'text-red-600')
  : isAngleActive
  ? (theme === 'dark' ? 'text-white' : 'text-gray-900')
  : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')
  }`}>
  {label}
  </span>
+ {isAngleFailed && (
+ <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-red-500/70' : 'text-red-400'}`}>Falhou</p>
+ )}
+ </div>
 
- {/* Status */}
- {isAngleDone && (
+ {/* Thumbnail da imagem gerada */}
+ {isAngleDone && angleStatus?.url && (
+ <img
+ src={angleStatus.url}
+ alt={label}
+ className="w-8 h-8 rounded-lg object-cover border border-green-500/30"
+ />
+ )}
+
+ {/* Status icon */}
+ {isAngleDone && !angleStatus?.url && (
  <i className="fas fa-check-circle text-green-400 text-sm"></i>
+ )}
+ {isAngleFailed && (
+   generationFinalStatus && generationFinalStatus !== 'processing' ? (
+     retryingAngle === angleId ? (
+       <i className="fas fa-spinner fa-spin text-[#FF9F43] text-sm"></i>
+     ) : (retryAttempts[angleId] || 0) >= 2 ? (
+       <button
+         onClick={(e) => { e.stopPropagation(); setReportAngle(angleId); setShowReportModal(true); }}
+         className="text-xs font-medium text-amber-400 hover:text-amber-300 whitespace-nowrap"
+       >
+         Reportar
+       </button>
+     ) : (
+       <button
+         onClick={(e) => { e.stopPropagation(); handleRetryAngle(angleId); }}
+         className="text-xs font-medium text-[#FF9F43] hover:text-[#FF6B6B] whitespace-nowrap"
+       >
+         Tentar de novo
+       </button>
+     )
+   ) : (
+     <i className="fas fa-exclamation-circle text-red-400 text-sm"></i>
+   )
  )}
  {isAngleActive && (
  <i className="fas fa-spinner fa-spin text-[#FF9F43] text-sm"></i>
@@ -2213,38 +2518,71 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  );
  })}
  </div>
+ {(() => {
+ const doneCount = completedAngleStatuses.filter(a => a.status === 'completed').length;
+ const failedCount = completedAngleStatuses.filter(a => a.status === 'failed').length;
+ return (
  <p className={`text-xs text-center mt-2 ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}>
- {selectedAngles.length} foto{selectedAngles.length > 1 ? 's' : ''} • {creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''}
+   {doneCount > 0
+     ? `${doneCount} de ${selectedAngles.length} pronta${doneCount > 1 ? 's' : ''}${failedCount > 0 ? ` • ${failedCount} falha${failedCount > 1 ? 's' : ''}` : ''}`
+     : `${selectedAngles.length} foto${selectedAngles.length > 1 ? 's' : ''} • ${creditsNeeded} crédito${creditsNeeded > 1 ? 's' : ''}`
+   }
  </p>
+ );
+ })()}
  </div>
 
- {/* Botão Minimizar */}
- <button
- onClick={handleMinimize}
- className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
- >
- <i className="fas fa-minus"></i>
- <span>Minimizar e continuar navegando</span>
- </button>
+ {/* Botões de ação — mudam conforme o estado */}
+ {generationFinalStatus && generationFinalStatus !== 'processing' ? (
+   <>
+     {/* Geração terminou com falhas — botão de fechar/ver resultados */}
+     <button
+       onClick={handleCloseFailedGeneration}
+       className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90`}
+     >
+       <i className={`fas ${completedAngleStatuses.some(a => a.status === 'completed') ? 'fa-images' : 'fa-times'}`}></i>
+       <span>{completedAngleStatuses.some(a => a.status === 'completed') ? 'Ver resultados' : 'Fechar'}</span>
+     </button>
+     <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}>
+       Você pode tentar novamente os ângulos que falharam
+     </p>
+   </>
+ ) : (
+   <>
+     {/* Ainda gerando — minimizar e cancelar */}
+     <button
+       onClick={handleMinimize}
+       className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
+     >
+       <i className="fas fa-minus"></i>
+       <span>Minimizar e continuar navegando</span>
+     </button>
 
- <p className={`text-xs mt-3 text-center ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}>
- A geração continuará em segundo plano
- </p>
+     <p className={`text-xs mt-3 text-center ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}>
+       A geração continuará em segundo plano
+     </p>
 
- {/* Botão Cancelar — limpa o estado de loading */}
- <button
- onClick={() => {
- clearPendingPSGeneration();
- const setGen = onSetGenerating || setLocalIsGenerating;
- const setProg = onSetProgress || setLocalProgress;
- setGen(false);
- setProg(0);
- if (onSetMinimized) onSetMinimized(false);
- }}
- className={`mt-4 text-xs transition-all ${theme === 'dark' ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
- >
- Cancelar geração
- </button>
+     <button
+       onClick={() => {
+         clearPendingPSGeneration();
+         setCompletedAngleStatuses([]);
+         setGenerationFinalStatus(null);
+         generationFinalStatusRef.current = null;
+         setRetryAttempts({});
+         setRetryingAngle(null);
+         setCurrentGenerationId(null);
+         const setGen = onSetGenerating || setLocalIsGenerating;
+         const setProg = onSetProgress || setLocalProgress;
+         setGen(false);
+         setProg(0);
+         if (onSetMinimized) onSetMinimized(false);
+       }}
+       className={`mt-4 text-xs transition-all ${theme === 'dark' ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+     >
+       Cancelar geração
+     </button>
+   </>
+ )}
  </div>
  </div>
  )}
@@ -2286,6 +2624,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onConfirm={handleConfirm4K}
  onCancel={handleCancel4K}
  theme={theme}
+ />
+
+ {/* Modal de Report para ângulo com problema (v9 3.2) */}
+ <ReportModal
+   isOpen={showReportModal}
+   onClose={() => { setShowReportModal(false); setReportAngle(null); }}
+   onSubmit={handleReportSubmit}
+   generationType="product-studio"
+   productName={product.name}
+   theme={theme}
  />
  </div>
  );
