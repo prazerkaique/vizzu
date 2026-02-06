@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
-import { generateProductStudioV2, ProductPresentationStyle } from '../../lib/api/studio';
+import { generateProductStudioV2, ProductPresentationStyle, FabricFinish } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 import { smartDownload } from '../../utils/downloadHelper';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
@@ -182,6 +182,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const [presentationStyle, setPresentationStyle] = useState<ProductPresentationStyle>('ghost-mannequin');
  const [showPresentationTooltip, setShowPresentationTooltip] = useState(false);
  const [expandedStyleImage, setExpandedStyleImage] = useState<{ url: string; label: string } | null>(null);
+
+ // Estado do acabamento do tecido (só para flat-lay)
+ const [fabricFinish, setFabricFinish] = useState<FabricFinish>('natural');
 
  // Estado de geração local (fallback se não tiver props globais)
  const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -913,6 +916,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  angles: selectedAngles,
  // Estilo de apresentação (Ghost Mannequin ou Flat Lay)
  presentationStyle,
+ // Acabamento do tecido (só relevante para flat-lay)
+ fabricFinish: presentationStyle === 'flat-lay' ? fabricFinish : 'natural',
  // Informações do produto para instruções do prompt
  productInfo: {
  name: product.name,
@@ -1669,6 +1674,76 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
  </button>
  </div>
+
+ {/* Acabamento do Tecido — só aparece quando Flat Lay */}
+ {presentationStyle === 'flat-lay' && (
+ <div className="mt-4">
+ <h4 className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-2'}>
+ <i className={"fas fa-wand-magic-sparkles mr-1.5 " + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}></i>Acabamento do Tecido
+ </h4>
+ <div className="grid grid-cols-2 gap-2">
+ {/* Natural */}
+ <button
+ onClick={() => setFabricFinish('natural')}
+ className={'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (fabricFinish === 'natural'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF9F43]'
+ : (theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' +
+ (fabricFinish === 'natural'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <i className={'fas fa-leaf text-base ' + (fabricFinish === 'natural' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+ </div>
+ <span className={(fabricFinish === 'natural' ? (theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[11px] font-medium'}>
+ Natural
+ </span>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] leading-tight text-center'}>
+ Rugas e textura realistas
+ </p>
+ {fabricFinish === 'natural' && (
+ <i className="fas fa-check-circle text-green-400 text-xs"></i>
+ )}
+ </button>
+
+ {/* Passada */}
+ <button
+ onClick={() => setFabricFinish('pressed')}
+ className={'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (fabricFinish === 'pressed'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF9F43]'
+ : (theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' +
+ (fabricFinish === 'pressed'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <i className={'fas fa-wand-magic-sparkles text-base ' + (fabricFinish === 'pressed' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+ </div>
+ <span className={(fabricFinish === 'pressed' ? (theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[11px] font-medium'}>
+ Passada
+ </span>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] leading-tight text-center'}>
+ Lisa e sem rugas
+ </p>
+ {fabricFinish === 'pressed' && (
+ <i className="fas fa-check-circle text-green-400 text-xs"></i>
+ )}
+ </button>
+ </div>
+ </div>
+ )}
  </div>
  )}
 

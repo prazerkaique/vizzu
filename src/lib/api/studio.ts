@@ -108,6 +108,9 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
 // Tipo de apresentação do produto
 export type ProductPresentationStyle = 'ghost-mannequin' | 'flat-lay';
 
+// Acabamento do tecido (só para flat-lay)
+export type FabricFinish = 'natural' | 'pressed';
+
 interface ProductStudioV2Params {
   productId: string;
   userId: string;
@@ -131,6 +134,8 @@ interface ProductStudioV2Params {
     category?: string;
     description?: string;
   };
+  // Acabamento do tecido: natural (amarrotadinho) ou pressed (passada)
+  fabricFinish?: FabricFinish;
   // Resolução da imagem gerada
   resolution?: '2k' | '4k';
 }
@@ -175,6 +180,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
       product_name: params.productInfo?.name,
       product_category: params.productInfo?.category,
       product_description: params.productInfo?.description,
+      // Acabamento do tecido (natural ou pressed, só para flat-lay)
+      fabric_finish: params.fabricFinish || 'natural',
       // Resolução da imagem (2k ou 4k)
       resolution: params.resolution || '2k',
     }),
