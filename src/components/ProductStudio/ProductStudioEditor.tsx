@@ -1495,14 +1495,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )
  }
  >
- {/* Indicador de referência */}
+ {/* Indicador de referência (só mostra aviso quando NÃO tem ref) */}
+ {!isFront && !hasRef && (
  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
- hasRef
- ? 'bg-green-500/20 text-green-400'
- : (theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500')
+ theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-500'
  }`}>
- <i className={`fas ${hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
+ <i className="fas fa-exclamation"></i>
  </div>
+ )}
  <i className={`fas ${angle.icon} text-xl`}></i>
  <span className="text-xs font-medium">{angle.label}</span>
  {(isFront || isSelected) && (
