@@ -296,9 +296,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  setGenerating(true);
 
- // Calcular progresso estimado
+ // Calcular progresso estimado (~60s por ângulo)
  const elapsedMs = Date.now() - pending.startTime;
- const estimatedDurationMs = 90 * 1000;
+ const angleCount = pending.angles?.length || 1;
+ const estimatedDurationMs = Math.max(90, angleCount * 60) * 1000;
  const estimatedProgress = Math.min(95, Math.floor((elapsedMs / estimatedDurationMs) * 100));
  setProgress(estimatedProgress);
 
@@ -934,12 +935,29 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  clearInterval(progressInterval);
 
  // Se o webhook deu timeout (502/504), o workflow continua no servidor
- // Mantemos o pending e ativamos o polling para recuperar o resultado
+ // Mantemos o pending e iniciamos polling para recuperar o resultado
  if ((response as any)._serverTimeout) {
- console.warn('[Studio] Webhook timeout — ativando polling para recuperar resultado');
- // NÃO limpar pending — polling vai buscar o resultado no Supabase
- // NÃO chamar setGenerating(false) — manter estado de loading
+ console.warn('[Studio] Webhook timeout — iniciando polling para recuperar resultado');
  waitingForPolling = true;
+
+ // Iniciar polling manualmente (o useEffect de mount não vai re-rodar)
+ const pollInterval = setInterval(async () => {
+ const result = await checkPendingPSGeneration();
+ if (result === 'completed') {
+ clearInterval(pollInterval);
+ clearInterval(pollProgressInterval);
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ const setProg = onSetProgress || setLocalProgress;
+ setGen(false);
+ setProg(0);
+ if (onSetMinimized) onSetMinimized(false);
+ }
+ }, 5000);
+ // Progresso lento enquanto aguarda polling
+ const pollProgressInterval = setInterval(() => {
+ setProgress(prev => Math.min(95, prev + 1));
+ }, 5000);
+
  return;
  }
 
@@ -1017,8 +1035,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const isNetworkAbort = msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError') || msg.includes('AbortError');
 
  if (isNetworkAbort) {
- console.warn('Geração interrompida por rede — pending mantido para polling');
+ console.warn('Geração interrompida por rede — iniciando polling');
  waitingForPolling = true;
+ // Iniciar polling para recuperar resultado
+ const pollInterval = setInterval(async () => {
+ const result = await checkPendingPSGeneration();
+ if (result === 'completed') {
+ clearInterval(pollInterval);
+ clearInterval(pollProgressInterval);
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ const setProg = onSetProgress || setLocalProgress;
+ setGen(false);
+ setProg(0);
+ if (onSetMinimized) onSetMinimized(false);
+ }
+ }, 5000);
+ const pollProgressInterval = setInterval(() => {
+ setProgress(prev => Math.min(95, prev + 1));
+ }, 5000);
  } else {
  clearPendingPSGeneration();
  console.error('Erro ao gerar imagens:', error);
