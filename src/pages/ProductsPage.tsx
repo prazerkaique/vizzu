@@ -921,7 +921,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
 
  {/* Detalhes (close-up) */}
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>Fotos de Detalhe (close-up)</p>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>Close-up de Detalhe (opcional)</p>
  <div className="grid grid-cols-2 gap-2">
  {/* DETALHE FRENTE */}
  <div className="flex flex-col">
@@ -986,7 +986,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className={(theme === 'dark' ? 'bg-[#FF9F43]/10 border-[#FF9F43]/30' : 'bg-orange-50 border-[#FF9F43]/20') + ' rounded-lg p-2 mt-3 border'}>
  <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' text-[10px] flex items-start gap-1.5'}>
  <i className="fas fa-magnifying-glass-plus mt-0.5"></i>
- <span><strong>Fotos de Detalhe:</strong> Close-up de logos, estampas, costuras ou detalhes que precisam aparecer fielmente na IA. Envie separado para frente e costas.</span>
+ <span><strong>Opcional:</strong> Close-up de logos, estampas ou costuras. Melhora a fidelidade da IA nesses detalhes. Sem essas fotos, a IA gera normalmente mas pode não reproduzir detalhes com precisão.</span>
  </p>
  </div>
 
