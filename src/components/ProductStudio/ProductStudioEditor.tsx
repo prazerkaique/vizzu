@@ -611,7 +611,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (product.originalImages?.['side-left']?.id) refs['side-left'] = true;
  if (product.originalImages?.['side-right']?.id) refs['side-right'] = true;
  if (product.originalImages?.top?.id) refs.top = true;
- if (product.originalImages?.detail?.id) refs.detail = true;
+ if (product.originalImages?.detail?.id || product.originalImages?.frontDetail?.id || product.originalImages?.backDetail?.id) refs.detail = true;
  if (product.originalImages?.['45-left']?.id) refs['45-left'] = true;
  if (product.originalImages?.['45-right']?.id) refs['45-right'] = true;
 
@@ -677,7 +677,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  };
 
- // Toggle ângulo - verifica se tem referência antes de selecionar
+ // Toggle ângulo - permite selecionar sem referência (apenas aviso)
  const toggleAngle = (angle: ProductStudioAngle) => {
  // Front é obrigatório — não pode desmarcar
  if (angle === 'front') return;
@@ -690,7 +690,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Verifica se tem referência (front e folded não precisam de ref extra)
  if (angle !== 'folded' && !availableReferences[angle]) {
- // Não tem referência - mostra modal de aviso
+ // Não tem referência - mostra aviso mas permite continuar
  setAngleWithoutRef(angle);
  setShowNoRefModal(true);
  return;
@@ -700,12 +700,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setSelectedAngles(prev => [...prev, angle]);
  };
 
- // Selecionar todos os ângulos (apenas os que têm referência + folded que não precisa)
+ // Selecionar todos os ângulos disponíveis
  const selectAllAngles = () => {
- const anglesWithRef = availableAngles
- .filter(a => a.id === 'front' || a.id === 'folded' || availableReferences[a.id])
- .map(a => a.id);
- setSelectedAngles(anglesWithRef);
+ setSelectedAngles(availableAngles.map(a => a.id));
  };
 
  // Limpar seleção (front sempre fica)
@@ -2319,25 +2316,31 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <i className={"fas fa-image text-2xl " + (theme === 'dark' ? 'text-amber-400' : 'text-amber-500')}></i>
  </div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-lg font-semibold font-serif mb-2"}>
- Imagem de referência necessária
+ Sem imagem de referência
  </h3>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
  O ângulo <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef]}</span> não
- possui imagem de referência cadastrada. Isso pode comprometer o resultado da criação.
+ possui foto de referência. A IA vai gerar normalmente, mas o resultado pode não ser tão fiel ao produto real.
  </p>
- </div>
-
- {/* Pergunta */}
- <div className="px-6 pb-4">
- <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + " rounded-xl p-4 border"}>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-sm font-medium text-center"}>
- Deseja adicionar a imagem de referência agora?
- </p>
- </div>
  </div>
 
  {/* Botões */}
- <div className="px-6 pb-6 space-y-3">
+ <div className="px-6 pb-4 space-y-3">
+ {/* Botão continuar sem referência */}
+ <button
+ onClick={() => {
+ setShowNoRefModal(false);
+ if (angleWithoutRef) {
+ setSelectedAngles(prev => [...prev, angleWithoutRef]);
+ }
+ setAngleWithoutRef(null);
+ }}
+ className="w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5555] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center flex items-center justify-center gap-2"
+ >
+ <i className="fas fa-check"></i>
+ <span>Continuar mesmo assim</span>
+ </button>
+
  {/* Botão de adicionar referência com input de arquivo */}
  <label className="block">
  <input
@@ -2352,7 +2355,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }}
  disabled={uploadingRef}
  />
- <div className={`w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5555] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
+ <div className={`w-full px-4 py-3 rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'} ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
  {uploadingRef ? (
  <>
  <i className="fas fa-spinner fa-spin"></i>
@@ -2361,34 +2364,31 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  ) : (
  <>
  <i className="fas fa-upload"></i>
- <span>Sim, adicionar imagem</span>
+ <span>Adicionar foto de referência</span>
  </>
  )}
  </div>
  </label>
 
- {/* Botão de não/desmarcar */}
+ {/* Botão cancelar */}
  <button
  onClick={() => {
  setShowNoRefModal(false);
  setAngleWithoutRef(null);
- // Não adiciona o ângulo à seleção (já não foi adicionado)
  }}
  disabled={uploadingRef}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700') + " w-full px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"}
+ className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + " w-full px-4 py-2 text-sm transition-all text-center"}
  >
- <i className="fas fa-times"></i>
- <span>Não, desmarcar este ângulo</span>
+ Cancelar
  </button>
  </div>
 
  {/* Dica */}
  <div className="px-6 pb-6">
- <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
- <i className="fas fa-lightbulb text-blue-400 mt-0.5"></i>
- <p className={(theme === 'dark' ? 'text-blue-400/80' : 'text-blue-600') + " text-xs"}>
- <span className="font-medium">Dica:</span> Para melhores resultados, use uma foto do produto
- neste ângulo específico. A IA usará essa imagem como referência.
+ <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
+ <i className="fas fa-lightbulb text-amber-400 mt-0.5"></i>
+ <p className={(theme === 'dark' ? 'text-amber-400/80' : 'text-amber-600') + " text-xs"}>
+ Com uma foto de referência deste ângulo, a IA reproduz melhor cores, proporções e detalhes do produto.
  </p>
  </div>
  </div>
