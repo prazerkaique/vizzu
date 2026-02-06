@@ -64,7 +64,12 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
           const originalImagesObj: any = {};
           originalImages.forEach((img: any) => {
-            const angle = img.angle || (img.type === 'original' ? 'front' : img.type);
+            let angle = img.angle || (img.type === 'original' ? 'front' : img.type);
+            // Mapear angles do Supabase para camelCase do TypeScript
+            if (angle === 'front_detail') angle = 'frontDetail';
+            else if (angle === 'back_detail') angle = 'backDetail';
+            // Compatibilidade: detail genérico → frontDetail
+            else if (angle === 'detail' && !originalImagesObj.frontDetail) angle = 'frontDetail';
             if (angle && !originalImagesObj[angle]) {
               originalImagesObj[angle] = {
                 id: img.id,

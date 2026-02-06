@@ -51,10 +51,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [showOptimizedImage, setShowOptimizedImage] = useState(true);
   const [selectedFrontImage, setSelectedFrontImage] = useState<string | null>(null);
   const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
-  const [selectedDetailImage, setSelectedDetailImage] = useState<string | null>(null);
-  const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'detail'>('front');
+  const [selectedFrontDetailImage, setSelectedFrontDetailImage] = useState<string | null>(null);
+  const [selectedBackDetailImage, setSelectedBackDetailImage] = useState<string | null>(null);
+  const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'front_detail' | 'back_detail'>('front');
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
-  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'detail' | null>(null);
+  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'front_detail' | 'back_detail' | null>(null);
   const [showConfirmNoDetail, setShowConfirmNoDetail] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
@@ -223,7 +224,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
   };
 
-  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, type: 'front' | 'back' | 'detail') => {
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, type: 'front' | 'back' | 'front_detail' | 'back_detail') => {
    e.preventDefault();
    e.stopPropagation();
    const file = e.dataTransfer.files[0];
@@ -236,8 +237,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    analyzeProductImageWithAI(base64);
    } else if (type === 'back') {
    setSelectedBackImage(base64);
+   } else if (type === 'front_detail') {
+   setSelectedFrontDetailImage(base64);
    } else {
-   setSelectedDetailImage(base64);
+   setSelectedBackDetailImage(base64);
    }
    };
    reader.readAsDataURL(file);
@@ -416,7 +419,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
    image_front_base64: selectedFrontImage,
    image_back_base64: selectedBackImage || null,
-   image_detail_base64: selectedDetailImage || null
+   image_front_detail_base64: selectedFrontDetailImage || null,
+   image_back_detail_base64: selectedBackDetailImage || null
    })
    });
    const data = await response.json();
@@ -427,7 +431,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    setShowCreateProduct(false);
    setSelectedFrontImage(null);
    setSelectedBackImage(null);
-   setSelectedDetailImage(null);
+   setSelectedFrontDetailImage(null);
+   setSelectedBackDetailImage(null);
    setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
    setProductAttributes({});
    setSuccessNotification('Produto criado com sucesso!');
@@ -457,7 +462,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    });
    setSelectedFrontImage(product.originalImages?.front?.url || null);
    setSelectedBackImage(product.originalImages?.back?.url || null);
-   setSelectedDetailImage(product.originalImages?.detail?.url || null);
+   setSelectedFrontDetailImage(product.originalImages?.frontDetail?.url || product.originalImages?.detail?.url || null);
+   setSelectedBackDetailImage(product.originalImages?.backDetail?.url || null);
    setEditingProduct(product);
    setShowProductDetail(null);
    setShowCreateProduct(true);
@@ -477,7 +483,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
    const frontImage = selectedFrontImage?.startsWith('data:') ? selectedFrontImage : null;
    const backImage = selectedBackImage?.startsWith('data:') ? selectedBackImage : null;
-   const detailImage = selectedDetailImage?.startsWith('data:') ? selectedDetailImage : null;
+   const frontDetailImage = selectedFrontDetailImage?.startsWith('data:') ? selectedFrontDetailImage : null;
+   const backDetailImage = selectedBackDetailImage?.startsWith('data:') ? selectedBackDetailImage : null;
    const response = await fetch(`${n8nUrl}/vizzu/produto-editar`, {
    method: 'POST',
    headers: { 'Content-Type': 'application/json' },
@@ -492,7 +499,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
    image_front_base64: frontImage,
    image_back_base64: backImage,
-   image_detail_base64: detailImage,
+   image_front_detail_base64: frontDetailImage,
+   image_back_detail_base64: backDetailImage,
    })
    });
    const data = await response.json();
@@ -504,7 +512,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    setEditingProduct(null);
    setSelectedFrontImage(null);
    setSelectedBackImage(null);
-   setSelectedDetailImage(null);
+   setSelectedFrontDetailImage(null); setSelectedBackDetailImage(null);
    setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
    setProductAttributes({});
    showToast('Produto atualizado com sucesso!', 'success');
@@ -707,7 +715,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
- Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : showPhotoSourcePicker === 'back' ? 'de costas' : 'de detalhe'}
+ Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : showPhotoSourcePicker === 'back' ? 'de costas' : showPhotoSourcePicker === 'front_detail' ? 'de detalhe (frente)' : 'de detalhe (costas)'}
  </h3>
  <div className="grid grid-cols-2 gap-3">
  <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
@@ -731,7 +739,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  } else if (showPhotoSourcePicker === 'back') {
  setSelectedBackImage(base64);
  } else {
- setSelectedDetailImage(base64);
+ if (showPhotoSourcePicker === 'front_detail') { setSelectedFrontDetailImage(base64); } else { setSelectedBackDetailImage(base64); };
  }
  setShowPhotoSourcePicker(null);
  } catch (error) {
@@ -764,7 +772,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  } else if (showPhotoSourcePicker === 'back') {
  setSelectedBackImage(base64);
  } else {
- setSelectedDetailImage(base64);
+ if (showPhotoSourcePicker === 'front_detail') { setSelectedFrontDetailImage(base64); } else { setSelectedBackDetailImage(base64); };
  }
  setShowPhotoSourcePicker(null);
  } catch (error) {
@@ -836,7 +844,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
- <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); setEditingProduct(null); }}>
+ <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedFrontDetailImage(null); setSelectedBackDetailImage(null); setEditingProduct(null); }}>
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pb-2 flex justify-center -mt-1">
@@ -844,15 +852,15 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold font-serif'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
- <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedDetailImage(null); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+ <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedFrontDetailImage(null); setSelectedBackDetailImage(null); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
  <i className="fas fa-times text-xs"></i>
  </button>
  </div>
 
- {/* Fotos Frente/Costas/Detalhe */}
+ {/* Fotos do Produto */}
  <div className="mb-4">
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
- <div className="grid grid-cols-3 gap-2">
+ <div className="grid grid-cols-2 gap-2">
  {/* FRENTE */}
  <div className="flex flex-col">
  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
@@ -910,21 +918,25 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  )}
  </div>
+ </div>
 
- {/* DETALHE */}
+ {/* Detalhes (close-up) */}
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>Fotos de Detalhe (close-up)</p>
+ <div className="grid grid-cols-2 gap-2">
+ {/* DETALHE FRENTE */}
  <div className="flex flex-col">
  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
  <i className="fas fa-magnifying-glass-plus text-[#FF9F43] text-[8px]"></i>
- Detalhe
+ Detalhe Frente
  </label>
- {selectedDetailImage ? (
- <div className={(theme === 'dark' ? 'border-[#FF9F43]' : 'border-[#FF9F43]') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
- <img src={selectedDetailImage} alt="Detalhe" className="w-full h-full object-cover" />
+ {selectedFrontDetailImage ? (
+ <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#FF9F43]">
+ <img src={selectedFrontDetailImage} alt="Detalhe Frente" className="w-full h-full object-cover" />
  <div className="absolute top-1 right-1 flex gap-0.5">
- <button onClick={() => setShowPhotoSourcePicker('detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+ <button onClick={() => setShowPhotoSourcePicker('front_detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
  <i className="fas fa-sync text-[7px]"></i>
  </button>
- <button onClick={() => setSelectedDetailImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+ <button onClick={() => setSelectedFrontDetailImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
  <i className="fas fa-times text-[7px]"></i>
  </button>
  </div>
@@ -933,7 +945,36 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  </div>
  ) : (
- <div onDrop={(e) => handleImageDrop(e, 'detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <div onDrop={(e) => handleImageDrop(e, 'front_detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front_detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
+ </div>
+ )}
+ </div>
+
+ {/* DETALHE COSTAS */}
+ <div className="flex flex-col">
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+ <i className="fas fa-magnifying-glass-plus text-[#FF9F43] text-[8px]"></i>
+ Detalhe Costas
+ </label>
+ {selectedBackDetailImage ? (
+ <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#FF9F43]">
+ <img src={selectedBackDetailImage} alt="Detalhe Costas" className="w-full h-full object-cover" />
+ <div className="absolute top-1 right-1 flex gap-0.5">
+ <button onClick={() => setShowPhotoSourcePicker('back_detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+ <i className="fas fa-sync text-[7px]"></i>
+ </button>
+ <button onClick={() => setSelectedBackDetailImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+ <i className="fas fa-times text-[7px]"></i>
+ </button>
+ </div>
+ <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-[#FF9F43] text-white text-[7px] font-bold rounded-full">
+ <i className="fas fa-check mr-0.5"></i>OK
+ </div>
+ </div>
+ ) : (
+ <div onDrop={(e) => handleImageDrop(e, 'back_detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back_detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
  </div>
@@ -945,7 +986,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className={(theme === 'dark' ? 'bg-[#FF9F43]/10 border-[#FF9F43]/30' : 'bg-orange-50 border-[#FF9F43]/20') + ' rounded-lg p-2 mt-3 border'}>
  <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' text-[10px] flex items-start gap-1.5'}>
  <i className="fas fa-magnifying-glass-plus mt-0.5"></i>
- <span><strong>Imagem de Detalhe:</strong> Importante para logos, estampas ou detalhes pequenos que precisam aparecer fielmente na IA.</span>
+ <span><strong>Fotos de Detalhe:</strong> Close-up de logos, estampas, costuras ou detalhes que precisam aparecer fielmente na IA. Envie separado para frente e costas.</span>
  </p>
  </div>
 

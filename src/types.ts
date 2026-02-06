@@ -45,7 +45,9 @@ export interface ProductOriginalImages {
   'side-left'?: ProductImage; // Opcional - lateral esquerda
   'side-right'?: ProductImage;// Opcional - lateral direita
   top?: ProductImage;         // Opcional - vista de cima
-  detail?: ProductImage;      // Opcional - foto de detalhe
+  detail?: ProductImage;      // Opcional - foto de detalhe (legado, mapeado para frontDetail)
+  frontDetail?: ProductImage; // Opcional - detalhe da frente (logo, estampa, costura)
+  backDetail?: ProductImage;  // Opcional - detalhe das costas (tag, estampa traseira)
   '45-left'?: ProductImage;   // Opcional - 45 graus esquerda
   '45-right'?: ProductImage;  // Opcional - 45 graus direita
   folded?: ProductImage;      // Opcional - produto dobrado

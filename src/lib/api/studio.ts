@@ -128,6 +128,8 @@ interface ProductStudioV2Params {
     top?: string;
     detail?: string;
     folded?: string;
+    front_detail?: string;
+    back_detail?: string;
   };
   // Informações do produto para melhorar o prompt
   productInfo?: {

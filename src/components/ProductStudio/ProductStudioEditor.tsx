@@ -111,8 +111,14 @@ const CLOTHING_CATEGORIES = [
 // Categorias de calçados
 const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'];
 
-// Categorias de acessórios (inclui cabeça — sem ghost mannequin/flat lay)
-const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Bolsas', 'Mochilas', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
+// Categorias de cabeça (bonés, chapéus)
+const HEADWEAR_CATEGORIES = ['Bonés', 'Chapéus', 'Gorros', 'Viseiras'];
+
+// Categorias de bolsas/mochilas
+const BAG_CATEGORIES = ['Bolsas', 'Mochilas', 'Pochetes', 'Necessaires'];
+
+// Categorias de acessórios genéricos (sem ghost mannequin/flat lay)
+const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Acessórios', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
 // Ângulos por tipo de produto
 const ANGLES_CONFIG = {
@@ -124,10 +130,22 @@ const ANGLES_CONFIG = {
  ],
  footwear: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-shoe-prints' },
- { id: 'back' as ProductStudioAngle, label: 'Trás', icon: 'fa-shoe-prints' },
- { id: 'top' as ProductStudioAngle, label: 'Cima', icon: 'fa-arrow-up' },
+ { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-shoe-prints' },
+ { id: 'top' as ProductStudioAngle, label: 'Vista Superior', icon: 'fa-arrow-up' },
  { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
- { id: 'detail' as ProductStudioAngle, label: 'Baixo', icon: 'fa-arrow-down' },
+ { id: 'detail' as ProductStudioAngle, label: 'Sola', icon: 'fa-arrow-down' },
+ ],
+ headwear: [
+ { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-hat-cowboy' },
+ { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-hat-cowboy' },
+ { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
+ { id: 'top' as ProductStudioAngle, label: 'Vista Superior', icon: 'fa-arrow-up' },
+ ],
+ bag: [
+ { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-bag-shopping' },
+ { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-bag-shopping' },
+ { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
+ { id: 'detail' as ProductStudioAngle, label: 'Interior', icon: 'fa-magnifying-glass-plus' },
  ],
  accessory: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-glasses' },
@@ -457,10 +475,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Determinar tipo de produto baseado na categoria
  // Usa check POSITIVO: so mostra Ghost Mannequin/Flat Lay para roupas explicitamente listadas
  // Categorias desconhecidas caem como 'accessory' (sem opcao de estilo) por seguranca
- const getProductType = (): 'clothing' | 'footwear' | 'accessory' => {
+ const getProductType = (): 'clothing' | 'footwear' | 'headwear' | 'bag' | 'accessory' => {
  const category = editedProduct.category || product.category || '';
  if (CLOTHING_CATEGORIES.includes(category)) return 'clothing';
  if (FOOTWEAR_CATEGORIES.includes(category)) return 'footwear';
+ if (HEADWEAR_CATEGORIES.includes(category)) return 'headwear';
+ if (BAG_CATEGORIES.includes(category)) return 'bag';
  return 'accessory';
  };
 
@@ -1015,6 +1035,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  imageIds['side-right'] = getImageId(product.originalImages?.['side-right']);
  imageIds.top = getImageId(product.originalImages?.top);
  imageIds.detail = getImageId(product.originalImages?.detail);
+ imageIds.front_detail = getImageId(product.originalImages?.frontDetail);
+ imageIds.back_detail = getImageId(product.originalImages?.backDetail);
  imageIds['45-left'] = getImageId(product.originalImages?.['45-left']);
  imageIds['45-right'] = getImageId(product.originalImages?.['45-right']);
 
@@ -1057,6 +1079,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (imageIds['45-right']) referenceImages['45-right'] = imageIds['45-right'];
  if (imageIds.top) referenceImages.top = imageIds.top;
  if (imageIds.detail) referenceImages.detail = imageIds.detail;
+ if (imageIds.front_detail) referenceImages.front_detail = imageIds.front_detail;
+ if (imageIds.back_detail) referenceImages.back_detail = imageIds.back_detail;
 
  // Chamar a API
  const response = await generateProductStudioV2({
@@ -1065,8 +1089,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  imageId: imageIds.front!,
  referenceImages: Object.keys(referenceImages).length > 0 ? referenceImages : undefined,
  angles: selectedAngles,
- presentationStyle,
- fabricFinish: presentationStyle === 'flat-lay' ? fabricFinish : 'natural',
+ presentationStyle: productType === 'clothing' ? presentationStyle : 'flat-lay',
+ fabricFinish: (productType === 'clothing' ? presentationStyle : 'flat-lay') === 'flat-lay' ? fabricFinish : 'natural',
  productInfo: {
  name: product.name,
  category: product.category || editedProduct.category,
@@ -1228,8 +1252,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        angle: angleId,
        generationId: currentGenerationId,
        frontStudioUrl: frontAngle.url,
-       presentationStyle,
-       fabricFinish: presentationStyle === 'flat-lay' ? fabricFinish : 'natural',
+       presentationStyle: productType === 'clothing' ? presentationStyle : 'flat-lay',
+       fabricFinish: (productType === 'clothing' ? presentationStyle : 'flat-lay') === 'flat-lay' ? fabricFinish : 'natural',
        productInfo: {
          name: product.name,
          category: product.category || editedProduct.category,
@@ -1800,11 +1824,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border'}>
  <div className="flex items-center gap-3">
  <div className={(theme === 'dark' ? 'bg-white/10' : 'bg-gray-200') + ' w-10 h-10 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas ' + (productType === 'footwear' ? 'fa-shoe-prints' : productType === 'accessory' ? 'fa-glasses' : 'fa-shirt')}></i>
+ <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas ' + (productType === 'footwear' ? 'fa-shoe-prints' : productType === 'headwear' ? 'fa-hat-cowboy' : productType === 'bag' ? 'fa-bag-shopping' : productType === 'accessory' ? 'fa-glasses' : 'fa-shirt')}></i>
  </div>
  <div>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
- {productType === 'footwear' ? 'Calçado' : productType === 'accessory' ? 'Acessório' : 'Roupa'}
+ {productType === 'footwear' ? 'Calçado' : productType === 'headwear' ? 'Acessório de Cabeça' : productType === 'bag' ? 'Bolsa/Mochila' : productType === 'accessory' ? 'Acessório' : 'Roupa'}
  </p>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
  {availableAngles.length} ângulos disponíveis
