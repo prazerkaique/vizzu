@@ -940,8 +940,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  console.warn('[Studio] Webhook timeout — iniciando polling para recuperar resultado');
  waitingForPolling = true;
 
+ const pollStart = Date.now();
+ const maxPollMs = 5 * 60 * 1000; // 5 minutos máximo de polling
+
  // Iniciar polling manualmente (o useEffect de mount não vai re-rodar)
  const pollInterval = setInterval(async () => {
+ // Timeout máximo do polling
+ if (Date.now() - pollStart > maxPollMs) {
+ console.warn('[Studio] Polling timeout — parando após 5 minutos');
+ clearInterval(pollInterval);
+ clearInterval(pollProgressInterval);
+ clearPendingPSGeneration();
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ const setProg = onSetProgress || setLocalProgress;
+ setGen(false);
+ setProg(0);
+ if (onSetMinimized) onSetMinimized(false);
+ return;
+ }
  const result = await checkPendingPSGeneration();
  if (result === 'completed') {
  clearInterval(pollInterval);
@@ -1037,8 +1053,20 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (isNetworkAbort) {
  console.warn('Geração interrompida por rede — iniciando polling');
  waitingForPolling = true;
- // Iniciar polling para recuperar resultado
+ const pollStart = Date.now();
+ const maxPollMs = 5 * 60 * 1000;
  const pollInterval = setInterval(async () => {
+ if (Date.now() - pollStart > maxPollMs) {
+ clearInterval(pollInterval);
+ clearInterval(pollProgressInterval);
+ clearPendingPSGeneration();
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ const setProg = onSetProgress || setLocalProgress;
+ setGen(false);
+ setProg(0);
+ if (onSetMinimized) onSetMinimized(false);
+ return;
+ }
  const result = await checkPendingPSGeneration();
  if (result === 'completed') {
  clearInterval(pollInterval);
@@ -2180,6 +2208,21 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <p className={`text-xs mt-3 text-center ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}>
  A geração continuará em segundo plano
  </p>
+
+ {/* Botão Cancelar — limpa o estado de loading */}
+ <button
+ onClick={() => {
+ clearPendingPSGeneration();
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ const setProg = onSetProgress || setLocalProgress;
+ setGen(false);
+ setProg(0);
+ if (onSetMinimized) onSetMinimized(false);
+ }}
+ className={`mt-4 text-xs transition-all ${theme === 'dark' ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+ >
+ Cancelar geração
+ </button>
  </div>
  </div>
  )}
