@@ -48,6 +48,7 @@ export interface ProductOriginalImages {
   detail?: ProductImage;      // Opcional - foto de detalhe
   '45-left'?: ProductImage;   // Opcional - 45 graus esquerda
   '45-right'?: ProductImage;  // Opcional - 45 graus direita
+  folded?: ProductImage;      // Opcional - produto dobrado
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -93,7 +94,7 @@ export interface ProductGeneratedImages {
 // Product Studio - Fotos profissionais de produto (sem modelo)
 // ═══════════════════════════════════════════════════════════════
 
-export type ProductStudioAngle = 'front' | 'back' | 'side-left' | 'side-right' | '45-left' | '45-right' | 'top' | 'detail';
+export type ProductStudioAngle = 'front' | 'back' | 'side-left' | 'side-right' | '45-left' | '45-right' | 'top' | 'detail' | 'folded';
 
 export interface ProductStudioImage {
   id: string;

@@ -116,6 +116,7 @@ const ANGLES_CONFIG = {
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-shirt' },
  { id: 'back' as ProductStudioAngle, label: 'Costas', icon: 'fa-shirt' },
  { id: 'detail' as ProductStudioAngle, label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
+ { id: 'folded' as ProductStudioAngle, label: 'Dobrada', icon: 'fa-layer-group' },
  ],
  footwear: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-shoe-prints' },
@@ -176,7 +177,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const [viewMode, setViewMode] = useState<'original' | 'otimizada'>('original'); // Começa em 'original' por padrão
 
  // Estados de seleção de ângulos
- const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>([]);
+ const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>(['front']);
 
  // Estado do estilo de apresentação (Ghost Mannequin ou Flat Lay)
  const [presentationStyle, setPresentationStyle] = useState<ProductPresentationStyle>('ghost-mannequin');
@@ -462,6 +463,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  '45-right': false,
  'top': false,
  'detail': false,
+ 'folded': false,
  };
 
  // Verificar originalImages - PRECISA ter ID para funcionar
@@ -491,6 +493,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  '45-right': '45° Direita',
  'top': 'Vista de Cima',
  'detail': 'Detalhe',
+ 'folded': 'Dobrada',
  };
 
  // Calcular créditos: 1 crédito por foto * multiplicador de resolução
@@ -537,41 +540,38 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Toggle ângulo - verifica se tem referência antes de selecionar
  const toggleAngle = (angle: ProductStudioAngle) => {
- // Se já está selecionado, apenas remove
+ // Front é obrigatório — não pode desmarcar
+ if (angle === 'front') return;
+
+ // Se já está selecionado, remove
  if (selectedAngles.includes(angle)) {
  setSelectedAngles(prev => prev.filter(a => a !== angle));
  return;
  }
 
- // Se é front, sempre permite (é obrigatório ter)
- if (angle === 'front') {
- setSelectedAngles(prev => [...prev, angle]);
- return;
- }
-
- // Verifica se tem referência
- if (!availableReferences[angle]) {
+ // Verifica se tem referência (front e folded não precisam de ref extra)
+ if (angle !== 'folded' && !availableReferences[angle]) {
  // Não tem referência - mostra modal de aviso
  setAngleWithoutRef(angle);
  setShowNoRefModal(true);
  return;
  }
 
- // Tem referência - adiciona normalmente
+ // Tem referência ou não precisa - adiciona normalmente
  setSelectedAngles(prev => [...prev, angle]);
  };
 
- // Selecionar todos os ângulos (apenas os que têm referência)
+ // Selecionar todos os ângulos (apenas os que têm referência + folded que não precisa)
  const selectAllAngles = () => {
  const anglesWithRef = availableAngles
- .filter(a => a.id === 'front' || availableReferences[a.id])
+ .filter(a => a.id === 'front' || a.id === 'folded' || availableReferences[a.id])
  .map(a => a.id);
  setSelectedAngles(anglesWithRef);
  };
 
- // Limpar seleção
+ // Limpar seleção (front sempre fica)
  const clearAngles = () => {
- setSelectedAngles([]);
+ setSelectedAngles(['front']);
  };
 
  // Obter atributos disponíveis para a categoria
@@ -994,8 +994,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setCurrentSession(newSession);
  setShowResult(true);
 
- // Limpar seleção após sucesso
- setSelectedAngles([]);
+ // Limpar seleção após sucesso (front sempre fica)
+ setSelectedAngles(['front']);
 
  } catch (error) {
  // Se foi interrupção de rede (F5/fechamento), manter pending key — a geração pode estar rodando no servidor
@@ -1480,13 +1480,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
  {availableAngles.map(angle => {
  const isSelected = selectedAngles.includes(angle.id);
- const hasRef = angle.id === 'front' || availableReferences[angle.id];
+ const isFront = angle.id === 'front';
+ const hasRef = isFront || angle.id === 'folded' || availableReferences[angle.id];
  return (
  <button
  key={angle.id}
  onClick={() => toggleAngle(angle.id)}
  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
- (isSelected
+ (isFront
+ ? (theme === 'dark' ? 'bg-white/10 border-white/30 text-white cursor-default' : 'bg-gray-100 border-gray-900 text-gray-900 cursor-default')
+ : isSelected
  ? (theme === 'dark' ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
  : (theme === 'dark'
  ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
@@ -1494,20 +1497,25 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )
  }
  >
- {/* Indicador de referência */}
+ {/* Indicador: cadeado para front, check/warning para outros */}
  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
- hasRef
+ isFront
+ ? (theme === 'dark' ? 'bg-white/20 text-white/60' : 'bg-gray-300 text-gray-600')
+ : hasRef
  ? 'bg-green-500/20 text-green-400'
  : (theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500')
  }`}>
- <i className={`fas ${hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
+ <i className={`fas ${isFront ? 'fa-lock' : hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
  </div>
  <i className={`fas ${angle.icon} text-xl`}></i>
  <span className="text-xs font-medium">{angle.label}</span>
- {isSelected && (
+ {isFront && (
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + " text-[10px]"}>Obrigatória</span>
+ )}
+ {!isFront && isSelected && (
  <i className="fas fa-check-circle text-green-400 text-sm"></i>
  )}
- {!hasRef && !isSelected && (
+ {!isFront && !hasRef && !isSelected && (
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + " text-[10px]"}>Sem ref.</span>
  )}
  </button>

@@ -33,7 +33,8 @@ const ANGLE_LABELS: Record<ProductStudioAngle, string> = {
  '45-left': '45° Esq.',
  '45-right': '45° Dir.',
  'top': 'Topo',
- 'detail': 'Detalhe'
+ 'detail': 'Detalhe',
+ 'folded': 'Dobrada'
 };
 
 // Ícones dos ângulos
@@ -45,7 +46,8 @@ const ANGLE_ICONS: Record<ProductStudioAngle, string> = {
  '45-left': 'fa-arrow-up-left',
  '45-right': 'fa-arrow-up-right',
  'top': 'fa-arrow-up',
- 'detail': 'fa-magnifying-glass-plus'
+ 'detail': 'fa-magnifying-glass-plus',
+ 'folded': 'fa-layer-group'
 };
 
 // Categorias de calçados
@@ -110,7 +112,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  case 'accessory':
  return ['front', 'back', 'side-left', 'side-right', 'detail'];
  default: // clothing
- return ['front', 'back', 'detail'];
+ return ['front', 'back', 'detail', 'folded'];
  }
  };
 

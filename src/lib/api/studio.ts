@@ -127,6 +127,7 @@ interface ProductStudioV2Params {
     '45-right'?: string;
     top?: string;
     detail?: string;
+    folded?: string;
   };
   // Informações do produto para melhorar o prompt
   productInfo?: {
