@@ -267,12 +267,22 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    setCompletedAngleStatuses(pollResult.completedAngles);
  }
 
- // Calcular progresso real: ângulos prontos / total
+ // Calcular progresso
  const totalAngles = pending.angles.length;
  const doneAngles = pollResult.completedAngles.filter(a => a.status === 'completed').length;
- const realProgress = Math.round((doneAngles / totalAngles) * 95);
  const setProgress = onSetProgress || setLocalProgress;
- setProgress(Math.max(realProgress, 5)); // mínimo 5% enquanto processa
+
+ if (doneAngles > 0) {
+   // Progresso real baseado em ângulos concluídos
+   const realProgress = Math.round((doneAngles / totalAngles) * 95);
+   setProgress(Math.max(realProgress, 15));
+ } else {
+   // Nenhum ângulo pronto ainda — progresso suave baseado no tempo
+   // Sobe de 10% a 50% ao longo de 2 minutos enquanto espera
+   const elapsedMs = Date.now() - pending.startTime;
+   const timeProgress = Math.min(Math.round(10 + (elapsedMs / 120000) * 40), 50);
+   setProgress(timeProgress);
+ }
 
  // Geração terminou (completed, partial, ou failed)?
  if (pollResult.generationStatus === 'completed' || pollResult.generationStatus === 'partial' || pollResult.generationStatus === 'failed') {

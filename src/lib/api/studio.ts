@@ -276,7 +276,11 @@ export async function pollStudioGeneration(generationId: string): Promise<Studio
   }
 
   // output_urls é atualizado incrementalmente pelo v9
-  const outputUrls = generation.output_urls as StudioAngleStatus[] | null;
+  // Pode vir como array (correto) ou string JSON (fallback se double-encoded)
+  let outputUrls: StudioAngleStatus[] | string | null = generation.output_urls as any;
+  if (typeof outputUrls === 'string') {
+    try { outputUrls = JSON.parse(outputUrls) as StudioAngleStatus[]; } catch { outputUrls = null; }
+  }
   const completedAngles: StudioAngleStatus[] = [];
 
   if (outputUrls && Array.isArray(outputUrls)) {
