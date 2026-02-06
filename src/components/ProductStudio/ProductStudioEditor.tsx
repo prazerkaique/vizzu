@@ -1487,9 +1487,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  key={angle.id}
  onClick={() => toggleAngle(angle.id)}
  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
- (isFront
- ? (theme === 'dark' ? 'bg-white/10 border-white/30 text-white cursor-default' : 'bg-gray-100 border-gray-900 text-gray-900 cursor-default')
- : isSelected
+ ((isFront || isSelected)
  ? (theme === 'dark' ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
  : (theme === 'dark'
  ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
@@ -1497,22 +1495,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )
  }
  >
- {/* Indicador: cadeado para front, check/warning para outros */}
+ {/* Indicador de referência */}
  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
- isFront
- ? (theme === 'dark' ? 'bg-white/20 text-white/60' : 'bg-gray-300 text-gray-600')
- : hasRef
+ hasRef
  ? 'bg-green-500/20 text-green-400'
  : (theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500')
  }`}>
- <i className={`fas ${isFront ? 'fa-lock' : hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
+ <i className={`fas ${hasRef ? 'fa-check' : 'fa-exclamation'}`}></i>
  </div>
  <i className={`fas ${angle.icon} text-xl`}></i>
  <span className="text-xs font-medium">{angle.label}</span>
- {isFront && (
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + " text-[10px]"}>Obrigatória</span>
- )}
- {!isFront && isSelected && (
+ {(isFront || isSelected) && (
  <i className="fas fa-check-circle text-green-400 text-sm"></i>
  )}
  {!isFront && !hasRef && !isSelected && (
