@@ -506,7 +506,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (product.originalImages?.top?.url) {
  images.push({ url: product.originalImages.top.url, type: 'Cima' });
  }
- if (product.originalImages?.detail?.url) {
+ if (product.originalImages?.frontDetail?.url) {
+ images.push({ url: product.originalImages.frontDetail.url, type: 'Detalhe Frente' });
+ }
+ if (product.originalImages?.backDetail?.url) {
+ images.push({ url: product.originalImages.backDetail.url, type: 'Detalhe Costas' });
+ }
+ if (product.originalImages?.detail?.url && !product.originalImages?.frontDetail?.url) {
  images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
  }
 
