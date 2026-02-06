@@ -147,7 +147,7 @@ interface ProductStudioV2Result {
   id: string;
 }
 
-interface ProductStudioV2Response {
+export interface ProductStudioV2Response {
   success: boolean;
   results?: ProductStudioV2Result[];
   generation_id?: string;
@@ -155,6 +155,7 @@ interface ProductStudioV2Response {
   credits_remaining?: number;
   error?: string;
   message?: string;
+  _serverTimeout?: boolean;
 }
 
 /**
@@ -163,30 +164,43 @@ interface ProductStudioV2Response {
  * Custo: 1 crédito por ângulo
  */
 export async function generateProductStudioV2(params: ProductStudioV2Params): Promise<ProductStudioV2Response> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/generate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      product_id: params.productId,
-      user_id: params.userId,
-      image_id: params.imageId,
-      angles: params.angles,
-      // Estilo de apresentação (ghost-mannequin ou flat-lay)
-      presentation_style: params.presentationStyle || 'ghost-mannequin',
-      // Enviar todas as imagens de referência disponíveis
-      reference_images: params.referenceImages || {},
-      // Informações do produto (contexto útil para o n8n)
-      product_name: params.productInfo?.name,
-      product_category: params.productInfo?.category,
-      product_description: params.productInfo?.description,
-      // Acabamento do tecido (natural ou pressed, só para flat-lay)
-      fabric_finish: params.fabricFinish || 'natural',
-      // Resolução da imagem (2k ou 4k)
-      resolution: params.resolution || '2k',
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${N8N_BASE_URL}/vizzu/studio/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product_id: params.productId,
+        user_id: params.userId,
+        image_id: params.imageId,
+        angles: params.angles,
+        // Estilo de apresentação (ghost-mannequin ou flat-lay)
+        presentation_style: params.presentationStyle || 'ghost-mannequin',
+        // Enviar todas as imagens de referência disponíveis
+        reference_images: params.referenceImages || {},
+        // Informações do produto (contexto útil para o n8n)
+        product_name: params.productInfo?.name,
+        product_category: params.productInfo?.category,
+        product_description: params.productInfo?.description,
+        // Acabamento do tecido (natural ou pressed, só para flat-lay)
+        fabric_finish: params.fabricFinish || 'natural',
+        // Resolução da imagem (2k ou 4k)
+        resolution: params.resolution || '2k',
+      }),
+    });
+  } catch (fetchError) {
+    // Erro de rede (Failed to fetch, timeout, etc.) — workflow pode estar rodando
+    console.warn('[Studio] Erro de rede — workflow pode estar rodando no servidor:', fetchError);
+    throw fetchError;
+  }
+
+  // 502/504 = webhook timeout, mas o workflow CONTINUA rodando no N8N
+  if (response.status === 502 || response.status === 504) {
+    console.warn(`[Studio] Timeout do webhook (${response.status}) — workflow continua no servidor`);
+    return { success: false, _serverTimeout: true } as ProductStudioV2Response;
+  }
 
   const text = await response.text();
 

@@ -885,9 +885,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  angles: selectedAngles,
  });
 
+ let waitingForPolling = false;
+
  try {
- // Progresso linear de 0 a 95% em 90 segundos (1.5 min)
- const totalDuration = 90000; // 90 segundos em ms
+ // Progresso de 0 a 95% — duração baseada no número de ângulos
+ // ~60s por ângulo (Gemini leva 60-180s por imagem)
+ const totalDuration = Math.max(90000, selectedAngles.length * 60000);
  const intervalMs = 1000; // atualiza a cada 1 segundo
  const maxProgress = 95; // para em 95% até a API responder
  let elapsed = 0;
@@ -929,6 +932,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  });
 
  clearInterval(progressInterval);
+
+ // Se o webhook deu timeout (502/504), o workflow continua no servidor
+ // Mantemos o pending e ativamos o polling para recuperar o resultado
+ if ((response as any)._serverTimeout) {
+ console.warn('[Studio] Webhook timeout — ativando polling para recuperar resultado');
+ // NÃO limpar pending — polling vai buscar o resultado no Supabase
+ // NÃO chamar setGenerating(false) — manter estado de loading
+ waitingForPolling = true;
+ return;
+ }
+
  clearPendingPSGeneration();
  setProgress(95);
 
@@ -1004,6 +1018,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  if (isNetworkAbort) {
  console.warn('Geração interrompida por rede — pending mantido para polling');
+ waitingForPolling = true;
  } else {
  clearPendingPSGeneration();
  console.error('Erro ao gerar imagens:', error);
@@ -1020,11 +1035,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  }
  } finally {
+ // Se estamos esperando polling (502/504), manter o loading ativo
+ if (!waitingForPolling) {
  const setGenerating = onSetGenerating || setLocalIsGenerating;
  const setProgress = onSetProgress || setLocalProgress;
  setGenerating(false);
  setProgress(0);
  if (onSetMinimized) onSetMinimized(false);
+ }
  }
  };
 
@@ -2050,24 +2068,70 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </p>
  </div>
 
- {/* Info do produto sendo gerado */}
- <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
- <div className="flex items-center gap-3">
- <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
- <OptimizedImage
- src={productImages[0]?.url || ''}
- alt={product.name}
- className="w-full h-full object-cover"
- size="thumb"
- />
+ {/* Cards dos ângulos sendo gerados */}
+ <div className="w-full max-w-xs mb-6">
+ <div className="flex flex-col gap-2">
+ {selectedAngles.map((angleId, idx) => {
+ // Calcular estado de cada ângulo baseado no progresso
+ // Distribui o progresso entre os ângulos (cada um ocupa uma faixa)
+ const angleCount = selectedAngles.length;
+ const perAngle = 90 / angleCount; // até 90% (5% para finalização)
+ const angleStart = idx * perAngle;
+ const angleEnd = angleStart + perAngle;
+ const isAngleDone = currentProgress >= angleEnd;
+ const isAngleActive = currentProgress >= angleStart && currentProgress < angleEnd;
+ const isAnglePending = currentProgress < angleStart;
+ const config = availableAngles.find(a => a.id === angleId);
+ const label = config?.label || angleLabels[angleId] || angleId;
+ const icon = config?.icon || 'fa-image';
+
+ return (
+ <div
+ key={angleId}
+ className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-500 ${
+ isAngleDone
+ ? (theme === 'dark' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200')
+ : isAngleActive
+ ? (theme === 'dark' ? 'bg-white/10 border-white/20' : 'bg-white border-gray-300 shadow-sm')
+ : (theme === 'dark' ? 'bg-neutral-900/50 border-neutral-800/50' : 'bg-gray-50/50 border-gray-200/50')
+ }`}
+ >
+ {/* Ícone do ângulo */}
+ <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all duration-500 ${
+ isAngleDone
+ ? 'bg-green-500/20 text-green-400'
+ : isAngleActive
+ ? 'bg-gradient-to-br from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-800 text-neutral-600' : 'bg-gray-200 text-gray-400')
+ }`}>
+ <i className={`fas ${isAngleDone ? 'fa-check' : icon}`}></i>
  </div>
- <div className="flex-1 min-w-0">
- <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{product.name}</p>
- <p className={`text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
+
+ {/* Label */}
+ <span className={`text-sm font-medium flex-1 transition-all duration-500 ${
+ isAngleDone
+ ? (theme === 'dark' ? 'text-green-400' : 'text-green-600')
+ : isAngleActive
+ ? (theme === 'dark' ? 'text-white' : 'text-gray-900')
+ : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')
+ }`}>
+ {label}
+ </span>
+
+ {/* Status */}
+ {isAngleDone && (
+ <i className="fas fa-check-circle text-green-400 text-sm"></i>
+ )}
+ {isAngleActive && (
+ <i className="fas fa-spinner fa-spin text-[#FF9F43] text-sm"></i>
+ )}
+ </div>
+ );
+ })}
+ </div>
+ <p className={`text-xs text-center mt-2 ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}>
  {selectedAngles.length} foto{selectedAngles.length > 1 ? 's' : ''} • {creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''}
  </p>
- </div>
- </div>
  </div>
 
  {/* Botão Minimizar */}
