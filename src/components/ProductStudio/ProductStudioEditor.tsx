@@ -218,18 +218,19 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // ═══════════════════════════════════════════════════════════════
  // VERIFICAR GERAÇÃO PENDENTE AO CARREGAR (sobrevive ao F5)
  // ═══════════════════════════════════════════════════════════════
- const checkPendingPSGeneration = useCallback(async () => {
+ const checkPendingPSGeneration = useCallback(async (): Promise<'polling' | 'completed'> => {
  const pending = getPendingPSGeneration();
- if (!pending || !userId || pending.productId !== product.id) return;
+ if (!pending || !userId) return 'polling';
 
  // Expirar após 10 minutos
  const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
  if (elapsedMinutes > 10) {
  clearPendingPSGeneration();
- return;
+ return 'completed'; // Para parar o polling
  }
 
- // Verificar se há geração completada no Supabase
+ try {
+ // Buscar geração mais recente — aceitar qualquer status desde que tenha output_urls
  const { data: generation, error } = await supabase
  .from('generations')
  .select('id, status, output_urls')
@@ -239,18 +240,38 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  .limit(1)
  .single();
 
- if (error) return 'polling';
+ if (error || !generation) {
+ console.log('[Polling] Sem geração encontrada, continuando...');
+ return 'polling';
+ }
 
- if (generation?.status === 'completed' && generation?.output_urls) {
+ // Aceitar se output_urls tem dados (independente do status)
+ const hasResults = generation.output_urls &&
+ (Array.isArray(generation.output_urls) ? generation.output_urls.length > 0 : true);
+
+ if (!hasResults) {
+ console.log('[Polling] Geração encontrada mas sem output_urls, status:', generation.status);
+ return 'polling';
+ }
+
+ console.log('[Polling] Geração completa! Status:', generation.status, 'URLs:',
+ Array.isArray(generation.output_urls) ? generation.output_urls.length : 'object');
+
  clearPendingPSGeneration();
+
  // Converter output_urls para ProductStudioImage[]
  const urls = generation.output_urls as Array<{ angle: string; url: string; id?: string }>;
- const newImages: ProductStudioImage[] = urls.map((item, idx) => ({
+ const newImages: ProductStudioImage[] = (Array.isArray(urls) ? urls : []).map((item, idx) => ({
  id: item.id || `${generation.id}-${idx}`,
  url: item.url,
  angle: (item.angle || 'front') as ProductStudioAngle,
  createdAt: new Date().toISOString()
  }));
+
+ if (newImages.length === 0) {
+ console.warn('[Polling] output_urls não tem imagens válidas');
+ return 'polling';
+ }
 
  const sessionId = generation.id;
  const newSession: ProductStudioSession = {
@@ -281,9 +302,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setCurrentSession(newSession);
  setShowResult(true);
  return 'completed';
- }
-
+ } catch (err) {
+ console.error('[Polling] Erro ao consultar Supabase:', err);
  return 'polling';
+ }
  }, [userId, product.id]);
 
  // Polling de geração pendente ao montar
