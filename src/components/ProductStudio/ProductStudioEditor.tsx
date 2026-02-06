@@ -125,7 +125,8 @@ const ANGLES_CONFIG = {
  clothing: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-shirt' },
  { id: 'back' as ProductStudioAngle, label: 'Costas', icon: 'fa-shirt' },
- { id: 'detail' as ProductStudioAngle, label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
+ { id: 'front_detail' as ProductStudioAngle, label: 'Detalhe Frente', icon: 'fa-magnifying-glass-plus' },
+ { id: 'back_detail' as ProductStudioAngle, label: 'Detalhe Costas', icon: 'fa-magnifying-glass-plus' },
  { id: 'folded' as ProductStudioAngle, label: 'Dobrada', icon: 'fa-layer-group' },
  ],
  footwear: [
@@ -602,6 +603,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  '45-right': false,
  'top': false,
  'detail': false,
+ 'front_detail': false,
+ 'back_detail': false,
  'folded': false,
  };
 
@@ -611,7 +614,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (product.originalImages?.['side-left']?.id) refs['side-left'] = true;
  if (product.originalImages?.['side-right']?.id) refs['side-right'] = true;
  if (product.originalImages?.top?.id) refs.top = true;
- if (product.originalImages?.detail?.id || product.originalImages?.frontDetail?.id || product.originalImages?.backDetail?.id) refs.detail = true;
+ if (product.originalImages?.detail?.id || product.originalImages?.frontDetail?.id) refs.detail = true;
+ if (product.originalImages?.frontDetail?.id) refs.front_detail = true;
+ if (product.originalImages?.backDetail?.id) refs.back_detail = true;
  if (product.originalImages?.['45-left']?.id) refs['45-left'] = true;
  if (product.originalImages?.['45-right']?.id) refs['45-right'] = true;
 
@@ -632,6 +637,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  '45-right': '45° Direita',
  'top': 'Vista de Cima',
  'detail': 'Detalhe',
+ 'front_detail': 'Detalhe Frente',
+ 'back_detail': 'Detalhe Costas',
  'folded': 'Dobrada',
  };
 
@@ -688,8 +695,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return;
  }
 
- // Verifica se tem referência (front e folded não precisam de ref extra)
- if (angle !== 'folded' && !availableReferences[angle]) {
+ // Verifica se tem referência (front, folded e detalhes não precisam de ref própria)
+ if (angle !== 'folded' && angle !== 'front_detail' && angle !== 'back_detail' && !availableReferences[angle]) {
  // Não tem referência - mostra aviso mas permite continuar
  setAngleWithoutRef(angle);
  setShowNoRefModal(true);

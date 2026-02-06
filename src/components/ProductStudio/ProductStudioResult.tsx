@@ -34,6 +34,8 @@ const ANGLE_LABELS: Record<ProductStudioAngle, string> = {
  '45-right': '45° Dir.',
  'top': 'Topo',
  'detail': 'Detalhe',
+ 'front_detail': 'Detalhe Frente',
+ 'back_detail': 'Detalhe Costas',
  'folded': 'Dobrada'
 };
 
@@ -47,6 +49,8 @@ const ANGLE_ICONS: Record<ProductStudioAngle, string> = {
  '45-right': 'fa-arrow-up-right',
  'top': 'fa-arrow-up',
  'detail': 'fa-magnifying-glass-plus',
+ 'front_detail': 'fa-magnifying-glass-plus',
+ 'back_detail': 'fa-magnifying-glass-plus',
  'folded': 'fa-layer-group'
 };
 
@@ -112,7 +116,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  case 'accessory':
  return ['front', 'back', 'side-left', 'side-right', 'detail'];
  default: // clothing
- return ['front', 'back', 'detail', 'folded'];
+ return ['front', 'back', 'front_detail', 'back_detail', 'folded'];
  }
  };
 

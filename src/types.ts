@@ -96,7 +96,7 @@ export interface ProductGeneratedImages {
 // Product Studio - Fotos profissionais de produto (sem modelo)
 // ═══════════════════════════════════════════════════════════════
 
-export type ProductStudioAngle = 'front' | 'back' | 'side-left' | 'side-right' | '45-left' | '45-right' | 'top' | 'detail' | 'folded';
+export type ProductStudioAngle = 'front' | 'back' | 'side-left' | 'side-right' | '45-left' | '45-right' | 'top' | 'detail' | 'front_detail' | 'back_detail' | 'folded';
 
 export interface ProductStudioImage {
   id: string;
