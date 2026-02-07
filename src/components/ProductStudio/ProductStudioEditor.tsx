@@ -223,6 +223,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Estado para modal de ângulo sem referência
  const [showNoRefModal, setShowNoRefModal] = useState(false);
  const [angleWithoutRef, setAngleWithoutRef] = useState<ProductStudioAngle | null>(null);
+ const [noRefModalMode, setNoRefModalMode] = useState<'blocked' | 'warning' | 'detail-tip'>('warning');
  const [uploadingRef, setUploadingRef] = useState(false);
 
  // Estado de resolução (2K ou 4K)
@@ -684,7 +685,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  };
 
- // Toggle ângulo - permite selecionar sem referência (apenas aviso)
+ // Toggle ângulo - lógica de bloqueio e avisos
  const toggleAngle = (angle: ProductStudioAngle) => {
  // Front é obrigatório — não pode desmarcar
  if (angle === 'front') return;
@@ -695,10 +696,34 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return;
  }
 
- // Verifica se tem referência (front, folded e detalhes não precisam de ref própria)
- if (angle !== 'folded' && angle !== 'front_detail' && angle !== 'back_detail' && !availableReferences[angle]) {
- // Não tem referência - mostra aviso mas permite continuar
+ // BLOQUEIO TOTAL: costas ou detalhe costas SEM foto de costas
+ if ((angle === 'back' || angle === 'back_detail') && !availableReferences['back']) {
  setAngleWithoutRef(angle);
+ setNoRefModalMode('blocked');
+ setShowNoRefModal(true);
+ return;
+ }
+
+ // DICA DE DETALHE: detalhe frente sem foto de detalhe frente
+ if (angle === 'front_detail' && !availableReferences['front_detail']) {
+ setAngleWithoutRef(angle);
+ setNoRefModalMode('detail-tip');
+ setShowNoRefModal(true);
+ return;
+ }
+
+ // DICA DE DETALHE: detalhe costas com foto de costas, mas sem foto de detalhe costas
+ if (angle === 'back_detail' && !availableReferences['back_detail']) {
+ setAngleWithoutRef(angle);
+ setNoRefModalMode('detail-tip');
+ setShowNoRefModal(true);
+ return;
+ }
+
+ // AVISO: outros ângulos sem referência (permite continuar)
+ if (angle !== 'folded' && !availableReferences[angle]) {
+ setAngleWithoutRef(angle);
+ setNoRefModalMode('warning');
  setShowNoRefModal(true);
  return;
  }
@@ -707,9 +732,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setSelectedAngles(prev => [...prev, angle]);
  };
 
- // Selecionar todos os ângulos disponíveis
+ // Selecionar todos os ângulos disponíveis (bloqueia back/back_detail sem foto de costas)
  const selectAllAngles = () => {
- setSelectedAngles(availableAngles.map(a => a.id));
+ setSelectedAngles(availableAngles
+ .filter(a => {
+ if ((a.id === 'back' || a.id === 'back_detail') && !availableReferences['back']) return false;
+ return true;
+ })
+ .map(a => a.id));
  };
 
  // Limpar seleção (front sempre fica)
@@ -1874,13 +1904,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {availableAngles.map(angle => {
  const isSelected = selectedAngles.includes(angle.id);
  const isFront = angle.id === 'front';
+ // Bloqueado: costas ou detalhe costas sem foto de costas
+ const isBlocked = (angle.id === 'back' || angle.id === 'back_detail') && !availableReferences['back'];
+ // Tem referência completa (incluindo detalhe específico)
  const hasRef = isFront || angle.id === 'folded' || availableReferences[angle.id];
+ // Tem referência base mas falta detalhe específico (dica suave)
+ const hasDetailTip = !isBlocked && (
+ (angle.id === 'front_detail' && !availableReferences['front_detail']) ||
+ (angle.id === 'back_detail' && availableReferences['back'] && !availableReferences['back_detail'])
+ );
  return (
  <button
  key={angle.id}
  onClick={() => toggleAngle(angle.id)}
+ disabled={isBlocked}
  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
- ((isFront || isSelected)
+ (isBlocked
+ ? (theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50' : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-50')
+ : (isFront || isSelected)
  ? (theme === 'dark' ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
  : (theme === 'dark'
  ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
@@ -1888,8 +1929,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )
  }
  >
- {/* Indicador de referência (só mostra aviso quando NÃO tem ref) */}
- {!isFront && !hasRef && (
+ {/* Indicador: bloqueado (cadeado vermelho) */}
+ {isBlocked && (
+ <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+ theme === 'dark' ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-500'
+ }`}>
+ <i className="fas fa-lock"></i>
+ </div>
+ )}
+ {/* Indicador: dica de detalhe (info azul) */}
+ {!isBlocked && hasDetailTip && !isSelected && (
+ <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+ theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-500'
+ }`}>
+ <i className="fas fa-info"></i>
+ </div>
+ )}
+ {/* Indicador: sem referência (aviso âmbar) */}
+ {!isFront && !isBlocked && !hasDetailTip && !hasRef && (
  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
  theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-500'
  }`}>
@@ -1898,10 +1955,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
  <i className={`fas ${angle.icon} text-xl`}></i>
  <span className="text-xs font-medium">{angle.label}</span>
- {(isFront || isSelected) && (
+ {(isFront || isSelected) && !isBlocked && (
  <i className="fas fa-check-circle text-green-400 text-sm"></i>
  )}
- {!isFront && !hasRef && !isSelected && (
+ {isBlocked && (
+ <span className={(theme === 'dark' ? 'text-red-400/60' : 'text-red-400') + " text-[10px]"}>Sem foto costas</span>
+ )}
+ {!isFront && !isBlocked && hasDetailTip && !isSelected && (
+ <span className={(theme === 'dark' ? 'text-blue-400/60' : 'text-blue-400') + " text-[10px]"}>Sem detalhe</span>
+ )}
+ {!isFront && !isBlocked && !hasDetailTip && !hasRef && !isSelected && (
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + " text-[10px]"}>Sem ref.</span>
  )}
  </button>
@@ -1910,7 +1973,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
 
  {/* Legenda */}
- <div className="flex items-center gap-4 mt-3 pt-3 border-t border-neutral-800/50">
+ <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-neutral-800/50">
  <div className="flex items-center gap-1.5">
  <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
  <i className="fas fa-check text-green-400 text-[8px]"></i>
@@ -1918,10 +1981,22 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Com referência</span>
  </div>
  <div className="flex items-center gap-1.5">
+ <div className={"w-4 h-4 rounded-full flex items-center justify-center " + (theme === 'dark' ? "bg-blue-500/20" : "bg-blue-100")}>
+ <i className={"fas fa-info text-[8px] " + (theme === 'dark' ? 'text-blue-400' : 'text-blue-500')}></i>
+ </div>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Sem detalhe</span>
+ </div>
+ <div className="flex items-center gap-1.5">
  <div className={"w-4 h-4 rounded-full flex items-center justify-center " + (theme === 'dark' ? "bg-amber-500/20" : "bg-amber-100")}>
  <i className={"fas fa-exclamation text-[8px] " + (theme === 'dark' ? 'text-amber-400' : 'text-amber-500')}></i>
  </div>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Sem referência</span>
+ </div>
+ <div className="flex items-center gap-1.5">
+ <div className={"w-4 h-4 rounded-full flex items-center justify-center " + (theme === 'dark' ? "bg-red-500/20" : "bg-red-100")}>
+ <i className={"fas fa-lock text-[8px] " + (theme === 'dark' ? 'text-red-400' : 'text-red-500')}></i>
+ </div>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Bloqueado</span>
  </div>
  </div>
  </div>
@@ -2302,7 +2377,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
 
  {/* ═══════════════════════════════════════════════════════════════ */}
- {/* MODAL - Ângulo sem imagem de referência */}
+ {/* MODAL - Ângulo sem imagem de referência (3 modos) */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {showNoRefModal && angleWithoutRef && (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 safe-area-all">
@@ -2317,8 +2392,37 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  {/* Modal */}
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + " relative z-10 w-full max-w-md rounded-2xl border overflow-hidden"}>
- {/* Header com ícone de aviso */}
+ {/* Header com ícone */}
  <div className="p-6 pb-4 text-center">
+ {noRefModalMode === 'blocked' ? (
+ <>
+ <div className={"w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center " + (theme === 'dark' ? "bg-red-500/20" : "bg-red-100")}>
+ <i className={"fas fa-lock text-2xl " + (theme === 'dark' ? 'text-red-400' : 'text-red-500')}></i>
+ </div>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-lg font-semibold font-serif mb-2"}>
+ Foto de costas necessária
+ </h3>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
+ Para gerar o ângulo <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef]}</span>,
+ é necessário ter uma foto de costas do produto no cadastro.
+ </p>
+ </>
+ ) : noRefModalMode === 'detail-tip' ? (
+ <>
+ <div className={"w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center " + (theme === 'dark' ? "bg-blue-500/20" : "bg-blue-100")}>
+ <i className={"fas fa-info-circle text-2xl " + (theme === 'dark' ? 'text-blue-400' : 'text-blue-500')}></i>
+ </div>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + " text-lg font-semibold font-serif mb-2"}>
+ Dica para melhores resultados
+ </h3>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
+ A imagem de <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef]}</span> pode
+ ser gerada, mas para melhores resultados é importante tirar uma foto do detalhe
+ {angleWithoutRef === 'front_detail' ? ' da frente' : ' das costas'} no cadastro de produto.
+ </p>
+ </>
+ ) : (
+ <>
  <div className={"w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center " + (theme === 'dark' ? "bg-amber-500/20" : "bg-amber-100")}>
  <i className={"fas fa-image text-2xl " + (theme === 'dark' ? 'text-amber-400' : 'text-amber-500')}></i>
  </div>
@@ -2329,11 +2433,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  O ângulo <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef]}</span> não
  possui foto de referência. A IA vai gerar normalmente, mas o resultado pode não ser tão fiel ao produto real.
  </p>
+ </>
+ )}
  </div>
 
  {/* Botões */}
  <div className="px-6 pb-4 space-y-3">
- {/* Botão continuar sem referência */}
+ {/* Botão continuar (NÃO aparece no modo bloqueado) */}
+ {noRefModalMode !== 'blocked' && (
  <button
  onClick={() => {
  setShowNoRefModal(false);
@@ -2345,8 +2452,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  className="w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5555] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center flex items-center justify-center gap-2"
  >
  <i className="fas fa-check"></i>
- <span>Continuar mesmo assim</span>
+ <span>{noRefModalMode === 'detail-tip' ? 'Entendi, gerar assim mesmo' : 'Continuar mesmo assim'}</span>
  </button>
+ )}
 
  {/* Botão de adicionar referência com input de arquivo */}
  <label className="block">
@@ -2362,7 +2470,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }}
  disabled={uploadingRef}
  />
- <div className={`w-full px-4 py-3 rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'} ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
+ <div className={`w-full px-4 py-3 rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${
+ noRefModalMode === 'blocked'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5555] hover:to-[#FF9F43] text-white'
+ : (theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700')
+ } ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
  {uploadingRef ? (
  <>
  <i className="fas fa-spinner fa-spin"></i>
@@ -2371,13 +2483,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  ) : (
  <>
  <i className="fas fa-upload"></i>
- <span>Adicionar foto de referência</span>
+ <span>{noRefModalMode === 'blocked' ? 'Adicionar foto de costas' : 'Adicionar foto de referência'}</span>
  </>
  )}
  </div>
  </label>
 
- {/* Botão cancelar */}
+ {/* Botão cancelar / fechar */}
  <button
  onClick={() => {
  setShowNoRefModal(false);
@@ -2386,18 +2498,35 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  disabled={uploadingRef}
  className={(theme === 'dark' ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + " w-full px-4 py-2 text-sm transition-all text-center"}
  >
- Cancelar
+ {noRefModalMode === 'blocked' ? 'Fechar' : 'Cancelar'}
  </button>
  </div>
 
- {/* Dica */}
+ {/* Dica contextual */}
  <div className="px-6 pb-6">
+ {noRefModalMode === 'blocked' ? (
+ <div className={(theme === 'dark' ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
+ <i className={"fas fa-exclamation-triangle mt-0.5 " + (theme === 'dark' ? 'text-red-400' : 'text-red-500')}></i>
+ <p className={(theme === 'dark' ? 'text-red-400/80' : 'text-red-600') + " text-xs"}>
+ Sem a foto de costas, não é possível gerar ângulos de costas ou detalhe de costas com qualidade.
+ </p>
+ </div>
+ ) : noRefModalMode === 'detail-tip' ? (
+ <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
+ <i className={"fas fa-lightbulb mt-0.5 " + (theme === 'dark' ? 'text-blue-400' : 'text-blue-500')}></i>
+ <p className={(theme === 'dark' ? 'text-blue-400/80' : 'text-blue-600') + " text-xs"}>
+ Uma foto de close-up do {angleWithoutRef === 'front_detail' ? 'detalhe frontal (logo, estampa, textura)' : 'detalhe traseiro (etiqueta, costura, acabamento)'} ajuda
+ a IA a reproduzir com mais fidelidade.
+ </p>
+ </div>
+ ) : (
  <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
  <i className="fas fa-lightbulb text-amber-400 mt-0.5"></i>
  <p className={(theme === 'dark' ? 'text-amber-400/80' : 'text-amber-600') + " text-xs"}>
  Com uma foto de referência deste ângulo, a IA reproduz melhor cores, proporções e detalhes do produto.
  </p>
  </div>
+ )}
  </div>
  </div>
  </div>

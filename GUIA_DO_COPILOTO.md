@@ -920,8 +920,8 @@ Inspirado no modelo padrão de referral de plataformas de IA. Simples, sem compl
 
 ### Assinatura RPC do Supabase
 ```
-add_credits(p_user_id uuid, p_amount integer, p_type text, p_description text, p_stripe_payment_id text DEFAULT NULL) → integer (novo saldo)
-deduct_credits(p_user_id uuid, p_amount integer, p_type text, p_description text) → boolean
+add_credits(p_user_id uuid, p_amount integer, p_generation_id uuid, p_description text, p_stripe_payment_id text DEFAULT NULL) → integer (novo saldo)
+deduct_credits(p_user_id uuid, p_amount integer, p_generation_id uuid, p_description text) → boolean
 ```
 
 ---
