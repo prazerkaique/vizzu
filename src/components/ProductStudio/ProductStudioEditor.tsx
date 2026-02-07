@@ -131,9 +131,9 @@ const ANGLES_CONFIG = {
  ],
  footwear: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-shoe-prints' },
- { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-shoe-prints' },
- { id: 'top' as ProductStudioAngle, label: 'Vista Superior', icon: 'fa-arrow-up' },
+ { id: 'back' as ProductStudioAngle, label: 'Par Traseira', icon: 'fa-shoe-prints' },
  { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
+ { id: 'top' as ProductStudioAngle, label: 'Par Superior', icon: 'fa-arrow-up' },
  { id: 'detail' as ProductStudioAngle, label: 'Sola', icon: 'fa-arrow-down' },
  ],
  headwear: [
@@ -141,12 +141,14 @@ const ANGLES_CONFIG = {
  { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-hat-cowboy' },
  { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
  { id: 'top' as ProductStudioAngle, label: 'Vista Superior', icon: 'fa-arrow-up' },
+ { id: 'front_detail' as ProductStudioAngle, label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
  ],
  bag: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-bag-shopping' },
  { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-bag-shopping' },
  { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
  { id: 'detail' as ProductStudioAngle, label: 'Interior', icon: 'fa-magnifying-glass-plus' },
+ { id: 'front_detail' as ProductStudioAngle, label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
  ],
  accessory: [
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-glasses' },
