@@ -12,6 +12,7 @@ import { OptimizedImage } from '../components/OptimizedImage';
 import { useImageViewer } from '../components/ImageViewer';
 import heic2any from 'heic2any';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
+import { getProductType, UPLOAD_SLOTS_CONFIG, DETAIL_TIPS, angleToApiField, angleToOriginalImagesKey, type UploadSlotConfig } from '../lib/productConfig';
 
 const CATEGORY_GROUPS = [
  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
@@ -49,13 +50,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
   const [showOptimizedImage, setShowOptimizedImage] = useState(true);
-  const [selectedFrontImage, setSelectedFrontImage] = useState<string | null>(null);
-  const [selectedBackImage, setSelectedBackImage] = useState<string | null>(null);
-  const [selectedFrontDetailImage, setSelectedFrontDetailImage] = useState<string | null>(null);
-  const [selectedBackDetailImage, setSelectedBackDetailImage] = useState<string | null>(null);
-  const [uploadTarget, setUploadTarget] = useState<'front' | 'back' | 'front_detail' | 'back_detail'>('front');
+  const [selectedImages, setSelectedImages] = useState<Record<string, string | null>>({});
+  const [uploadTarget, setUploadTarget] = useState<string>('front');
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
-  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'front_detail' | 'back_detail' | null>(null);
+  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<string | null>(null);
+
+  // Helpers para o mapa de imagens
+  const setImage = (angle: string, base64: string | null) => {
+    setSelectedImages(prev => ({ ...prev, [angle]: base64 }));
+  };
+  const getImage = (angle: string): string | null => selectedImages[angle] || null;
+  const clearAllImages = () => setSelectedImages({});
+
   const [showConfirmNoDetail, setShowConfirmNoDetail] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [lastCreatedProductId, setLastCreatedProductId] = useState<string | null>(null);
@@ -72,6 +78,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
   const [productAttributes, setProductAttributes] = useState<ProductAttributes>({});
+
+  // Slots de upload dinâmicos pela categoria selecionada
+  const currentProductType = useMemo(() => getProductType(newProduct.category), [newProduct.category]);
+  const currentUploadSlots = useMemo(() => UPLOAD_SLOTS_CONFIG[currentProductType], [currentProductType]);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [detectedProducts, setDetectedProducts] = useState<Array<{ type: string; color: string; pattern: string; material?: string; gender?: string; suggestedName?: string; confidence: number }>>([]);
   const [showProductSelector, setShowProductSelector] = useState(false);
@@ -206,17 +216,15 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
   };
 
-  const handleFileSelect = (files: FileList, target: 'front' | 'back' = 'front') => {
+  const handleFileSelect = (files: FileList, target: string = 'front') => {
    if (files.length > 0) {
    const file = files[0];
    const reader = new FileReader();
    reader.onload = () => {
    const base64 = reader.result as string;
+   setImage(target, base64);
    if (target === 'front') {
-   setSelectedFrontImage(base64);
    analyzeProductImageWithAI(base64);
-   } else {
-   setSelectedBackImage(base64);
    }
    setShowCreateProduct(true);
    };
@@ -224,7 +232,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
   };
 
-  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, type: 'front' | 'back' | 'front_detail' | 'back_detail') => {
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, angle: string) => {
    e.preventDefault();
    e.stopPropagation();
    const file = e.dataTransfer.files[0];
@@ -232,15 +240,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    const reader = new FileReader();
    reader.onload = (event) => {
    const base64 = event.target?.result as string;
-   if (type === 'front') {
-   setSelectedFrontImage(base64);
+   setImage(angle, base64);
+   if (angle === 'front') {
    analyzeProductImageWithAI(base64);
-   } else if (type === 'back') {
-   setSelectedBackImage(base64);
-   } else if (type === 'front_detail') {
-   setSelectedFrontDetailImage(base64);
-   } else {
-   setSelectedBackDetailImage(base64);
    }
    };
    reader.readAsDataURL(file);
@@ -395,7 +397,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   };
 
   const handleCreateProduct = async () => {
-   if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
+   if (!getImage('front') || !newProduct.name || !newProduct.category) {
    alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
    return;
    }
@@ -405,10 +407,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    if (!n8nUrl) {
    throw new Error('URL do webhook não configurada');
    }
-   const response = await fetch(`${n8nUrl}/vizzu/produto-importar`, {
-   method: 'POST',
-   headers: { 'Content-Type': 'application/json' },
-   body: JSON.stringify({
+   // Montar body com campos de imagem dinâmicos pela categoria
+   const validAngles = new Set(currentUploadSlots.map(s => s.angle));
+   const body: Record<string, any> = {
    user_id: user?.id,
    sku: 'SKU-' + Date.now().toString().slice(-6),
    name: newProduct.name,
@@ -417,11 +418,16 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    category: newProduct.category,
    collection: newProduct.collection || null,
    attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
-   image_front_base64: selectedFrontImage,
-   image_back_base64: selectedBackImage || null,
-   image_front_detail_base64: selectedFrontDetailImage || null,
-   image_back_detail_base64: selectedBackDetailImage || null
-   })
+   };
+   for (const [angle, base64] of Object.entries(selectedImages)) {
+   if (base64 && validAngles.has(angle)) {
+   body[angleToApiField(angle)] = base64;
+   }
+   }
+   const response = await fetch(`${n8nUrl}/vizzu/produto-importar`, {
+   method: 'POST',
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify(body)
    });
    const data = await response.json();
    if (data.success) {
@@ -429,10 +435,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    await loadUserProducts(user.id);
    }
    setShowCreateProduct(false);
-   setSelectedFrontImage(null);
-   setSelectedBackImage(null);
-   setSelectedFrontDetailImage(null);
-   setSelectedBackDetailImage(null);
+   clearAllImages();
    setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
    setProductAttributes({});
    setSuccessNotification('Produto criado com sucesso!');
@@ -460,10 +463,20 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    category: product.category || '',
    collection: product.collection || '',
    });
-   setSelectedFrontImage(product.originalImages?.front?.url || null);
-   setSelectedBackImage(product.originalImages?.back?.url || null);
-   setSelectedFrontDetailImage(product.originalImages?.frontDetail?.url || product.originalImages?.detail?.url || null);
-   setSelectedBackDetailImage(product.originalImages?.backDetail?.url || null);
+   // Carregar todas as imagens existentes no mapa
+   const images: Record<string, string | null> = {};
+   const oi = product.originalImages;
+   if (oi?.front?.url) images.front = oi.front.url;
+   if (oi?.back?.url) images.back = oi.back.url;
+   if (oi?.frontDetail?.url) images.front_detail = oi.frontDetail.url;
+   else if (oi?.detail?.url) images.front_detail = oi.detail.url;
+   if (oi?.backDetail?.url) images.back_detail = oi.backDetail.url;
+   if (oi?.['side-left']?.url) images['side-left'] = oi['side-left'].url;
+   if (oi?.['side-right']?.url) images['side-right'] = oi['side-right'].url;
+   if (oi?.top?.url) images.top = oi.top.url;
+   if (oi?.detail?.url && !images.front_detail) images.detail = oi.detail.url;
+   else if (oi?.detail?.url) images.detail = oi.detail.url;
+   setSelectedImages(images);
    setEditingProduct(product);
    setShowProductDetail(null);
    setShowCreateProduct(true);
@@ -471,7 +484,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
   const handleSaveEditedProduct = async () => {
    if (!editingProduct) return;
-   if (!selectedFrontImage || !newProduct.name || !newProduct.category) {
+   if (!getImage('front') || !newProduct.name || !newProduct.category) {
    alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
    return;
    }
@@ -481,14 +494,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    if (!n8nUrl) {
    throw new Error('URL do webhook não configurada');
    }
-   const frontImage = selectedFrontImage?.startsWith('data:') ? selectedFrontImage : null;
-   const backImage = selectedBackImage?.startsWith('data:') ? selectedBackImage : null;
-   const frontDetailImage = selectedFrontDetailImage?.startsWith('data:') ? selectedFrontDetailImage : null;
-   const backDetailImage = selectedBackDetailImage?.startsWith('data:') ? selectedBackDetailImage : null;
-   const response = await fetch(`${n8nUrl}/vizzu/produto-editar`, {
-   method: 'POST',
-   headers: { 'Content-Type': 'application/json' },
-   body: JSON.stringify({
+   // Montar body só com imagens novas (base64 data URI)
+   const validAngles = new Set(currentUploadSlots.map(s => s.angle));
+   const body: Record<string, any> = {
    user_id: user?.id,
    product_id: editingProduct.id,
    name: newProduct.name,
@@ -497,11 +505,16 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    category: newProduct.category,
    collection: newProduct.collection || null,
    attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
-   image_front_base64: frontImage,
-   image_back_base64: backImage,
-   image_front_detail_base64: frontDetailImage,
-   image_back_detail_base64: backDetailImage,
-   })
+   };
+   for (const [angle, value] of Object.entries(selectedImages)) {
+   if (value?.startsWith('data:') && validAngles.has(angle)) {
+   body[angleToApiField(angle)] = value;
+   }
+   }
+   const response = await fetch(`${n8nUrl}/vizzu/produto-editar`, {
+   method: 'POST',
+   headers: { 'Content-Type': 'application/json' },
+   body: JSON.stringify(body)
    });
    const data = await response.json();
    if (data.success) {
@@ -510,9 +523,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
    setShowCreateProduct(false);
    setEditingProduct(null);
-   setSelectedFrontImage(null);
-   setSelectedBackImage(null);
-   setSelectedFrontDetailImage(null); setSelectedBackDetailImage(null);
+   clearAllImages();
    setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
    setProductAttributes({});
    showToast('Produto atualizado com sucesso!', 'success');
@@ -715,7 +726,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
  <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
- Adicionar foto {showPhotoSourcePicker === 'front' ? 'de frente' : showPhotoSourcePicker === 'back' ? 'de costas' : showPhotoSourcePicker === 'front_detail' ? 'de detalhe (frente)' : 'de detalhe (costas)'}
+ Adicionar foto: {currentUploadSlots.find(s => s.angle === showPhotoSourcePicker)?.label || showPhotoSourcePicker}
  </h3>
  <div className="grid grid-cols-2 gap-3">
  <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
@@ -732,15 +743,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  if (file) {
  try {
  const base64 = await processImageFile(file);
- if (showPhotoSourcePicker === 'front') {
- setSelectedFrontImage(base64);
- // Analisar imagem com IA para pré-preencher campos
- analyzeProductImageWithAI(base64);
- } else if (showPhotoSourcePicker === 'back') {
- setSelectedBackImage(base64);
- } else {
- if (showPhotoSourcePicker === 'front_detail') { setSelectedFrontDetailImage(base64); } else { setSelectedBackDetailImage(base64); };
- }
+ setImage(showPhotoSourcePicker!, base64);
+ if (showPhotoSourcePicker === 'front') analyzeProductImageWithAI(base64);
  setShowPhotoSourcePicker(null);
  } catch (error) {
  console.error('Erro ao processar imagem:', error);
@@ -765,15 +769,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  if (file) {
  try {
  const base64 = await processImageFile(file);
- if (showPhotoSourcePicker === 'front') {
- setSelectedFrontImage(base64);
- // Analisar imagem com IA para pré-preencher campos
- analyzeProductImageWithAI(base64);
- } else if (showPhotoSourcePicker === 'back') {
- setSelectedBackImage(base64);
- } else {
- if (showPhotoSourcePicker === 'front_detail') { setSelectedFrontDetailImage(base64); } else { setSelectedBackDetailImage(base64); };
- }
+ setImage(showPhotoSourcePicker!, base64);
+ if (showPhotoSourcePicker === 'front') analyzeProductImageWithAI(base64);
  setShowPhotoSourcePicker(null);
  } catch (error) {
  console.error('Erro ao processar imagem:', error);
@@ -844,7 +841,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
- <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedFrontDetailImage(null); setSelectedBackDetailImage(null); setEditingProduct(null); }}>
+ <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); }}>
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pb-2 flex justify-center -mt-1">
@@ -852,144 +849,74 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold font-serif'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
- <button onClick={() => { setShowCreateProduct(false); setSelectedFrontImage(null); setSelectedBackImage(null); setSelectedFrontDetailImage(null); setSelectedBackDetailImage(null); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+ <button onClick={() => { setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
  <i className="fas fa-times text-xs"></i>
  </button>
  </div>
 
- {/* Fotos do Produto */}
+ {/* Fotos do Produto — dinâmico por categoria */}
  <div className="mb-4">
+ {(() => {
+ const mainSlots = currentUploadSlots.filter(s => s.group === 'main');
+ const detailSlots = currentUploadSlots.filter(s => s.group === 'detail');
+ const renderSlot = (slot: UploadSlotConfig) => {
+ const image = getImage(slot.angle);
+ return (
+ <div key={slot.angle} className="flex flex-col">
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+ <i className={`fas ${slot.icon} text-[8px]`} style={{ color: slot.required ? slot.accentColor : undefined }}></i>
+ {slot.label} {slot.required && <span className="text-[#FF6B6B]">*</span>}
+ </label>
+ {image ? (
+ <div className="relative aspect-square rounded-lg overflow-hidden border-2" style={{ borderColor: slot.accentColor }}>
+ <img src={image} alt={slot.label} className="w-full h-full object-cover" />
+ <div className="absolute top-1 right-1 flex gap-0.5">
+ <button onClick={() => setShowPhotoSourcePicker(slot.angle)} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
+ <i className="fas fa-sync text-[7px]"></i>
+ </button>
+ <button onClick={() => setImage(slot.angle, null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
+ <i className="fas fa-times text-[7px]"></i>
+ </button>
+ </div>
+ <div className="absolute bottom-1 left-1 px-1 py-0.5 text-white text-[7px] font-bold rounded-full" style={{ backgroundColor: slot.accentColor }}>
+ <i className="fas fa-check mr-0.5"></i>OK
+ </div>
+ </div>
+ ) : (
+ <div onDrop={(e) => handleImageDrop(e, slot.angle)} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker(slot.angle)} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
+ </div>
+ )}
+ </div>
+ );
+ };
+ return (
+ <>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
  <div className="grid grid-cols-2 gap-2">
- {/* FRENTE */}
- <div className="flex flex-col">
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
- <i className="fas fa-image text-[#FF6B6B] text-[8px]"></i>
- Frente <span className="text-[#FF6B6B]">*</span>
- </label>
- {selectedFrontImage ? (
- <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#FF6B6B]">
- <img src={selectedFrontImage} alt="Frente" className="w-full h-full object-cover" />
- <div className="absolute top-1 right-1 flex gap-0.5">
- <button onClick={() => setShowPhotoSourcePicker('front')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-sync text-[7px]"></i>
- </button>
- <button onClick={() => setSelectedFrontImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-times text-[7px]"></i>
- </button>
+ {mainSlots.map(renderSlot)}
  </div>
- <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[7px] font-bold rounded-full">
- <i className="fas fa-check mr-0.5"></i>OK
- </div>
- </div>
- ) : (
- <div onDrop={(e) => handleImageDrop(e, 'front')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
- </div>
- )}
- </div>
-
- {/* COSTAS */}
- <div className="flex flex-col">
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
- <i className="fas fa-image text-neutral-400 text-[8px]"></i>
- Costas
- </label>
- {selectedBackImage ? (
- <div className={(theme === 'dark' ? 'border-green-500' : 'border-green-400') + ' relative aspect-square rounded-lg overflow-hidden border-2'}>
- <img src={selectedBackImage} alt="Costas" className="w-full h-full object-cover" />
- <div className="absolute top-1 right-1 flex gap-0.5">
- <button onClick={() => setShowPhotoSourcePicker('back')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-sync text-[7px]"></i>
- </button>
- <button onClick={() => setSelectedBackImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-times text-[7px]"></i>
- </button>
- </div>
- <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-green-500 text-white text-[7px] font-bold rounded-full">
- <i className="fas fa-check mr-0.5"></i>OK
- </div>
- </div>
- ) : (
- <div onDrop={(e) => handleImageDrop(e, 'back')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
- </div>
- )}
- </div>
- </div>
-
- {/* Detalhes (close-up) */}
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>Close-up de Detalhe (opcional)</p>
+ {detailSlots.length > 0 && (
+ <>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>
+ {currentProductType === 'footwear' ? 'Sola (opcional)' : 'Close-up / Detalhe (opcional)'}
+ </p>
  <div className="grid grid-cols-2 gap-2">
- {/* DETALHE FRENTE */}
- <div className="flex flex-col">
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
- <i className="fas fa-magnifying-glass-plus text-[#FF9F43] text-[8px]"></i>
- Detalhe Frente
- </label>
- {selectedFrontDetailImage ? (
- <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#FF9F43]">
- <img src={selectedFrontDetailImage} alt="Detalhe Frente" className="w-full h-full object-cover" />
- <div className="absolute top-1 right-1 flex gap-0.5">
- <button onClick={() => setShowPhotoSourcePicker('front_detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-sync text-[7px]"></i>
- </button>
- <button onClick={() => setSelectedFrontDetailImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-times text-[7px]"></i>
- </button>
+ {detailSlots.map(renderSlot)}
  </div>
- <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-[#FF9F43] text-white text-[7px] font-bold rounded-full">
- <i className="fas fa-check mr-0.5"></i>OK
- </div>
- </div>
- ) : (
- <div onDrop={(e) => handleImageDrop(e, 'front_detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('front_detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
- </div>
+ </>
  )}
- </div>
-
- {/* DETALHE COSTAS */}
- <div className="flex flex-col">
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
- <i className="fas fa-magnifying-glass-plus text-[#FF9F43] text-[8px]"></i>
- Detalhe Costas
- </label>
- {selectedBackDetailImage ? (
- <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-[#FF9F43]">
- <img src={selectedBackDetailImage} alt="Detalhe Costas" className="w-full h-full object-cover" />
- <div className="absolute top-1 right-1 flex gap-0.5">
- <button onClick={() => setShowPhotoSourcePicker('back_detail')} className="w-5 h-5 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-sync text-[7px]"></i>
- </button>
- <button onClick={() => setSelectedBackDetailImage(null)} className="w-5 h-5 bg-red-500/80 hover:bg-red-500 text-white rounded-full flex items-center justify-center">
- <i className="fas fa-times text-[7px]"></i>
- </button>
- </div>
- <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-[#FF9F43] text-white text-[7px] font-bold rounded-full">
- <i className="fas fa-check mr-0.5"></i>OK
- </div>
- </div>
- ) : (
- <div onDrop={(e) => handleImageDrop(e, 'back_detail')} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker('back_detail')} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
- </div>
- )}
- </div>
- </div>
-
- {/* Dica */}
+ {/* Dica contextual */}
  <div className={(theme === 'dark' ? 'bg-[#FF9F43]/10 border-[#FF9F43]/30' : 'bg-orange-50 border-[#FF9F43]/20') + ' rounded-lg p-2 mt-3 border'}>
  <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' text-[10px] flex items-start gap-1.5'}>
- <i className="fas fa-magnifying-glass-plus mt-0.5"></i>
- <span><strong>Opcional:</strong> Close-up de logos, estampas ou costuras. Melhora a fidelidade da IA nesses detalhes. Sem essas fotos, a IA gera normalmente mas pode não reproduzir detalhes com precisão.</span>
+ <i className="fas fa-lightbulb mt-0.5"></i>
+ <span><strong>Dica:</strong> {DETAIL_TIPS[currentProductType]} Sem essas fotos, a IA gera normalmente mas pode não reproduzir detalhes com precisão.</span>
  </p>
  </div>
-
+ </>
+ );
+ })()}
  </div>
 
  {/* OVERLAY DE ANÁLISE IA - Tela imersiva de loading */}
@@ -1094,7 +1021,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  )}
 
- <button onClick={editingProduct ? handleSaveEditedProduct : handleCreateProduct} disabled={isCreatingProduct || !selectedFrontImage} className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+ <button onClick={editingProduct ? handleSaveEditedProduct : handleCreateProduct} disabled={isCreatingProduct || !getImage('front')} className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
  {isCreatingProduct ? (
  <>
  <i className="fas fa-spinner fa-spin text-xs"></i>

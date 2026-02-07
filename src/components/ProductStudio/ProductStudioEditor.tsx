@@ -13,6 +13,7 @@ import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, g
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import { OptimizedImage } from '../OptimizedImage';
 import { supabase } from '../../services/supabaseClient';
+import { getProductType, CLOTHING_CATEGORIES, FOOTWEAR_CATEGORIES, HEADWEAR_CATEGORIES, BAG_CATEGORIES, ACCESSORY_CATEGORIES } from '../../lib/productConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
@@ -100,25 +101,7 @@ const LOADING_PHRASES = [
  "Quase pronto! Últimos ajustes..."
 ];
 
-// Categorias de roupas
-const CLOTHING_CATEGORIES = [
- 'Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies',
- 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts',
- 'Bermudas', 'Saias', 'Leggings', 'Vestidos', 'Macacões', 'Jardineiras',
- 'Biquínis', 'Maiôs', 'Shorts Fitness'
-];
-
-// Categorias de calçados
-const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'];
-
-// Categorias de cabeça (bonés, chapéus)
-const HEADWEAR_CATEGORIES = ['Bonés', 'Chapéus', 'Gorros', 'Viseiras'];
-
-// Categorias de bolsas/mochilas
-const BAG_CATEGORIES = ['Bolsas', 'Mochilas', 'Pochetes', 'Necessaires'];
-
-// Categorias de acessórios genéricos (sem ghost mannequin/flat lay)
-const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Acessórios', 'Tiaras', 'Lenços', 'Outros Acessórios'];
+// Categorias importadas de ../../lib/productConfig
 
 // Ângulos por tipo de produto
 const ANGLES_CONFIG = {
@@ -479,19 +462,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  }, [phraseIndex, isGenerating, onSetLoadingText]);
 
- // Determinar tipo de produto baseado na categoria
- // Usa check POSITIVO: so mostra Ghost Mannequin/Flat Lay para roupas explicitamente listadas
- // Categorias desconhecidas caem como 'accessory' (sem opcao de estilo) por seguranca
- const getProductType = (): 'clothing' | 'footwear' | 'headwear' | 'bag' | 'accessory' => {
- const category = editedProduct.category || product.category || '';
- if (CLOTHING_CATEGORIES.includes(category)) return 'clothing';
- if (FOOTWEAR_CATEGORIES.includes(category)) return 'footwear';
- if (HEADWEAR_CATEGORIES.includes(category)) return 'headwear';
- if (BAG_CATEGORIES.includes(category)) return 'bag';
- return 'accessory';
- };
-
- const productType = getProductType();
+ // Determinar tipo de produto baseado na categoria (usa config centralizada)
+ const productType = getProductType(editedProduct.category || product.category);
  const availableAngles = ANGLES_CONFIG[productType];
 
  // Obter todas as imagens do produto
@@ -2442,8 +2414,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </h3>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
  A imagem de <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef]}</span> pode
- ser gerada, mas para melhores resultados é importante tirar uma foto do detalhe
- {angleWithoutRef === 'front_detail' ? ' da frente' : ' das costas'} no cadastro de produto.
+ ser gerada, mas para melhores resultados é importante enviar uma foto de referência desse ângulo no cadastro de produto.
  </p>
  </>
  ) : (
@@ -2540,8 +2511,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
  <i className={"fas fa-lightbulb mt-0.5 " + (theme === 'dark' ? 'text-blue-400' : 'text-blue-500')}></i>
  <p className={(theme === 'dark' ? 'text-blue-400/80' : 'text-blue-600') + " text-xs"}>
- Uma foto de close-up do {angleWithoutRef === 'front_detail' ? 'detalhe frontal (logo, estampa, textura)' : 'detalhe traseiro (etiqueta, costura, acabamento)'} ajuda
- a IA a reproduzir com mais fidelidade.
+ Uma foto de referência desse ângulo ({angleLabels[angleWithoutRef!]}) ajuda a IA a reproduzir com mais fidelidade.
+ Envie pelo cadastro do produto para melhores resultados.
  </p>
  </div>
  ) : (

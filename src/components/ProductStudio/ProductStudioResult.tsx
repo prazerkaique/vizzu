@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
+import { getProductType as getProductTypeFromConfig } from '../../lib/productConfig';
 
 interface ProductStudioResultProps {
  product: Product;
@@ -54,10 +55,7 @@ const ANGLE_ICONS: Record<ProductStudioAngle, string> = {
  'folded': 'fa-layer-group'
 };
 
-// Categorias de calçados
-const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos'];
-// Categorias de acessórios
-const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Bolsas', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
+// Categorias importadas de ../../lib/productConfig
 
 export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  product,
@@ -98,21 +96,18 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  const images = session.images;
  const currentImage = images[currentIndex];
 
- // Determinar tipo de produto
- const getProductType = (): 'clothing' | 'footwear' | 'accessory' => {
- const category = product.category || '';
- if (FOOTWEAR_CATEGORIES.some(c => category.toLowerCase().includes(c.toLowerCase()))) return 'footwear';
- if (ACCESSORY_CATEGORIES.some(c => category.toLowerCase().includes(c.toLowerCase()))) return 'accessory';
- return 'clothing';
- };
-
- const productType = getProductType();
+ // Determinar tipo de produto (usa config centralizada)
+ const productType = getProductTypeFromConfig(product.category);
 
  // Ângulos disponíveis baseado no tipo de produto
  const getAvailableAngles = (): ProductStudioAngle[] => {
  switch (productType) {
  case 'footwear':
- return ['front', 'back', 'top', 'side-left', 'detail'];
+ return ['front', 'back', 'side-left', 'top', 'detail'];
+ case 'headwear':
+ return ['front', 'back', 'side-left', 'top', 'front_detail'];
+ case 'bag':
+ return ['front', 'back', 'side-left', 'detail', 'front_detail'];
  case 'accessory':
  return ['front', 'back', 'side-left', 'side-right', 'detail'];
  default: // clothing
