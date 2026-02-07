@@ -999,11 +999,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Iniciar polling incremental (usado tanto por v9 direto quanto por fallback)
  const startIncrementalPolling = useCallback(() => {
  const pollStart = Date.now();
- const maxPollMs = 5 * 60 * 1000; // 5 minutos
+ const pending = getPendingPSGeneration();
+ const numAngles = pending?.angles?.length || 5;
+ const maxPollMs = Math.max(10, numAngles * 2.5) * 60 * 1000; // ~2.5 min por ângulo, mínimo 10 min
 
  const pollInterval = setInterval(async () => {
  if (Date.now() - pollStart > maxPollMs) {
-   console.warn('[Studio] Polling timeout — parando após 5 minutos');
+   console.warn(`[Studio] Polling timeout — parando após ${Math.round(maxPollMs / 60000)} minutos`);
    clearInterval(pollInterval);
    clearPendingPSGeneration();
    setGenerationFinalStatus('failed');
