@@ -247,12 +247,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // v9 3.2: Report de problema
  const [showReportModal, setShowReportModal] = useState(false);
  const [reportAngle, setReportAngle] = useState<string | null>(null);
- // Ref para status final (evitar stale closure no polling)
+ // Refs para evitar stale closure no polling
  const generationFinalStatusRef = useRef<string | null>(null);
+ const completedAngleStatusesRef = useRef<StudioAngleStatus[]>([]);
  // ID da geração atual (sobrevive ao cleanup do polling)
  const [currentGenerationId, setCurrentGenerationId] = useState<string | null>(null);
 
  const { user: authUser } = useAuth();
+
+ // Sincronizar ref dos ângulos completados (para acessar dentro de callbacks sem stale closure)
+ useEffect(() => {
+ completedAngleStatusesRef.current = completedAngleStatuses;
+ }, [completedAngleStatuses]);
 
  // Usar estado global se disponível, senão local
  const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
@@ -347,11 +353,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
      setCurrentSession(newSession);
 
-     // Só mostrar resultado automaticamente se TODOS os ângulos geraram com sucesso
-     // Se parcial/falha, manter modal aberto para retry/report (v9 3.1)
-     if (pollResult.generationStatus === 'completed') {
-       setShowResult(true);
-     }
+     // Mostrar tela de resultados sempre que houver imagens geradas
+     setShowResult(true);
    }
 
    return 'completed';
@@ -1013,7 +1016,30 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const setProg = onSetProgress || setLocalProgress;
    setGen(false);
    setProg(0);
+   setIsSubmitting(false);
    if (onSetMinimized) onSetMinimized(false);
+   // Se já tiver ângulos parciais prontos, mostrar resultados mesmo com timeout
+   if (completedAngleStatusesRef.current && completedAngleStatusesRef.current.length > 0) {
+     const partialAngles = completedAngleStatusesRef.current.filter(a => a.status === 'completed' && a.url);
+     if (partialAngles.length > 0) {
+       const pending = getPendingPSGeneration();
+       const newImages = partialAngles.map((item, idx) => ({
+         id: item.id || `timeout-${idx}`,
+         url: item.url!,
+         angle: (item.angle || 'front') as ProductStudioAngle,
+         createdAt: new Date().toISOString()
+       }));
+       const newSession: ProductStudioSession = {
+         id: `timeout-${Date.now()}`,
+         productId: product.id,
+         images: newImages,
+         status: 'ready' as const,
+         createdAt: new Date().toISOString()
+       };
+       setCurrentSession(newSession);
+       setShowResult(true);
+     }
+   }
    return;
  }
  const result = await checkPendingPSGeneration();
@@ -1023,18 +1049,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const setProg = onSetProgress || setLocalProgress;
    setProg(100);
 
-   const hasFailed = generationFinalStatusRef.current === 'partial' || generationFinalStatusRef.current === 'failed';
-   if (hasFailed) {
-     // Manter modal aberto para retry/report (v9 3.1)
+   // Sempre fechar loading após conclusão — tela de resultados cuida do resto
+   setTimeout(() => {
+     setGen(false);
+     setProg(0);
+     if (onSetMinimized) onSetMinimized(false);
      setIsSubmitting(false);
-   } else {
-     // Tudo OK — fechar após mostrar 100%
-     setTimeout(() => {
-       setGen(false);
-       setProg(0);
-       if (onSetMinimized) onSetMinimized(false);
-     }, 1000);
-   }
+   }, 1000);
  }
  }, 3000); // v9: poll a cada 3s (mais rápido que v8)
 
