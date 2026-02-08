@@ -4,11 +4,13 @@ import {
  CreativeStillTemplate,
  CreativeStillGeneration,
  CreativeStillWizardState,
+ CreativeStillSimpleState,
 } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 import { Plan } from '../../hooks/useCredits';
 import { CreativeStillWizard } from './CreativeStillWizard';
 import { CreativeStillResults } from './CreativeStillResults';
+import { CreativeStillSimple } from './CreativeStillSimple';
 import { OptimizedImage } from '../OptimizedImage';
 
 // ============================================================
@@ -230,7 +232,7 @@ export interface CreativeStillProps {
 // COMPONENTE PRINCIPAL
 // ============================================================
 
-type View = 'home' | 'wizard' | 'results';
+type View = 'mode-select' | 'home' | 'simple' | 'wizard' | 'results';
 
 export const CreativeStill: React.FC<CreativeStillProps> = ({
  theme,
@@ -250,7 +252,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  onSetMinimized,
  isMinimized,
 }) => {
- const [view, setView] = useState<View>('home');
+ const [view, setView] = useState<View>('mode-select');
+ const [simpleState, setSimpleState] = useState<CreativeStillSimpleState | null>(null);
  const [wizardState, setWizardState] = useState<CreativeStillWizardState>({ ...INITIAL_WIZARD_STATE });
  const [templates, setTemplates] = useState<CreativeStillTemplate[]>([]);
  const [generations, setGenerations] = useState<CreativeStillGeneration[]>([]);
@@ -588,10 +591,211 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  };
 
  const handleBackToHome = () => {
- setView('home');
+ setView('mode-select');
  setCurrentGeneration(null);
+ setSimpleState(null);
  setWizardState({ ...INITIAL_WIZARD_STATE });
  loadData(); // Recarregar listas ao voltar
+ };
+
+ // Gerar no modo simplificado
+ const handleGenerateSimple = async (state: CreativeStillSimpleState) => {
+ if (!state.mainProduct) return;
+
+ const creditCost = state.resolution === '4k' ? 2 : 1;
+ const creditsNeeded = state.variationsCount * creditCost;
+ if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still-simple')) return;
+
+ setSimpleState(state);
+ setIsGenerating(true);
+ onSetGenerating?.(true);
+ setGenerationProgress(10);
+ onSetProgress?.(10);
+ setLoadingText('');
+ setView('results');
+
+ // Criar registro no Supabase
+ const { data: insertedGen, error: insertError } = await supabase
+   .from('creative_still_generations')
+   .insert({
+     user_id: userId,
+     product_id: state.mainProduct.id || '',
+     additional_products: [],
+     settings_snapshot: {
+       mode: 'simple',
+       userPrompt: state.userPrompt,
+       optimizedPrompt: state.optimizedPrompt,
+       frameRatio: state.frameRatio,
+       resolution: state.resolution,
+       variationsCount: state.variationsCount,
+       allProductImageUrls: state.allProductImageUrls,
+       product_name: state.mainProduct.name,
+       product_category: state.mainProduct.category || '',
+       product_color: state.mainProduct.color || '',
+     },
+     variations_requested: state.variationsCount,
+     resolution: state.resolution,
+     variation_urls: [],
+     variation_1_url: null,
+     variation_2_url: null,
+     credits_used: creditsNeeded,
+     status: 'pending',
+   })
+   .select()
+   .single();
+
+ if (insertError || !insertedGen) {
+   console.error('Erro ao criar geração simples:', insertError);
+   setIsGenerating(false);
+   onSetGenerating?.(false);
+   setCurrentGeneration({
+     id: crypto.randomUUID(),
+     user_id: userId || '',
+     template_id: null,
+     product_id: state.mainProduct.id || '',
+     additional_products: [],
+     settings_snapshot: {},
+     variation_urls: [],
+     variation_1_url: null,
+     variation_2_url: null,
+     variations_requested: state.variationsCount,
+     selected_variation: null,
+     reference_image_url: null,
+     resolution: state.resolution,
+     credits_used: 0,
+     status: 'failed',
+     error_message: 'Erro ao iniciar geração. Tente novamente.',
+     created_at: new Date().toISOString(),
+     completed_at: null,
+   });
+   return;
+ }
+
+ const generationId = insertedGen.id;
+
+ // Progresso suave
+ let currentProg = 10;
+ const progressInterval = setInterval(() => {
+   const remaining = 90 - currentProg;
+   const increment = Math.max(remaining * 0.08, 0.5);
+   currentProg = Math.min(currentProg + increment, 90);
+   setGenerationProgress(Math.round(currentProg));
+   onSetProgress?.(Math.round(currentProg));
+ }, 1000);
+
+ // Polling
+ const POLL_INTERVAL = 3000;
+ const POLL_TIMEOUT = state.variationsCount * 120000; // 2 min por variação
+ const pollStart = Date.now();
+
+ try {
+   const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
+     let webhookFailed = false;
+
+     const poll = async () => {
+       if (Date.now() - pollStart > POLL_TIMEOUT) {
+         reject(new Error('Tempo limite excedido'));
+         return;
+       }
+       try {
+         const { data, error } = await supabase
+           .from('creative_still_generations')
+           .select('*')
+           .eq('id', generationId)
+           .single();
+
+         if (error) { reject(error); return; }
+
+         if (data.status === 'completed') {
+           resolve(data as CreativeStillGeneration);
+         } else if (data.status === 'failed') {
+           resolve(data as CreativeStillGeneration);
+         } else if (webhookFailed) {
+           reject(new Error('Falha na comunicação com o servidor de geração.'));
+         } else {
+           setTimeout(poll, POLL_INTERVAL);
+         }
+       } catch (pollErr) {
+         reject(pollErr);
+       }
+     };
+
+     // Chamar webhook N8N para iniciar geração simplificada
+     fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate-simple', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         generation_id: generationId,
+         user_id: userId,
+       }),
+     })
+     .then(res => {
+       if (!res.ok) {
+         console.error('Webhook retornou erro:', res.status);
+         webhookFailed = true;
+       }
+     })
+     .catch(err => {
+       console.error('Erro ao chamar webhook n8n:', err);
+       webhookFailed = true;
+     });
+
+     setTimeout(poll, 2000);
+   });
+
+   clearInterval(progressInterval);
+   setGenerationProgress(95);
+   onSetProgress?.(95);
+   await new Promise(resolve => setTimeout(resolve, 500));
+   setGenerationProgress(100);
+   onSetProgress?.(100);
+   setCurrentGeneration(result);
+
+   try {
+     const notifiedKey = `vizzu_bg_notified_${userId}`;
+     const notified: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+     notified.push(`still-${generationId}`);
+     localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
+   } catch {}
+
+   loadData();
+ } catch (err) {
+   clearInterval(progressInterval);
+   await supabase
+     .from('creative_still_generations')
+     .update({ status: 'failed', error_message: 'Erro ao gerar imagem.' })
+     .eq('id', generationId);
+
+   const { data: failedGen } = await supabase
+     .from('creative_still_generations')
+     .select('*')
+     .eq('id', generationId)
+     .single();
+
+   setCurrentGeneration((failedGen as CreativeStillGeneration) || {
+     id: generationId,
+     user_id: userId || '',
+     template_id: null,
+     product_id: state.mainProduct.id || '',
+     additional_products: [],
+     settings_snapshot: {},
+     variation_urls: [],
+     variation_1_url: null,
+     variation_2_url: null,
+     variations_requested: state.variationsCount,
+     selected_variation: null,
+     reference_image_url: null,
+     resolution: state.resolution,
+     credits_used: 0,
+     status: 'failed',
+     error_message: 'Erro ao gerar imagem. Tente novamente.',
+     created_at: new Date().toISOString(),
+     completed_at: null,
+   });
+ } finally {
+   setIsGenerating(false);
+   onSetGenerating?.(false);
+ }
  };
 
  // Toggle favorito
@@ -604,7 +808,112 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  };
 
  // ============================================================
- // TELA INICIAL
+ // TELA DE SELEÇÃO DE MODO
+ // ============================================================
+ if (view === 'mode-select') {
+ return (
+   <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-cream')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
+   <div className="max-w-lg mx-auto">
+     {/* Header */}
+     <div className="flex items-center gap-3 mb-8">
+     {onBack && (
+       <button onClick={onBack} className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}>
+       <i className="fas fa-arrow-left text-sm"></i>
+       </button>
+     )}
+     <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+       <i className={'fas fa-palette text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+     </div>
+     <div>
+       <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Still Criativo®</h1>
+       <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
+     </div>
+     </div>
+
+     <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-6 text-center'}>
+     Como você quer criar?
+     </p>
+
+     <div className="space-y-4">
+     {/* Card — Modo Rápido */}
+     <button
+       onClick={() => setView('simple')}
+       className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400')}
+     >
+       <div className="flex items-start gap-4">
+       <div className={'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ' + (isDark ? 'from-amber-500/20 to-[#FF9F43]/10' : 'from-amber-100 to-[#FF9F43]/10')}>
+         <i className={'fas fa-bolt text-xl ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
+       </div>
+       <div className="flex-1 min-w-0">
+         <div className="flex items-center gap-2 mb-1">
+         <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-bold text-base'}>Modo Rápido</h3>
+         <span className={'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ' + (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600')}>Novo</span>
+         </div>
+         <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
+         Selecione o produto e descreva a cena. A IA cuida do resto.
+         </p>
+         <div className={'flex items-center gap-3 mt-3 text-[10px] ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
+         <span><i className="fas fa-check mr-1"></i>Prompt livre</span>
+         <span><i className="fas fa-check mr-1"></i>Presets prontos</span>
+         <span><i className="fas fa-check mr-1"></i>1-5 variações</span>
+         </div>
+       </div>
+       <div className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' self-center'}>
+         <i className="fas fa-chevron-right text-sm"></i>
+       </div>
+       </div>
+     </button>
+
+     {/* Card — Modo Avançado */}
+     <button
+       onClick={() => setView('home')}
+       className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-purple-500/50' : 'bg-white border-2 border-gray-200 hover:border-purple-400')}
+     >
+       <div className="flex items-start gap-4">
+       <div className={'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ' + (isDark ? 'from-purple-500/20 to-purple-400/10' : 'from-purple-100 to-purple-50')}>
+         <i className={'fas fa-wand-magic-sparkles text-xl ' + (isDark ? 'text-purple-400' : 'text-purple-500')}></i>
+       </div>
+       <div className="flex-1 min-w-0">
+         <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-bold text-base mb-1'}>Modo Avançado</h3>
+         <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
+         Wizard de 4 passos com controle total: cenário, estética, câmera, iluminação.
+         </p>
+         <div className={'flex items-center gap-3 mt-3 text-[10px] ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
+         <span><i className="fas fa-check mr-1"></i>Templates</span>
+         <span><i className="fas fa-check mr-1"></i>Lente e câmera</span>
+         <span><i className="fas fa-check mr-1"></i>Controle total</span>
+         </div>
+       </div>
+       <div className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' self-center'}>
+         <i className="fas fa-chevron-right text-sm"></i>
+       </div>
+       </div>
+     </button>
+     </div>
+   </div>
+   </div>
+ );
+ }
+
+ // ============================================================
+ // MODO SIMPLIFICADO
+ // ============================================================
+ if (view === 'simple') {
+ return (
+   <CreativeStillSimple
+   theme={theme}
+   products={products}
+   userCredits={userCredits}
+   currentPlan={currentPlan}
+   onGenerate={handleGenerateSimple}
+   onBack={() => setView('mode-select')}
+   onOpenPlanModal={onOpenPlanModal}
+   />
+ );
+ }
+
+ // ============================================================
+ // TELA INICIAL (AVANÇADO)
  // ============================================================
  if (view === 'home') {
  return (
@@ -613,16 +922,14 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  {/* Header */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
- {onBack && (
- <button onClick={onBack} className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}>
+ <button onClick={() => setView('mode-select')} className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}>
  <i className="fas fa-arrow-left text-sm"></i>
  </button>
- )}
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-palette text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <i className={'fas fa-wand-magic-sparkles text-sm ' + (isDark ? 'text-purple-400' : 'text-purple-500')}></i>
  </div>
  <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Still Criativo®</h1>
+ <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Modo Avançado</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
  </div>
  </div>
@@ -794,7 +1101,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  progress={generationProgress}
  loadingText={loadingText}
  onBackToHome={handleBackToHome}
- onGenerateAgain={handleGenerate}
+ onGenerateAgain={simpleState ? () => handleGenerateSimple(simpleState) : handleGenerate}
  onMinimize={() => onSetMinimized?.(true)}
  isMinimized={isMinimized}
  onSaveTemplate={async (name: string) => {

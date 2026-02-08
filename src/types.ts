@@ -1697,3 +1697,17 @@ export interface CreativeStillWizardState {
   saveAsTemplate: boolean;
   templateName: string;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Creative Still — Modo Simplificado (Rápido)
+// ═══════════════════════════════════════════════════════════════
+
+export interface CreativeStillSimpleState {
+  mainProduct: Product | null;
+  userPrompt: string;
+  optimizedPrompt: string;
+  frameRatio: '1:1' | '4:5' | '9:16' | '16:9';
+  resolution: '2k' | '4k';
+  variationsCount: number; // 1-5
+  allProductImageUrls: string[];
+}
