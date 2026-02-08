@@ -1896,8 +1896,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {availableAngles.map(angle => {
  const isSelected = selectedAngles.includes(angle.id);
  const isFront = angle.id === 'front';
- // Bloqueado: costas ou detalhe costas sem foto de costas
- const isBlocked = (angle.id === 'back' || angle.id === 'back_detail') && !availableReferences['back'];
+ // Nenhum ângulo é bloqueado — todos podem ser selecionados (com aviso)
+ const isBlocked = false;
  // Tem referência completa (incluindo detalhe específico)
  const hasRef = isFront || angle.id === 'folded' || availableReferences[angle.id];
  // Tem referência base mas falta detalhe específico (dica suave)
