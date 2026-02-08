@@ -673,16 +673,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return;
  }
 
- // BLOQUEIO: costas ou detalhe costas SEM foto de costas
+ // AVISO: costas ou detalhe costas SEM foto de costas
  if ((angle === 'back' || angle === 'back_detail') && !availableReferences['back']) {
  setAngleWithoutRef(angle);
- // Para roupa: bloqueio total (costas pode ter estampa completamente diferente)
- // Para outras categorias (calçado, boné, bolsa, acessório): apenas aviso
- if (productType === 'clothing') {
- setNoRefModalMode('blocked');
- } else {
  setNoRefModalMode('warning');
- }
  setShowNoRefModal(true);
  return;
  }
@@ -715,21 +709,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setSelectedAngles(prev => [...prev, angle]);
  };
 
- // Selecionar todos os ângulos disponíveis
- // Para roupa: bloqueia back/back_detail sem foto de costas
- // Para outras categorias: inclui back (IA gera a partir da frontal)
+ // Selecionar todos os ângulos disponíveis (inclui todos, mesmo sem referência)
  const selectAllAngles = () => {
- setSelectedAngles(availableAngles
- .filter(a => {
- if (!availableReferences['back']) {
- // back_detail sempre bloqueado sem foto de costas (todas as categorias)
- if (a.id === 'back_detail') return false;
- // back bloqueado apenas para roupa
- if (a.id === 'back' && productType === 'clothing') return false;
- }
- return true;
- })
- .map(a => a.id));
+ setSelectedAngles(availableAngles.map(a => a.id));
  };
 
  // Limpar seleção (front sempre fica)
