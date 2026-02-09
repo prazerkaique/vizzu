@@ -15,6 +15,7 @@ import { OptimizedImage } from '../OptimizedImage';
 import { supabase } from '../../services/supabaseClient';
 import { getProductType, CLOTHING_CATEGORIES, FOOTWEAR_CATEGORIES, HEADWEAR_CATEGORIES, BAG_CATEGORIES, ACCESSORY_CATEGORIES } from '../../lib/productConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 
@@ -169,6 +170,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  currentPlan,
  onOpenPlanModal
 }) => {
+ const { showToast } = useUI();
+
  // Estados de edição do produto
  const [editMode, setEditMode] = useState(false);
  const [editedProduct, setEditedProduct] = useState({
@@ -265,6 +268,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  clearPendingPSGeneration();
  generationFinalStatusRef.current = 'failed';
  setGenerationFinalStatus('failed');
+ showToast('A geração expirou após 10 minutos. Tente novamente.', 'error');
  return 'completed';
  }
 
@@ -340,6 +344,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
      // Mostrar tela de resultados sempre que houver imagens geradas
      setShowResult(true);
+   }
+
+   // Se falhou completamente (nenhum ângulo gerado), mostrar erro
+   if (pollResult.generationStatus === 'failed' && successAngles.length === 0) {
+     showToast(pollResult.error_message || 'Erro na geração. Seus créditos foram reembolsados. Tente novamente.', 'error');
    }
 
    return 'completed';
