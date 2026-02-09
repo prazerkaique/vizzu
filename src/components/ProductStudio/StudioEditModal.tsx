@@ -6,6 +6,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Product, ProductStudioImage, ProductStudioSession } from '../../types';
 import { editStudioImage, StudioBackground, StudioShadow } from '../../lib/api/studio';
+import { supabase } from '../../services/supabaseClient';
+import { ZoomableImage } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 
@@ -56,6 +58,13 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Zoom state
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+
+  // Desktop hover zoom refs
+  const [hoverTarget, setHoverTarget] = useState<'before' | 'after' | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const creditCost = resolution === '4k' ? 2 : 1;
@@ -76,6 +85,8 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     setLastSource(null);
     setIsDragging(false);
     setIsGenerating(false);
+    setZoomImage(null);
+    setHoverTarget(null);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -123,6 +134,16 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     if (e.target) e.target.value = '';
   }, [processFile]);
 
+  // ── Desktop hover zoom ────────────────────────────────────
+
+  const handleImageMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>, target: 'before' | 'after') => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+    setHoverTarget(target);
+  }, []);
+
   // ── Generate ───────────────────────────────────────────────
 
   const handleGenerate = useCallback(async () => {
@@ -156,7 +177,12 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
       });
 
       if (result.success && result.new_image_url) {
-        if (onDeductEditCredits) {
+        // Check if workflow already deducted credits (v4+)
+        if (result.credits_deducted) {
+          // Workflow handled deduction — just set source for UI banner
+          setLastSource(result.credit_source || (editBalance >= creditCost ? 'edit' : 'regular'));
+        } else if (onDeductEditCredits) {
+          // Fallback: frontend deducts (backward compat with old workflow)
           const deductResult = await onDeductEditCredits(creditCost, generationId);
           setLastSource(deductResult.source || (editBalance >= creditCost ? 'edit' : 'regular'));
         }
@@ -181,13 +207,48 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
 
   // ── Compare Actions ────────────────────────────────────────
 
-  const handleUseNew = useCallback(() => {
-    if (newImageUrl) {
-      onImageUpdated(currentImage.angle, newImageUrl);
-      showToast('Imagem atualizada!', 'success');
-      handleClose();
+  const handleUseNew = useCallback(async () => {
+    if (!newImageUrl || !user) return;
+
+    // 1. Update React state (immediate UI update)
+    onImageUpdated(currentImage.angle, newImageUrl);
+
+    // 2. Persist edited URL to generations.output_urls in Supabase
+    try {
+      const { data: gen } = await supabase
+        .from('generations')
+        .select('output_urls')
+        .eq('id', generationId)
+        .single();
+
+      if (gen) {
+        let urls = gen.output_urls;
+        if (typeof urls === 'string') {
+          try { urls = JSON.parse(urls); } catch { urls = {}; }
+        }
+        urls = urls || {};
+
+        if (Array.isArray(urls)) {
+          // Array format: replace matching URL
+          urls = urls.map((u: string) => u === currentImage.url ? newImageUrl : u);
+        } else if (typeof urls === 'object') {
+          // Object format {angle: url}: update the angle key
+          urls[currentImage.angle] = newImageUrl;
+        }
+
+        await supabase
+          .from('generations')
+          .update({ output_urls: urls })
+          .eq('id', generationId);
+      }
+    } catch (err) {
+      console.error('[StudioEditModal] Erro ao salvar edição no banco:', err);
+      // Non-blocking — UI already updated
     }
-  }, [newImageUrl, currentImage.angle, onImageUpdated, showToast, handleClose]);
+
+    showToast('Imagem atualizada!', 'success');
+    handleClose();
+  }, [newImageUrl, user, currentImage, generationId, onImageUpdated, showToast, handleClose]);
 
   const handleKeepOriginal = useCallback(() => {
     showToast('Imagem original mantida', 'info');
@@ -197,6 +258,8 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const handleRetry = useCallback(() => {
     setNewImageUrl(null);
     setLastSource(null);
+    setZoomImage(null);
+    setHoverTarget(null);
     setMode('input');
   }, []);
 
@@ -214,6 +277,95 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const glassInner = isDark
     ? 'bg-white/[0.03] border border-white/[0.06]'
     : 'bg-white/50 border border-white/40';
+
+  // Helper: render a compare image with hover zoom (desktop) + tap zoom (mobile)
+  const renderCompareImage = (src: string, label: string, target: 'before' | 'after') => {
+    const isActive = hoverTarget === target;
+    const isBefore = target === 'before';
+
+    return (
+      <div className={
+        'rounded-xl overflow-hidden ' +
+        (isBefore
+          ? glassInner
+          : 'border border-[#FF6B6B]/20 bg-[#FF6B6B]/[0.03]')
+      }>
+        <div
+          className={
+            'relative flex items-center justify-center p-2 md:p-3 cursor-zoom-in overflow-hidden ' +
+            (isDark
+              ? (isBefore ? 'bg-black/20' : 'bg-black/10')
+              : (isBefore ? 'bg-gray-100/50' : 'bg-[#FF6B6B]/[0.02]'))
+          }
+          onMouseEnter={() => setHoverTarget(target)}
+          onMouseLeave={() => setHoverTarget(null)}
+          onMouseMove={(e) => handleImageMouseMove(e, target)}
+          onClick={() => setZoomImage(src)}
+        >
+          {/* Normal image (hidden on desktop hover) */}
+          <img
+            src={src}
+            alt={label}
+            className={
+              'max-h-[200px] md:max-h-[320px] object-contain rounded-lg transition-opacity duration-150 ' +
+              (isActive ? 'lg:opacity-0' : 'opacity-100')
+            }
+          />
+
+          {/* Desktop hover zoom */}
+          {isActive && (
+            <div
+              className="hidden lg:block absolute inset-0 bg-no-repeat"
+              style={{
+                backgroundImage: `url(${src})`,
+                backgroundPosition: `${mousePos.x}% ${mousePos.y}%`,
+                backgroundSize: '250%',
+              }}
+            />
+          )}
+
+          {/* Magnifying glass icon (desktop) */}
+          <div className={
+            'hidden lg:flex absolute bottom-2 right-2 w-7 h-7 rounded-lg items-center justify-center transition-all pointer-events-none ' +
+            (isDark ? 'bg-black/50 text-white/70' : 'bg-white/70 text-gray-600')
+          }>
+            <i className="fas fa-search-plus text-xs"></i>
+          </div>
+
+          {/* Tap hint (mobile) */}
+          <div className={
+            'lg:hidden absolute bottom-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center pointer-events-none ' +
+            (isDark ? 'bg-black/50 text-white/70' : 'bg-white/70 text-gray-600')
+          }>
+            <i className="fas fa-expand text-xs"></i>
+          </div>
+        </div>
+
+        {/* Label bar */}
+        <div className={
+          'px-3 py-1.5 border-t flex items-center gap-2 ' +
+          (isBefore
+            ? (isDark ? 'border-white/[0.06]' : 'border-gray-200/40')
+            : 'border-[#FF6B6B]/15')
+        }>
+          <div className={
+            'w-1.5 h-1.5 rounded-full ' +
+            (isBefore
+              ? (isDark ? 'bg-neutral-500' : 'bg-gray-400')
+              : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]')
+          }></div>
+          <p className={
+            'text-[9px] uppercase tracking-wider font-medium ' +
+            (isBefore
+              ? (isDark ? 'text-neutral-500' : 'text-gray-500')
+              : 'text-[#FF6B6B]')
+          }>
+            {label}
+          </p>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
@@ -471,50 +623,17 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 </div>
               )}
 
-              {/* Before / After */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {/* Before */}
-                <div className={'rounded-xl overflow-hidden ' + glassInner}>
-                  <div className={
-                    'flex items-center justify-center p-3 ' +
-                    (isDark ? 'bg-black/20' : 'bg-gray-100/50')
-                  }>
-                    <img
-                      src={currentImage.url}
-                      alt="Anterior"
-                      className="max-h-[160px] md:max-h-[240px] object-contain rounded-lg"
-                    />
-                  </div>
-                  <div className={
-                    'px-3 py-1.5 border-t flex items-center gap-2 ' +
-                    (isDark ? 'border-white/[0.06]' : 'border-gray-200/40')
-                  }>
-                    <div className={'w-1.5 h-1.5 rounded-full ' + (isDark ? 'bg-neutral-500' : 'bg-gray-400')}></div>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wider font-medium'}>
-                      Anterior
-                    </p>
-                  </div>
-                </div>
+              {/* Hint: tap/hover to zoom */}
+              <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] text-center mb-2'}>
+                <i className="fas fa-search-plus mr-1"></i>
+                <span className="hidden lg:inline">Passe o mouse para ampliar ou clique para tela cheia</span>
+                <span className="lg:hidden">Toque na imagem para ampliar</span>
+              </p>
 
-                {/* After */}
-                <div className="rounded-xl overflow-hidden border border-[#FF6B6B]/20 bg-[#FF6B6B]/[0.03]">
-                  <div className={
-                    'flex items-center justify-center p-3 ' +
-                    (isDark ? 'bg-black/10' : 'bg-[#FF6B6B]/[0.02]')
-                  }>
-                    <img
-                      src={newImageUrl}
-                      alt="Nova"
-                      className="max-h-[160px] md:max-h-[240px] object-contain rounded-lg"
-                    />
-                  </div>
-                  <div className="px-3 py-1.5 border-t border-[#FF6B6B]/15 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]"></div>
-                    <p className="text-[#FF6B6B] text-[9px] uppercase tracking-wider font-medium">
-                      Nova
-                    </p>
-                  </div>
-                </div>
+              {/* Before / After with zoom */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {renderCompareImage(currentImage.url, 'Anterior', 'before')}
+                {renderCompareImage(newImageUrl, 'Nova', 'after')}
               </div>
 
               {/* Action buttons — lado a lado + gerar novamente embaixo */}
@@ -559,6 +678,63 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* ═══ FULLSCREEN ZOOM MODAL ═══ */}
+      {zoomImage && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black/95" onClick={() => setZoomImage(null)}>
+          {/* Header */}
+          <div
+            className="flex items-center justify-between p-4 flex-shrink-0"
+            style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Switch Anterior / Nova */}
+            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
+              <button
+                onClick={() => setZoomImage(currentImage.url)}
+                className={
+                  'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                  (zoomImage === currentImage.url
+                    ? 'bg-white text-black'
+                    : 'text-white/70 hover:text-white')
+                }
+              >
+                Anterior
+              </button>
+              {newImageUrl && (
+                <button
+                  onClick={() => setZoomImage(newImageUrl)}
+                  className={
+                    'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
+                    (zoomImage === newImageUrl
+                      ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
+                      : 'text-white/70 hover:text-white')
+                  }
+                >
+                  Nova
+                </button>
+              )}
+            </div>
+
+            {/* Close */}
+            <button
+              onClick={() => setZoomImage(null)}
+              className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+
+          {/* Zoomable image — pinch-to-zoom, double-tap, scroll zoom */}
+          <div className="flex-1 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <ZoomableImage
+              src={zoomImage}
+              alt={`${product.name} - ${angleName}`}
+              className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

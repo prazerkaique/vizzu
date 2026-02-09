@@ -1,5 +1,5 @@
 {
-  "name": "20 - Product Studio Edit",
+  "name": "20 - Product Studio Edit v4",
   "nodes": [
     {
       "parameters": {
@@ -104,8 +104,43 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://dbdqiqehuapcicejnzyd.supabase.co/rest/v1/rpc/deduct_edit_credits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_user_id: $('Extrair Dados').first().json.user_id, p_amount: $('Extrair Dados').first().json.resolution === '4k' ? 2 : 1, p_generation_id: $('Extrair Dados').first().json.generation_id }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "deduct-credits",
+      "name": "Deduzir Créditos Edição",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1420, 200],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ success: true, new_image_url: $('Editar Imagem (Gemini)').first().json.publicUrl }) }}",
+        "responseBody": "={{ JSON.stringify({ success: true, new_image_url: $('Editar Imagem (Gemini)').first().json.publicUrl, credits_deducted: true, credit_source: ($('Deduzir Créditos Edição').first().json?.source) || null }) }}",
         "options": {
           "responseCode": 200
         }
@@ -114,7 +149,7 @@
       "name": "Respond Sucesso",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1420, 200]
+      "position": [1660, 200]
     },
     {
       "parameters": {
@@ -154,6 +189,11 @@
       ]
     },
     "Upload Imagem": {
+      "main": [
+        [{ "node": "Deduzir Créditos Edição", "type": "main", "index": 0 }]
+      ]
+    },
+    "Deduzir Créditos Edição": {
       "main": [
         [{ "node": "Respond Sucesso", "type": "main", "index": 0 }]
       ]

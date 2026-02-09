@@ -1179,6 +1179,8 @@ interface EditStudioImageResponse {
   new_image_url?: string;
   error?: string;
   message?: string;
+  credits_deducted?: boolean;
+  credit_source?: 'edit' | 'regular';
 }
 
 /**
