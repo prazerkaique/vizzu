@@ -12,6 +12,8 @@ import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { getProductType as getProductTypeFromConfig } from '../../lib/productConfig';
+import { StudioEditModal } from './StudioEditModal';
+import type { StudioBackground, StudioShadow } from '../../lib/api/studio';
 
 interface ProductStudioResultProps {
  product: Product;
@@ -22,6 +24,15 @@ interface ProductStudioResultProps {
  onRegenerate: () => void;
  onDelete: () => void;
  onBack: () => void;
+ // Edit modal props
+ editBalance?: number;
+ regularBalance?: number;
+ resolution?: '2k' | '4k';
+ studioBackground?: StudioBackground;
+ studioShadow?: StudioShadow;
+ productNotes?: string;
+ onImageUpdated?: (angle: string, newUrl: string) => void;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  theme?: 'dark' | 'light';
 }
 
@@ -66,6 +77,14 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  onRegenerate,
  onDelete,
  onBack,
+ editBalance = 0,
+ regularBalance,
+ resolution = '2k',
+ studioBackground,
+ studioShadow,
+ productNotes,
+ onImageUpdated,
+ onDeductEditCredits,
  theme = 'dark'
 }) => {
  const [currentIndex, setCurrentIndex] = useState(0);
@@ -78,6 +97,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  const [timeAgo, setTimeAgo] = useState('agora');
  const [showReveal, setShowReveal] = useState(true);
  const [showReportModal, setShowReportModal] = useState(false);
+ const [showEditModal, setShowEditModal] = useState(false);
 
  const { user } = useAuth();
  const { showToast } = useUI();
@@ -107,7 +127,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  case 'headwear':
  return ['front', 'back', 'side-left', 'top', 'front_detail'];
  case 'bag':
- return ['front', 'back', 'side-left', 'detail', 'front_detail'];
+ return ['front', 'back', 'side-left', 'top', 'detail', 'front_detail'];
  case 'accessory':
  return ['front', 'back', 'side-left', 'side-right', 'detail'];
  default: // clothing
@@ -501,13 +521,13 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Baixar</span>
  </button>
 
- {/* Gerar Novamente */}
+ {/* Editar Imagem */}
  <button
- onClick={onRegenerate}
+ onClick={() => onDeductEditCredits ? setShowEditModal(true) : onRegenerate()}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
  >
- <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-rotate text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Refazer</span>
+ <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-pen-to-square text-sm'}></i>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Editar</span>
  </button>
 
  {/* Zoom */}
@@ -695,6 +715,29 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {/* MODAL - Editar Imagem */}
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {showEditModal && currentImage && onDeductEditCredits && onImageUpdated && (
+ <StudioEditModal
+ isOpen={showEditModal}
+ onClose={() => setShowEditModal(false)}
+ product={product}
+ currentImage={currentImage}
+ generationId={session.id}
+ session={session}
+ editBalance={editBalance}
+ regularBalance={regularBalance ?? userCredits}
+ resolution={resolution}
+ studioBackground={studioBackground}
+ studioShadow={studioShadow}
+ productNotes={productNotes}
+ onImageUpdated={onImageUpdated}
+ onDeductEditCredits={onDeductEditCredits}
+ theme={theme}
+ />
  )}
 
  </div>

@@ -143,11 +143,13 @@ function App() {
  // Hook de créditos com integração ao backend
  const {
  userCredits,
+ editBalance,
  currentPlan,
  billingPeriod,
  daysUntilRenewal,
  isCheckoutLoading,
  deductCredits,
+ deductEditCredits,
  purchaseCredits,
  upgradePlan,
  setBillingPeriod,
@@ -1011,6 +1013,8 @@ function App() {
  onClearInitialProduct={() => setProductForCreation(null)}
  onBack={goBack}
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
+ editBalance={editBalance}
+ onDeductEditCredits={deductEditCredits}
  />
  </Suspense>
  </div>

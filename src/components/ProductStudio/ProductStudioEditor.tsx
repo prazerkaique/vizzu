@@ -87,6 +87,9 @@ interface ProductStudioEditorProps {
  currentPlan?: Plan;
  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
  onOpenPlanModal?: () => void;
+ // Créditos de edição (para StudioEditModal)
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
 }
 
 // Frases de loading para Product Studio
@@ -170,7 +173,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  isAnyGenerationRunning = false,
  onNavigate,
  currentPlan,
- onOpenPlanModal
+ onOpenPlanModal,
+ editBalance = 0,
+ onDeductEditCredits,
 }) => {
  const { showToast } = useUI();
  const { checkLoad } = useSystemLoad();
@@ -1485,6 +1490,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    setIsSubmitting(false);
  };
 
+ // Handler para atualizar imagem editada no session
+ const handleImageUpdated = (angle: string, newUrl: string) => {
+ if (!currentSession) return;
+ setCurrentSession({
+ ...currentSession,
+ images: currentSession.images.map(img =>
+ img.angle === angle ? { ...img, url: newUrl } : img
+ ),
+ });
+ };
+
  // ═══════════════════════════════════════════════════════════════
  // Se tem resultado para mostrar, renderiza página de resultado
  // ═══════════════════════════════════════════════════════════════
@@ -1499,6 +1515,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onRegenerate={handleResultRegenerate}
  onDelete={handleResultDelete}
  onBack={handleResultBack}
+ editBalance={editBalance}
+ regularBalance={userCredits}
+ resolution={resolution}
+ studioBackground={studioBackground}
+ studioShadow={studioShadow}
+ productNotes={productNotes}
+ onImageUpdated={handleImageUpdated}
+ onDeductEditCredits={onDeductEditCredits}
  theme={theme}
  />
  );

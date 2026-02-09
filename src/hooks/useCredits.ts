@@ -88,6 +88,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
 
   // Determinar créditos atuais
   const userCredits = creditsData?.balance ?? localData.credits;
+  const editBalance = creditsData?.edit_balance ?? 0;
 
   // Período de cobrança — override local tem prioridade (para visualização de preços)
   const [billingPeriodOverride, setBillingPeriodOverride] = useState<'monthly' | 'yearly' | null>(null);
@@ -160,6 +161,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
         setCreditsData({
           user_id: userId,
           balance: creditsRow.balance ?? 0,
+          edit_balance: creditsRow.edit_balance ?? 0,
           lifetime_purchased: creditsRow.lifetime_purchased ?? 0,
           lifetime_used: creditsRow.lifetime_used ?? 0,
           last_renewal_credits: creditsRow.last_renewal_credits ?? 0,
@@ -373,6 +375,61 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   }, [creditsData, localData.credits, userId, enableBackend]);
 
   // ═══════════════════════════════════════════════════════════════
+  // DEDUZIR CRÉDITOS DE EDIÇÃO
+  // ═══════════════════════════════════════════════════════════════
+
+  const deductEditCredits = useCallback(async (amount: number, generationId?: string): Promise<{ success: boolean; source?: 'edit' | 'regular' }> => {
+    // Verificação local
+    const totalAvailable = (creditsData?.edit_balance ?? 0) + (creditsData?.balance ?? localData.credits);
+    if (totalAvailable < amount) return { success: false };
+
+    // Atualização otimista (UI imediata)
+    const hasEditCredits = (creditsData?.edit_balance ?? 0) >= amount;
+    if (hasEditCredits) {
+      setCreditsData(prev => prev ? { ...prev, edit_balance: prev.edit_balance - amount } : null);
+    } else {
+      setLocalData(prev => ({ ...prev, credits: prev.credits - amount }));
+      if (creditsData) {
+        setCreditsData(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
+      }
+    }
+
+    // Chamar RPC no Supabase
+    if (userId && enableBackend) {
+      try {
+        const { data, error } = await supabase.rpc('deduct_edit_credits', {
+          p_user_id: userId,
+          p_amount: amount,
+          p_generation_id: generationId || null,
+        });
+
+        if (error) {
+          console.error('[deductEditCredits] RPC error:', error);
+          return { success: false };
+        }
+
+        const result = data as { success: boolean; source?: string; new_edit_balance?: number; new_balance?: number };
+        if (result.success) {
+          // Sincronizar saldos reais
+          setCreditsData(prev => prev ? {
+            ...prev,
+            edit_balance: result.new_edit_balance ?? prev.edit_balance,
+            balance: result.new_balance ?? prev.balance,
+          } : null);
+          setLocalData(prev => ({ ...prev, credits: result.new_balance ?? prev.credits }));
+          return { success: true, source: result.source as 'edit' | 'regular' };
+        }
+        return { success: false };
+      } catch (err) {
+        console.error('[deductEditCredits] Error:', err);
+        return { success: hasEditCredits, source: hasEditCredits ? 'edit' : 'regular' };
+      }
+    }
+
+    return { success: true, source: hasEditCredits ? 'edit' : 'regular' };
+  }, [creditsData, localData.credits, userId, enableBackend]);
+
+  // ═══════════════════════════════════════════════════════════════
   // ALTERAR PERÍODO DE COBRANÇA
   // ═══════════════════════════════════════════════════════════════
 
@@ -406,6 +463,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
 
   return {
     userCredits,
+    editBalance,
     currentPlan,
     billingPeriod,
     daysUntilRenewal,
@@ -418,6 +476,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     addCredits,
     applyPlanChange,
     deductCredits,
+    deductEditCredits,
     setBillingPeriod,
     setCredits,
     refresh,

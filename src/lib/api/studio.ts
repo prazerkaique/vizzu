@@ -1155,6 +1155,87 @@ export async function analyzeProductImage(params: AnalyzeProductImageParams): Pr
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// EDIÇÃO DE IMAGEM (Product Studio)
+// ═══════════════════════════════════════════════════════════════
+
+interface EditStudioImageParams {
+  userId: string;
+  productId: string;
+  generationId: string;
+  angle: string;
+  currentImageUrl: string;
+  correctionPrompt: string;
+  referenceImageBase64?: string;
+  resolution?: '2k' | '4k';
+  productInfo?: { name?: string; category?: string };
+  studioBackground?: StudioBackground;
+  studioShadow?: StudioShadow;
+  productNotes?: string;
+}
+
+interface EditStudioImageResponse {
+  success: boolean;
+  new_image_url?: string;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Edita/corrige uma imagem gerada no Product Studio
+ * Envia a imagem atual + prompt de correção + referência opcional ao Gemini
+ * Custo: 1 crédito (2k) ou 2 créditos (4k) — debitado via deduct_edit_credits
+ */
+export async function editStudioImage(params: EditStudioImageParams): Promise<EditStudioImageResponse> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/edit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: params.userId,
+        product_id: params.productId,
+        generation_id: params.generationId,
+        angle: params.angle,
+        current_image_url: params.currentImageUrl,
+        correction_prompt: params.correctionPrompt,
+        reference_image_base64: params.referenceImageBase64 || null,
+        resolution: params.resolution || '2k',
+        product_name: params.productInfo?.name,
+        product_category: params.productInfo?.category,
+        studio_background: params.studioBackground || 'gray',
+        studio_shadow: params.studioShadow || 'with-shadow',
+        product_notes: params.productNotes || '',
+      }),
+    });
+
+    if (response.status === 502 || response.status === 504) {
+      return { success: false, error: 'Timeout do servidor. Tente novamente.' };
+    }
+
+    const text = await response.text();
+    if (!text) {
+      return { success: false, error: 'Resposta vazia do servidor.' };
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Erro ao editar imagem.' };
+    }
+
+    return data;
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
+}
+
 export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<SendWhatsAppResponse> {
   try {
     const response = await fetch(`${N8N_BASE_URL}/vizzu/send-whatsapp`, {

@@ -37,6 +37,9 @@ interface ProductStudioProps {
  onClearInitialProduct?: () => void;
  // Navegação de volta
  onBack?: () => void;
+ // Créditos de edição (para StudioEditModal)
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
 }
 
 const CATEGORY_GROUPS = [
@@ -77,7 +80,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  initialProduct,
  onClearInitialProduct,
  onBack,
- onOpenPlanModal
+ onOpenPlanModal,
+ editBalance = 0,
+ onDeductEditCredits,
 }) => {
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
  const [showProductModal, setShowProductModal] = useState(false);
@@ -284,6 +289,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  onNavigate={onNavigate}
  currentPlan={currentPlan}
  onOpenPlanModal={onOpenPlanModal}
+ editBalance={editBalance}
+ onDeductEditCredits={onDeductEditCredits}
  />
  );
  }

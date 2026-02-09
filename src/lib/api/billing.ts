@@ -28,6 +28,7 @@ export interface UserSubscription {
 export interface UserCredits {
   user_id: string;
   balance: number;
+  edit_balance: number;
   lifetime_purchased: number;
   lifetime_used: number;
   last_renewal_credits: number;
