@@ -259,7 +259,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </button>
             <div>
               <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                Editar Imagem
+                Gerar novamente
               </h2>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                 {angleName} — {product.name}

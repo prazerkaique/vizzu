@@ -1707,6 +1707,19 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  );
  })()}
+
+ {/* Botão Gerar Novamente (dentro do card, logo após miniaturas) */}
+ {isOptimized && viewMode === 'otimizada' && generatedImages.length > 0 && (
+ <div className={'border-t px-3 py-2.5 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+ <button
+ onClick={() => setShowEditModalEditor(true)}
+ className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5252] hover:to-[#FF8F2F] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#FF6B6B]/20"
+ >
+ <i className="fas fa-rotate text-sm text-white"></i>
+ <span className="text-white text-sm font-semibold">Gerar novamente</span>
+ </button>
+ </div>
+ )}
  </div>
 
  {/* Informações do Produto */}
@@ -1854,23 +1867,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  )}
  </div>
-
- {/* Botão Editar Imagem (destaque, só em viewMode otimizada) */}
- {isOptimized && viewMode === 'otimizada' && generatedImages.length > 0 && (
- <button
- onClick={() => setShowEditModalEditor(true)}
- className="w-full p-3.5 rounded-xl border border-[#FF6B6B]/30 bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 hover:from-[#FF6B6B]/20 hover:to-[#FF9F43]/20 transition-all flex items-center gap-3"
- >
- <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]">
- <i className="fas fa-pen-to-square text-sm text-white"></i>
- </div>
- <div className="text-left">
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold block'}>Editar Imagem</span>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Corrigir detalhes com IA</span>
- </div>
- <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-right text-xs ml-auto'}></i>
- </button>
- )}
 
  {/* Botões de Ação (só aparecem se o produto foi otimizado) */}
  {isOptimized && (

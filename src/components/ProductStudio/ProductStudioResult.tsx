@@ -521,13 +521,13 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Baixar</span>
  </button>
 
- {/* Editar Imagem */}
+ {/* Gerar Novamente */}
  <button
  onClick={() => onDeductEditCredits ? setShowEditModal(true) : onRegenerate()}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ className="p-2.5 rounded-lg border border-[#FF6B6B]/30 bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 hover:from-[#FF6B6B]/20 hover:to-[#FF9F43]/20 transition-all flex flex-col items-center gap-1"
  >
- <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-pen-to-square text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Editar</span>
+ <i className="fas fa-rotate text-sm bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent"></i>
+ <span className="text-[9px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent">Gerar novamente</span>
  </button>
 
  {/* Zoom */}
