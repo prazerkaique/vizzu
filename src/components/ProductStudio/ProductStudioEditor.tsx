@@ -273,7 +273,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  clearPendingPSGeneration();
  generationFinalStatusRef.current = 'failed';
  setGenerationFinalStatus('failed');
- showToast('A geração expirou após 10 minutos. Tente novamente.', 'error');
+ showToast('A geração demorou mais que o esperado e foi cancelada. Seus créditos foram devolvidos.', 'error');
  return 'completed';
  }
 
@@ -353,7 +353,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
    // Se falhou completamente (nenhum ângulo gerado), mostrar erro
    if (pollResult.generationStatus === 'failed' && successAngles.length === 0) {
-     showToast(pollResult.error_message || 'Erro na geração. Seus créditos foram reembolsados. Tente novamente.', 'error');
+     showToast(pollResult.error_message || 'Não conseguimos gerar suas imagens. Seus créditos foram devolvidos automaticamente.', 'error');
+   }
+
+   // Sucesso parcial: alguns ângulos geraram, outros falharam
+   if (pollResult.generationStatus === 'partial' && successAngles.length > 0) {
+     const failedAngles = pollResult.completedAngles.filter(a => a.status === 'failed');
+     if (failedAngles.length > 0) {
+       showToast(`${successAngles.length} de ${successAngles.length + failedAngles.length} imagens geradas. Os créditos dos ângulos que falharam foram devolvidos.`, 'info');
+     }
    }
 
    return 'completed';
@@ -1005,6 +1013,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    if (completedAngleStatusesRef.current && completedAngleStatusesRef.current.length > 0) {
      const partialAngles = completedAngleStatusesRef.current.filter(a => a.status === 'completed' && a.url);
      if (partialAngles.length > 0) {
+       showToast(`Parte das imagens demorou mais que o esperado. Exibindo ${partialAngles.length} resultado${partialAngles.length > 1 ? 's' : ''} disponível${partialAngles.length > 1 ? 'is' : ''}.`, 'info');
        const pending = getPendingPSGeneration();
        const newImages = partialAngles.map((item, idx) => ({
          id: item.id || `timeout-${idx}`,
@@ -1021,7 +1030,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        };
        setCurrentSession(newSession);
        setShowResult(true);
+     } else {
+       showToast('A geração demorou mais que o esperado e foi cancelada. Seus créditos foram devolvidos.', 'error');
      }
+   } else {
+     showToast('A geração demorou mais que o esperado e foi cancelada. Seus créditos foram devolvidos.', 'error');
    }
    return;
  }

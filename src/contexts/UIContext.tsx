@@ -38,6 +38,7 @@ interface UIContextType {
   // Toast
   toast: Toast | null;
   showToast: (message: string, type?: 'success' | 'error' | 'info', action?: ToastAction) => void;
+  dismissToast: () => void;
 
   // Success notification
   successNotification: string | null;
@@ -100,7 +101,12 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success', action?: ToastAction) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type, action });
-    toastTimerRef.current = setTimeout(() => setToast(null), action ? 6000 : 3000);
+    const duration = action ? 6000 : type === 'error' ? 10000 : 3000;
+    toastTimerRef.current = setTimeout(() => setToast(null), duration);
+  }, []);
+  const dismissToast = useCallback(() => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(null);
   }, []);
 
   // Success notification
@@ -135,7 +141,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
       settingsTab, setSettingsTab,
       showSettingsDropdown, setShowSettingsDropdown,
       sidebarCollapsed, setSidebarCollapsed,
-      toast, showToast,
+      toast, showToast, dismissToast,
       successNotification, setSuccessNotification,
       showVideoTutorial, setShowVideoTutorial,
     }}>

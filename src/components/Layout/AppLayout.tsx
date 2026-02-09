@@ -24,7 +24,7 @@ export function AppLayout({
  onBuyCredits,
  renderSwipePage,
 }: AppLayoutProps) {
- const { theme, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
+ const { theme, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, dismissToast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
  const { user } = useAuth();
  const {
    isGeneratingProductStudio, productStudioMinimized, productStudioProgress, setProductStudioMinimized,
@@ -775,22 +775,27 @@ export function AppLayout({
  </div>
  )}
 
- {/* Toast de notificação */}
+ {/* Toast de notificação — clique para fechar */}
  {toast && (
- <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
- <div className={`px-4 py-3 rounded-xl flex items-center gap-2 ${
+ <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-fade-in w-[calc(100%-2rem)] max-w-sm">
+ <div
+ onClick={dismissToast}
+ className={`px-4 py-3 rounded-xl flex flex-col items-center gap-2 cursor-pointer shadow-lg transition-opacity hover:opacity-90 ${
  toast.type === 'success' ? 'bg-green-500 text-white' :
  toast.type === 'error' ? 'bg-red-500 text-white' :
  'bg-neutral-800 text-white'
- }`}>
+ }`}
+ >
+ <div className="flex items-center gap-2">
  <i className={`fas ${
  toast.type === 'success' ? 'fa-check-circle' :
  toast.type === 'error' ? 'fa-exclamation-circle' :
  'fa-info-circle'
- } text-sm`}></i>
- <span className="text-sm font-medium">{toast.message}</span>
+ } text-sm shrink-0`}></i>
+ <span className="text-sm font-medium text-center">{toast.message}</span>
+ </div>
  {toast.action && (
- <button onClick={() => { toast.action!.onClick(); }} className="ml-2 px-2.5 py-0.5 bg-white/20 rounded-lg text-xs font-semibold hover:bg-white/30 transition-colors whitespace-nowrap">
+ <button onClick={(e) => { e.stopPropagation(); toast.action!.onClick(); }} className="px-2.5 py-0.5 bg-white/20 rounded-lg text-xs font-semibold hover:bg-white/30 transition-colors whitespace-nowrap">
  {toast.action.label} <i className="fas fa-arrow-right text-[9px] ml-1"></i>
  </button>
  )}
