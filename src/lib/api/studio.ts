@@ -149,6 +149,8 @@ interface ProductStudioV2Params {
   studioBackground?: StudioBackground;
   // Sombra no produto (com ou sem)
   studioShadow?: StudioShadow;
+  // Observações do produto (detalhes estruturais para a IA)
+  productNotes?: string;
   // Resolução da imagem gerada
   resolution?: '2k' | '4k';
 }
@@ -220,6 +222,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
         studio_background: params.studioBackground || 'gray',
         // Sombra no produto (with-shadow ou no-shadow)
         studio_shadow: params.studioShadow || 'with-shadow',
+        // Observações do produto (detalhes estruturais)
+        product_notes: params.productNotes || '',
         // Resolução da imagem (2k ou 4k)
         resolution: params.resolution || '2k',
       }),
@@ -344,6 +348,7 @@ interface RetryStudioAngleParams {
   resolution?: '2k' | '4k';
   studioBackground?: StudioBackground;
   studioShadow?: StudioShadow;
+  productNotes?: string;
 }
 
 interface RetryStudioAngleResponse {
@@ -380,6 +385,7 @@ export async function retryStudioAngle(params: RetryStudioAngleParams): Promise<
         resolution: params.resolution || '2k',
         studio_background: params.studioBackground || 'gray',
         studio_shadow: params.studioShadow || 'with-shadow',
+        product_notes: params.productNotes || '',
       }),
     });
 

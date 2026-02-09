@@ -205,6 +205,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const [fabricFinish, setFabricFinish] = useState<FabricFinish>('natural');
  const [studioBackground, setStudioBackground] = useState<StudioBackground>('gray');
  const [studioShadow, setStudioShadow] = useState<StudioShadow>('with-shadow');
+ const [productNotes, setProductNotes] = useState('');
 
  // Estado de geração local (fallback se não tiver props globais)
  const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -1165,6 +1166,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  },
  studioBackground,
  studioShadow,
+ productNotes: productNotes.trim(),
  resolution,
  });
 
@@ -1330,6 +1332,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        },
        studioBackground,
        studioShadow,
+       productNotes: productNotes.trim(),
        resolution,
      });
 
@@ -2246,6 +2249,33 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
  </div>
  )}
+
+ {/* Observações do Produto */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
+ <h4 className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-2'}>
+ <i className={"fas fa-circle-info mr-1.5 " + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}></i>Observações do produto
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
+ </h4>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] leading-relaxed mb-2'}>
+ Use este campo <strong>apenas</strong> para descrever detalhes estruturais que a IA pode não perceber na foto frontal, mas que devem aparecer em todos os ângulos. Não descreva cores ou formas já visíveis nas fotos.
+ </p>
+ <textarea
+ value={productNotes}
+ onChange={(e) => setProductNotes(e.target.value)}
+ maxLength={300}
+ rows={2}
+ placeholder={'Ex: "2 zippers no topo da bolsa" · "logo bordado na manga esquerda" · "botões dourados nas costas"'}
+ className={(theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 text-neutral-200 placeholder-neutral-600'
+ : 'bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400'
+ ) + ' w-full rounded-lg border px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#FF9F43]/50 focus:border-[#FF9F43] resize-none'}
+ />
+ {productNotes.length > 0 && (
+ <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-[9px] mt-1 text-right'}>
+ {productNotes.length}/300
+ </p>
+ )}
+ </div>
 
  {/* Fundo do Estúdio */}
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
