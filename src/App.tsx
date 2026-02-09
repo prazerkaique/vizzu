@@ -42,7 +42,7 @@ import { supabase } from './services/supabaseClient';
 import { generateProvador, sendWhatsAppMessage } from './lib/api/studio';
 import { cancelSubscription } from './lib/api/billing';
 import { smartDownload } from './utils/downloadHelper';
-import { getReviewedReports, markReportsNotified } from './lib/api/reports';
+// import { getReviewedReports, markReportsNotified } from './lib/api/reports'; // TODO: habilitar com tabela generation_reports
 import { runFullMigration, runProductMigration, runStorageMigration } from './utils/imageMigration';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -515,32 +515,23 @@ function App() {
  return () => clearTimeout(timeout);
  }, [user?.id]);
 
- // Checar reports revisados pelo admin (mostrar toast ao usuário)
- useEffect(() => {
- if (!user?.id) return;
- const checkReviewedReports = async () => {
- try {
- const reports = await getReviewedReports(user.id);
- if (reports.length === 0) return;
-
- const approved = reports.filter(r => r.status === 'approved');
- const denied = reports.filter(r => r.status === 'denied');
-
- if (approved.length > 0) {
- showToast(`Seu report foi aprovado! ${approved.length} crédito${approved.length > 1 ? 's' : ''} adicionado${approved.length > 1 ? 's' : ''}.`, 'success');
- }
- if (denied.length > 0) {
- showToast('Seu report foi analisado e não foi aprovado.', 'info');
- }
-
- await markReportsNotified(reports.map(r => r.id));
- } catch (e) {
- console.error('Erro ao checar reports revisados:', e);
- }
- };
- const timeout = setTimeout(checkReviewedReports, 5000);
- return () => clearTimeout(timeout);
- }, [user?.id]);
+ // TODO: Habilitar quando tabela generation_reports existir no Supabase
+ // useEffect(() => {
+ //   if (!user?.id) return;
+ //   const checkReviewedReports = async () => {
+ //     try {
+ //       const reports = await getReviewedReports(user.id);
+ //       if (reports.length === 0) return;
+ //       const approved = reports.filter(r => r.status === 'approved');
+ //       const denied = reports.filter(r => r.status === 'denied');
+ //       if (approved.length > 0) showToast(`Seu report foi aprovado! ${approved.length} crédito${approved.length > 1 ? 's' : ''}.`, 'success');
+ //       if (denied.length > 0) showToast('Seu report foi analisado e não foi aprovado.', 'info');
+ //       await markReportsNotified(reports.map(r => r.id));
+ //     } catch (e) { console.error('Erro ao checar reports:', e); }
+ //   };
+ //   const timeout = setTimeout(checkReviewedReports, 5000);
+ //   return () => clearTimeout(timeout);
+ // }, [user?.id]);
 
  // Sincronizar créditos com Supabase quando uma geração termina
  const wasGeneratingRef = useRef(false);

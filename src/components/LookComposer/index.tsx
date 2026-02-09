@@ -125,6 +125,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  const [selectedLookView, setSelectedLookView] = useState<'front' | 'back'>('front');
  const [visibleLooksCount, setVisibleLooksCount] = useState(6); // Paginação de looks
  const [visibleModalProductsCount, setVisibleModalProductsCount] = useState(20); // Paginação do modal
+ const [visibleExploreCount, setVisibleExploreCount] = useState(12); // Paginação de explorar por produto
  const [selectedProductForModal, setSelectedProductForModal] = useState<ProductWithLooks | null>(null);
  const [modalSelectedLook, setModalSelectedLook] = useState<GeneratedLook | null>(null);
  const [modalSelectedView, setModalSelectedView] = useState<'front' | 'back'>('front');
@@ -274,6 +275,38 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
  return result.sort((a, b) => b.lookCount - a.lookCount);
  }, [products, allGeneratedLooks]);
+
+ // Todos os produtos para a seção "Explorar por Produto" (com e sem looks)
+ const allProductsForExplore = useMemo(() => {
+ const lookMap = new Map(productsWithLooks.map(pwl => [pwl.product.id, pwl]));
+ const result: ProductWithLooks[] = [];
+
+ products.forEach(product => {
+ const existing = lookMap.get(product.id);
+ if (existing) {
+ result.push(existing);
+ } else {
+ result.push({
+ product,
+ lookCount: 0,
+ looks: [],
+ totalImageCount: 0,
+ participations: 0,
+ });
+ }
+ });
+
+ // Ordenar: com looks primeiro (por quantidade desc), depois sem looks (por data desc)
+ return result.sort((a, b) => {
+ if (a.lookCount > 0 && b.lookCount === 0) return -1;
+ if (a.lookCount === 0 && b.lookCount > 0) return 1;
+ if (a.lookCount > 0 && b.lookCount > 0) return b.lookCount - a.lookCount;
+ // Ambos sem looks: por data de criação
+ const dateA = a.product.createdAt ? new Date(a.product.createdAt).getTime() : 0;
+ const dateB = b.product.createdAt ? new Date(b.product.createdAt).getTime() : 0;
+ return dateB - dateA;
+ });
+ }, [products, productsWithLooks]);
 
  // Reset paginação quando filtros do modal mudam
  useEffect(() => {
@@ -687,7 +720,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* EXPLORAR POR PRODUTO */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- {productsWithLooks.length > 0 && (
+ {allProductsForExplore.length > 0 && (
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden'}>
  <div className="p-4">
  <div className="flex items-center gap-3">
@@ -696,20 +729,21 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  <div>
  <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Explorar por Produto</h2>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{productsWithLooks.length} produtos com looks</p>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{allProductsForExplore.length} produtos{productsWithLooks.length > 0 ? ` • ${productsWithLooks.length} com looks` : ''}</p>
  </div>
  </div>
  </div>
 
  <div className={(isDark ? 'border-neutral-800' : 'border-gray-200') + ' border-t p-4'}>
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
- {productsWithLooks.map((pwl) => {
+ {allProductsForExplore.slice(0, visibleExploreCount).map((pwl) => {
  const productImage = getProductImage(pwl.product);
  const isOptimized = hasOptimizedImage(pwl.product);
+ const hasLooks = pwl.lookCount > 0;
  return (
  <div
  key={pwl.product.id}
- onClick={() => handleOpenProductModal(pwl)}
+ onClick={() => hasLooks ? handleOpenProductModal(pwl) : setSelectedProduct(pwl.product)}
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#A855F7]/50' : 'bg-gray-50 border-gray-200 hover:border-[#A855F7]/30') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
@@ -755,6 +789,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <i className="fas fa-cube text-[10px]"></i>
  </div>
  )}
+ {/* Overlay para produtos sem looks */}
+ {!hasLooks && (
+ <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
+ <span className="text-white text-[9px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] px-2.5 py-1 rounded-full">
+ <i className="fas fa-wand-magic-sparkles mr-1 text-[7px]"></i>Criar look
+ </span>
+ </div>
+ )}
  </div>
  <div className="p-2.5">
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{pwl.product.sku}</p>
@@ -764,6 +806,19 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  );
  })}
  </div>
+
+ {/* Botão Carregar Mais */}
+ {visibleExploreCount < allProductsForExplore.length && (
+ <div className="flex justify-center mt-4">
+ <button
+ onClick={() => setVisibleExploreCount(prev => prev + 12)}
+ className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+ >
+ <i className="fas fa-chevron-down text-xs"></i>
+ Carregar mais ({allProductsForExplore.length - visibleExploreCount} restantes)
+ </button>
+ </div>
+ )}
  </div>
  </div>
  )}
@@ -981,6 +1036,35 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
  {/* Ações */}
  <div className="md:w-1/3 flex flex-col gap-3">
+ {/* Peça Principal */}
+ {(() => {
+ const mainProduct = products.find(p => p.id === selectedLook.productId);
+ if (!mainProduct) return null;
+ const mainProductImage = getProductImage(mainProduct);
+ return (
+ <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+ <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
+ <i className="fas fa-star mr-2 text-[#FF6B6B]"></i>Peça Principal
+ </h3>
+ <div className="flex items-center gap-3">
+ {mainProductImage ? (
+ <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-12 h-12 rounded-lg overflow-hidden flex-shrink-0'}>
+ <OptimizedImage src={mainProductImage} alt={mainProduct.name} className="w-full h-full" objectFit="contain" size="thumb" />
+ </div>
+ ) : (
+ <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0'}>
+ <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-shirt'}></i>
+ </div>
+ )}
+ <div className="flex-1 min-w-0">
+ <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium truncate'}>{mainProduct.name}</p>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{mainProduct.sku}{mainProduct.category ? ` • ${mainProduct.category}` : ''}</p>
+ </div>
+ </div>
+ </div>
+ );
+ })()}
+
  {/* Modelo usado */}
  {selectedLook.metadata?.modelName && (
  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>

@@ -571,7 +571,81 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {filteredProducts.length > 0 ? (
  <>
  {/* ═══════════════════════════════════════════════════════════════ */}
- {/* SEÇÃO: Produtos Otimizados (PRIMEIRO) */}
+ {/* SEÇÃO: Pendentes de Otimização (PRIMEIRO) */}
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {pendingProducts.length > 0 && (
+ <div className="mb-6">
+ <button
+ onClick={() => setPendingCollapsed(!pendingCollapsed)}
+ className="w-full flex items-center justify-between mb-3 group"
+ >
+ <div className="flex items-center gap-2">
+ <div className={(theme === 'dark' ? 'bg-[#FF9F43]/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+ <i className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas fa-clock text-[10px]'}></i>
+ </div>
+ <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+ Pendentes de otimização
+ </h2>
+ <span className={(theme === 'dark' ? 'bg-[#FF9F43]/20 text-[#FF9F43]' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+ {pendingProducts.length > visiblePending
+ ? `${Math.min(visiblePending, pendingProducts.length)} de ${pendingProducts.length}`
+ : pendingProducts.length}
+ </span>
+ </div>
+ <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+ <i className={'fas fa-chevron-' + (pendingCollapsed ? 'down' : 'up') + ' text-xs'}></i>
+ </div>
+ </button>
+
+ {!pendingCollapsed && (
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+ {pendingProducts.slice(0, visiblePending).map(product => {
+ const productImage = getProductImage(product);
+ return (
+ <div
+ key={product.id}
+ data-product-id={product.id}
+ onClick={() => handleSelectProduct(product)}
+ className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-gray-400' : 'bg-white border-gray-200 hover:border-gray-400 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+ >
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+ <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
+ <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+ <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
+ <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
+ </button>
+ </div>
+ </div>
+ <div className="p-2.5">
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+ {product.category && (
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+ )}
+ </div>
+ </div>
+ );
+ })}
+ </div>
+ )}
+
+ {/* Botão Carregar Mais - Pendentes */}
+ {!pendingCollapsed && visiblePending < pendingProducts.length && (
+ <div className="flex justify-center mt-4">
+ <button
+ onClick={() => setVisiblePending(prev => prev + PRODUCTS_PER_PAGE)}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 ') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+ >
+ <i className="fas fa-chevron-down text-xs"></i>
+ Carregar mais ({pendingProducts.length - visiblePending} restantes)
+ </button>
+ </div>
+ )}
+ </div>
+ )}
+
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {/* SEÇÃO: Produtos Otimizados (SEGUNDO) */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {optimizedProducts.length > 0 && (
  <div className="mb-6">
@@ -649,80 +723,6 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  >
  <i className="fas fa-chevron-down text-xs"></i>
  Carregar mais ({optimizedProducts.length - visibleOptimized} restantes)
- </button>
- </div>
- )}
- </div>
- )}
-
- {/* ═══════════════════════════════════════════════════════════════ */}
- {/* SEÇÃO: Pendentes de Otimização (SEGUNDO) */}
- {/* ═══════════════════════════════════════════════════════════════ */}
- {pendingProducts.length > 0 && (
- <div className="mb-6">
- <button
- onClick={() => setPendingCollapsed(!pendingCollapsed)}
- className="w-full flex items-center justify-between mb-3 group"
- >
- <div className="flex items-center gap-2">
- <div className={(theme === 'dark' ? 'bg-[#FF9F43]/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas fa-clock text-[10px]'}></i>
- </div>
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
- Pendentes de otimização
- </h2>
- <span className={(theme === 'dark' ? 'bg-[#FF9F43]/20 text-[#FF9F43]' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
- {pendingProducts.length > visiblePending
- ? `${Math.min(visiblePending, pendingProducts.length)} de ${pendingProducts.length}`
- : pendingProducts.length}
- </span>
- </div>
- <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
- <i className={'fas fa-chevron-' + (pendingCollapsed ? 'down' : 'up') + ' text-xs'}></i>
- </div>
- </button>
-
- {!pendingCollapsed && (
- <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
- {pendingProducts.slice(0, visiblePending).map(product => {
- const productImage = getProductImage(product);
- return (
- <div
- key={product.id}
- data-product-id={product.id}
- onClick={() => handleSelectProduct(product)}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-gray-400' : 'bg-white border-gray-200 hover:border-gray-400 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
- >
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
- <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
- <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
- <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
- <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
- </button>
- </div>
- </div>
- <div className="p-2.5">
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
- {product.category && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
- )}
- </div>
- </div>
- );
- })}
- </div>
- )}
-
- {/* Botão Carregar Mais - Pendentes */}
- {!pendingCollapsed && visiblePending < pendingProducts.length && (
- <div className="flex justify-center mt-4">
- <button
- onClick={() => setVisiblePending(prev => prev + PRODUCTS_PER_PAGE)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 ') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
- >
- <i className="fas fa-chevron-down text-xs"></i>
- Carregar mais ({pendingProducts.length - visiblePending} restantes)
  </button>
  </div>
  )}

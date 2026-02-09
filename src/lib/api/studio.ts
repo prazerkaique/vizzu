@@ -487,6 +487,8 @@ interface ModeloIAParams {
   backgroundPrompt?: string;         // Prompt para gerar fundo por IA
   solidColor?: string;               // Cor sólida (hex) para fundo
   sceneHint?: string;                // Dica de cena para melhorar o prompt (ex: "model standing on grass")
+  // Enquadramento (framing) - como a câmera enquadra o modelo
+  framing?: 'full-body' | 'upper-half' | 'lower-half' | 'face' | 'feet';
   // Parâmetros de ângulos (frente/costas)
   viewsMode?: 'front' | 'front-back';
   backImageId?: string;              // ID da imagem de costas do produto principal
@@ -564,6 +566,8 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       sceneHint: params.sceneHint || null,
       // Prompt de pose personalizada
       posePrompt: params.posePrompt || null,
+      // Enquadramento (framing)
+      framing: params.framing || 'full-body',
       // Parâmetros de ângulos (frente/costas)
       viewsMode: params.viewsMode || 'front',
       backImageId: params.backImageId || null,

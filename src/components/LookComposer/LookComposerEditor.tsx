@@ -156,6 +156,64 @@ type BackgroundType = 'studio' | 'custom' | 'prompt';
 type BackgroundMode = 'preset' | 'upload' | 'prompt' | 'saved';
 type PoseMode = 'default' | 'custom';
 type ViewsMode = 'front' | 'front-back';
+type FramingMode = 'full-body' | 'upper-half' | 'lower-half' | 'face' | 'feet';
+
+// Opções de enquadramento
+const FRAMING_OPTIONS: { id: FramingMode; label: string; icon: string; description: string }[] = [
+ { id: 'full-body', label: 'Corpo inteiro', icon: 'fa-person', description: 'Modelo inteiro, dos pés à cabeça' },
+ { id: 'upper-half', label: 'Metade de cima', icon: 'fa-user', description: 'Da cintura pra cima' },
+ { id: 'lower-half', label: 'Metade de baixo', icon: 'fa-shoe-prints', description: 'Da cintura pra baixo' },
+ { id: 'face', label: 'Rosto', icon: 'fa-face-smile', description: 'Close-up no rosto/cabeça' },
+ { id: 'feet', label: 'Pés', icon: 'fa-socks', description: 'Close-up nos pés' },
+];
+
+// Mapeamento: categoria → opções permitidas + default
+const CATEGORY_TO_FRAMING: Record<string, { options: FramingMode[]; default: FramingMode }> = {
+ // Cabeça
+ 'Bonés': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ 'Chapéus': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ 'Tiaras': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ 'Lenços': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ // Topo
+ 'Camisetas': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Blusas': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Regatas': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Tops': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Camisas': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Jaquetas': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Casacos': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Blazers': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Moletons': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Bodies': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ // Baixo
+ 'Calças': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ 'Shorts': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ 'Bermudas': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ 'Saias': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ 'Leggings': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ 'Shorts Fitness': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ // Peças inteiras
+ 'Vestidos': { options: ['full-body', 'upper-half'], default: 'full-body' },
+ 'Macacões': { options: ['full-body', 'upper-half'], default: 'full-body' },
+ 'Jardineiras': { options: ['full-body', 'upper-half'], default: 'full-body' },
+ // Pés
+ 'Tênis': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
+ 'Sandálias': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
+ 'Botas': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
+ 'Calçados': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
+ // Acessórios de rosto
+ 'Óculos': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ 'Bijuterias': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ // Acessórios de corpo
+ 'Bolsas': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Cintos': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Relógios': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Acessórios': { options: ['face', 'upper-half', 'full-body'], default: 'full-body' },
+};
+
+const getFramingForCategory = (category: string): { options: FramingMode[]; default: FramingMode } => {
+ return CATEGORY_TO_FRAMING[category] || { options: ['full-body', 'upper-half', 'lower-half', 'face', 'feet'], default: 'full-body' };
+};
 
 // Interface para os steps de loading com thumbnails
 interface LoadingStep {
@@ -288,6 +346,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  // Estado dos ângulos (views)
  const [viewsMode, setViewsMode] = useState<ViewsMode>('front');
+
+ // Estado do enquadramento (framing) — filtrado pela categoria do produto
+ const framingConfig = useMemo(() => getFramingForCategory(product.category), [product.category]);
+ const [framing, setFraming] = useState<FramingMode>(() => getFramingForCategory(product.category).default);
+
+ // Recalcular framing default quando a categoria do produto mudar
+ useEffect(() => {
+ setFraming(framingConfig.default);
+ }, [framingConfig.default]);
 
  // Estado de geração
  const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -919,7 +986,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setGeneratedImageUrl(null);
  setGeneratedBackImageUrl(null);
  setGenerationId(null);
- // Produto já foi atualizado - apenas fechar
+ onBack(); // Voltar para a página principal do Look Composer
  };
 
  const handleResultRegenerate = () => {
@@ -1240,6 +1307,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  selectedModel.skinNotes ? `Skin: ${selectedModel.skinNotes}` : '',
  ].filter(Boolean).join('. ') : '',
  viewsMode: 'front', // Sempre 'front' na primeira chamada
+ framing: framing, // Enquadramento selecionado pelo usuário
  // Resolução da imagem (2k ou 4k)
  resolution,
  // Callback de progresso para atualizar a barra
@@ -1296,6 +1364,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  selectedModel.skinNotes ? `Skin: ${selectedModel.skinNotes}` : '',
  ].filter(Boolean).join('. ') : 'back view, from behind',
  viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
+ framing: framing, // Mesmo enquadramento da frente
  // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
  isBackView: true,
  frontGenerationId: frontGenerationId,
@@ -2275,6 +2344,44 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </p>
  </div>
  )}
+
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {/* SELETOR DE ENQUADRAMENTO */}
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ <div className="mt-6">
+ <div className="flex items-center gap-2 mb-3">
+ <div className={(isDark ? 'bg-purple-500/20' : 'bg-purple-100') + ' w-7 h-7 rounded-lg flex items-center justify-center'}>
+ <i className={(isDark ? 'text-purple-400' : 'text-purple-500') + ' fas fa-crop-simple text-xs'}></i>
+ </div>
+ <div>
+ <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Enquadramento</h3>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Como a câmera enquadra o modelo</p>
+ </div>
+ </div>
+
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+ {FRAMING_OPTIONS.filter(opt => framingConfig.options.includes(opt.id)).map((opt) => (
+ <div
+ key={opt.id}
+ onClick={() => setFraming(opt.id)}
+ className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${framing === opt.id ? 'border-[#FF6B6B] ' + (isDark ? 'bg-[#FF6B6B]/10' : 'bg-[#FF6B6B]/10') : isDark ? 'border-neutral-700 bg-neutral-800/50 hover:border-neutral-600' : 'border-gray-200 bg-gray-50 hover:border-gray-300'}`}
+ >
+ <div className="flex items-center gap-2">
+ <div className={(framing === opt.id ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-8 h-8 rounded-lg flex items-center justify-center transition-colors text-sm'}>
+ <i className={`fas ${opt.icon}`}></i>
+ </div>
+ <div className="flex-1 min-w-0">
+ <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{opt.label}</p>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] leading-tight'}>{opt.description}</p>
+ </div>
+ {framing === opt.id && (
+ <i className="fas fa-check-circle text-[#FF6B6B] text-sm flex-shrink-0"></i>
+ )}
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
 
  {/* Seletor de Resolução */}
  <div className={(isDark ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border mt-4'}>
