@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
-import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, ProductPresentationStyle, FabricFinish, StudioBackground, StudioAngleStatus } from '../../lib/api/studio';
+import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, ProductPresentationStyle, FabricFinish, StudioBackground, StudioShadow, StudioAngleStatus } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 import { smartDownload } from '../../utils/downloadHelper';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
@@ -203,6 +203,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Estado do acabamento do tecido (só para flat-lay)
  const [fabricFinish, setFabricFinish] = useState<FabricFinish>('natural');
  const [studioBackground, setStudioBackground] = useState<StudioBackground>('gray');
+ const [studioShadow, setStudioShadow] = useState<StudioShadow>('with-shadow');
 
  // Estado de geração local (fallback se não tiver props globais)
  const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -1162,6 +1163,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  description: product.description || editedProduct.description,
  },
  studioBackground,
+ studioShadow,
  resolution,
  });
 
@@ -1326,6 +1328,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
          description: product.description || editedProduct.description,
        },
        studioBackground,
+       studioShadow,
        resolution,
      });
 
@@ -2305,6 +2308,71 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  Fundo branco limpo
  </p>
  {studioBackground === 'white' && (
+ <i className="fas fa-check-circle text-green-400 text-xs"></i>
+ )}
+ </button>
+ </div>
+ </div>
+
+ {/* Sombra do Produto */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
+ <h4 className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-2'}>
+ <i className={"fas fa-cloud-sun mr-1.5 " + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}></i>Sombra
+ </h4>
+ <div className="grid grid-cols-2 gap-2">
+ <button
+ onClick={() => setStudioShadow('with-shadow')}
+ className={'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (studioShadow === 'with-shadow'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF9F43]'
+ : (theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' +
+ (studioShadow === 'with-shadow'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <i className={'fas fa-circle-half-stroke text-sm ' + (studioShadow === 'with-shadow' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+ </div>
+ <span className={(studioShadow === 'with-shadow' ? (theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[11px] font-medium'}>
+ Com sombra
+ </span>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] leading-tight text-center'}>
+ Sombra suave natural
+ </p>
+ {studioShadow === 'with-shadow' && (
+ <i className="fas fa-check-circle text-green-400 text-xs"></i>
+ )}
+ </button>
+ <button
+ onClick={() => setStudioShadow('no-shadow')}
+ className={'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (studioShadow === 'no-shadow'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF9F43]'
+ : (theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' +
+ (studioShadow === 'no-shadow'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <i className={'fas fa-ban text-sm ' + (studioShadow === 'no-shadow' ? 'text-white' : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+ </div>
+ <span className={(studioShadow === 'no-shadow' ? (theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[11px] font-medium'}>
+ Sem sombra
+ </span>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] leading-tight text-center'}>
+ Fundo 100% limpo
+ </p>
+ {studioShadow === 'no-shadow' && (
  <i className="fas fa-check-circle text-green-400 text-xs"></i>
  )}
  </button>

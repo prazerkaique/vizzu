@@ -114,6 +114,9 @@ export type FabricFinish = 'natural' | 'pressed';
 // Cor de fundo do estúdio
 export type StudioBackground = 'gray' | 'white';
 
+// Sombra no produto
+export type StudioShadow = 'with-shadow' | 'no-shadow';
+
 interface ProductStudioV2Params {
   productId: string;
   userId: string;
@@ -144,6 +147,8 @@ interface ProductStudioV2Params {
   fabricFinish?: FabricFinish;
   // Cor de fundo do estúdio (cinza ou branco)
   studioBackground?: StudioBackground;
+  // Sombra no produto (com ou sem)
+  studioShadow?: StudioShadow;
   // Resolução da imagem gerada
   resolution?: '2k' | '4k';
 }
@@ -213,6 +218,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
         fabric_finish: params.fabricFinish || 'natural',
         // Cor de fundo do estúdio (gray ou white)
         studio_background: params.studioBackground || 'gray',
+        // Sombra no produto (with-shadow ou no-shadow)
+        studio_shadow: params.studioShadow || 'with-shadow',
         // Resolução da imagem (2k ou 4k)
         resolution: params.resolution || '2k',
       }),
@@ -336,6 +343,7 @@ interface RetryStudioAngleParams {
   };
   resolution?: '2k' | '4k';
   studioBackground?: StudioBackground;
+  studioShadow?: StudioShadow;
 }
 
 interface RetryStudioAngleResponse {
@@ -371,6 +379,7 @@ export async function retryStudioAngle(params: RetryStudioAngleParams): Promise<
         fabric_finish: params.fabricFinish || 'natural',
         resolution: params.resolution || '2k',
         studio_background: params.studioBackground || 'gray',
+        studio_shadow: params.studioShadow || 'with-shadow',
       }),
     });
 
