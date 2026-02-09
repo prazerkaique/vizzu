@@ -267,19 +267,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const pending = getPendingPSGeneration();
  if (!pending || !userId) return 'polling';
 
- // Detecção de geração travada: se 2 min sem nenhum ângulo pronto, assume erro
- const elapsedSeconds = (Date.now() - pending.startTime) / 1000;
- const hasAnyProgress = completedAngleStatusesRef.current && completedAngleStatusesRef.current.some(a => a.status === 'completed');
- if (elapsedSeconds > 120 && !hasAnyProgress) {
- clearPendingPSGeneration();
- generationFinalStatusRef.current = 'failed';
- setGenerationFinalStatus('failed');
- showToast('A geração parece ter falhado. Seus créditos serão verificados. Tente novamente.', 'error');
- return 'completed';
- }
-
  // Expirar após 10 minutos (safety net absoluto)
- const elapsedMinutes = elapsedSeconds / 60;
+ const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
  if (elapsedMinutes > 10) {
  clearPendingPSGeneration();
  generationFinalStatusRef.current = 'failed';
