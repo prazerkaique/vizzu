@@ -1,0 +1,173 @@
+{
+  "name": "20 - Product Studio Edit",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/studio/edit",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook-edit",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "webhookId": "studio-edit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "user_id", "name": "user_id", "value": "={{ $json.body.user_id }}", "type": "string" },
+            { "id": "product_id", "name": "product_id", "value": "={{ $json.body.product_id }}", "type": "string" },
+            { "id": "generation_id", "name": "generation_id", "value": "={{ $json.body.generation_id }}", "type": "string" },
+            { "id": "angle", "name": "angle", "value": "={{ $json.body.angle }}", "type": "string" },
+            { "id": "current_image_url", "name": "current_image_url", "value": "={{ $json.body.current_image_url }}", "type": "string" },
+            { "id": "correction_prompt", "name": "correction_prompt", "value": "={{ $json.body.correction_prompt }}", "type": "string" },
+            { "id": "reference_image_base64", "name": "reference_image_base64", "value": "={{ $json.body.reference_image_base64 }}", "type": "string" },
+            { "id": "resolution", "name": "resolution", "value": "={{ $json.body.resolution || '2k' }}", "type": "string" },
+            { "id": "product_name", "name": "product_name", "value": "={{ $json.body.product_name || '' }}", "type": "string" },
+            { "id": "product_category", "name": "product_category", "value": "={{ $json.body.product_category || '' }}", "type": "string" },
+            { "id": "studio_background", "name": "studio_background", "value": "={{ $json.body.studio_background || 'gray' }}", "type": "string" },
+            { "id": "studio_shadow", "name": "studio_shadow", "value": "={{ $json.body.studio_shadow || 'with-shadow' }}", "type": "string" },
+            { "id": "product_notes", "name": "product_notes", "value": "={{ $json.body.product_notes || '' }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-data",
+      "name": "Extrair Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// VIZZU - Studio Edit v3: Upload via S3 node (padrão workflow 18)\n// ═══════════════════════════════════════════════════════════════\n\nconst data = $input.first().json;\n\nconst GEMINI_API_KEY = 'AIzaSyAWcNmKXgYfoU8NZh3-1Mfyz6tCDG0-5Kg';\nconst SUPABASE_URL = 'https://dbdqiqehuapcicejnzyd.supabase.co';\nconst GEMINI_MODEL = 'gemini-3-pro-image-preview';\n\nconst userId = data.user_id;\nconst productId = data.product_id;\nconst generationId = data.generation_id;\nconst angle = data.angle;\nconst currentImageUrl = data.current_image_url;\nconst correctionPrompt = data.correction_prompt;\nconst referenceBase64 = data.reference_image_base64;\nconst resolution = (data.resolution || '2K').toUpperCase();\nconst productName = data.product_name || '';\nconst productCategory = data.product_category || '';\nconst studioBackground = data.studio_background || 'gray';\nconst studioShadow = data.studio_shadow || 'with-shadow';\nconst productNotes = data.product_notes || '';\n\nconsole.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');\nconsole.log(`🎨 Studio Edit v3: user=${userId}, angle=${angle}, res=${resolution}`);\nconsole.log(`📝 Correction: ${correctionPrompt}`);\nconsole.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');\n\ntry {\n  // ── 1. Download imagem atual ────────────────────────────\n  console.log('⬇️ [1/3] Baixando imagem atual...');\n  const imgResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: currentImageUrl,\n    encoding: 'arraybuffer',\n    returnFullResponse: true\n  });\n  const imgBuffer = Buffer.from(imgResp.body);\n  const imgBase64 = imgBuffer.toString('base64');\n  const imgMimeType = imgResp.headers['content-type'] || 'image/png';\n  console.log(`✅ Imagem carregada (${(imgBuffer.length / 1024).toFixed(1)} KB)`);\n\n  // ── 2. Montar prompt ───────────────────────────────────\n  const bgInstruction = studioBackground === 'white' && studioShadow === 'no-shadow'\n    ? 'The background MUST remain COMPLETELY UNIFORM, SOLID PURE WHITE (#FFFFFF). No shadows, no gradients, no variations.'\n    : studioBackground === 'white'\n      ? 'The background must remain white/light gray (#F5F5F5 to #FFFFFF) with subtle shadow.'\n      : 'The background must remain neutral gray (#EDEDED to #F2F2F2) with subtle shadow.';\n\n  const notesBlock = productNotes\n    ? `\\nCRITICAL PRODUCT NOTES FROM THE OWNER: ${productNotes}`\n    : '';\n\n  const editPrompt = `You are editing an existing professional studio product photo.\nProduct: ${productName} (${productCategory}), angle: ${angle}.\n\nThe user wants the following correction applied to this image:\n\"${correctionPrompt}\"\n\nIMPORTANT RULES:\n- Apply ONLY the requested correction. Do NOT change anything else.\n- Maintain the exact same camera angle, lighting, composition, and style.\n- ${bgInstruction}\n- The product must remain photorealistic and commercially viable.\n- Preserve all product details (textures, colors, logos, stitching) that are not being corrected.${notesBlock}\n\nGenerate the corrected image.`;\n\n  // ── 3. Montar parts ────────────────────────────────────\n  const parts = [\n    { inline_data: { mime_type: imgMimeType, data: imgBase64 } }\n  ];\n\n  if (referenceBase64 && referenceBase64 !== 'null' && referenceBase64.length > 100) {\n    const cleanRef = referenceBase64.includes(',') ? referenceBase64.split(',')[1] : referenceBase64;\n    parts.push({ inline_data: { mime_type: 'image/png', data: cleanRef } });\n    parts.push({ text: 'The second image above is a reference provided by the user to guide the correction. Use it for shape, position, or detail guidance.' });\n  }\n\n  parts.push({ text: editPrompt });\n\n  // ── 4. Chamar Gemini (com retry) ───────────────────────\n  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;\n  const payload = {\n    contents: [{ role: 'user', parts }],\n    generationConfig: {\n      responseModalities: ['TEXT', 'IMAGE'],\n      temperature: 0.3,\n      imageConfig: { aspectRatio: '9:16', imageSize: resolution }\n    }\n  };\n\n  console.log(`🤖 [2/3] Chamando Gemini ${GEMINI_MODEL}...`);\n\n  const maxRetries = 3;\n  const retryDelays = [0, 8000, 15000];\n  let geminiRawResp;\n  for (let attempt = 0; attempt < maxRetries; attempt++) {\n    if (attempt > 0) {\n      console.log('⏳ Retry ' + attempt + '/' + (maxRetries - 1) + ' após ' + (retryDelays[attempt] / 1000) + 's...');\n      await new Promise(r => setTimeout(r, retryDelays[attempt]));\n    }\n    geminiRawResp = await this.helpers.httpRequest({\n      method: 'POST',\n      url: endpoint,\n      headers: { 'Content-Type': 'application/json' },\n      body: payload,\n      json: true,\n      timeout: 180000,\n      returnFullResponse: true,\n      ignoreHttpStatusErrors: true\n    });\n    if (geminiRawResp.statusCode === 200) break;\n    if (geminiRawResp.statusCode !== 503 && geminiRawResp.statusCode !== 429) break;\n    console.warn('⚠️ Gemini retornou ' + geminiRawResp.statusCode + ' (tentativa ' + (attempt + 1) + '/' + maxRetries + ')');\n  }\n\n  if (geminiRawResp.statusCode !== 200) {\n    const errBody = typeof geminiRawResp.body === 'string' ? geminiRawResp.body : JSON.stringify(geminiRawResp.body);\n    console.error('❌ Gemini erro ' + geminiRawResp.statusCode + ': ' + errBody.substring(0, 2000));\n    throw new Error('Gemini API erro (status ' + geminiRawResp.statusCode + '): ' + errBody.substring(0, 500));\n  }\n\n  const response = geminiRawResp.body;\n\n  // ── 5. Extrair imagem ──────────────────────────────────\n  let outputBase64 = null;\n  if (response.candidates?.[0]?.content?.parts) {\n    for (const part of response.candidates[0].content.parts) {\n      if (part.inlineData?.data) {\n        outputBase64 = part.inlineData.data;\n        break;\n      }\n    }\n  }\n\n  if (!outputBase64) {\n    throw new Error('Gemini não retornou imagem na resposta');\n  }\n  console.log(`✅ [3/3] Gemini retornou imagem: ${(outputBase64.length / 1024).toFixed(0)} KB base64`);\n\n  // ── 6. Preparar binary data (padrão workflow 18) ───────\n  // Upload será feito pelo nó S3 dedicado (não pelo Code node)\n  const timestamp = Date.now();\n  const storagePath = `${userId}/${productId}/edit_${angle}_${timestamp}.png`;\n  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/products/${storagePath}`;\n\n  const binaryData = await this.helpers.prepareBinaryData(\n    Buffer.from(outputBase64, 'base64'),\n    `edit_${angle}_${timestamp}.png`,\n    'image/png'\n  );\n\n  console.log(`📦 Imagem preparada para upload: ${storagePath}`);\n\n  return [{\n    json: {\n      success: true,\n      storagePath: storagePath,\n      publicUrl: publicUrl\n    },\n    binary: {\n      editedImage: binaryData\n    }\n  }];\n\n} catch (error) {\n  console.error('❌ Studio Edit error:', error.message);\n  return [{ json: { success: false, error: error.message || 'Erro ao editar imagem' } }];\n}\n"
+      },
+      "id": "edit-code",
+      "name": "Editar Imagem (Gemini)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "check-success",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-success",
+      "name": "Sucesso?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [940, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "products",
+        "fileName": "={{ $json.storagePath }}",
+        "binaryPropertyName": "editedImage",
+        "additionalFields": {}
+      },
+      "id": "upload-s3",
+      "name": "Upload Imagem",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [1180, 200],
+      "credentials": {
+        "s3": {
+          "id": "IANNuMl4gOF84BAm",
+          "name": "Vizzu S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, new_image_url: $('Editar Imagem (Gemini)').first().json.publicUrl }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1420, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.error || 'Erro desconhecido' }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-error",
+      "name": "Respond Erro",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1180, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Extrair Dados", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair Dados": {
+      "main": [
+        [{ "node": "Editar Imagem (Gemini)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Editar Imagem (Gemini)": {
+      "main": [
+        [{ "node": "Sucesso?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Sucesso?": {
+      "main": [
+        [{ "node": "Upload Imagem", "type": "main", "index": 0 }],
+        [{ "node": "Respond Erro", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload Imagem": {
+      "main": [
+        [{ "node": "Respond Sucesso", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    { "name": "vizzu" },
+    { "name": "product-studio" }
+  ]
+}
