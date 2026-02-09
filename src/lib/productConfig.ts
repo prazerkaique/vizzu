@@ -69,6 +69,7 @@ export const UPLOAD_SLOTS_CONFIG: Record<ProductType, UploadSlotConfig[]> = {
     { angle: 'front', label: 'Frente', required: true, icon: 'fa-bag-shopping', accentColor: '#FF6B6B', group: 'main' },
     { angle: 'back', label: 'Traseira', required: false, icon: 'fa-bag-shopping', accentColor: '#22c55e', group: 'main' },
     { angle: 'side-left', label: 'Lateral', required: false, icon: 'fa-arrows-left-right', accentColor: '#3b82f6', group: 'main' },
+    { angle: 'top', label: 'Vista Superior', required: false, icon: 'fa-arrow-up', accentColor: '#8b5cf6', group: 'main' },
     { angle: 'detail', label: 'Interior', required: false, icon: 'fa-magnifying-glass-plus', accentColor: '#FF9F43', group: 'detail' },
     { angle: 'front_detail', label: 'Detalhe', required: false, icon: 'fa-magnifying-glass-plus', accentColor: '#FF9F43', group: 'detail' },
   ],

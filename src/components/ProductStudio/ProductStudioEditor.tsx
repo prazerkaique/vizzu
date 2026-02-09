@@ -132,6 +132,7 @@ const ANGLES_CONFIG = {
  { id: 'front' as ProductStudioAngle, label: 'Frente', icon: 'fa-bag-shopping' },
  { id: 'back' as ProductStudioAngle, label: 'Traseira', icon: 'fa-bag-shopping' },
  { id: 'side-left' as ProductStudioAngle, label: 'Lateral', icon: 'fa-arrows-left-right' },
+ { id: 'top' as ProductStudioAngle, label: 'Vista Superior', icon: 'fa-arrow-up' },
  { id: 'detail' as ProductStudioAngle, label: 'Interior', icon: 'fa-magnifying-glass-plus' },
  { id: 'front_detail' as ProductStudioAngle, label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
  ],
