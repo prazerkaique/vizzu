@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
-import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, ProductPresentationStyle, FabricFinish, StudioAngleStatus } from '../../lib/api/studio';
+import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, ProductPresentationStyle, FabricFinish, StudioBackground, StudioAngleStatus } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
 import { smartDownload } from '../../utils/downloadHelper';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
@@ -202,6 +202,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Estado do acabamento do tecido (só para flat-lay)
  const [fabricFinish, setFabricFinish] = useState<FabricFinish>('natural');
+ const [studioBackground, setStudioBackground] = useState<StudioBackground>('gray');
 
  // Estado de geração local (fallback se não tiver props globais)
  const [localIsGenerating, setLocalIsGenerating] = useState(false);
@@ -1160,6 +1161,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  category: product.category || editedProduct.category,
  description: product.description || editedProduct.description,
  },
+ studioBackground,
  resolution,
  });
 
@@ -1323,6 +1325,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
          category: product.category || editedProduct.category,
          description: product.description || editedProduct.description,
        },
+       studioBackground,
        resolution,
      });
 
@@ -2239,6 +2242,74 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
  </div>
  )}
+
+ {/* Fundo do Estúdio */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
+ <h4 className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-2'}>
+ <i className={"fas fa-fill-drip mr-1.5 " + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}></i>Fundo do Estúdio
+ </h4>
+ <div className="grid grid-cols-2 gap-2">
+ {/* Cinza */}
+ <button
+ onClick={() => setStudioBackground('gray')}
+ className={'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (studioBackground === 'gray'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF9F43]'
+ : (theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' +
+ (studioBackground === 'gray'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <div className={'w-5 h-5 rounded ' + (studioBackground === 'gray' ? 'bg-white/30' : (theme === 'dark' ? 'bg-neutral-500' : 'bg-gray-400'))} style={{ backgroundColor: studioBackground === 'gray' ? undefined : '#9ca3af' }}></div>
+ </div>
+ <span className={(studioBackground === 'gray' ? (theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[11px] font-medium'}>
+ Cinza
+ </span>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] leading-tight text-center'}>
+ Fundo cinza neutro
+ </p>
+ {studioBackground === 'gray' && (
+ <i className="fas fa-check-circle text-green-400 text-xs"></i>
+ )}
+ </button>
+
+ {/* Branco */}
+ <button
+ onClick={() => setStudioBackground('white')}
+ className={'p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (studioBackground === 'white'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF9F43]'
+ : (theme === 'dark'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-9 h-9 rounded-lg flex items-center justify-center ' +
+ (studioBackground === 'white'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <div className={'w-5 h-5 rounded border ' + (studioBackground === 'white' ? 'bg-white/80 border-white/40' : (theme === 'dark' ? 'bg-white border-neutral-600' : 'bg-white border-gray-300'))}></div>
+ </div>
+ <span className={(studioBackground === 'white' ? (theme === 'dark' ? 'text-neutral-200' : 'text-gray-700') : (theme === 'dark' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[11px] font-medium'}>
+ Branco
+ </span>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] leading-tight text-center'}>
+ Fundo branco limpo
+ </p>
+ {studioBackground === 'white' && (
+ <i className="fas fa-check-circle text-green-400 text-xs"></i>
+ )}
+ </button>
+ </div>
+ </div>
 
  {/* Seletor de Resolução */}
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
