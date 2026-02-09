@@ -514,43 +514,43 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={handleUseNew}
-                  className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-[#FF6B6B]/25 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-                >
-                  <i className="fas fa-check-circle"></i>
-                  Usar Nova Imagem
-                </button>
-
+              {/* Action buttons — lado a lado + gerar novamente embaixo */}
+              <div className="flex flex-col gap-2.5">
+                {/* Linha principal: Manter Original | Usar Nova Imagem */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={handleKeepOriginal}
                     className={
-                      'py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 ' +
+                      'py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ' +
                       (isDark
                         ? 'bg-white/[0.04] border border-white/[0.08] text-neutral-300 hover:bg-white/[0.08]'
                         : 'bg-white/60 border border-gray-200/60 text-gray-700 hover:bg-white/80')
                     }
                   >
-                    <i className="fas fa-undo text-[10px]"></i>
+                    <i className="fas fa-arrow-left text-xs"></i>
                     Manter Original
                   </button>
 
                   <button
-                    onClick={handleRetry}
-                    className={
-                      'py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 ' +
-                      (isDark
-                        ? 'bg-white/[0.04] border border-white/[0.08] text-neutral-300 hover:bg-white/[0.08]'
-                        : 'bg-white/60 border border-gray-200/60 text-gray-700 hover:bg-white/80')
-                    }
+                    onClick={handleUseNew}
+                    className="py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-[#FF6B6B]/25 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                   >
-                    <i className="fas fa-rotate text-[10px]"></i>
-                    Corrigir Novamente
+                    Usar Nova Imagem
+                    <i className="fas fa-arrow-right text-xs"></i>
                   </button>
                 </div>
+
+                {/* Gerar novamente — discreto */}
+                <button
+                  onClick={handleRetry}
+                  className={
+                    'w-full py-2 text-xs transition-all flex items-center justify-center gap-1.5 ' +
+                    (isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600')
+                  }
+                >
+                  <i className="fas fa-rotate text-[10px]"></i>
+                  Gerar novamente
+                </button>
               </div>
             </div>
           )}
