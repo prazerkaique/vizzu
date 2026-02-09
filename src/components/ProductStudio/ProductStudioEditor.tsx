@@ -16,6 +16,7 @@ import { supabase } from '../../services/supabaseClient';
 import { getProductType, CLOTHING_CATEGORIES, FOOTWEAR_CATEGORIES, HEADWEAR_CATEGORIES, BAG_CATEGORIES, ACCESSORY_CATEGORIES } from '../../lib/productConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
+import { useSystemLoad } from '../../hooks/useSystemLoad';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 
@@ -171,6 +172,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onOpenPlanModal
 }) => {
  const { showToast } = useUI();
+ const { checkLoad } = useSystemLoad();
+
+ // Mensagem de alta demanda (exibida no loading)
+ const [highDemandMessage, setHighDemandMessage] = useState<string | null>(null);
 
  // Estados de edição do produto
  const [editMode, setEditMode] = useState(false);
@@ -1087,6 +1092,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return;
  }
 
+ // Verificar carga do sistema antes de iniciar
+ const loadInfo = await checkLoad();
+ setHighDemandMessage(loadInfo.message);
+
  // Iniciar geração (global ou local)
  const setGenerating = onSetGenerating || setLocalIsGenerating;
  const setProgress = onSetProgress || setLocalProgress;
@@ -1097,6 +1106,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setCompletedAngleStatuses([]);
  setGenerationFinalStatus(null);
  generationFinalStatusRef.current = null;
+ setHighDemandMessage(null);
  setRetryAttempts({});
  setRetryingAngle(null);
  setCurrentGenerationId(null);
@@ -2574,6 +2584,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {currentProgress}%
  </p>
  </div>
+
+ {/* Aviso de alta demanda */}
+ {highDemandMessage && (
+ <div className={`w-full max-w-xs mb-4 px-4 py-3 rounded-xl border ${theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+   <div className="flex items-center gap-2">
+     <i className={`fas fa-clock text-sm ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'}`}></i>
+     <p className={`text-xs ${theme === 'dark' ? 'text-amber-300' : 'text-amber-700'}`}>
+       {highDemandMessage}
+     </p>
+   </div>
+ </div>
+ )}
 
  {/* Cards dos ângulos sendo gerados */}
  <div className="w-full max-w-xs mb-6">
