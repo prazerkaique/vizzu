@@ -19,6 +19,7 @@ import { useUI } from '../../contexts/UIContext';
 import { useSystemLoad } from '../../hooks/useSystemLoad';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
+import { StudioEditModal } from './StudioEditModal';
 
 // ═══════════════════════════════════════════════════════════════
 // PENDING GENERATION (sobrevive ao F5 / fechamento do app)
@@ -235,6 +236,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Verificar se plano permite 4K
  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
+
+ // Estado do modal de edição (para imagens já otimizadas)
+ const [showEditModalEditor, setShowEditModalEditor] = useState(false);
 
  // v9: Ângulos completados pelo polling incremental (atualizado em tempo real)
  const [completedAngleStatuses, setCompletedAngleStatuses] = useState<StudioAngleStatus[]>([]);
@@ -1490,7 +1494,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    setIsSubmitting(false);
  };
 
- // Handler para atualizar imagem editada no session
+ // Handler para atualizar imagem editada no session (tela de resultado)
  const handleImageUpdated = (angle: string, newUrl: string) => {
  if (!currentSession) return;
  setCurrentSession({
@@ -1498,6 +1502,22 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  images: currentSession.images.map(img =>
  img.angle === angle ? { ...img, url: newUrl } : img
  ),
+ });
+ };
+
+ // Handler para atualizar imagem otimizada existente (tela do editor)
+ const handleOptimizedImageUpdated = (angle: string, newUrl: string) => {
+ const currentGenerated = product.generatedImages || {
+ productStudio: [], studioReady: [], cenarioCriativo: [], modeloIA: []
+ };
+ const updatedPS = (currentGenerated.productStudio || []).map(session => ({
+ ...session,
+ images: session.images.map(img =>
+ img.angle === angle ? { ...img, url: newUrl } : img
+ ),
+ }));
+ onUpdateProduct(product.id, {
+ generatedImages: { ...currentGenerated, productStudio: updatedPS }
  });
  };
 
@@ -1834,6 +1854,23 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  )}
  </div>
+
+ {/* Botão Editar Imagem (destaque, só em viewMode otimizada) */}
+ {isOptimized && viewMode === 'otimizada' && generatedImages.length > 0 && (
+ <button
+ onClick={() => setShowEditModalEditor(true)}
+ className="w-full p-3.5 rounded-xl border border-[#FF6B6B]/30 bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 hover:from-[#FF6B6B]/20 hover:to-[#FF9F43]/20 transition-all flex items-center gap-3"
+ >
+ <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]">
+ <i className="fas fa-pen-to-square text-sm text-white"></i>
+ </div>
+ <div className="text-left">
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold block'}>Editar Imagem</span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Corrigir detalhes com IA</span>
+ </div>
+ <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-right text-xs ml-auto'}></i>
+ </button>
+ )}
 
  {/* Botões de Ação (só aparecem se o produto foi otimizado) */}
  {isOptimized && (
@@ -3040,6 +3077,35 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    productName={product.name}
    theme={theme}
  />
+
+ {/* Modal de Edição de Imagem Otimizada */}
+ {showEditModalEditor && generatedImages.length > 0 && (() => {
+ const safeIdx = Math.min(currentImageIndex, generatedImages.length - 1);
+ const img = generatedImages[safeIdx];
+ const sessionId = img.sessionId;
+ const session = (product.generatedImages?.productStudio || []).find(s => s.id === sessionId);
+ const currentImage: ProductStudioImage = { id: img.url, url: img.url, angle: img.angle as ProductStudioAngle, createdAt: new Date().toISOString() };
+ const dummySession: ProductStudioSession = session || { id: sessionId, productId: product.id, images: [currentImage], status: 'ready', createdAt: new Date().toISOString() };
+ return (
+ <StudioEditModal
+   isOpen={showEditModalEditor}
+   onClose={() => setShowEditModalEditor(false)}
+   product={product}
+   currentImage={currentImage}
+   generationId={sessionId}
+   session={dummySession}
+   editBalance={editBalance ?? 0}
+   regularBalance={userCredits}
+   resolution={resolution}
+   studioBackground={studioBackground}
+   studioShadow={studioShadow}
+   productNotes={productNotes}
+   onImageUpdated={handleOptimizedImageUpdated}
+   onDeductEditCredits={onDeductEditCredits}
+   theme={theme}
+ />
+ );
+ })()}
  </div>
  );
 };
