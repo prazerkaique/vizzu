@@ -406,8 +406,16 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </div>
 
  {/* Badge indicando tipo */}
- <div className={'absolute top-3 left-3 px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>
- {showOriginal ? 'Original' : ANGLE_LABELS[currentImage?.angle] || 'Gerada'}
+ <div className="absolute top-3 left-3 flex items-center gap-1.5">
+  <div className={'px-2 py-1 rounded-lg text-[10px] font-medium ' + (showOriginal ? 'bg-neutral-600 text-white' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white')}>
+   {showOriginal ? 'Original' : ANGLE_LABELS[currentImage?.angle] || 'Gerada'}
+  </div>
+  {!showOriginal && currentImage?.url?.includes('/edit_') && (
+   <div className="px-2 py-1 bg-blue-500/80 backdrop-blur-sm rounded-lg flex items-center gap-1">
+    <i className="fas fa-pen-to-square text-white text-[8px]"></i>
+    <span className="text-white text-[10px] font-medium">Editado</span>
+   </div>
+  )}
  </div>
  </>
  ) : (

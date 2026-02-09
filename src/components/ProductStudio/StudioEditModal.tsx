@@ -366,6 +366,9 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                     <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                       Arraste ou <span className="text-[#FF6B6B] font-medium">clique aqui</span>
                     </p>
+                    <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-1 max-w-[260px] mx-auto leading-relaxed'}>
+                      Envie uma foto do produto real mostrando como a correção deve ficar. A IA vai usar como guia visual para forma, posição ou detalhe.
+                    </p>
                   </div>
                 )}
 

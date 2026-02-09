@@ -362,6 +362,44 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
      // Mostrar tela de resultados sempre que houver imagens geradas
      setShowResult(true);
+
+     // Re-poll após 5s para capturar ângulos que chegaram tarde (ex: top)
+     // Workers paralelos podem terminar DEPOIS do status virar 'completed'
+     const genId = pending.generationId!;
+     setTimeout(async () => {
+       try {
+         const latePoll = await pollStudioGeneration(genId);
+         const lateAngles = latePoll.completedAngles.filter(a => a.status === 'completed');
+         if (lateAngles.length > successAngles.length) {
+           const lateImages: ProductStudioImage[] = lateAngles.map((item, idx) => ({
+             id: item.id || `${genId}-${idx}`,
+             url: item.url!,
+             angle: (item.angle || 'front') as ProductStudioAngle,
+             createdAt: new Date().toISOString()
+           }));
+           const lateSession: ProductStudioSession = {
+             id: genId,
+             productId: product.id,
+             images: lateImages,
+             status: 'ready',
+             createdAt: newSession.createdAt
+           };
+           setCurrentSession(lateSession);
+           const curGen = product.generatedImages || {
+             studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: []
+           };
+           const updPS = [...(curGen.productStudio || [])];
+           const sIdx = updPS.findIndex(s => s.id === genId);
+           if (sIdx >= 0) updPS[sIdx] = lateSession;
+           else updPS.push(lateSession);
+           onUpdateProduct(product.id, {
+             generatedImages: { ...curGen, productStudio: updPS }
+           });
+         }
+       } catch (e) {
+         console.warn('[Polling] Late re-poll failed:', e);
+       }
+     }, 5000);
    }
 
    // Se falhou completamente (nenhum ângulo gerado), mostrar erro
@@ -1632,10 +1670,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  className="max-w-full max-h-[450px] object-contain rounded-lg"
  />
  {/* Badge do ângulo/tipo */}
- <div className="absolute top-3 left-3 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg">
+ <div className="absolute top-3 left-3 flex items-center gap-1.5">
+ <div className="px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg">
  <span className="text-white text-xs font-medium capitalize">
  {viewMode === 'otimizada' ? (currentImg as any).angle : (currentImg as any).type}
  </span>
+ </div>
+ {viewMode === 'otimizada' && (currentImg as any).url?.includes('/edit_') && (
+ <div className="px-2 py-1 bg-blue-500/80 backdrop-blur-sm rounded-lg flex items-center gap-1">
+ <i className="fas fa-pen-to-square text-white text-[8px]"></i>
+ <span className="text-white text-[10px] font-medium">Editado</span>
+ </div>
+ )}
  </div>
  {/* Navegação do carrossel */}
  {currentImages.length > 1 && (

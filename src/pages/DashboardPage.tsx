@@ -233,8 +233,15 @@ export function DashboardPage() {
  >
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
  <OptimizedImage src={creation.imageUrl} size="thumb" alt="" className="w-full h-full" />
- <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
- {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : creation.type === 'still' ? 'Still' : 'Look'}
+ <div className="absolute bottom-1 right-1 flex items-center gap-0.5">
+  {creation.imageUrl?.includes('/edit_') && (
+   <div className="px-1 py-0.5 rounded text-[7px] font-medium bg-blue-500 text-white">
+    Editado
+   </div>
+  )}
+  <div className="px-1.5 py-0.5 rounded text-[8px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
+   {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : creation.type === 'still' ? 'Still' : 'Look'}
+  </div>
  </div>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{creation.name}</p>
