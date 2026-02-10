@@ -151,6 +151,12 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [filterGender, setFilterGender] = useState('');
   const [sortBy, setSortBy] = useState<'recent' | 'a-z' | 'z-a'>('recent');
 
+  // ── States para duas listas separadas ──
+  const [withStillsCollapsed, setWithStillsCollapsed] = useState(false);
+  const [withoutStillsCollapsed, setWithoutStillsCollapsed] = useState(false);
+  const [visibleWithStills, setVisibleWithStills] = useState(20);
+  const [visibleWithoutStills, setVisibleWithoutStills] = useState(20);
+
   const isDark = theme === 'dark';
   const { openViewer } = useImageViewer();
   const { navigateTo } = useUI();
@@ -226,6 +232,26 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     }
     return result;
   }, [products, searchQuery, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
+
+  // ── Separar produtos com/sem stills ──
+  const { productsWithStills, productsWithoutStills } = useMemo(() => {
+    const withStills: Product[] = [];
+    const withoutStills: Product[] = [];
+    filteredProducts.forEach(product => {
+      if (getStillCount(product, generations) > 0) {
+        withStills.push(product);
+      } else {
+        withoutStills.push(product);
+      }
+    });
+    return { productsWithStills: withStills, productsWithoutStills: withoutStills };
+  }, [filteredProducts, generations]);
+
+  // Reset paginação quando filtros mudam
+  useEffect(() => {
+    setVisibleWithStills(20);
+    setVisibleWithoutStills(20);
+  }, [searchQuery, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender]);
 
   // ── GERAR ──
   const handleGenerate = useCallback(async (params: CreativeStillGenerateParams) => {
@@ -738,72 +764,194 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         </div>
 
         {/* ── PRODUTOS ── */}
-        <div>
-          <h2 className={(isDark ? 'text-neutral-200' : 'text-gray-800') + ' text-sm font-bold mb-3'}>
-            <i className="fas fa-box mr-2 text-xs opacity-50"></i>
-            Seus Produtos
-            <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-2'}>({filteredProducts.length})</span>
-          </h2>
-          {filteredProducts.length === 0 ? (
-            <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-white border border-gray-200')}>
-              <i className={'fas fa-box-open text-3xl mb-3 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
-                {searchQuery ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado.'}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {filteredProducts.map(product => {
-                const imgUrl = getProductImage(product);
-                const stillCount = getStillCount(product, generations);
-                return (
-                  <button
-                    key={product.id}
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setView('editor');
-                    }}
-                    className={'group relative rounded-xl overflow-hidden border transition-all hover:scale-[1.03] text-left ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-600' : 'bg-white border-gray-200 hover:border-gray-400 shadow-sm')}
-                  >
-                    <div className="aspect-square relative overflow-hidden">
-                      {imgUrl ? (
-                        <OptimizedImage src={imgUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
-                        </div>
-                      )}
-                      {/* Badge stills */}
-                      {stillCount > 0 && (
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-[#FF6B6B]/90 text-white text-[9px] font-bold">
-                          {stillCount}
-                        </div>
-                      )}
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                        <span className="text-white text-xs font-semibold flex items-center gap-1">
-                          <i className="fas fa-camera-retro text-[10px]"></i>
-                          Criar still
-                        </span>
-                      </div>
+        {filteredProducts.length === 0 ? (
+          <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-white border border-gray-200')}>
+            <i className={'fas fa-box-open text-3xl mb-3 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+            <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+              {searchQuery ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* ═══ SEÇÃO: Sem Still Criativo ═══ */}
+            {productsWithoutStills.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => setWithoutStillsCollapsed(!withoutStillsCollapsed)}
+                  className="w-full flex items-center justify-between mb-3 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={(isDark ? 'bg-[#FF9F43]/20' : 'bg-amber-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                      <i className={(isDark ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas fa-clock text-[10px]'}></i>
                     </div>
-                    <div className="p-2.5">
-                      <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold truncate'}>{product.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        {product.sku && <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{product.sku}</span>}
-                        {product.category && (
-                          <span className={'text-[9px] px-1 py-0.5 rounded ' + (isDark ? 'bg-white/5 text-neutral-500' : 'bg-gray-100 text-gray-500')}>
-                            {product.category}
-                          </span>
-                        )}
-                      </div>
+                    <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                      Sem Still Criativo
+                    </h2>
+                    <span className={(isDark ? 'bg-[#FF9F43]/20 text-[#FF9F43]' : 'bg-amber-100 text-amber-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                      {productsWithoutStills.length > visibleWithoutStills
+                        ? `${Math.min(visibleWithoutStills, productsWithoutStills.length)} de ${productsWithoutStills.length}`
+                        : productsWithoutStills.length}
+                    </span>
+                  </div>
+                  <div className={(isDark ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+                    <i className={'fas fa-chevron-' + (withoutStillsCollapsed ? 'down' : 'up') + ' text-xs'}></i>
+                  </div>
+                </button>
+
+                {!withoutStillsCollapsed && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    {productsWithoutStills.slice(0, visibleWithoutStills).map(product => {
+                      const imgUrl = getProductImage(product);
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setView('editor');
+                          }}
+                          className={'group relative rounded-xl overflow-hidden border transition-all hover:scale-[1.03] text-left ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-600' : 'bg-white border-gray-200 hover:border-gray-400 shadow-sm')}
+                        >
+                          <div className="aspect-square relative overflow-hidden">
+                            {imgUrl ? (
+                              <OptimizedImage src={imgUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                              </div>
+                            )}
+                            {/* Hover overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                              <span className="text-white text-xs font-semibold flex items-center gap-1">
+                                <i className="fas fa-camera-retro text-[10px]"></i>
+                                Criar still
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-2.5">
+                            <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold truncate'}>{product.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {product.sku && <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{product.sku}</span>}
+                              {product.category && (
+                                <span className={'text-[9px] px-1 py-0.5 rounded ' + (isDark ? 'bg-white/5 text-neutral-500' : 'bg-gray-100 text-gray-500')}>
+                                  {product.category}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Carregar mais - Sem stills */}
+                {!withoutStillsCollapsed && visibleWithoutStills < productsWithoutStills.length && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={() => setVisibleWithoutStills(prev => prev + 20)}
+                      className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                    >
+                      <i className="fas fa-chevron-down text-xs"></i>
+                      Carregar mais ({productsWithoutStills.length - visibleWithoutStills} restantes)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ═══ SEÇÃO: Produtos com Still Criativo ═══ */}
+            {productsWithStills.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => setWithStillsCollapsed(!withStillsCollapsed)}
+                  className="w-full flex items-center justify-between mb-3 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={(isDark ? 'bg-[#FF6B6B]/20' : 'bg-red-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+                      <i className={(isDark ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-gem text-[10px]'}></i>
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                    <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+                      Produtos com Still Criativo
+                    </h2>
+                    <span className={(isDark ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-red-100 text-red-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+                      {productsWithStills.length > visibleWithStills
+                        ? `${Math.min(visibleWithStills, productsWithStills.length)} de ${productsWithStills.length}`
+                        : productsWithStills.length}
+                    </span>
+                  </div>
+                  <div className={(isDark ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+                    <i className={'fas fa-chevron-' + (withStillsCollapsed ? 'down' : 'up') + ' text-xs'}></i>
+                  </div>
+                </button>
+
+                {!withStillsCollapsed && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    {productsWithStills.slice(0, visibleWithStills).map(product => {
+                      const imgUrl = getProductImage(product);
+                      const stillCount = getStillCount(product, generations);
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => setHubProduct(product)}
+                          className={'group relative rounded-xl overflow-hidden border transition-all hover:scale-[1.03] text-left ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-[#FF6B6B]/50' : 'bg-white border-gray-200 hover:border-[#FF6B6B]/40 shadow-sm')}
+                        >
+                          <div className="aspect-square relative overflow-hidden">
+                            {imgUrl ? (
+                              <OptimizedImage src={imgUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                              </div>
+                            )}
+                            {/* Badge stills */}
+                            <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-[#FF6B6B]/90 text-white text-[9px] font-bold">
+                              {stillCount}
+                            </div>
+                            {/* Hover overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                              <div className="flex gap-1.5 items-center">
+                                <span className="text-white text-[9px] font-medium bg-[#FF6B6B]/90 px-2.5 py-1 rounded-full">
+                                  <i className="fas fa-eye mr-1 text-[7px]"></i>Ver stills
+                                </span>
+                                <span className="text-white text-[9px] font-medium bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
+                                  <i className="fas fa-th-large text-[7px]"></i>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="p-2.5">
+                            <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold truncate'}>{product.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {product.sku && <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{product.sku}</span>}
+                              {product.category && (
+                                <span className={'text-[9px] px-1 py-0.5 rounded ' + (isDark ? 'bg-white/5 text-neutral-500' : 'bg-gray-100 text-gray-500')}>
+                                  {product.category}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Carregar mais - Com stills */}
+                {!withStillsCollapsed && visibleWithStills < productsWithStills.length && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={() => setVisibleWithStills(prev => prev + 20)}
+                      className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+                    >
+                      <i className="fas fa-chevron-down text-xs"></i>
+                      Carregar mais ({productsWithStills.length - visibleWithStills} restantes)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ── MODAL: Detalhes do Still ── */}
@@ -885,6 +1033,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           userId={userId}
           navigateTo={navigateTo}
           setProductForCreation={setProductForCreationProp || (() => {})}
+          defaultTab="cs"
         />
       )}
     </div>

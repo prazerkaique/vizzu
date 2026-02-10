@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
-import DownloadModal from '../shared/DownloadModal';
+import DownloadModal, { type DownloadImageGroup } from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 import { Plan } from '../../hooks/useCredits';
 import { ImageEditModal } from '../shared/ImageEditModal';
@@ -481,6 +481,21 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
  // ── Download system (modal centralizado) ──
  const [downloadModalLook, setDownloadModalLook] = useState<{ images: DownloadableImage[]; productName: string } | null>(null);
+ const [downloadAllGroups, setDownloadAllGroups] = useState<{ groups: DownloadImageGroup[]; productName: string } | null>(null);
+
+ const handleDownloadAllLooks = useCallback((pwl: ProductWithLooks) => {
+   const groups: DownloadImageGroup[] = pwl.looks.map((look, i) => {
+     const imgs: DownloadableImage[] = [
+       { url: look.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' },
+     ];
+     if (look.backImageUrl) {
+       imgs.push({ url: look.backImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
+     }
+     const date = new Date(look.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+     return { label: `Look ${i + 1} (${date})`, featurePrefix: 'VLookComposer', images: imgs };
+   });
+   setDownloadAllGroups({ groups, productName: pwl.product.name });
+ }, []);
 
  const handleDeleteLook = (look: GeneratedLook) => {
  const product = products.find(p => p.id === look.productId);
@@ -1444,6 +1459,17 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  Gerar novo look com este produto
  </button>
 
+ {/* Botão download todos os looks */}
+ {selectedProductForModal.looks.length > 1 && (
+ <button
+ onClick={() => handleDownloadAllLooks(selectedProductForModal)}
+ className={(isDark ? 'bg-white/10 hover:bg-white/15 text-white border-white/10' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' w-full py-2.5 border rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+ >
+ <i className="fas fa-download"></i>
+ Download todos os looks ({selectedProductForModal.totalImageCount} {selectedProductForModal.totalImageCount === 1 ? 'imagem' : 'imagens'})
+ </button>
+ )}
+
  {/* Looks deste produto */}
  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Looks criados ({selectedProductForModal.lookCount})</h3>
@@ -1610,13 +1636,24 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  />
  )}
 
- {/* Download Modal */}
+ {/* Download Modal — look individual */}
  {downloadModalLook && (
  <DownloadModal
   isOpen={!!downloadModalLook}
   onClose={() => setDownloadModalLook(null)}
   productName={downloadModalLook.productName}
   images={downloadModalLook.images}
+  theme={theme}
+ />
+ )}
+
+ {/* Download Modal — todos os looks (agrupado) */}
+ {downloadAllGroups && (
+ <DownloadModal
+  isOpen={!!downloadAllGroups}
+  onClose={() => setDownloadAllGroups(null)}
+  productName={downloadAllGroups.productName}
+  groups={downloadAllGroups.groups}
   theme={theme}
  />
  )}

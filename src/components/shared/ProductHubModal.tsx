@@ -30,6 +30,8 @@ export interface ProductHubModalProps {
   navigateTo: (page: string) => void;
   setProductForCreation: (p: Product | null) => void;
   onEditProduct?: (p: Product) => void;
+  /** Aba padrão para abrir (ex: 'cs' para Still Criativo) */
+  defaultTab?: string;
 }
 
 // ── Helpers ──
@@ -77,6 +79,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   navigateTo,
   setProductForCreation,
   onEditProduct,
+  defaultTab,
 }) => {
   const isDark = theme === 'dark';
   const { openViewer } = useImageViewer();
@@ -136,10 +139,15 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      const first = tabs.find(t => t.count > 0)?.id || 'ps';
-      setActiveTab(first);
+      // Se defaultTab foi passado e essa aba tem conteúdo, usar ela
+      if (defaultTab && tabs.find(t => t.id === defaultTab && t.count > 0)) {
+        setActiveTab(defaultTab);
+      } else {
+        const first = tabs.find(t => t.count > 0)?.id || 'ps';
+        setActiveTab(first);
+      }
     }
-  }, [isOpen, tabs]);
+  }, [isOpen, tabs, defaultTab]);
 
   // ── Atalhos ──
   const handleShortcut = useCallback((page: string) => {
