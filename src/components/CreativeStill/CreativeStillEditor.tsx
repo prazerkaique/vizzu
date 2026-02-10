@@ -158,6 +158,9 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const [resolution, setResolution] = useState<Resolution>(() => getPreferredResolution() as Resolution);
   const [show4KModal, setShow4KModal] = useState(false);
   const [previewAngleIndex, setPreviewAngleIndex] = useState(0);
+  const [showNoRefModal, setShowNoRefModal] = useState(false);
+  const [angleWithoutRef, setAngleWithoutRef] = useState<string | null>(null);
+  const [noRefModalMode, setNoRefModalMode] = useState<'warning' | 'detail-tip'>('warning');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Tipo do produto e ângulos disponíveis (condicionais por categoria) ──
@@ -203,6 +206,25 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
     return result;
   }, [product, anglesConfig]);
 
+  // Mapa de referências disponíveis (quais ângulos têm foto)
+  const availableReferences = useMemo(() => {
+    const refs: Record<string, boolean> = {};
+    for (const ai of angleImages) {
+      refs[ai.angle] = ai.hasImage;
+    }
+    // front e folded sempre considerados "com referência" (front obrigatório, folded usa original)
+    refs['front'] = true;
+    refs['folded'] = true;
+    return refs;
+  }, [angleImages]);
+
+  // Labels amigáveis para os ângulos (para o modal)
+  const angleLabels = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const ai of angleImages) map[ai.angle] = ai.label;
+    return map;
+  }, [angleImages]);
+
   // Imagens dos ângulos selecionados (para enviar ao N8N)
   const selectedImageUrls = useMemo(() =>
     angleImages.filter(a => selectedAngles.includes(a.angle)).map(a => a.url),
@@ -225,18 +247,43 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const toggleAngle = useCallback((angle: string) => {
     // Front é obrigatório — não pode desmarcar
     if (angle === 'front') return;
-    // Só pode selecionar ângulos que têm imagem
-    const ai = angleImages.find(a => a.angle === angle);
-    if (!ai?.hasImage) return;
 
-    setSelectedAngles(prev => {
-      if (prev.includes(angle)) return prev.filter(a => a !== angle);
-      return [...prev, angle];
-    });
-  }, [angleImages]);
+    // Se já está selecionado, remove
+    if (selectedAngles.includes(angle)) {
+      setSelectedAngles(prev => prev.filter(a => a !== angle));
+      return;
+    }
+
+    // DICA DE DETALHE: detalhe frente sem foto de detalhe frente
+    if (angle === 'front_detail' && !availableReferences['front_detail']) {
+      setAngleWithoutRef(angle);
+      setNoRefModalMode('detail-tip');
+      setShowNoRefModal(true);
+      return;
+    }
+
+    // DICA DE DETALHE: detalhe costas sem foto de detalhe costas
+    if (angle === 'back_detail' && !availableReferences['back_detail']) {
+      setAngleWithoutRef(angle);
+      setNoRefModalMode('detail-tip');
+      setShowNoRefModal(true);
+      return;
+    }
+
+    // AVISO: ângulos sem referência (permite continuar)
+    if (angle !== 'folded' && !availableReferences[angle]) {
+      setAngleWithoutRef(angle);
+      setNoRefModalMode('warning');
+      setShowNoRefModal(true);
+      return;
+    }
+
+    // Tem referência — adiciona normalmente
+    setSelectedAngles(prev => [...prev, angle]);
+  }, [selectedAngles, availableReferences]);
 
   const selectAllAngles = useCallback(() => {
-    setSelectedAngles(angleImages.filter(a => a.hasImage).map(a => a.angle));
+    setSelectedAngles(angleImages.map(a => a.angle));
   }, [angleImages]);
 
   const handleOptimize = useCallback(() => {
@@ -420,14 +467,24 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                   <i className="fas fa-cube mr-2 text-xs opacity-50"></i>
                   Ângulos para gerar
                 </label>
-                {angleImages.filter(a => a.hasImage).length > 1 && (
-                  <button
-                    onClick={selectAllAngles}
-                    className={'text-[10px] font-medium px-2 py-0.5 rounded-md transition-all ' + (isDark ? 'text-amber-400 hover:bg-amber-500/20' : 'text-amber-600 hover:bg-amber-50')}
-                  >
-                    Selecionar todos
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {selectedAngles.length > 1 && (
+                    <button
+                      onClick={() => setSelectedAngles(['front'])}
+                      className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] font-medium'}
+                    >
+                      Limpar
+                    </button>
+                  )}
+                  {angleImages.length > 1 && (
+                    <button
+                      onClick={selectAllAngles}
+                      className={'text-[10px] font-medium px-2 py-0.5 rounded-md transition-all ' + (isDark ? 'text-amber-400 hover:bg-amber-500/20' : 'text-amber-600 hover:bg-amber-50')}
+                    >
+                      Selecionar todos
+                    </button>
+                  )}
+                </div>
               </div>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
                 Cada ângulo selecionado gera 1 imagem criativa
@@ -436,43 +493,71 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 {angleImages.map((ai) => {
                   const isSelected = selectedAngles.includes(ai.angle);
                   const isFront = ai.angle === 'front';
-                  const isDisabled = !ai.hasImage;
+                  const hasRef = isFront || ai.angle === 'folded' || availableReferences[ai.angle];
+                  const hasDetailTip = (
+                    (ai.angle === 'front_detail' && !availableReferences['front_detail']) ||
+                    (ai.angle === 'back_detail' && availableReferences['back'] && !availableReferences['back_detail'])
+                  );
                   return (
                     <button
                       key={ai.angle}
                       onClick={() => toggleAngle(ai.angle)}
-                      disabled={isDisabled}
-                      className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
-                        (isDisabled
-                          ? (isDark ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50' : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-50')
-                          : (isFront || isSelected)
-                            ? (isDark ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
-                            : (isDark
-                              ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
-                              : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300')
+                      className={'rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ' +
+                        ((isFront || isSelected)
+                          ? (isDark ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
+                          : (isDark
+                            ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                            : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300')
                         )
                       }
                     >
-                      {/* Badge otimizada */}
-                      {ai.isOptimized && ai.hasImage && (
+                      {/* Thumbnail do produto */}
+                      <div className={'w-full aspect-square flex items-center justify-center overflow-hidden ' + (isDark ? 'bg-neutral-900' : 'bg-gray-50')}>
+                        {ai.url ? (
+                          <OptimizedImage
+                            src={ai.url}
+                            alt={ai.label}
+                            className="w-full h-full object-contain"
+                            size="thumb"
+                          />
+                        ) : (
+                          <i className={'fas ' + ai.icon + ' text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                        )}
+                      </div>
+
+                      {/* Indicadores no canto superior direito */}
+                      {/* PS Otimizada */}
+                      {ai.isOptimized && ai.hasImage && !hasDetailTip && (
                         <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
                           <i className="fas fa-sparkles text-emerald-400 text-[8px]"></i>
                         </div>
                       )}
-                      {/* Badge sem foto */}
-                      {!ai.hasImage && (
-                        <div className={'absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (isDark ? 'bg-neutral-700 text-neutral-500' : 'bg-gray-200 text-gray-400')}>
-                          <i className="fas fa-ban"></i>
+                      {/* Dica de detalhe (info azul) */}
+                      {hasDetailTip && !isSelected && (
+                        <div className={'absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-500')}>
+                          <i className="fas fa-info"></i>
                         </div>
                       )}
-                      <i className={'fas ' + ai.icon + ' text-xl'}></i>
-                      <span className="text-xs font-medium">{ai.label}</span>
-                      {(isFront || isSelected) && ai.hasImage && (
-                        <i className="fas fa-check-circle text-green-400 text-sm"></i>
+                      {/* Sem referência (aviso âmbar) */}
+                      {!isFront && !hasDetailTip && !hasRef && !isSelected && (
+                        <div className={'absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-500')}>
+                          <i className="fas fa-exclamation"></i>
+                        </div>
                       )}
-                      {!ai.hasImage && (
-                        <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Sem foto</span>
-                      )}
+
+                      {/* Label + check */}
+                      <div className="px-2 pb-2 pt-0.5 flex flex-col items-center gap-1">
+                        <span className="text-xs font-medium">{ai.label}</span>
+                        {(isFront || isSelected) && (
+                          <i className="fas fa-check-circle text-green-400 text-sm"></i>
+                        )}
+                        {!isFront && !isSelected && hasDetailTip && (
+                          <span className={(isDark ? 'text-blue-400/60' : 'text-blue-400') + ' text-[10px]'}>Sem detalhe</span>
+                        )}
+                        {!isFront && !isSelected && !hasDetailTip && !hasRef && (
+                          <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Sem ref.</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
@@ -483,7 +568,19 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                   <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
                     <i className="fas fa-check text-green-400 text-[8px]"></i>
                   </div>
-                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Selecionado</span>
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Com referência</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className={'w-4 h-4 rounded-full flex items-center justify-center ' + (isDark ? 'bg-blue-500/20' : 'bg-blue-100')}>
+                    <i className={'fas fa-info text-[8px] ' + (isDark ? 'text-blue-400' : 'text-blue-500')}></i>
+                  </div>
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Sem detalhe</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className={'w-4 h-4 rounded-full flex items-center justify-center ' + (isDark ? 'bg-amber-500/20' : 'bg-amber-100')}>
+                    <i className={'fas fa-exclamation text-[8px] ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
+                  </div>
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Sem referência</span>
                 </div>
                 {angleImages.some(a => a.isOptimized) && (
                   <div className="flex items-center gap-1.5">
@@ -491,14 +588,6 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                       <i className="fas fa-sparkles text-emerald-400 text-[8px]"></i>
                     </div>
                     <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>PS Otimizada</span>
-                  </div>
-                )}
-                {angleImages.some(a => !a.hasImage) && (
-                  <div className="flex items-center gap-1.5">
-                    <div className={'w-4 h-4 rounded-full flex items-center justify-center ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}>
-                      <i className={'fas fa-ban text-[8px] ' + (isDark ? 'text-neutral-500' : 'text-gray-400')}></i>
-                    </div>
-                    <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Sem foto (envie no cadastro)</span>
                   </div>
                 )}
               </div>
@@ -519,8 +608,8 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                     setShowOptimized(false);
                   }}
                   placeholder={referenceImages.length > 0
-                    ? 'Ex: Meu produto sobre mármore branco com a iluminação da @ref1 e o cenário da @ref2...'
-                    : 'Ex: Meu produto sobre uma mesa de mármore branco com flores ao redor, luz natural suave, estilo editorial minimalista...'
+                    ? 'Ex: Meu produto sobre mármore branco, com a iluminação da @ref1 e o cenário da @ref2. Estilo editorial, luz natural suave...'
+                    : 'Ex: Meu produto sobre uma mesa de mármore branco com flores ao redor, luz natural suave, estilo editorial. Dica: envie referências abaixo e use @ref1, @ref2 no texto!'
                   }
                   rows={4}
                   className={'w-full rounded-xl p-4 pr-12 text-sm resize-none transition-all ' +
@@ -576,12 +665,12 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
             {/* 3. Referências visuais (opcional) */}
             <div>
               <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-sm font-semibold mb-2 block'}>
-                <i className="fas fa-image mr-2 text-xs opacity-50"></i>
-                Referências visuais
+                <i className="fas fa-palette mr-2 text-xs opacity-50"></i>
+                Imagens de inspiração
                 <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
               </label>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
-                Envie fotos de inspiração e use @ref1, @ref2... no prompt para descrever o que quer de cada uma
+                Envie fotos de referência — cenários, iluminação, composição, texturas — e use <span className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' font-semibold'}>@ref1</span>, <span className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' font-semibold'}>@ref2</span> no prompt acima para dizer o que quer de cada uma
               </p>
               <div className="flex flex-wrap gap-3">
                 {referenceImages.map((ref, i) => (
@@ -726,6 +815,76 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
           onConfirm={handleConfirm4K}
           onCancel={() => setShow4KModal(false)}
         />
+      )}
+
+      {/* Modal: Sem referência / Dica de detalhe */}
+      {showNoRefModal && angleWithoutRef && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => { setShowNoRefModal(false); setAngleWithoutRef(null); }}
+          ></div>
+          <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-md rounded-2xl border overflow-hidden'}>
+            <div className="p-6 pb-4 text-center">
+              {noRefModalMode === 'detail-tip' ? (
+                <>
+                  <div className={'w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ' + (isDark ? 'bg-blue-500/20' : 'bg-blue-100')}>
+                    <i className={'fas fa-info-circle text-2xl ' + (isDark ? 'text-blue-400' : 'text-blue-500')}></i>
+                  </div>
+                  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif mb-2'}>
+                    Dica para melhores resultados
+                  </h3>
+                  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>
+                    A imagem de <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef] || angleWithoutRef}</span> pode
+                    ser gerada, mas para melhores resultados é importante enviar uma foto de referência desse ângulo no cadastro do produto.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className={'w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ' + (isDark ? 'bg-amber-500/20' : 'bg-amber-100')}>
+                    <i className={'fas fa-image text-2xl ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
+                  </div>
+                  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif mb-2'}>
+                    Sem imagem de referência
+                  </h3>
+                  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>
+                    O ângulo <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef] || angleWithoutRef}</span> não
+                    possui foto de referência. A IA vai gerar normalmente, mas o resultado pode não ser tão fiel ao produto real.
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="px-6 pb-4 space-y-3">
+              <button
+                onClick={() => {
+                  setShowNoRefModal(false);
+                  if (angleWithoutRef) {
+                    setSelectedAngles(prev => [...prev, angleWithoutRef]);
+                  }
+                  setAngleWithoutRef(null);
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5555] hover:to-[#FF9F43] text-white rounded-xl font-medium transition-all text-center flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-check"></i>
+                <span>{noRefModalMode === 'detail-tip' ? 'Entendi, gerar assim mesmo' : 'Continuar mesmo assim'}</span>
+              </button>
+              <button
+                onClick={() => { setShowNoRefModal(false); setAngleWithoutRef(null); }}
+                className={(isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' w-full px-4 py-2 text-sm transition-all text-center'}
+              >
+                Cancelar
+              </button>
+            </div>
+            <div className="px-6 pb-6">
+              <div className={(isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') + ' flex items-start gap-3 rounded-xl p-3 border'}>
+                <i className={'fas fa-lightbulb mt-0.5 ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
+                <p className={(isDark ? 'text-amber-300/80' : 'text-amber-700') + ' text-xs'}>
+                  Para melhores resultados, envie fotos de todos os ângulos do produto no cadastro. Quanto mais referências, mais fiel será o resultado.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
