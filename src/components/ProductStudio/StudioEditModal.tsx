@@ -213,8 +213,22 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     // 1. Update React state (immediate UI update)
     onImageUpdated(currentImage.angle, newImageUrl);
 
-    // 2. Persist edited URL to generations.output_urls in Supabase
+    // 2. Persist edited URL to product_images in Supabase
+    //    (product_images is the source of truth — loadUserProducts reads from it)
     try {
+      const { error } = await supabase
+        .from('product_images')
+        .update({ url: newImageUrl })
+        .eq('product_id', product.id)
+        .eq('generation_id', generationId)
+        .eq('angle', currentImage.angle)
+        .eq('type', 'product_studio');
+
+      if (error) {
+        console.error('[StudioEditModal] Erro ao salvar edição em product_images:', error);
+      }
+
+      // Also update generations.output_urls for consistency
       const { data: gen } = await supabase
         .from('generations')
         .select('output_urls')
@@ -224,31 +238,27 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
       if (gen) {
         let urls = gen.output_urls;
         if (typeof urls === 'string') {
-          try { urls = JSON.parse(urls); } catch { urls = {}; }
+          try { urls = JSON.parse(urls); } catch { urls = []; }
         }
-        urls = urls || {};
-
         if (Array.isArray(urls)) {
-          // Array format: replace matching URL
-          urls = urls.map((u: string) => u === currentImage.url ? newImageUrl : u);
-        } else if (typeof urls === 'object') {
-          // Object format {angle: url}: update the angle key
-          urls[currentImage.angle] = newImageUrl;
+          urls = urls.map((item: any) =>
+            (item.angle === currentImage.angle)
+              ? { ...item, url: newImageUrl }
+              : item
+          );
+          await supabase
+            .from('generations')
+            .update({ output_urls: urls })
+            .eq('id', generationId);
         }
-
-        await supabase
-          .from('generations')
-          .update({ output_urls: urls })
-          .eq('id', generationId);
       }
     } catch (err) {
       console.error('[StudioEditModal] Erro ao salvar edição no banco:', err);
-      // Non-blocking — UI already updated
     }
 
     showToast('Imagem atualizada!', 'success');
     handleClose();
-  }, [newImageUrl, user, currentImage, generationId, onImageUpdated, showToast, handleClose]);
+  }, [newImageUrl, user, currentImage, product.id, generationId, onImageUpdated, showToast, handleClose]);
 
   const handleKeepOriginal = useCallback(() => {
     showToast('Imagem original mantida', 'info');
