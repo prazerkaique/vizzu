@@ -431,7 +431,7 @@ function Step1Selection({
           {selectedCount > 0 ? (
             <>
               <i className="fas fa-arrow-right text-xs" />
-              Escolher formato e baixar ({selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'})
+              Escolher formato ({selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} × {DOWNLOAD_PRESETS.length} tamanhos)
             </>
           ) : (
             <>
@@ -481,7 +481,7 @@ function Step2Format({
                 Escolher formato
               </h3>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
-                Passo 2 de 2 · {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} · {productName}
+                Passo 2 de 2 · {selectedCount} {selectedCount === 1 ? 'imagem selecionada' : 'imagens selecionadas'} · {productName}
               </p>
             </div>
           </div>
@@ -519,7 +519,7 @@ function Step2Format({
                 Baixar Tudo (ZIP)
               </p>
               <p className="text-white/70 text-[11px] mt-0.5">
-                {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} x {DOWNLOAD_PRESETS.length} tamanhos · Organizado em pastas
+                {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} × {DOWNLOAD_PRESETS.length} tamanhos = <span className="text-white font-semibold">{selectedCount * DOWNLOAD_PRESETS.length} arquivos</span> · ZIP organizado
               </p>
             </div>
             <i className="fas fa-download text-white/50 ml-auto flex-shrink-0" />
@@ -558,7 +558,7 @@ function Step2Format({
                 {preset.label}
               </p>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
-                {preset.description}
+                {preset.description} · {selectedCount} {selectedCount === 1 ? 'arquivo' : 'arquivos'}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
