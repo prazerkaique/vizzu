@@ -30,6 +30,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserProducts = useCallback(async (userId: string) => {
     try {
+      console.log('[Products] Carregando produtos para userId:', userId);
       const { data: productsData, error } = await supabase
         .from('products')
         .select(`
@@ -39,6 +40,8 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId);
 
       if (error) throw error;
+
+      console.log('[Products] Supabase retornou', productsData?.length ?? 0, 'produtos');
 
       if (productsData && productsData.length > 0) {
         const formattedProducts: Product[] = productsData.map(p => {
@@ -175,10 +178,11 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
         setProducts(formattedProducts);
       } else {
+        console.warn('[Products] Nenhum produto encontrado para este usuário');
         setProducts([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
+      console.error('[Products] Erro ao carregar produtos:', error);
     }
   }, []);
 
