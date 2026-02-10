@@ -2,12 +2,14 @@
 // VIZZU - Look Composer (Monte looks completos com IA)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
 import { smartDownload } from '../../utils/downloadHelper';
 import { Plan } from '../../hooks/useCredits';
+import { ImageEditModal } from '../shared/ImageEditModal';
+import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 
 interface LookComposerProps {
  products: Product[];
@@ -136,6 +138,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
  // Estado para controlar qual imagem cada card está mostrando (carrossel)
  const [cardViewStates, setCardViewStates] = useState<Record<string, 'front' | 'back'>>({});
+
+ // Estado para edição de look na galeria
+ const [editingGalleryLook, setEditingGalleryLook] = useState<boolean>(false);
 
  // Verificar se há geração pendente (F5 durante geração)
  useEffect(() => {
@@ -489,6 +494,65 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  setModalSelectedLook(null);
  }
  };
+
+ // Callbacks de edição de look na galeria
+ const handleGalleryEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
+   if (!selectedLook) return { success: false, error: 'Nenhum look selecionado' };
+   const currentUrl = selectedLookView === 'back' && selectedLook.backImageUrl
+     ? selectedLook.backImageUrl
+     : selectedLook.imageUrl;
+   return editStudioImage({
+     currentImageUrl: currentUrl,
+     correctionPrompt: params.correctionPrompt,
+     referenceImageBase64: params.referenceImageBase64,
+     resolution: '2k',
+   });
+ }, [selectedLook, selectedLookView]);
+
+ const handleGalleryEditSave = useCallback(async (newImageUrl: string) => {
+   if (!selectedLook) return { success: false };
+   const view = selectedLookView;
+   // Atualizar local state
+   const updatedLook = { ...selectedLook };
+   if (view === 'back' && selectedLook.backImageUrl) {
+     updatedLook.backImageUrl = newImageUrl;
+   } else {
+     updatedLook.imageUrl = newImageUrl;
+   }
+   setSelectedLook(updatedLook);
+
+   // Atualizar no produto (generatedImages.modeloIA)
+   const product = products.find(p => p.id === selectedLook.productId);
+   if (product && product.generatedImages?.modeloIA) {
+     const updatedModeloIA = product.generatedImages.modeloIA.map((l: any, idx: number) => {
+       const lookId = l.id || `${product.id}-${idx}`;
+       if (lookId === selectedLook.id) {
+         const updatedImages = { ...l.images };
+         if (view === 'back') {
+           updatedImages.back = newImageUrl;
+         } else {
+           updatedImages.front = newImageUrl;
+         }
+         return { ...l, images: updatedImages };
+       }
+       return l;
+     });
+     onUpdateProduct(product.id, {
+       generatedImages: {
+         ...product.generatedImages,
+         modeloIA: updatedModeloIA
+       }
+     });
+   }
+
+   // Salvar no Supabase via N8N
+   return saveLookComposerEdit({
+     productId: selectedLook.productId,
+     generationId: selectedLook.id,
+     view,
+     newImageUrl,
+   });
+ }, [selectedLook, selectedLookView, products, onUpdateProduct]);
 
  const handleOpenProductModal = (pwl: ProductWithLooks) => {
  setSelectedProductForModal(pwl);
@@ -1171,6 +1235,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
 
  <button
+ onClick={() => setEditingGalleryLook(true)}
+ className={(isDark ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600') + ' w-full py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+ >
+ <i className="fas fa-pen-to-square"></i>
+ Editar imagem {selectedLook.imageCount > 1 ? (selectedLookView === 'front' ? '(Frente)' : '(Costas)') : ''}
+ </button>
+
+ <button
  onClick={() => {
  const product = products.find(p => p.id === selectedLook.productId);
  if (product) {
@@ -1200,6 +1272,29 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* Modal de edição de look da galeria */}
+ {selectedLook && editingGalleryLook && (
+ <ImageEditModal
+   isOpen={editingGalleryLook}
+   onClose={() => setEditingGalleryLook(false)}
+   currentImageUrl={
+     selectedLookView === 'back' && selectedLook.backImageUrl
+       ? selectedLook.backImageUrl
+       : selectedLook.imageUrl
+   }
+   imageName={selectedLook.imageCount > 1
+     ? (selectedLookView === 'front' ? 'Look Frontal' : 'Look Traseiro')
+     : 'Look'}
+   editBalance={editBalance}
+   regularBalance={userCredits}
+   resolution="2k"
+   onGenerate={handleGalleryEditGenerate}
+   onSave={handleGalleryEditSave}
+   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, selectedLook.id) : undefined}
+   theme={theme}
+ />
  )}
 
  {/* ═══════════════════════════════════════════════════════════════ */}
