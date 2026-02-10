@@ -50,16 +50,16 @@ export default function DownloadModal({
   const isGrouped = !!groups && groups.length > 0;
 
   // ── State ──
-  const [step, setStep] = useState<'select' | 'format'>('select');
+  const [step, setStep] = useState<1 | 2>(1);
   const [selected, setSelected] = useState<Set<number>>(() => new Set(allImages.map((_, i) => i)));
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(() => new Set(groups?.map((_, i) => i) || []));
   const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
   const zipAbortRef = useRef<AbortController | null>(null);
 
-  // Reset ao abrir/fechar
+  // Reset ao abrir
   useEffect(() => {
     if (isOpen) {
-      setStep('select');
+      setStep(1);
       setSelected(new Set(allImages.map((_, i) => i)));
       setExpandedGroups(new Set(groups?.map((_, i) => i) || []));
       setZipProgress(null);
@@ -129,7 +129,6 @@ export default function DownloadModal({
     if (selectedImages.length === 0) return;
 
     if (selectedImages.length === 1) {
-      // Download direto
       const img = selectedImages[0];
       const url = getDownloadUrl(img.url, preset);
       const filename = buildFilename(productName, img.featurePrefix, img.label, preset);
@@ -138,7 +137,6 @@ export default function DownloadModal({
       return;
     }
 
-    // Múltiplas imagens → ZIP com 1 preset
     const abort = new AbortController();
     zipAbortRef.current = abort;
     setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
@@ -167,283 +165,50 @@ export default function DownloadModal({
   // ── Render ──
   if (!isOpen) return null;
 
-  // ── Shared styles ──
-  const overlayClass = 'fixed inset-0 z-[100] flex items-end md:items-center justify-center';
-  const modalClass = (isDark ? 'bg-[#1a1a1a]' : 'bg-white') +
-    ' rounded-t-2xl md:rounded-2xl w-full max-w-lg flex flex-col overflow-hidden shadow-2xl';
-
   return (
     <>
-      <div className={overlayClass}>
+      <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center">
         {/* Overlay */}
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md" onClick={onClose} />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
         {/* Modal */}
         <div
-          className={modalClass}
-          style={{ maxHeight: 'min(85vh, 680px)' }}
+          className={
+            (isDark ? 'bg-[#1a1a1a]' : 'bg-white') +
+            ' relative rounded-t-2xl md:rounded-2xl w-full max-w-lg flex flex-col overflow-hidden shadow-2xl'
+          }
+          style={{ maxHeight: 'min(85vh, 700px)' }}
           onClick={(e) => e.stopPropagation()}
         >
-          {step === 'select' ? (
-            // ═══════════════════════════════════════
-            // STEP 1 — Image Selection
-            // ═══════════════════════════════════════
-            <>
-              {/* Header */}
-              <div className={'px-5 py-4 border-b ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-download text-white text-sm" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-sm font-bold truncate'}>
-                        Download — {productName}
-                      </h3>
-                    </div>
-                  </div>
-                  <button
-                    onClick={onClose}
-                    className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
-                  >
-                    <i className="fas fa-times text-sm" />
-                  </button>
-                </div>
-                <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-2 ml-12'}>
-                  Selecione as imagens que deseja baixar, depois escolha o formato.
-                </p>
-              </div>
-
-              {/* Select all bar */}
-              <div className={'flex items-center justify-between px-5 py-2.5 border-b ' + (isDark ? 'border-white/[0.04]' : 'border-gray-50')}>
-                <button
-                  onClick={toggleAll}
-                  className="flex items-center gap-2 group"
-                >
-                  <div className={
-                    'w-5 h-5 rounded flex items-center justify-center transition-all ' +
-                    (allSelected
-                      ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'
-                      : isDark ? 'border border-white/20 hover:border-white/40' : 'border border-gray-300 hover:border-gray-400')
-                  }>
-                    {allSelected && <i className="fas fa-check text-white text-[9px]" />}
-                  </div>
-                  <span className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-medium'}>
-                    Selecionar todas
-                  </span>
-                </button>
-                <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
-                  {selectedCount} de {allImages.length}
-                </span>
-              </div>
-
-              {/* Image grid / groups (scrollable) */}
-              <div className="flex-1 overflow-y-auto px-5 py-3">
-                {isGrouped && groups ? (
-                  // ── Grouped mode ──
-                  <div className="space-y-3">
-                    {groups.map((group, gi) => {
-                      const indexes = getGroupIndexRange(gi);
-                      const groupAllSelected = indexes.length > 0 && indexes.every((i) => selected.has(i));
-                      const groupSomeSelected = indexes.some((i) => selected.has(i));
-                      const isExpanded = expandedGroups.has(gi);
-
-                      return (
-                        <div key={gi}>
-                          {/* Group header */}
-                          <div className="flex items-center justify-between mb-2">
-                            <button
-                              onClick={() => toggleGroupExpand(gi)}
-                              className="flex items-center gap-2"
-                            >
-                              <i className={'fas text-[10px] transition-transform ' + (isExpanded ? 'fa-chevron-down' : 'fa-chevron-right') + (isDark ? ' text-neutral-500' : ' text-gray-400')} />
-                              <span className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-semibold'}>
-                                {group.label}
-                              </span>
-                              <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>
-                                ({group.images.length})
-                              </span>
-                            </button>
-                            <button
-                              onClick={() => toggleGroup(gi)}
-                              className={
-                                'flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium transition-colors ' +
-                                (groupAllSelected
-                                  ? 'text-[#FF6B6B] bg-[#FF6B6B]/10'
-                                  : isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600')
-                              }
-                            >
-                              <div className={
-                                'w-3.5 h-3.5 rounded flex items-center justify-center ' +
-                                (groupAllSelected
-                                  ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'
-                                  : groupSomeSelected
-                                    ? 'bg-[#FF6B6B]/40'
-                                    : isDark ? 'border border-white/20' : 'border border-gray-300')
-                              }>
-                                {(groupAllSelected || groupSomeSelected) && <i className="fas fa-check text-white text-[7px]" />}
-                              </div>
-                              {groupAllSelected ? 'Grupo' : 'Selec. grupo'}
-                            </button>
-                          </div>
-
-                          {/* Group images */}
-                          {isExpanded && (
-                            <div className="grid grid-cols-4 gap-2 ml-4">
-                              {group.images.map((img, ii) => {
-                                const flatIndex = indexes[ii];
-                                const isSelected = selected.has(flatIndex);
-                                return (
-                                  <ImageThumb
-                                    key={flatIndex}
-                                    img={img}
-                                    isSelected={isSelected}
-                                    onToggle={() => toggleImage(flatIndex)}
-                                    isDark={isDark}
-                                  />
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  // ── Flat mode ──
-                  <div className="grid grid-cols-4 gap-2">
-                    {allImages.map((img, i) => (
-                      <ImageThumb
-                        key={i}
-                        img={img}
-                        isSelected={selected.has(i)}
-                        onToggle={() => toggleImage(i)}
-                        isDark={isDark}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer — CTA proeminente */}
-              <div className={'px-5 py-4 border-t ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
-                <button
-                  onClick={() => setStep('format')}
-                  disabled={selectedCount === 0}
-                  className={
-                    'w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ' +
-                    (selectedCount > 0
-                      ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 shadow-lg shadow-[#FF6B6B]/20'
-                      : isDark ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
-                  }
-                >
-                  {selectedCount > 0 ? (
-                    <>
-                      Escolher formato ({selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'})
-                      <i className="fas fa-arrow-right text-xs" />
-                    </>
-                  ) : (
-                    'Selecione ao menos uma imagem'
-                  )}
-                </button>
-              </div>
-            </>
+          {step === 1 ? (
+            <Step1Selection
+              isDark={isDark}
+              productName={productName}
+              allImages={allImages}
+              isGrouped={isGrouped}
+              groups={groups}
+              selected={selected}
+              selectedCount={selectedCount}
+              allSelected={allSelected}
+              expandedGroups={expandedGroups}
+              toggleAll={toggleAll}
+              toggleImage={toggleImage}
+              toggleGroup={toggleGroup}
+              toggleGroupExpand={toggleGroupExpand}
+              getGroupIndexRange={getGroupIndexRange}
+              onContinue={() => setStep(2)}
+              onClose={onClose}
+            />
           ) : (
-            // ═══════════════════════════════════════
-            // STEP 2 — Format Selection
-            // ═══════════════════════════════════════
-            <>
-              {/* Header */}
-              <div className={'flex items-center gap-3 px-5 py-4 border-b ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
-                <button
-                  onClick={() => setStep('select')}
-                  className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
-                >
-                  <i className="fas fa-arrow-left text-sm" />
-                </button>
-                <div className="min-w-0 flex-1">
-                  <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-sm font-semibold'}>
-                    Escolha o formato
-                  </h3>
-                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
-                    {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} · {productName}
-                  </p>
-                </div>
-                <button
-                  onClick={onClose}
-                  className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
-                >
-                  <i className="fas fa-times text-sm" />
-                </button>
-              </div>
-
-              {/* Format list */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
-                {/* ⭐ Baixar Tudo (ZIP destaque) */}
-                <button
-                  onClick={handleDownloadAll}
-                  className={
-                    'w-full p-4 rounded-xl text-left transition-all group ' +
-                    'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90'
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-file-zipper text-white text-lg" />
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-bold">
-                        Baixar Tudo (ZIP)
-                      </p>
-                      <p className="text-white/70 text-[11px]">
-                        {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} × {DOWNLOAD_PRESETS.length} tamanhos · Organizado em pastas
-                      </p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Separador */}
-                <div className="flex items-center gap-3 py-1">
-                  <div className={'flex-1 h-px ' + (isDark ? 'bg-white/[0.06]' : 'bg-gray-100')} />
-                  <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider'}>
-                    ou escolha um tamanho
-                  </span>
-                  <div className={'flex-1 h-px ' + (isDark ? 'bg-white/[0.06]' : 'bg-gray-100')} />
-                </div>
-
-                {/* 6 presets */}
-                {DOWNLOAD_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    onClick={() => handlePresetDownload(preset)}
-                    className={
-                      'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ' +
-                      (isDark
-                        ? 'hover:bg-white/[0.04] active:bg-white/[0.08]'
-                        : 'hover:bg-gray-50 active:bg-gray-100')
-                    }
-                  >
-                    <div className={
-                      'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ' +
-                      (isDark ? 'bg-white/[0.06]' : 'bg-gray-100')
-                    }>
-                      <i className={'fas fa-' + preset.icon + ' text-xs ' + (isDark ? 'text-neutral-400' : 'text-gray-500')} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-[13px] font-medium'}>
-                        {preset.label}
-                      </p>
-                      <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
-                        {preset.description}
-                      </p>
-                    </div>
-                    <span className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' text-[11px] font-mono flex-shrink-0'}>
-                      {preset.formatLabel}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </>
+            <Step2Format
+              isDark={isDark}
+              productName={productName}
+              selectedCount={selectedCount}
+              onBack={() => setStep(1)}
+              onClose={onClose}
+              onPresetDownload={handlePresetDownload}
+              onDownloadAll={handleDownloadAll}
+            />
           )}
         </div>
       </div>
@@ -461,7 +226,357 @@ export default function DownloadModal({
   );
 }
 
-// ── Thumbnail subcomponent ──
+// ═══════════════════════════════════════════════════════════════
+// STEP 1 — Seleção de Imagens
+// ═══════════════════════════════════════════════════════════════
+
+function Step1Selection({
+  isDark,
+  productName,
+  allImages,
+  isGrouped,
+  groups,
+  selected,
+  selectedCount,
+  allSelected,
+  expandedGroups,
+  toggleAll,
+  toggleImage,
+  toggleGroup,
+  toggleGroupExpand,
+  getGroupIndexRange,
+  onContinue,
+  onClose,
+}: {
+  isDark: boolean;
+  productName: string;
+  allImages: DownloadableImage[];
+  isGrouped: boolean;
+  groups?: DownloadImageGroup[];
+  selected: Set<number>;
+  selectedCount: number;
+  allSelected: boolean;
+  expandedGroups: Set<number>;
+  toggleAll: () => void;
+  toggleImage: (i: number) => void;
+  toggleGroup: (gi: number) => void;
+  toggleGroupExpand: (gi: number) => void;
+  getGroupIndexRange: (gi: number) => number[];
+  onContinue: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      {/* ── Header ── */}
+      <div className={'px-5 pt-5 pb-4 ' + (isDark ? '' : '')}>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            {/* Step badge */}
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">1</span>
+            </div>
+            <div>
+              <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-base font-bold'}>
+                Selecionar imagens
+              </h3>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
+                Passo 1 de 2 · {productName}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
+          >
+            <i className="fas fa-times text-sm" />
+          </button>
+        </div>
+
+        {/* Instrução */}
+        <div className={(isDark ? 'bg-white/[0.04] border-white/[0.06]' : 'bg-[#f7f5f2] border-gray-100') + ' rounded-xl p-3 border'}>
+          <p className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+            <i className={'fas fa-hand-pointer mr-1.5 ' + (isDark ? 'text-[#FF9F43]' : 'text-[#FF6B6B]')} />
+            Toque nas imagens para selecionar quais deseja baixar. Na próxima etapa você escolhe o tamanho e formato.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Select all bar ── */}
+      <div className={'flex items-center justify-between px-5 py-2 border-y ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
+        <button
+          onClick={toggleAll}
+          className="flex items-center gap-2 group"
+        >
+          <div className={
+            'w-5 h-5 rounded flex items-center justify-center transition-all ' +
+            (allSelected
+              ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'
+              : isDark ? 'border border-white/20 group-hover:border-white/40' : 'border border-gray-300 group-hover:border-gray-400')
+          }>
+            {allSelected && <i className="fas fa-check text-white text-[9px]" />}
+          </div>
+          <span className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-medium'}>
+            {allSelected ? 'Desmarcar todas' : 'Selecionar todas'}
+          </span>
+        </button>
+        <span className={
+          'text-[11px] font-medium px-2 py-0.5 rounded-full ' +
+          (selectedCount > 0
+            ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-[#FF6B6B]'
+            : isDark ? 'text-neutral-600' : 'text-gray-400')
+        }>
+          {selectedCount} de {allImages.length}
+        </span>
+      </div>
+
+      {/* ── Image grid (scrollable) ── */}
+      <div className="flex-1 overflow-y-auto px-5 py-3 min-h-0">
+        {isGrouped && groups ? (
+          <div className="space-y-4">
+            {groups.map((group, gi) => {
+              const indexes = getGroupIndexRange(gi);
+              const groupAllSelected = indexes.length > 0 && indexes.every((i) => selected.has(i));
+              const groupSomeSelected = indexes.some((i) => selected.has(i));
+              const isExpanded = expandedGroups.has(gi);
+
+              return (
+                <div key={gi}>
+                  {/* Group header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <button
+                      onClick={() => toggleGroupExpand(gi)}
+                      className="flex items-center gap-2"
+                    >
+                      <i className={'fas text-[10px] transition-transform ' + (isExpanded ? 'fa-chevron-down' : 'fa-chevron-right') + (isDark ? ' text-neutral-500' : ' text-gray-400')} />
+                      <span className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-semibold'}>
+                        {group.label}
+                      </span>
+                      <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>
+                        ({group.images.length})
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => toggleGroup(gi)}
+                      className={
+                        'flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium transition-colors ' +
+                        (groupAllSelected
+                          ? 'text-[#FF6B6B] bg-[#FF6B6B]/10'
+                          : isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600')
+                      }
+                    >
+                      <div className={
+                        'w-3.5 h-3.5 rounded flex items-center justify-center ' +
+                        (groupAllSelected
+                          ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'
+                          : groupSomeSelected
+                            ? 'bg-[#FF6B6B]/40'
+                            : isDark ? 'border border-white/20' : 'border border-gray-300')
+                      }>
+                        {(groupAllSelected || groupSomeSelected) && <i className="fas fa-check text-white text-[7px]" />}
+                      </div>
+                      {groupAllSelected ? 'Grupo selecionado' : 'Selecionar grupo'}
+                    </button>
+                  </div>
+
+                  {/* Group images */}
+                  {isExpanded && (
+                    <div className="grid grid-cols-4 gap-2 ml-4">
+                      {group.images.map((img, ii) => {
+                        const flatIndex = indexes[ii];
+                        return (
+                          <ImageThumb
+                            key={flatIndex}
+                            img={img}
+                            isSelected={selected.has(flatIndex)}
+                            onToggle={() => toggleImage(flatIndex)}
+                            isDark={isDark}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+            {allImages.map((img, i) => (
+              <ImageThumb
+                key={i}
+                img={img}
+                isSelected={selected.has(i)}
+                onToggle={() => toggleImage(i)}
+                isDark={isDark}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Footer CTA ── */}
+      <div className={'px-5 py-4 border-t ' + (isDark ? 'border-white/[0.06] bg-[#1a1a1a]' : 'border-gray-100 bg-white')}>
+        <button
+          onClick={onContinue}
+          disabled={selectedCount === 0}
+          className={
+            'w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-bold transition-all ' +
+            (selectedCount > 0
+              ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 shadow-lg shadow-[#FF6B6B]/25 active:scale-[0.98]'
+              : isDark
+                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed')
+          }
+        >
+          {selectedCount > 0 ? (
+            <>
+              <i className="fas fa-arrow-right text-xs" />
+              Escolher formato e baixar ({selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'})
+            </>
+          ) : (
+            <>
+              <i className="fas fa-hand-pointer text-xs" />
+              Selecione ao menos uma imagem
+            </>
+          )}
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 2 — Escolha de Formato
+// ═══════════════════════════════════════════════════════════════
+
+function Step2Format({
+  isDark,
+  productName,
+  selectedCount,
+  onBack,
+  onClose,
+  onPresetDownload,
+  onDownloadAll,
+}: {
+  isDark: boolean;
+  productName: string;
+  selectedCount: number;
+  onBack: () => void;
+  onClose: () => void;
+  onPresetDownload: (preset: DownloadPreset) => void;
+  onDownloadAll: () => void;
+}) {
+  return (
+    <>
+      {/* ── Header ── */}
+      <div className={'px-5 pt-5 pb-4'}>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            {/* Step badge */}
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">2</span>
+            </div>
+            <div>
+              <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-base font-bold'}>
+                Escolher formato
+              </h3>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
+                Passo 2 de 2 · {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} · {productName}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
+          >
+            <i className="fas fa-times text-sm" />
+          </button>
+        </div>
+
+        {/* Voltar */}
+        <button
+          onClick={onBack}
+          className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' flex items-center gap-1.5 text-xs font-medium transition-colors'}
+        >
+          <i className="fas fa-arrow-left text-[10px]" />
+          Voltar e alterar seleção
+        </button>
+      </div>
+
+      {/* ── Format list ── */}
+      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-2">
+        {/* Baixar Tudo (ZIP) — destaque */}
+        <button
+          onClick={onDownloadAll}
+          className="w-full p-4 rounded-xl text-left transition-all bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 active:scale-[0.99] shadow-lg shadow-[#FF6B6B]/20"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <i className="fas fa-file-zipper text-white text-lg" />
+            </div>
+            <div>
+              <p className="text-white text-sm font-bold">
+                Baixar Tudo (ZIP)
+              </p>
+              <p className="text-white/70 text-[11px] mt-0.5">
+                {selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'} x {DOWNLOAD_PRESETS.length} tamanhos · Organizado em pastas
+              </p>
+            </div>
+            <i className="fas fa-download text-white/50 ml-auto flex-shrink-0" />
+          </div>
+        </button>
+
+        {/* Separador */}
+        <div className="flex items-center gap-3 py-2">
+          <div className={'flex-1 h-px ' + (isDark ? 'bg-white/[0.06]' : 'bg-gray-200')} />
+          <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium'}>
+            ou escolha um tamanho
+          </span>
+          <div className={'flex-1 h-px ' + (isDark ? 'bg-white/[0.06]' : 'bg-gray-200')} />
+        </div>
+
+        {/* 6 presets */}
+        {DOWNLOAD_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            onClick={() => onPresetDownload(preset)}
+            className={
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-[0.99] ' +
+              (isDark
+                ? 'hover:bg-white/[0.04] active:bg-white/[0.08] border border-white/[0.04]'
+                : 'hover:bg-gray-50 active:bg-gray-100 border border-gray-100')
+            }
+          >
+            <div className={
+              'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ' +
+              (isDark ? 'bg-white/[0.06]' : 'bg-gray-100')
+            }>
+              <i className={'fas fa-' + preset.icon + ' text-xs ' + (isDark ? 'text-neutral-400' : 'text-gray-500')} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-[13px] font-medium'}>
+                {preset.label}
+              </p>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px]'}>
+                {preset.description}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' text-[11px] font-mono'}>
+                {preset.formatLabel}
+              </span>
+              <i className={(isDark ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-chevron-right text-[10px]'} />
+            </div>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Thumbnail subcomponent
+// ═══════════════════════════════════════════════════════════════
 
 function ImageThumb({
   img,
@@ -478,32 +593,32 @@ function ImageThumb({
     <button
       onClick={onToggle}
       className={
-        'relative rounded-lg overflow-hidden border-2 transition-all ' +
+        'relative rounded-xl overflow-hidden transition-all ' +
         (isSelected
-          ? 'border-[#FF6B6B] ring-1 ring-[#FF6B6B]/30'
-          : isDark ? 'border-transparent hover:border-white/10' : 'border-transparent hover:border-gray-200')
+          ? 'ring-2 ring-[#FF6B6B] ring-offset-2 ' + (isDark ? 'ring-offset-[#1a1a1a]' : 'ring-offset-white')
+          : isDark ? 'hover:ring-1 hover:ring-white/20' : 'hover:ring-1 hover:ring-gray-200')
       }
     >
       <OptimizedImage
         src={img.url}
         alt={img.label}
         size="thumb"
-        className="w-full aspect-square"
+        className={'w-full aspect-square transition-all ' + (isSelected ? '' : 'opacity-60')}
       />
 
       {/* Checkbox overlay */}
       <div className={
-        'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all ' +
+        'absolute top-1.5 left-1.5 w-5 h-5 rounded-md flex items-center justify-center transition-all ' +
         (isSelected
-          ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] shadow-sm'
-          : isDark ? 'bg-black/50 border border-white/20' : 'bg-white/80 border border-gray-300')
+          ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] shadow-md'
+          : 'bg-black/40 border border-white/30')
       }>
         {isSelected && <i className="fas fa-check text-white text-[8px]" />}
       </div>
 
       {/* Label */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1">
-        <p className="text-white text-[8px] font-medium truncate text-center">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-1.5 py-1.5">
+        <p className="text-white text-[9px] font-semibold truncate text-center drop-shadow-sm">
           {img.label}
         </p>
       </div>
