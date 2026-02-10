@@ -455,6 +455,14 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         onBackToHome={handleBackToEditor}
         onGenerateAgain={() => lastGenerateParams && handleGenerate(lastGenerateParams)}
         onMinimize={() => onSetMinimized?.(true)}
+        onCancel={() => {
+          setIsGenerating(false);
+          setGenerationProgress(0);
+          setLoadingText('');
+          setCurrentGeneration(null);
+          onSetMinimized?.(false);
+          setView('editor');
+        }}
         isMinimized={isMinimized}
         editBalance={editBalance}
         regularBalance={userCredits}

@@ -10,17 +10,6 @@ import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { editStudioImage, saveCreativeStillEdit, saveCreativeStillSaveAsNew } from '../../lib/api/studio';
 
-const lottieColorStyles = `
- @keyframes stillColorCycle {
- 0%, 100% { filter: sepia(1) saturate(3) hue-rotate(20deg) brightness(1.1); }
- 33% { filter: sepia(1) saturate(3) hue-rotate(35deg) brightness(1.2); }
- 66% { filter: sepia(1) saturate(2.5) hue-rotate(10deg) brightness(1.1); }
- }
- .vizzu-still-lottie-gradient {
- animation: stillColorCycle 3s ease-in-out infinite;
- }
-`;
-
 const LOADING_PHRASES = [
  "Preparando a composição criativa...",
  "Analisando a estética escolhida...",
@@ -46,6 +35,7 @@ interface Props {
  onBackToHome: () => void;
  onGenerateAgain: () => void;
  onMinimize?: () => void;
+ onCancel?: () => void;
  isMinimized?: boolean;
  editBalance?: number;
  regularBalance?: number;
@@ -83,6 +73,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  onBackToHome,
  onGenerateAgain,
  onMinimize,
+ onCancel,
  isMinimized,
  editBalance = 0,
  regularBalance = 0,
@@ -205,41 +196,29 @@ export const CreativeStillResults: React.FC<Props> = ({
  }, [generation?.id, onVariationAdded, showToast]);
 
  // ============================================================
- // LOADING STATE
+ // LOADING STATE (padrão Product Studio)
  // ============================================================
  if (isGenerating && !isMinimized) {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
- {/* Backdrop com blur */}
- <div className={'absolute inset-0 backdrop-blur-xl ' + (isDark ? 'bg-black/80' : 'bg-white/80')}></div>
+ {/* Backdrop com blur pesado (padrão PS) */}
+ <div className={'absolute inset-0 backdrop-blur-2xl ' + (isDark ? 'bg-black/80' : 'bg-white/30')}></div>
 
  {/* Container do conteúdo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
- {/* Botão minimizar */}
- {onMinimize && (
- <button
- onClick={onMinimize}
- className={'absolute top-2 right-2 w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15' : 'bg-black/5 border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-black/10')}
- title="Minimizar"
- >
- <i className="fas fa-minus text-sm"></i>
- </button>
- )}
-
- {/* Animação Lottie com degradê de cores (âmbar → laranja) */}
- <style>{lottieColorStyles}</style>
- <div className="w-64 h-64 mb-6 vizzu-still-lottie-gradient">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
+ {/* Motion GIF (padrão PS — Scene-1.gif) */}
+ <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
+ <img
+ src="/Scene-1.gif"
+ alt=""
+ className="h-full object-cover"
+ style={{ width: '140%', maxWidth: 'none' }}
  />
  </div>
 
  {/* Título */}
- <h2 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-2xl font-bold font-serif mb-2 text-center'}>
- Criando seu Vizzu Still Criativo®...
+ <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold font-serif mb-2 text-center'}>
+ Criando suas fotos...
  </h2>
 
  {/* Frase de loading */}
@@ -247,15 +226,15 @@ export const CreativeStillResults: React.FC<Props> = ({
  {LOADING_PHRASES[phraseIndex]}
  </p>
 
- {/* Barra de progresso */}
+ {/* Barra de progresso (gradiente coral→laranja, padrão PS) */}
  <div className="w-full max-w-xs mb-4">
  <div className={'h-2 rounded-full overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
  <div
- className="h-full bg-gradient-to-r from-amber-500 to-[#FF9F43] rounded-full transition-all duration-500"
+ className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${progress}%` }}
  ></div>
  </div>
- <p className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-sm font-medium text-center mt-2'}>
+ <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mt-2'}>
  {progress}%
  </p>
  </div>
@@ -288,9 +267,32 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
  )}
 
- <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs text-center'}>
- A geração pode levar até 2 minutos
+ {/* Botão minimizar (padrão PS — embaixo, botão largo) */}
+ {onMinimize && (
+ <>
+ <button
+ onClick={onMinimize}
+ className={'flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ' + (isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm')}
+ >
+ <i className="fas fa-minus"></i>
+ <span>Minimizar e continuar navegando</span>
+ </button>
+
+ <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-3 text-center'}>
+ A geração continuará em segundo plano
  </p>
+ </>
+ )}
+
+ {/* Botão cancelar */}
+ {onCancel && (
+ <button
+ onClick={onCancel}
+ className={(isDark ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' mt-4 text-xs transition-all'}
+ >
+ Cancelar geração
+ </button>
+ )}
  </div>
  </div>
  );
