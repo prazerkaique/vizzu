@@ -210,10 +210,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const handleUseNew = useCallback(async () => {
     if (!newImageUrl || !user) return;
 
-    // 1. Update React state (immediate UI update)
-    onImageUpdated(currentImage.angle, newImageUrl);
-
-    // 2. Persist via N8N (service_role → bypasses RLS)
+    // Persist via N8N (service_role → bypasses RLS)
     try {
       const result = await saveEditedImage({
         productId: product.id,
@@ -222,16 +219,19 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
         newImageUrl,
       });
 
-      if (!result.success) {
+      if (result.success) {
+        // Só atualiza state DEPOIS de confirmar que salvou no banco
+        onImageUpdated(currentImage.angle, newImageUrl);
+        showToast('Imagem atualizada!', 'success');
+        handleClose();
+      } else {
         console.error('[StudioEditModal] N8N save failed:', result.error);
-        showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
+        showToast('Erro ao salvar imagem no servidor. Tente novamente.', 'error');
       }
     } catch (err) {
       console.error('[StudioEditModal] Erro ao salvar edição:', err);
+      showToast('Erro de conexão ao salvar. Tente novamente.', 'error');
     }
-
-    showToast('Imagem atualizada!', 'success');
-    handleClose();
   }, [newImageUrl, user, currentImage, product.id, generationId, onImageUpdated, showToast, handleClose]);
 
   const handleKeepOriginal = useCallback(() => {
@@ -243,14 +243,17 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     if (!newImageUrl || !onSaveAsNew) return;
     try {
       const result = await onSaveAsNew(newImageUrl);
-      if (!result.success) {
-        showToast('Imagem salva localmente, mas houve erro ao persistir no servidor.', 'info');
+      if (result.success) {
+        showToast('Imagem salva como nova variação!', 'success');
+        handleClose();
+      } else {
+        console.error('[StudioEditModal] SaveAsNew falhou:', result);
+        showToast('Erro ao salvar nova variação. Tente novamente.', 'error');
       }
     } catch (err) {
       console.error('[StudioEditModal] Erro ao salvar como nova:', err);
+      showToast('Erro de conexão ao salvar. Tente novamente.', 'error');
     }
-    showToast('Imagem salva como nova variação!', 'success');
-    handleClose();
   }, [newImageUrl, onSaveAsNew, showToast, handleClose]);
 
   const handleRetry = useCallback(() => {

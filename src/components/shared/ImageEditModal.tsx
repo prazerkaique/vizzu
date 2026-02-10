@@ -187,15 +187,17 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
     try {
       const result = await onSave(newImageUrl);
-      if (!result.success) {
-        showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
+      if (result.success) {
+        showToast('Imagem atualizada!', 'success');
+        handleClose();
+      } else {
+        console.error('[ImageEditModal] Save falhou:', result);
+        showToast('Erro ao salvar imagem no servidor. Tente novamente.', 'error');
       }
     } catch (err) {
       console.error('[ImageEditModal] Erro ao salvar edição:', err);
+      showToast('Erro de conexão ao salvar. Tente novamente.', 'error');
     }
-
-    showToast('Imagem atualizada!', 'success');
-    handleClose();
   }, [newImageUrl, onSave, showToast, handleClose]);
 
   const handleKeepOriginal = useCallback(() => {
@@ -207,14 +209,17 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     if (!newImageUrl || !onSaveAsNew) return;
     try {
       const result = await onSaveAsNew(newImageUrl);
-      if (!result.success) {
-        showToast('Imagem salva localmente, mas houve erro ao persistir no servidor.', 'info');
+      if (result.success) {
+        showToast('Imagem salva como nova variação!', 'success');
+        handleClose();
+      } else {
+        console.error('[ImageEditModal] SaveAsNew falhou:', result);
+        showToast('Erro ao salvar nova variação. Tente novamente.', 'error');
       }
     } catch (err) {
       console.error('[ImageEditModal] Erro ao salvar como nova:', err);
+      showToast('Erro de conexão ao salvar. Tente novamente.', 'error');
     }
-    showToast('Imagem salva como nova variação!', 'success');
-    handleClose();
   }, [newImageUrl, onSaveAsNew, showToast, handleClose]);
 
   const handleRetry = useCallback(() => {
