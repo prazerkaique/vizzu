@@ -320,17 +320,21 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       onSetProgress?.(Math.round(currentProg));
     }, 1000);
 
-    // Polling
+    // Polling — multi-worker: mínimo 5 min, ou 3 min por ângulo (Gemini ~90s + fila + S3)
     const POLL_INTERVAL = 3000;
-    const POLL_TIMEOUT = params.variationsCount * 120000;
+    const POLL_TIMEOUT = Math.max(params.variationsCount * 180000, 300000);
     const pollStart = Date.now();
 
     try {
       const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
         let webhookFailed = false;
+        let lastActivityAt = Date.now();
 
         const poll = async () => {
-          if (Date.now() - pollStart > POLL_TIMEOUT) {
+          const elapsed = Date.now() - pollStart;
+          const idleTime = Date.now() - lastActivityAt;
+          // Timeout: ou excedeu POLL_TIMEOUT total, ou 4 min sem nenhuma atividade
+          if (elapsed > POLL_TIMEOUT && idleTime > 240000) {
             reject(new Error('Tempo limite excedido'));
             return;
           }
@@ -343,11 +347,17 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
             if (error) { reject(error); return; }
 
+            // Detectar atividade: variation_urls crescendo = workers processando
+            const currentUrls = data.variation_urls || [];
+            if (currentUrls.length > 0) {
+              lastActivityAt = Date.now();
+            }
+
             if (data.status === 'completed') {
               resolve(data as CreativeStillGeneration);
             } else if (data.status === 'failed') {
               resolve(data as CreativeStillGeneration);
-            } else if (webhookFailed) {
+            } else if (webhookFailed && idleTime > 30000) {
               reject(new Error('Falha na comunicação com o servidor de geração.'));
             } else {
               setTimeout(poll, POLL_INTERVAL);
