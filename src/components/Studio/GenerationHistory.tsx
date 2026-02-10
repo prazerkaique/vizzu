@@ -2,11 +2,12 @@
 // VIZZU - Generation History Component
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { VisualStudioGeneration } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
-import DownloadBottomSheet from '../shared/DownloadBottomSheet';
+import DownloadModal from '../shared/DownloadModal';
+import type { DownloadableImage } from '../../utils/downloadSizes';
 
 interface Props {
  generations: VisualStudioGeneration[];
@@ -35,7 +36,15 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  }
  };
 
- const [downloadSheet, setDownloadSheet] = useState<{ url: string; productName: string } | null>(null);
+ const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+ const downloadableImages: DownloadableImage[] = useMemo(() =>
+  generations.map((gen) => ({
+   url: gen.generatedImage,
+   label: gen.productName || gen.productSku || 'Imagem Gerada',
+   featurePrefix: 'VStudio',
+  })),
+ [generations]);
 
  if (generations.length === 0) return null;
 
@@ -114,7 +123,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  <i className="fas fa-search-plus text-sm"></i>
  </button>
  <button
- onClick={() => setDownloadSheet({ url: gen.generatedImage, productName: gen.productName || gen.productSku || 'Produto' })}
+ onClick={() => setShowDownloadModal(true)}
  className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100"
  title="Download"
  >
@@ -145,14 +154,12 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  )}
  </div>
 
- {/* Download Bottom Sheet */}
- <DownloadBottomSheet
-  isOpen={!!downloadSheet}
-  onClose={() => setDownloadSheet(null)}
-  imageUrl={downloadSheet?.url || ''}
-  imageLabel="Imagem Gerada"
-  productName={downloadSheet?.productName || 'Produto'}
-  featurePrefix="VStudio"
+ {/* Download Modal */}
+ <DownloadModal
+  isOpen={showDownloadModal}
+  onClose={() => setShowDownloadModal(false)}
+  productName="Histórico"
+  images={downloadableImages}
   theme="light"
  />
  </>

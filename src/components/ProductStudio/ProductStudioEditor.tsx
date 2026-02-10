@@ -7,7 +7,8 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES, ProductStudioSession, ProductStudioImage, ProductStudioAngle } from '../../types';
 import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, ProductPresentationStyle, FabricFinish, StudioBackground, StudioShadow, StudioAngleStatus } from '../../lib/api/studio';
 import { ProductStudioResult } from './ProductStudioResult';
-import DownloadBottomSheet from '../shared/DownloadBottomSheet';
+import DownloadModal from '../shared/DownloadModal';
+import type { DownloadableImage } from '../../utils/downloadSizes';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
@@ -907,19 +908,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return null;
  };
 
- // ── Download system (bottom sheet) ──
- const [downloadSheet, setDownloadSheet] = useState<{ url: string; label: string } | null>(null);
+ // ── Download system (modal centralizado) ──
+ const [showDownloadModal, setShowDownloadModal] = useState(false);
 
- const handleDownloadMainImage = () => {
-  const currentImg = getCurrentCarouselImage();
-  if (!currentImg) return;
-  const angleLabels: Record<string, string> = {
-   'front': 'Frente', 'back': 'Costas', 'side-left': 'Lateral Esq.', 'side-right': 'Lateral Dir.',
-   '45-left': '45° Esq.', '45-right': '45° Dir.', 'top': 'Topo', 'detail': 'Detalhe',
-   'front_detail': 'Detalhe Frente', 'back_detail': 'Detalhe Costas', 'folded': 'Dobrada'
-  };
-  setDownloadSheet({ url: currentImg.url, label: angleLabels[currentImg.angle] || currentImg.angle });
- };
+ const downloadableImages: DownloadableImage[] = useMemo(() =>
+  generatedImages.map((img) => ({
+   url: img.url,
+   label: angleLabels[img.angle] || img.angle,
+   featurePrefix: 'VProductStudio',
+  })),
+ [generatedImages]);
 
  // Navegar para outras ferramentas com o produto
  const handleNavigateToFeature = (destination: 'look-composer' | 'lifestyle' | 'provador') => {
@@ -1941,13 +1939,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  {/* Download */}
  <button
- onClick={handleDownloadMainImage}
- className={(theme === 'dark' ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white/60 border-gray-200/60 hover:border-gray-300') + ' w-full p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-xl'}
+ onClick={() => setShowDownloadModal(true)}
+ disabled={generatedImages.length === 0}
+ className={(theme === 'dark' ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white/60 border-gray-200/60 hover:border-gray-300') + ' w-full p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-xl disabled:opacity-40'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-download text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Download</span>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Download ({generatedImages.length})</span>
  </button>
  </div>
  </div>
@@ -2590,12 +2589,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <button
  onClick={(e) => {
   e.stopPropagation();
-  const angleLabels: Record<string, string> = {
-   'front': 'Frente', 'back': 'Costas', 'side-left': 'Lateral Esq.', 'side-right': 'Lateral Dir.',
-   '45-left': '45° Esq.', '45-right': '45° Dir.', 'top': 'Topo', 'detail': 'Detalhe',
-   'front_detail': 'Detalhe Frente', 'back_detail': 'Detalhe Costas', 'folded': 'Dobrada'
-  };
-  setDownloadSheet({ url: img.url, label: angleLabels[img.angle] || img.angle });
+  setShowDownloadModal(true);
  }}
  className="absolute top-2 right-2 w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
  >
@@ -3140,14 +3134,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  );
  })()}
 
- {/* Download Bottom Sheet */}
- <DownloadBottomSheet
-  isOpen={!!downloadSheet}
-  onClose={() => setDownloadSheet(null)}
-  imageUrl={downloadSheet?.url || ''}
-  imageLabel={downloadSheet?.label || ''}
+ {/* Download Modal */}
+ <DownloadModal
+  isOpen={showDownloadModal}
+  onClose={() => setShowDownloadModal(false)}
   productName={product.name}
-  featurePrefix="VProductStudio"
+  images={downloadableImages}
   theme={theme}
  />
  </div>

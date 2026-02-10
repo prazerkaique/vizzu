@@ -6,7 +6,8 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
-import DownloadBottomSheet from '../shared/DownloadBottomSheet';
+import DownloadModal from '../shared/DownloadModal';
+import type { DownloadableImage } from '../../utils/downloadSizes';
 import { Plan } from '../../hooks/useCredits';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { ProductHubModal } from '../shared/ProductHubModal';
@@ -478,12 +479,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  setSelectedProduct(null);
  };
 
- // ── Download system (bottom sheet) ──
- const [lookDownloadSheet, setLookDownloadSheet] = useState<{ url: string; label: string; productName: string } | null>(null);
-
- const handleDownloadLook = (imageUrl: string, productName: string) => {
-  setLookDownloadSheet({ url: imageUrl, label: 'Look', productName });
- };
+ // ── Download system (modal centralizado) ──
+ const [downloadModalLook, setDownloadModalLook] = useState<{ images: DownloadableImage[]; productName: string } | null>(null);
 
  const handleDeleteLook = (look: GeneratedLook) => {
  const product = products.find(p => p.id === look.productId);
@@ -1276,34 +1273,17 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  )}
 
- <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
- <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Download</h3>
- <div className="flex flex-col gap-2">
- <div className="flex gap-2">
- <button
- onClick={() => handleDownloadLook(
- selectedLookView === 'back' && selectedLook.backImageUrl ? selectedLook.backImageUrl : selectedLook.imageUrl,
- selectedLook.productName
- )}
- className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
- >
- PNG {selectedLook.imageCount > 1 && (selectedLookView === 'front' ? '(Frente)' : '(Costas)')}
- </button>
- </div>
- {/* Botão para baixar todas */}
- {selectedLook.imageCount > 1 && selectedLook.backImageUrl && (
  <button
  onClick={() => {
- handleDownloadLook(selectedLook.imageUrl, selectedLook.productName);
+  const imgs: DownloadableImage[] = [{ url: selectedLook.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' }];
+  if (selectedLook.backImageUrl) imgs.push({ url: selectedLook.backImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
+  setDownloadModalLook({ images: imgs, productName: selectedLook.productName });
  }}
- className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+ className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
  >
  <i className="fas fa-download"></i>
- Baixar Todas
+ Download ({selectedLook.imageCount} {selectedLook.imageCount === 1 ? 'imagem' : 'imagens'})
  </button>
- )}
- </div>
- </div>
 
  <button
  onClick={() => setEditingGalleryLook(true)}
@@ -1433,31 +1413,18 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
 
  {modalSelectedLook && (
- <div className="mt-3 flex flex-col gap-2">
- <div className="flex gap-2">
+ <div className="mt-3">
  <button
- onClick={() => handleDownloadLook(
- modalSelectedView === 'back' && modalSelectedLook.backImageUrl
- ? modalSelectedLook.backImageUrl
- : modalSelectedLook.imageUrl,
- modalSelectedLook.productName
- )}
- className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+ onClick={() => {
+  const imgs: DownloadableImage[] = [{ url: modalSelectedLook.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' }];
+  if (modalSelectedLook.backImageUrl) imgs.push({ url: modalSelectedLook.backImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
+  setDownloadModalLook({ images: imgs, productName: modalSelectedLook.productName });
+ }}
+ className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  >
  <i className="fas fa-download"></i>
- Download {modalSelectedLook.imageCount > 1 && (modalSelectedView === 'front' ? '(Frente)' : '(Costas)')}
+ Download ({modalSelectedLook.imageCount} {modalSelectedLook.imageCount === 1 ? 'imagem' : 'imagens'})
  </button>
- </div>
- {/* Botão para baixar todas */}
- {modalSelectedLook.imageCount > 1 && modalSelectedLook.backImageUrl && (
- <button
- onClick={() => handleDownloadLook(modalSelectedLook.imageUrl, modalSelectedLook.productName)}
- className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
- >
- <i className="fas fa-download"></i>
- Baixar Todas
- </button>
- )}
  </div>
  )}
  </div>
@@ -1643,16 +1610,16 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  />
  )}
 
- {/* Download Bottom Sheet */}
- <DownloadBottomSheet
-  isOpen={!!lookDownloadSheet}
-  onClose={() => setLookDownloadSheet(null)}
-  imageUrl={lookDownloadSheet?.url || ''}
-  imageLabel={lookDownloadSheet?.label || 'Look'}
-  productName={lookDownloadSheet?.productName || 'Look'}
-  featurePrefix="VLookComposer"
+ {/* Download Modal */}
+ {downloadModalLook && (
+ <DownloadModal
+  isOpen={!!downloadModalLook}
+  onClose={() => setDownloadModalLook(null)}
+  productName={downloadModalLook.productName}
+  images={downloadModalLook.images}
   theme={theme}
  />
+ )}
  </div>
  );
 };
