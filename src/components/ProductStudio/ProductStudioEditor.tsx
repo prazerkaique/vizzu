@@ -3162,6 +3162,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
          angle: currentImage.angle,
          url: newImageUrl,
          file_name: `ps_edit_${Date.now()}.png`,
+         storage_path: `generated/ps_edit_${Date.now()}.png`,
          mime_type: 'image/png',
          is_primary: false,
          generation_id: sessionId,

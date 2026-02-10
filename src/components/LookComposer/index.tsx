@@ -578,6 +578,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
        angle: view === 'back' ? 'back' : 'front',
        url: newImageUrl,
        file_name: `look_edit_${newGenId}.png`,
+       storage_path: `generated/look_edit_${newGenId}.png`,
        mime_type: 'image/png',
        is_primary: false,
        generation_id: newGenId,
