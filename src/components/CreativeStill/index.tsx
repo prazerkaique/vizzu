@@ -249,7 +249,10 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       .insert({
         user_id: userId,
         product_id: params.product.id,
-        additional_products: [],
+        additional_products: params.compositionProducts?.map(cp => ({
+          product_id: cp.product_id,
+          product_name: cp.product_name,
+        })) || [],
         settings_snapshot: {
           mode: 'simple',
           userPrompt: params.userPrompt,
@@ -263,6 +266,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           product_name: params.product.name,
           product_category: params.product.category || '',
           product_color: params.product.color || '',
+          parsedPrompt: params.parsedPrompt || null,
+          compositionProducts: params.compositionProducts || [],
+          compositionProductImageUrls: params.compositionProducts?.map(cp => cp.product_image_url) || [],
         },
         variations_requested: params.variationsCount,
         resolution: params.resolution,
@@ -502,6 +508,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     return (
       <CreativeStillEditor
         product={selectedProduct}
+        products={products}
         theme={theme}
         userCredits={userCredits}
         userId={userId}

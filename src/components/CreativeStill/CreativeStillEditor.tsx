@@ -9,6 +9,11 @@ import { getProductType } from '../../lib/productConfig';
 import { OptimizedImage } from '../OptimizedImage';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
+import { MentionDropdown } from './MentionDropdown';
+import { ProductCompositionPicker } from './ProductCompositionPicker';
+import { usePromptMentions } from './usePromptMentions';
+import { parsePromptMentions, buildMentionMap } from './promptParser';
+import type { CompositionProduct, ParsedPrompt } from './promptParser';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -64,7 +69,7 @@ const ANGLES_CONFIG: Record<string, Array<{ id: string; label: string; icon: str
 // OTIMIZADOR DE PROMPT
 // ═══════════════════════════════════════════════════════════════
 
-function optimizePrompt(userPrompt: string, product: Product, refCount: number): string {
+function optimizePrompt(userPrompt: string, product: Product, refCount: number, compositionProducts: CompositionProduct[] = []): string {
   const productName = product.name || 'o produto';
   const productCategory = product.category || 'produto';
   const productColor = product.color || '';
@@ -72,6 +77,10 @@ function optimizePrompt(userPrompt: string, product: Product, refCount: number):
 
   const refSection = refCount > 0
     ? `\n### Inspiration Reference Images\nThe user uploaded ${refCount} inspiration image(s) labeled ${Array.from({ length: refCount }, (_, i) => `@ref${i + 1}`).join(', ')}.\nThe user's prompt may reference specific images using these @ref tags (e.g., "use the lighting from @ref1").\nFollow the user's instructions for each referenced image.\n`
+    : '';
+
+  const compSection = compositionProducts.length > 0
+    ? `\n### Composition Products\nThe scene includes ${compositionProducts.length} additional product(s) alongside the main product:\n${compositionProducts.map((cp, i) => `- @produto${i + 1}: ${cp.product.name} (${cp.product.category || 'product'})`).join('\n')}\nThe user's prompt may reference these using @produto1, @produto2, etc. to give placement/styling instructions.\nThe MAIN product must remain the clear hero and focal point.\n`
     : '';
 
   return `## Creative Still Life Photography Brief
@@ -88,7 +97,7 @@ You are receiving ALL available angles of this product. Use them to:
 - Understand the complete 3D form, shape, and construction of the product
 - Reproduce EXACT colors, patterns, logos, prints, and textures
 - Show the product from the angle specified for this generation
-${refSection}
+${refSection}${compSection}
 ### Photography Requirements
 - PHOTOREALISTIC still life photograph — must look like a real professional photo
 - Professional lighting that complements the scene described above
@@ -118,10 +127,18 @@ export interface CreativeStillGenerateParams {
   frameRatio: string;
   resolution: string;
   variationsCount: number;
+  parsedPrompt: ParsedPrompt;
+  compositionProducts: Array<{
+    product_id: string;
+    product_name: string;
+    product_image_url: string;
+    label: string;
+  }>;
 }
 
 interface CreativeStillEditorProps {
   product: Product;
+  products: Product[];
   theme: 'dark' | 'light';
   userCredits: number;
   userId?: string;
@@ -138,6 +155,7 @@ interface CreativeStillEditorProps {
 
 export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   product,
+  products,
   theme,
   userCredits,
   currentPlan,
@@ -161,6 +179,8 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const [showNoRefModal, setShowNoRefModal] = useState(false);
   const [angleWithoutRef, setAngleWithoutRef] = useState<string | null>(null);
   const [noRefModalMode, setNoRefModalMode] = useState<'warning' | 'detail-tip'>('warning');
+  const [compositionProducts, setCompositionProducts] = useState<CompositionProduct[]>([]);
+  const [showProductPicker, setShowProductPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Tipo do produto e ângulos disponíveis (condicionais por categoria) ──
@@ -237,6 +257,30 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
     return selectedWithImages[previewAngleIndex % selectedWithImages.length] || selectedWithImages[0];
   }, [angleImages, selectedAngles, previewAngleIndex]);
 
+  // ── Mentions ──
+  const mention = usePromptMentions({
+    selectedAngles,
+    anglesConfig,
+    referenceCount: referenceImages.length,
+    compositionProducts,
+    prompt,
+    setPrompt,
+    onPromptChange: () => { setOptimizedPromptText(''); setShowOptimized(false); },
+  });
+
+  // Helper: pega imagem frontal de um produto (para composição)
+  const getProductFrontUrl = useCallback((p: Product): string => {
+    const psImages = p.generatedImages?.productStudio || [];
+    for (let i = psImages.length - 1; i >= 0; i--) {
+      const front = psImages[i].images.find((img: any) => img.angle === 'front');
+      if (front?.url) return front.url;
+    }
+    if (p.originalImages?.front && typeof p.originalImages.front === 'object' && 'url' in p.originalImages.front) {
+      return (p.originalImages.front as any).url || '';
+    }
+    return p.images?.[0]?.url || '';
+  }, []);
+
   // ── Créditos (1 imagem por ângulo selecionado) ──
   const creditCost = resolution === '4k' ? 2 : 1;
   const totalCredits = selectedAngles.length * creditCost;
@@ -288,10 +332,10 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
 
   const handleOptimize = useCallback(() => {
     if (!prompt.trim()) return;
-    const opt = optimizePrompt(prompt.trim(), product, referenceImages.length);
+    const opt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
     setOptimizedPromptText(opt);
     setShowOptimized(true);
-  }, [prompt, product, referenceImages.length]);
+  }, [prompt, product, referenceImages.length, compositionProducts]);
 
   const handleResolutionChange = useCallback((newRes: Resolution) => {
     if (newRes === '4k' && !can4K) {
@@ -338,7 +382,8 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
 
   const handleGenerate = useCallback(() => {
     if (!prompt.trim() || isGenerating) return;
-    const finalPrompt = optimizedPromptText || optimizePrompt(prompt.trim(), product, referenceImages.length);
+    const finalPrompt = optimizedPromptText || optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
+    const parsed = parsePromptMentions(prompt.trim(), mention.mentionItems);
     onGenerate({
       product,
       selectedAngles,
@@ -349,8 +394,15 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
       frameRatio,
       resolution,
       variationsCount: selectedAngles.length,
+      parsedPrompt: parsed,
+      compositionProducts: compositionProducts.map((cp, i) => ({
+        product_id: cp.product.id,
+        product_name: cp.product.name || `Produto ${i + 1}`,
+        product_image_url: getProductFrontUrl(cp.product),
+        label: `@produto${i + 1}`,
+      })),
     });
-  }, [prompt, isGenerating, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate]);
+  }, [prompt, isGenerating, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate, compositionProducts, mention.mentionItems, getProductFrontUrl]);
 
   const canGenerate = prompt.trim().length > 5 && hasEnoughCredits && !isGenerating && selectedAngles.length > 0;
 
@@ -602,14 +654,11 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
               <div className="relative">
                 <textarea
                   value={prompt}
-                  onChange={(e) => {
-                    setPrompt(e.target.value);
-                    setOptimizedPromptText('');
-                    setShowOptimized(false);
-                  }}
+                  onChange={mention.handleChange}
+                  onKeyDown={mention.handleKeyDown}
                   placeholder={referenceImages.length > 0
                     ? 'Ex: Meu produto sobre mármore branco, com a iluminação da @ref1 e o cenário da @ref2. Estilo editorial, luz natural suave...'
-                    : 'Ex: Meu produto sobre uma mesa de mármore branco com flores ao redor, luz natural suave, estilo editorial. Dica: envie referências abaixo e use @ref1, @ref2 no texto!'
+                    : 'Ex: Meu produto sobre uma mesa de mármore branco com flores ao redor, luz natural suave, estilo editorial. Digite @ para mencionar ângulos, referências ou produtos!'
                   }
                   rows={4}
                   className={'w-full rounded-xl p-4 pr-12 text-sm resize-none transition-all ' +
@@ -617,6 +666,13 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                       ? 'bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-600 focus:border-[#FF6B6B]/50 focus:ring-1 focus:ring-[#FF6B6B]/30'
                       : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#FF6B6B]/50 focus:ring-1 focus:ring-[#FF6B6B]/30'
                     )}
+                />
+                <MentionDropdown
+                  items={mention.filteredItems}
+                  selectedIndex={mention.selectedIndex}
+                  onSelect={mention.handleSelect}
+                  visible={mention.showDropdown}
+                  theme={theme}
                 />
                 {prompt.trim().length > 5 && (
                   <button
@@ -650,8 +706,19 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                   )}
                 </div>
               )}
-              {/* Hint @ref quando tem referências */}
-              {referenceImages.length > 0 && (
+              {/* Hint de @ mentions */}
+              {prompt.trim().length > 0 && !prompt.includes('@') && (
+                <div className={'mt-2 rounded-lg px-3 py-2 flex items-start gap-2 ' + (isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200')}>
+                  <i className={'fas fa-at text-xs mt-0.5 ' + (isDark ? 'text-blue-400' : 'text-blue-500')}></i>
+                  <span className={(isDark ? 'text-blue-300/80' : 'text-blue-700') + ' text-[11px] leading-relaxed'}>
+                    Digite <span className="font-bold">@</span> para personalizar cada ângulo (<span className="font-semibold">@frente</span>, <span className="font-semibold">@costas</span>),
+                    {referenceImages.length > 0 && <> referenciar inspirações (<span className="font-semibold">@ref1</span>),</>}
+                    {compositionProducts.length > 0 && <> posicionar produtos (<span className="font-semibold">@produto1</span>),</>}
+                    {' '}ou deixe sem @ para instruções gerais.
+                  </span>
+                </div>
+              )}
+              {referenceImages.length > 0 && prompt.includes('@') && (
                 <div className={'mt-2 rounded-lg px-3 py-2 flex items-start gap-2 ' + (isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200')}>
                   <i className={'fas fa-lightbulb text-xs mt-0.5 ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
                   <span className={(isDark ? 'text-amber-300/80' : 'text-amber-700') + ' text-[11px] leading-relaxed'}>
@@ -716,6 +783,65 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 className="hidden"
                 onChange={(e) => handleReferenceUpload(e.target.files)}
               />
+            </div>
+
+            {/* 3.5. Produtos na cena (composição) */}
+            <div>
+              <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-sm font-semibold mb-2 block'}>
+                <i className="fas fa-object-group mr-2 text-xs opacity-50"></i>
+                Produtos na cena
+                <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
+              </label>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
+                Adicione outros produtos do catálogo para compor a cena. Use <span className={(isDark ? 'text-emerald-400' : 'text-emerald-600') + ' font-semibold'}>@produto1</span>, <span className={(isDark ? 'text-emerald-400' : 'text-emerald-600') + ' font-semibold'}>@produto2</span> no prompt para dar coordenadas
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {compositionProducts.map((cp, i) => {
+                  const thumb = getProductFrontUrl(cp.product);
+                  return (
+                    <div key={cp.product.id} className="relative group">
+                      <div className={'w-24 h-24 rounded-xl overflow-hidden border-2 ' + (isDark ? 'border-neutral-700' : 'border-gray-200')}>
+                        {thumb ? (
+                          <OptimizedImage src={thumb} alt={cp.product.name} className="w-full h-full object-cover" size="thumb" />
+                        ) : (
+                          <div className={'w-full h-full flex items-center justify-center ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                            <i className={'fas fa-box text-lg ' + (isDark ? 'text-neutral-600' : 'text-gray-300')}></i>
+                          </div>
+                        )}
+                      </div>
+                      {/* Label @produto */}
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-gradient-to-r from-emerald-500 to-emerald-400 text-white text-[10px] font-bold whitespace-nowrap shadow-md">
+                        @produto{i + 1}
+                      </div>
+                      {/* Nome */}
+                      <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] text-center mt-2 truncate w-24'}>
+                        {cp.product.name}
+                      </p>
+                      {/* Botão remover */}
+                      <button
+                        onClick={() => setCompositionProducts(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  );
+                })}
+                {compositionProducts.length < 4 && (
+                  <button
+                    onClick={() => setShowProductPicker(true)}
+                    className={'w-24 h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ' +
+                      (isDark
+                        ? 'border-neutral-700 text-neutral-600 hover:border-emerald-500/50 hover:text-emerald-400'
+                        : 'border-gray-300 text-gray-400 hover:border-emerald-400 hover:text-emerald-500'
+                      )
+                    }
+                  >
+                    <i className="fas fa-plus text-sm"></i>
+                    <span className="text-[9px] font-medium">{compositionProducts.length}/4</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* 4. Ratio + Resolução */}
@@ -886,6 +1012,22 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
           </div>
         </div>
       )}
+      {/* Modal: Product Composition Picker */}
+      <ProductCompositionPicker
+        isOpen={showProductPicker}
+        onClose={() => setShowProductPicker(false)}
+        onSelect={(selectedProduct) => {
+          setCompositionProducts(prev => [
+            ...prev,
+            { product: selectedProduct, label: `@produto${prev.length + 1}`, index: prev.length },
+          ]);
+          setShowProductPicker(false);
+        }}
+        products={products}
+        excludeProductId={product.id}
+        alreadyAddedIds={compositionProducts.map(cp => cp.product.id)}
+        theme={theme}
+      />
     </div>
   );
 };
