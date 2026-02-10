@@ -5,8 +5,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { Product, ProductStudioImage, ProductStudioSession } from '../../types';
-import { editStudioImage, StudioBackground, StudioShadow } from '../../lib/api/studio';
-import { supabase } from '../../services/supabaseClient';
+import { editStudioImage, saveEditedImage, StudioBackground, StudioShadow } from '../../lib/api/studio';
 import { ZoomableImage } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
@@ -213,47 +212,21 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     // 1. Update React state (immediate UI update)
     onImageUpdated(currentImage.angle, newImageUrl);
 
-    // 2. Persist edited URL to product_images in Supabase
-    //    (product_images is the source of truth — loadUserProducts reads from it)
+    // 2. Persist via N8N (service_role → bypasses RLS)
     try {
-      const { error } = await supabase
-        .from('product_images')
-        .update({ url: newImageUrl })
-        .eq('product_id', product.id)
-        .eq('generation_id', generationId)
-        .eq('angle', currentImage.angle)
-        .eq('type', 'product_studio');
+      const result = await saveEditedImage({
+        productId: product.id,
+        generationId,
+        angle: currentImage.angle,
+        newImageUrl,
+      });
 
-      if (error) {
-        console.error('[StudioEditModal] Erro ao salvar edição em product_images:', error);
-      }
-
-      // Also update generations.output_urls for consistency
-      const { data: gen } = await supabase
-        .from('generations')
-        .select('output_urls')
-        .eq('id', generationId)
-        .single();
-
-      if (gen) {
-        let urls = gen.output_urls;
-        if (typeof urls === 'string') {
-          try { urls = JSON.parse(urls); } catch { urls = []; }
-        }
-        if (Array.isArray(urls)) {
-          urls = urls.map((item: any) =>
-            (item.angle === currentImage.angle)
-              ? { ...item, url: newImageUrl }
-              : item
-          );
-          await supabase
-            .from('generations')
-            .update({ output_urls: urls })
-            .eq('id', generationId);
-        }
+      if (!result.success) {
+        console.error('[StudioEditModal] N8N save failed:', result.error);
+        showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'warning');
       }
     } catch (err) {
-      console.error('[StudioEditModal] Erro ao salvar edição no banco:', err);
+      console.error('[StudioEditModal] Erro ao salvar edição:', err);
     }
 
     showToast('Imagem atualizada!', 'success');

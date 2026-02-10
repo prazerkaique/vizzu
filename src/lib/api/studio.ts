@@ -1238,6 +1238,41 @@ export async function editStudioImage(params: EditStudioImageParams): Promise<Ed
   }
 }
 
+/**
+ * Salva a imagem editada no Supabase via N8N (service_role, bypass RLS)
+ * Atualiza product_images.url para o ângulo correspondente
+ */
+export async function saveEditedImage(params: {
+  productId: string;
+  generationId: string;
+  angle: string;
+  newImageUrl: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/edit/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_id: params.productId,
+        generation_id: params.generationId,
+        angle: params.angle,
+        new_image_url: params.newImageUrl,
+      }),
+    });
+
+    const text = await response.text();
+    if (!text) return { success: false, error: 'Resposta vazia do servidor.' };
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
+}
+
 export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<SendWhatsAppResponse> {
   try {
     const response = await fetch(`${N8N_BASE_URL}/vizzu/send-whatsapp`, {
