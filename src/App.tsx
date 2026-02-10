@@ -1100,6 +1100,8 @@ function App() {
  onClearInitialProduct={() => setProductForCreation(null)}
  onBack={goBack}
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
+ editBalance={editBalance}
+ onDeductEditCredits={deductEditCredits}
  />
  </Suspense>
  </div>
@@ -1126,6 +1128,8 @@ function App() {
  onSetProgress={setCreativeStillProgress}
  onSetMinimized={setCreativeStillMinimized}
  isMinimized={creativeStillMinimized}
+ editBalance={editBalance}
+ onDeductEditCredits={deductEditCredits}
  />
  </Suspense>
  </div>

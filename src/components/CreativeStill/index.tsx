@@ -226,6 +226,8 @@ export interface CreativeStillProps {
  onSetProgress?: (value: number) => void;
  onSetMinimized?: (value: boolean) => void;
  isMinimized?: boolean;
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
 }
 
 // ============================================================
@@ -251,6 +253,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  onSetProgress,
  onSetMinimized,
  isMinimized,
+ editBalance = 0,
+ onDeductEditCredits,
 }) => {
  const [view, setView] = useState<View>('mode-select');
  const [simpleState, setSimpleState] = useState<CreativeStillSimpleState | null>(null);
@@ -1104,6 +1108,17 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
  onGenerateAgain={simpleState ? () => handleGenerateSimple(simpleState) : handleGenerate}
  onMinimize={() => onSetMinimized?.(true)}
  isMinimized={isMinimized}
+ editBalance={editBalance}
+ regularBalance={userCredits}
+ onDeductEditCredits={onDeductEditCredits}
+ onVariationUpdated={(index, newUrl) => {
+  setCurrentGeneration(prev => {
+   if (!prev) return prev;
+   const urls = [...(prev.variation_urls || [])];
+   urls[index] = newUrl;
+   return { ...prev, variation_urls: urls };
+  });
+ }}
  onSaveTemplate={async (name: string) => {
  if (!userId) return;
  const { error } = await supabase

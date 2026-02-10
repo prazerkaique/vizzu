@@ -42,6 +42,8 @@ interface LookComposerEditorProps {
  currentPlan?: Plan;
  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
  onOpenPlanModal?: () => void;
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
 }
 
 // Frases de loading (usadas durante o processo)
@@ -300,7 +302,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onSetLoadingText,
  isAnyGenerationRunning = false,
  currentPlan,
- onOpenPlanModal
+ onOpenPlanModal,
+ editBalance = 0,
+ onDeductEditCredits,
 }) => {
  // Estado da fase atual
  const [currentStep, setCurrentStep] = useState<Step>('product');
@@ -2468,6 +2472,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onBack={handleResultBack}
  onNewLook={handleNewLook}
  theme={theme}
+ editBalance={editBalance}
+ onDeductEditCredits={onDeductEditCredits}
+ onImageUpdated={(view, newUrl) => {
+  if (view === 'front') setGeneratedImageUrl(newUrl);
+  else setGeneratedBackImageUrl(newUrl);
+ }}
  />
  );
  }

@@ -1160,10 +1160,10 @@ export async function analyzeProductImage(params: AnalyzeProductImageParams): Pr
 // ═══════════════════════════════════════════════════════════════
 
 interface EditStudioImageParams {
-  userId: string;
-  productId: string;
-  generationId: string;
-  angle: string;
+  userId?: string;
+  productId?: string;
+  generationId?: string;
+  angle?: string;
   currentImageUrl: string;
   correctionPrompt: string;
   referenceImageBase64?: string;
@@ -1256,6 +1256,74 @@ export async function saveEditedImage(params: {
         product_id: params.productId,
         generation_id: params.generationId,
         angle: params.angle,
+        new_image_url: params.newImageUrl,
+      }),
+    });
+
+    const text = await response.text();
+    if (!text) return { success: false, error: 'Resposta vazia do servidor.' };
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
+}
+
+/**
+ * Salva edição de variação do Creative Still via N8N (service_role, bypass RLS)
+ * Atualiza creative_still_generations.variation_urls[index]
+ */
+export async function saveCreativeStillEdit(params: {
+  generationId: string;
+  variationIndex: number;
+  newImageUrl: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/still/edit/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        generation_id: params.generationId,
+        variation_index: params.variationIndex,
+        new_image_url: params.newImageUrl,
+      }),
+    });
+
+    const text = await response.text();
+    if (!text) return { success: false, error: 'Resposta vazia do servidor.' };
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
+}
+
+/**
+ * Salva edição de imagem do Look Composer via N8N (service_role, bypass RLS)
+ * Atualiza product_images.url WHERE type='modelo_ia'
+ */
+export async function saveLookComposerEdit(params: {
+  productId: string;
+  generationId: string;
+  view: 'front' | 'back';
+  newImageUrl: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/look-composer/edit/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_id: params.productId,
+        generation_id: params.generationId,
+        view: params.view,
         new_image_url: params.newImageUrl,
       }),
     });

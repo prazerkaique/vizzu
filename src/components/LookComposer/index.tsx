@@ -30,6 +30,8 @@ interface LookComposerProps {
  generationText?: string;
  onSetGenerating?: (value: boolean) => void;
  onSetMinimized?: (value: boolean) => void;
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  onSetProgress?: (value: number) => void;
  onSetLoadingText?: (value: string) => void;
  isAnyGenerationRunning?: boolean;
@@ -114,7 +116,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  initialProduct,
  onClearInitialProduct,
  onBack,
- onOpenPlanModal
+ onOpenPlanModal,
+ editBalance = 0,
+ onDeductEditCredits,
 }) => {
  const isDark = theme === 'dark';
 
@@ -520,6 +524,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  isAnyGenerationRunning={isAnyGenerationRunning}
  currentPlan={currentPlan}
  onOpenPlanModal={onOpenPlanModal}
+ editBalance={editBalance}
+ onDeductEditCredits={onDeductEditCredits}
  />
  );
  }

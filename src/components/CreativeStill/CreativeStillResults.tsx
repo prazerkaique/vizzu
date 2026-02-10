@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
@@ -7,6 +7,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
+import { ImageEditModal } from '../shared/ImageEditModal';
+import { editStudioImage, saveCreativeStillEdit } from '../../lib/api/studio';
 
 const lottieColorStyles = `
  @keyframes stillColorCycle {
@@ -44,6 +46,10 @@ interface Props {
  onSaveTemplate: (name: string) => Promise<void>;
  onMinimize?: () => void;
  isMinimized?: boolean;
+ editBalance?: number;
+ regularBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+ onVariationUpdated?: (index: number, newUrl: string) => void;
 }
 
 /** Get the list of variation URLs from a generation, with retrocompat fallback */
@@ -75,6 +81,10 @@ export const CreativeStillResults: React.FC<Props> = ({
  onSaveTemplate,
  onMinimize,
  isMinimized,
+ editBalance = 0,
+ regularBalance = 0,
+ onDeductEditCredits,
+ onVariationUpdated,
 }) => {
  const { openViewer } = useImageViewer();
  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
@@ -85,6 +95,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  const [wasGenerating, setWasGenerating] = useState(false);
  const [showReportModal, setShowReportModal] = useState(false);
  const [reportVariationUrl, setReportVariationUrl] = useState<string | null>(null);
+ const [editingVariation, setEditingVariation] = useState<{ index: number; url: string } | null>(null);
 
  const { user } = useAuth();
  const { showToast } = useUI();
@@ -156,6 +167,37 @@ export const CreativeStillResults: React.FC<Props> = ({
  link.download = `still-criativo-${wizardState.mainProduct?.name || 'produto'}-v${variation}.png`;
  link.click();
  };
+
+ // Edit callbacks
+ const resolution = (wizardState.resolution || '2k') as '2k' | '4k';
+ const creditCost = resolution === '4k' ? 2 : 1;
+
+ const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
+ if (!editingVariation) return { success: false, error: 'Nenhuma variação selecionada.' };
+ return editStudioImage({
+  currentImageUrl: editingVariation.url,
+  correctionPrompt: params.correctionPrompt,
+  referenceImageBase64: params.referenceImageBase64,
+  resolution,
+ });
+ }, [editingVariation, resolution]);
+
+ const handleEditSave = useCallback(async (newImageUrl: string) => {
+ if (!editingVariation || !generation?.id) return { success: false };
+ // Update local state
+ onVariationUpdated?.(editingVariation.index, newImageUrl);
+ // Persist via N8N
+ const result = await saveCreativeStillEdit({
+  generationId: generation.id,
+  variationIndex: editingVariation.index,
+  newImageUrl,
+ });
+ if (!result.success) {
+  console.error('[CS Edit] Save failed:', result.error);
+  showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
+ }
+ return result;
+ }, [editingVariation, generation?.id, onVariationUpdated, showToast]);
 
  // ============================================================
  // LOADING STATE
@@ -373,6 +415,12 @@ export const CreativeStillResults: React.FC<Props> = ({
  <i className="fas fa-download mr-1"></i>Download
  </button>
  <button
+ onClick={() => setEditingVariation({ index, url })}
+ className={(isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500') + ' text-xs font-medium'}
+ >
+ <i className="fas fa-pen mr-1"></i>Editar
+ </button>
+ <button
  onClick={() => { setReportVariationUrl(url); setShowReportModal(true); }}
  className={(isDark ? 'text-amber-400/70 hover:text-amber-400' : 'text-amber-500 hover:text-amber-600') + ' text-xs font-medium'}
  >
@@ -420,6 +468,25 @@ export const CreativeStillResults: React.FC<Props> = ({
  productName={wizardState.mainProduct?.name}
  theme={theme}
  />
+
+ {/* ============================================================ */}
+ {/* MODAL: Edição de Variação */}
+ {/* ============================================================ */}
+ {editingVariation && (
+ <ImageEditModal
+  isOpen={!!editingVariation}
+  onClose={() => setEditingVariation(null)}
+  currentImageUrl={editingVariation.url}
+  imageName={`Variação ${editingVariation.index + 1}`}
+  editBalance={editBalance}
+  regularBalance={regularBalance}
+  resolution={resolution}
+  onGenerate={handleEditGenerate}
+  onSave={handleEditSave}
+  onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, generation?.id) : undefined}
+  theme={theme}
+ />
+ )}
 
  {/* ============================================================ */}
  {/* MODAL: Salvar Template */}

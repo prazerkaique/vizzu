@@ -2,7 +2,7 @@
 // VIZZU - Look Composer Result (Página de Pós-Criação)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, LookComposition, SavedModel } from '../../types';
 import { smartDownload, smartDownloadMultiple } from '../../utils/downloadHelper';
@@ -12,6 +12,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
+import { ImageEditModal } from '../shared/ImageEditModal';
+import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 
 type ExportQuality = 'high' | 'performance';
 
@@ -38,6 +40,9 @@ interface LookComposerResultProps {
  onBack: () => void;
  onNewLook?: () => void; // Criar novo look com o mesmo produto
  theme?: 'dark' | 'light';
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+ onImageUpdated?: (view: 'front' | 'back', newUrl: string) => void;
 }
 
 // Labels dos slots em português
@@ -77,7 +82,10 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  onDelete,
  onBack,
  onNewLook,
- theme = 'dark'
+ theme = 'dark',
+ editBalance = 0,
+ onDeductEditCredits,
+ onImageUpdated,
 }) => {
  const [isSaved, setIsSaved] = useState(false);
  const [showExitModal, setShowExitModal] = useState(false);
@@ -90,6 +98,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  const [showDownloadOptions, setShowDownloadOptions] = useState(false);
  const [showReveal, setShowReveal] = useState(true);
  const [showReportModal, setShowReportModal] = useState(false);
+ const [editingView, setEditingView] = useState<'front' | 'back' | null>(null);
 
  const { user } = useAuth();
  const { showToast } = useUI();
@@ -260,6 +269,37 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  setShowDeleteModal(false);
  onDelete();
  };
+
+ // Edit callbacks
+ const editingImageUrl = editingView === 'back' ? generatedBackImageUrl : generatedImageUrl;
+
+ const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
+ if (!editingImageUrl) return { success: false, error: 'Nenhuma imagem selecionada.' };
+ return editStudioImage({
+  currentImageUrl: editingImageUrl,
+  correctionPrompt: params.correctionPrompt,
+  referenceImageBase64: params.referenceImageBase64,
+  resolution: '2k',
+ });
+ }, [editingImageUrl]);
+
+ const handleEditSave = useCallback(async (newImageUrl: string) => {
+ if (!editingView) return { success: false };
+ // Update local state
+ onImageUpdated?.(editingView, newImageUrl);
+ // Persist via N8N
+ const result = await saveLookComposerEdit({
+  productId: product.id,
+  generationId,
+  view: editingView,
+  newImageUrl,
+ });
+ if (!result.success) {
+  console.error('[LC Edit] Save failed:', result.error);
+  showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
+ }
+ return result;
+ }, [editingView, product.id, generationId, onImageUpdated, showToast]);
 
  // Obter peças do look
  const lookPieces = lookComposition ? Object.entries(lookComposition) : [];
@@ -677,7 +717,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  Ações
  </p>
 
- <div className="grid grid-cols-4 gap-2">
+ <div className="grid grid-cols-5 gap-2">
  {/* Gerar Novamente */}
  <button
  onClick={onRegenerate}
@@ -685,6 +725,15 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  >
  <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-rotate text-sm'}></i>
  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Refazer</span>
+ </button>
+
+ {/* Editar */}
+ <button
+ onClick={() => setEditingView(currentView)}
+ className={(isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ >
+ <i className="fas fa-pen text-emerald-400 text-sm"></i>
+ <span className="text-emerald-400 text-[9px]">Editar</span>
  </button>
 
  {/* Zoom */}
@@ -891,6 +940,25 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {/* MODAL - Edição de Imagem */}
+ {/* ═══════════════════════════════════════════════════════════════ */}
+ {editingView && editingImageUrl && (
+ <ImageEditModal
+  isOpen={!!editingView}
+  onClose={() => setEditingView(null)}
+  currentImageUrl={editingImageUrl}
+  imageName={editingView === 'front' ? 'Look Frontal' : 'Look Traseiro'}
+  editBalance={editBalance}
+  regularBalance={userCredits}
+  resolution="2k"
+  onGenerate={handleEditGenerate}
+  onSave={handleEditSave}
+  onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, generationId) : undefined}
+  theme={theme}
+ />
  )}
 
  </div>

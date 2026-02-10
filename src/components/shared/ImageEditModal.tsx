@@ -1,51 +1,47 @@
 // ═══════════════════════════════════════════════════════════════
-// VIZZU - Studio Edit Modal (Gerar Novamente / Correção de Imagem)
+// VIZZU - Image Edit Modal (Genérico — reutilizável para PS, CS, LC)
 // Liquid Glass aesthetic — backdrop-blur, transparências, bordas
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Product, ProductStudioImage, ProductStudioSession } from '../../types';
-import { editStudioImage, saveEditedImage, StudioBackground, StudioShadow } from '../../lib/api/studio';
 import { ZoomableImage } from '../ImageViewer';
-import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 
-interface StudioEditModalProps {
+interface GenerateResult {
+  success: boolean;
+  new_image_url?: string;
+  credits_deducted?: boolean;
+  credit_source?: string;
+  error?: string;
+}
+
+export interface ImageEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: Product;
-  currentImage: ProductStudioImage;
-  generationId: string;
-  session: ProductStudioSession;
+  currentImageUrl: string;
+  imageName: string;
   editBalance: number;
   regularBalance: number;
   resolution: '2k' | '4k';
-  studioBackground?: StudioBackground;
-  studioShadow?: StudioShadow;
-  productNotes?: string;
-  onImageUpdated: (angle: string, newUrl: string) => void;
-  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+  onGenerate: (params: {
+    correctionPrompt: string;
+    referenceImageBase64?: string;
+  }) => Promise<GenerateResult>;
+  onSave: (newImageUrl: string) => Promise<{ success: boolean }>;
+  onDeductEditCredits?: (amount: number) => Promise<{ success: boolean; source?: string }>;
   theme?: 'dark' | 'light';
 }
 
 type ModalMode = 'input' | 'generating' | 'compare';
 
-const ANGLE_LABELS: Record<string, string> = {
-  'front': 'Frente', 'back': 'Costas', 'side-left': 'Lateral Esq.',
-  'side-right': 'Lateral Dir.', '45-left': '45° Esq.', '45-right': '45° Dir.',
-  'top': 'Topo', 'detail': 'Detalhe', 'front_detail': 'Detalhe Frente',
-  'back_detail': 'Detalhe Costas', 'folded': 'Dobrada',
-};
-
 const MAX_REF_SIZE_MB = 10;
 
-export const StudioEditModal: React.FC<StudioEditModalProps> = ({
-  isOpen, onClose, product, currentImage, generationId,
-  editBalance, regularBalance, resolution, studioBackground,
-  studioShadow, productNotes, onImageUpdated, onDeductEditCredits,
+export const ImageEditModal: React.FC<ImageEditModalProps> = ({
+  isOpen, onClose, currentImageUrl, imageName,
+  editBalance, regularBalance, resolution,
+  onGenerate, onSave, onDeductEditCredits,
   theme = 'dark',
 }) => {
-  const { user } = useAuth();
   const { showToast } = useUI();
 
   const [mode, setMode] = useState<ModalMode>('input');
@@ -59,8 +55,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
 
   // Zoom state
   const [zoomImage, setZoomImage] = useState<string | null>(null);
-
-  // Desktop hover zoom refs
   const [hoverTarget, setHoverTarget] = useState<'before' | 'after' | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -70,7 +64,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const totalAvailable = editBalance + regularBalance;
   const hasEnoughCredits = totalAvailable >= creditCost;
   const willUseRegular = editBalance < creditCost;
-
   const isDark = theme === 'dark';
 
   // ── Helpers ────────────────────────────────────────────────
@@ -154,36 +147,22 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
       showToast('Créditos insuficientes', 'error');
       return;
     }
-    if (!user) return;
 
     setMode('generating');
     setIsGenerating(true);
 
     try {
-      const result = await editStudioImage({
-        userId: user.id,
-        productId: product.id,
-        generationId,
-        angle: currentImage.angle,
-        currentImageUrl: currentImage.url,
+      const result = await onGenerate({
         correctionPrompt: correctionPrompt.trim(),
         referenceImageBase64: referenceBase64 || undefined,
-        resolution,
-        productInfo: { name: product.name, category: product.category },
-        studioBackground,
-        studioShadow,
-        productNotes,
       });
 
       if (result.success && result.new_image_url) {
-        // Check if workflow already deducted credits (v4+)
         if (result.credits_deducted) {
-          // Workflow handled deduction — just set source for UI banner
-          setLastSource(result.credit_source || (editBalance >= creditCost ? 'edit' : 'regular'));
+          setLastSource((result.credit_source as 'edit' | 'regular') || (editBalance >= creditCost ? 'edit' : 'regular'));
         } else if (onDeductEditCredits) {
-          // Fallback: frontend deducts (backward compat with old workflow)
-          const deductResult = await onDeductEditCredits(creditCost, generationId);
-          setLastSource(deductResult.source || (editBalance >= creditCost ? 'edit' : 'regular'));
+          const deductResult = await onDeductEditCredits(creditCost);
+          setLastSource((deductResult.source as 'edit' | 'regular') || (editBalance >= creditCost ? 'edit' : 'regular'));
         }
         setNewImageUrl(result.new_image_url);
         setMode('compare');
@@ -192,46 +171,31 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
         setMode('input');
       }
     } catch (err) {
-      console.error('[StudioEditModal] Error:', err);
+      console.error('[ImageEditModal] Error:', err);
       showToast('Erro de rede. Verifique sua conexão.', 'error');
       setMode('input');
     } finally {
       setIsGenerating(false);
     }
-  }, [
-    correctionPrompt, hasEnoughCredits, user, product, generationId, currentImage,
-    referenceBase64, resolution, studioBackground, studioShadow, productNotes,
-    creditCost, editBalance, onDeductEditCredits, showToast,
-  ]);
+  }, [correctionPrompt, hasEnoughCredits, referenceBase64, creditCost, editBalance, onGenerate, onDeductEditCredits, showToast]);
 
   // ── Compare Actions ────────────────────────────────────────
 
   const handleUseNew = useCallback(async () => {
-    if (!newImageUrl || !user) return;
+    if (!newImageUrl) return;
 
-    // 1. Update React state (immediate UI update)
-    onImageUpdated(currentImage.angle, newImageUrl);
-
-    // 2. Persist via N8N (service_role → bypasses RLS)
     try {
-      const result = await saveEditedImage({
-        productId: product.id,
-        generationId,
-        angle: currentImage.angle,
-        newImageUrl,
-      });
-
+      const result = await onSave(newImageUrl);
       if (!result.success) {
-        console.error('[StudioEditModal] N8N save failed:', result.error);
         showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
       }
     } catch (err) {
-      console.error('[StudioEditModal] Erro ao salvar edição:', err);
+      console.error('[ImageEditModal] Erro ao salvar edição:', err);
     }
 
     showToast('Imagem atualizada!', 'success');
     handleClose();
-  }, [newImageUrl, user, currentImage, product.id, generationId, onImageUpdated, showToast, handleClose]);
+  }, [newImageUrl, onSave, showToast, handleClose]);
 
   const handleKeepOriginal = useCallback(() => {
     showToast('Imagem original mantida', 'info');
@@ -250,9 +214,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
 
   if (!isOpen) return null;
 
-  const angleName = ANGLE_LABELS[currentImage.angle] || currentImage.angle;
-
-  // Glass card base classes
   const glassCard = isDark
     ? 'bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)]'
     : 'bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.08)]';
@@ -261,7 +222,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     ? 'bg-white/[0.03] border border-white/[0.06]'
     : 'bg-white/50 border border-white/40';
 
-  // Helper: render a compare image with hover zoom (desktop) + tap zoom (mobile)
   const renderCompareImage = (src: string, label: string, target: 'before' | 'after') => {
     const isActive = hoverTarget === target;
     const isBefore = target === 'before';
@@ -269,9 +229,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     return (
       <div className={
         'rounded-xl overflow-hidden ' +
-        (isBefore
-          ? glassInner
-          : 'border border-[#FF6B6B]/20 bg-[#FF6B6B]/[0.03]')
+        (isBefore ? glassInner : 'border border-[#FF6B6B]/20 bg-[#FF6B6B]/[0.03]')
       }>
         <div
           className={
@@ -285,7 +243,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
           onMouseMove={(e) => handleImageMouseMove(e, target)}
           onClick={() => setZoomImage(src)}
         >
-          {/* Normal image (hidden on desktop hover) */}
           <img
             src={src}
             alt={label}
@@ -294,8 +251,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
               (isActive ? 'lg:opacity-0' : 'opacity-100')
             }
           />
-
-          {/* Desktop hover zoom */}
           {isActive && (
             <div
               className="hidden lg:block absolute inset-0 bg-no-repeat"
@@ -306,16 +261,12 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
               }}
             />
           )}
-
-          {/* Magnifying glass icon (desktop) */}
           <div className={
             'hidden lg:flex absolute bottom-2 right-2 w-7 h-7 rounded-lg items-center justify-center transition-all pointer-events-none ' +
             (isDark ? 'bg-black/50 text-white/70' : 'bg-white/70 text-gray-600')
           }>
             <i className="fas fa-search-plus text-xs"></i>
           </div>
-
-          {/* Tap hint (mobile) */}
           <div className={
             'lg:hidden absolute bottom-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center pointer-events-none ' +
             (isDark ? 'bg-black/50 text-white/70' : 'bg-white/70 text-gray-600')
@@ -323,8 +274,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             <i className="fas fa-expand text-xs"></i>
           </div>
         </div>
-
-        {/* Label bar */}
         <div className={
           'px-3 py-1.5 border-t flex items-center gap-2 ' +
           (isBefore
@@ -352,16 +301,10 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
-      {/* Backdrop — blur forte + gradiente sutil */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-xl"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={handleClose} />
 
-      {/* Modal Container — liquid glass */}
       <div className={
-        'relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden ' +
-        glassCard
+        'relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden ' + glassCard
       }>
         {/* ═══ HEADER ═══ */}
         <div className={
@@ -380,15 +323,14 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </button>
             <div>
               <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                Gerar novamente
+                Editar imagem
               </h2>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
-                {angleName} — {product.name}
+                {imageName}
               </p>
             </div>
           </div>
 
-          {/* Credits */}
           <div className="flex items-center gap-1.5">
             {editBalance > 0 && (
               <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
@@ -409,20 +351,17 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
         {/* ═══ CONTENT ═══ */}
         <div className="flex-1 overflow-y-auto">
 
-          {/* ─── MODE: INPUT ────────────────────────────── */}
+          {/* ─── MODE: INPUT ─── */}
           {mode === 'input' && (
             <div className="p-5">
-              {/* Current image — compact preview */}
-              <div className={
-                'rounded-xl overflow-hidden mb-4 ' + glassInner
-              }>
+              <div className={'rounded-xl overflow-hidden mb-4 ' + glassInner}>
                 <div className={
                   'flex items-center justify-center p-3 ' +
                   (isDark ? 'bg-black/20' : 'bg-gray-100/50')
                 }>
                   <img
-                    src={currentImage.url}
-                    alt={`${product.name} - ${angleName}`}
+                    src={currentImageUrl}
+                    alt={imageName}
                     className="max-h-[180px] md:max-h-[220px] object-contain rounded-lg"
                   />
                 </div>
@@ -432,12 +371,11 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 }>
                   <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]"></div>
                   <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wider font-medium'}>
-                    {angleName}
+                    {imageName}
                   </p>
                 </div>
               </div>
 
-              {/* Prompt textarea */}
               <div className="mb-3">
                 <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-1.5 block'}>
                   <i className="fas fa-rotate text-[#FF6B6B] mr-1.5 text-[10px]"></i>
@@ -446,7 +384,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 <textarea
                   value={correctionPrompt}
                   onChange={(e) => setCorrectionPrompt(e.target.value)}
-                  placeholder={'Ex: "Remover sombra no canto esquerdo"\n"A costura do bolso ficou borrada"\n"Ajustar a cor para mais próximo do original"'}
+                  placeholder={'Ex: "Remover reflexo na mesa"\n"Ajustar a iluminação do lado esquerdo"\n"A cor do produto ficou diferente do original"'}
                   rows={3}
                   maxLength={500}
                   className={
@@ -461,7 +399,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 </p>
               </div>
 
-              {/* Reference image */}
               <div className="mb-4">
                 <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-1.5 block'}>
                   <i className="fas fa-image text-[#FF9F43] mr-1.5 text-[10px]"></i>
@@ -516,10 +453,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 />
               </div>
 
-              {/* Cost info */}
-              <div className={
-                'rounded-xl p-3 mb-4 ' + glassInner
-              }>
+              <div className={'rounded-xl p-3 mb-4 ' + glassInner}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <i className="fas fa-ticket text-[#FF9F43] text-[10px]"></i>
@@ -543,7 +477,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 </div>
               </div>
 
-              {/* Generate button */}
               <button
                 onClick={handleGenerate}
                 disabled={!correctionPrompt.trim() || !hasEnoughCredits}
@@ -569,7 +502,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </div>
           )}
 
-          {/* ─── MODE: GENERATING ───────────────────────── */}
+          {/* ─── MODE: GENERATING ─── */}
           {mode === 'generating' && (
             <div className="flex flex-col items-center justify-center p-8 min-h-[350px]">
               <div className="relative w-16 h-16 mb-5">
@@ -592,11 +525,9 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </div>
           )}
 
-          {/* ─── MODE: COMPARE ──────────────────────────── */}
+          {/* ─── MODE: COMPARE ─── */}
           {mode === 'compare' && newImageUrl && (
             <div className="p-5">
-
-              {/* Warning banner — regular credits */}
               {lastSource === 'regular' && (
                 <div className="mb-4 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
                   <i className="fas fa-info-circle text-amber-400 text-xs mt-0.5 flex-shrink-0"></i>
@@ -606,22 +537,18 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 </div>
               )}
 
-              {/* Hint: tap/hover to zoom */}
               <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] text-center mb-2'}>
                 <i className="fas fa-search-plus mr-1"></i>
                 <span className="hidden lg:inline">Passe o mouse para ampliar ou clique para tela cheia</span>
                 <span className="lg:hidden">Toque na imagem para ampliar</span>
               </p>
 
-              {/* Before / After with zoom */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                {renderCompareImage(currentImage.url, 'Anterior', 'before')}
+                {renderCompareImage(currentImageUrl, 'Anterior', 'before')}
                 {renderCompareImage(newImageUrl, 'Nova', 'after')}
               </div>
 
-              {/* Action buttons — lado a lado + gerar novamente embaixo */}
               <div className="flex flex-col gap-2.5">
-                {/* Linha principal: Manter Original | Usar Nova Imagem */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={handleKeepOriginal}
@@ -645,7 +572,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                   </button>
                 </div>
 
-                {/* Gerar novamente — discreto */}
                 <button
                   onClick={handleRetry}
                   className={
@@ -665,21 +591,17 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
       {/* ═══ FULLSCREEN ZOOM MODAL ═══ */}
       {zoomImage && (
         <div className="fixed inset-0 z-[60] flex flex-col bg-black/95" onClick={() => setZoomImage(null)}>
-          {/* Header */}
           <div
             className="flex items-center justify-between p-4 flex-shrink-0"
             style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Switch Anterior / Nova */}
             <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
               <button
-                onClick={() => setZoomImage(currentImage.url)}
+                onClick={() => setZoomImage(currentImageUrl)}
                 className={
                   'px-3 py-1.5 rounded-md text-xs font-medium transition-all ' +
-                  (zoomImage === currentImage.url
-                    ? 'bg-white text-black'
-                    : 'text-white/70 hover:text-white')
+                  (zoomImage === currentImageUrl ? 'bg-white text-black' : 'text-white/70 hover:text-white')
                 }
               >
                 Anterior
@@ -699,7 +621,6 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
               )}
             </div>
 
-            {/* Close */}
             <button
               onClick={() => setZoomImage(null)}
               className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"
@@ -708,11 +629,10 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </button>
           </div>
 
-          {/* Zoomable image — pinch-to-zoom, double-tap, scroll zoom */}
           <div className="flex-1 overflow-hidden" onClick={e => e.stopPropagation()}>
             <ZoomableImage
               src={zoomImage}
-              alt={`${product.name} - ${angleName}`}
+              alt={imageName}
               className="w-full h-full"
             />
           </div>
