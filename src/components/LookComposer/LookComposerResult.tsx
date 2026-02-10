@@ -286,21 +286,20 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
 
  const handleEditSave = useCallback(async (newImageUrl: string) => {
  if (!editingView) return { success: false };
- // Update local state
- onImageUpdated?.(editingView, newImageUrl);
- // Persist via N8N
+ // Persist via N8N primeiro — só atualiza state se salvar com sucesso
  const result = await saveLookComposerEdit({
   productId: product.id,
   generationId,
   view: editingView,
   newImageUrl,
  });
- if (!result.success) {
+ if (result.success) {
+  onImageUpdated?.(editingView, newImageUrl);
+ } else {
   console.error('[LC Edit] Save failed:', result.error);
-  showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
  }
  return result;
- }, [editingView, product.id, generationId, onImageUpdated, showToast]);
+ }, [editingView, product.id, generationId, onImageUpdated]);
 
  const handleEditSaveAsNew = useCallback(async (newImageUrl: string) => {
    if (!editingView || !user) return { success: false };

@@ -513,46 +513,53 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  const handleGalleryEditSave = useCallback(async (newImageUrl: string) => {
    if (!selectedLook) return { success: false };
    const view = selectedLookView;
-   // Atualizar local state
-   const updatedLook = { ...selectedLook };
-   if (view === 'back' && selectedLook.backImageUrl) {
-     updatedLook.backImageUrl = newImageUrl;
-   } else {
-     updatedLook.imageUrl = newImageUrl;
-   }
-   setSelectedLook(updatedLook);
 
-   // Atualizar no produto (generatedImages.modeloIA)
-   const product = products.find(p => p.id === selectedLook.productId);
-   if (product && product.generatedImages?.modeloIA) {
-     const updatedModeloIA = product.generatedImages.modeloIA.map((l: any, idx: number) => {
-       const lookId = l.id || `${product.id}-${idx}`;
-       if (lookId === selectedLook.id) {
-         const updatedImages = { ...l.images };
-         if (view === 'back') {
-           updatedImages.back = newImageUrl;
-         } else {
-           updatedImages.front = newImageUrl;
-         }
-         return { ...l, images: updatedImages };
-       }
-       return l;
-     });
-     onUpdateProduct(product.id, {
-       generatedImages: {
-         ...product.generatedImages,
-         modeloIA: updatedModeloIA
-       }
-     });
-   }
-
-   // Salvar no Supabase via N8N
-   return saveLookComposerEdit({
+   // Salvar no Supabase via N8N primeiro — só atualiza state se sucesso
+   const result = await saveLookComposerEdit({
      productId: selectedLook.productId,
      generationId: selectedLook.id,
      view,
      newImageUrl,
    });
+
+   if (result.success) {
+     // Atualizar local state
+     const updatedLook = { ...selectedLook };
+     if (view === 'back' && selectedLook.backImageUrl) {
+       updatedLook.backImageUrl = newImageUrl;
+     } else {
+       updatedLook.imageUrl = newImageUrl;
+     }
+     setSelectedLook(updatedLook);
+
+     // Atualizar no produto (generatedImages.modeloIA)
+     const product = products.find(p => p.id === selectedLook.productId);
+     if (product && product.generatedImages?.modeloIA) {
+       const updatedModeloIA = product.generatedImages.modeloIA.map((l: any, idx: number) => {
+         const lookId = l.id || `${product.id}-${idx}`;
+         if (lookId === selectedLook.id) {
+           const updatedImages = { ...l.images };
+           if (view === 'back') {
+             updatedImages.back = newImageUrl;
+           } else {
+             updatedImages.front = newImageUrl;
+           }
+           return { ...l, images: updatedImages };
+         }
+         return l;
+       });
+       onUpdateProduct(product.id, {
+         generatedImages: {
+           ...product.generatedImages,
+           modeloIA: updatedModeloIA
+         }
+       });
+     }
+   } else {
+     console.error('[LC Gallery Edit] Save failed:', result.error);
+   }
+
+   return result;
  }, [selectedLook, selectedLookView, products, onUpdateProduct]);
 
  const handleGalleryEditSaveAsNew = useCallback(async (newImageUrl: string) => {
