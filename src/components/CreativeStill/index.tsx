@@ -171,7 +171,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     try {
       const { data } = await supabase
         .from('creative_still_generations')
-        .select('*')
+        .select('id, variation_urls, variation_1_url, variation_2_url, status, created_at, product_id, settings_snapshot, variations_requested')
         .eq('user_id', userId)
         .neq('status', 'failed')
         .order('created_at', { ascending: false })
@@ -243,6 +243,33 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     setLoadingText('');
     setView('results');
 
+    // Upload referências para Storage (evita armazenar base64 no banco)
+    const referenceUrls: string[] = [];
+    if (params.referenceImages && params.referenceImages.length > 0) {
+      console.log('[CS] Fazendo upload de', params.referenceImages.length, 'referências para Storage...');
+      for (let i = 0; i < params.referenceImages.length; i++) {
+        try {
+          const dataUrl = params.referenceImages[i];
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+          const path = `references/${userId}/${crypto.randomUUID()}.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from('products')
+            .upload(path, blob, { upsert: true });
+          if (uploadErr) {
+            console.warn('[CS] Erro upload ref', i + 1, ':', uploadErr.message);
+          } else {
+            const { data: urlData } = supabase.storage.from('products').getPublicUrl(path);
+            referenceUrls.push(urlData.publicUrl);
+            console.log('[CS] Ref', i + 1, 'uploaded:', path);
+          }
+        } catch (e) {
+          console.warn('[CS] Falha upload ref', i + 1);
+        }
+      }
+    }
+
     // Inserir registro no Supabase
     const { data: insertedGen, error: insertError } = await supabase
       .from('creative_still_generations')
@@ -261,7 +288,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           resolution: params.resolution,
           variationsCount: params.variationsCount,
           allProductImageUrls: params.productImageUrls,
-          referenceImageUrls: params.referenceImages,
+          referenceImageUrls: referenceUrls,
           selectedAngles: params.selectedAngles,
           product_name: params.product.name,
           product_category: params.product.category || '',
