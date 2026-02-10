@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Product } from '../../types';
 import { Plan, RESOLUTION_COST, canUseResolution } from '../../hooks/useCredits';
-import { getProductType, UPLOAD_SLOTS_CONFIG } from '../../lib/productConfig';
+import { getProductType } from '../../lib/productConfig';
 import { OptimizedImage } from '../OptimizedImage';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
@@ -21,15 +21,58 @@ const FRAME_RATIOS = [
   { id: '16:9', label: '16:9', description: 'Banner', icon: 'fa-rectangle-wide' },
 ];
 
+const ANGLES_CONFIG: Record<string, Array<{ id: string; label: string; icon: string }>> = {
+  clothing: [
+    { id: 'front', label: 'Frente', icon: 'fa-shirt' },
+    { id: 'back', label: 'Costas', icon: 'fa-shirt' },
+    { id: 'front_detail', label: 'Detalhe Frente', icon: 'fa-magnifying-glass-plus' },
+    { id: 'back_detail', label: 'Detalhe Costas', icon: 'fa-magnifying-glass-plus' },
+    { id: 'folded', label: 'Dobrada', icon: 'fa-layer-group' },
+  ],
+  footwear: [
+    { id: 'front', label: 'Frente', icon: 'fa-shoe-prints' },
+    { id: 'back', label: 'Par Traseira', icon: 'fa-shoe-prints' },
+    { id: 'side-left', label: 'Lateral', icon: 'fa-arrows-left-right' },
+    { id: 'top', label: 'Par Superior', icon: 'fa-arrow-up' },
+    { id: 'detail', label: 'Sola', icon: 'fa-arrow-down' },
+  ],
+  headwear: [
+    { id: 'front', label: 'Frente', icon: 'fa-hat-cowboy' },
+    { id: 'back', label: 'Traseira', icon: 'fa-hat-cowboy' },
+    { id: 'side-left', label: 'Lateral', icon: 'fa-arrows-left-right' },
+    { id: 'top', label: 'Vista Superior', icon: 'fa-arrow-up' },
+    { id: 'front_detail', label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
+  ],
+  bag: [
+    { id: 'front', label: 'Frente', icon: 'fa-bag-shopping' },
+    { id: 'back', label: 'Traseira', icon: 'fa-bag-shopping' },
+    { id: 'side-left', label: 'Lateral', icon: 'fa-arrows-left-right' },
+    { id: 'top', label: 'Vista Superior', icon: 'fa-arrow-up' },
+    { id: 'detail', label: 'Interior', icon: 'fa-magnifying-glass-plus' },
+    { id: 'front_detail', label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
+  ],
+  accessory: [
+    { id: 'front', label: 'Frente', icon: 'fa-glasses' },
+    { id: 'back', label: 'Trás', icon: 'fa-glasses' },
+    { id: 'side-left', label: 'Lateral Esq.', icon: 'fa-caret-left' },
+    { id: 'side-right', label: 'Lateral Dir.', icon: 'fa-caret-right' },
+    { id: 'detail', label: 'Detalhe', icon: 'fa-magnifying-glass-plus' },
+  ],
+};
+
 // ═══════════════════════════════════════════════════════════════
 // OTIMIZADOR DE PROMPT
 // ═══════════════════════════════════════════════════════════════
 
-function optimizePrompt(userPrompt: string, product: Product): string {
+function optimizePrompt(userPrompt: string, product: Product, refCount: number): string {
   const productName = product.name || 'o produto';
   const productCategory = product.category || 'produto';
   const productColor = product.color || '';
   const colorInfo = productColor ? ` in ${productColor} color` : '';
+
+  const refSection = refCount > 0
+    ? `\n### Inspiration Reference Images\nThe user uploaded ${refCount} inspiration image(s) labeled ${Array.from({ length: refCount }, (_, i) => `@ref${i + 1}`).join(', ')}.\nThe user's prompt may reference specific images using these @ref tags (e.g., "use the lighting from @ref1").\nFollow the user's instructions for each referenced image.\n`
+    : '';
 
   return `## Creative Still Life Photography Brief
 
@@ -40,12 +83,12 @@ ${userPrompt}
 - Product: ${productName} (${productCategory})${colorInfo}
 - The product is the HERO and absolute focal point of the composition
 
-### Reference Images
-You are receiving ALL available angles of this product as reference images. Use them to:
+### Product Reference Images
+You are receiving ALL available angles of this product. Use them to:
 - Understand the complete 3D form, shape, and construction of the product
 - Reproduce EXACT colors, patterns, logos, prints, and textures
-- Choose the most compelling angle for the creative composition
-
+- Show the product from the angle specified for this generation
+${refSection}
 ### Photography Requirements
 - PHOTOREALISTIC still life photograph — must look like a real professional photo
 - Professional lighting that complements the scene described above
@@ -58,8 +101,7 @@ You are receiving ALL available angles of this product as reference images. Use 
 1. NO watermarks, text overlays, or signatures
 2. Do NOT alter product colors — exact match with reference images
 3. All props and elements must complement, never compete with the product
-4. The final image must be commercially viable for social media and e-commerce
-5. Generate a DIFFERENT composition angle/arrangement for each variation`;
+4. The final image must be commercially viable for social media and e-commerce`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -114,26 +156,26 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const [referenceImages, setReferenceImages] = useState<Array<{ base64: string; preview: string }>>([]);
   const [frameRatio, setFrameRatio] = useState('4:5');
   const [resolution, setResolution] = useState<Resolution>(() => getPreferredResolution() as Resolution);
-  const [variationsCount, setVariationsCount] = useState(2);
   const [show4KModal, setShow4KModal] = useState(false);
   const [previewAngleIndex, setPreviewAngleIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Tipo do produto e ângulos disponíveis ──
+  // ── Tipo do produto e ângulos disponíveis (condicionais por categoria) ──
   const productType = useMemo(() => getProductType(product.category), [product.category]);
-  const uploadSlots = useMemo(() => UPLOAD_SLOTS_CONFIG[productType], [productType]);
+  const anglesConfig = useMemo(() => ANGLES_CONFIG[productType] || ANGLES_CONFIG.clothing, [productType]);
 
-  // Para cada ângulo, resolver a melhor imagem (PS otimizada > original)
+  // Para cada ângulo do config, resolver a melhor imagem (PS otimizada > original)
+  // Ângulos SEM imagem ainda aparecem (mas desabilitados)
   const angleImages = useMemo(() => {
-    const result: Array<{ angle: string; label: string; url: string; isOptimized: boolean; icon: string }> = [];
+    const result: Array<{ angle: string; label: string; url: string | null; isOptimized: boolean; icon: string; hasImage: boolean }> = [];
     const psImages = product.generatedImages?.productStudio || [];
 
-    for (const slot of uploadSlots) {
-      // 1. Tentar PS otimizada (mais recente primeiro)
+    for (const cfg of anglesConfig) {
       let url: string | null = null;
       let isOptimized = false;
+      // 1. Tentar PS otimizada (mais recente primeiro)
       for (let i = psImages.length - 1; i >= 0; i--) {
-        const psImg = psImages[i].images.find((img: any) => img.angle === slot.angle);
+        const psImg = psImages[i].images.find((img: any) => img.angle === cfg.id);
         if (psImg?.url) {
           url = psImg.url;
           isOptimized = true;
@@ -142,26 +184,24 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
       }
       // 2. Fallback para original
       if (!url) {
-        const origKey = slot.angle as keyof typeof product.originalImages;
+        const origKey = cfg.id as keyof typeof product.originalImages;
         const origImg = product.originalImages?.[origKey];
         if (origImg && typeof origImg === 'object' && 'url' in origImg) {
           url = (origImg as any).url;
         }
       }
       // 3. Fallback para array legado
-      if (!url && slot.angle === 'front' && product.images?.[0]?.url) {
+      if (!url && cfg.id === 'front' && product.images?.[0]?.url) {
         url = product.images[0].url;
       }
-      if (!url && slot.angle === 'back' && product.images?.[1]?.url) {
+      if (!url && cfg.id === 'back' && product.images?.[1]?.url) {
         url = product.images[1].url;
       }
 
-      if (url) {
-        result.push({ angle: slot.angle, label: slot.label, url, isOptimized, icon: slot.icon });
-      }
+      result.push({ angle: cfg.id, label: cfg.label, url, isOptimized, icon: cfg.icon, hasImage: !!url });
     }
     return result;
-  }, [product, uploadSlots]);
+  }, [product, anglesConfig]);
 
   // Imagens dos ângulos selecionados (para enviar ao N8N)
   const selectedImageUrls = useMemo(() =>
@@ -175,33 +215,36 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
     return selectedWithImages[previewAngleIndex % selectedWithImages.length] || selectedWithImages[0];
   }, [angleImages, selectedAngles, previewAngleIndex]);
 
-  // ── Créditos ──
+  // ── Créditos (1 imagem por ângulo selecionado) ──
   const creditCost = resolution === '4k' ? 2 : 1;
-  const totalCredits = variationsCount * creditCost;
+  const totalCredits = selectedAngles.length * creditCost;
   const hasEnoughCredits = userCredits >= totalCredits;
   const can4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
 
   // ── Handlers ──
   const toggleAngle = useCallback((angle: string) => {
+    // Front é obrigatório — não pode desmarcar
+    if (angle === 'front') return;
+    // Só pode selecionar ângulos que têm imagem
+    const ai = angleImages.find(a => a.angle === angle);
+    if (!ai?.hasImage) return;
+
     setSelectedAngles(prev => {
-      if (prev.includes(angle)) {
-        if (prev.length <= 1) return prev; // Mínimo 1 selecionado
-        return prev.filter(a => a !== angle);
-      }
+      if (prev.includes(angle)) return prev.filter(a => a !== angle);
       return [...prev, angle];
     });
-  }, []);
+  }, [angleImages]);
 
   const selectAllAngles = useCallback(() => {
-    setSelectedAngles(angleImages.map(a => a.angle));
+    setSelectedAngles(angleImages.filter(a => a.hasImage).map(a => a.angle));
   }, [angleImages]);
 
   const handleOptimize = useCallback(() => {
     if (!prompt.trim()) return;
-    const opt = optimizePrompt(prompt.trim(), product);
+    const opt = optimizePrompt(prompt.trim(), product, referenceImages.length);
     setOptimizedPromptText(opt);
     setShowOptimized(true);
-  }, [prompt, product]);
+  }, [prompt, product, referenceImages.length]);
 
   const handleResolutionChange = useCallback((newRes: Resolution) => {
     if (newRes === '4k' && !can4K) {
@@ -248,7 +291,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
 
   const handleGenerate = useCallback(() => {
     if (!prompt.trim() || isGenerating) return;
-    const finalPrompt = optimizedPromptText || optimizePrompt(prompt.trim(), product);
+    const finalPrompt = optimizedPromptText || optimizePrompt(prompt.trim(), product, referenceImages.length);
     onGenerate({
       product,
       selectedAngles,
@@ -258,9 +301,9 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
       referenceImages: referenceImages.map(r => r.base64),
       frameRatio,
       resolution,
-      variationsCount,
+      variationsCount: selectedAngles.length,
     });
-  }, [prompt, isGenerating, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, variationsCount, onGenerate]);
+  }, [prompt, isGenerating, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate]);
 
   const canGenerate = prompt.trim().length > 5 && hasEnoughCredits && !isGenerating && selectedAngles.length > 0;
 
@@ -370,56 +413,95 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
           {/* ═══ COLUNA DIREITA — Configurações ═══ */}
           <div className="space-y-5">
 
-            {/* 1. Seletor de ângulos */}
+            {/* 1. Seletor de ângulos (condicional por categoria, estilo PS) */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-sm font-semibold'}>
-                  <i className="fas fa-images mr-2 text-xs opacity-50"></i>
-                  Fotos de referência
+                  <i className="fas fa-cube mr-2 text-xs opacity-50"></i>
+                  Ângulos para gerar
                 </label>
-                {angleImages.length > 1 && (
+                {angleImages.filter(a => a.hasImage).length > 1 && (
                   <button
                     onClick={selectAllAngles}
                     className={'text-[10px] font-medium px-2 py-0.5 rounded-md transition-all ' + (isDark ? 'text-amber-400 hover:bg-amber-500/20' : 'text-amber-600 hover:bg-amber-50')}
                   >
-                    Selecionar todas
+                    Selecionar todos
                   </button>
                 )}
               </div>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
-                Quais fotos do produto enviar como referência para a IA
+                Cada ângulo selecionado gera 1 imagem criativa
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {angleImages.map((ai) => {
                   const isSelected = selectedAngles.includes(ai.angle);
+                  const isFront = ai.angle === 'front';
+                  const isDisabled = !ai.hasImage;
                   return (
                     <button
                       key={ai.angle}
                       onClick={() => toggleAngle(ai.angle)}
-                      className={'relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all border ' +
-                        (isSelected
-                          ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white border-transparent shadow-md'
-                          : isDark
-                            ? 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:border-neutral-500'
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400 shadow-sm'
+                      disabled={isDisabled}
+                      className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
+                        (isDisabled
+                          ? (isDark ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50' : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-50')
+                          : (isFront || isSelected)
+                            ? (isDark ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
+                            : (isDark
+                              ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                              : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300')
                         )
                       }
                     >
-                      <i className={'fas ' + ai.icon + ' text-[10px]'}></i>
-                      {ai.label}
-                      {ai.isOptimized && (
-                        <span className={'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + (isSelected ? 'bg-white/60' : 'bg-emerald-400')}></span>
+                      {/* Badge otimizada */}
+                      {ai.isOptimized && ai.hasImage && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                          <i className="fas fa-sparkles text-emerald-400 text-[8px]"></i>
+                        </div>
+                      )}
+                      {/* Badge sem foto */}
+                      {!ai.hasImage && (
+                        <div className={'absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ' + (isDark ? 'bg-neutral-700 text-neutral-500' : 'bg-gray-200 text-gray-400')}>
+                          <i className="fas fa-ban"></i>
+                        </div>
+                      )}
+                      <i className={'fas ' + ai.icon + ' text-xl'}></i>
+                      <span className="text-xs font-medium">{ai.label}</span>
+                      {(isFront || isSelected) && ai.hasImage && (
+                        <i className="fas fa-check-circle text-green-400 text-sm"></i>
+                      )}
+                      {!ai.hasImage && (
+                        <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>Sem foto</span>
                       )}
                     </button>
                   );
                 })}
               </div>
-              {angleImages.some(a => a.isOptimized) && (
-                <p className={'text-[10px] mt-2 flex items-center gap-1 ' + (isDark ? 'text-emerald-400/70' : 'text-emerald-600/70')}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                  = Imagem otimizada pelo Product Studio
-                </p>
-              )}
+              {/* Legenda */}
+              <div className={'flex flex-wrap items-center gap-3 mt-3 pt-3 border-t ' + (isDark ? 'border-neutral-800/50' : 'border-gray-200')}>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <i className="fas fa-check text-green-400 text-[8px]"></i>
+                  </div>
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Selecionado</span>
+                </div>
+                {angleImages.some(a => a.isOptimized) && (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <i className="fas fa-sparkles text-emerald-400 text-[8px]"></i>
+                    </div>
+                    <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>PS Otimizada</span>
+                  </div>
+                )}
+                {angleImages.some(a => !a.hasImage) && (
+                  <div className="flex items-center gap-1.5">
+                    <div className={'w-4 h-4 rounded-full flex items-center justify-center ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}>
+                      <i className={'fas fa-ban text-[8px] ' + (isDark ? 'text-neutral-500' : 'text-gray-400')}></i>
+                    </div>
+                    <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Sem foto (envie no cadastro)</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 2. Prompt */}
@@ -436,7 +518,10 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                     setOptimizedPromptText('');
                     setShowOptimized(false);
                   }}
-                  placeholder="Ex: Meu produto sobre uma mesa de mármore branco com flores ao redor, luz natural suave, estilo editorial minimalista..."
+                  placeholder={referenceImages.length > 0
+                    ? 'Ex: Meu produto sobre mármore branco com a iluminação da @ref1 e o cenário da @ref2...'
+                    : 'Ex: Meu produto sobre uma mesa de mármore branco com flores ao redor, luz natural suave, estilo editorial minimalista...'
+                  }
                   rows={4}
                   className={'w-full rounded-xl p-4 pr-12 text-sm resize-none transition-all ' +
                     (isDark
@@ -476,6 +561,16 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                   )}
                 </div>
               )}
+              {/* Hint @ref quando tem referências */}
+              {referenceImages.length > 0 && (
+                <div className={'mt-2 rounded-lg px-3 py-2 flex items-start gap-2 ' + (isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200')}>
+                  <i className={'fas fa-lightbulb text-xs mt-0.5 ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
+                  <span className={(isDark ? 'text-amber-300/80' : 'text-amber-700') + ' text-[11px] leading-relaxed'}>
+                    Use <span className="font-bold">@ref1</span>{referenceImages.length > 1 && <>, <span className="font-bold">@ref2</span></>}{referenceImages.length > 2 && '...'} no prompt para referenciar suas imagens de inspiração.
+                    Ex: "quero a iluminação da @ref1 com o cenário da @ref2"
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* 3. Referências visuais (opcional) */}
@@ -486,15 +581,22 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-1'}>(opcional)</span>
               </label>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
-                Envie fotos de inspiração: iluminação, cenário, estilo, composição...
+                Envie fotos de inspiração e use @ref1, @ref2... no prompt para descrever o que quer de cada uma
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {referenceImages.map((ref, i) => (
-                  <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group">
-                    <img src={ref.preview} alt={`Ref ${i + 1}`} className="w-full h-full object-cover" />
+                  <div key={i} className="relative group">
+                    <div className={'w-24 h-24 rounded-xl overflow-hidden border-2 ' + (isDark ? 'border-neutral-700' : 'border-gray-200')}>
+                      <img src={ref.preview} alt={`Ref ${i + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                    {/* Label @ref */}
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-bold whitespace-nowrap shadow-md">
+                      @ref{i + 1}
+                    </div>
+                    {/* Botão remover */}
                     <button
                       onClick={() => removeReference(i)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                     >
                       <i className="fas fa-times"></i>
                     </button>
@@ -505,7 +607,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                     onClick={() => fileInputRef.current?.click()}
                     onDrop={handleReferenceDrop}
                     onDragOver={(e) => e.preventDefault()}
-                    className={'w-20 h-20 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ' +
+                    className={'w-24 h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ' +
                       (isDark
                         ? 'border-neutral-700 text-neutral-600 hover:border-neutral-500 hover:text-neutral-400'
                         : 'border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-500'
@@ -527,7 +629,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
               />
             </div>
 
-            {/* 4. Ratio + Resolução + Variações */}
+            {/* 4. Ratio + Resolução */}
             <div className="space-y-4">
               {/* Ratio */}
               <div>
@@ -569,27 +671,6 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                   theme={theme}
                 />
               </div>
-
-              {/* Variações */}
-              <div>
-                <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-sm font-semibold mb-2 block'}>
-                  <i className="fas fa-layer-group mr-2 text-xs opacity-50"></i>
-                  Variações: {variationsCount}
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={4}
-                  value={variationsCount}
-                  onChange={(e) => setVariationsCount(parseInt(e.target.value))}
-                  className="w-full accent-[#FF6B6B]"
-                />
-                <div className="flex justify-between mt-1">
-                  {[1, 2, 3, 4].map(n => (
-                    <span key={n} className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{n}</span>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* 5. Créditos + Botão Gerar */}
@@ -599,7 +680,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 <div className="flex items-center gap-2">
                   <i className={'fas fa-coins text-sm ' + (hasEnoughCredits ? 'text-amber-500' : 'text-red-500')}></i>
                   <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-sm font-medium'}>
-                    {variationsCount} {variationsCount === 1 ? 'variação' : 'variações'} × {creditCost} {creditCost === 1 ? 'crédito' : 'créditos'}
+                    {selectedAngles.length} {selectedAngles.length === 1 ? 'ângulo' : 'ângulos'} × {creditCost} {creditCost === 1 ? 'crédito' : 'créditos'}
                   </span>
                 </div>
                 <span className={' text-sm font-bold ' + (hasEnoughCredits ? (isDark ? 'text-white' : 'text-gray-900') : 'text-red-500')}>
@@ -630,7 +711,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 }
               >
                 <i className="fas fa-sparkles text-xs"></i>
-                Gerar {variationsCount} {variationsCount === 1 ? 'variação' : 'variações'}
+                Gerar {selectedAngles.length} {selectedAngles.length === 1 ? 'ângulo' : 'ângulos'}
               </button>
             </div>
           </div>
