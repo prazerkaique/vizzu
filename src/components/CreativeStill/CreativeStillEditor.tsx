@@ -484,6 +484,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                     src={currentPreviewImage.url}
                     alt={currentPreviewImage.label}
                     className="w-full h-full object-contain"
+                    size="full"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
