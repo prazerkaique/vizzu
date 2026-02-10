@@ -3,10 +3,12 @@ import { useImageViewer } from './ImageViewerContext';
 import { ZoomableImage } from './ZoomableImage';
 import { getOptimizedImageUrl } from '../../utils/imageUrl';
 import { smartDownload } from '../../utils/downloadHelper';
+import DownloadBottomSheet from '../shared/DownloadBottomSheet';
 
 export function ImageViewer() {
   const { state, closeViewer } = useImageViewer();
-  const { isOpen, src, alt, onDownload } = state;
+  const { isOpen, src, alt, onDownload, downloadMeta } = state;
+  const [showDownloadSheet, setShowDownloadSheet] = useState(false);
 
   const [displaySrc, setDisplaySrc] = useState('');
   const [fullLoaded, setFullLoaded] = useState(false);
@@ -138,12 +140,14 @@ export function ImageViewer() {
   const handleDownload = useCallback(() => {
     if (onDownload) {
       onDownload();
+    } else if (downloadMeta && src) {
+      setShowDownloadSheet(true);
     } else if (src) {
       smartDownload(src, {
         filename: `vizzu-${Date.now()}.png`,
       });
     }
-  }, [src, onDownload]);
+  }, [src, onDownload, downloadMeta]);
 
   if (!isOpen) return null;
 
@@ -221,6 +225,19 @@ export function ImageViewer() {
           transition: 'opacity 200ms ease',
         }}
       />
+
+      {/* Download Bottom Sheet */}
+      {downloadMeta && (
+        <DownloadBottomSheet
+          isOpen={showDownloadSheet}
+          onClose={() => setShowDownloadSheet(false)}
+          imageUrl={src}
+          imageLabel={downloadMeta.imageLabel}
+          productName={downloadMeta.productName}
+          featurePrefix={downloadMeta.featurePrefix}
+          theme="dark"
+        />
+      )}
     </div>
   );
 }

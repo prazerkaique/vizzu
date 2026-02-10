@@ -46,9 +46,9 @@ const dataUrlToFile = (dataUrl: string, filename: string): File => {
 };
 
 /**
- * Download tradicional (fallback)
+ * Download tradicional (fallback) — exportado para uso no ZIP
  */
-const traditionalDownload = (blob: Blob, filename: string): void => {
+export const traditionalDownload = (blob: Blob, filename: string): void => {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

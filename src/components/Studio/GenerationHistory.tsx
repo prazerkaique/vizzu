@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 import { VisualStudioGeneration } from '../../types';
-import { smartDownload } from '../../utils/downloadHelper';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
+import DownloadBottomSheet from '../shared/DownloadBottomSheet';
 
 interface Props {
  generations: VisualStudioGeneration[];
@@ -35,13 +35,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  }
  };
 
- const handleDownload = async (imageData: string, productName?: string) => {
- await smartDownload(imageData, {
- filename: `vizzu-${productName || 'image'}-${Date.now()}.png`,
- shareTitle: 'Vizzu Studio',
- shareText: productName ? `${productName}` : 'Imagem gerada'
- });
- };
+ const [downloadSheet, setDownloadSheet] = useState<{ url: string; productName: string } | null>(null);
 
  if (generations.length === 0) return null;
 
@@ -120,7 +114,7 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  <i className="fas fa-search-plus text-sm"></i>
  </button>
  <button
- onClick={() => handleDownload(gen.generatedImage, gen.productName)}
+ onClick={() => setDownloadSheet({ url: gen.generatedImage, productName: gen.productName || gen.productSku || 'Produto' })}
  className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100"
  title="Download"
  >
@@ -151,6 +145,16 @@ export const GenerationHistory: React.FC<Props> = ({ generations, onView, onDele
  )}
  </div>
 
+ {/* Download Bottom Sheet */}
+ <DownloadBottomSheet
+  isOpen={!!downloadSheet}
+  onClose={() => setDownloadSheet(null)}
+  imageUrl={downloadSheet?.url || ''}
+  imageLabel="Imagem Gerada"
+  productName={downloadSheet?.productName || 'Produto'}
+  featurePrefix="VStudio"
+  theme="light"
+ />
  </>
  );
 };

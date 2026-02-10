@@ -6,7 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
-import { smartDownload } from '../../utils/downloadHelper';
+import DownloadBottomSheet from '../shared/DownloadBottomSheet';
 import { Plan } from '../../hooks/useCredits';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { ProductHubModal } from '../shared/ProductHubModal';
@@ -478,12 +478,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  setSelectedProduct(null);
  };
 
- const handleDownloadLook = async (imageUrl: string, productName: string, format: 'png' | 'svg' = 'png') => {
- await smartDownload(imageUrl, {
- filename: `look-${productName.replace(/\s+/g, '-').toLowerCase()}.${format}`,
- shareTitle: 'Vizzu Look Composer',
- shareText: `Look: ${productName}`
- });
+ // ── Download system (bottom sheet) ──
+ const [lookDownloadSheet, setLookDownloadSheet] = useState<{ url: string; label: string; productName: string } | null>(null);
+
+ const handleDownloadLook = (imageUrl: string, productName: string) => {
+  setLookDownloadSheet({ url: imageUrl, label: 'Look', productName });
  };
 
  const handleDeleteLook = (look: GeneratedLook) => {
@@ -1284,8 +1283,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <button
  onClick={() => handleDownloadLook(
  selectedLookView === 'back' && selectedLook.backImageUrl ? selectedLook.backImageUrl : selectedLook.imageUrl,
- `${selectedLook.productName}${selectedLook.imageCount > 1 ? `-${selectedLookView}` : ''}`,
- 'png'
+ selectedLook.productName
  )}
  className={(isDark ? 'bg-neutral-700 hover:bg-neutral-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900') + ' flex-1 py-2.5 rounded-lg font-medium text-xs transition-colors'}
  >
@@ -1295,17 +1293,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* Botão para baixar todas */}
  {selectedLook.imageCount > 1 && selectedLook.backImageUrl && (
  <button
- onClick={async () => {
- await handleDownloadLook(selectedLook.imageUrl, `${selectedLook.productName}-frente`, 'png');
- await new Promise(resolve => setTimeout(resolve, 500));
- if (selectedLook.backImageUrl) {
- await handleDownloadLook(selectedLook.backImageUrl, `${selectedLook.productName}-costas`, 'png');
- }
+ onClick={() => {
+ handleDownloadLook(selectedLook.imageUrl, selectedLook.productName);
  }}
- className="w-full py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2"
+ className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
  >
- <i className="fas fa-images"></i>
- Baixar Todas ({selectedLook.imageCount})
+ <i className="fas fa-download"></i>
+ Baixar Todas
  </button>
  )}
  </div>
@@ -1446,8 +1440,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  modalSelectedView === 'back' && modalSelectedLook.backImageUrl
  ? modalSelectedLook.backImageUrl
  : modalSelectedLook.imageUrl,
- `${modalSelectedLook.productName}${modalSelectedLook.imageCount > 1 ? `-${modalSelectedView}` : ''}`,
- 'png'
+ modalSelectedLook.productName
  )}
  className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  >
@@ -1458,17 +1451,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* Botão para baixar todas */}
  {modalSelectedLook.imageCount > 1 && modalSelectedLook.backImageUrl && (
  <button
- onClick={async () => {
- await handleDownloadLook(modalSelectedLook.imageUrl, `${modalSelectedLook.productName}-frente`, 'png');
- await new Promise(resolve => setTimeout(resolve, 500));
- if (modalSelectedLook.backImageUrl) {
- await handleDownloadLook(modalSelectedLook.backImageUrl, `${modalSelectedLook.productName}-costas`, 'png');
- }
- }}
- className="w-full py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium text-xs transition-colors flex items-center justify-center gap-2"
+ onClick={() => handleDownloadLook(modalSelectedLook.imageUrl, modalSelectedLook.productName)}
+ className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
  >
- <i className="fas fa-images"></i>
- Baixar Todas ({modalSelectedLook.imageCount})
+ <i className="fas fa-download"></i>
+ Baixar Todas
  </button>
  )}
  </div>
@@ -1655,6 +1642,17 @@ export const LookComposer: React.FC<LookComposerProps> = ({
    setProductForCreation={setProductForCreation || (() => {})}
  />
  )}
+
+ {/* Download Bottom Sheet */}
+ <DownloadBottomSheet
+  isOpen={!!lookDownloadSheet}
+  onClose={() => setLookDownloadSheet(null)}
+  imageUrl={lookDownloadSheet?.url || ''}
+  imageLabel={lookDownloadSheet?.label || 'Look'}
+  productName={lookDownloadSheet?.productName || 'Look'}
+  featurePrefix="VLookComposer"
+  theme={theme}
+ />
  </div>
  );
 };

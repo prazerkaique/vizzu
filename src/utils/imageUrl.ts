@@ -62,3 +62,17 @@ export function getOptimizedImageUrl(
 export function getImageUrl(url: string | undefined, size: ImageSize = 'full'): string | undefined {
   return getOptimizedImageUrl(url, size);
 }
+
+/**
+ * Gera URL wsrv.nl para download com formato dinâmico (webp, jpg, png).
+ * Diferente de toTransformUrl que sempre retorna webp.
+ */
+export function getDownloadImageUrl(
+  url: string,
+  width: number,
+  quality: number,
+  format: 'webp' | 'jpg' | 'png'
+): string {
+  if (!url.startsWith('http')) return url;
+  return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&q=${quality}&fit=contain&output=${format}`;
+}

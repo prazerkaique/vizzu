@@ -5,7 +5,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, LookComposition, SavedModel } from '../../types';
-import { smartDownload, smartDownloadMultiple } from '../../utils/downloadHelper';
+import DownloadBottomSheet from '../shared/DownloadBottomSheet';
+import DownloadProgressModal from '../shared/DownloadProgressModal';
+import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload';
+import type { DownloadableImage } from '../../utils/downloadSizes';
 import { OptimizedImage } from '../OptimizedImage';
 import { getOptimizedImageUrl } from '../../utils/imageUrl';
 import { ZoomableImage } from '../ImageViewer';
@@ -192,40 +195,32 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  onSave();
  };
 
- // Download da imagem atual
- const handleDownload = async () => {
- const imageToDownload = getCurrentGeneratedImage();
- if (!imageToDownload) return;
- const viewSuffix = hasBackImage ? `-${currentView}` : '';
- await smartDownload(imageToDownload, {
- filename: `${product.sku}-look-composer${viewSuffix}.png`,
- shareTitle: 'Vizzu Look Composer',
- shareText: `${product.name} - ${currentView === 'front' ? 'Frente' : 'Costas'}`
- });
+ // ── Download system ──
+ const [downloadSheet, setDownloadSheet] = useState<{ url: string; label: string } | null>(null);
+ const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
+ const zipAbortRef = useRef<AbortController | null>(null);
+
+ const downloadableImages: DownloadableImage[] = React.useMemo(() => {
+  const imgs: DownloadableImage[] = [];
+  if (generatedImageUrl) imgs.push({ url: generatedImageUrl, label: 'Frente', featurePrefix: 'VLookComposer' });
+  if (generatedBackImageUrl) imgs.push({ url: generatedBackImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
+  return imgs;
+ }, [generatedImageUrl, generatedBackImageUrl]);
+
+ const handleDownload = () => {
+  const imageToDownload = getCurrentGeneratedImage();
+  if (!imageToDownload) return;
+  setDownloadSheet({ url: imageToDownload, label: currentView === 'front' ? 'Frente' : 'Costas' });
  };
 
- // Download de todas as imagens (frente e costas)
- const handleDownloadAll = async () => {
- const images: Array<{ source: string; filename: string }> = [];
-
- if (generatedImageUrl) {
- images.push({
- source: generatedImageUrl,
- filename: `${product.sku}-look-composer-frente.png`
- });
- }
-
- if (generatedBackImageUrl) {
- images.push({
- source: generatedBackImageUrl,
- filename: `${product.sku}-look-composer-costas.png`
- });
- }
-
- if (images.length > 0) {
- await smartDownloadMultiple(images, 'Vizzu Look Composer');
- }
- };
+ const handleDownloadAll = useCallback(async () => {
+  const abort = new AbortController();
+  zipAbortRef.current = abort;
+  setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
+  await generateZipFromImages(downloadableImages, product.name, setZipProgress, abort.signal);
+  setZipProgress(null);
+  zipAbortRef.current = null;
+ }, [downloadableImages, product.name]);
 
  // Report
  const handleReportSubmit = async (observation: string) => {
@@ -662,57 +657,12 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
 
  {/* Opções de Download */}
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
- <div className="flex items-center justify-between mb-2">
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide'}>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
  Baixar Imagem
  </p>
- <button
- onClick={() => setShowDownloadOptions(!showDownloadOptions)}
- className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] flex items-center gap-1'}
- >
- <i className="fas fa-gear"></i>
- {exportQuality === 'high' ? 'Alta Qualidade' : 'Performance'}
- </button>
- </div>
-
- {/* Opções de qualidade (expansível) */}
- {showDownloadOptions && (
- <div className={'mb-3 p-2 rounded-lg space-y-1.5 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-50')}>
- <button
- onClick={() => setExportQuality('high')}
- className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
- (exportQuality === 'high'
- ? 'bg-[#FF6B6B]/20 text-[#FF6B6B] border border-[#FF6B6B]/30'
- : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
- }
- >
- <i className="fas fa-gem w-4"></i>
- <div>
- <span className="font-medium">Alta Qualidade</span>
- <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>PNG 2048px</span>
- </div>
- {exportQuality === 'high' && <i className="fas fa-check ml-auto text-[#FF6B6B]"></i>}
- </button>
- <button
- onClick={() => setExportQuality('performance')}
- className={'w-full p-2 rounded-lg text-left text-xs flex items-center gap-2 transition-all ' +
- (exportQuality === 'performance'
- ? 'bg-[#FF6B6B]/20 text-[#FF6B6B] border border-[#FF6B6B]/30'
- : isDark ? 'hover:bg-neutral-700 text-neutral-300' : 'hover:bg-gray-100 text-gray-600')
- }
- >
- <i className="fas fa-bolt w-4"></i>
- <div>
- <span className="font-medium">Performance</span>
- <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' ml-2'}>JPEG 1024px</span>
- </div>
- {exportQuality === 'performance' && <i className="fas fa-check ml-auto text-[#FF6B6B]"></i>}
- </button>
- </div>
- )}
 
  <div className={'grid gap-2 ' + (hasBackImage ? 'grid-cols-2' : 'grid-cols-1')}>
- {/* Baixar atual */}
+ {/* Baixar atual (abre bottom sheet) */}
  <button
  onClick={handleDownload}
  className={'py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ' +
@@ -723,15 +673,15 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <span className="text-xs font-medium">{hasBackImage ? (currentView === 'front' ? 'Frente' : 'Costas') : 'Baixar'}</span>
  </button>
 
- {/* Baixar todas (só aparece se tem costas) */}
+ {/* Baixar Tudo (ZIP) */}
  {hasBackImage && (
  <button
  onClick={handleDownloadAll}
- className={(isDark ? 'bg-purple-500/20 hover:bg-purple-500/30 border-[#A855F7]/30' : 'bg-purple-50 hover:bg-purple-100 border-[#A855F7]/20') + ' py-2.5 px-4 rounded-lg border transition-all flex items-center justify-center gap-2'}
- title="Baixar frente e costas"
+ className="py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white font-bold text-xs"
+ title="Baixar frente e costas em ZIP"
  >
- <i className="fas fa-images text-purple-400 text-sm"></i>
- <span className="text-purple-400 text-xs font-medium">Baixar Todas</span>
+ <i className="fas fa-file-zipper text-sm"></i>
+ <span>Baixar Tudo</span>
  </button>
  )}
  </div>
@@ -986,6 +936,27 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, generationId) : undefined}
   theme={theme}
  />
+ )}
+
+ {/* Download Bottom Sheet */}
+ <DownloadBottomSheet
+  isOpen={!!downloadSheet}
+  onClose={() => setDownloadSheet(null)}
+  imageUrl={downloadSheet?.url || ''}
+  imageLabel={downloadSheet?.label || ''}
+  productName={product.name}
+  featurePrefix="VLookComposer"
+  theme={theme}
+ />
+
+ {/* ZIP Progress */}
+ {zipProgress && (
+  <DownloadProgressModal
+   isOpen={!!zipProgress}
+   progress={zipProgress}
+   theme={theme}
+   onCancel={() => { zipAbortRef.current?.abort(); setZipProgress(null); }}
+  />
  )}
 
  </div>

@@ -1,8 +1,15 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
+export interface DownloadMeta {
+  imageLabel: string;
+  productName: string;
+  featurePrefix: string;
+}
+
 interface ImageViewerOptions {
   alt?: string;
   onDownload?: () => void;
+  downloadMeta?: DownloadMeta;
 }
 
 interface ImageViewerState {
@@ -10,6 +17,7 @@ interface ImageViewerState {
   src: string;
   alt: string;
   onDownload?: () => void;
+  downloadMeta?: DownloadMeta;
 }
 
 interface ImageViewerContextType {
@@ -35,6 +43,7 @@ export function ImageViewerProvider({ children }: { children: React.ReactNode })
       src,
       alt: options?.alt ?? '',
       onDownload: options?.onDownload,
+      downloadMeta: options?.downloadMeta,
     });
   }, []);
 

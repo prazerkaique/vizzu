@@ -9,6 +9,11 @@ import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { editStudioImage, saveCreativeStillEdit, saveCreativeStillSaveAsNew } from '../../lib/api/studio';
+import DownloadBottomSheet from '../shared/DownloadBottomSheet';
+import DownloadProgressModal from '../shared/DownloadProgressModal';
+import { useDownloadSelection } from '../../hooks/useDownloadSelection';
+import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload';
+import type { DownloadableImage } from '../../utils/downloadSizes';
 
 const LOADING_PHRASES = [
  "Preparando a composição criativa...",
@@ -141,12 +146,25 @@ export const CreativeStillResults: React.FC<Props> = ({
  }
  };
 
- const handleDownload = (url: string, variation: number) => {
- const link = document.createElement('a');
- link.href = url;
- link.download = `still-criativo-${product?.name || 'produto'}-v${variation}.png`;
- link.click();
- };
+ // ── Download system ──
+ const [downloadSheet, setDownloadSheet] = useState<{ url: string; label: string } | null>(null);
+ const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
+ const zipAbortRef = React.useRef<AbortController | null>(null);
+
+ const downloadableImages: DownloadableImage[] = useMemo(
+  () => variationUrls.map((url, i) => ({ url, label: `Variação ${i + 1}`, featurePrefix: 'VCreativeStill' })),
+  [variationUrls]
+ );
+ const { isSelectionMode, selectedIds, toggleSelectionMode, toggleSelection, selectedImages, buttonLabel } = useDownloadSelection(downloadableImages);
+
+ const handleZipDownload = useCallback(async () => {
+  const abort = new AbortController();
+  zipAbortRef.current = abort;
+  setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
+  await generateZipFromImages(selectedImages, product?.name || 'Creative Still', setZipProgress, abort.signal);
+  setZipProgress(null);
+  zipAbortRef.current = null;
+ }, [selectedImages, product?.name]);
 
  // Edit callbacks
  const resolution = resolutionProp;
@@ -416,7 +434,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  <i className="fas fa-search-plus mr-1"></i>Zoom
  </button>
  <button
- onClick={() => handleDownload(url, vNum)}
+ onClick={() => setDownloadSheet({ url, label: `Variação ${vNum}` })}
  className={(isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-500') + ' text-xs font-medium'}
  >
  <i className="fas fa-download mr-1"></i>Download
@@ -443,6 +461,23 @@ export const CreativeStillResults: React.FC<Props> = ({
 
  {/* Ações */}
  <div className={'rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
+ {variationUrls.length > 1 && (
+  <button
+   onClick={toggleSelectionMode}
+   className={'flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ' + (isSelectionMode ? 'bg-[#FF6B6B]/10 text-[#FF6B6B]' : (isDark ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'))}
+  >
+   <i className={isSelectionMode ? 'fas fa-xmark text-xs' : 'fas fa-check-double text-xs'}></i>
+   {isSelectionMode ? 'Cancelar' : 'Selecionar'}
+  </button>
+ )}
+ {variationUrls.length > 0 && (
+  <button
+   onClick={handleZipDownload}
+   className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-[#FF6B6B]/20 transition-all"
+  >
+   <i className="fas fa-file-zipper text-xs"></i>{buttonLabel}
+  </button>
+ )}
  <button
  onClick={onGenerateAgain}
  className={'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ' + (isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200')}
@@ -488,6 +523,27 @@ export const CreativeStillResults: React.FC<Props> = ({
   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, generation?.id) : undefined}
   theme={theme}
  />
+ )}
+
+ {/* Download Bottom Sheet */}
+ <DownloadBottomSheet
+  isOpen={!!downloadSheet}
+  onClose={() => setDownloadSheet(null)}
+  imageUrl={downloadSheet?.url || ''}
+  imageLabel={downloadSheet?.label || ''}
+  productName={product?.name || 'Creative Still'}
+  featurePrefix="VCreativeStill"
+  theme={theme}
+ />
+
+ {/* ZIP Progress */}
+ {zipProgress && (
+  <DownloadProgressModal
+   isOpen={!!zipProgress}
+   progress={zipProgress}
+   theme={theme}
+   onCancel={() => { zipAbortRef.current?.abort(); setZipProgress(null); }}
+  />
  )}
 
  </div>
