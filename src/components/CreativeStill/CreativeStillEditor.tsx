@@ -181,6 +181,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const [noRefModalMode, setNoRefModalMode] = useState<'warning' | 'detail-tip'>('warning');
   const [compositionProducts, setCompositionProducts] = useState<CompositionProduct[]>([]);
   const [showProductPicker, setShowProductPicker] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Tipo do produto e ângulos disponíveis (condicionais por categoria) ──
@@ -330,12 +331,45 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
     setSelectedAngles(angleImages.map(a => a.angle));
   }, [angleImages]);
 
-  const handleOptimize = useCallback(() => {
-    if (!prompt.trim()) return;
-    const opt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
-    setOptimizedPromptText(opt);
-    setShowOptimized(true);
-  }, [prompt, product, referenceImages.length, compositionProducts]);
+  const handleOptimize = useCallback(async () => {
+    if (!prompt.trim() || isOptimizing) return;
+    setIsOptimizing(true);
+    try {
+      const resp = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/optimize-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userPrompt: prompt.trim(),
+          product_name: product.name || '',
+          product_category: product.category || '',
+          product_color: product.color || '',
+          selectedAngles,
+          refCount: referenceImages.length,
+          compositionProducts: compositionProducts.map((cp, i) => ({
+            product_name: cp.product.name || `Produto ${i + 1}`,
+          })),
+        }),
+      });
+      const data = await resp.json();
+      if (data.success && data.improvedPrompt) {
+        setPrompt(data.improvedPrompt);
+        setOptimizedPromptText('');
+        setShowOptimized(false);
+      } else {
+        // Fallback: otimização local
+        const opt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
+        setOptimizedPromptText(opt);
+        setShowOptimized(true);
+      }
+    } catch {
+      // Fallback: otimização local
+      const opt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
+      setOptimizedPromptText(opt);
+      setShowOptimized(true);
+    } finally {
+      setIsOptimizing(false);
+    }
+  }, [prompt, isOptimizing, product, selectedAngles, referenceImages.length, compositionProducts]);
 
   const handleResolutionChange = useCallback((newRes: Resolution) => {
     if (newRes === '4k' && !can4K) {
@@ -677,16 +711,17 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 {prompt.trim().length > 5 && (
                   <button
                     onClick={handleOptimize}
-                    title="Otimizar prompt"
+                    disabled={isOptimizing}
+                    title="Melhorar prompt com IA"
                     className={'absolute right-3 top-3 w-8 h-8 rounded-lg flex items-center justify-center transition-all ' +
-                      (optimizedPromptText
-                        ? 'bg-green-500/20 text-green-400'
+                      (isOptimizing
+                        ? 'bg-amber-500/20 text-amber-400 animate-pulse cursor-wait'
                         : isDark
                           ? 'bg-white/10 text-neutral-400 hover:text-amber-400 hover:bg-amber-500/20'
                           : 'bg-gray-100 text-gray-400 hover:text-amber-500 hover:bg-amber-50'
                       )}
                   >
-                    <i className={'fas ' + (optimizedPromptText ? 'fa-check' : 'fa-wand-magic-sparkles') + ' text-xs'}></i>
+                    <i className={'fas ' + (isOptimizing ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles') + ' text-xs'}></i>
                   </button>
                 )}
               </div>
