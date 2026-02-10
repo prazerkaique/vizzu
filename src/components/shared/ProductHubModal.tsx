@@ -9,6 +9,8 @@ import { Product, CreativeStillGeneration } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
+import DownloadModal, { type DownloadImageGroup } from './DownloadModal';
+import type { DownloadableImage } from '../../utils/downloadSizes';
 
 // ── Types ──
 
@@ -145,6 +147,45 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     onClose();
     navigateTo(page);
   }, [product, onClose, navigateTo, setProductForCreation]);
+
+  // ── Download ──
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+  const downloadGroups: DownloadImageGroup[] = useMemo(() => {
+    const groups: DownloadImageGroup[] = [];
+
+    // Product Studio
+    const psImgs: DownloadableImage[] = psSessions.flatMap(s =>
+      s.images.map(img => ({ url: img.url, label: getAngleLabel(img.angle), featurePrefix: 'VProductStudio' }))
+    );
+    if (psImgs.length) groups.push({ label: 'Product Studio', featurePrefix: 'VProductStudio', images: psImgs });
+
+    // Creative Still
+    const csImgs: DownloadableImage[] = csGenerations.flatMap(g =>
+      getCSVariationUrls(g).map((url, i) => ({ url, label: `Variação ${i + 1}`, featurePrefix: 'VCreativeStill' }))
+    );
+    if (csImgs.length) groups.push({ label: 'Still Criativo', featurePrefix: 'VCreativeStill', images: csImgs });
+
+    // Look Composer
+    const lcImgs: DownloadableImage[] = lcLooks.flatMap(look => {
+      const imgs: DownloadableImage[] = [{ url: look.images.front, label: 'Frente', featurePrefix: 'VLookComposer' }];
+      if (look.images.back) imgs.push({ url: look.images.back, label: 'Costas', featurePrefix: 'VLookComposer' });
+      return imgs;
+    });
+    if (lcImgs.length) groups.push({ label: 'Look Composer', featurePrefix: 'VLookComposer', images: lcImgs });
+
+    // Studio Ready
+    const srImgs: DownloadableImage[] = srImages.map(img => ({ url: img.images.front, label: 'Studio Ready', featurePrefix: 'VStudioReady' }));
+    if (srImgs.length) groups.push({ label: 'Studio Ready', featurePrefix: 'VStudioReady', images: srImgs });
+
+    // Cenário Criativo
+    const ccImgs: DownloadableImage[] = ccImages.map(img => ({ url: img.images.front, label: 'Cenário', featurePrefix: 'VCenario' }));
+    if (ccImgs.length) groups.push({ label: 'Cenário Criativo', featurePrefix: 'VCenario', images: ccImgs });
+
+    return groups;
+  }, [psSessions, csGenerations, lcLooks, srImages, ccImages]);
+
+  const totalDownloadableImages = downloadGroups.reduce((sum, g) => sum + g.images.length, 0);
 
   // ── Render ──
   if (!isOpen) return null;
@@ -366,6 +407,15 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
           {/* Ações header */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            {totalDownloadableImages > 0 && (
+              <button
+                onClick={() => setShowDownloadModal(true)}
+                className="h-8 px-2.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white flex items-center justify-center gap-1.5 hover:opacity-90 transition-all"
+              >
+                <i className="fas fa-download text-[10px]"></i>
+                <span className="text-[10px] font-semibold">{totalDownloadableImages}</span>
+              </button>
+            )}
             {onEditProduct && (
               <button
                 onClick={() => { onEditProduct(product); onClose(); }}
@@ -439,6 +489,15 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Download Modal */}
+      <DownloadModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        productName={product.name}
+        groups={downloadGroups}
+        theme={theme}
+      />
     </div>
   );
 };

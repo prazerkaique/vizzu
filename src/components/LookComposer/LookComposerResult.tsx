@@ -5,9 +5,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, LookComposition, SavedModel } from '../../types';
-import DownloadBottomSheet from '../shared/DownloadBottomSheet';
-import DownloadProgressModal from '../shared/DownloadProgressModal';
-import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload';
+import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 import { OptimizedImage } from '../OptimizedImage';
 import { getOptimizedImageUrl } from '../../utils/imageUrl';
@@ -196,31 +194,13 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  };
 
  // ── Download system ──
- const [downloadSheet, setDownloadSheet] = useState<{ url: string; label: string } | null>(null);
- const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
- const zipAbortRef = useRef<AbortController | null>(null);
-
+ const [showDownloadModal, setShowDownloadModal] = useState(false);
  const downloadableImages: DownloadableImage[] = React.useMemo(() => {
   const imgs: DownloadableImage[] = [];
   if (generatedImageUrl) imgs.push({ url: generatedImageUrl, label: 'Frente', featurePrefix: 'VLookComposer' });
   if (generatedBackImageUrl) imgs.push({ url: generatedBackImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
   return imgs;
  }, [generatedImageUrl, generatedBackImageUrl]);
-
- const handleDownload = () => {
-  const imageToDownload = getCurrentGeneratedImage();
-  if (!imageToDownload) return;
-  setDownloadSheet({ url: imageToDownload, label: currentView === 'front' ? 'Frente' : 'Costas' });
- };
-
- const handleDownloadAll = useCallback(async () => {
-  const abort = new AbortController();
-  zipAbortRef.current = abort;
-  setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
-  await generateZipFromImages(downloadableImages, product.name, setZipProgress, abort.signal);
-  setZipProgress(null);
-  zipAbortRef.current = null;
- }, [downloadableImages, product.name]);
 
  // Report
  const handleReportSubmit = async (observation: string) => {
@@ -655,37 +635,14 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </button>
  )}
 
- {/* Opções de Download */}
- <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
- Baixar Imagem
- </p>
-
- <div className={'grid gap-2 ' + (hasBackImage ? 'grid-cols-2' : 'grid-cols-1')}>
- {/* Baixar atual (abre bottom sheet) */}
+ {/* Download */}
  <button
- onClick={handleDownload}
- className={'py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ' +
- (isDark ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700') + ' border'}
- title={hasBackImage ? `Baixar imagem ${currentView === 'front' ? 'de frente' : 'de costas'}` : 'Baixar imagem'}
+  onClick={() => setShowDownloadModal(true)}
+  className="w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90"
  >
- <i className="fas fa-download text-sm"></i>
- <span className="text-xs font-medium">{hasBackImage ? (currentView === 'front' ? 'Frente' : 'Costas') : 'Baixar'}</span>
+  <i className="fas fa-download"></i>
+  Download ({downloadableImages.length} {downloadableImages.length === 1 ? 'imagem' : 'imagens'})
  </button>
-
- {/* Baixar Tudo (ZIP) */}
- {hasBackImage && (
- <button
- onClick={handleDownloadAll}
- className="py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white font-bold text-xs"
- title="Baixar frente e costas em ZIP"
- >
- <i className="fas fa-file-zipper text-sm"></i>
- <span>Baixar Tudo</span>
- </button>
- )}
- </div>
- </div>
 
  {/* Ações Rápidas - Grid compacto */}
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
@@ -938,26 +895,14 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  />
  )}
 
- {/* Download Bottom Sheet */}
- <DownloadBottomSheet
-  isOpen={!!downloadSheet}
-  onClose={() => setDownloadSheet(null)}
-  imageUrl={downloadSheet?.url || ''}
-  imageLabel={downloadSheet?.label || ''}
+ {/* Download Modal */}
+ <DownloadModal
+  isOpen={showDownloadModal}
+  onClose={() => setShowDownloadModal(false)}
   productName={product.name}
-  featurePrefix="VLookComposer"
+  images={downloadableImages}
   theme={theme}
  />
-
- {/* ZIP Progress */}
- {zipProgress && (
-  <DownloadProgressModal
-   isOpen={!!zipProgress}
-   progress={zipProgress}
-   theme={theme}
-   onCancel={() => { zipAbortRef.current?.abort(); setZipProgress(null); }}
-  />
- )}
 
  </div>
  );

@@ -2,7 +2,7 @@
 // VIZZU - Product Studio Result (Página de Pós-Criação)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, ProductStudioSession, ProductStudioAngle } from '../../types';
 import { ZoomableImage } from '../ImageViewer';
@@ -14,9 +14,7 @@ import { getProductType as getProductTypeFromConfig } from '../../lib/productCon
 import { StudioEditModal } from './StudioEditModal';
 import type { StudioBackground, StudioShadow } from '../../lib/api/studio';
 import { supabase } from '../../services/supabaseClient';
-import DownloadBottomSheet from '../shared/DownloadBottomSheet';
-import DownloadProgressModal from '../shared/DownloadProgressModal';
-import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload';
+import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 
 interface ProductStudioResultProps {
@@ -218,28 +216,11 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  };
 
  // ── Download system ──
- const [downloadSheet, setDownloadSheet] = useState<{ url: string; label: string } | null>(null);
- const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
- const zipAbortRef = useRef<AbortController | null>(null);
-
+ const [showDownloadModal, setShowDownloadModal] = useState(false);
  const downloadableImages: DownloadableImage[] = useMemo(
   () => images.map((img) => ({ url: img.url, label: ANGLE_LABELS[img.angle] || img.angle, featurePrefix: 'VProductStudio' })),
   [images]
  );
-
- const handleDownload = () => {
-  if (!currentImage?.url) return;
-  setDownloadSheet({ url: currentImage.url, label: ANGLE_LABELS[currentImage.angle] || currentImage.angle });
- };
-
- const handleZipDownload = useCallback(async () => {
-  const abort = new AbortController();
-  zipAbortRef.current = abort;
-  setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
-  await generateZipFromImages(downloadableImages, product.name, setZipProgress, abort.signal);
-  setZipProgress(null);
-  zipAbortRef.current = null;
- }, [downloadableImages, product.name]);
 
  // Report
  const handleReportSubmit = async (observation: string) => {
@@ -533,32 +514,22 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  <span>{isSaved ? 'Imagens Salvas' : 'Salvar Imagens Criadas'}</span>
  </button>
 
- {/* Baixar Tudo ZIP */}
- {images.length > 1 && (
-  <button
-   onClick={handleZipDownload}
-   className="w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90"
-  >
-   <i className="fas fa-file-zipper"></i>
-   Baixar Tudo ({images.length} ângulos)
-  </button>
- )}
+ {/* Download */}
+ <button
+  onClick={() => setShowDownloadModal(true)}
+  className="w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90"
+ >
+  <i className="fas fa-download"></i>
+  Download ({images.length} {images.length === 1 ? 'imagem' : 'imagens'})
+ </button>
 
- {/* Ações Rápidas - Grid 2x2 compacto */}
+ {/* Ações Rápidas - Grid compacto */}
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
  Ações Rápidas
  </p>
 
- <div className="grid grid-cols-5 gap-2">
- {/* Baixar */}
- <button
- onClick={handleDownload}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
- >
- <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-download text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Baixar</span>
- </button>
+ <div className="grid grid-cols-4 gap-2">
 
  {/* Gerar Novamente */}
  <button
@@ -801,26 +772,14 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  />
  )}
 
- {/* Download Bottom Sheet */}
- <DownloadBottomSheet
-  isOpen={!!downloadSheet}
-  onClose={() => setDownloadSheet(null)}
-  imageUrl={downloadSheet?.url || ''}
-  imageLabel={downloadSheet?.label || ''}
+ {/* Download Modal */}
+ <DownloadModal
+  isOpen={showDownloadModal}
+  onClose={() => setShowDownloadModal(false)}
   productName={product.name}
-  featurePrefix="VProductStudio"
+  images={downloadableImages}
   theme={theme}
  />
-
- {/* ZIP Progress */}
- {zipProgress && (
-  <DownloadProgressModal
-   isOpen={!!zipProgress}
-   progress={zipProgress}
-   theme={theme}
-   onCancel={() => { zipAbortRef.current?.abort(); setZipProgress(null); }}
-  />
- )}
 
  </div>
  );

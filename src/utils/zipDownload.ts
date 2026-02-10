@@ -2,7 +2,7 @@
 // VIZZU - ZIP Download Engine (JSZip + wsrv.nl)
 // ═══════════════════════════════════════════════════════════════
 
-import { DOWNLOAD_PRESETS, getDownloadUrl, buildFilename, type DownloadableImage } from './downloadSizes';
+import { DOWNLOAD_PRESETS, getDownloadUrl, buildFilename, type DownloadableImage, type DownloadPreset } from './downloadSizes';
 import { traditionalDownload } from './downloadHelper';
 
 export interface ZipProgress {
@@ -54,13 +54,15 @@ export async function generateZipDownload(
   entries: ZipEntry[],
   zipFilename: string,
   onProgress?: (progress: ZipProgress) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  presets?: DownloadPreset[]
 ): Promise<boolean> {
   const JSZip = (await import('jszip')).default;
   const zip = new JSZip();
 
+  const activePresets = presets || DOWNLOAD_PRESETS;
   // Total = entries × presets
-  const total = entries.length * DOWNLOAD_PRESETS.length;
+  const total = entries.length * activePresets.length;
   let current = 0;
 
   const report = (phase: ZipProgress['phase']) => {
@@ -74,7 +76,7 @@ export async function generateZipDownload(
 
   // Preparar lista flat de downloads
   const downloads = entries.flatMap((entry) =>
-    DOWNLOAD_PRESETS.map((preset) => ({ entry, preset }))
+    activePresets.map((preset) => ({ entry, preset }))
   );
 
   // Download com concorrência limitada a 3
@@ -129,7 +131,8 @@ export async function generateZipFromImages(
   images: DownloadableImage[],
   productName: string,
   onProgress?: (progress: ZipProgress) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  presets?: DownloadPreset[]
 ): Promise<boolean> {
   const sanitized = productName.replace(/[<>:"/\\|?*]/g, '').trim();
   const zipFilename = `${sanitized}_Vizzu.zip`;
@@ -141,5 +144,5 @@ export async function generateZipFromImages(
     imageLabel: img.label,
   }));
 
-  return generateZipDownload(entries, zipFilename, onProgress, signal);
+  return generateZipDownload(entries, zipFilename, onProgress, signal, presets);
 }
