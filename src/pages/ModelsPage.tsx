@@ -1284,13 +1284,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Estado: Gerando */}
  {generatingModelImages && (
  <div className="text-center py-4">
- <div className="w-20 h-20 mx-auto mb-4">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ <div className="w-20 h-20 mx-auto mb-4 rounded-xl overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>

@@ -1156,13 +1156,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  }`}>
  {isGenerating ? (
  <div className="flex flex-col items-center justify-center h-full p-6">
- <div className="w-20 h-20 mb-3">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ <div className="w-20 h-20 mb-3 rounded-xl overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
  <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} text-xs font-medium mb-2 text-center`}>
  {loadingText}
@@ -1605,14 +1600,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
 
  {/* Container do conteudo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
- {/* Animacao Lottie */}
- <div className="w-48 h-48 md:w-64 md:h-64 mb-6">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ {/* Vizzu Motion */}
+ <div className="w-40 h-40 md:w-48 md:h-48 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
 
  {/* Titulo */}
