@@ -371,8 +371,8 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
             >
               <i className="fas fa-arrow-left text-sm"></i>
             </button>
-            <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'}>
-              <i className="fas fa-camera-retro text-sm text-white"></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+              <i className={'fas fa-camera-retro text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
             </div>
             <div>
               <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Criativo</h1>

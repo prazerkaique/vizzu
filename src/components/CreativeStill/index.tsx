@@ -32,6 +32,20 @@ export const RESOLUTIONS = [
   { id: '4k', label: '4K', description: 'Alta resolução' },
 ];
 
+// ── Filtros (mesmos do Product Studio) ──
+const CATEGORY_GROUPS = [
+  { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
+  { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
+  { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
+  { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
+];
+const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
+const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
+const COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Bege'];
+const GENDERS = ['Masculino', 'Feminino', 'Unissex'];
+
 // ═══════════════════════════════════════════════════════════════
 // PROPS
 // ═══════════════════════════════════════════════════════════════
@@ -123,6 +137,15 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [selectedStill, setSelectedStill] = useState<CreativeStillGeneration | null>(null);
   const [lastGenerateParams, setLastGenerateParams] = useState<CreativeStillGenerateParams | null>(null);
 
+  // ── Filtros (padrão Product Studio) ──
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterCategoryGroup, setFilterCategoryGroup] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCollection, setFilterCollection] = useState('');
+  const [filterColor, setFilterColor] = useState('');
+  const [filterGender, setFilterGender] = useState('');
+  const [sortBy, setSortBy] = useState<'recent' | 'a-z' | 'z-a'>('recent');
+
   const isDark = theme === 'dark';
 
   // ── Produto pré-selecionado (vindo de outra página) ──
@@ -160,16 +183,41 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     generations.filter(g => g.status === 'completed' && getFirstVariationUrl(g)),
   [generations]);
 
-  // ── Produtos filtrados ──
+  // ── Produtos filtrados (mesma lógica do Product Studio) ──
+  const hasActiveFilters = searchQuery || filterCategoryGroup || filterCategory || filterCollection || filterColor || filterGender || sortBy !== 'recent';
+
+  const clearFilters = useCallback(() => {
+    setSearchQuery('');
+    setFilterCategoryGroup('');
+    setFilterCategory('');
+    setFilterCollection('');
+    setFilterColor('');
+    setFilterGender('');
+    setSortBy('recent');
+  }, []);
+
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-    const q = searchQuery.toLowerCase();
-    return products.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      (p.sku || '').toLowerCase().includes(q) ||
-      (p.category || '').toLowerCase().includes(q)
-    );
-  }, [products, searchQuery]);
+    let result = products.filter(product => {
+      const matchesSearch = !searchQuery ||
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.sku || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const categoryGroup = getCategoryGroupBySubcategory(product.category || '');
+      const matchesCategoryGroup = !filterCategoryGroup || categoryGroup?.id === filterCategoryGroup;
+      const matchesCategory = !filterCategory || product.category === filterCategory;
+      const matchesCollection = !filterCollection || (product as any).collection === filterCollection;
+      const matchesColor = !filterColor || product.color === filterColor;
+      const matchesGender = !filterGender || (product as any).gender === filterGender;
+      return matchesSearch && matchesCategoryGroup && matchesCategory && matchesCollection && matchesColor && matchesGender;
+    });
+    if (sortBy === 'a-z') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'z-a') {
+      result = [...result].sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+      result = [...result].sort((a, b) => new Date((b as any).updatedAt || 0).getTime() - new Date((a as any).updatedAt || 0).getTime());
+    }
+    return result;
+  }, [products, searchQuery, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
 
   // ── GERAR ──
   const handleGenerate = useCallback(async (params: CreativeStillGenerateParams) => {
@@ -472,8 +520,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                 <i className="fas fa-arrow-left text-sm"></i>
               </button>
             )}
-            <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'}>
-              <i className="fas fa-camera-retro text-sm text-white"></i>
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+              <i className={'fas fa-camera-retro text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
             </div>
             <div>
               <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Criativo</h1>
@@ -537,22 +585,96 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         )}
 
         {/* ── BUSCA ── */}
-        <div className="mb-4">
-          <div className="relative">
-            <i className={'fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar produto..."
-              className={'w-full pl-9 pr-4 py-2.5 rounded-xl text-sm transition-all ' +
-                (isDark
-                  ? 'bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 focus:border-neutral-600'
-                  : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 shadow-sm'
-                )
-              }
-            />
-          </div>
+        <div className="relative mb-4">
+          <i className={'fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar produtos..."
+            className={(isDark ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' absolute right-3 top-1/2 -translate-y-1/2'}>
+              <i className="fas fa-times text-xs"></i>
+            </button>
+          )}
+        </div>
+
+        {/* ── FILTROS ── */}
+        <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border mb-4'}>
+          <button onClick={() => setShowFilters(!showFilters)} className="w-full p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <i className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-filter text-xs'}></i>
+              <span className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar e ordenar</span>
+              {hasActiveFilters && (
+                <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] rounded-full">
+                  {[filterCategory, filterCollection, filterColor, filterGender, sortBy !== 'recent' ? sortBy : ''].filter(Boolean).length}
+                </span>
+              )}
+            </div>
+            <i className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-' + (showFilters ? 'up' : 'down') + ' text-xs'}></i>
+          </button>
+          {showFilters && (
+            <div className="px-3 pb-3">
+              {hasActiveFilters && (
+                <div className="flex justify-end mb-2">
+                  <button onClick={clearFilters} className="text-[10px] text-[#FF9F43] hover:text-[#FF9F43] font-medium">Limpar filtros</button>
+                </div>
+              )}
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                {/* Categoria */}
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
+                  <select value={filterCategoryGroup} onChange={(e) => { setFilterCategoryGroup(e.target.value); setFilterCategory(''); }} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}>
+                    <option value="">Todas</option>
+                    {CATEGORY_GROUPS.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+                  </select>
+                </div>
+                {/* Subcategoria */}
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Subcategoria</label>
+                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} disabled={!filterCategoryGroup} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white disabled:opacity-50' : 'bg-gray-50 border-gray-200 text-gray-900 disabled:opacity-50') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}>
+                    <option value="">Todas</option>
+                    {filterCategoryGroup && CATEGORY_GROUPS.find(g => g.id === filterCategoryGroup)?.items.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+                {/* Coleção */}
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
+                  <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}>
+                    <option value="">Todas</option>
+                    {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
+                  </select>
+                </div>
+                {/* Cor */}
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+                  <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}>
+                    <option value="">Todas</option>
+                    {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                {/* Gênero */}
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
+                  <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}>
+                    <option value="">Todos</option>
+                    {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                {/* Ordenar */}
+                <div>
+                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Ordenar</label>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'recent' | 'a-z' | 'z-a')} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}>
+                    <option value="recent">Mais recentes</option>
+                    <option value="a-z">A → Z</option>
+                    <option value="z-a">Z → A</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── PRODUTOS ── */}
