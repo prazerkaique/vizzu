@@ -190,26 +190,28 @@ export default function DownloadModal({
             // ═══════════════════════════════════════
             <>
               {/* Header */}
-              <div className={'flex items-center justify-between px-5 py-4 border-b ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center flex-shrink-0">
-                    <i className="fas fa-download text-white text-xs" />
+              <div className={'px-5 py-4 border-b ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-download text-white text-sm" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-sm font-bold truncate'}>
+                        Download — {productName}
+                      </h3>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-sm font-semibold truncate'}>
-                      Download
-                    </h3>
-                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[11px] truncate'}>
-                      {productName}
-                    </p>
-                  </div>
+                  <button
+                    onClick={onClose}
+                    className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
+                  >
+                    <i className="fas fa-times text-sm" />
+                  </button>
                 </div>
-                <button
-                  onClick={onClose}
-                  className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 rounded-full flex items-center justify-center transition-colors'}
-                >
-                  <i className="fas fa-times text-sm" />
-                </button>
+                <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-2 ml-12'}>
+                  Selecione as imagens que deseja baixar, depois escolha o formato.
+                </p>
               </div>
 
               {/* Select all bar */}
@@ -323,23 +325,26 @@ export default function DownloadModal({
                 )}
               </div>
 
-              {/* Footer */}
-              <div className={'flex items-center justify-between px-5 py-3 border-t ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
-                <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
-                  {selectedCount} {selectedCount === 1 ? 'selecionada' : 'selecionadas'}
-                </span>
+              {/* Footer — CTA proeminente */}
+              <div className={'px-5 py-4 border-t ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
                 <button
                   onClick={() => setStep('format')}
                   disabled={selectedCount === 0}
                   className={
-                    'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ' +
+                    'w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ' +
                     (selectedCount > 0
-                      ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+                      ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 shadow-lg shadow-[#FF6B6B]/20'
                       : isDark ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
                   }
                 >
-                  Continuar
-                  <i className="fas fa-arrow-right text-xs" />
+                  {selectedCount > 0 ? (
+                    <>
+                      Escolher formato ({selectedCount} {selectedCount === 1 ? 'imagem' : 'imagens'})
+                      <i className="fas fa-arrow-right text-xs" />
+                    </>
+                  ) : (
+                    'Selecione ao menos uma imagem'
+                  )}
                 </button>
               </div>
             </>
