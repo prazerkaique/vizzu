@@ -81,7 +81,8 @@ interface GeneratedLook {
 interface ProductWithLooks {
  product: Product;
  lookCount: number;
- looks: GeneratedLook[];
+ looks: GeneratedLook[]; // Looks onde é produto principal
+ allLooks: GeneratedLook[]; // Todos os looks (principal + item) — para download/grid
  totalImageCount: number; // Total de imagens (frente + costas)
  participations?: number; // Quantas vezes participou como item (não principal)
 }
@@ -279,12 +280,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  const allLooks = Array.from(allLooksSet);
 
  // Calcular total de imagens (frente + costas)
- const totalImageCount = data.asMain.reduce((sum, look) => sum + look.imageCount, 0);
+ const totalImageCount = allLooks.reduce((sum, look) => sum + look.imageCount, 0);
 
  result.push({
  product,
  lookCount: allLooks.length,
  looks: data.asMain, // Looks onde é o produto principal
+ allLooks, // Todos os looks (principal + item) — para download/grid
  totalImageCount,
  participations: data.asItem.length // Quantas vezes participou como item
  });
@@ -308,6 +310,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  product,
  lookCount: 0,
  looks: [],
+ allLooks: [],
  totalImageCount: 0,
  participations: 0,
  });
@@ -484,7 +487,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  const [downloadAllGroups, setDownloadAllGroups] = useState<{ groups: DownloadImageGroup[]; productName: string } | null>(null);
 
  const handleDownloadAllLooks = useCallback((pwl: ProductWithLooks) => {
-   const groups: DownloadImageGroup[] = pwl.looks.map((look, i) => {
+   const groups: DownloadImageGroup[] = pwl.allLooks.map((look, i) => {
      const imgs: DownloadableImage[] = [
        { url: look.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' },
      ];
@@ -907,14 +910,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* Badges */}
  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
  {/* Badge de quantidade de looks */}
- {pwl.looks.length > 0 && (
- <div className="px-2 py-1 bg-[#FF6B6B]/100 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.looks.length} look${pwl.looks.length > 1 ? 's' : ''} criado${pwl.looks.length > 1 ? 's' : ''}`}>
+ {pwl.lookCount > 0 && (
+ <div className="px-2 py-1 bg-[#FF6B6B]/100 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.lookCount} look${pwl.lookCount > 1 ? 's' : ''} criado${pwl.lookCount > 1 ? 's' : ''}`}>
  <i className="fas fa-layer-group text-[8px]"></i>
- {pwl.looks.length}
+ {pwl.lookCount}
  </div>
  )}
  {/* Badge de total de imagens (se diferente do número de looks = tem costas) */}
- {pwl.totalImageCount > pwl.looks.length && (
+ {pwl.totalImageCount > pwl.lookCount && (
  <div className="px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center gap-1" title={`${pwl.totalImageCount} imagens (frente + costas)`}>
  <i className="fas fa-images text-[8px]"></i>
  {pwl.totalImageCount}
@@ -1460,7 +1463,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </button>
 
  {/* Botão download todos os looks */}
- {selectedProductForModal.looks.length > 1 && (
+ {selectedProductForModal.allLooks.length > 1 && (
  <button
  onClick={() => handleDownloadAllLooks(selectedProductForModal)}
  className={(isDark ? 'bg-white/10 hover:bg-white/15 text-white border-white/10' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' w-full py-2.5 border rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-2'}
@@ -1474,7 +1477,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
  <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Looks criados ({selectedProductForModal.lookCount})</h3>
  <div className="grid grid-cols-4 gap-2">
- {selectedProductForModal.looks.map((look) => {
+ {selectedProductForModal.allLooks.map((look) => {
  const thumbView = getCardView(`modal-${look.id}`);
  const thumbImage = thumbView === 'back' && look.backImageUrl ? look.backImageUrl : look.imageUrl;
 
