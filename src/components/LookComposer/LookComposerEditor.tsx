@@ -2581,10 +2581,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  )
  ) : productImages.length > 0 ? (
  <>
- <img
+ <OptimizedImage
  src={productImages[currentImageIndex]?.url}
  alt={product.name}
  className="max-w-full max-h-[400px] object-contain rounded-lg"
+ size="preview"
+ objectFit="contain"
  />
  {productImages.length > 1 && (
  <>

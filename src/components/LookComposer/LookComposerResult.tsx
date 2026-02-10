@@ -7,6 +7,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, LookComposition, SavedModel } from '../../types';
 import { smartDownload, smartDownloadMultiple } from '../../utils/downloadHelper';
 import { OptimizedImage } from '../OptimizedImage';
+import { getOptimizedImageUrl } from '../../utils/imageUrl';
 import { ZoomableImage } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
@@ -451,7 +452,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <>
  {/* Imagem normal */}
  <img
- src={displayImage}
+ src={getOptimizedImageUrl(displayImage, 'preview')}
  alt={`${product.name} - ${showOriginal ? 'original' : 'look'}`}
  className={'max-w-full max-h-[260px] md:max-h-[420px] object-contain rounded-lg transition-opacity duration-200 ' + (isHovering ? 'opacity-0 lg:opacity-0' : 'opacity-100')}
  style={{ display: isHovering ? 'none' : 'block' }}
@@ -462,7 +463,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  <div
  className="hidden lg:block absolute inset-0 bg-no-repeat"
  style={{
- backgroundImage: `url(${displayImage})`,
+ backgroundImage: `url(${getOptimizedImageUrl(displayImage, 'display')})`,
  backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
  backgroundSize: '150%'
  }}
@@ -471,7 +472,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
 
  {/* Imagem mobile quando não está em hover */}
  <img
- src={displayImage}
+ src={getOptimizedImageUrl(displayImage, 'preview')}
  alt={`${product.name}`}
  className={'lg:hidden max-w-full max-h-[260px] object-contain rounded-lg ' + (isHovering ? '' : 'hidden')}
  />
