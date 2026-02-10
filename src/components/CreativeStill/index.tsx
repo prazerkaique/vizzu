@@ -1,1160 +1,683 @@
-import React, { useState, useCallback, useEffect } from 'react';
+// ═══════════════════════════════════════════════════════════════
+// VIZZU - Creative Still (Refatorado — 3 camadas)
+// Camada 1: Listagem (produtos + stills recentes)
+// Camada 2: Editor (prompt + referências + configs)
+// Camada 3: Resultados (grid de variações)
+// ═══════════════════════════════════════════════════════════════
+
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
- Product,
- CreativeStillTemplate,
- CreativeStillGeneration,
- CreativeStillWizardState,
- CreativeStillSimpleState,
+  Product,
+  CreativeStillGeneration,
 } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 import { Plan } from '../../hooks/useCredits';
-import { CreativeStillWizard } from './CreativeStillWizard';
 import { CreativeStillResults } from './CreativeStillResults';
-import { CreativeStillSimple } from './CreativeStillSimple';
+import { CreativeStillEditor, CreativeStillGenerateParams } from './CreativeStillEditor';
 import { OptimizedImage } from '../OptimizedImage';
 
-// ============================================================
-// CONSTANTES
-// ============================================================
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTES (exportadas para o Results)
+// ═══════════════════════════════════════════════════════════════
 
-export const PRODUCT_SCALES = [
- { id: 'close-up', label: 'Close-up', description: 'Bem próximo, destaque nos detalhes', icon: 'fa-magnifying-glass-plus' },
- { id: 'medium', label: 'Médio', description: 'Enquadramento intermediário', icon: 'fa-expand' },
- { id: 'full', label: 'Completo', description: 'Produto inteiro visível com contexto', icon: 'fa-up-right-and-down-left-from-center' },
- { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
-];
-
-export const MOOD_SEASONS = [
- { id: 'verao_tropical', label: 'Verão Tropical', icon: 'fa-sun' },
- { id: 'alto_verao_resort', label: 'Alto Verão Resort', icon: 'fa-umbrella-beach' },
- { id: 'primavera_floral', label: 'Primavera Floral', icon: 'fa-seedling' },
- { id: 'inverno_urbano', label: 'Inverno Urbano', icon: 'fa-snowflake' },
- { id: 'outono_rustico', label: 'Outono Rústico', icon: 'fa-leaf' },
- { id: 'colecao_festa', label: 'Coleção Festa', icon: 'fa-champagne-glasses' },
- { id: 'basics_atemporal', label: 'Basics Atemporal', icon: 'fa-circle' },
- { id: 'ai_choose', label: 'IA Escolhe', icon: 'fa-wand-magic-sparkles' },
- { id: 'custom', label: 'Personalizado', icon: 'fa-pen' },
-];
-
-export const VISUAL_STYLES = [
- { id: 'clean_natural', label: 'Clean Natural', description: 'Cores fiéis, sem grão, neutro. Ideal para catálogo.', icon: 'fa-droplet' },
- { id: 'warm_soft', label: 'Warm & Soft', description: 'Tons dourados, leve desaturação, grão sutil.', icon: 'fa-sun' },
- { id: 'cool_crisp', label: 'Cool & Crisp', description: 'Tons azulados, alto contraste, sem grão.', icon: 'fa-snowflake' },
- { id: 'film_analog', label: 'Filme Analógico', description: 'Tons quentes, contraste suave, grão de película.', icon: 'fa-film' },
- { id: 'vintage_faded', label: 'Vintage Faded', description: 'Baixo contraste, pretos lavados, grão moderado.', icon: 'fa-clock-rotate-left' },
- { id: 'moody_dark', label: 'Moody / Dark', description: 'Sombras profundas, tons escuros, grão sutil.', icon: 'fa-moon' },
- { id: 'vibrant_pop', label: 'Vibrante Pop', description: 'Saturação alta, cores vivas, sem grão.', icon: 'fa-palette' },
- { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir o melhor estilo.', icon: 'fa-wand-magic-sparkles' },
- { id: 'custom', label: 'Personalizado', description: 'Descreva o estilo visual desejado.', icon: 'fa-pen' },
+export const FRAME_RATIOS = [
+  { id: '1:1', label: '1:1', description: 'Feed quadrado', icon: 'fa-square' },
+  { id: '4:5', label: '4:5', description: 'Feed vertical', icon: 'fa-rectangle-portrait' },
+  { id: '9:16', label: '9:16', description: 'Stories/Reels', icon: 'fa-mobile-screen' },
+  { id: '16:9', label: '16:9', description: 'Banner', icon: 'fa-rectangle-wide' },
 ];
 
 export const RESOLUTIONS = [
- { id: '2k', label: '2K', description: 'Resolução padrão' },
- { id: '4k', label: '4K', description: 'Alta resolução' },
+  { id: '2k', label: '2K', description: 'Resolução padrão' },
+  { id: '4k', label: '4K', description: 'Alta resolução' },
 ];
 
-export const LIGHTING_OPTIONS = [
- { id: 'natural_soft', label: 'Natural Suave', description: 'Luz do dia suave, sombras gentis', icon: 'fa-cloud-sun' },
- { id: 'golden_hour', label: 'Golden Hour', description: 'Tons quentes de pôr do sol', icon: 'fa-sun' },
- { id: 'leaf_shadows', label: 'Sombras de Folha', description: 'Luz filtrada por folhas', icon: 'fa-leaf' },
- { id: 'studio_soft', label: 'Estúdio Soft', description: 'Iluminação profissional softbox', icon: 'fa-lightbulb' },
- { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
-];
-
-export const LENS_OPTIONS = [
- { id: 'canon_24mm_f14', label: 'Canon EF 24mm f/1.4L II', category: 'wide', description: 'Wide dramático' },
- { id: 'sony_24mm_gm', label: 'Sony 24mm f/1.4 GM', category: 'wide', description: 'Sharp, moderno' },
- { id: 'sigma_35mm_art', label: 'Sigma 35mm f/1.4 Art', category: 'standard', description: 'Nitidez extrema' },
- { id: 'leica_35mm', label: 'Leica Summilux 35mm f/1.4', category: 'standard', description: 'Look analógico' },
- { id: 'canon_50mm_f12', label: 'Canon EF 50mm f/1.2L', category: 'standard', description: 'Bokeh cremoso' },
- { id: 'zeiss_50mm', label: 'Zeiss Planar 50mm f/1.4', category: 'standard', description: 'Vintage, suave' },
- { id: 'sony_85mm_gm', label: 'Sony 85mm f/1.4 GM', category: 'portrait', description: 'Rei do portrait' },
- { id: 'canon_85mm_f12', label: 'Canon EF 85mm f/1.2L', category: 'portrait', description: 'Bokeh suave' },
- { id: 'canon_100mm_macro', label: 'Canon 100mm f/2.8L Macro', category: 'macro', description: 'Detalhes extremos' },
- { id: 'sony_90mm_macro', label: 'Sony 90mm f/2.8 Macro G', category: 'macro', description: 'Textura perfeita' },
- { id: 'ai_choose', label: 'IA Escolhe', category: 'ai', description: 'Melhor lente para a composição' },
-];
-
-export const CAMERA_ANGLES = [
- { id: 'top_down', label: 'Top-Down (90°)', description: 'Diretamente de cima', icon: 'fa-arrow-down' },
- { id: '45deg', label: '45°', description: 'Vista angular', icon: 'fa-arrows-turn-right' },
- { id: 'eye_level', label: 'Eye-Level', description: 'Frontal', icon: 'fa-arrows-left-right' },
- { id: 'low_angle', label: 'Low Angle', description: 'De baixo', icon: 'fa-arrow-up' },
- { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
-];
-
-
-// Mapeamento de categorias para tipo de produto (para apresentações condicionais)
-export type ProductTypeGroup = 'clothing' | 'footwear' | 'bags' | 'accessories' | 'headwear' | 'fullpiece';
-
-export const CATEGORY_TO_TYPE: Record<string, ProductTypeGroup> = {
- // Topo
- 'Camisetas': 'clothing', 'Blusas': 'clothing', 'Regatas': 'clothing', 'Tops': 'clothing',
- 'Camisas': 'clothing', 'Bodies': 'clothing', 'Jaquetas': 'clothing', 'Casacos': 'clothing',
- 'Blazers': 'clothing', 'Moletons': 'clothing',
- // Baixo
- 'Calças': 'clothing', 'Shorts': 'clothing', 'Bermudas': 'clothing', 'Saias': 'clothing',
- 'Leggings': 'clothing', 'Shorts Fitness': 'clothing',
- // Peças inteiras
- 'Vestidos': 'fullpiece', 'Macacões': 'fullpiece', 'Jardineiras': 'fullpiece',
- 'Biquínis': 'clothing', 'Maiôs': 'clothing',
- // Calçados
- 'Calçados': 'footwear', 'Tênis': 'footwear', 'Sandálias': 'footwear', 'Botas': 'footwear',
- // Cabeça
- 'Bonés': 'headwear', 'Chapéus': 'headwear', 'Tiaras': 'headwear', 'Lenços': 'clothing',
- // Acessórios
- 'Bolsas': 'bags', 'Cintos': 'accessories', 'Relógios': 'accessories', 'Óculos': 'accessories',
- 'Bijuterias': 'accessories', 'Acessórios': 'accessories', 'Outros Acessórios': 'accessories',
-};
-
-// Tipos de produto para upload (quando não vem do catálogo)
-export const PRODUCT_TYPES_FOR_UPLOAD = [
- { id: 'clothing' as ProductTypeGroup, label: 'Roupa', description: 'Camiseta, calça, vestido, etc.', icon: 'fa-shirt' },
- { id: 'footwear' as ProductTypeGroup, label: 'Calçado', description: 'Tênis, bota, sandália, etc.', icon: 'fa-shoe-prints' },
- { id: 'bags' as ProductTypeGroup, label: 'Bolsa', description: 'Bolsa, mochila, clutch, etc.', icon: 'fa-bag-shopping' },
- { id: 'headwear' as ProductTypeGroup, label: 'Chapéu / Boné', description: 'Chapéu, boné, tiara, etc.', icon: 'fa-hat-cowboy' },
- { id: 'accessories' as ProductTypeGroup, label: 'Acessório', description: 'Óculos, relógio, cinto, etc.', icon: 'fa-gem' },
-];
-
-// Todas as apresentações possíveis
-export const ALL_PRESENTATIONS = [
- { id: 'open', label: 'Aberto / Estendido', description: 'Peça aberta e esticada', icon: 'fa-expand', types: ['clothing', 'fullpiece'] },
- { id: 'folded', label: 'Dobrado', description: 'Dobrado com cuidado', icon: 'fa-shirt', types: ['clothing'] },
- { id: 'hanging', label: 'Pendurado', description: 'Pendurado em cabide ou gancho', icon: 'fa-grip-lines', types: ['clothing', 'fullpiece'] },
- { id: 'rolled', label: 'Enrolado', description: 'Enrolado de forma estilosa', icon: 'fa-toilet-paper', types: ['clothing'] },
- { id: 'natural', label: 'Jogado Natural', description: 'Solto de forma casual e natural', icon: 'fa-wind', types: ['clothing', 'fullpiece'] },
- { id: 'standing', label: 'Em Pé', description: 'Posicionado em pé, ereto', icon: 'fa-shoe-prints', types: ['footwear'] },
- { id: 'side_view', label: 'Vista Lateral', description: 'Lateral mostrando o perfil', icon: 'fa-arrows-left-right', types: ['footwear'] },
- { id: 'pair', label: 'Par Cruzado', description: 'Par sobreposto em composição', icon: 'fa-xmarks-lines', types: ['footwear'] },
- { id: 'flat_lay', label: 'Flat Lay', description: 'Deitado visto de cima', icon: 'fa-arrow-down', types: ['footwear', 'bags', 'headwear', 'accessories'] },
- { id: 'upright', label: 'Em Pé / Ereto', description: 'Posicionado verticalmente', icon: 'fa-arrow-up', types: ['bags'] },
- { id: 'open_bag', label: 'Aberta', description: 'Bolsa aberta mostrando interior', icon: 'fa-box-open', types: ['bags'] },
- { id: 'worn_style', label: 'Estilo Vestido', description: 'Posicionado como se estivesse sendo usado', icon: 'fa-user', types: ['headwear', 'accessories'] },
- { id: 'display', label: 'Em Display', description: 'Em suporte ou expositor', icon: 'fa-display', types: ['accessories', 'headwear'] },
- { id: 'custom', label: 'Personalizado', description: 'Descreva como quer exibir', icon: 'fa-pen', types: ['clothing', 'fullpiece', 'footwear', 'bags', 'headwear', 'accessories'] },
- { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles', types: ['clothing', 'fullpiece', 'footwear', 'bags', 'headwear', 'accessories'] },
-];
-
-// Helper: filtrar apresentações por tipo de produto
-export const getPresentationsForType = (typeGroup: ProductTypeGroup | null) => {
- if (!typeGroup) return ALL_PRESENTATIONS.filter(p => p.id === 'ai_choose');
- return ALL_PRESENTATIONS.filter(p => p.types.includes(typeGroup));
-};
-
-// Helper: obter tipo do produto pela categoria
-export const getProductTypeGroup = (category?: string): ProductTypeGroup | null => {
- if (!category) return null;
- return CATEGORY_TO_TYPE[category] || null;
-};
-
-// Mantido por compatibilidade (usado no review step)
-export const PRODUCT_PRESENTATIONS = ALL_PRESENTATIONS;
-
-export const PRODUCT_PLACEMENTS = [
- { id: 'center', label: 'Centralizado', description: 'Centro da composição', icon: 'fa-crosshairs' },
- { id: 'left_third', label: 'Terço Esquerdo', description: 'Regra dos terços, à esquerda', icon: 'fa-align-left' },
- { id: 'right_third', label: 'Terço Direito', description: 'Regra dos terços, à direita', icon: 'fa-align-right' },
- { id: 'slight_left', label: 'Levemente Esquerda', description: 'Deslocado sutil para esquerda', icon: 'fa-arrow-left' },
- { id: 'slight_right', label: 'Levemente Direita', description: 'Deslocado sutil para direita', icon: 'fa-arrow-right' },
- { id: 'ai_choose', label: 'IA Escolhe', description: 'Deixar a IA decidir', icon: 'fa-wand-magic-sparkles' },
-];
-
-export const FRAME_RATIOS = [
- { id: '1:1', label: '1:1', description: 'Feed quadrado', icon: 'fa-square' },
- { id: '4:5', label: '4:5', description: 'Feed vertical', icon: 'fa-rectangle-portrait' },
- { id: '9:16', label: '9:16', description: 'Stories/Reels', icon: 'fa-mobile-screen' },
- { id: '16:9', label: '16:9', description: 'Banner', icon: 'fa-rectangle-wide' },
-];
-
-const INITIAL_WIZARD_STATE: CreativeStillWizardState = {
- // Step 1 - Produtos
- mainProduct: null,
- mainProductView: 'front',
- mainProductHighlight: 'front',
- productPresentation: 'ai_choose',
- customPresentationText: '',
- productScale: 'ai_choose',
- additionalProducts: [],
-
- // Step 2 - Cenário
- surfaceDescription: '',
- surfaceReference: null,
- environmentDescription: '',
- environmentReference: null,
- compositionElements: [],
- compositionReference: null,
- moodSeason: 'ai_choose',
- customMoodSeason: '',
-
- // Step 3 - Estética Fotográfica
- lighting: 'ai_choose',
- customLighting: '',
- lightingReference: null,
- lensModel: 'ai_choose',
- cameraAngle: 'ai_choose',
- depthOfField: 50,
- visualStyle: 'ai_choose',
- customVisualStyle: '',
- visualStyleReference: null,
-
- // Step 4 - Frame & Configs
- frameRatio: '4:5',
- resolution: '2k',
- variationsCount: 2,
- saveAsTemplate: false,
- templateName: '',
-};
-
-// ============================================================
+// ═══════════════════════════════════════════════════════════════
 // PROPS
-// ============================================================
+// ═══════════════════════════════════════════════════════════════
 
 export interface CreativeStillProps {
- theme: 'dark' | 'light';
- products: Product[];
- userCredits: number;
- userId?: string;
- onDeductCredits: (amount: number, reason: string) => boolean;
- onAddHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => void;
- onCheckCredits?: (creditsNeeded: number, actionContext: string) => boolean;
- currentPlan?: Plan;
- onBack?: () => void;
- onOpenPlanModal?: () => void;
- initialProduct?: Product | null;
- onClearInitialProduct?: () => void;
- onSetGenerating?: (value: boolean) => void;
- onSetProgress?: (value: number) => void;
- onSetMinimized?: (value: boolean) => void;
- isMinimized?: boolean;
- editBalance?: number;
- onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+  theme: 'dark' | 'light';
+  products: Product[];
+  userCredits: number;
+  userId?: string;
+  onDeductCredits: (amount: number, reason: string) => boolean;
+  onAddHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => void;
+  onCheckCredits?: (creditsNeeded: number, actionContext: string) => boolean;
+  currentPlan?: Plan;
+  onBack?: () => void;
+  onOpenPlanModal?: () => void;
+  initialProduct?: Product | null;
+  onClearInitialProduct?: () => void;
+  onSetGenerating?: (value: boolean) => void;
+  onSetProgress?: (value: number) => void;
+  onSetMinimized?: (value: boolean) => void;
+  isMinimized?: boolean;
+  editBalance?: number;
+  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
 }
 
-// ============================================================
-// COMPONENTE PRINCIPAL
-// ============================================================
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
 
-type View = 'mode-select' | 'home' | 'simple' | 'wizard' | 'results';
+function getProductImage(product: Product): string {
+  // PS otimizada > original > legado
+  const ps = product.generatedImages?.productStudio || [];
+  for (let i = ps.length - 1; i >= 0; i--) {
+    const front = ps[i].images.find((img: any) => img.angle === 'front');
+    if (front?.url) return front.url;
+    if (ps[i].images[0]?.url) return ps[i].images[0].url;
+  }
+  if (product.originalImages?.front && typeof product.originalImages.front === 'object') {
+    return (product.originalImages.front as any).url || '';
+  }
+  return product.images?.[0]?.url || '';
+}
+
+function getStillCount(product: Product, generations: CreativeStillGeneration[]): number {
+  return generations.filter(g => g.product_id === product.id && g.status === 'completed').length;
+}
+
+function getFirstVariationUrl(gen: CreativeStillGeneration): string | null {
+  if (gen.variation_urls?.length > 0) return gen.variation_urls[0];
+  if (gen.variation_1_url) return gen.variation_1_url;
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ═══════════════════════════════════════════════════════════════
+
+type View = 'listing' | 'editor' | 'results';
 
 export const CreativeStill: React.FC<CreativeStillProps> = ({
- theme,
- products,
- userCredits,
- userId,
- onDeductCredits,
- onAddHistoryLog,
- onCheckCredits,
- currentPlan,
- onBack,
- onOpenPlanModal,
- initialProduct,
- onClearInitialProduct,
- onSetGenerating,
- onSetProgress,
- onSetMinimized,
- isMinimized,
- editBalance = 0,
- onDeductEditCredits,
+  theme,
+  products,
+  userCredits,
+  userId,
+  onDeductCredits,
+  onAddHistoryLog,
+  onCheckCredits,
+  currentPlan,
+  onBack,
+  onOpenPlanModal,
+  initialProduct,
+  onClearInitialProduct,
+  onSetGenerating,
+  onSetProgress,
+  onSetMinimized,
+  isMinimized,
+  editBalance = 0,
+  onDeductEditCredits,
 }) => {
- const [view, setView] = useState<View>('mode-select');
- const [simpleState, setSimpleState] = useState<CreativeStillSimpleState | null>(null);
- const [wizardState, setWizardState] = useState<CreativeStillWizardState>({ ...INITIAL_WIZARD_STATE });
- const [templates, setTemplates] = useState<CreativeStillTemplate[]>([]);
- const [generations, setGenerations] = useState<CreativeStillGeneration[]>([]);
- const [favorites, setFavorites] = useState<CreativeStillGeneration[]>([]);
- const [loadingTemplates, setLoadingTemplates] = useState(false);
- const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
- const [isGenerating, setIsGenerating] = useState(false);
- const [generationProgress, setGenerationProgress] = useState(0);
- const [loadingText, setLoadingText] = useState('');
+  const [view, setView] = useState<View>('listing');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
+  const [generations, setGenerations] = useState<CreativeStillGeneration[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleStillsCount, setVisibleStillsCount] = useState(6);
+  const [selectedStill, setSelectedStill] = useState<CreativeStillGeneration | null>(null);
+  const [lastGenerateParams, setLastGenerateParams] = useState<CreativeStillGenerateParams | null>(null);
 
- const isDark = theme === 'dark';
+  const isDark = theme === 'dark';
 
- // Se veio com produto pré-selecionado, vai direto pro wizard
- useEffect(() => {
- if (initialProduct) {
- setWizardState(prev => ({ ...prev, mainProduct: initialProduct }));
- setView('wizard');
- onClearInitialProduct?.();
- }
- }, [initialProduct, onClearInitialProduct]);
+  // ── Produto pré-selecionado (vindo de outra página) ──
+  useEffect(() => {
+    if (initialProduct) {
+      setSelectedProduct(initialProduct);
+      setView('editor');
+      onClearInitialProduct?.();
+    }
+  }, [initialProduct, onClearInitialProduct]);
 
- // Carregar dados do Supabase
- const loadData = useCallback(async () => {
- if (!userId) return;
- setLoadingTemplates(true);
- try {
- // Templates
- const { data: tplData } = await supabase
- .from('creative_still_templates')
- .select('*')
- .eq('user_id', userId)
- .order('created_at', { ascending: false });
- if (tplData) setTemplates(tplData as CreativeStillTemplate[]);
+  // ── Carregar gerações do Supabase ──
+  const loadGenerations = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const { data } = await supabase
+        .from('creative_still_generations')
+        .select('*')
+        .eq('user_id', userId)
+        .neq('status', 'failed')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (data) setGenerations(data as CreativeStillGeneration[]);
+    } catch (err) {
+      console.error('[CS] Erro ao carregar gerações:', err);
+    }
+  }, [userId]);
 
- // Gerações
- const { data: genData } = await supabase
- .from('creative_still_generations')
- .select('*')
- .eq('user_id', userId)
- .neq('status', 'failed')
- .order('created_at', { ascending: false })
- .limit(20);
- if (genData) {
- setGenerations(genData as CreativeStillGeneration[]);
- setFavorites((genData as (CreativeStillGeneration & { is_favorite?: boolean })[]).filter(g => g.is_favorite));
- }
- } catch (err) {
- console.error('Erro ao carregar dados do Vizzu Still Criativo:', err);
- } finally {
- setLoadingTemplates(false);
- }
- }, [userId]);
+  useEffect(() => {
+    loadGenerations();
+  }, [loadGenerations]);
 
- useEffect(() => {
- loadData();
- }, [loadData]);
+  // ── Stills recentes (completados) ──
+  const recentStills = useMemo(() =>
+    generations.filter(g => g.status === 'completed' && getFirstVariationUrl(g)),
+  [generations]);
 
- const handleStartNew = () => {
- setWizardState({ ...INITIAL_WIZARD_STATE });
- setView('wizard');
- };
+  // ── Produtos filtrados ──
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    const q = searchQuery.toLowerCase();
+    return products.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.sku || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q)
+    );
+  }, [products, searchQuery]);
 
- const handleUseTemplate = (template: CreativeStillTemplate) => {
- setWizardState({
- ...INITIAL_WIZARD_STATE,
- surfaceDescription: template.surface_description,
- environmentDescription: template.environment_description || '',
- moodSeason: template.mood_season || 'ai_choose',
- productPresentation: template.product_presentation || 'ai_choose',
- productScale: (template.product_scale as CreativeStillWizardState['productScale']) || 'ai_choose',
- lighting: template.lighting,
- lensModel: template.lens_model,
- cameraAngle: template.camera_angle,
- depthOfField: template.depth_of_field,
- visualStyle: template.visual_style || 'ai_choose',
- frameRatio: template.frame_ratio,
- resolution: (template.resolution as CreativeStillWizardState['resolution']) || '2k',
- variationsCount: template.default_variations || 2,
- });
- setView('wizard');
- };
+  // ── GERAR ──
+  const handleGenerate = useCallback(async (params: CreativeStillGenerateParams) => {
+    if (!userId) return;
+    setLastGenerateParams(params);
 
- const handleGenerate = async () => {
- if (!wizardState.mainProduct) return;
+    const creditCost = params.resolution === '4k' ? 2 : 1;
+    const creditsNeeded = params.variationsCount * creditCost;
+    if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still')) return;
 
- const creditsNeeded = wizardState.variationsCount;
- if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still')) return;
+    setIsGenerating(true);
+    onSetGenerating?.(true);
+    setGenerationProgress(10);
+    onSetProgress?.(10);
+    setLoadingText('');
+    setView('results');
 
- setIsGenerating(true);
- onSetGenerating?.(true);
- setGenerationProgress(10);
- onSetProgress?.(10);
- setLoadingText('');
- setView('results');
+    // Inserir registro no Supabase
+    const { data: insertedGen, error: insertError } = await supabase
+      .from('creative_still_generations')
+      .insert({
+        user_id: userId,
+        product_id: params.product.id,
+        additional_products: [],
+        settings_snapshot: {
+          mode: 'simple',
+          userPrompt: params.userPrompt,
+          optimizedPrompt: params.optimizedPrompt,
+          frameRatio: params.frameRatio,
+          resolution: params.resolution,
+          variationsCount: params.variationsCount,
+          allProductImageUrls: params.productImageUrls,
+          referenceImageUrls: params.referenceImages,
+          selectedAngles: params.selectedAngles,
+          product_name: params.product.name,
+          product_category: params.product.category || '',
+          product_color: params.product.color || '',
+        },
+        variations_requested: params.variationsCount,
+        resolution: params.resolution,
+        variation_urls: [],
+        variation_1_url: null,
+        variation_2_url: null,
+        credits_used: creditsNeeded,
+        status: 'pending',
+      })
+      .select()
+      .single();
 
- // Criar registro no Supabase com status 'pending'
- const { data: insertedGen, error: insertError } = await supabase
- .from('creative_still_generations')
- .insert({
- user_id: userId,
- product_id: wizardState.mainProduct.id || '',
- additional_products: wizardState.additionalProducts.map(p => ({
- product_id: p.product_id,
- product_name: p.product_name,
- product_image_url: p.product_image_url,
- position_description: p.position_description,
- source: p.source,
- })),
- settings_snapshot: {
- mainProductView: wizardState.mainProductView,
- mainProductHighlight: wizardState.mainProductHighlight,
- productPresentation: wizardState.productPresentation,
- customPresentationText: wizardState.customPresentationText,
- productScale: wizardState.productScale,
- surfaceDescription: wizardState.surfaceDescription,
- surfaceReference: wizardState.surfaceReference ? 'attached' : null,
- environmentDescription: wizardState.environmentDescription,
- environmentReference: wizardState.environmentReference ? 'attached' : null,
- compositionElements: wizardState.compositionElements.map(el => ({
- description: el.description,
- hasImage: !!el.image,
- })),
- compositionReference: wizardState.compositionReference ? 'attached' : null,
- moodSeason: wizardState.moodSeason,
- customMoodSeason: wizardState.customMoodSeason,
- lighting: wizardState.lighting,
- customLighting: wizardState.customLighting,
- lightingReference: wizardState.lightingReference ? 'attached' : null,
- lensModel: wizardState.lensModel,
- cameraAngle: wizardState.cameraAngle,
- depthOfField: wizardState.depthOfField,
- visualStyle: wizardState.visualStyle,
- customVisualStyle: wizardState.customVisualStyle,
- visualStyleReference: wizardState.visualStyleReference ? 'attached' : null,
- frameRatio: wizardState.frameRatio,
- resolution: wizardState.resolution,
- variationsCount: wizardState.variationsCount,
- // Dados do produto
- product_image_url: (() => {
- const p = wizardState.mainProduct!;
- const view = wizardState.mainProductView === 'both' ? 'front' : wizardState.mainProductView;
- if (p.generatedImages?.productStudio?.length) {
- const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
- const img = lastSession.images?.find(i => i.angle === view);
- if (img?.url) return img.url;
- }
- if (view === 'back' && p.originalImages?.back?.url) return p.originalImages.back.url;
- if (p.originalImages?.front?.url) return p.originalImages.front.url;
- if (p.images?.[0]?.url) return p.images[0].url;
- return '';
- })(),
- product_detail_image_url: (() => {
- const p = wizardState.mainProduct!;
- if (p.generatedImages?.productStudio?.length) {
- const lastSession = p.generatedImages.productStudio[p.generatedImages.productStudio.length - 1];
- const img = lastSession.images?.find(i => i.angle === 'detail');
- if (img?.url) return img.url;
- }
- if (p.originalImages?.detail?.url) return p.originalImages.detail.url;
- return null;
- })(),
- product_name: wizardState.mainProduct!.name,
- product_category: wizardState.mainProduct!.category || '',
- product_color: wizardState.mainProduct!.color || '',
- },
- variations_requested: wizardState.variationsCount,
- resolution: wizardState.resolution,
- variation_urls: [],
- variation_1_url: null,
- variation_2_url: null,
- credits_used: creditsNeeded,
- status: 'pending',
- })
- .select()
- .single();
+    if (insertError || !insertedGen) {
+      console.error('[CS] Erro ao criar geração:', insertError);
+      setIsGenerating(false);
+      onSetGenerating?.(false);
+      setCurrentGeneration({
+        id: crypto.randomUUID(),
+        user_id: userId,
+        template_id: null,
+        product_id: params.product.id,
+        additional_products: [],
+        settings_snapshot: {},
+        variation_urls: [],
+        variation_1_url: null,
+        variation_2_url: null,
+        variations_requested: params.variationsCount,
+        selected_variation: null,
+        reference_image_url: null,
+        resolution: params.resolution,
+        credits_used: 0,
+        status: 'failed',
+        error_message: 'Erro ao iniciar geração. Tente novamente.',
+        created_at: new Date().toISOString(),
+        completed_at: null,
+      });
+      return;
+    }
 
- if (insertError || !insertedGen) {
- console.error('Erro ao criar geração:', insertError);
- setIsGenerating(false);
- onSetGenerating?.(false);
- setCurrentGeneration({
- id: crypto.randomUUID(),
- user_id: userId || '',
- template_id: null,
- product_id: wizardState.mainProduct.id || '',
- additional_products: [],
- settings_snapshot: {},
- variation_urls: [],
- variation_1_url: null,
- variation_2_url: null,
- variations_requested: wizardState.variationsCount,
- selected_variation: null,
- reference_image_url: null,
- resolution: wizardState.resolution,
- credits_used: 0,
- status: 'failed',
- error_message: 'Erro ao iniciar geração. Tente novamente.',
- created_at: new Date().toISOString(),
- completed_at: null,
- });
- return;
- }
+    const generationId = insertedGen.id;
 
- const generationId = insertedGen.id;
+    // Progresso suave
+    let currentProg = 10;
+    const progressInterval = setInterval(() => {
+      const remaining = 90 - currentProg;
+      const increment = Math.max(remaining * 0.08, 0.5);
+      currentProg = Math.min(currentProg + increment, 90);
+      setGenerationProgress(Math.round(currentProg));
+      onSetProgress?.(Math.round(currentProg));
+    }, 1000);
 
- // Progresso suave estilo Vizzu Studio (~2 min, desacelera ao se aproximar de 90%)
- let currentProg = 10;
- const progressInterval = setInterval(() => {
- const remaining = 90 - currentProg;
- const increment = Math.max(remaining * 0.08, 0.5);
- currentProg = Math.min(currentProg + increment, 90);
- setGenerationProgress(Math.round(currentProg));
- onSetProgress?.(Math.round(currentProg));
- }, 1000);
+    // Polling
+    const POLL_INTERVAL = 3000;
+    const POLL_TIMEOUT = params.variationsCount * 120000;
+    const pollStart = Date.now();
 
- // Polling: verificar status a cada 3s até completar ou falhar (timeout 5min)
- const POLL_INTERVAL = 3000;
- const POLL_TIMEOUT = 300000;
- const pollStart = Date.now();
+    try {
+      const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
+        let webhookFailed = false;
 
- try {
- const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
- let webhookFailed = false;
+        const poll = async () => {
+          if (Date.now() - pollStart > POLL_TIMEOUT) {
+            reject(new Error('Tempo limite excedido'));
+            return;
+          }
+          try {
+            const { data, error } = await supabase
+              .from('creative_still_generations')
+              .select('*')
+              .eq('id', generationId)
+              .single();
 
- const poll = async () => {
- if (Date.now() - pollStart > POLL_TIMEOUT) {
- reject(new Error('Tempo limite excedido'));
- return;
- }
- try {
- const { data, error } = await supabase
- .from('creative_still_generations')
- .select('*')
- .eq('id', generationId)
- .single();
+            if (error) { reject(error); return; }
 
- if (error) { reject(error); return; }
+            if (data.status === 'completed') {
+              resolve(data as CreativeStillGeneration);
+            } else if (data.status === 'failed') {
+              resolve(data as CreativeStillGeneration);
+            } else if (webhookFailed) {
+              reject(new Error('Falha na comunicação com o servidor de geração.'));
+            } else {
+              setTimeout(poll, POLL_INTERVAL);
+            }
+          } catch (pollErr) {
+            reject(pollErr);
+          }
+        };
 
- if (data.status === 'completed') {
- resolve(data as CreativeStillGeneration);
- } else if (data.status === 'failed') {
- resolve(data as CreativeStillGeneration);
- } else if (webhookFailed) {
- // Webhook falhou e status ainda pending — não vai mudar
- reject(new Error('Falha na comunicação com o servidor de geração.'));
- } else {
- setTimeout(poll, POLL_INTERVAL);
- }
- } catch (pollErr) {
- reject(pollErr);
- }
- };
+        // Chamar webhook N8N
+        fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate-simple', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            generation_id: generationId,
+            user_id: userId,
+          }),
+        })
+        .then(res => {
+          if (!res.ok) {
+            console.error('[CS] Webhook retornou erro:', res.status);
+            webhookFailed = true;
+          }
+        })
+        .catch(err => {
+          console.error('[CS] Erro ao chamar webhook:', err);
+          webhookFailed = true;
+        });
 
- // Chamar webhook n8n para iniciar geração
- fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- generation_id: generationId,
- user_id: userId,
- }),
- })
- .then(res => {
- if (!res.ok) {
- console.error('Webhook retornou erro:', res.status);
- webhookFailed = true;
- }
- })
- .catch(err => {
- console.error('Erro ao chamar webhook n8n:', err);
- webhookFailed = true;
- });
+        setTimeout(poll, 2000);
+      });
 
- // Dar tempo pro webhook responder antes de começar polling
- setTimeout(poll, 2000);
- });
+      clearInterval(progressInterval);
+      setGenerationProgress(95);
+      onSetProgress?.(95);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setGenerationProgress(100);
+      onSetProgress?.(100);
+      setCurrentGeneration(result);
+      loadGenerations();
+    } catch (err) {
+      clearInterval(progressInterval);
+      console.error('[CS] Erro durante geração:', err);
+      await supabase
+        .from('creative_still_generations')
+        .update({ status: 'failed', error_message: 'Erro ao gerar imagem.' })
+        .eq('id', generationId);
 
- clearInterval(progressInterval);
- setGenerationProgress(95);
- onSetProgress?.(95);
- await new Promise(resolve => setTimeout(resolve, 500));
- setGenerationProgress(100);
- onSetProgress?.(100);
- setCurrentGeneration(result);
+      const { data: failedGen } = await supabase
+        .from('creative_still_generations')
+        .select('*')
+        .eq('id', generationId)
+        .single();
 
- // Marcar como notificado (para não exibir toast de "concluído em segundo plano" no próximo startup)
- try {
- const notifiedKey = `vizzu_bg_notified_${userId}`;
- const notified: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
- notified.push(`still-${generationId}`);
- localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
- } catch {}
+      setCurrentGeneration((failedGen as CreativeStillGeneration) || {
+        id: generationId,
+        user_id: userId,
+        template_id: null,
+        product_id: params.product.id,
+        additional_products: [],
+        settings_snapshot: {},
+        variation_urls: [],
+        variation_1_url: null,
+        variation_2_url: null,
+        variations_requested: params.variationsCount,
+        selected_variation: null,
+        reference_image_url: null,
+        resolution: params.resolution,
+        credits_used: 0,
+        status: 'failed',
+        error_message: 'Erro ao gerar imagem. Tente novamente.',
+        created_at: new Date().toISOString(),
+        completed_at: null,
+      });
+    } finally {
+      setIsGenerating(false);
+      onSetGenerating?.(false);
+    }
+  }, [userId, onCheckCredits, onSetGenerating, onSetProgress, loadGenerations]);
 
- // Recarregar lista
- loadData();
+  // ── Navegar de volta ──
+  const handleBackToListing = useCallback(() => {
+    setView('listing');
+    setCurrentGeneration(null);
+    setSelectedProduct(null);
+    loadGenerations();
+  }, [loadGenerations]);
 
- } catch (err) {
- clearInterval(progressInterval);
- // Marcar como falha no Supabase
- await supabase
- .from('creative_still_generations')
- .update({ status: 'failed', error_message: 'Erro ao gerar imagem.' })
- .eq('id', generationId);
+  const handleBackToEditor = useCallback(() => {
+    setView('editor');
+    setCurrentGeneration(null);
+  }, []);
 
- const { data: failedGen } = await supabase
- .from('creative_still_generations')
- .select('*')
- .eq('id', generationId)
- .single();
+  // ── Deletar geração ──
+  const handleDeleteGeneration = useCallback(async (genId: string) => {
+    await supabase
+      .from('creative_still_generations')
+      .delete()
+      .eq('id', genId);
+    setSelectedStill(null);
+    loadGenerations();
+  }, [loadGenerations]);
 
- setCurrentGeneration((failedGen as CreativeStillGeneration) || {
- id: generationId,
- user_id: userId || '',
- template_id: null,
- product_id: wizardState.mainProduct.id || '',
- additional_products: [],
- settings_snapshot: {},
- variation_urls: [],
- variation_1_url: null,
- variation_2_url: null,
- variations_requested: wizardState.variationsCount,
- selected_variation: null,
- reference_image_url: null,
- resolution: wizardState.resolution,
- credits_used: 0,
- status: 'failed',
- error_message: 'Erro ao gerar imagem. Tente novamente.',
- created_at: new Date().toISOString(),
- completed_at: null,
- });
- } finally {
- setIsGenerating(false);
- onSetGenerating?.(false);
- }
- };
+  // ═══════════════════════════════════════════════════════════════
+  // CAMADA 3: RESULTADOS
+  // ═══════════════════════════════════════════════════════════════
 
- const handleBackToHome = () => {
- setView('mode-select');
- setCurrentGeneration(null);
- setSimpleState(null);
- setWizardState({ ...INITIAL_WIZARD_STATE });
- loadData(); // Recarregar listas ao voltar
- };
+  if (view === 'results') {
+    return (
+      <CreativeStillResults
+        theme={theme}
+        generation={currentGeneration}
+        product={selectedProduct}
+        resolution={(lastGenerateParams?.resolution || '2k') as '2k' | '4k'}
+        variationsCount={lastGenerateParams?.variationsCount || 2}
+        isGenerating={isGenerating}
+        progress={generationProgress}
+        loadingText={loadingText}
+        onBackToHome={handleBackToEditor}
+        onGenerateAgain={() => lastGenerateParams && handleGenerate(lastGenerateParams)}
+        onMinimize={() => onSetMinimized?.(true)}
+        isMinimized={isMinimized}
+        editBalance={editBalance}
+        regularBalance={userCredits}
+        onDeductEditCredits={onDeductEditCredits}
+        onVariationUpdated={(index, newUrl) => {
+          setCurrentGeneration(prev => {
+            if (!prev) return prev;
+            const urls = [...(prev.variation_urls || [])];
+            urls[index] = newUrl;
+            return { ...prev, variation_urls: urls };
+          });
+        }}
+        onVariationAdded={(newUrl) => {
+          setCurrentGeneration(prev => {
+            if (!prev) return prev;
+            const urls = [...(prev.variation_urls || []), newUrl];
+            return { ...prev, variation_urls: urls };
+          });
+        }}
+      />
+    );
+  }
 
- // Gerar no modo simplificado
- const handleGenerateSimple = async (state: CreativeStillSimpleState) => {
- if (!state.mainProduct) return;
+  // ═══════════════════════════════════════════════════════════════
+  // CAMADA 2: EDITOR
+  // ═══════════════════════════════════════════════════════════════
 
- const creditCost = state.resolution === '4k' ? 2 : 1;
- const creditsNeeded = state.variationsCount * creditCost;
- if (onCheckCredits && !onCheckCredits(creditsNeeded, 'creative-still-simple')) return;
+  if (view === 'editor' && selectedProduct) {
+    return (
+      <CreativeStillEditor
+        product={selectedProduct}
+        theme={theme}
+        userCredits={userCredits}
+        userId={userId}
+        currentPlan={currentPlan}
+        onBack={() => {
+          setView('listing');
+          setSelectedProduct(null);
+        }}
+        onGenerate={handleGenerate}
+        onOpenPlanModal={onOpenPlanModal}
+        isGenerating={isGenerating}
+      />
+    );
+  }
 
- setSimpleState(state);
- setIsGenerating(true);
- onSetGenerating?.(true);
- setGenerationProgress(10);
- onSetProgress?.(10);
- setLoadingText('');
- setView('results');
+  // ═══════════════════════════════════════════════════════════════
+  // CAMADA 1: LISTAGEM
+  // ═══════════════════════════════════════════════════════════════
 
- // Criar registro no Supabase
- const { data: insertedGen, error: insertError } = await supabase
-   .from('creative_still_generations')
-   .insert({
-     user_id: userId,
-     product_id: state.mainProduct.id || '',
-     additional_products: [],
-     settings_snapshot: {
-       mode: 'simple',
-       userPrompt: state.userPrompt,
-       optimizedPrompt: state.optimizedPrompt,
-       frameRatio: state.frameRatio,
-       resolution: state.resolution,
-       variationsCount: state.variationsCount,
-       allProductImageUrls: state.allProductImageUrls,
-       product_name: state.mainProduct.name,
-       product_category: state.mainProduct.category || '',
-       product_color: state.mainProduct.color || '',
-     },
-     variations_requested: state.variationsCount,
-     resolution: state.resolution,
-     variation_urls: [],
-     variation_1_url: null,
-     variation_2_url: null,
-     credits_used: creditsNeeded,
-     status: 'pending',
-   })
-   .select()
-   .single();
+  return (
+    <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-[#f7f5f2]')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
+      <div className="max-w-7xl mx-auto pb-24">
 
- if (insertError || !insertedGen) {
-   console.error('Erro ao criar geração simples:', insertError);
-   setIsGenerating(false);
-   onSetGenerating?.(false);
-   setCurrentGeneration({
-     id: crypto.randomUUID(),
-     user_id: userId || '',
-     template_id: null,
-     product_id: state.mainProduct.id || '',
-     additional_products: [],
-     settings_snapshot: {},
-     variation_urls: [],
-     variation_1_url: null,
-     variation_2_url: null,
-     variations_requested: state.variationsCount,
-     selected_variation: null,
-     reference_image_url: null,
-     resolution: state.resolution,
-     credits_used: 0,
-     status: 'failed',
-     error_message: 'Erro ao iniciar geração. Tente novamente.',
-     created_at: new Date().toISOString(),
-     completed_at: null,
-   });
-   return;
- }
+        {/* ── HEADER ── */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}
+              >
+                <i className="fas fa-arrow-left text-sm"></i>
+              </button>
+            )}
+            <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]'}>
+              <i className="fas fa-camera-retro text-sm text-white"></i>
+            </div>
+            <div>
+              <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Criativo</h1>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Still life criativo para e-commerce</p>
+            </div>
+          </div>
+          <div className={'flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold ' + (isDark ? 'bg-white/10 text-neutral-300' : 'bg-white/60 border border-gray-200/60 text-gray-600')}>
+            <i className="fas fa-coins text-xs text-amber-500"></i>
+            {userCredits}
+          </div>
+        </div>
 
- const generationId = insertedGen.id;
+        {/* ── ÚLTIMOS STILLS ── */}
+        {recentStills.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={(isDark ? 'text-neutral-200' : 'text-gray-800') + ' text-sm font-bold'}>
+                <i className="fas fa-clock-rotate-left mr-2 text-xs opacity-50"></i>
+                Últimos Stills
+              </h2>
+              {recentStills.length > visibleStillsCount && (
+                <button
+                  onClick={() => setVisibleStillsCount(prev => prev + 6)}
+                  className={'text-xs font-medium transition-all ' + (isDark ? 'text-[#FF6B6B] hover:text-[#FF9F43]' : 'text-[#FF6B6B] hover:text-[#FF9F43]')}
+                >
+                  Ver mais +
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              {recentStills.slice(0, visibleStillsCount).map(gen => {
+                const thumbUrl = getFirstVariationUrl(gen);
+                const productName = (gen.settings_snapshot as any)?.product_name || 'Produto';
+                const varCount = gen.variation_urls?.length || 1;
+                return (
+                  <button
+                    key={gen.id}
+                    onClick={() => setSelectedStill(gen)}
+                    className={'group relative rounded-xl overflow-hidden border transition-all hover:scale-[1.03] ' + (isDark ? 'border-neutral-800 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-400 shadow-sm')}
+                  >
+                    <div className="aspect-[4/5]">
+                      {thumbUrl && (
+                        <OptimizedImage src={thumbUrl} alt={productName} className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    {/* Badge variações */}
+                    {varCount > 1 && (
+                      <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-purple-500/90 text-white text-[9px] font-bold">
+                        {varCount}
+                      </div>
+                    )}
+                    {/* Footer */}
+                    <div className={'absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t ' + (isDark ? 'from-black/80 to-transparent' : 'from-black/60 to-transparent')}>
+                      <p className="text-white text-[10px] font-medium truncate">{productName}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
- // Progresso suave
- let currentProg = 10;
- const progressInterval = setInterval(() => {
-   const remaining = 90 - currentProg;
-   const increment = Math.max(remaining * 0.08, 0.5);
-   currentProg = Math.min(currentProg + increment, 90);
-   setGenerationProgress(Math.round(currentProg));
-   onSetProgress?.(Math.round(currentProg));
- }, 1000);
+        {/* ── BUSCA ── */}
+        <div className="mb-4">
+          <div className="relative">
+            <i className={'fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar produto..."
+              className={'w-full pl-9 pr-4 py-2.5 rounded-xl text-sm transition-all ' +
+                (isDark
+                  ? 'bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 focus:border-neutral-600'
+                  : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 shadow-sm'
+                )
+              }
+            />
+          </div>
+        </div>
 
- // Polling
- const POLL_INTERVAL = 3000;
- const POLL_TIMEOUT = state.variationsCount * 120000; // 2 min por variação
- const pollStart = Date.now();
+        {/* ── PRODUTOS ── */}
+        <div>
+          <h2 className={(isDark ? 'text-neutral-200' : 'text-gray-800') + ' text-sm font-bold mb-3'}>
+            <i className="fas fa-box mr-2 text-xs opacity-50"></i>
+            Seus Produtos
+            <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' font-normal ml-2'}>({filteredProducts.length})</span>
+          </h2>
+          {filteredProducts.length === 0 ? (
+            <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-white border border-gray-200')}>
+              <i className={'fas fa-box-open text-3xl mb-3 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+                {searchQuery ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {filteredProducts.map(product => {
+                const imgUrl = getProductImage(product);
+                const stillCount = getStillCount(product, generations);
+                return (
+                  <button
+                    key={product.id}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setView('editor');
+                    }}
+                    className={'group relative rounded-xl overflow-hidden border transition-all hover:scale-[1.03] text-left ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-600' : 'bg-white border-gray-200 hover:border-gray-400 shadow-sm')}
+                  >
+                    <div className="aspect-square relative overflow-hidden">
+                      {imgUrl ? (
+                        <OptimizedImage src={imgUrl} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                        </div>
+                      )}
+                      {/* Badge stills */}
+                      {stillCount > 0 && (
+                        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-[#FF6B6B]/90 text-white text-[9px] font-bold">
+                          {stillCount}
+                        </div>
+                      )}
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                        <span className="text-white text-xs font-semibold flex items-center gap-1">
+                          <i className="fas fa-camera-retro text-[10px]"></i>
+                          Criar still
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-2.5">
+                      <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold truncate'}>{product.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {product.sku && <span className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{product.sku}</span>}
+                        {product.category && (
+                          <span className={'text-[9px] px-1 py-0.5 rounded ' + (isDark ? 'bg-white/5 text-neutral-500' : 'bg-gray-100 text-gray-500')}>
+                            {product.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
 
- try {
-   const result = await new Promise<CreativeStillGeneration>((resolve, reject) => {
-     let webhookFailed = false;
-
-     const poll = async () => {
-       if (Date.now() - pollStart > POLL_TIMEOUT) {
-         reject(new Error('Tempo limite excedido'));
-         return;
-       }
-       try {
-         const { data, error } = await supabase
-           .from('creative_still_generations')
-           .select('*')
-           .eq('id', generationId)
-           .single();
-
-         if (error) { reject(error); return; }
-
-         if (data.status === 'completed') {
-           resolve(data as CreativeStillGeneration);
-         } else if (data.status === 'failed') {
-           resolve(data as CreativeStillGeneration);
-         } else if (webhookFailed) {
-           reject(new Error('Falha na comunicação com o servidor de geração.'));
-         } else {
-           setTimeout(poll, POLL_INTERVAL);
-         }
-       } catch (pollErr) {
-         reject(pollErr);
-       }
-     };
-
-     // Chamar webhook N8N para iniciar geração simplificada
-     fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate-simple', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({
-         generation_id: generationId,
-         user_id: userId,
-       }),
-     })
-     .then(res => {
-       if (!res.ok) {
-         console.error('Webhook retornou erro:', res.status);
-         webhookFailed = true;
-       }
-     })
-     .catch(err => {
-       console.error('Erro ao chamar webhook n8n:', err);
-       webhookFailed = true;
-     });
-
-     setTimeout(poll, 2000);
-   });
-
-   clearInterval(progressInterval);
-   setGenerationProgress(95);
-   onSetProgress?.(95);
-   await new Promise(resolve => setTimeout(resolve, 500));
-   setGenerationProgress(100);
-   onSetProgress?.(100);
-   setCurrentGeneration(result);
-
-   try {
-     const notifiedKey = `vizzu_bg_notified_${userId}`;
-     const notified: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
-     notified.push(`still-${generationId}`);
-     localStorage.setItem(notifiedKey, JSON.stringify(notified.slice(-200)));
-   } catch {}
-
-   loadData();
- } catch (err) {
-   clearInterval(progressInterval);
-   await supabase
-     .from('creative_still_generations')
-     .update({ status: 'failed', error_message: 'Erro ao gerar imagem.' })
-     .eq('id', generationId);
-
-   const { data: failedGen } = await supabase
-     .from('creative_still_generations')
-     .select('*')
-     .eq('id', generationId)
-     .single();
-
-   setCurrentGeneration((failedGen as CreativeStillGeneration) || {
-     id: generationId,
-     user_id: userId || '',
-     template_id: null,
-     product_id: state.mainProduct.id || '',
-     additional_products: [],
-     settings_snapshot: {},
-     variation_urls: [],
-     variation_1_url: null,
-     variation_2_url: null,
-     variations_requested: state.variationsCount,
-     selected_variation: null,
-     reference_image_url: null,
-     resolution: state.resolution,
-     credits_used: 0,
-     status: 'failed',
-     error_message: 'Erro ao gerar imagem. Tente novamente.',
-     created_at: new Date().toISOString(),
-     completed_at: null,
-   });
- } finally {
-   setIsGenerating(false);
-   onSetGenerating?.(false);
- }
- };
-
- // Toggle favorito
- const handleToggleFavorite = async (generationId: string, current: boolean) => {
- await supabase
- .from('creative_still_generations')
- .update({ is_favorite: !current })
- .eq('id', generationId);
- loadData();
- };
-
- // ============================================================
- // TELA DE SELEÇÃO DE MODO
- // ============================================================
- if (view === 'mode-select') {
- return (
-   <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-cream')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
-   <div className="max-w-lg mx-auto">
-     {/* Header */}
-     <div className="flex items-center gap-3 mb-8">
-     {onBack && (
-       <button onClick={onBack} className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}>
-       <i className="fas fa-arrow-left text-sm"></i>
-       </button>
-     )}
-     <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
-       <i className={'fas fa-palette text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
-     </div>
-     <div>
-       <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Vizzu Still Criativo®</h1>
-       <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
-     </div>
-     </div>
-
-     <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-sm mb-6 text-center'}>
-     Como você quer criar?
-     </p>
-
-     <div className="space-y-4">
-     {/* Card — Modo Rápido */}
-     <button
-       onClick={() => setView('simple')}
-       className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400')}
-     >
-       <div className="flex items-start gap-4">
-       <div className={'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ' + (isDark ? 'from-amber-500/20 to-[#FF9F43]/10' : 'from-amber-100 to-[#FF9F43]/10')}>
-         <i className={'fas fa-bolt text-xl ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
-       </div>
-       <div className="flex-1 min-w-0">
-         <div className="flex items-center gap-2 mb-1">
-         <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-bold text-base'}>Modo Rápido</h3>
-         <span className={'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ' + (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600')}>Novo</span>
-         </div>
-         <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
-         Selecione o produto e descreva a cena. A IA cuida do resto.
-         </p>
-         <div className={'flex items-center gap-3 mt-3 text-[10px] ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
-         <span><i className="fas fa-check mr-1"></i>Prompt livre</span>
-         <span><i className="fas fa-check mr-1"></i>Presets prontos</span>
-         <span><i className="fas fa-check mr-1"></i>1-5 variações</span>
-         </div>
-       </div>
-       <div className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' self-center'}>
-         <i className="fas fa-chevron-right text-sm"></i>
-       </div>
-       </div>
-     </button>
-
-     {/* Card — Modo Avançado */}
-     <button
-       onClick={() => setView('home')}
-       className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-purple-500/50' : 'bg-white border-2 border-gray-200 hover:border-purple-400')}
-     >
-       <div className="flex items-start gap-4">
-       <div className={'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ' + (isDark ? 'from-purple-500/20 to-purple-400/10' : 'from-purple-100 to-purple-50')}>
-         <i className={'fas fa-wand-magic-sparkles text-xl ' + (isDark ? 'text-purple-400' : 'text-purple-500')}></i>
-       </div>
-       <div className="flex-1 min-w-0">
-         <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-bold text-base mb-1'}>Modo Avançado</h3>
-         <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
-         Wizard de 4 passos com controle total: cenário, estética, câmera, iluminação.
-         </p>
-         <div className={'flex items-center gap-3 mt-3 text-[10px] ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}>
-         <span><i className="fas fa-check mr-1"></i>Templates</span>
-         <span><i className="fas fa-check mr-1"></i>Lente e câmera</span>
-         <span><i className="fas fa-check mr-1"></i>Controle total</span>
-         </div>
-       </div>
-       <div className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' self-center'}>
-         <i className="fas fa-chevron-right text-sm"></i>
-       </div>
-       </div>
-     </button>
-     </div>
-   </div>
-   </div>
- );
- }
-
- // ============================================================
- // MODO SIMPLIFICADO
- // ============================================================
- if (view === 'simple') {
- return (
-   <CreativeStillSimple
-   theme={theme}
-   products={products}
-   userCredits={userCredits}
-   currentPlan={currentPlan}
-   onGenerate={handleGenerateSimple}
-   onBack={() => setView('mode-select')}
-   onOpenPlanModal={onOpenPlanModal}
-   />
- );
- }
-
- // ============================================================
- // TELA INICIAL (AVANÇADO)
- // ============================================================
- if (view === 'home') {
- return (
- <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? '' : 'bg-cream')} style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}>
- <div className="max-w-4xl mx-auto">
- {/* Header */}
- <div className="flex items-center justify-between mb-6">
- <div className="flex items-center gap-3">
- <button onClick={() => setView('mode-select')} className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (isDark ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}>
- <i className="fas fa-arrow-left text-sm"></i>
- </button>
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-wand-magic-sparkles text-sm ' + (isDark ? 'text-purple-400' : 'text-purple-500')}></i>
- </div>
- <div>
- <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Modo Avançado</h1>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Composições artísticas para Instagram e e-commerce</p>
- </div>
- </div>
- <div className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ' + (isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-600 border border-amber-200')}>
- <i className="fas fa-coins text-[10px]"></i>
- <span>1 crédito/variação</span>
- </div>
- </div>
-
- {/* Novo Still */}
- <div className="mb-8">
- <button
- onClick={() => handleStartNew()}
- className={'group relative overflow-hidden rounded-xl p-5 text-left transition-all hover:scale-[1.02] w-full ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border-2 border-gray-200 hover:border-amber-400 ')}
- >
- <div className="flex items-start gap-4">
- <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-gradient-to-r from-amber-500/20 to-[#FF9F43]/15' : 'bg-gradient-to-r from-amber-100 to-[#FF9F43]/10')}>
- <i className={'fas fa-wand-magic-sparkles text-lg ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
- </div>
- <div>
- <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Novo Still</h3>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs leading-relaxed'}>
- 4 passos: Produto, Cenário, Estética e Frame. Controle total sobre cada detalhe.
- </p>
- </div>
- </div>
- </button>
- </div>
-
- {/* Stills Gerados */}
- <div className="mb-8">
- <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
- <i className="fas fa-images mr-2 text-xs opacity-50"></i>
- Stills Gerados
- </h2>
- {loadingTemplates ? (
- <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200')}>
- <i className="fas fa-spinner fa-spin text-lg text-neutral-500"></i>
- </div>
- ) : generations.length === 0 ? (
- <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
- <div className={'w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-3 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
- <i className={'fas fa-images text-xl ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
- </div>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
- Você ainda não gerou nenhum still.
- </p>
- <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-1'}>
- Crie seu primeiro still criativo e ele aparecerá aqui!
- </p>
- </div>
- ) : (
- <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
- {generations.map(gen => (
- <div
- key={gen.id}
- className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-amber-500/50' : 'bg-white border border-gray-200 hover:border-amber-400 ')}
- >
- <div className={'aspect-square flex items-center justify-center ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
- {(() => {
- const urls = gen.variation_urls?.length ? gen.variation_urls : [gen.variation_1_url, gen.variation_2_url].filter(Boolean) as string[];
- const displayUrl = gen.selected_variation != null && urls[gen.selected_variation - 1]
- ? urls[gen.selected_variation - 1]
- : urls[0] || null;
- return displayUrl ? (
- <OptimizedImage src={displayUrl} alt="" className="w-full h-full" size="thumb" />
- ) : (
- <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
- );
- })()}
- </div>
- <div className="p-3">
- <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>
- {gen.status === 'completed' ? 'Still gerado' : gen.status === 'processing' ? 'Gerando...' : 'Falhou'}
- </p>
- <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
- {new Date(gen.created_at).toLocaleDateString('pt-BR')}
- </p>
- </div>
- </div>
- ))}
- </div>
- )}
- </div>
-
- {/* Meus Stills Favoritos */}
- <div>
- <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>
- <i className="fas fa-heart mr-2 text-xs opacity-50"></i>
- Meus Stills Favoritos
- </h2>
- {favorites.length === 0 ? (
- <div className={'rounded-xl p-8 text-center ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
- <div className={'w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-3 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-200')}>
- <i className={'fas fa-heart text-xl ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
- </div>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
- Nenhum favorito ainda.
- </p>
- <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-1'}>
- Favorite seus melhores stills para acessá-los rapidamente!
- </p>
- </div>
- ) : (
- <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
- {favorites.map(gen => (
- <div
- key={gen.id}
- className={'group rounded-xl overflow-hidden text-left transition-all hover:scale-[1.02] ' + (isDark ? 'bg-neutral-900 border border-neutral-800 hover:border-[#FF6B6B]/50' : 'bg-white border border-gray-200 hover:border-[#FF6B6B]/50 ')}
- >
- <div className={'aspect-square flex items-center justify-center relative ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
- {(() => {
- const urls = gen.variation_urls?.length ? gen.variation_urls : [gen.variation_1_url, gen.variation_2_url].filter(Boolean) as string[];
- const displayUrl = gen.selected_variation != null && urls[gen.selected_variation - 1]
- ? urls[gen.selected_variation - 1]
- : urls[0] || null;
- return displayUrl ? (
- <OptimizedImage src={displayUrl} alt="" className="w-full h-full" size="thumb" />
- ) : (
- <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
- );
- })()}
- <div className="absolute top-2 right-2">
- <i className="fas fa-heart text-[#FF6B6B] text-sm drop-"></i>
- </div>
- </div>
- <div className="p-3">
- <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>Still favorito</p>
- <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
- {new Date(gen.created_at).toLocaleDateString('pt-BR')}
- </p>
- </div>
- </div>
- ))}
- </div>
- )}
- </div>
- </div>
- </div>
- );
- }
-
- // ============================================================
- // WIZARD
- // ============================================================
- if (view === 'wizard') {
- return (
- <CreativeStillWizard
- theme={theme}
- products={products}
- wizardState={wizardState}
- onUpdateState={(updates) => setWizardState(prev => ({ ...prev, ...updates }))}
- onGenerate={handleGenerate}
- onBack={() => setView('home')}
- userCredits={userCredits}
- />
- );
- }
-
- // ============================================================
- // RESULTADOS
- // ============================================================
- return (
- <CreativeStillResults
- theme={theme}
- generation={currentGeneration}
- wizardState={wizardState}
- isGenerating={isGenerating}
- progress={generationProgress}
- loadingText={loadingText}
- onBackToHome={handleBackToHome}
- onGenerateAgain={simpleState ? () => handleGenerateSimple(simpleState) : handleGenerate}
- onMinimize={() => onSetMinimized?.(true)}
- isMinimized={isMinimized}
- editBalance={editBalance}
- regularBalance={userCredits}
- onDeductEditCredits={onDeductEditCredits}
- onVariationUpdated={(index, newUrl) => {
-  setCurrentGeneration(prev => {
-   if (!prev) return prev;
-   const urls = [...(prev.variation_urls || [])];
-   urls[index] = newUrl;
-   return { ...prev, variation_urls: urls };
-  });
- }}
- onVariationAdded={(newUrl) => {
-  setCurrentGeneration(prev => {
-   if (!prev) return prev;
-   const urls = [...(prev.variation_urls || []), newUrl];
-   return { ...prev, variation_urls: urls };
-  });
- }}
- onSaveTemplate={async (name: string) => {
- if (!userId) return;
- const { error } = await supabase
- .from('creative_still_templates')
- .insert({
- user_id: userId,
- name,
- surface_description: wizardState.surfaceDescription,
- environment_description: wizardState.environmentDescription || null,
- elements_description: wizardState.compositionElements.map(e => e.description).join('; ') || null,
- elements_images: [],
- mood_season: wizardState.moodSeason || null,
- product_presentation: wizardState.productPresentation || null,
- product_scale: wizardState.productScale || null,
- lighting: wizardState.lighting,
- lens_model: wizardState.lensModel,
- camera_angle: wizardState.cameraAngle,
- depth_of_field: wizardState.depthOfField,
- visual_style: wizardState.visualStyle,
- frame_ratio: wizardState.frameRatio,
- resolution: wizardState.resolution,
- default_variations: wizardState.variationsCount,
- });
- if (error) {
- console.error('Erro ao salvar template:', error);
- } else {
- loadData();
- }
- }}
- />
- );
+      {/* ── MODAL: Detalhes do Still ── */}
+      {selectedStill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedStill(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div
+            className={'relative rounded-2xl overflow-hidden max-w-3xl w-full max-h-[90vh] overflow-y-auto ' + (isDark ? 'bg-neutral-900 border border-neutral-700' : 'bg-white border border-gray-200 shadow-2xl')}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={'flex items-center justify-between p-4 border-b ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
+              <div>
+                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>
+                  {(selectedStill.settings_snapshot as any)?.product_name || 'Still Criativo'}
+                </h3>
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
+                  {new Date(selectedStill.created_at).toLocaleDateString('pt-BR')} &middot; {selectedStill.variation_urls?.length || 1} {(selectedStill.variation_urls?.length || 1) === 1 ? 'variação' : 'variações'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setCurrentGeneration(selectedStill);
+                    setSelectedStill(null);
+                    // Encontrar o produto correspondente
+                    const prod = products.find(p => p.id === selectedStill.product_id);
+                    if (prod) setSelectedProduct(prod);
+                    setView('results');
+                  }}
+                  className={'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + (isDark ? 'bg-white/10 text-neutral-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
+                >
+                  <i className="fas fa-expand mr-1.5"></i>
+                  Abrir
+                </button>
+                <button
+                  onClick={() => setSelectedStill(null)}
+                  className={'w-8 h-8 rounded-lg flex items-center justify-center transition-all ' + (isDark ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}
+                >
+                  <i className="fas fa-times text-sm"></i>
+                </button>
+              </div>
+            </div>
+            {/* Grid de variações */}
+            <div className="p-4">
+              <div className={'grid gap-3 ' + ((selectedStill.variation_urls?.length || 1) === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-2')}>
+                {(selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean).map((url, i) => (
+                  <div key={i} className={'rounded-xl overflow-hidden border ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
+                    <OptimizedImage src={url!} alt={`Variação ${i + 1}`} className="w-full aspect-square object-contain" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };

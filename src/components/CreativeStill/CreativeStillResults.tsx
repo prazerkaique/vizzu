@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { CreativeStillGeneration, CreativeStillWizardState } from '../../types';
+import { CreativeStillGeneration, Product } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
@@ -37,13 +37,14 @@ const LOADING_PHRASES = [
 interface Props {
  theme: 'dark' | 'light';
  generation: CreativeStillGeneration | null;
- wizardState: CreativeStillWizardState;
+ product: Product | null;
+ resolution: '2k' | '4k';
+ variationsCount: number;
  isGenerating: boolean;
  progress: number;
  loadingText: string;
  onBackToHome: () => void;
  onGenerateAgain: () => void;
- onSaveTemplate: (name: string) => Promise<void>;
  onMinimize?: () => void;
  isMinimized?: boolean;
  editBalance?: number;
@@ -73,13 +74,14 @@ function getGridClasses(count: number): string {
 export const CreativeStillResults: React.FC<Props> = ({
  theme,
  generation,
- wizardState,
+ product,
+ resolution: resolutionProp,
+ variationsCount: variationsCountProp,
  isGenerating,
  progress,
  loadingText,
  onBackToHome,
  onGenerateAgain,
- onSaveTemplate,
  onMinimize,
  isMinimized,
  editBalance = 0,
@@ -90,9 +92,6 @@ export const CreativeStillResults: React.FC<Props> = ({
 }) => {
  const { openViewer } = useImageViewer();
  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
- const [showSaveModal, setShowSaveModal] = useState(false);
- const [templateName, setTemplateName] = useState('');
- const [savingTemplate, setSavingTemplate] = useState(false);
  const [showReveal, setShowReveal] = useState(false);
  const [wasGenerating, setWasGenerating] = useState(false);
  const [showReportModal, setShowReportModal] = useState(false);
@@ -105,7 +104,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  const isDark = theme === 'dark';
 
  const variationUrls = useMemo(() => getVariationUrls(generation), [generation]);
- const variationsRequested = generation?.variations_requested ?? wizardState.variationsCount ?? 2;
+ const variationsRequested = generation?.variations_requested ?? variationsCountProp;
  const creditsUsed = generation?.credits_used ?? variationsRequested;
 
  // Rotacionar frases de loading
@@ -130,18 +129,6 @@ export const CreativeStillResults: React.FC<Props> = ({
  }
  }, [isGenerating, wasGenerating, variationUrls.length, generation?.status]);
 
- const handleSave = async () => {
- if (!templateName.trim()) return;
- setSavingTemplate(true);
- try {
- await onSaveTemplate(templateName);
- setShowSaveModal(false);
- setTemplateName('');
- } finally {
- setSavingTemplate(false);
- }
- };
-
  // Report
  const handleReportSubmit = async (observation: string) => {
  if (!user || !reportVariationUrl) return;
@@ -151,9 +138,9 @@ export const CreativeStillResults: React.FC<Props> = ({
  userName: user.name || user.email || '',
  generationType: 'creative-still',
  generationId: generation?.id,
- productName: wizardState.mainProduct?.name || 'Still Criativo',
+ productName: product?.name || 'Still Criativo',
  generatedImageUrl: reportVariationUrl,
- originalImageUrl: wizardState.mainProduct?.originalImages?.front?.url || wizardState.mainProduct?.images?.[0]?.url || undefined,
+ originalImageUrl: product?.originalImages?.front?.url || product?.images?.[0]?.url || undefined,
  observation,
  });
  if (result.success) {
@@ -166,12 +153,12 @@ export const CreativeStillResults: React.FC<Props> = ({
  const handleDownload = (url: string, variation: number) => {
  const link = document.createElement('a');
  link.href = url;
- link.download = `still-criativo-${wizardState.mainProduct?.name || 'produto'}-v${variation}.png`;
+ link.download = `still-criativo-${product?.name || 'produto'}-v${variation}.png`;
  link.click();
  };
 
  // Edit callbacks
- const resolution = (wizardState.resolution || '2k') as '2k' | '4k';
+ const resolution = resolutionProp;
  const creditCost = resolution === '4k' ? 2 : 1;
 
  const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
@@ -274,14 +261,14 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
 
  {/* Info do produto sendo gerado */}
- {wizardState.mainProduct && (
+ {product && (
  <div className={(isDark ? 'bg-neutral-900/80 border-neutral-800' : 'bg-gray-50 border-gray-200') + ' rounded-xl p-4 border mb-6 w-full max-w-xs'}>
  <div className="flex items-center gap-3">
- {wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url ? (
+ {product.originalImages?.front?.url || product.images?.[0]?.url ? (
  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
  <OptimizedImage
- src={wizardState.mainProduct.originalImages?.front?.url || wizardState.mainProduct.images?.[0]?.url || ''}
- alt={wizardState.mainProduct.name}
+ src={product.originalImages?.front?.url || product.images?.[0]?.url || ''}
+ alt={product.name}
  className="w-full h-full"
  size="thumb"
  />
@@ -292,7 +279,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
  )}
  <div className="flex-1 min-w-0">
- <p className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-sm font-medium truncate'}>{wizardState.mainProduct.name}</p>
+ <p className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-sm font-medium truncate'}>{product.name}</p>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
  {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'} · {creditsUsed} {creditsUsed === 1 ? 'crédito' : 'créditos'}
  </p>
@@ -378,7 +365,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  <div>
  <h1 className={(isDark ? 'text-white' : 'text-[#1A1A1A]') + ' text-lg font-extrabold'}>Resultado</h1>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
- {wizardState.mainProduct?.name || 'Vizzu Still Criativo'} · {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'}
+ {product?.name || 'Vizzu Still Criativo'} · {variationsRequested} {variationsRequested === 1 ? 'variação' : 'variações'}
  </p>
  </div>
  </div>
@@ -461,12 +448,6 @@ export const CreativeStillResults: React.FC<Props> = ({
  <i className="fas fa-redo text-xs"></i>Gerar Novas Variações
  </button>
  <button
- onClick={() => setShowSaveModal(true)}
- className={'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ' + (isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200')}
- >
- <i className="fas fa-bookmark text-xs"></i>Salvar Template
- </button>
- <button
  onClick={onBackToHome}
  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl text-sm font-semibold"
  >
@@ -483,7 +464,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  onClose={() => { setShowReportModal(false); setReportVariationUrl(null); }}
  onSubmit={handleReportSubmit}
  generationType="creative-still"
- productName={wizardState.mainProduct?.name}
+ productName={product?.name}
  theme={theme}
  />
 
@@ -507,50 +488,6 @@ export const CreativeStillResults: React.FC<Props> = ({
  />
  )}
 
- {/* ============================================================ */}
- {/* MODAL: Salvar Template */}
- {/* ============================================================ */}
- {showSaveModal && (
- <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowSaveModal(false)}>
- <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
- <div
- onClick={(e) => e.stopPropagation()}
- className={'relative w-full max-w-sm mx-4 rounded-2xl overflow-hidden ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white ')}
- >
- <div className="p-5">
- <div className={'w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-4 ' + (isDark ? 'bg-amber-500/20' : 'bg-amber-100')}>
- <i className={'fas fa-bookmark text-xl ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
- </div>
- <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-base font-semibold font-serif text-center mb-1'}>Salvar como Template</h3>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mb-4'}>
- Este template poderá ser usado para criar stills com outros produtos mantendo o mesmo estilo.
- </p>
- <input
- value={templateName}
- onChange={(e) => setTemplateName(e.target.value)}
- placeholder="Nome do template..."
- className={'w-full rounded-lg px-3 py-2.5 text-sm mb-4 ' + (isDark ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600' : 'bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400')}
- autoFocus
- />
- <div className="flex gap-2">
- <button
- onClick={() => setShowSaveModal(false)}
- className={'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ' + (isDark ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700')}
- >
- Cancelar
- </button>
- <button
- onClick={handleSave}
- disabled={!templateName.trim() || savingTemplate}
- className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-[#FF9F43] text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
- >
- {savingTemplate ? <i className="fas fa-spinner fa-spin"></i> : 'Salvar'}
- </button>
- </div>
- </div>
- </div>
- </div>
- )}
  </div>
  );
 };
