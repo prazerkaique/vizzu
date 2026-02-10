@@ -9,8 +9,10 @@ import { LookComposerEditor } from './LookComposerEditor';
 import { smartDownload } from '../../utils/downloadHelper';
 import { Plan } from '../../hooks/useCredits';
 import { ImageEditModal } from '../shared/ImageEditModal';
+import { ProductHubModal } from '../shared/ProductHubModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 import { supabase } from '../../services/supabaseClient';
+import { useUI } from '../../contexts/UIContext';
 
 interface LookComposerProps {
  products: Product[];
@@ -45,6 +47,8 @@ interface LookComposerProps {
  onBack?: () => void;
  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
  onOpenPlanModal?: () => void;
+ // Para o ProductHubModal
+ setProductForCreation?: (p: Product | null) => void;
 }
 
 interface GeneratedLook {
@@ -122,13 +126,16 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onOpenPlanModal,
  editBalance = 0,
  onDeductEditCredits,
+ setProductForCreation,
 }) => {
  const isDark = theme === 'dark';
+ const { navigateTo } = useUI();
 
  // Estados principais
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
  const [showProductModal, setShowProductModal] = useState(false);
  const [selectedLook, setSelectedLook] = useState<GeneratedLook | null>(null);
+ const [hubProduct, setHubProduct] = useState<Product | null>(null);
  const [selectedLookView, setSelectedLookView] = useState<'front' | 'back'>('front');
  const [visibleLooksCount, setVisibleLooksCount] = useState(6); // Paginação de looks
  const [visibleModalProductsCount, setVisibleModalProductsCount] = useState(20); // Paginação do modal
@@ -916,14 +923,27 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <i className="fas fa-cube text-[10px]"></i>
  </div>
  )}
- {/* Overlay para produtos sem looks */}
- {!hasLooks && (
+ {/* Overlay com ações */}
  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
+ <div className="flex gap-1.5 items-center">
+ {!hasLooks && (
  <span className="text-white text-[9px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] px-2.5 py-1 rounded-full">
  <i className="fas fa-wand-magic-sparkles mr-1 text-[7px]"></i>Criar look
  </span>
- </div>
  )}
+ {hasLooks && (
+ <span className="text-white text-[9px] font-medium bg-gradient-to-r from-[#A855F7] to-[#7C3AED] px-2.5 py-1 rounded-full">
+ <i className="fas fa-eye mr-1 text-[7px]"></i>Ver looks
+ </span>
+ )}
+ <button
+   onClick={(e) => { e.stopPropagation(); setHubProduct(pwl.product); }}
+   className="py-1 px-2 bg-black/60 backdrop-blur-sm text-white rounded-full text-[9px] hover:bg-black/80 transition-all"
+ >
+   <i className="fas fa-th-large"></i>
+ </button>
+ </div>
+ </div>
  </div>
  <div className="p-2.5">
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{pwl.product.sku}</p>
@@ -1621,6 +1641,19 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* Hub 360° do Produto */}
+ {hubProduct && (
+ <ProductHubModal
+   isOpen={!!hubProduct}
+   onClose={() => setHubProduct(null)}
+   product={hubProduct}
+   theme={theme}
+   userId={userId}
+   navigateTo={navigateTo}
+   setProductForCreation={setProductForCreation || (() => {})}
+ />
  )}
  </div>
  );

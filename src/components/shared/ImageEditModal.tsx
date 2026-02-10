@@ -3,7 +3,7 @@
 // Liquid Glass aesthetic — backdrop-blur, transparências, bordas
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { ZoomableImage } from '../ImageViewer';
 import { useUI } from '../../contexts/UIContext';
 
@@ -37,6 +37,17 @@ type ModalMode = 'input' | 'generating' | 'compare';
 
 const MAX_REF_SIZE_MB = 10;
 
+const EDIT_LOADING_PHRASES = [
+  "Analisando a imagem original...",
+  "Entendendo a correção solicitada...",
+  "Aplicando os ajustes com IA...",
+  "Refinando detalhes da edição...",
+  "Preservando a qualidade original...",
+  "Ajustando cores e iluminação...",
+  "Renderizando resultado final...",
+  "Quase pronto! Últimos retoques...",
+];
+
 export const ImageEditModal: React.FC<ImageEditModalProps> = ({
   isOpen, onClose, currentImageUrl, imageName,
   editBalance, regularBalance, resolution,
@@ -60,6 +71,17 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Loading phrase rotation
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  useEffect(() => {
+    if (mode !== 'generating') return;
+    setPhraseIndex(0);
+    const interval = setInterval(() => {
+      setPhraseIndex(prev => (prev + 1) % EDIT_LOADING_PHRASES.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [mode]);
 
   const creditCost = resolution === '4k' ? 2 : 1;
   const totalAvailable = editBalance + regularBalance;
@@ -525,22 +547,20 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
           {/* ─── MODE: GENERATING ─── */}
           {mode === 'generating' && (
             <div className="flex flex-col items-center justify-center p-8 min-h-[350px]">
-              <div className="relative w-16 h-16 mb-5">
-                <div className={
-                  'absolute inset-0 rounded-full border-2 ' +
-                  (isDark ? 'border-white/[0.06]' : 'border-gray-200')
-                }></div>
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#FF6B6B] animate-spin"></div>
-                <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-[#FF9F43] animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <i className="fas fa-rotate text-[#FF6B6B] text-sm animate-pulse"></i>
-                </div>
+              {/* Motion GIF (padrão Vizzu — Scene-1.gif) */}
+              <div className="w-40 h-40 mb-5 rounded-2xl overflow-hidden flex items-center justify-center">
+                <img
+                  src="/Scene-1.gif"
+                  alt=""
+                  className="h-full object-cover"
+                  style={{ width: '140%', maxWidth: 'none' }}
+                />
               </div>
               <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-1'}>
                 Gerando correção...
               </p>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
-                Isso pode levar alguns segundos
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center min-h-[16px] transition-all duration-300'}>
+                {EDIT_LOADING_PHRASES[phraseIndex]}
               </p>
             </div>
           )}

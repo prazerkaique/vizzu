@@ -1015,6 +1015,7 @@ function App() {
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  editBalance={editBalance}
  onDeductEditCredits={deductEditCredits}
+ setProductForCreation={setProductForCreation}
  />
  </Suspense>
  </div>
@@ -1102,6 +1103,7 @@ function App() {
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  editBalance={editBalance}
  onDeductEditCredits={deductEditCredits}
+ setProductForCreation={setProductForCreation}
  />
  </Suspense>
  </div>
@@ -1130,6 +1132,7 @@ function App() {
  isMinimized={creativeStillMinimized}
  editBalance={editBalance}
  onDeductEditCredits={deductEditCredits}
+ setProductForCreation={setProductForCreation}
  />
  </Suspense>
  </div>

@@ -7,6 +7,8 @@ import { OptimizedImage } from '../OptimizedImage';
 import { Product, HistoryLog } from '../../types';
 import { ProductStudioEditor } from './ProductStudioEditor';
 import { Plan } from '../../hooks/useCredits';
+import { ProductHubModal } from '../shared/ProductHubModal';
+import { useUI } from '../../contexts/UIContext';
 
 interface ProductStudioProps {
  products: Product[];
@@ -40,6 +42,8 @@ interface ProductStudioProps {
  // Créditos de edição (para StudioEditModal)
  editBalance?: number;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+ // Para o ProductHubModal
+ setProductForCreation?: (p: Product | null) => void;
 }
 
 const CATEGORY_GROUPS = [
@@ -83,9 +87,12 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  onOpenPlanModal,
  editBalance = 0,
  onDeductEditCredits,
+ setProductForCreation,
 }) => {
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
  const [showProductModal, setShowProductModal] = useState(false);
+ const [hubProduct, setHubProduct] = useState<Product | null>(null);
+ const { navigateTo } = useUI();
  const [productSearchTerm, setProductSearchTerm] = useState('');
  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
  const [productFilterCategory, setProductFilterCategory] = useState('');
@@ -702,9 +709,15 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  <i className="fas fa-images text-[6px]"></i>
  {studioCount}
  </div>
- <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
- <button className="w-full py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-[10px]">
+ <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
+ <button className="flex-1 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium text-[10px]">
  <i className="fas fa-eye mr-1"></i>Ver fotos
+ </button>
+ <button
+ onClick={(e) => { e.stopPropagation(); setHubProduct(product); }}
+ className="py-1.5 px-2.5 bg-black/60 backdrop-blur-sm text-white rounded-lg text-[10px] hover:bg-black/80 transition-all"
+ >
+ <i className="fas fa-th-large"></i>
  </button>
  </div>
  </div>
@@ -877,6 +890,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* Hub 360° do Produto */}
+ {hubProduct && (
+ <ProductHubModal
+   isOpen={!!hubProduct}
+   onClose={() => setHubProduct(null)}
+   product={hubProduct}
+   theme={theme}
+   userId={userId}
+   navigateTo={navigateTo}
+   setProductForCreation={setProductForCreation || (() => {})}
+ />
  )}
  </div>
  );

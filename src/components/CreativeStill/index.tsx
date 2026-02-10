@@ -15,6 +15,9 @@ import { Plan } from '../../hooks/useCredits';
 import { CreativeStillResults } from './CreativeStillResults';
 import { CreativeStillEditor, CreativeStillGenerateParams } from './CreativeStillEditor';
 import { OptimizedImage } from '../OptimizedImage';
+import { useImageViewer } from '../ImageViewer';
+import { ProductHubModal } from '../shared/ProductHubModal';
+import { useUI } from '../../contexts/UIContext';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES (exportadas para o Results)
@@ -69,6 +72,7 @@ export interface CreativeStillProps {
   isMinimized?: boolean;
   editBalance?: number;
   onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+  setProductForCreation?: (p: Product | null) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -124,6 +128,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   isMinimized,
   editBalance = 0,
   onDeductEditCredits,
+  setProductForCreation: setProductForCreationProp,
 }) => {
   const [view, setView] = useState<View>('listing');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -147,6 +152,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [sortBy, setSortBy] = useState<'recent' | 'a-z' | 'z-a'>('recent');
 
   const isDark = theme === 'dark';
+  const { openViewer } = useImageViewer();
+  const { navigateTo } = useUI();
+  const [hubProduct, setHubProduct] = useState<Product | null>(null);
 
   // ── Produto pré-selecionado (vindo de outra página) ──
   useEffect(() => {
@@ -572,7 +580,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                   >
                     <div className="aspect-[4/5]">
                       {thumbUrl && (
-                        <OptimizedImage src={thumbUrl} alt={productName} className="w-full h-full object-cover" />
+                        <OptimizedImage src={thumbUrl} alt={productName} className="w-full h-full" size="thumb" />
                       )}
                     </div>
                     {/* Badge variações */}
@@ -775,6 +783,16 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
+                    const prod = products.find(p => p.id === selectedStill.product_id);
+                    if (prod) { setSelectedStill(null); setHubProduct(prod); }
+                  }}
+                  className={'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + (isDark ? 'bg-white/10 text-neutral-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
+                >
+                  <i className="fas fa-th-large mr-1.5"></i>
+                  Todas
+                </button>
+                <button
+                  onClick={() => {
                     setCurrentGeneration(selectedStill);
                     setSelectedStill(null);
                     // Encontrar o produto correspondente
@@ -799,14 +817,31 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             <div className="p-4">
               <div className={'grid gap-3 ' + ((selectedStill.variation_urls?.length || 1) === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-2')}>
                 {(selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean).map((url, i) => (
-                  <div key={i} className={'rounded-xl overflow-hidden border ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
-                    <OptimizedImage src={url!} alt={`Variação ${i + 1}`} className="w-full aspect-square object-contain" />
+                  <div
+                    key={i}
+                    className={'rounded-xl overflow-hidden border cursor-zoom-in transition-all hover:border-[#FF6B6B]/50 ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}
+                    onClick={() => openViewer(url!, { alt: `Variação ${i + 1}` })}
+                  >
+                    <OptimizedImage src={url!} alt={`Variação ${i + 1}`} className="w-full aspect-[4/5]" size="display" objectFit="contain" />
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* PRODUCT HUB MODAL */}
+      {hubProduct && (
+        <ProductHubModal
+          isOpen={!!hubProduct}
+          onClose={() => setHubProduct(null)}
+          product={hubProduct}
+          theme={theme}
+          userId={userId}
+          navigateTo={navigateTo}
+          setProductForCreation={setProductForCreationProp || (() => {})}
+        />
       )}
     </div>
   );
