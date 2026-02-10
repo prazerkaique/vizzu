@@ -1119,6 +1119,13 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
    return { ...prev, variation_urls: urls };
   });
  }}
+ onVariationAdded={(newUrl) => {
+  setCurrentGeneration(prev => {
+   if (!prev) return prev;
+   const urls = [...(prev.variation_urls || []), newUrl];
+   return { ...prev, variation_urls: urls };
+  });
+ }}
  onSaveTemplate={async (name: string) => {
  if (!userId) return;
  const { error } = await supabase

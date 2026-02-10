@@ -8,7 +8,7 @@ import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
-import { editStudioImage, saveCreativeStillEdit } from '../../lib/api/studio';
+import { editStudioImage, saveCreativeStillEdit, saveCreativeStillSaveAsNew } from '../../lib/api/studio';
 
 const lottieColorStyles = `
  @keyframes stillColorCycle {
@@ -50,6 +50,7 @@ interface Props {
  regularBalance?: number;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  onVariationUpdated?: (index: number, newUrl: string) => void;
+ onVariationAdded?: (newUrl: string) => void;
 }
 
 /** Get the list of variation URLs from a generation, with retrocompat fallback */
@@ -85,6 +86,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  regularBalance = 0,
  onDeductEditCredits,
  onVariationUpdated,
+ onVariationAdded,
 }) => {
  const { openViewer } = useImageViewer();
  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
@@ -198,6 +200,22 @@ export const CreativeStillResults: React.FC<Props> = ({
  }
  return result;
  }, [editingVariation, generation?.id, onVariationUpdated, showToast]);
+
+ const handleEditSaveAsNew = useCallback(async (newImageUrl: string) => {
+   if (!generation?.id) return { success: false };
+   // Atualizar local state — append nova variação
+   onVariationAdded?.(newImageUrl);
+   // Persistir via N8N — append ao array variation_urls
+   const result = await saveCreativeStillSaveAsNew({
+     generationId: generation.id,
+     newImageUrl,
+   });
+   if (!result.success) {
+     console.error('[CS SaveAsNew] failed:', result.error);
+     showToast('Imagem salva localmente, mas houve erro ao persistir no servidor.', 'info');
+   }
+   return result;
+ }, [generation?.id, onVariationAdded, showToast]);
 
  // ============================================================
  // LOADING STATE
@@ -483,6 +501,7 @@ export const CreativeStillResults: React.FC<Props> = ({
   resolution={resolution}
   onGenerate={handleEditGenerate}
   onSave={handleEditSave}
+  onSaveAsNew={handleEditSaveAsNew}
   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, generation?.id) : undefined}
   theme={theme}
  />

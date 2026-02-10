@@ -14,6 +14,7 @@ import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
+import { supabase } from '../../services/supabaseClient';
 
 type ExportQuality = 'high' | 'performance';
 
@@ -300,6 +301,30 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  }
  return result;
  }, [editingView, product.id, generationId, onImageUpdated, showToast]);
+
+ const handleEditSaveAsNew = useCallback(async (newImageUrl: string) => {
+   if (!editingView || !user) return { success: false };
+   const newGenId = crypto.randomUUID();
+   const { error } = await supabase
+     .from('product_images')
+     .insert({
+       product_id: product.id,
+       user_id: user.id,
+       type: 'modelo_ia',
+       angle: editingView,
+       url: newImageUrl,
+       file_name: `look_edit_${newGenId}.png`,
+       mime_type: 'image/png',
+       is_primary: false,
+       generation_id: newGenId,
+       metadata: JSON.stringify({}),
+     });
+   if (error) {
+     console.error('[LCR SaveAsNew] Insert failed:', error);
+     return { success: false };
+   }
+   return { success: true };
+ }, [editingView, user, product.id]);
 
  // Obter peças do look
  const lookPieces = lookComposition ? Object.entries(lookComposition) : [];
@@ -956,6 +981,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   resolution="2k"
   onGenerate={handleEditGenerate}
   onSave={handleEditSave}
+  onSaveAsNew={handleEditSaveAsNew}
   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, generationId) : undefined}
   theme={theme}
  />

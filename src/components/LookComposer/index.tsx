@@ -10,6 +10,7 @@ import { smartDownload } from '../../utils/downloadHelper';
 import { Plan } from '../../hooks/useCredits';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
+import { supabase } from '../../services/supabaseClient';
 
 interface LookComposerProps {
  products: Product[];
@@ -553,6 +554,54 @@ export const LookComposer: React.FC<LookComposerProps> = ({
      newImageUrl,
    });
  }, [selectedLook, selectedLookView, products, onUpdateProduct]);
+
+ const handleGalleryEditSaveAsNew = useCallback(async (newImageUrl: string) => {
+   if (!selectedLook || !userId) return { success: false };
+   const view = selectedLookView;
+   const newGenId = crypto.randomUUID();
+
+   // 1. Inserir nova row no Supabase
+   const metadata = selectedLook.metadata || {};
+   const { error } = await supabase
+     .from('product_images')
+     .insert({
+       product_id: selectedLook.productId,
+       user_id: userId,
+       type: 'modelo_ia',
+       angle: view === 'back' ? 'back' : 'front',
+       url: newImageUrl,
+       file_name: `look_edit_${newGenId}.png`,
+       mime_type: 'image/png',
+       is_primary: false,
+       generation_id: newGenId,
+       metadata: typeof metadata === 'string' ? metadata : JSON.stringify(metadata),
+     });
+
+   if (error) {
+     console.error('[LC SaveAsNew] Insert failed:', error);
+     return { success: false };
+   }
+
+   // 2. Atualizar local state — append ao modeloIA do produto
+   const product = products.find(p => p.id === selectedLook.productId);
+   if (product) {
+     const newEntry = {
+       id: newGenId,
+       createdAt: new Date().toISOString(),
+       tool: 'lifestyle' as const,
+       images: { front: newImageUrl, back: undefined as string | undefined },
+       metadata,
+     };
+     onUpdateProduct(product.id, {
+       generatedImages: {
+         ...(product.generatedImages || { studioReady: [], cenarioCriativo: [], modeloIA: [], productStudio: [] }),
+         modeloIA: [...(product.generatedImages?.modeloIA || []), newEntry],
+       },
+     });
+   }
+
+   return { success: true };
+ }, [selectedLook, selectedLookView, userId, products, onUpdateProduct]);
 
  const handleOpenProductModal = (pwl: ProductWithLooks) => {
  setSelectedProductForModal(pwl);
@@ -1292,6 +1341,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
    resolution="2k"
    onGenerate={handleGalleryEditGenerate}
    onSave={handleGalleryEditSave}
+   onSaveAsNew={handleGalleryEditSaveAsNew}
    onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, selectedLook.id) : undefined}
    theme={theme}
  />

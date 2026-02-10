@@ -1341,6 +1341,36 @@ export async function saveLookComposerEdit(params: {
   }
 }
 
+/**
+ * Salva edição como NOVA variação no Creative Still via N8N (append ao array)
+ */
+export async function saveCreativeStillSaveAsNew(params: {
+  generationId: string;
+  newImageUrl: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/still/edit/save-as-new`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        generation_id: params.generationId,
+        new_image_url: params.newImageUrl,
+      }),
+    });
+
+    const text = await response.text();
+    if (!text) return { success: false, error: 'Resposta vazia do servidor.' };
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
+}
+
 export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<SendWhatsAppResponse> {
   try {
     const response = await fetch(`${N8N_BASE_URL}/vizzu/send-whatsapp`, {

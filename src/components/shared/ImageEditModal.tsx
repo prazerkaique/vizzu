@@ -28,6 +28,7 @@ export interface ImageEditModalProps {
     referenceImageBase64?: string;
   }) => Promise<GenerateResult>;
   onSave: (newImageUrl: string) => Promise<{ success: boolean }>;
+  onSaveAsNew?: (newImageUrl: string) => Promise<{ success: boolean }>;
   onDeductEditCredits?: (amount: number) => Promise<{ success: boolean; source?: string }>;
   theme?: 'dark' | 'light';
 }
@@ -39,7 +40,7 @@ const MAX_REF_SIZE_MB = 10;
 export const ImageEditModal: React.FC<ImageEditModalProps> = ({
   isOpen, onClose, currentImageUrl, imageName,
   editBalance, regularBalance, resolution,
-  onGenerate, onSave, onDeductEditCredits,
+  onGenerate, onSave, onSaveAsNew, onDeductEditCredits,
   theme = 'dark',
 }) => {
   const { showToast } = useUI();
@@ -201,6 +202,20 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     showToast('Imagem original mantida', 'info');
     handleClose();
   }, [showToast, handleClose]);
+
+  const handleSaveAsNew = useCallback(async () => {
+    if (!newImageUrl || !onSaveAsNew) return;
+    try {
+      const result = await onSaveAsNew(newImageUrl);
+      if (!result.success) {
+        showToast('Imagem salva localmente, mas houve erro ao persistir no servidor.', 'info');
+      }
+    } catch (err) {
+      console.error('[ImageEditModal] Erro ao salvar como nova:', err);
+    }
+    showToast('Imagem salva como nova variação!', 'success');
+    handleClose();
+  }, [newImageUrl, onSaveAsNew, showToast, handleClose]);
 
   const handleRetry = useCallback(() => {
     setNewImageUrl(null);
@@ -571,6 +586,21 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                     <i className="fas fa-arrow-right text-xs"></i>
                   </button>
                 </div>
+
+                {onSaveAsNew && (
+                  <button
+                    onClick={handleSaveAsNew}
+                    className={
+                      'w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ' +
+                      (isDark
+                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                        : 'bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100')
+                    }
+                  >
+                    <i className="fas fa-copy text-xs"></i>
+                    Salvar como Nova
+                  </button>
+                )}
 
                 <button
                   onClick={handleRetry}

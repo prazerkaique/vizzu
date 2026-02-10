@@ -24,6 +24,7 @@ interface StudioEditModalProps {
   studioShadow?: StudioShadow;
   productNotes?: string;
   onImageUpdated: (angle: string, newUrl: string) => void;
+  onSaveAsNew?: (newImageUrl: string) => Promise<{ success: boolean }>;
   onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
   theme?: 'dark' | 'light';
 }
@@ -42,7 +43,7 @@ const MAX_REF_SIZE_MB = 10;
 export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   isOpen, onClose, product, currentImage, generationId,
   editBalance, regularBalance, resolution, studioBackground,
-  studioShadow, productNotes, onImageUpdated, onDeductEditCredits,
+  studioShadow, productNotes, onImageUpdated, onSaveAsNew, onDeductEditCredits,
   theme = 'dark',
 }) => {
   const { user } = useAuth();
@@ -237,6 +238,20 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     showToast('Imagem original mantida', 'info');
     handleClose();
   }, [showToast, handleClose]);
+
+  const handleSaveAsNew = useCallback(async () => {
+    if (!newImageUrl || !onSaveAsNew) return;
+    try {
+      const result = await onSaveAsNew(newImageUrl);
+      if (!result.success) {
+        showToast('Imagem salva localmente, mas houve erro ao persistir no servidor.', 'info');
+      }
+    } catch (err) {
+      console.error('[StudioEditModal] Erro ao salvar como nova:', err);
+    }
+    showToast('Imagem salva como nova variação!', 'success');
+    handleClose();
+  }, [newImageUrl, onSaveAsNew, showToast, handleClose]);
 
   const handleRetry = useCallback(() => {
     setNewImageUrl(null);
@@ -644,6 +659,21 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                     <i className="fas fa-arrow-right text-xs"></i>
                   </button>
                 </div>
+
+                {onSaveAsNew && (
+                  <button
+                    onClick={handleSaveAsNew}
+                    className={
+                      'w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ' +
+                      (isDark
+                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                        : 'bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100')
+                    }
+                  >
+                    <i className="fas fa-copy text-xs"></i>
+                    Salvar como Nova
+                  </button>
+                )}
 
                 {/* Gerar novamente — discreto */}
                 <button

@@ -14,6 +14,7 @@ import { submitReport } from '../../lib/api/reports';
 import { getProductType as getProductTypeFromConfig } from '../../lib/productConfig';
 import { StudioEditModal } from './StudioEditModal';
 import type { StudioBackground, StudioShadow } from '../../lib/api/studio';
+import { supabase } from '../../services/supabaseClient';
 
 interface ProductStudioResultProps {
  product: Product;
@@ -32,6 +33,7 @@ interface ProductStudioResultProps {
  studioShadow?: StudioShadow;
  productNotes?: string;
  onImageUpdated?: (angle: string, newUrl: string) => void;
+ onImageSavedAsNew?: (angle: string, newUrl: string) => void;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  theme?: 'dark' | 'light';
 }
@@ -84,6 +86,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  studioShadow,
  productNotes,
  onImageUpdated,
+ onImageSavedAsNew,
  onDeductEditCredits,
  theme = 'dark'
 }) => {
@@ -743,6 +746,27 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  studioShadow={studioShadow}
  productNotes={productNotes}
  onImageUpdated={onImageUpdated}
+ onSaveAsNew={user ? async (newImageUrl: string) => {
+   const { error } = await supabase
+     .from('product_images')
+     .insert({
+       product_id: product.id,
+       user_id: user.id,
+       type: 'product_studio',
+       angle: currentImage.angle,
+       url: newImageUrl,
+       file_name: `ps_edit_${Date.now()}.png`,
+       mime_type: 'image/png',
+       is_primary: false,
+       generation_id: session.id,
+     });
+   if (error) {
+     console.error('[PSR SaveAsNew] Insert failed:', error);
+     return { success: false };
+   }
+   onImageSavedAsNew?.(currentImage.angle, newImageUrl);
+   return { success: true };
+ } : undefined}
  onDeductEditCredits={onDeductEditCredits}
  theme={theme}
  />

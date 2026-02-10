@@ -1580,6 +1580,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  studioShadow={studioShadow}
  productNotes={productNotes}
  onImageUpdated={handleImageUpdated}
+ onImageSavedAsNew={(angle, newUrl) => {
+  // Append nova imagem à sessão local
+  if (!currentSession) return;
+  const newImage = { id: `new-${Date.now()}`, url: newUrl, angle: angle as any, createdAt: new Date().toISOString() };
+  setCurrentSession({
+    ...currentSession,
+    images: [...currentSession.images, newImage],
+  });
+ }}
  onDeductEditCredits={onDeductEditCredits}
  theme={theme}
  />
@@ -3143,6 +3152,28 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    studioShadow={studioShadow}
    productNotes={productNotes}
    onImageUpdated={handleOptimizedImageUpdated}
+   onSaveAsNew={authUser ? async (newImageUrl: string) => {
+     const { error } = await supabase
+       .from('product_images')
+       .insert({
+         product_id: product.id,
+         user_id: authUser.id,
+         type: 'product_studio',
+         angle: currentImage.angle,
+         url: newImageUrl,
+         file_name: `ps_edit_${Date.now()}.png`,
+         mime_type: 'image/png',
+         is_primary: false,
+         generation_id: sessionId,
+       });
+     if (error) {
+       console.error('[PSE SaveAsNew] Insert failed:', error);
+       return { success: false };
+     }
+     // Atualizar local state — a nova imagem aparece como nova entry
+     handleOptimizedImageUpdated(currentImage.angle, newImageUrl);
+     return { success: true };
+   } : undefined}
    onDeductEditCredits={onDeductEditCredits}
    theme={theme}
  />

@@ -1,5 +1,5 @@
 {
-  "name": "20 - Product Studio Edit v4",
+  "name": "20 - Studio Edit v7 (PS + CS + LC save + CS save-as-new)",
   "nodes": [
     {
       "parameters": {
@@ -164,6 +164,275 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [1180, 500]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/studio/edit/save",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook-save",
+      "name": "Webhook Save",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 700],
+      "webhookId": "studio-edit-save"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "s_product_id", "name": "product_id", "value": "={{ $json.body.product_id }}", "type": "string" },
+            { "id": "s_generation_id", "name": "generation_id", "value": "={{ $json.body.generation_id }}", "type": "string" },
+            { "id": "s_angle", "name": "angle", "value": "={{ $json.body.angle }}", "type": "string" },
+            { "id": "s_new_image_url", "name": "new_image_url", "value": "={{ $json.body.new_image_url }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-save",
+      "name": "Extrair Dados Save",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 700]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://dbdqiqehuapcicejnzyd.supabase.co/rest/v1/product_images?product_id=eq.' + $json.product_id + '&generation_id=eq.' + $json.generation_id + '&angle=eq.' + $json.angle + '&type=eq.product_studio' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ url: $json.new_image_url }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "update-product-images",
+      "name": "Atualizar product_images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 700]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-save-success",
+      "name": "Respond Save OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 700]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/still/edit/save",
+        "responseMode": "responseNode",
+        "options": { "rawBody": false }
+      },
+      "id": "webhook-cs-save",
+      "name": "Webhook CS Save",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 1100],
+      "webhookId": "still-edit-save"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "cs_gen_id", "name": "generation_id", "value": "={{ $json.body.generation_id }}", "type": "string" },
+            { "id": "cs_var_idx", "name": "variation_index", "value": "={{ $json.body.variation_index }}", "type": "number" },
+            { "id": "cs_new_url", "name": "new_image_url", "value": "={{ $json.body.new_image_url }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-cs-save",
+      "name": "Extrair CS Save",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 1100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Creative Still Save: GET variation_urls → update index → PATCH\nconst data = $input.first().json;\nconst SUPABASE_URL = 'https://dbdqiqehuapcicejnzyd.supabase.co';\nconst SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM';\n\nconst generationId = data.generation_id;\nconst variationIndex = parseInt(data.variation_index);\nconst newImageUrl = data.new_image_url;\n\nconsole.log(`📝 CS Save: gen=${generationId}, idx=${variationIndex}`);\n\ntry {\n  // 1. GET current variation_urls\n  const getResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${SUPABASE_URL}/rest/v1/creative_still_generations?id=eq.${generationId}&select=variation_urls`,\n    headers: {\n      'apikey': SERVICE_KEY,\n      'Authorization': `Bearer ${SERVICE_KEY}`,\n    },\n    json: true,\n  });\n\n  if (!getResp || !getResp.length) {\n    throw new Error('Generation not found: ' + generationId);\n  }\n\n  let urls = getResp[0].variation_urls;\n  if (typeof urls === 'string') urls = JSON.parse(urls);\n  if (!Array.isArray(urls)) urls = [];\n\n  console.log(`📦 variation_urls tem ${urls.length} itens, atualizando índice ${variationIndex}`);\n  urls[variationIndex] = newImageUrl;\n\n  // 2. PATCH updated array\n  await this.helpers.httpRequest({\n    method: 'PATCH',\n    url: `${SUPABASE_URL}/rest/v1/creative_still_generations?id=eq.${generationId}`,\n    headers: {\n      'apikey': SERVICE_KEY,\n      'Authorization': `Bearer ${SERVICE_KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal',\n    },\n    body: { variation_urls: urls },\n    json: true,\n  });\n\n  console.log('✅ CS variation_urls atualizado com sucesso');\n  return [{ json: { success: true } }];\n} catch (error) {\n  console.error('❌ CS Save error:', error.message);\n  return [{ json: { success: false, error: error.message } }];\n}\n"
+      },
+      "id": "code-cs-save",
+      "name": "Atualizar variation_urls",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 1100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-cs-save",
+      "name": "Respond CS Save",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 1100]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/look-composer/edit/save",
+        "responseMode": "responseNode",
+        "options": { "rawBody": false }
+      },
+      "id": "webhook-lc-save",
+      "name": "Webhook LC Save",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 1500],
+      "webhookId": "lc-edit-save"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "lc_product_id", "name": "product_id", "value": "={{ $json.body.product_id }}", "type": "string" },
+            { "id": "lc_gen_id", "name": "generation_id", "value": "={{ $json.body.generation_id }}", "type": "string" },
+            { "id": "lc_view", "name": "view", "value": "={{ $json.body.view }}", "type": "string" },
+            { "id": "lc_new_url", "name": "new_image_url", "value": "={{ $json.body.new_image_url }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-lc-save",
+      "name": "Extrair LC Save",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 1500]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://dbdqiqehuapcicejnzyd.supabase.co/rest/v1/product_images?product_id=eq.' + $json.product_id + '&generation_id=eq.' + $json.generation_id + '&angle=eq.' + $json.view + '&type=eq.modelo_ia' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM"
+            },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ url: $json.new_image_url }) }}",
+        "options": { "timeout": 10000 }
+      },
+      "id": "update-lc-images",
+      "name": "Atualizar LC product_images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 1500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-lc-save",
+      "name": "Respond LC Save",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 1500]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vizzu/still/edit/save-as-new",
+        "responseMode": "responseNode",
+        "options": { "rawBody": false }
+      },
+      "id": "webhook-cs-save-new",
+      "name": "Webhook CS SaveAsNew",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 1900],
+      "webhookId": "still-edit-save-as-new"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "csn_gen_id", "name": "generation_id", "value": "={{ $json.body.generation_id }}", "type": "string" },
+            { "id": "csn_new_url", "name": "new_image_url", "value": "={{ $json.body.new_image_url }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-cs-save-new",
+      "name": "Extrair CS SaveAsNew",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 1900]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Creative Still SaveAsNew: GET variation_urls → append → PATCH\nconst data = $input.first().json;\nconst SUPABASE_URL = 'https://dbdqiqehuapcicejnzyd.supabase.co';\nconst SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM';\n\nconst generationId = data.generation_id;\nconst newImageUrl = data.new_image_url;\n\nconsole.log(`📝 CS SaveAsNew: gen=${generationId}`);\n\ntry {\n  // 1. GET current variation_urls\n  const getResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${SUPABASE_URL}/rest/v1/creative_still_generations?id=eq.${generationId}&select=variation_urls`,\n    headers: {\n      'apikey': SERVICE_KEY,\n      'Authorization': `Bearer ${SERVICE_KEY}`,\n    },\n    json: true,\n  });\n\n  if (!getResp || !getResp.length) {\n    throw new Error('Generation not found: ' + generationId);\n  }\n\n  let urls = getResp[0].variation_urls;\n  if (typeof urls === 'string') urls = JSON.parse(urls);\n  if (!Array.isArray(urls)) urls = [];\n\n  console.log(`📦 variation_urls tem ${urls.length} itens, appendando nova`);\n  urls.push(newImageUrl);\n\n  // 2. PATCH updated array\n  await this.helpers.httpRequest({\n    method: 'PATCH',\n    url: `${SUPABASE_URL}/rest/v1/creative_still_generations?id=eq.${generationId}`,\n    headers: {\n      'apikey': SERVICE_KEY,\n      'Authorization': `Bearer ${SERVICE_KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal',\n    },\n    body: { variation_urls: urls },\n    json: true,\n  });\n\n  console.log('✅ CS SaveAsNew: variation appendada com sucesso');\n  return [{ json: { success: true } }];\n} catch (error) {\n  console.error('❌ CS SaveAsNew error:', error.message);\n  return [{ json: { success: false, error: error.message } }];\n}\n"
+      },
+      "id": "code-cs-save-new",
+      "name": "Append variation_urls",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 1900]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-cs-save-new",
+      "name": "Respond CS SaveAsNew",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 1900]
     }
   ],
   "connections": {
@@ -196,6 +465,70 @@
     "Deduzir Créditos Edição": {
       "main": [
         [{ "node": "Respond Sucesso", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Webhook Save": {
+      "main": [
+        [{ "node": "Extrair Dados Save", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair Dados Save": {
+      "main": [
+        [{ "node": "Atualizar product_images", "type": "main", "index": 0 }]
+      ]
+    },
+    "Atualizar product_images": {
+      "main": [
+        [{ "node": "Respond Save OK", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Webhook CS Save": {
+      "main": [
+        [{ "node": "Extrair CS Save", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair CS Save": {
+      "main": [
+        [{ "node": "Atualizar variation_urls", "type": "main", "index": 0 }]
+      ]
+    },
+    "Atualizar variation_urls": {
+      "main": [
+        [{ "node": "Respond CS Save", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Webhook LC Save": {
+      "main": [
+        [{ "node": "Extrair LC Save", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair LC Save": {
+      "main": [
+        [{ "node": "Atualizar LC product_images", "type": "main", "index": 0 }]
+      ]
+    },
+    "Atualizar LC product_images": {
+      "main": [
+        [{ "node": "Respond LC Save", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Webhook CS SaveAsNew": {
+      "main": [
+        [{ "node": "Extrair CS SaveAsNew", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair CS SaveAsNew": {
+      "main": [
+        [{ "node": "Append variation_urls", "type": "main", "index": 0 }]
+      ]
+    },
+    "Append variation_urls": {
+      "main": [
+        [{ "node": "Respond CS SaveAsNew", "type": "main", "index": 0 }]
       ]
     }
   },

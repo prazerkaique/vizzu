@@ -123,21 +123,34 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
               images: { front: img.url, back: undefined },
               metadata: img.metadata || {}
             })),
-            modeloIA: generatedModelo.map((img: any) => {
-              const metadata = typeof img.metadata === 'string'
-                ? JSON.parse(img.metadata)
-                : (img.metadata || {});
-              return {
-                id: img.id,
-                createdAt: img.created_at,
-                tool: 'lifestyle' as const,
-                images: {
-                  front: img.url,
-                  back: metadata?.backImageUrl || undefined
-                },
-                metadata: metadata
-              };
-            }),
+            // Agrupar modelo_ia por generation_id (mesmo padrão do productStudio)
+            // Isso evita duplicatas quando um look tem front+back (2 rows no Supabase)
+            // e garante que o id seja o generation_id (correto para save/delete)
+            modeloIA: (() => {
+              const modeloIAGroups: Record<string, any[]> = {};
+              generatedModelo.forEach((img: any) => {
+                const groupId = img.generation_id || img.id;
+                if (!modeloIAGroups[groupId]) modeloIAGroups[groupId] = [];
+                modeloIAGroups[groupId].push(img);
+              });
+              return Object.entries(modeloIAGroups).map(([groupId, images]) => {
+                const frontImg = images.find((i: any) => i.angle === 'front') || images[0];
+                const backImg = images.find((i: any) => i.angle === 'back');
+                const metadata = typeof frontImg.metadata === 'string'
+                  ? JSON.parse(frontImg.metadata)
+                  : (frontImg.metadata || {});
+                return {
+                  id: groupId,
+                  createdAt: frontImg.created_at,
+                  tool: 'lifestyle' as const,
+                  images: {
+                    front: frontImg.url,
+                    back: backImg?.url || metadata?.backImageUrl || undefined
+                  },
+                  metadata: metadata
+                };
+              });
+            })(),
             productStudio: formattedProductStudio
           };
 
