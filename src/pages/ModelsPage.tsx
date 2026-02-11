@@ -159,6 +159,7 @@ interface ModelsPageProps {
  setShowCreateModel: (v: boolean) => void;
  userCredits?: number;
  onDeductCredits?: (amount: number, reason: string) => boolean;
+ onModelCreated?: (modelId: string) => void;
 }
 
 export const ModelsPage: React.FC<ModelsPageProps> = ({
@@ -168,6 +169,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setShowCreateModel,
  userCredits = 0,
  onDeductCredits,
+ onModelCreated,
 }) => {
  // Combinar modelos default + do usuário
  const allModels = [...DEFAULT_MODELS, ...savedModels];
@@ -592,6 +594,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  await loadSavedModels();
  setShowCreateModel(false);
  resetModelWizard();
+ onModelCreated?.(result.id);
 
  return result;
  } catch (error) {

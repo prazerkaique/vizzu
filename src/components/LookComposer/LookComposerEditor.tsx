@@ -27,6 +27,8 @@ interface LookComposerEditorProps {
  savedModels: SavedModel[];
  onSaveModel?: (model: SavedModel) => void;
  onOpenCreateModel?: () => void;
+ pendingModelId?: string | null;
+ onClearPendingModel?: () => void;
  modelLimit?: number;
  // Props para geração global
  isGenerating?: boolean;
@@ -291,6 +293,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  savedModels,
  onSaveModel,
  onOpenCreateModel,
+ pendingModelId,
+ onClearPendingModel,
  modelLimit = 10,
  isGenerating: globalIsGenerating = false,
  isMinimized = false,
@@ -316,6 +320,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  const generatedModels = useMemo(() => savedModels.filter(m => !m.id.startsWith('default-')), [savedModels]);
  const presetModels = useMemo(() => savedModels.filter(m => m.id.startsWith('default-')), [savedModels]);
  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+
+ // Auto-selecionar modelo criado a partir do LC e avançar para próximo passo
+ useEffect(() => {
+ if (pendingModelId) {
+ setSelectedModelId(pendingModelId);
+ setModelTab('generated');
+ setCurrentStep('look');
+ onClearPendingModel?.();
+ }
+ }, [pendingModelId]);
 
  // Estado do look
  const [lookMode, setLookMode] = useState<LookMode>('composer');

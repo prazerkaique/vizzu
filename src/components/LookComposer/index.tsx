@@ -29,6 +29,8 @@ interface LookComposerProps {
  savedModels: SavedModel[];
  onSaveModel?: (model: SavedModel) => void;
  onOpenCreateModel?: () => void;
+ pendingModelId?: string | null;
+ onClearPendingModel?: () => void;
  modelLimit?: number;
  isGenerating?: boolean;
  isMinimized?: boolean;
@@ -112,6 +114,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  savedModels,
  onSaveModel,
  onOpenCreateModel,
+ pendingModelId,
+ onClearPendingModel,
  modelLimit = 10,
  isGenerating = false,
  isMinimized = false,
@@ -660,6 +664,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  savedModels={savedModels}
  onSaveModel={onSaveModel}
  onOpenCreateModel={onOpenCreateModel}
+ pendingModelId={pendingModelId}
+ onClearPendingModel={onClearPendingModel}
  modelLimit={modelLimit}
  isGenerating={isGenerating}
  isMinimized={isMinimized}

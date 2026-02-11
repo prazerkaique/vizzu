@@ -123,6 +123,8 @@ function App() {
  // Saved Models (shared with LookComposer)
  const [savedModels, setSavedModels] = useState<SavedModel[]>([]);
  const [showCreateModel, setShowCreateModel] = useState(false);
+ const [modelCreationFromLC, setModelCreationFromLC] = useState(false);
+ const [lcPendingModelId, setLcPendingModelId] = useState<string | null>(null);
  const restoreModal = (modalId: string) => {
  const modal = minimizedModals.find(m => m.id === modalId);
  if (modal) {
@@ -966,7 +968,7 @@ function App() {
      case 'dashboard': return <DashboardPage />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
-     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} />;
+     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
      case 'clients': return <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />;
      default: return null;
    }
@@ -1085,9 +1087,12 @@ function App() {
  const plan = user?.plan || 'free';
  const limit = plan === 'free' ? 1 : 10;
  if (savedModels.length >= limit) return;
+ setModelCreationFromLC(true);
  setShowCreateModel(true);
  navigateTo('models');
  }}
+ pendingModelId={lcPendingModelId}
+ onClearPendingModel={() => setLcPendingModelId(null)}
  modelLimit={(() => { const plan = user?.plan || 'free'; return plan === 'free' ? 1 : 10; })()}
  isGenerating={isGeneratingLookComposer}
  isMinimized={lookComposerMinimized}
@@ -1140,7 +1145,7 @@ function App() {
  )}
 
  {/* MODELS */}
- {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} />}
+ {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />}
 
  {/* PRODUCTS */}
  {currentPage === 'products' && <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />}
