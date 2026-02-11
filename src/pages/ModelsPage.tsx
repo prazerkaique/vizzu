@@ -139,6 +139,18 @@ export const DEFAULT_MODELS: SavedModel[] = [
     },
     status: 'ready', createdAt: '2026-02-02',
   },
+  {
+    id: 'default-woman-3', userId: 'system', name: 'Amanda',
+    gender: 'woman', ethnicity: 'brazilian', skinTone: 'tan',
+    bodyType: 'average', ageRange: 'adult', height: 'medium',
+    hairColor: 'black', hairStyle: 'straight', eyeColor: 'brown',
+    expression: 'neutral', bustSize: 'medium', waistType: 'thin',
+    images: {
+      front: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/model-images/system/default-woman-3/front.png',
+      back: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/model-images/system/default-woman-3/back.png',
+    },
+    status: 'ready', createdAt: '2026-02-11',
+  },
 ];
 
 interface ModelsPageProps {
