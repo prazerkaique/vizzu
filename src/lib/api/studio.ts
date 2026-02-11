@@ -310,6 +310,7 @@ export async function pollStudioGeneration(generationId: string): Promise<Studio
         url: item.url,
         id: item.id,
         status: item.status || 'completed',
+        error: item.error,
       });
     }
   }

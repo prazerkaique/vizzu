@@ -17,6 +17,7 @@ import { supabase } from '../../services/supabaseClient';
 import { getProductType, CLOTHING_CATEGORIES, FOOTWEAR_CATEGORIES, HEADWEAR_CATEGORIES, BAG_CATEGORIES, ACCESSORY_CATEGORIES } from '../../lib/productConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
+import { useProducts } from '../../contexts/ProductsContext';
 import { useSystemLoad } from '../../hooks/useSystemLoad';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
@@ -181,6 +182,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 }) => {
  const { showToast } = useUI();
  const { checkLoad } = useSystemLoad();
+ const { loadUserProducts } = useProducts();
 
  // Mensagem de alta demanda (exibida no loading)
  const [highDemandMessage, setHighDemandMessage] = useState<string | null>(null);
@@ -364,6 +366,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
      // Mostrar tela de resultados sempre que houver imagens geradas
      setShowResult(true);
 
+     // Refresh dados do Supabase para garantir sincronização
+     if (userId) loadUserProducts(userId).catch(() => {});
+
      // Re-poll após 5s para capturar ângulos que chegaram tarde (ex: top)
      // Workers paralelos podem terminar DEPOIS do status virar 'completed'
      const genId = pending.generationId!;
@@ -396,6 +401,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
            onUpdateProduct(product.id, {
              generatedImages: { ...curGen, productStudio: updPS }
            });
+           // Refresh do Supabase com dados mais recentes
+           if (userId) loadUserProducts(userId).catch(() => {});
          }
        } catch (e) {
          console.warn('[Polling] Late re-poll failed:', e);
@@ -1418,6 +1425,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        });
 
        setCurrentSession(updatedSession);
+
+       // Refresh do Supabase para sincronizar
+       if (userId) loadUserProducts(userId).catch(() => {});
      }
 
      // Auto-fechar após 1s
