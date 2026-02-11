@@ -1067,7 +1067,7 @@ function App() {
  )}
 
  {/* LOOK COMPOSER - Monta quando ativo ou gerando */}
- {(currentPage === 'look-composer' || isGeneratingLookComposer) && (
+ {(currentPage === 'look-composer' || isGeneratingLookComposer || modelCreationFromLC) && (
  <div style={{ display: currentPage === 'look-composer' ? 'contents' : 'none' }}>
  <Suspense fallback={<LoadingSkeleton theme={theme} />}>
  <VizzuLookComposer
