@@ -4,7 +4,6 @@ import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabaseClient';
 import { generateModelImages } from '../lib/api/studio';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { ModelGridSkeleton } from '../components/LoadingSkeleton';
 
@@ -709,8 +708,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
   )}
   {model.status === 'generating' && (
    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-   <div className="w-16 h-16">
-    <DotLottieReact src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie" loop autoplay style={{ width: '100%', height: '100%' }} />
+   <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center">
+    <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
    </div>
    </div>
   )}

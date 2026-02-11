@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
-import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
+import { LookComposer as StudioLookComposer } from './LookComposerUI';
 import { generateModeloIA } from '../../lib/api/studio';
 import { LookComposerResult } from './LookComposerResult';
 import { OptimizedImage } from '../OptimizedImage';
@@ -2664,9 +2664,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/30'}`}></div>
  <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
- {/* Animação de loading com gradiente */}
- <div className="w-24 h-24 mb-4 flex items-center justify-center">
- <div className={`w-16 h-16 rounded-full border-4 animate-spin ${theme === 'dark' ? 'border-neutral-700 border-t-neutral-400' : 'border-gray-200 border-t-gray-500'}`}></div>
+ {/* Motion GIF (padrão Vizzu — Scene-1.gif) */}
+ <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
 
  {/* Header */}

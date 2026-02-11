@@ -9,7 +9,7 @@ import {
  Product,
  WhatsAppTemplate,
 } from '../../types';
-import { LookComposer as StudioLookComposer } from '../Studio/LookComposer';
+import { LookComposer as StudioLookComposer } from '../LookComposer/LookComposerUI';
 import { compressImage, formatFileSize } from '../../utils/imageCompression';
 import { OptimizedImage } from '../OptimizedImage';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
@@ -1601,12 +1601,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Container do conteudo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
  {/* Vizzu Motion */}
- <div className="w-40 h-40 md:w-48 md:h-48 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
+ <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
  <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
 
  {/* Titulo */}
- <h2 className={`text-xl md:text-2xl font-bold font-serif mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <h2 className={`text-2xl font-bold font-serif mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  Criando seu look...
  </h2>
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useUI, type Page } from '../../contexts/UIContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGeneration } from '../../contexts/GenerationContext';
@@ -641,13 +640,8 @@ export function AppLayout({
  onClick={() => handleMinimizedClick(() => setProductStudioMinimized(false))}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
- <div className="w-10 h-10 flex-shrink-0">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
  <div className="flex-1">
  <p className="text-white text-sm font-medium">Product Studio</p>
@@ -678,13 +672,8 @@ export function AppLayout({
  onClick={() => handleMinimizedClick(() => setLookComposerMinimized(false))}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
- <div className="w-10 h-10 flex-shrink-0">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
  <div className="flex-1">
  <p className="text-white text-sm font-medium">Look Composer</p>
@@ -715,13 +704,8 @@ export function AppLayout({
  onClick={() => handleMinimizedClick(() => setProvadorMinimized(false))}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
- <div className="w-10 h-10 flex-shrink-0">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
  <div className="flex-1">
  <p className="text-white text-sm font-medium">Vizzu Provador</p>
@@ -752,13 +736,8 @@ export function AppLayout({
  onClick={() => handleMinimizedClick(() => setCreativeStillMinimized(false))}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
- <div className="w-10 h-10 flex-shrink-0">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
+ <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
  <div className="flex-1">
  <p className="text-white text-sm font-medium">Still Criativo</p>
