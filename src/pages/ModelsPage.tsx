@@ -146,8 +146,8 @@ export const DEFAULT_MODELS: SavedModel[] = [
     hairColor: 'black', hairStyle: 'straight', eyeColor: 'brown',
     expression: 'neutral', bustSize: 'medium', waistType: 'thin',
     images: {
-      front: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/model-images/system/default-woman-3/front.png',
-      back: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/model-images/system/default-woman-3/back.png',
+      front: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/models/314df8ec-687f-44d6-bc11-f00f0bab2bde/preview-1770814004742/front.jpeg',
+      back: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/models/314df8ec-687f-44d6-bc11-f00f0bab2bde/preview-1770814004742/back.jpeg',
     },
     status: 'ready', createdAt: '2026-02-11',
   },
