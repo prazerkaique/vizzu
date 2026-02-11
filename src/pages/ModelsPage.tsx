@@ -701,8 +701,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
   )}>
    {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
   </div>
-  {isDefaultModel(model.id) && (
-   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-white/90 text-[#FF6B6B]">Gratuito</div>
+  {isDefaultModel(model.id) ? (
+   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">Vizzu</div>
+  ) : (
+   <div className={'absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase ' + (theme === 'dark' ? 'bg-white/15 text-white/70' : 'bg-black/10 text-black/50')}>Criado</div>
   )}
   </div>
   <div className="p-3">
@@ -856,8 +858,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {filteredDefaultModels.length > 0 && (
  <>
  <div className="flex items-center gap-2 mb-3">
- <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
- <span className="px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">Gratuitos</span>
+ <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Vizzu</h2>
+ <span className="px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">Incluso</span>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
  {filteredDefaultModels.map(model => renderModelCard(model))}
@@ -1759,7 +1761,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}
  {isDefaultModel(showModelDetail.id) && (
  <span className="text-[#FF9F43] text-xs flex items-center px-2">
- <i className="fas fa-info-circle mr-1.5"></i>Modelo gratuito pré-definido
+ <i className="fas fa-info-circle mr-1.5"></i>Modelo Vizzu — incluso no plano
  </span>
  )}
  <button
