@@ -144,6 +144,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    return () => window.removeEventListener('keydown', handleEsc);
   }, [showBulkImport, showCreateProduct, showProductDetail, showPhotoSourcePicker, showProductSelector, showDeleteProductsModal]);
 
+  // Sincroniza o produto aberto no Hub com dados frescos após reload
+  useEffect(() => {
+    if (showProductDetail) {
+      const fresh = products.find(p => p.id === showProductDetail.id);
+      if (fresh) {
+        setShowProductDetail(fresh);
+      } else {
+        setShowProductDetail(null); // produto foi deletado inteiramente
+      }
+    }
+  }, [products]);
+
   const toggleProductSelection = (productId: string) => {
    setSelectedProducts(prev =>
    prev.includes(productId)
