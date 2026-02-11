@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SavedModel, MODEL_OPTIONS } from '../types';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -213,8 +213,6 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  // Fix 10: loading state
  const [isLoadingModels, setIsLoadingModels] = useState(true);
 
- // Fix 12: ref para timer de undo delete
- const deleteModelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
  // Quando showCreateModel muda para true (de fora, ex: LookComposer), reset wizard
  useEffect(() => {
@@ -594,50 +592,61 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }
  };
 
- const deleteModel = useCallback((model: SavedModel) => {
+ const deleteModel = useCallback(async (model: SavedModel) => {
  if (!user) return;
 
  // 1. Esconder otimisticamente
  setSavedModels(prev => prev.filter(m => m.id !== model.id));
  if (showModelDetail?.id === model.id) setShowModelDetail(null);
 
- // 2. Cancelar timer anterior
- if (deleteModelTimerRef.current) clearTimeout(deleteModelTimerRef.current);
-
- // 3. Agendar deleção real após 6.5s
- let cancelled = false;
- deleteModelTimerRef.current = setTimeout(async () => {
- if (cancelled) return;
+ // 2. Deletar imediatamente no banco
  try {
-  if (model.referenceStoragePath) {
-   await supabase.storage.from('model-references').remove([model.referenceStoragePath]);
-  }
-  if (model.images) {
-   const imagePaths = [];
-   if (model.images.front) imagePaths.push(`${user.id}/${model.id}/front.png`);
-   if (model.images.back) imagePaths.push(`${user.id}/${model.id}/back.png`);
-   if (imagePaths.length > 0) {
-    await supabase.storage.from('model-images').remove(imagePaths);
-   }
-  }
   const { error } = await supabase.from('saved_models').delete().eq('id', model.id).eq('user_id', user.id);
   if (error) throw error;
  } catch (error) {
   console.error('Erro ao deletar modelo:', error);
   showToast('Erro ao deletar modelo', 'error');
   loadSavedModels();
+  return;
  }
- }, 6500);
 
- // 4. Toast com Desfazer
+ // 3. Toast com Desfazer (re-insere se clicado)
  showToast(`"${model.name}" excluído`, 'success', {
  label: 'Desfazer',
- onClick: () => {
-  cancelled = true;
-  if (deleteModelTimerRef.current) clearTimeout(deleteModelTimerRef.current);
-  setSavedModels(prev => [...prev, model].sort((a, b) =>
-   new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-  ));
+ onClick: async () => {
+  try {
+   const { error } = await supabase.from('saved_models').insert({
+    id: model.id,
+    user_id: user.id,
+    name: model.name,
+    gender: model.gender,
+    ethnicity: model.ethnicity,
+    skin_tone: model.skinTone,
+    body_type: model.bodyType,
+    age_range: model.ageRange,
+    height: model.height,
+    hair_color: model.hairColor,
+    hair_style: model.hairStyle,
+    eye_color: model.eyeColor,
+    expression: model.expression,
+    bust_size: model.bustSize || null,
+    waist_type: model.waistType || null,
+    physical_notes: model.physicalNotes || null,
+    hair_notes: model.hairNotes || null,
+    skin_notes: model.skinNotes || null,
+    reference_image_url: model.referenceImageUrl || null,
+    reference_storage_path: model.referenceStoragePath || null,
+    status: model.status,
+    images: model.images || {},
+   });
+   if (error) throw error;
+   setSavedModels(prev => [...prev, model].sort((a, b) =>
+    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+   ));
+  } catch (e) {
+   console.error('Erro ao restaurar modelo:', e);
+   showToast('Erro ao desfazer exclusão', 'error');
+  }
  }
  });
  }, [user, showModelDetail, showToast]);
