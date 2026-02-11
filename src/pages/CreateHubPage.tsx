@@ -77,7 +77,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
 
     {/* Card 2: Vizzu Provador */}
     <div
-    onClick={() => setShowVideoTutorial('provador')}
+    onClick={() => navigateTo('provador')}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
