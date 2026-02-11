@@ -466,7 +466,7 @@ export function DashboardPage() {
    { label: 'Vizzu Provador®', count: provadorCount, pct: pct(provadorCount), gradient: 'from-[#FF6B6B] to-[#FF9F43]' },
    { label: 'Vizzu Still Criativo®', count: stillCount, pct: pct(stillCount), gradient: 'from-emerald-500 to-teal-500' },
    ...(otherCount > 0 ? [{ label: 'Outros', count: otherCount, pct: pct(otherCount), gradient: 'from-gray-400 to-gray-500' }] : []),
- ].filter(c => c.count > 0);
+ ];
 
  return (
  <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
