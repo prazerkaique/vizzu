@@ -1059,6 +1059,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  navigateTo={navigateTo}
  setProductForCreation={setProductForCreation}
  onEditProduct={(p) => { setShowProductDetail(null); startEditProduct(p); }}
+ showToast={showToast}
+ onRefreshProduct={() => user?.id && loadUserProducts(user.id)}
  />
  )}
 

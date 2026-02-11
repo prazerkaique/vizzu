@@ -92,7 +92,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
  const [showProductModal, setShowProductModal] = useState(false);
  const [hubProduct, setHubProduct] = useState<Product | null>(null);
- const { navigateTo } = useUI();
+ const { navigateTo, showToast } = useUI();
  const [productSearchTerm, setProductSearchTerm] = useState('');
  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
  const [productFilterCategory, setProductFilterCategory] = useState('');
@@ -902,6 +902,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
    userId={userId}
    navigateTo={navigateTo}
    setProductForCreation={setProductForCreation || (() => {})}
+   showToast={showToast}
  />
  )}
  </div>

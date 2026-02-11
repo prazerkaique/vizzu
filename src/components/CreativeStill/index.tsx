@@ -159,7 +159,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
   const isDark = theme === 'dark';
   const { openViewer } = useImageViewer();
-  const { navigateTo } = useUI();
+  const { navigateTo, showToast } = useUI();
   const [hubProduct, setHubProduct] = useState<Product | null>(null);
 
   // ── Produto pré-selecionado (vindo de outra página) ──
@@ -1046,6 +1046,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           navigateTo={navigateTo}
           setProductForCreation={setProductForCreationProp || (() => {})}
           defaultTab="cs"
+          showToast={showToast}
         />
       )}
     </div>

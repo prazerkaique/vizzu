@@ -131,7 +131,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  setProductForCreation,
 }) => {
  const isDark = theme === 'dark';
- const { navigateTo } = useUI();
+ const { navigateTo, showToast } = useUI();
 
  // Estados principais
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -1636,6 +1636,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
    userId={userId}
    navigateTo={navigateTo}
    setProductForCreation={setProductForCreation || (() => {})}
+   showToast={showToast}
  />
  )}
 
