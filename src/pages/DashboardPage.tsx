@@ -8,16 +8,73 @@ import { useCredits } from '../hooks/useCredits';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { supabase } from '../services/supabaseClient';
 
-// ── Dicas rotativas ──
+// ── 50 dicas rotativas (carrossel automático) ──
 const TIPS = [
- 'Use fotos com boa iluminação e fundo neutro para melhores resultados nas gerações de IA.',
+ // Fotografia de produto
+ 'Use luz natural difusa para fotografar seus produtos — evite flash direto que cria sombras duras.',
+ 'Fundo branco ou cinza claro dá mais liberdade para a IA gerar cenários criativos e remover fundo.',
+ 'Fotografe o produto de frente, centralizado e sem inclinação — a IA usa essa imagem como referência principal.',
+ 'Evite fotos com marcas d\'água, textos ou logos sobrepostos — a IA pode reproduzi-los na imagem gerada.',
+ 'Quanto melhor a resolução da foto original, melhor o resultado da IA. Use no mínimo 1000×1000px.',
+ 'Para roupas, use cabide invisível ou manequim — a IA consegue gerar o ghost mannequin a partir disso.',
+ 'Fotografe acessórios (bolsas, sapatos, relógios) em ângulo de 3/4 para mostrar profundidade.',
+ 'Evite reflexos em produtos metálicos ou com vidro — use luz indireta ou difusor.',
+ 'Para produtos pequenos (joias, cosméticos), use macro ou aproxime bastante para capturar detalhes.',
+ 'Tire mais de uma foto por produto — ângulos diferentes ajudam a IA a entender a peça completa.',
+
+ // Vizzu Product Studio®
  'O Vizzu Product Studio® gera múltiplos ângulos automaticamente — cadastre uma boa foto frontal e deixe a IA fazer o resto.',
- 'No Look Composer, combine até 4 peças para criar looks completos com modelo IA.',
- 'Use o Creative Still para composições estilizadas — perfeito para redes sociais e campanhas.',
- 'Fotos com fundo branco ou cinza claro dão mais liberdade para a IA criar cenários criativos.',
+ 'Cadastre a categoria correta dos produtos para que o Vizzu Product Studio® gere os ângulos mais adequados.',
+ 'No Vizzu Product Studio®, o ângulo frontal é a referência principal — garanta que seja a melhor foto do produto.',
+ 'O Vizzu Product Studio® funciona melhor com peças isoladas — evite fotos com vários produtos juntos.',
+ 'Após gerar no Vizzu Product Studio®, use o editor integrado para ajustes finos antes de baixar.',
+ 'O ghost mannequin do Vizzu Product Studio® funciona melhor com roupas em cabide ou manequim claro.',
+
+ // Vizzu Look Composer®
+ 'No Vizzu Look Composer®, combine até 4 peças para criar looks completos com modelo IA.',
+ 'Para o Vizzu Look Composer®, selecione peças que combinam entre si — a IA monta o look no modelo escolhido.',
+ 'Crie modelos personalizados com características específicas para representar melhor seu público-alvo.',
+ 'No Vizzu Look Composer®, as observações do modelo (físico, cabelo, pele) influenciam diretamente o resultado.',
+ 'Use o Vizzu Look Composer® para criar lookbooks completos de coleção — ideal para catálogos sazonais.',
+ 'O Vizzu Look Composer® preserva fielmente as cores das peças — use fotos com cores bem definidas.',
+
+ // Vizzu Still Criativo®
+ 'Use o Vizzu Still Criativo® para composições estilizadas — perfeito para redes sociais e campanhas.',
+ 'No Vizzu Still Criativo®, a estética "Flat Lay" funciona muito bem para acessórios e produtos pequenos.',
+ 'Experimente diferentes presets de iluminação no Vizzu Still Criativo® — cada um muda completamente o mood.',
+ 'O Vizzu Still Criativo® permite adicionar elementos decorativos à cena — flores, tecidos, objetos temáticos.',
+ 'Para campanhas sazonais, use o Vizzu Still Criativo® com mood e estação do ano definidos no template.',
+ 'Salve seus templates favoritos no Vizzu Still Criativo® para reutilizar em novos produtos rapidamente.',
+ 'No Vizzu Still Criativo®, a profundidade de campo controla o desfoque — use 30-50 para foco seletivo.',
+
+ // Vizzu Provador®
+ 'O Vizzu Provador® funciona melhor com fotos corporais bem enquadradas — da cabeça aos pés.',
+ 'Para o Vizzu Provador®, peça ao cliente uma foto com roupa justa e neutra para melhor resultado.',
+ 'O Vizzu Provador® é ideal para vendas por WhatsApp — envie o resultado direto para o cliente.',
+ 'Fotos do cliente com boa iluminação e fundo limpo geram resultados mais realistas no Vizzu Provador®.',
+ 'Cadastre gênero do cliente corretamente — o Vizzu Provador® usa essa informação para ajustar o resultado.',
+
+ // Download e formatos
  'Baixe suas imagens em diferentes tamanhos usando o sistema de download — são 6 presets otimizados para cada canal.',
- 'Cadastre a categoria correta dos produtos para que o Product Studio® gere os ângulos mais adequados.',
- 'O Provador Virtual funciona melhor com fotos corporais bem enquadradas — da cabeça aos pés.',
+ 'Para e-commerce, use o preset "E-commerce" (2048px WebP) — balanceia qualidade e velocidade de carregamento.',
+ 'Para Instagram e redes sociais, use o preset "Redes Sociais" (1080px JPEG) — tamanho ideal para feed.',
+ 'O preset "Marketplaces" (1200px JPEG) é otimizado para Mercado Livre, Shopee e Amazon.',
+ 'Use o download em ZIP quando precisar baixar várias imagens de uma vez — economiza tempo.',
+ 'O formato WebP é até 30% menor que JPEG com mesma qualidade — ideal para sites e blogs.',
+ 'O preset "Original" mantém a resolução nativa em PNG — use para edição profissional ou impressão.',
+
+ // Catálogo e organização
+ 'Preencha a descrição dos produtos com detalhes de material, textura e acabamento — a IA usa essas informações.',
+ 'Organize seus produtos por categoria para encontrar rapidamente na hora de gerar imagens.',
+ 'Produtos com nome descritivo facilitam a busca e organização — "Vestido Longo Floral" é melhor que "Prod 001".',
+ 'Use a cor do produto no cadastro para facilitar filtros e buscas no seu catálogo.',
+
+ // E-commerce e marketing
+ 'Imagens profissionais aumentam em até 40% a taxa de conversão em e-commerce.',
+ 'Consistência visual no catálogo transmite profissionalismo — use o mesmo estilo em todas as fotos.',
+ 'Para anúncios pagos, use imagens com modelo vestindo o produto — geram mais clique que fotos isoladas.',
+ 'Crie variações de uma mesma foto para testes A/B — descubra qual estilo converte mais.',
+ 'Atualize as fotos dos produtos sazonalmente — looks de verão no verão, inverno no inverno.',
 ];
 
 export function DashboardPage() {
@@ -28,20 +85,25 @@ export function DashboardPage() {
  const { historyLogs } = useHistory();
  const { userCredits, currentPlan } = useCredits({ userId: user?.id });
 
- // Dica do dia — rotaciona com base no dia do ano
- const todayTip = useMemo(() => {
-   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-   return TIPS[dayOfYear % TIPS.length];
+ // Carrossel de dicas — troca a cada 10s
+ const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * TIPS.length));
+
+ useEffect(() => {
+   const interval = setInterval(() => {
+     setTipIndex(i => (i + 1) % TIPS.length);
+   }, 10000);
+   return () => clearInterval(interval);
  }, []);
 
  // Queries diretas para criações recentes (não dependem de contexto de outra página)
  const [recentStills, setRecentStills] = useState<{ id: string; imageUrl: string; name: string; date: string }[]>([]);
  const [recentProvadorLooks, setRecentProvadorLooks] = useState<{ id: string; imageUrl: string; clientId: string; date: string }[]>([]);
+ const [totalStillsCount, setTotalStillsCount] = useState(0);
 
  useEffect(() => {
  if (!user?.id) return;
 
- // Creative Still generations
+ // Creative Still generations (últimas 10 para exibição)
  supabase
  .from('creative_still_generations')
  .select('id, variation_urls, variation_1_url, variation_2_url, status, created_at, settings_snapshot')
@@ -56,11 +118,21 @@ export function DashboardPage() {
  return {
  id: g.id,
  imageUrl: urls[0] || '',
- name: g.settings_snapshot?.product_name || 'Creative Still',
+ name: g.settings_snapshot?.product_name || 'Still Criativo',
  date: g.created_at,
  };
  }).filter((s: any) => s.imageUrl));
  }
+ });
+
+ // Contagem total de Creative Stills (sem limit, para stats corretos)
+ supabase
+ .from('creative_still_generations')
+ .select('id', { count: 'exact', head: true })
+ .eq('user_id', user.id)
+ .eq('status', 'completed')
+ .then(({ count }) => {
+ if (count !== null) setTotalStillsCount(count);
  });
 
  // Client looks (Provador) - direto do banco, sem depender do contexto
@@ -104,10 +176,10 @@ export function DashboardPage() {
  const cenarioCount = gen.cenarioCriativo?.length || 0;
  const legacyCount = gen.studioReady?.[0]?.images?.front ? 1 : 0;
  return total + psCount + lcCount + cenarioCount + legacyCount;
- }, 0) + clientLooks.length + recentStills.length;
+ }, 0) + clientLooks.length + totalStillsCount;
 
  return { optimizedProducts, totalGenerations };
- }, [products, clientLooks, recentStills]);
+ }, [products, clientLooks, totalStillsCount]);
 
  // ── Nome do usuário com fallback inteligente ──
  const userName = useMemo(() => {
@@ -193,7 +265,7 @@ export function DashboardPage() {
  });
  }
 
- // Look Composer
+ // Vizzu Look Composer®
  if (genImages?.modeloIA?.length > 0) {
  genImages.modeloIA.forEach((item: any) => {
  const imgUrl = item.images?.front || item.image_url || item.imageUrl;
@@ -244,10 +316,10 @@ export function DashboardPage() {
 
  // Badge labels e navegação por tipo
  const badgeLabel: Record<string, string> = {
-   studio: 'Studio',
+   studio: 'Product Studio',
    provador: 'Provador',
-   still: 'Still',
-   look: 'Look',
+   still: 'Still Criativo',
+   look: 'Look Composer',
    cenario: 'Cenário',
  };
  const navTarget: Record<string, () => void> = {
@@ -329,47 +401,47 @@ export function DashboardPage() {
  );
  })()}
 
- {/* STATS GRID - 4 Cards */}
+ {/* STATS GRID - 4 Cards (buttons para acessibilidade) */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
  {/* Produtos Cadastrados */}
- <div onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-box text-sm text-[#FF6B6B]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
- </div>
+ </button>
 
  {/* Produtos com Imagens IA */}
- <div onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-wand-magic-sparkles text-sm text-[#A855F7]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos com imagens IA</p>
- </div>
+ </button>
 
  {/* Imagens Geradas */}
- <div onClick={() => { navigateTo('settings'); setSettingsTab('history'); }} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => { navigateTo('settings'); setSettingsTab('history'); }} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-images text-sm text-[#FF9F43]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.totalGenerations}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
- </div>
+ </button>
 
  {/* Clientes Cadastrados */}
- <div onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-users text-sm text-[#4ADE80]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
- </div>
+ </button>
  </div>
 
  {/* USO DE CRÉDITOS - Todas as categorias */}
@@ -389,10 +461,10 @@ export function DashboardPage() {
  const pct = (v: number) => totalCredits > 0 ? Math.round((v / totalCredits) * 100) : 0;
 
  const categories = [
-   { label: 'Product Studio', count: studioCount, pct: pct(studioCount), gradient: 'from-[#A855F7] to-indigo-500' },
-   { label: 'Look Composer', count: lookCount, pct: pct(lookCount), gradient: 'from-amber-500 to-[#FF9F43]' },
-   { label: 'Provador Virtual', count: provadorCount, pct: pct(provadorCount), gradient: 'from-[#FF6B6B] to-[#FF9F43]' },
-   { label: 'Creative Still', count: stillCount, pct: pct(stillCount), gradient: 'from-emerald-500 to-teal-500' },
+   { label: 'Vizzu Product Studio®', count: studioCount, pct: pct(studioCount), gradient: 'from-[#A855F7] to-indigo-500' },
+   { label: 'Vizzu Look Composer®', count: lookCount, pct: pct(lookCount), gradient: 'from-amber-500 to-[#FF9F43]' },
+   { label: 'Vizzu Provador®', count: provadorCount, pct: pct(provadorCount), gradient: 'from-[#FF6B6B] to-[#FF9F43]' },
+   { label: 'Vizzu Still Criativo®', count: stillCount, pct: pct(stillCount), gradient: 'from-emerald-500 to-teal-500' },
    ...(otherCount > 0 ? [{ label: 'Outros', count: otherCount, pct: pct(otherCount), gradient: 'from-gray-400 to-gray-500' }] : []),
  ].filter(c => c.count > 0);
 
@@ -415,7 +487,7 @@ export function DashboardPage() {
  <div className="space-y-3">
  {categories.map((cat) => (
  <div key={cat.label} className="flex items-center gap-3">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-24 truncate'}>{cat.label}</span>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-36 truncate'}>{cat.label}</span>
  <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
  <div className={`h-full rounded-full bg-gradient-to-r ${cat.gradient} transition-all`} style={{ width: `${cat.pct}%` }} />
  </div>
@@ -428,19 +500,22 @@ export function DashboardPage() {
  );
  })()}
 
- {/* DICA DO DIA + PLANO - Grid 2:1 */}
+ {/* DICAS + PLANO - Grid 2:1 */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {/* Dica do dia - 2 colunas */}
+ {/* Carrossel de dicas - 2 colunas */}
  <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#373632]/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex items-center gap-4 w-full">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/70')}>
- <i className={'fas fa-lightbulb text-lg ' + (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]')}></i>
+ <i className="fas fa-lightbulb text-lg text-[#FF9F43]"></i>
  </div>
  <div className="flex-1 min-w-0">
- <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>
- {todayTip}
+ <div className="flex items-center gap-2 mb-1">
+ <h3 className={'text-sm font-semibold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica</h3>
+ <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{tipIndex + 1}/{TIPS.length}</span>
+ </div>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm transition-opacity duration-300'}>
+ {TIPS[tipIndex]}
  </p>
  </div>
  </div>
