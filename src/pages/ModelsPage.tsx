@@ -693,16 +693,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    </div>
    </div>
   )}
-  <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur-sm ' + (
-   model.status === 'ready' ? 'bg-gradient-to-r from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF6B6B]' :
-   model.status === 'generating' ? 'bg-amber-500/15 text-amber-400' :
-   model.status === 'error' ? 'bg-red-500/15 text-red-400' :
-   'bg-neutral-500/15 text-neutral-400'
+  <div className={'absolute top-2 right-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase ' + (
+   model.status === 'ready' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :
+   model.status === 'generating' ? 'bg-amber-500 text-white' :
+   model.status === 'error' ? 'bg-red-500 text-white' :
+   'bg-neutral-600 text-white'
   )}>
    {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
   </div>
   {isDefaultModel(model.id) && (
-   <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur-sm bg-[#f7f5f2]/20 text-[#FF9F43]">Gratuito</div>
+   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-white/90 text-[#FF6B6B]">Gratuito</div>
   )}
   </div>
   <div className="p-3">
@@ -857,7 +857,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <div className="flex items-center gap-2 mb-3">
  <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
- <span className={(theme === 'dark' ? 'bg-[#FF9F43]/10 text-[#FF9F43]' : 'bg-[#FF9F43]/10 text-[#FF9F43]') + ' px-2 py-0.5 rounded-full text-[9px] font-medium'}>Gratuitos</span>
+ <span className="px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">Gratuitos</span>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
  {filteredDefaultModels.map(model => renderModelCard(model))}
