@@ -693,16 +693,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    </div>
    </div>
   )}
-  <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium ' + (
-   model.status === 'ready' ? 'bg-green-500/20 text-green-400 backdrop-blur-sm' :
-   model.status === 'generating' ? 'bg-yellow-500/20 text-yellow-400 backdrop-blur-sm' :
-   model.status === 'error' ? 'bg-red-500/20 text-red-400 backdrop-blur-sm' :
-   'bg-neutral-500/20 text-neutral-400 backdrop-blur-sm'
+  <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur-sm ' + (
+   model.status === 'ready' ? 'bg-gradient-to-r from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF6B6B]' :
+   model.status === 'generating' ? 'bg-amber-500/15 text-amber-400' :
+   model.status === 'error' ? 'bg-red-500/15 text-red-400' :
+   'bg-neutral-500/15 text-neutral-400'
   )}>
    {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
   </div>
   {isDefaultModel(model.id) && (
-   <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-400 backdrop-blur-sm">Gratuito</div>
+   <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur-sm bg-[#f7f5f2]/20 text-[#FF9F43]">Gratuito</div>
   )}
   </div>
   <div className="p-3">
@@ -857,7 +857,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <div className="flex items-center gap-2 mb-3">
  <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
- <span className={(theme === 'dark' ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-500') + ' px-2 py-0.5 rounded-full text-[9px] font-medium'}>Gratuitos</span>
+ <span className={(theme === 'dark' ? 'bg-[#FF9F43]/10 text-[#FF9F43]' : 'bg-[#FF9F43]/10 text-[#FF9F43]') + ' px-2 py-0.5 rounded-full text-[9px] font-medium'}>Gratuitos</span>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
  {filteredDefaultModels.map(model => renderModelCard(model))}
@@ -922,7 +922,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  modelWizardStep === step
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
  : modelWizardStep > step
- ? (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')
+ ? (theme === 'dark' ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-[#FF6B6B]/10 text-[#FF6B6B]')
  : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400')
  )}>
  {modelWizardStep > step ? <i className="fas fa-check text-[10px]"></i> : step}
@@ -1341,7 +1341,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <i className={`fas ${step.icon} ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>
  )}
  </div>
- <span className={`${isCompleted ? 'text-green-400' : isCurrent ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>
+ <span className={`${isCompleted ? 'text-[#FF6B6B]' : isCurrent ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>
  {step.label}
  </span>
  </div>
@@ -1371,8 +1371,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <div className="text-center mb-2">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
- <p className={(theme === 'dark' ? 'text-green-400' : 'text-green-600') + ' text-sm'}>
- <i className="fas fa-check-circle mr-1"></i>Modelo criado com sucesso!
+ <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-sm font-medium">
+ <i className="fas fa-check-circle mr-1 text-[#FF6B6B]"></i>Modelo criado com sucesso!
  </p>
  </div>
  {/* Grid de imagens geradas */}
@@ -1758,7 +1758,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </>
  )}
  {isDefaultModel(showModelDetail.id) && (
- <span className={(theme === 'dark' ? 'text-blue-400' : 'text-blue-500') + ' text-xs flex items-center px-2'}>
+ <span className="text-[#FF9F43] text-xs flex items-center px-2">
  <i className="fas fa-info-circle mr-1.5"></i>Modelo gratuito pré-definido
  </span>
  )}
