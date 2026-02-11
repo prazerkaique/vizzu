@@ -83,7 +83,7 @@ export const ModelGridSkeleton: React.FC<{ theme?: 'dark' | 'light'; count?: num
   const isDark = theme === 'dark';
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-pulse">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-pulse">
       {[...Array(count)].map((_, i) => (
         <div key={i} className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-100') + ' rounded-2xl border overflow-hidden'}>
           <div className={(isDark ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-[3/4]'}></div>

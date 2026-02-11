@@ -881,7 +881,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="flex items-center gap-2 mb-3">
  <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
  </div>
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
  {filteredDefaultModels.map(model => renderModelCard(model))}
  </div>
  </>
@@ -894,7 +894,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Meus Modelos</h2>
  <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>({filteredUserModels.length})</span>
  </div>
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
  {filteredUserModels.map(model => renderModelCard(model))}
  </div>
  </>
