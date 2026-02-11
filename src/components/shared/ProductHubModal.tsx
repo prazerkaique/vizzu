@@ -126,11 +126,11 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
   // ── Tabs ──
   const tabs: Tab[] = useMemo(() => [
-    { id: 'ps', label: 'Product Studio', icon: 'fa-camera', count: psCount },
-    { id: 'cs', label: 'Still Criativo', icon: 'fa-gem', count: csCount },
-    { id: 'lc', label: 'Look Composer', icon: 'fa-layer-group', count: lcCount },
+    { id: 'ps', label: 'Vizzu Product Studio®', icon: 'fa-camera', count: psCount },
+    { id: 'cs', label: 'Vizzu Still Criativo®', icon: 'fa-gem', count: csCount },
+    { id: 'lc', label: 'Vizzu Look Composer®', icon: 'fa-layer-group', count: lcCount },
     { id: 'sr', label: 'Studio Ready', icon: 'fa-cube', count: srCount },
-    { id: 'cc', label: 'Cenário', icon: 'fa-mountain-sun', count: ccCount },
+    { id: 'cc', label: 'Cenário Criativo', icon: 'fa-mountain-sun', count: ccCount },
   ], [psCount, csCount, lcCount, srCount, ccCount]);
 
   // Auto-selecionar primeira aba com conteúdo

@@ -399,7 +399,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
   const handleCreateProduct = async () => {
    if (!getImage('front') || !newProduct.name || !newProduct.category) {
-   alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
+   showToast('Preencha pelo menos o nome, categoria e adicione a foto de frente', 'error');
    return;
    }
    setIsCreatingProduct(true);
@@ -446,11 +446,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
    addHistoryLog('Produto criado', `"${newProduct.name}" foi adicionado ao catálogo`, 'success', [], 'manual', 0);
    } else {
-   alert('Erro ao criar produto: ' + (data.error || 'Tente novamente'));
+   showToast('Erro ao criar produto: ' + (data.error || 'Tente novamente'), 'error');
    }
    } catch (error) {
    console.error('Erro:', error);
-   alert('Erro ao criar produto. Verifique sua conexão.');
+   showToast('Erro ao criar produto. Verifique sua conexão.', 'error');
    } finally {
    setIsCreatingProduct(false);
    }
@@ -478,6 +478,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    if (oi?.detail?.url && !images.front_detail) images.detail = oi.detail.url;
    else if (oi?.detail?.url) images.detail = oi.detail.url;
    setSelectedImages(images);
+   setProductAttributes(product.attributes || {});
    setEditingProduct(product);
    setShowProductDetail(null);
    setShowCreateProduct(true);
@@ -486,7 +487,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const handleSaveEditedProduct = async () => {
    if (!editingProduct) return;
    if (!getImage('front') || !newProduct.name || !newProduct.category) {
-   alert('Preencha pelo menos o nome, categoria e adicione a foto de frente');
+   showToast('Preencha pelo menos o nome, categoria e adicione a foto de frente', 'error');
    return;
    }
    setIsCreatingProduct(true);
@@ -530,7 +531,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    showToast('Produto atualizado com sucesso!', 'success');
    addHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
    } else {
-   alert('Erro ao atualizar produto: ' + (data.error || 'Tente novamente'));
+   showToast('Erro ao atualizar produto: ' + (data.error || 'Tente novamente'), 'error');
    }
    } catch (error) {
    console.error('Erro ao atualizar produto:', error);
@@ -749,7 +750,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  setShowPhotoSourcePicker(null);
  } catch (error) {
  console.error('Erro ao processar imagem:', error);
- alert('Erro ao processar imagem. Tente outro formato.');
+ showToast('Erro ao processar imagem. Tente outro formato.', 'error');
  }
  }
  }}
@@ -775,7 +776,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  setShowPhotoSourcePicker(null);
  } catch (error) {
  console.error('Erro ao processar imagem:', error);
- alert('Erro ao processar imagem. Tente outro formato.');
+ showToast('Erro ao processar imagem. Tente outro formato.', 'error');
  }
  }
  }}
@@ -959,6 +960,14 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <span>Marca e caimento</span>
  </div>
  </div>
+
+ {/* Botão cancelar */}
+ <button
+ onClick={() => setIsAnalyzingImage(false)}
+ className={`mt-6 px-4 py-2 rounded-lg text-xs font-medium transition-all ${theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+ >
+ Preencher manualmente
+ </button>
  </div>
  )}
 
