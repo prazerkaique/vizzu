@@ -26,7 +26,7 @@ const CATEGORY_GROUPS = [
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
-// Coleções são extraídas dinamicamente dos produtos existentes (ver useMemo abaixo)
+const COLLECTIONS = ['Verão 2026', 'Inverno 2026', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = [
  'Preto', 'Branco', 'Cinza', 'Cinza Claro', 'Cinza Escuro', 'Chumbo',
  'Azul', 'Azul Marinho', 'Azul Royal', 'Azul Claro', 'Azul Bebê', 'Azul Petróleo', 'Azul Turquesa', 'Índigo',
@@ -74,7 +74,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [filterCategory, setFilterCategory] = useState('');
   const [filterColor, setFilterColor] = useState('');
   const [filterCollection, setFilterCollection] = useState('');
-  const [visibleProductsCount, setVisibleProductsCount] = useState(20);
+  // visibleProductsCount removido — paginação real agora
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showDeleteProductsModal, setShowDeleteProductsModal] = useState(false);
   const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
@@ -110,10 +110,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   // Fix 6: proteção contra fechamento acidental do modal
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
-  // Fix 8: coleções dinâmicas extraídas dos produtos
-  const dynamicCollections = useMemo(() =>
-    [...new Set(products.map(p => p.collection).filter(Boolean))] as string[]
-  , [products]);
+  // Fix 8: coleções = fixas + dinâmicas dos produtos existentes
+  const allCollections = useMemo(() => {
+    const fromProducts = products.map(p => p.collection).filter(Boolean) as string[];
+    return [...new Set([...COLLECTIONS, ...fromProducts])];
+  }, [products]);
 
   // Fix 1: detecta se há filtros ativos
   const hasActiveFilters = !!(filterCategoryGroup || filterCategory || filterColor || filterCollection || debouncedSearchTerm);
@@ -146,9 +147,6 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
     return ps + sr + cc + lc;
   }, []);
 
-  // Fix 17: scroll infinito com IntersectionObserver (ref declarado aqui, useEffect abaixo após filteredProducts)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-
   const filteredProducts = useMemo(() => products
    .filter(product => {
    const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
@@ -165,22 +163,19 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    return dateB - dateA;
    }), [products, debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
 
-  useEffect(() => {
-   setVisibleProductsCount(20);
-  }, [debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
+  // Paginação
+  const PRODUCTS_PER_PAGE = 24;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
 
-  // Fix 17: scroll infinito com IntersectionObserver
+  // Resetar para página 1 quando filtros mudam
   useEffect(() => {
-    const el = loadMoreRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setVisibleProductsCount(prev => prev + 20);
-      }
-    }, { rootMargin: '200px' });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [filteredProducts.length]);
+   setCurrentPage(1);
+  }, [debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
 
   useEffect(() => {
    if (lastCreatedProductId && products.length > 0) {
@@ -678,12 +673,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <option value="">Cor</option>
  {COLORS.filter(c => filterCounts.colorCounts[c]).map(color => <option key={color} value={color}>{color} ({filterCounts.colorCounts[color]})</option>)}
  </select>
- {dynamicCollections.length > 0 && (
  <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
  <option value="">Coleção</option>
- {dynamicCollections.map(col => <option key={col} value={col}>{col}{filterCounts.collectionCounts[col] ? ` (${filterCounts.collectionCounts[col]})` : ''}</option>)}
+ {allCollections.map(col => <option key={col} value={col}>{col}{filterCounts.collectionCounts[col] ? ` (${filterCounts.collectionCounts[col]})` : ''}</option>)}
  </select>
- )}
  {hasActiveFilters && (
  <button onClick={clearAllFilters} className="px-2.5 py-1.5 text-xs text-[#FF6B6B] hover:bg-neutral-800/50 rounded-lg transition-colors">
  <i className="fas fa-times mr-1"></i>Limpar
@@ -692,8 +685,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  <div className="flex items-center justify-between mt-2">
  <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px]'}>
- {filteredProducts.length > visibleProductsCount
- ? `Mostrando ${Math.min(visibleProductsCount, filteredProducts.length)} de ${filteredProducts.length} produtos`
+ {totalPages > 1
+ ? `Página ${currentPage} de ${totalPages} — ${filteredProducts.length} produtos`
  : `${filteredProducts.length} de ${products.length} produtos`}
  </p>
  {filteredProducts.length > 0 && (
@@ -726,7 +719,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <ProductGridSkeleton theme={theme} count={12} />
  ) : filteredProducts.length > 0 ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
- {filteredProducts.slice(0, visibleProductsCount).map(product => {
+ {paginatedProducts.map(product => {
  const imgCount = getGeneratedImageCount(product);
  const isSelected = selectedProducts.includes(product.id);
  return (
@@ -793,13 +786,48 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  ) : null}
 
- {/* Fix 17: scroll infinito com sentinel */}
- {filteredProducts.length > 0 && visibleProductsCount < filteredProducts.length && (
- <div ref={loadMoreRef} className="flex justify-center p-4 pt-2">
- <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-xs flex items-center gap-2'}>
- <div className={'w-4 h-4 border-2 rounded-full animate-spin border-t-transparent ' + (theme === 'dark' ? 'border-neutral-600' : 'border-gray-300')}></div>
- Carregando mais...
- </div>
+ {/* Paginação */}
+ {filteredProducts.length > 0 && totalPages > 1 && (
+ <div className="flex items-center justify-center gap-1 p-3 pt-2">
+ <button
+  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+  disabled={currentPage === 1}
+  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white disabled:text-neutral-700' : 'text-gray-500 hover:text-gray-900 disabled:text-gray-300') + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors disabled:cursor-not-allowed'}
+ >
+  <i className="fas fa-chevron-left text-[10px]"></i>
+ </button>
+ {Array.from({ length: totalPages }, (_, i) => i + 1)
+  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+  .reduce<(number | string)[]>((acc, page, idx, arr) => {
+   if (idx > 0 && page - (arr[idx - 1] as number) > 1) acc.push('...');
+   acc.push(page);
+   return acc;
+  }, [])
+  .map((item, idx) =>
+   typeof item === 'string' ? (
+    <span key={`dot-${idx}`} className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' w-6 text-center text-xs'}>...</span>
+   ) : (
+    <button
+     key={item}
+     onClick={() => setCurrentPage(item)}
+     className={
+      (item === currentPage
+       ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white font-semibold'
+       : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'))
+      + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors'
+     }
+    >
+     {item}
+    </button>
+   )
+  )}
+ <button
+  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+  disabled={currentPage === totalPages}
+  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white disabled:text-neutral-700' : 'text-gray-500 hover:text-gray-900 disabled:text-gray-300') + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors disabled:cursor-not-allowed'}
+ >
+  <i className="fas fa-chevron-right text-[10px]"></i>
+ </button>
  </div>
  )}
 
@@ -1115,6 +1143,13 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {group.items.map(cat => <option key={cat} value={cat}>{cat}</option>)}
  </optgroup>
  ))}
+ </select>
+ </div>
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
+ <select value={newProduct.collection} onChange={(e) => setNewProduct({...newProduct, collection: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+ <option value="">Nenhuma</option>
+ {allCollections.map(col => <option key={col} value={col}>{col}</option>)}
  </select>
  </div>
 
