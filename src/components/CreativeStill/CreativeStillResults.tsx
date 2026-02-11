@@ -156,6 +156,7 @@ export const CreativeStillResults: React.FC<Props> = ({
 
  const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
  if (!editingVariation) return { success: false, error: 'Nenhuma variação selecionada.' };
+ const origUrl = product?.originalImages?.front?.url || product?.images?.[0]?.url || '';
  return editStudioImage({
   userId: user?.id,
   productId: product?.id,
@@ -164,6 +165,7 @@ export const CreativeStillResults: React.FC<Props> = ({
   referenceImageBase64: params.referenceImageBase64,
   resolution,
   productInfo: { name: product?.name, category: product?.category, color: product?.color, description: product?.description },
+  originalImageUrl: origUrl,
  });
  }, [editingVariation, resolution, user, product]);
 

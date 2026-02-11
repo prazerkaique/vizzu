@@ -230,6 +230,8 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
     if (!editingImage) return { success: false, error: 'Nenhuma imagem selecionada' };
     try {
+      // Foto original do produto = referência de cor para o Gemini
+      const origUrl = product.originalImages?.front?.url || product.images?.[0]?.url || '';
       const result = await editStudioImage({
         userId,
         productId: product.id,
@@ -238,6 +240,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         referenceImageBase64: params.referenceImageBase64,
         resolution,
         productInfo: { name: product.name, category: product.category, color: product.color, description: product.description },
+        originalImageUrl: origUrl,
       });
       return result;
     } catch (err: any) {

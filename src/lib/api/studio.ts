@@ -1172,6 +1172,8 @@ interface EditStudioImageParams {
   studioBackground?: StudioBackground;
   studioShadow?: StudioShadow;
   productNotes?: string;
+  /** URL da foto original do produto — usada como referência de cor pelo Gemini */
+  originalImageUrl?: string;
 }
 
 interface EditStudioImageResponse {
@@ -1208,6 +1210,7 @@ export async function editStudioImage(params: EditStudioImageParams): Promise<Ed
         product_category: params.productInfo?.category,
         product_color: params.productInfo?.color || '',
         product_description: params.productInfo?.description || '',
+        original_image_url: params.originalImageUrl || '',
         studio_background: params.studioBackground || 'gray',
         studio_shadow: params.studioShadow || 'with-shadow',
         product_notes: params.productNotes || '',

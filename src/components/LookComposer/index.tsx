@@ -523,13 +523,19 @@ export const LookComposer: React.FC<LookComposerProps> = ({
    const currentUrl = selectedLookView === 'back' && selectedLook.backImageUrl
      ? selectedLook.backImageUrl
      : selectedLook.imageUrl;
+   const product = products.find(p => p.id === selectedLook.productId);
+   const origUrl = product?.originalImages?.front?.url || product?.images?.[0]?.url || '';
    return editStudioImage({
+     userId,
+     productId: selectedLook.productId,
      currentImageUrl: currentUrl,
      correctionPrompt: params.correctionPrompt,
      referenceImageBase64: params.referenceImageBase64,
      resolution: '2k',
+     productInfo: { name: product?.name, category: product?.category, color: product?.color, description: product?.description },
+     originalImageUrl: origUrl,
    });
- }, [selectedLook, selectedLookView]);
+ }, [selectedLook, selectedLookView, products, userId]);
 
  const handleGalleryEditSave = useCallback(async (newImageUrl: string) => {
    if (!selectedLook) return { success: false };

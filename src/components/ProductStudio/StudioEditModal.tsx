@@ -161,6 +161,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     setIsGenerating(true);
 
     try {
+      const origUrl = product.originalImages?.front?.url || product.images?.[0]?.url || '';
       const result = await editStudioImage({
         userId: user.id,
         productId: product.id,
@@ -170,10 +171,11 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
         correctionPrompt: correctionPrompt.trim(),
         referenceImageBase64: referenceBase64 || undefined,
         resolution,
-        productInfo: { name: product.name, category: product.category },
+        productInfo: { name: product.name, category: product.category, color: product.color, description: product.description },
         studioBackground,
         studioShadow,
         productNotes,
+        originalImageUrl: origUrl,
       });
 
       if (result.success && result.new_image_url) {

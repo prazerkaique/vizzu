@@ -252,6 +252,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
 
  const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
  if (!editingImageUrl) return { success: false, error: 'Nenhuma imagem selecionada.' };
+ const origUrl = product?.originalImages?.front?.url || product?.images?.[0]?.url || '';
  return editStudioImage({
   userId: user?.id,
   productId: product?.id,
@@ -260,6 +261,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   referenceImageBase64: params.referenceImageBase64,
   resolution: '2k',
   productInfo: { name: product?.name, category: product?.category, color: product?.color, description: product?.description },
+  originalImageUrl: origUrl,
  });
  }, [editingImageUrl, user, product]);
 
