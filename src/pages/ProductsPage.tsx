@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useProducts } from '../contexts/ProductsContext';
@@ -14,6 +14,7 @@ import { ProductHubModal } from '../components/shared/ProductHubModal';
 import heic2any from 'heic2any';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
 import { getProductType, UPLOAD_SLOTS_CONFIG, DETAIL_TIPS, angleToApiField, angleToOriginalImagesKey, type UploadSlotConfig } from '../lib/productConfig';
+import { ProductGridSkeleton } from '../components/LoadingSkeleton';
 
 const CATEGORY_GROUPS = [
  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
@@ -25,7 +26,7 @@ const CATEGORY_GROUPS = [
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
-const COLLECTIONS = ['Verão 2025', 'Inverno 2025', 'Básicos', 'Premium', 'Promoção'];
+// Coleções são extraídas dinamicamente dos produtos existentes (ver useMemo abaixo)
 const COLORS = [
  'Preto', 'Branco', 'Cinza', 'Cinza Claro', 'Cinza Escuro', 'Chumbo',
  'Azul', 'Azul Marinho', 'Azul Royal', 'Azul Claro', 'Azul Bebê', 'Azul Petróleo', 'Azul Turquesa', 'Índigo',
@@ -95,6 +96,59 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const { historyLogs, setHistoryLogs, addHistoryLog } = useHistory();
   const { userCredits, currentPlan } = useCredits({ userId: user?.id });
 
+  // Fix 9: skeleton loading inicial
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  useEffect(() => {
+    if (products.length > 0) setIsInitialLoad(false);
+  }, [products]);
+  // Desligar skeleton após 3s mesmo sem produtos (evitar skeleton eterno)
+  useEffect(() => {
+    const t = setTimeout(() => setIsInitialLoad(false), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Fix 6: proteção contra fechamento acidental do modal
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // Fix 8: coleções dinâmicas extraídas dos produtos
+  const dynamicCollections = useMemo(() =>
+    [...new Set(products.map(p => p.collection).filter(Boolean))] as string[]
+  , [products]);
+
+  // Fix 1: detecta se há filtros ativos
+  const hasActiveFilters = !!(filterCategoryGroup || filterCategory || filterColor || filterCollection || debouncedSearchTerm);
+  const clearAllFilters = () => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); setSearchTerm(''); };
+
+  // Fix 7: contagem de produtos por opção de filtro
+  const filterCounts = useMemo(() => {
+    const colorCounts: Record<string, number> = {};
+    const categoryCounts: Record<string, number> = {};
+    const collectionCounts: Record<string, number> = {};
+    const categoryGroupCounts: Record<string, number> = {};
+    products.forEach(p => {
+      if (p.color) colorCounts[p.color] = (colorCounts[p.color] || 0) + 1;
+      if (p.category) categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+      if (p.collection) collectionCounts[p.collection] = (collectionCounts[p.collection] || 0) + 1;
+      const group = getCategoryGroupBySubcategory(p.category);
+      if (group) categoryGroupCounts[group.id] = (categoryGroupCounts[group.id] || 0) + 1;
+    });
+    return { colorCounts, categoryCounts, collectionCounts, categoryGroupCounts };
+  }, [products]);
+
+  // Fix 15: contagem total de imagens geradas por produto
+  const getGeneratedImageCount = useCallback((product: Product): number => {
+    const gi = product.generatedImages;
+    if (!gi) return 0;
+    const ps = (gi.productStudio || []).reduce((sum, s) => sum + (s.images?.length || 0), 0);
+    const sr = (gi.studioReady || []).length;
+    const cc = (gi.cenarioCriativo || []).length;
+    const lc = (gi.modeloIA || []).length;
+    return ps + sr + cc + lc;
+  }, []);
+
+  // Fix 17: scroll infinito com IntersectionObserver (ref declarado aqui, useEffect abaixo após filteredProducts)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   const filteredProducts = useMemo(() => products
    .filter(product => {
    const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
@@ -114,6 +168,19 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   useEffect(() => {
    setVisibleProductsCount(20);
   }, [debouncedSearchTerm, filterCategoryGroup, filterCategory, filterColor, filterCollection]);
+
+  // Fix 17: scroll infinito com IntersectionObserver
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisibleProductsCount(prev => prev + 20);
+      }
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filteredProducts.length]);
 
   useEffect(() => {
    if (lastCreatedProductId && products.length > 0) {
@@ -592,7 +659,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  >
  <option value="">Categoria</option>
  {CATEGORY_GROUPS.map(group => (
- <option key={group.id} value={group.id}>{group.label}</option>
+ <option key={group.id} value={group.id}>{group.label}{filterCounts.categoryGroupCounts[group.id] ? ` (${filterCounts.categoryGroupCounts[group.id]})` : ''}</option>
  ))}
  </select>
  {filterCategoryGroup && (
@@ -603,20 +670,22 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  >
  <option value="">Subcategoria</option>
  {CATEGORY_GROUPS.find(g => g.id === filterCategoryGroup)?.items.map(cat => (
- <option key={cat} value={cat}>{cat}</option>
+ <option key={cat} value={cat}>{cat}{filterCounts.categoryCounts[cat] ? ` (${filterCounts.categoryCounts[cat]})` : ''}</option>
  ))}
  </select>
  )}
  <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
  <option value="">Cor</option>
- {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
+ {COLORS.filter(c => filterCounts.colorCounts[c]).map(color => <option key={color} value={color}>{color} ({filterCounts.colorCounts[color]})</option>)}
  </select>
+ {dynamicCollections.length > 0 && (
  <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
  <option value="">Coleção</option>
- {COLLECTIONS.map(col => <option key={col} value={col}>{col}</option>)}
+ {dynamicCollections.map(col => <option key={col} value={col}>{col}{filterCounts.collectionCounts[col] ? ` (${filterCounts.collectionCounts[col]})` : ''}</option>)}
  </select>
- {(filterCategoryGroup || filterCategory || filterColor || filterCollection) && (
- <button onClick={() => { setFilterCategoryGroup(''); setFilterCategory(''); setFilterColor(''); setFilterCollection(''); }} className="px-2.5 py-1.5 text-xs text-[#FF6B6B] hover:bg-neutral-800/50 rounded-lg transition-colors">
+ )}
+ {hasActiveFilters && (
+ <button onClick={clearAllFilters} className="px-2.5 py-1.5 text-xs text-[#FF6B6B] hover:bg-neutral-800/50 rounded-lg transition-colors">
  <i className="fas fa-times mr-1"></i>Limpar
  </button>
  )}
@@ -628,7 +697,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  : `${filteredProducts.length} de ${products.length} produtos`}
  </p>
  {filteredProducts.length > 0 && (
- <button onClick={selectAllProducts} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-[10px] flex items-center gap-1'}>
+ <button onClick={selectAllProducts} className={(theme === 'dark' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-800') + ' text-xs flex items-center gap-1.5 px-2 py-0.5 rounded-lg hover:bg-black/5 transition-colors'}>
  <i className={`fas fa-${selectedProducts.length === filteredProducts.length ? 'check-square' : 'square'} text-xs`}></i>
  {selectedProducts.length === filteredProducts.length ? 'Desmarcar todos' : 'Selecionar todos'}
  </button>
@@ -652,28 +721,34 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  )}
 
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
- {filteredProducts.length > 0 ? (
+ {/* Fix 9: skeleton loading inicial */}
+ {isInitialLoad ? (
+ <ProductGridSkeleton theme={theme} count={12} />
+ ) : filteredProducts.length > 0 ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
- {filteredProducts.slice(0, visibleProductsCount).map(product => (
+ {filteredProducts.slice(0, visibleProductsCount).map(product => {
+ const imgCount = getGeneratedImageCount(product);
+ const isSelected = selectedProducts.includes(product.id);
+ return (
  <div
  key={product.id}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (selectedProducts.includes(product.id) ? (theme === 'dark' ? 'ring-2 ring-neutral-500' : 'ring-2 ring-gray-400') : '')}
+ data-product-id={product.id}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (isSelected ? (theme === 'dark' ? 'ring-2 ring-neutral-500' : 'ring-2 ring-gray-400') : '')}
  onTouchStart={() => handleProductTouchStart(product.id)}
  onTouchEnd={() => handleProductTouchEnd(product.id)}
  onTouchMove={handleProductTouchMove}
  onClick={(e) => {
- // Desktop: clique abre card se não está em modo seleção
  if (window.matchMedia('(pointer: fine)').matches) {
  if (selectedProducts.length > 0) {
  toggleProductSelection(product.id);
  } else {
- setShowOptimizedImage(true); // Reset toggle ao abrir novo produto
+ setShowOptimizedImage(true);
  setShowProductDetail(product);
  }
  }
  }}
  >
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={getProductDisplayImage(product)} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform pointer-events-none" />
  {/* Badge de produto otimizado */}
  {isProductOptimized(product) && (
@@ -682,16 +757,26 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <span className="hidden sm:inline">Studio</span>
  </div>
  )}
- {/* Checkbox de seleção - visível em modo seleção ou hover no desktop */}
- <div
- className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (selectedProducts.includes(product.id) ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
- >
- <i className={`fas fa-${selectedProducts.includes(product.id) ? 'check' : 'square'} text-[8px]`}></i>
+ {/* Fix 15: badge contagem de imagens geradas */}
+ {imgCount > 0 && !isProductOptimized(product) && (
+ <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm text-white text-[7px] font-bold rounded-full flex items-center gap-1 pointer-events-none">
+ <i className="fas fa-images text-[6px]"></i>
+ {imgCount}
  </div>
- {/* Botão delete individual - apenas desktop hover */}
+ )}
+ {/* Fix 5: checkbox com a11y */}
+ <div
+ role="checkbox"
+ aria-checked={isSelected}
+ aria-label={`Selecionar ${product.name}`}
+ className={'absolute top-1.5 left-1.5 w-5 h-5 rounded flex items-center justify-center transition-all pointer-events-none ' + (isSelected ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : selectedProducts.length > 0 ? 'bg-black/50 text-white/70' : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100')}
+ >
+ <i className={`fas fa-${isSelected ? 'check' : 'square'} text-[8px]`}></i>
+ </div>
+ {/* Fix 4: botão delete — visível no hover (desktop) OU quando selecionado (mobile) */}
  <button
  onClick={(e) => { e.stopPropagation(); setDeleteProductTarget(product); setShowDeleteProductsModal(true); }}
- className="absolute top-1.5 right-1.5 w-5 h-5 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hidden md:flex"
+ className={'absolute top-1.5 right-1.5 w-5 h-5 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition-all ' + (isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}
  title="Excluir produto"
  >
  <i className="fas fa-trash text-[8px]"></i>
@@ -699,36 +784,46 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  <div className="p-2">
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'}>{product.name}</p>
+ {/* Fix 18: tooltip em nomes truncados */}
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'} title={product.name}>{product.name}</p>
  </div>
  </div>
- ))}
+ );
+ })}
  </div>
  ) : null}
 
- {/* Botão Carregar Mais */}
+ {/* Fix 17: scroll infinito com sentinel */}
  {filteredProducts.length > 0 && visibleProductsCount < filteredProducts.length && (
- <div className="flex justify-center p-4 pt-2">
- <button
- onClick={() => setVisibleProductsCount(prev => prev + 20)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300 text-white border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
- >
- <i className="fas fa-chevron-down text-xs"></i>
- Carregar mais ({filteredProducts.length - visibleProductsCount} restantes)
- </button>
+ <div ref={loadMoreRef} className="flex justify-center p-4 pt-2">
+ <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-xs flex items-center gap-2'}>
+ <div className={'w-4 h-4 border-2 rounded-full animate-spin border-t-transparent ' + (theme === 'dark' ? 'border-neutral-600' : 'border-gray-300')}></div>
+ Carregando mais...
+ </div>
  </div>
  )}
 
- {filteredProducts.length === 0 && (
+ {/* Fix 1: estado vazio diferenciado */}
+ {!isInitialLoad && filteredProducts.length === 0 && (
  <div className="p-8 text-center">
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-box text-xl'}></i>
+ <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + (hasActiveFilters ? ' fas fa-filter-circle-xmark text-xl' : ' fas fa-box text-xl')}></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum produto</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>Adicione seu primeiro produto</p>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
+ {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
+ </h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
+ {hasActiveFilters ? 'Tente ajustar os filtros ou a busca' : 'Adicione seu primeiro produto'}
+ </p>
+ {hasActiveFilters ? (
+ <button onClick={clearAllFilters} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs transition-colors'}>
+ <i className="fas fa-times mr-1.5"></i>Limpar filtros
+ </button>
+ ) : (
  <button onClick={() => setShowCreateProduct(true)} className={'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 mt-3 px-4 py-2 rounded-lg font-medium text-xs transition-opacity'}>
  <i className="fas fa-plus mr-1.5"></i>Adicionar
  </button>
+ )}
  </div>
  )}
  </div>
@@ -738,7 +833,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 {showPhotoSourcePicker && (
  <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
  Adicionar foto: {currentUploadSlots.find(s => s.angle === showPhotoSourcePicker)?.label || showPhotoSourcePicker}
  </h3>
@@ -806,7 +901,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 {showProductSelector && detectedProducts.length > 1 && (
  <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowProductSelector(false)}>
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[80vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
 
  <div className="flex items-center gap-3 mb-4">
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
@@ -855,15 +950,24 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
 {/* CREATE PRODUCT MODAL */}
 {showCreateProduct && (
- <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); }}>
+ <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => {
+ // Fix 6: proteção contra fechamento acidental
+ const hasData = !!(getImage('front') || newProduct.name || newProduct.category);
+ if (hasData) { setShowDiscardConfirm(true); return; }
+ setShowCreateProduct(false); clearAllImages(); setEditingProduct(null);
+ }}>
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pb-2 flex justify-center -mt-1">
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold font-serif'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
- <button onClick={() => { setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+ <button onClick={() => {
+ const hasData = !!(getImage('front') || newProduct.name || newProduct.category);
+ if (hasData) { setShowDiscardConfirm(true); return; }
+ setShowCreateProduct(false); clearAllImages(); setEditingProduct(null);
+ }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
  <i className="fas fa-times text-xs"></i>
  </button>
  </div>
@@ -1060,6 +1164,27 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
 )}
 
+ {/* Fix 6: modal de confirmação de descarte */}
+ {showDiscardConfirm && (
+ <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDiscardConfirm(false)}>
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-xs p-5 text-center'} onClick={(e) => e.stopPropagation()}>
+ <div className={'w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-50')}>
+ <i className="fas fa-exclamation-triangle text-amber-500 text-lg"></i>
+ </div>
+ <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>Descartar alterações?</h4>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-4'}>Você tem dados não salvos que serão perdidos.</p>
+ <div className="flex gap-2">
+ <button onClick={() => setShowDiscardConfirm(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2 rounded-lg text-xs font-medium transition-colors'}>
+ Continuar editando
+ </button>
+ <button onClick={() => { setShowDiscardConfirm(false); setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' }); setProductAttributes({}); }} className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium transition-colors">
+ Descartar
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+
  {/* PRODUCT HUB MODAL (Hub 360° do Produto) */}
  {showProductDetail && (
  <ProductHubModal
@@ -1073,6 +1198,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  onEditProduct={(p) => { setShowProductDetail(null); startEditProduct(p); }}
  showToast={showToast}
  onRefreshProduct={() => user?.id && loadUserProducts(user.id)}
+ editBalance={userCredits || 0}
+ regularBalance={userCredits || 0}
+ resolution={currentPlan?.maxResolution === '4k' ? '4k' : '2k'}
  />
  )}
 
@@ -1118,7 +1246,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pb-3 flex justify-center -mt-1">
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  <div className="flex items-center gap-3 mb-4">
  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -1142,7 +1270,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="flex gap-2">
  <button
  onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}
- className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-gray-300' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
+ className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
  >
  Cancelar
  </button>
@@ -1163,7 +1291,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
  >
  <i className="fas fa-trash text-xs"></i>
- Excluir
+ {deleteProductTarget ? `Excluir "${deleteProductTarget.name.length > 20 ? deleteProductTarget.name.slice(0, 20) + '...' : deleteProductTarget.name}"` : `Excluir ${selectedProducts.length} produto${selectedProducts.length > 1 ? 's' : ''}`}
  </button>
  </div>
  </div>

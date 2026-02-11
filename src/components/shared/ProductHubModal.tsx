@@ -168,8 +168,8 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     { id: 'ps', label: 'Vizzu Product Studio®', icon: 'fa-camera', count: psCount },
     { id: 'cs', label: 'Vizzu Still Criativo®', icon: 'fa-gem', count: csCount },
     { id: 'lc', label: 'Vizzu Look Composer®', icon: 'fa-layer-group', count: lcCount },
-    { id: 'sr', label: 'Studio Ready', icon: 'fa-cube', count: srCount },
-    { id: 'cc', label: 'Cenário Criativo', icon: 'fa-mountain-sun', count: ccCount },
+    { id: 'sr', label: 'Vizzu Studio Ready®', icon: 'fa-cube', count: srCount },
+    { id: 'cc', label: 'Vizzu Cenário Criativo®', icon: 'fa-mountain-sun', count: ccCount },
   ], [psCount, csCount, lcCount, srCount, ccCount]);
 
   // Auto-selecionar primeira aba com conteúdo
@@ -321,10 +321,10 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     if (lcImgs.length) groups.push({ label: 'Vizzu Look Composer®', featurePrefix: 'VLookComposer', images: lcImgs });
 
     const srImgs: DownloadableImage[] = srImages.map(img => ({ url: img.images.front, label: 'Studio Ready', featurePrefix: 'VStudioReady' }));
-    if (srImgs.length) groups.push({ label: 'Studio Ready', featurePrefix: 'VStudioReady', images: srImgs });
+    if (srImgs.length) groups.push({ label: 'Vizzu Studio Ready®', featurePrefix: 'VStudioReady', images: srImgs });
 
     const ccImgs: DownloadableImage[] = ccImages.map(img => ({ url: img.images.front, label: 'Cenário', featurePrefix: 'VCenario' }));
-    if (ccImgs.length) groups.push({ label: 'Cenário Criativo', featurePrefix: 'VCenario', images: ccImgs });
+    if (ccImgs.length) groups.push({ label: 'Vizzu Cenário Criativo®', featurePrefix: 'VCenario', images: ccImgs });
 
     return groups;
   }, [psSessions, csGenerations, lcLooks, srImages, ccImages]);
@@ -419,10 +419,10 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   })();
 
   const shortcuts = [
-    { label: 'Product Studio', icon: 'fa-camera', page: 'product-studio', desc: 'Foto profissional' },
-    { label: 'Provador', icon: 'fa-shirt', page: 'provador', desc: 'Vista seus clientes' },
-    { label: 'Look Composer', icon: 'fa-layer-group', page: 'look-composer', desc: 'Monte combinações' },
-    { label: 'Still Criativo', icon: 'fa-gem', page: 'creative-still', desc: 'Foto editorial' },
+    { label: 'Product Studio®', icon: 'fa-camera', page: 'product-studio', desc: 'Foto profissional' },
+    { label: 'Provador®', icon: 'fa-shirt', page: 'provador', desc: 'Vista seus clientes' },
+    { label: 'Look Composer®', icon: 'fa-layer-group', page: 'look-composer', desc: 'Monte combinações' },
+    { label: 'Still Criativo®', icon: 'fa-gem', page: 'creative-still', desc: 'Foto editorial' },
   ];
 
   // ── Tab content renderers ──
