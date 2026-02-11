@@ -371,7 +371,7 @@ export function AppLayout({
  </button>
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
- <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/40') + ' rounded-xl p-3'}>
+ <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/40') + ' rounded-xl p-3 transition-all' + (userCredits <= 5 ? ' ring-2 ring-red-500/50' : '')}>
  {!sidebarCollapsed ? (
  <>
  <div className="flex items-center justify-between mb-1.5">
@@ -382,9 +382,13 @@ export function AppLayout({
  <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
  <div className={((userCredits <= currentPlan.limit * 0.2 ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full')} style={{ width: Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
  </div>
+ {userCredits <= 5 && <p className="text-[9px] text-red-400 mt-1.5 font-medium">Saldo baixo</p>}
  </>
  ) : (
- <p className={'text-xs font-bold text-center ' + (theme === 'dark' ? 'text-white' : 'text-[#373632]')}>{userCredits}</p>
+ <div className="text-center">
+ <p className={'text-xs font-bold ' + (userCredits <= 5 ? 'text-red-400' : (theme === 'dark' ? 'text-white' : 'text-[#373632]'))}>{userCredits}</p>
+ <p className={'text-[8px] ' + (userCredits <= 5 ? 'text-red-400/70' : (theme === 'dark' ? 'text-neutral-500' : 'text-[#373632]/40'))}>cred.</p>
+ </div>
  )}
  </div>
  {/* Configurações com Dropdown */}
@@ -416,26 +420,26 @@ export function AppLayout({
  <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-[#e5e6ea]') + ' absolute bottom-full mb-1 left-0 right-0 rounded-xl border overflow-hidden z-50'}>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
  </button>
  <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-gray-300' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
  </button>
@@ -481,10 +485,10 @@ export function AppLayout({
  <div className="flex items-center gap-2">
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
- className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ' + (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200')}
+ className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ' + (userCredits <= 5 ? 'bg-red-500/15 text-red-400 border border-red-500/30' : (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200'))}
  >
- <i className="fas fa-coins text-[10px]"></i>
- <span>{userCredits}</span>
+ <i className={'fas fa-coins text-[10px] ' + (userCredits <= 5 ? 'text-red-400' : 'text-[#FF9F43]')}></i>
+ <span>{userCredits} créditos</span>
  </button>
  <button
  onClick={() => navigateTo('settings')}
