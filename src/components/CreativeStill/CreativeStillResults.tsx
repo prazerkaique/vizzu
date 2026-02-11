@@ -157,12 +157,15 @@ export const CreativeStillResults: React.FC<Props> = ({
  const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
  if (!editingVariation) return { success: false, error: 'Nenhuma variação selecionada.' };
  return editStudioImage({
+  userId: user?.id,
+  productId: product?.id,
   currentImageUrl: editingVariation.url,
   correctionPrompt: params.correctionPrompt,
   referenceImageBase64: params.referenceImageBase64,
   resolution,
+  productInfo: { name: product?.name, category: product?.category, color: product?.color, description: product?.description },
  });
- }, [editingVariation, resolution]);
+ }, [editingVariation, resolution, user, product]);
 
  const handleEditSave = useCallback(async (newImageUrl: string) => {
  if (!editingVariation || !generation?.id) return { success: false };

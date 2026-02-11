@@ -237,7 +237,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         correctionPrompt: params.correctionPrompt,
         referenceImageBase64: params.referenceImageBase64,
         resolution,
-        productInfo: { name: product.name, category: product.category },
+        productInfo: { name: product.name, category: product.category, color: product.color, description: product.description },
       });
       return result;
     } catch (err: any) {

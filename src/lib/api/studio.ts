@@ -1168,7 +1168,7 @@ interface EditStudioImageParams {
   correctionPrompt: string;
   referenceImageBase64?: string;
   resolution?: '2k' | '4k';
-  productInfo?: { name?: string; category?: string };
+  productInfo?: { name?: string; category?: string; color?: string; description?: string };
   studioBackground?: StudioBackground;
   studioShadow?: StudioShadow;
   productNotes?: string;
@@ -1206,6 +1206,8 @@ export async function editStudioImage(params: EditStudioImageParams): Promise<Ed
         resolution: params.resolution || '2k',
         product_name: params.productInfo?.name,
         product_category: params.productInfo?.category,
+        product_color: params.productInfo?.color || '',
+        product_description: params.productInfo?.description || '',
         studio_background: params.studioBackground || 'gray',
         studio_shadow: params.studioShadow || 'with-shadow',
         product_notes: params.productNotes || '',
