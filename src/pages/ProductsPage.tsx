@@ -26,7 +26,6 @@ const CATEGORY_GROUPS = [
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
-const COLLECTIONS = ['Verão 2026', 'Inverno 2026', 'Básicos', 'Premium', 'Promoção'];
 const COLORS = [
  'Preto', 'Branco', 'Cinza', 'Cinza Claro', 'Cinza Escuro', 'Chumbo',
  'Azul', 'Azul Marinho', 'Azul Royal', 'Azul Claro', 'Azul Bebê', 'Azul Petróleo', 'Azul Turquesa', 'Índigo',
@@ -110,10 +109,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   // Fix 6: proteção contra fechamento acidental do modal
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
-  // Fix 8: coleções = fixas + dinâmicas dos produtos existentes
+  // Coleções extraídas dos produtos existentes do cliente
   const allCollections = useMemo(() => {
-    const fromProducts = products.map(p => p.collection).filter(Boolean) as string[];
-    return [...new Set([...COLLECTIONS, ...fromProducts])];
+    return [...new Set(products.map(p => p.collection).filter(Boolean) as string[])].sort();
   }, [products]);
 
   // Fix 1: detecta se há filtros ativos
@@ -673,10 +671,12 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <option value="">Cor</option>
  {COLORS.filter(c => filterCounts.colorCounts[c]).map(color => <option key={color} value={color}>{color} ({filterCounts.colorCounts[color]})</option>)}
  </select>
+ {allCollections.length > 0 && (
  <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
  <option value="">Coleção</option>
  {allCollections.map(col => <option key={col} value={col}>{col}{filterCounts.collectionCounts[col] ? ` (${filterCounts.collectionCounts[col]})` : ''}</option>)}
  </select>
+ )}
  {hasActiveFilters && (
  <button onClick={clearAllFilters} className="px-2.5 py-1.5 text-xs text-[#FF6B6B] hover:bg-neutral-800/50 rounded-lg transition-colors">
  <i className="fas fa-times mr-1"></i>Limpar
@@ -1147,10 +1147,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
- <select value={newProduct.collection} onChange={(e) => setNewProduct({...newProduct, collection: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
- <option value="">Nenhuma</option>
- {allCollections.map(col => <option key={col} value={col}>{col}</option>)}
- </select>
+ <input
+  list="collections-list"
+  value={newProduct.collection}
+  onChange={(e) => setNewProduct({...newProduct, collection: e.target.value})}
+  placeholder="Ex: Verão 2026"
+  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+ />
+ {allCollections.length > 0 && (
+  <datalist id="collections-list">
+   {allCollections.map(col => <option key={col} value={col} />)}
+  </datalist>
+ )}
  </div>
 
  {/* Atributos condicionais por categoria */}
