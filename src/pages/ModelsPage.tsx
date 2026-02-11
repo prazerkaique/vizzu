@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { SavedModel, MODEL_OPTIONS } from '../types';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +6,7 @@ import { supabase } from '../services/supabaseClient';
 import { generateModelImages } from '../lib/api/studio';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { ModelGridSkeleton } from '../components/LoadingSkeleton';
 
 // Componente de carrossel para cards de modelos
 const ModelCardCarousel: React.FC<{
@@ -160,7 +161,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  // Combinar modelos default + do usuário
  const allModels = [...DEFAULT_MODELS, ...savedModels];
  const isDefaultModel = (id: string) => id.startsWith('default-');
- const { theme, navigateTo } = useUI();
+ const { theme, navigateTo, showToast } = useUI();
  const { user } = useAuth();
 
  // Model states
@@ -204,6 +205,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const [modelFilterBodyType, setModelFilterBodyType] = useState<string>('');
  const [modelFilterSearch, setModelFilterSearch] = useState<string>('');
  const [pendingModelBanner, setPendingModelBanner] = useState<string | null>(null);
+
+ // Fix 8: state para confirmação de delete
+ const [showDeleteModelConfirm, setShowDeleteModelConfirm] = useState(false);
+ const [deleteModelTarget, setDeleteModelTarget] = useState<SavedModel | null>(null);
+
+ // Fix 10: loading state
+ const [isLoadingModels, setIsLoadingModels] = useState(true);
+
+ // Fix 12: ref para timer de undo delete
+ const deleteModelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
  // Quando showCreateModel muda para true (de fora, ex: LookComposer), reset wizard
  useEffect(() => {
@@ -270,15 +281,25 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setSavedModels(models);
  } catch (error) {
  console.error('Erro ao carregar modelos:', error);
+ showToast('Erro ao carregar modelos', 'error');
+ } finally {
+ setIsLoadingModels(false);
  }
  };
 
  // Carregar modelos ao autenticar
  useEffect(() => {
  if (user) {
+ setIsLoadingModels(true);
  loadSavedModels();
  }
  }, [user?.id]);
+
+ // Desligar loading após 3s (evitar skeleton eterno se sem modelos)
+ useEffect(() => {
+ const t = setTimeout(() => setIsLoadingModels(false), 3000);
+ return () => clearTimeout(t);
+ }, []);
 
  // Verificar se há geração pendente (F5 / saiu da página)
  useEffect(() => {
@@ -426,7 +447,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  if (onDeductCredits) {
  const success = onDeductCredits(MODEL_CREATION_COST, 'Criar Modelo IA');
  if (!success) {
- alert('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.');
+ showToast('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.', 'error');
  return;
  }
  }
@@ -500,7 +521,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  clearInterval(progressInterval);
  localStorage.removeItem('vizzu_pending_model');
  console.error('Erro ao gerar preview:', error);
- alert('Erro ao gerar preview do modelo. Tente novamente.');
+ showToast('Erro ao gerar preview do modelo. Tente novamente.', 'error');
  } finally {
  setGeneratingModelImages(false);
  }
@@ -566,54 +587,135 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  return result;
  } catch (error) {
  console.error('Erro ao salvar modelo:', error);
- alert('Erro ao salvar modelo. Tente novamente.');
+ showToast('Erro ao salvar modelo. Tente novamente.', 'error');
  return null;
  } finally {
  setSavingModel(false);
  }
  };
 
- const deleteModel = async (model: SavedModel) => {
+ const deleteModel = useCallback((model: SavedModel) => {
  if (!user) return;
 
- try {
- if (model.referenceStoragePath) {
- await supabase.storage
- .from('model-references')
- .remove([model.referenceStoragePath]);
- }
-
- if (model.images) {
- const imagePaths = [];
- if (model.images.front) imagePaths.push(`${user.id}/${model.id}/front.png`);
- if (model.images.back) imagePaths.push(`${user.id}/${model.id}/back.png`);
- if (imagePaths.length > 0) {
- await supabase.storage.from('model-images').remove(imagePaths);
- }
- }
-
- const { error } = await supabase
- .from('saved_models')
- .delete()
- .eq('id', model.id)
- .eq('user_id', user.id);
-
- if (error) throw error;
-
+ // 1. Esconder otimisticamente
  setSavedModels(prev => prev.filter(m => m.id !== model.id));
- if (showModelDetail?.id === model.id) {
- setShowModelDetail(null);
- }
+ if (showModelDetail?.id === model.id) setShowModelDetail(null);
+
+ // 2. Cancelar timer anterior
+ if (deleteModelTimerRef.current) clearTimeout(deleteModelTimerRef.current);
+
+ // 3. Agendar deleção real após 6.5s
+ let cancelled = false;
+ deleteModelTimerRef.current = setTimeout(async () => {
+ if (cancelled) return;
+ try {
+  if (model.referenceStoragePath) {
+   await supabase.storage.from('model-references').remove([model.referenceStoragePath]);
+  }
+  if (model.images) {
+   const imagePaths = [];
+   if (model.images.front) imagePaths.push(`${user.id}/${model.id}/front.png`);
+   if (model.images.back) imagePaths.push(`${user.id}/${model.id}/back.png`);
+   if (imagePaths.length > 0) {
+    await supabase.storage.from('model-images').remove(imagePaths);
+   }
+  }
+  const { error } = await supabase.from('saved_models').delete().eq('id', model.id).eq('user_id', user.id);
+  if (error) throw error;
  } catch (error) {
- console.error('Erro ao deletar modelo:', error);
- alert('Erro ao deletar modelo.');
+  console.error('Erro ao deletar modelo:', error);
+  showToast('Erro ao deletar modelo', 'error');
+  loadSavedModels();
  }
- };
+ }, 6500);
+
+ // 4. Toast com Desfazer
+ showToast(`"${model.name}" excluído`, 'success', {
+ label: 'Desfazer',
+ onClick: () => {
+  cancelled = true;
+  if (deleteModelTimerRef.current) clearTimeout(deleteModelTimerRef.current);
+  setSavedModels(prev => [...prev, model].sort((a, b) =>
+   new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  ));
+ }
+ });
+ }, [user, showModelDetail, showToast]);
 
  const getModelLabel = (field: keyof typeof MODEL_OPTIONS, id: string) => {
  const options = MODEL_OPTIONS[field] as { id: string; label: string }[];
  return options?.find(o => o.id === id)?.label || id;
  };
+
+ // Fix 18: filtro extraído em useMemo (evita duplicação)
+ const filterModel = useCallback((model: SavedModel) => {
+ if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
+ if (modelFilterGender && model.gender !== modelFilterGender) return false;
+ if (modelFilterSkinTone && model.skinTone !== modelFilterSkinTone) return false;
+ if (modelFilterAge && model.ageRange !== modelFilterAge) return false;
+ if (modelFilterBodyType && model.bodyType !== modelFilterBodyType) return false;
+ return true;
+ }, [modelFilterSearch, modelFilterGender, modelFilterSkinTone, modelFilterAge, modelFilterBodyType]);
+
+ // Fix 17: separar default e user models filtrados
+ const filteredDefaultModels = useMemo(() => DEFAULT_MODELS.filter(filterModel), [filterModel]);
+ const filteredUserModels = useMemo(() => savedModels.filter(filterModel), [savedModels, filterModel]);
+
+ // Fix 9 + render card extraído para reusar em ambas seções
+ const renderModelCard = useCallback((model: SavedModel) => {
+ const images = [
+  ...(model.images?.front ? [{ key: 'front', label: 'Frente', src: model.images.front }] : []),
+  ...(model.images?.back ? [{ key: 'back', label: 'Costas', src: model.images.back }] : []),
+ ];
+ return (
+  <div
+  key={model.id}
+  onClick={() => setShowModelDetail(model)}
+  className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-neutral-500' : 'bg-white border border-gray-100 ')}
+  >
+  <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5')}>
+  {images.length > 0 ? (
+   <ModelCardCarousel images={images} modelName={model.name} onCardClick={() => setShowModelDetail(model)} />
+  ) : (
+   <div className="text-center">
+   <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
+    <i className="fas fa-user text-3xl text-white"></i>
+   </div>
+   <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
+    {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Clique para ver'}
+   </p>
+   </div>
+  )}
+  {model.status === 'generating' && (
+   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+   <div className="w-16 h-16">
+    <DotLottieReact src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie" loop autoplay style={{ width: '100%', height: '100%' }} />
+   </div>
+   </div>
+  )}
+  <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium ' + (
+   model.status === 'ready' ? 'bg-green-500/20 text-green-400 backdrop-blur-sm' :
+   model.status === 'generating' ? 'bg-yellow-500/20 text-yellow-400 backdrop-blur-sm' :
+   model.status === 'error' ? 'bg-red-500/20 text-red-400 backdrop-blur-sm' :
+   'bg-neutral-500/20 text-neutral-400 backdrop-blur-sm'
+  )}>
+   {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
+  </div>
+  {isDefaultModel(model.id) && (
+   <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-400 backdrop-blur-sm">Gratuito</div>
+  )}
+  </div>
+  <div className="p-3">
+  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'} title={model.name}>{model.name}</h3>
+  <div className="flex flex-wrap gap-1">
+   <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('gender', model.gender)}</span>
+   <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('skinTone', model.skinTone)}</span>
+   <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('ageRange', model.ageRange)}</span>
+  </div>
+  </div>
+  </div>
+ );
+ }, [theme, getModelLabel]);
 
  return (
  <>
@@ -633,11 +735,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  <div className="flex items-center gap-2">
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
- {savedModels.length}/{getModelLimit()} modelos criados
+ {savedModels.length}/{getModelLimit()} modelos
+ {!canCreateModel() && <span className="text-red-400 ml-1">(limite atingido)</span>}
  </span>
  <button
  onClick={() => { resetModelWizard(); setShowCreateModel(true); }}
  disabled={!canCreateModel()}
+ title={!canCreateModel() ? `Limite de ${getModelLimit()} modelos atingido` : 'Criar novo modelo'}
  className={'px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs transition-opacity ' + (!canCreateModel() ? 'opacity-50 cursor-not-allowed' : '')}
  >
  <i className="fas fa-plus mr-1.5"></i>Novo Modelo
@@ -678,12 +782,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Tom de Pele</option>
- <option value="very-light">Muito Claro</option>
- <option value="light">Claro</option>
- <option value="medium">Médio</option>
- <option value="tan">Bronzeado</option>
- <option value="dark">Escuro</option>
- <option value="very-dark">Muito Escuro</option>
+ {MODEL_OPTIONS.skinTone.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
  </select>
  {/* Idade */}
  <select
@@ -692,11 +791,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Idade</option>
- <option value="teen">Adolescente (13-19)</option>
- <option value="young">18-25 anos</option>
- <option value="adult">26-35 anos</option>
- <option value="mature">36-50 anos</option>
- <option value="senior">50+ anos</option>
+ {MODEL_OPTIONS.ageRange.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
  </select>
  {/* Tipo Físico */}
  <select
@@ -705,11 +800,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Tipo Físico</option>
- <option value="slim">Magro(a)</option>
- <option value="athletic">Atlético(a)</option>
- <option value="average">Médio</option>
- <option value="curvy">Curvilíneo(a)</option>
- <option value="plussize">Plus Size</option>
+ {MODEL_OPTIONS.bodyType.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
  </select>
  {/* Limpar filtros */}
  {(modelFilterSearch || modelFilterGender || modelFilterSkinTone || modelFilterAge || modelFilterBodyType) && (
@@ -729,8 +820,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
 
- {/* Empty State (only show if no user models AND no defaults) */}
- {allModels.length === 0 ? (
+ {/* Loading skeleton */}
+ {isLoadingModels && savedModels.length === 0 ? (
+ <ModelGridSkeleton theme={theme} count={8} />
+ ) : allModels.length === 0 ? (
  <div className={'rounded-2xl p-12 text-center ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 ')}>
  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 flex items-center justify-center">
  <i className="fas fa-user-tie text-3xl text-[#FF6B6B]"></i>
@@ -758,105 +851,37 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
  )}
- {/* Models Grid - Vertical Cards */}
+
+ {/* Modelos Padrão */}
+ {filteredDefaultModels.length > 0 && (
+ <>
+ <div className="flex items-center gap-2 mb-3">
+ <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
+ <span className={(theme === 'dark' ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-500') + ' px-2 py-0.5 rounded-full text-[9px] font-medium'}>Gratuitos</span>
+ </div>
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+ {filteredDefaultModels.map(model => renderModelCard(model))}
+ </div>
+ </>
+ )}
+
+ {/* Meus Modelos */}
+ {filteredUserModels.length > 0 && (
+ <>
+ <div className="flex items-center gap-2 mb-3">
+ <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Meus Modelos</h2>
+ <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>({filteredUserModels.length})</span>
+ </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
- {allModels
- .filter(model => {
- if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
- if (modelFilterGender && model.gender !== modelFilterGender) return false;
- if (modelFilterSkinTone && model.skinTone !== modelFilterSkinTone) return false;
- if (modelFilterAge && model.ageRange !== modelFilterAge) return false;
- if (modelFilterBodyType && model.bodyType !== modelFilterBodyType) return false;
- return true;
- })
- .map(model => {
- const images = [
- { key: 'front', label: 'Frente', src: model.images.front },
- { key: 'back', label: 'Costas', src: model.images.back },
- ].filter(img => img.src);
- return (
- <div
- key={model.id}
- onClick={() => setShowModelDetail(model)}
- className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-neutral-500' : 'bg-white border border-gray-100 ')}
- >
- {/* Image Carousel */}
- <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5')}>
- {images.length > 0 ? (
- <ModelCardCarousel
- images={images}
- modelName={model.name}
- onCardClick={() => setShowModelDetail(model)}
- />
- ) : (
- <div className="text-center">
- <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
- <i className="fas fa-user text-3xl text-white"></i>
+ {filteredUserModels.map(model => renderModelCard(model))}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
- {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Clique para ver'}
- </p>
- </div>
+ </>
  )}
- {model.status === 'generating' && (
- <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
- <div className="w-16 h-16">
- <DotLottieReact
- src="https://lottie.host/d29d70f3-bf03-4212-b53f-932dbefb9077/kIkLDFupvi.lottie"
- loop
- autoplay
- style={{ width: '100%', height: '100%' }}
- />
- </div>
- </div>
- )}
- {/* Status Badge */}
- <div className={'absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-medium ' + (
- model.status === 'ready' ? 'bg-green-500/20 text-green-400 backdrop-blur-sm' :
- model.status === 'generating' ? 'bg-yellow-500/20 text-yellow-400 backdrop-blur-sm' :
- model.status === 'error' ? 'bg-red-500/20 text-red-400 backdrop-blur-sm' :
- 'bg-neutral-500/20 text-neutral-400 backdrop-blur-sm'
- )}>
- {model.status === 'ready' ? 'Pronto' : model.status === 'generating' ? 'Gerando...' : model.status === 'error' ? 'Erro' : 'Rascunho'}
- </div>
- {/* Badge Gratuito para modelos default */}
- {isDefaultModel(model.id) && (
- <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-400 backdrop-blur-sm">
- Gratuito
- </div>
- )}
- </div>
- {/* Info */}
- <div className="p-3">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'}>{model.name}</h3>
- <div className="flex flex-wrap gap-1">
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
- {getModelLabel('gender', model.gender)}
- </span>
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
- {getModelLabel('skinTone', model.skinTone)}
- </span>
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>
- {getModelLabel('ageRange', model.ageRange)}
- </span>
- </div>
- </div>
- </div>
- );
- })}
- </div>
 
  {/* Nenhum resultado com filtros */}
- {allModels.length > 0 && allModels.filter(model => {
- if (modelFilterSearch && !model.name.toLowerCase().includes(modelFilterSearch.toLowerCase())) return false;
- if (modelFilterGender && model.gender !== modelFilterGender) return false;
- if (modelFilterSkinTone && model.skinTone !== modelFilterSkinTone) return false;
- if (modelFilterAge && model.ageRange !== modelFilterAge) return false;
- if (modelFilterBodyType && model.bodyType !== modelFilterBodyType) return false;
- return true;
- }).length === 0 && (
+ {filteredDefaultModels.length === 0 && filteredUserModels.length === 0 && (
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-filter text-3xl mb-3'}></i>
+ <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-filter-circle-xmark text-3xl mb-3'}></i>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Nenhum modelo encontrado com os filtros selecionados</p>
  </div>
  )}
@@ -871,7 +896,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  {/* Header com Steps */}
  <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
@@ -879,11 +904,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>
  {editingModel ? 'Editar Modelo' : 'Criar Modelo'}
  </h2>
- <div className="hidden md:flex items-center gap-2">
  <button onClick={() => { setShowCreateModel(false); setEditingModel(null); }} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
  <i className="fas fa-times"></i>
  </button>
- </div>
  </div>
  {/* Step Indicators */}
  <div className="flex items-center justify-between gap-2">
@@ -1020,7 +1043,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={2}
  value={MODEL_OPTIONS.height.findIndex(h => h.id === newModel.height)}
  onChange={(e) => setNewModel({ ...newModel, height: MODEL_OPTIONS.height[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1110,7 +1133,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={5}
  value={MODEL_OPTIONS.hairLength.findIndex(h => h.id === newModel.hairLength)}
  onChange={(e) => setNewModel({ ...newModel, hairLength: MODEL_OPTIONS.hairLength[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1208,7 +1231,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={2}
  value={MODEL_OPTIONS.bustSize.findIndex(b => b.id === newModel.bustSize)}
  onChange={(e) => setNewModel({ ...newModel, bustSize: MODEL_OPTIONS.bustSize[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1238,7 +1261,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={2}
  value={MODEL_OPTIONS.waistType.findIndex(w => w.id === newModel.waistType)}
  onChange={(e) => setNewModel({ ...newModel, waistType: MODEL_OPTIONS.waistType[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1308,7 +1331,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  return (
  <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
- isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300')
+ isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')
  }`}>
  {isCompleted ? (
  <i className="fas fa-check text-white text-xs"></i>
@@ -1396,6 +1419,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  value={newModel.name}
  onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
  placeholder="Ex: Amanda, João, Modelo Principal..."
+ maxLength={30}
  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
  />
  </div>
@@ -1531,7 +1555,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setShowCreateModel(false);
  navigateTo('product-studio');
  }}
- className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+ className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-camera text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
@@ -1547,7 +1571,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setShowCreateModel(false);
  navigateTo('lifestyle');
  }}
- className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+ className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-mountain-sun text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
@@ -1563,7 +1587,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setShowCreateModel(false);
  navigateTo('look-composer');
  }}
- className={(theme === 'dark' ? 'hover:bg-gray-300 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+ className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
@@ -1609,12 +1633,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  {/* Header */}
  <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
  <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>{showModelDetail.name}</h2>
- <button onClick={() => setShowModelDetail(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' hidden md:block transition-colors'}>
+ <button onClick={() => setShowModelDetail(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
  <i className="fas fa-times"></i>
  </button>
  </div>
@@ -1714,10 +1738,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => {
- if (window.confirm('Tem certeza que deseja excluir este modelo?')) {
- deleteModel(showModelDetail);
- setShowModelDetail(null);
- }
+ setDeleteModelTarget(showModelDetail);
+ setShowDeleteModelConfirm(true);
  }}
  className={(theme === 'dark' ? 'text-red-400 hover:bg-red-500/10' : 'text-red-500 hover:bg-red-50') + ' px-4 py-2 rounded-lg text-sm font-medium transition-colors'}
  >
@@ -1759,6 +1781,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  type="text"
  value={renameValue}
  onChange={(e) => setRenameValue(e.target.value)}
+ maxLength={30}
  onKeyDown={(e) => {
  if (e.key === 'Enter' && renameValue.trim() && !savingRename) {
  (async () => {
@@ -1768,7 +1791,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  if (error) throw error;
  await loadSavedModels();
  setRenamingModel(null);
- } catch (err) { console.error('Erro ao renomear:', err); }
+ showToast('Modelo renomeado', 'success');
+ } catch (err) { console.error('Erro ao renomear:', err); showToast('Erro ao renomear modelo', 'error'); }
  finally { setSavingRename(false); }
  })();
  }
@@ -1793,12 +1817,35 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  if (error) throw error;
  await loadSavedModels();
  setRenamingModel(null);
- } catch (err) { console.error('Erro ao renomear:', err); }
+ showToast('Modelo renomeado', 'success');
+ } catch (err) { console.error('Erro ao renomear:', err); showToast('Erro ao renomear modelo', 'error'); }
  finally { setSavingRename(false); }
  }}
  className={'flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ' + (!renameValue.trim() || savingRename ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90')}
  >
  {savingRename ? 'Salvando...' : 'Salvar'}
+ </button>
+ </div>
+ </div>
+ </div>
+ )}
+ {/* DELETE CONFIRM MODAL */}
+ {showDeleteModelConfirm && deleteModelTarget && (
+ <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDeleteModelConfirm(false)}>
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-xs p-5'} onClick={(e) => e.stopPropagation()}>
+ <div className="text-center mb-4">
+ <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-3">
+  <i className="fas fa-trash text-red-500"></i>
+ </div>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Excluir "{deleteModelTarget.name}"?</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>Esta ação pode ser desfeita nos próximos segundos.</p>
+ </div>
+ <div className="flex gap-2">
+ <button onClick={() => setShowDeleteModelConfirm(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors'}>
+  Cancelar
+ </button>
+ <button onClick={() => { deleteModel(deleteModelTarget); setShowDeleteModelConfirm(false); setShowModelDetail(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors">
+  Excluir
  </button>
  </div>
  </div>
