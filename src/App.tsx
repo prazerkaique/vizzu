@@ -1086,6 +1086,7 @@ function App() {
  const limit = plan === 'free' ? 1 : 10;
  if (savedModels.length >= limit) return;
  setShowCreateModel(true);
+ navigateTo('models');
  }}
  modelLimit={(() => { const plan = user?.plan || 'free'; return plan === 'free' ? 1 : 10; })()}
  isGenerating={isGeneratingLookComposer}
