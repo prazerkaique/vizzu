@@ -320,10 +320,24 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    setProgress(timeProgress);
  }
 
- // Geração terminou (completed, partial, ou failed)?
- if (pollResult.generationStatus === 'completed' || pollResult.generationStatus === 'partial' || pollResult.generationStatus === 'failed') {
-   generationFinalStatusRef.current = pollResult.generationStatus;
-   setGenerationFinalStatus(pollResult.generationStatus);
+ // Geração terminou?
+ // 1) Status final do N8N (completed/partial/failed)
+ // 2) OU todos os ângulos já foram reportados em output_urls (sucesso + falha)
+ const statusIsFinal = pollResult.generationStatus === 'completed' || pollResult.generationStatus === 'partial' || pollResult.generationStatus === 'failed';
+ const allAnglesReported = pollResult.completedAngles.length >= pending.angles.length
+   && pollResult.completedAngles.every(a => a.status === 'completed' || a.status === 'failed');
+
+ if (statusIsFinal || allAnglesReported) {
+   // Inferir status se o N8N ainda não finalizou (Finalizar Geracao não rodou)
+   let effectiveStatus: 'processing' | 'completed' | 'partial' | 'failed' = pollResult.generationStatus === 'unknown' ? 'failed' : pollResult.generationStatus;
+   if (!statusIsFinal && allAnglesReported) {
+     const hasSuccess = pollResult.completedAngles.some(a => a.status === 'completed');
+     const hasFailed = pollResult.completedAngles.some(a => a.status === 'failed');
+     effectiveStatus = !hasSuccess ? 'failed' : hasFailed ? 'partial' : 'completed';
+   }
+
+   generationFinalStatusRef.current = effectiveStatus;
+   setGenerationFinalStatus(effectiveStatus);
    setCurrentGenerationId(pending.generationId || null);
    clearPendingPSGeneration();
 
@@ -411,12 +425,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    }
 
    // Se falhou completamente (nenhum ângulo gerado), mostrar erro
-   if (pollResult.generationStatus === 'failed' && successAngles.length === 0) {
+   if (effectiveStatus === 'failed' && successAngles.length === 0) {
      showToast(pollResult.error_message || 'Não conseguimos gerar suas imagens. Seus créditos foram devolvidos automaticamente.', 'error');
    }
 
    // Sucesso parcial: alguns ângulos geraram, outros falharam
-   if (pollResult.generationStatus === 'partial' && successAngles.length > 0) {
+   if (effectiveStatus === 'partial' && successAngles.length > 0) {
      const failedAngles = pollResult.completedAngles.filter(a => a.status === 'failed');
      if (failedAngles.length > 0) {
        showToast(`${successAngles.length} de ${successAngles.length + failedAngles.length} imagens geradas. Os créditos dos ângulos que falharam foram devolvidos.`, 'info');
