@@ -8,6 +8,18 @@ import { useCredits } from '../hooks/useCredits';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { supabase } from '../services/supabaseClient';
 
+// ── Dicas rotativas ──
+const TIPS = [
+ 'Use fotos com boa iluminação e fundo neutro para melhores resultados nas gerações de IA.',
+ 'O Vizzu Product Studio® gera múltiplos ângulos automaticamente — cadastre uma boa foto frontal e deixe a IA fazer o resto.',
+ 'No Look Composer, combine até 4 peças para criar looks completos com modelo IA.',
+ 'Use o Creative Still para composições estilizadas — perfeito para redes sociais e campanhas.',
+ 'Fotos com fundo branco ou cinza claro dão mais liberdade para a IA criar cenários criativos.',
+ 'Baixe suas imagens em diferentes tamanhos usando o sistema de download — são 6 presets otimizados para cada canal.',
+ 'Cadastre a categoria correta dos produtos para que o Product Studio® gere os ângulos mais adequados.',
+ 'O Provador Virtual funciona melhor com fotos corporais bem enquadradas — da cabeça aos pés.',
+];
+
 export function DashboardPage() {
  const { theme, navigateTo, setSettingsTab } = useUI();
  const { user } = useAuth();
@@ -15,6 +27,12 @@ export function DashboardPage() {
  const { clients, clientLooks } = useClients();
  const { historyLogs } = useHistory();
  const { userCredits, currentPlan } = useCredits({ userId: user?.id });
+
+ // Dica do dia — rotaciona com base no dia do ano
+ const todayTip = useMemo(() => {
+   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+   return TIPS[dayOfYear % TIPS.length];
+ }, []);
 
  // Queries diretas para criações recentes (não dependem de contexto de outra página)
  const [recentStills, setRecentStills] = useState<{ id: string; imageUrl: string; name: string; date: string }[]>([]);
@@ -38,7 +56,7 @@ export function DashboardPage() {
  return {
  id: g.id,
  imageUrl: urls[0] || '',
- name: g.settings_snapshot?.product_name || 'Still Criativo',
+ name: g.settings_snapshot?.product_name || 'Creative Still',
  date: g.created_at,
  };
  }).filter((s: any) => s.imageUrl));
@@ -64,19 +82,43 @@ export function DashboardPage() {
  });
  }, [user?.id]);
 
+ // ── Stats com contagem correta ──
  const dashboardStats = useMemo(() => {
+ // Produtos com QUALQUER imagem gerada (PS, LC, CS, Cenário)
  const optimizedProducts = products.filter(p => {
  const gen = (p as any).generatedImages;
- return gen?.productStudio?.some((s: any) => s.images?.length > 0);
+ if (!gen) return false;
+ const hasPS = gen.productStudio?.some((s: any) => s.images?.length > 0);
+ const hasLC = gen.modeloIA?.length > 0;
+ const hasCenario = gen.cenarioCriativo?.length > 0;
+ const hasLegacy = gen.studioReady?.[0]?.images?.front;
+ return hasPS || hasLC || hasCenario || hasLegacy;
  }).length;
- const looksGenerated = products.reduce((total, p) => {
+
+ // Total de imagens geradas (todas as features)
+ const totalGenerations = products.reduce((total, p) => {
  const gen = (p as any).generatedImages;
- const modeloIA = gen?.modeloIA?.length || 0;
- const cenario = gen?.cenarioCriativo?.length || 0;
- return total + modeloIA + cenario;
- }, 0) + clientLooks.length;
- return { optimizedProducts, looksGenerated };
- }, [products, clientLooks]);
+ if (!gen) return total;
+ const psCount = gen.productStudio?.reduce((s: number, sess: any) => s + (sess.images?.length || 0), 0) || 0;
+ const lcCount = gen.modeloIA?.length || 0;
+ const cenarioCount = gen.cenarioCriativo?.length || 0;
+ const legacyCount = gen.studioReady?.[0]?.images?.front ? 1 : 0;
+ return total + psCount + lcCount + cenarioCount + legacyCount;
+ }, 0) + clientLooks.length + recentStills.length;
+
+ return { optimizedProducts, totalGenerations };
+ }, [products, clientLooks, recentStills]);
+
+ // ── Nome do usuário com fallback inteligente ──
+ const userName = useMemo(() => {
+   const name = user?.name?.split(' ')[0];
+   if (name && name !== 'Usuário') return name;
+   if (user?.email) return user.email.split('@')[0];
+   return 'usuário';
+ }, [user]);
+
+ // ── Plano é o mais alto? ──
+ const isTopPlan = currentPlan.id === 'enterprise' || currentPlan.id === 'premier';
 
  return (
  <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-cream')}>
@@ -89,22 +131,22 @@ export function DashboardPage() {
  <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
- Bem-vindo de volta, <span className="font-medium">{user?.name?.split(' ')[0] || 'usuário'}</span>
+ Bem-vindo, <span className="font-medium">{userName}</span>
  </p>
  </div>
  <button
  onClick={() => navigateTo('create')}
- className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity "
+ className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
  >
  <i className="fas fa-plus text-xs"></i>
- Novo Projeto
+ <span className="hidden md:inline">Novo Projeto</span>
  </button>
  </div>
 
  {/* ÚLTIMAS CRIAÇÕES */}
  {(() => {
  // Combinar fontes de imagens geradas
- const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look' | 'still'; date: string }[] = [];
+ const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look' | 'still' | 'cenario'; date: string }[] = [];
 
  // Adicionar looks do Provador (query direta)
  recentProvadorLooks.forEach(look => {
@@ -113,14 +155,14 @@ export function DashboardPage() {
  recentCreations.push({
  id: look.id,
  imageUrl: look.imageUrl,
- name: client ? `${client.firstName}` : 'Look',
+ name: client ? `${client.firstName}` : 'Provador',
  type: 'provador',
  date: look.date
  });
  }
  });
 
- // Adicionar Still Criativo (query direta)
+ // Adicionar Creative Still (query direta)
  recentStills.forEach(still => {
  recentCreations.push({
  id: `still-${still.id}`,
@@ -135,11 +177,10 @@ export function DashboardPage() {
  products.forEach(product => {
  const genImages = (product as any).generatedImages;
 
- // Product Studio (novo sistema)
+ // Vizzu Product Studio® (novo sistema)
  if (genImages?.productStudio?.length > 0) {
  genImages.productStudio.forEach((session: any) => {
  if (session.images?.length > 0) {
- // Pegar a primeira imagem da sessão (geralmente a frente)
  const frontImg = session.images.find((img: any) => img.angle === 'front') || session.images[0];
  recentCreations.push({
  id: `studio-${product.id}-${session.id}`,
@@ -152,7 +193,7 @@ export function DashboardPage() {
  });
  }
 
- // Modelo IA / Look Composer
+ // Look Composer
  if (genImages?.modeloIA?.length > 0) {
  genImages.modeloIA.forEach((item: any) => {
  const imgUrl = item.images?.front || item.image_url || item.imageUrl;
@@ -177,14 +218,14 @@ export function DashboardPage() {
  id: `cenario-${product.id}-${item.id}`,
  imageUrl: imgUrl,
  name: product.name,
- type: 'look',
+ type: 'cenario',
  date: item.createdAt || item.created_at || new Date().toISOString()
  });
  }
  });
  }
 
- // Studio Ready (sistema legado)
+ // Product Studio (legado)
  if (genImages?.studioReady?.[0]?.images?.front) {
  recentCreations.push({
  id: `studio-legacy-${product.id}`,
@@ -201,11 +242,27 @@ export function DashboardPage() {
  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
  .slice(0, 4);
 
+ // Badge labels e navegação por tipo
+ const badgeLabel: Record<string, string> = {
+   studio: 'Studio',
+   provador: 'Provador',
+   still: 'Still',
+   look: 'Look',
+   cenario: 'Cenário',
+ };
+ const navTarget: Record<string, () => void> = {
+   studio: () => navigateTo('product-studio'),
+   provador: () => navigateTo('provador'),
+   still: () => navigateTo('creative-still'),
+   look: () => navigateTo('look-composer'),
+   cenario: () => navigateTo('studio'),
+ };
+
  return (
- <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
- <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]')}></i>
+ <i className={'fas fa-sparkles text-sm text-[#FF6B6B]'}></i>
  <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
  </div>
  {sortedCreations.length > 0 && (
@@ -223,13 +280,8 @@ export function DashboardPage() {
  {sortedCreations.map((creation) => (
  <div
  key={creation.id}
- onClick={() => {
- if (creation.type === 'studio') navigateTo('product-studio');
- else if (creation.type === 'provador') navigateTo('provador');
- else if (creation.type === 'still') navigateTo('creative-still');
- else navigateTo('look-composer');
- }}
- className={'flex-shrink-0 w-24 cursor-pointer group ' + (theme === 'dark' ? 'hover:opacity-80' : 'hover:opacity-90') + ' transition-opacity'}
+ onClick={() => navTarget[creation.type]?.()}
+ className={'flex-shrink-0 w-24 cursor-pointer group hover:opacity-80 transition-opacity'}
  >
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
  <OptimizedImage src={creation.imageUrl} size="thumb" alt="" className="w-full h-full" />
@@ -240,7 +292,7 @@ export function DashboardPage() {
    </div>
   )}
   <div className="px-1.5 py-0.5 rounded text-[8px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
-   {creation.type === 'studio' ? 'Studio' : creation.type === 'provador' ? 'Provador' : creation.type === 'still' ? 'Still' : 'Look'}
+   {badgeLabel[creation.type] || 'IA'}
   </div>
  </div>
  </div>
@@ -280,39 +332,39 @@ export function DashboardPage() {
  {/* STATS GRID - 4 Cards */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
  {/* Produtos Cadastrados */}
- <div onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
- <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]')}></i>
+ <i className="fas fa-box text-sm text-[#FF6B6B]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
  </div>
 
- {/* Produtos Otimizados */}
- <div onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ {/* Produtos com Imagens IA */}
+ <div onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
- <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-[#A855F7]' : 'text-[#A855F7]')}></i>
+ <i className="fas fa-wand-magic-sparkles text-sm text-[#A855F7]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos otimizados</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos com imagens IA</p>
  </div>
 
- {/* Looks Gerados */}
- <div onClick={() => navigateTo('look-composer')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ {/* Imagens Geradas */}
+ <div onClick={() => { navigateTo('settings'); setSettingsTab('history'); }} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
- <i className={'fas fa-shirt text-sm ' + (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]')}></i>
+ <i className="fas fa-images text-sm text-[#FF9F43]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.looksGenerated}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Looks gerados</p>
+ <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.totalGenerations}</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
  </div>
 
  {/* Clientes Cadastrados */}
- <div onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
- <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-[#4ADE80]' : 'text-[#4ADE80]')}></i>
+ <i className="fas fa-users text-sm text-[#4ADE80]"></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
  <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
@@ -320,19 +372,32 @@ export function DashboardPage() {
  </div>
  </div>
 
- {/* USO DE CRÉDITOS - Dados reais */}
+ {/* USO DE CRÉDITOS - Todas as categorias */}
  {(() => {
  const aiLogs = historyLogs.filter(log => log.method === 'ai' && log.status === 'success');
- const studioCount = aiLogs.filter(log => log.action.toLowerCase().includes('studio')).reduce((sum, log) => sum + (log.cost || 1), 0);
- const provadorCount = aiLogs.filter(log => log.action.toLowerCase().includes('provador')).reduce((sum, log) => sum + (log.cost || 1), 0);
- const lookCount = aiLogs.filter(log => log.action.toLowerCase().includes('look') || log.action.toLowerCase().includes('modelo')).reduce((sum, log) => sum + (log.cost || 1), 0);
- const totalCredits = studioCount + provadorCount + lookCount;
- const studioPercent = totalCredits > 0 ? Math.round((studioCount / totalCredits) * 100) : 0;
- const provadorPercent = totalCredits > 0 ? Math.round((provadorCount / totalCredits) * 100) : 0;
- const lookPercent = totalCredits > 0 ? Math.round((lookCount / totalCredits) * 100) : 0;
+ const a = (s: string) => aiLogs.filter(log => log.action.toLowerCase().includes(s));
+ const sum = (logs: typeof aiLogs) => logs.reduce((s, log) => s + (log.cost || 1), 0);
+
+ const studioCount = sum(a('studio'));
+ const lookCount = sum(a('look').concat(a('modelo')));
+ const provadorCount = sum(a('provador'));
+ const stillCount = sum(a('still').concat(a('creative')));
+ const categorized = studioCount + lookCount + provadorCount + stillCount;
+ const otherCount = sum(aiLogs) - categorized;
+ const totalCredits = categorized + otherCount;
+
+ const pct = (v: number) => totalCredits > 0 ? Math.round((v / totalCredits) * 100) : 0;
+
+ const categories = [
+   { label: 'Product Studio', count: studioCount, pct: pct(studioCount), gradient: 'from-[#A855F7] to-indigo-500' },
+   { label: 'Look Composer', count: lookCount, pct: pct(lookCount), gradient: 'from-amber-500 to-[#FF9F43]' },
+   { label: 'Provador Virtual', count: provadorCount, pct: pct(provadorCount), gradient: 'from-[#FF6B6B] to-[#FF9F43]' },
+   { label: 'Creative Still', count: stillCount, pct: pct(stillCount), gradient: 'from-emerald-500 to-teal-500' },
+   ...(otherCount > 0 ? [{ label: 'Outros', count: otherCount, pct: pct(otherCount), gradient: 'from-gray-400 to-gray-500' }] : []),
+ ].filter(c => c.count > 0);
 
  return (
- <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200 ')}>
+ <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
  <i className={'fas fa-chart-bar text-sm ' + (theme === 'dark' ? 'text-indigo-400' : 'text-indigo-500')}></i>
@@ -348,27 +413,15 @@ export function DashboardPage() {
  </div>
  ) : (
  <div className="space-y-3">
- <div className="flex items-center gap-3">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Studio</span>
+ {categories.map((cat) => (
+ <div key={cat.label} className="flex items-center gap-3">
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-24 truncate'}>{cat.label}</span>
  <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
- <div className="h-full rounded-full bg-gradient-to-r from-[#A855F7] to-indigo-500 transition-all" style={{ width: `${studioPercent}%` }} />
+ <div className={`h-full rounded-full bg-gradient-to-r ${cat.gradient} transition-all`} style={{ width: `${cat.pct}%` }} />
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{studioPercent}%</span>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{cat.pct}%</span>
  </div>
- <div className="flex items-center gap-3">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Provador</span>
- <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
- <div className="h-full rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all" style={{ width: `${provadorPercent}%` }} />
- </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{provadorPercent}%</span>
- </div>
- <div className="flex items-center gap-3">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-20'}>Look</span>
- <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
- <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-[#FF9F43] transition-all" style={{ width: `${lookPercent}%` }} />
- </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{lookPercent}%</span>
- </div>
+ ))}
  </div>
  )}
  </div>
@@ -382,12 +435,12 @@ export function DashboardPage() {
  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#373632]/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex items-center gap-4 w-full">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/70')}>
- <i className={'fas fa-lightbulb text-lg ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/70')}></i>
+ <i className={'fas fa-lightbulb text-lg ' + (theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]')}></i>
  </div>
  <div className="flex-1 min-w-0">
  <h3 className={'text-sm font-semibold mb-1 ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica do dia</h3>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm'}>
- Use fotos com boa iluminação e fundo neutro para melhores resultados nas gerações de IA. Quanto melhor a foto original, melhor o resultado final!
+ {todayTip}
  </p>
  </div>
  </div>
@@ -411,7 +464,7 @@ export function DashboardPage() {
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90')}
  >
- Upgrade <i className="fas fa-arrow-right text-[10px]"></i>
+ {isTopPlan ? 'Gerenciar plano' : 'Upgrade'} <i className="fas fa-arrow-right text-[10px]"></i>
  </button>
  </div>
  </div>

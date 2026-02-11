@@ -451,6 +451,18 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       onSetProgress?.(100);
       setCurrentGeneration(result);
       loadGenerations();
+
+      // Log de histórico
+      if (result.status === 'completed' && onAddHistoryLog) {
+        onAddHistoryLog(
+          'Creative Still',
+          `Still gerado para "${params.product.name}" (${params.variationsCount} ${params.variationsCount === 1 ? 'variação' : 'variações'})`,
+          'success',
+          [params.product],
+          'ai',
+          creditsNeeded
+        );
+      }
     } catch (err) {
       clearInterval(progressInterval);
       console.error('[CS] Erro durante geração:', err);
