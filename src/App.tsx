@@ -854,12 +854,16 @@ function App() {
  }
  };
 
- const handleProvadorSendWhatsAppForWizard = async (client: Client, imageUrl: string, message: string, look: LookComposition) => {
+ const handleProvadorSendWhatsAppForWizard = async (
+ client: Client, imageUrl: string, message: string, look: LookComposition,
+ productStudioImages?: { name: string; url: string }[]
+ ) => {
  // A mensagem já vem formatada do wizard (com nome do cliente e itens do look)
  const finalMessage = message;
 
  // Confirmação antes de enviar
- const confirmMessage = `Deseja enviar um WhatsApp para ${client.firstName} ${client.lastName}?\n\nMensagem:\n"${finalMessage.substring(0, 200)}${finalMessage.length > 200 ? '...' : ''}"`;
+ const imageCount = 1 + (productStudioImages?.length || 0);
+ const confirmMessage = `Deseja enviar um WhatsApp para ${client.firstName} ${client.lastName}?\n\n${imageCount > 1 ? `📸 ${imageCount} imagens serão enviadas (look + fotos dos produtos)\n\n` : ''}Mensagem:\n"${finalMessage.substring(0, 200)}${finalMessage.length > 200 ? '...' : ''}"`;
 
  if (!window.confirm(confirmMessage)) {
  return;
@@ -875,6 +879,19 @@ function App() {
  });
 
  if (result.success) {
+ // Enviar fotos dos produtos do Product Studio (uma por uma)
+ if (productStudioImages?.length) {
+ for (const pi of productStudioImages) {
+ try {
+ await sendWhatsAppMessage({
+ phone: client.whatsapp || '',
+ message: `📸 ${pi.name}`,
+ imageUrl: pi.url,
+ clientName: `${client.firstName} ${client.lastName}`,
+ });
+ } catch { /* silently skip */ }
+ }
+ }
  alert('WhatsApp enviado com sucesso!');
  return;
  }
@@ -886,13 +903,25 @@ function App() {
 
  // Fallback: Web Share API (mobile) ou wa.me (desktop)
  try {
+ const files: File[] = [];
  const response = await fetch(imageUrl);
  const blob = await response.blob();
- const file = new File([blob], 'look.png', { type: 'image/png' });
+ files.push(new File([blob], 'look.png', { type: 'image/png' }));
 
- if (navigator.canShare?.({ files: [file] })) {
+ // Incluir fotos PS no share
+ if (productStudioImages?.length) {
+ for (let i = 0; i < productStudioImages.length; i++) {
+ try {
+ const resp = await fetch(productStudioImages[i].url);
+ const pBlob = await resp.blob();
+ files.push(new File([pBlob], `${productStudioImages[i].name.replace(/\s+/g, '_')}.png`, { type: 'image/png' }));
+ } catch { /* skip */ }
+ }
+ }
+
+ if (navigator.canShare?.({ files })) {
  await navigator.share({
- files: [file],
+ files,
  text: finalMessage
  });
  return;
@@ -904,7 +933,13 @@ function App() {
  // Final fallback: WhatsApp with text + image link
  const phone = client.whatsapp?.replace(/\D/g, '') || '';
  const fullPhone = phone.startsWith('55') ? phone : '55' + phone;
- const fullMessage = finalMessage + '\n\n' + imageUrl;
+ let fullMessage = finalMessage + '\n\n' + imageUrl;
+ if (productStudioImages?.length) {
+ fullMessage += '\n\n📸 Fotos dos produtos:';
+ productStudioImages.forEach(pi => {
+ fullMessage += `\n${pi.name}: ${pi.url}`;
+ });
+ }
  window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
  };
 
@@ -965,7 +1000,7 @@ function App() {
  // Renderiza página para swipe adjacente (Instagram-style)
  const renderSwipePage = (page: Page): React.ReactNode => {
    switch (page) {
-     case 'dashboard': return <DashboardPage />;
+     case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
      case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
@@ -983,7 +1018,7 @@ function App() {
  onBuyCredits={() => { setCreditModalContext({ creditsNeeded: 1, actionContext: 'generic' }); setShowCreditModal(true); }}
  renderSwipePage={renderSwipePage}
  >
- {currentPage === 'dashboard' && <DashboardPage />}
+ {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} />}
  {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
 
  {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}

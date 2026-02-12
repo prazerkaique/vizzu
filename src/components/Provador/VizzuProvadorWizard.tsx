@@ -44,7 +44,8 @@ interface Props {
  client: Client,
  image: string,
  message: string,
- look: LookComposition
+ look: LookComposition,
+ productStudioImages?: { name: string; url: string }[]
  ) => void;
  onDownloadImage: (image: string, clientName: string) => void;
  onSaveLook: (client: Client, image: string, look: LookComposition) => Promise<ClientLook | null>;
@@ -249,22 +250,37 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  accessory2: '⌚',
  };
 
- // Formatar os itens do look para preview
+ // Formatar os itens do look para preview (com preço real quando disponível)
  const formatLookItemsPreview = useCallback(() => {
  const currentLook = selectedSavedLook?.lookItems || lookComposition;
  const items: string[] = [];
+ const seenIds = new Set<string>();
  const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
 
  lookKeys.forEach(key => {
  const item = currentLook[key];
  if (item && item.name) {
+ // Evitar duplicar quando top e bottom são a mesma peça (vestido/macacão)
+ const dedupeKey = item.productId || item.name;
+ if (seenIds.has(dedupeKey)) return;
+ seenIds.add(dedupeKey);
+
  const emoji = lookEmojis[key] || '👔';
- items.push(`${emoji} ${item.name} — Consulte`);
+ let priceText = 'Consulte';
+ if (item.productId) {
+ const product = products.find(p => p.id === item.productId);
+ if (product?.priceSale) {
+ priceText = `R$ ${product.priceSale.toFixed(2).replace('.', ',')}`;
+ } else if (product?.price) {
+ priceText = `R$ ${product.price.toFixed(2).replace('.', ',')}`;
+ }
+ }
+ items.push(`${emoji} ${item.name} — ${priceText}`);
  }
  });
 
  return items.join('\n');
- }, [lookComposition, selectedSavedLook]);
+ }, [lookComposition, selectedSavedLook, products]);
 
  // Mensagem completa formatada para preview (gerada automaticamente)
  const getFormattedMessagePreview = useCallback(() => {
@@ -471,7 +487,29 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  const messageToSend = getFinalMessage();
  // Usa o look atual ou o look salvo selecionado
  const lookToSend = selectedSavedLook?.lookItems || lookComposition;
- onSendWhatsApp(selectedClient, imageToSend, messageToSend, lookToSend);
+
+ // Coletar fotos otimizadas do Product Studio para cada produto do look
+ const psImages: { name: string; url: string }[] = [];
+ const seenProductIds = new Set<string>();
+ const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
+ lookKeys.forEach(key => {
+ const item = lookToSend[key];
+ if (item?.productId && !seenProductIds.has(item.productId)) {
+ seenProductIds.add(item.productId);
+ const product = products.find(p => p.id === item.productId);
+ if (product?.generatedImages?.productStudio?.length) {
+ const lastSession = product.generatedImages.productStudio[product.generatedImages.productStudio.length - 1];
+ if (lastSession.images?.length) {
+ const frontImg = lastSession.images.find(img => img.angle === 'front') || lastSession.images[0];
+ if (frontImg?.url) {
+ psImages.push({ name: item.name, url: frontImg.url });
+ }
+ }
+ }
+ }
+ });
+
+ onSendWhatsApp(selectedClient, imageToSend, messageToSend, lookToSend, psImages.length > 0 ? psImages : undefined);
  };
 
  const handleDownload = () => {

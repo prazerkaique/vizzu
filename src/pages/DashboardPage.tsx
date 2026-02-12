@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useUI } from '../contexts/UIContext';
+import { useUI, type Page } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useProducts } from '../contexts/ProductsContext';
 import { useClients } from '../contexts/ClientsContext';
@@ -7,6 +7,7 @@ import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { supabase } from '../services/supabaseClient';
+import type { Product } from '../types';
 
 // ── 50 dicas rotativas (carrossel automático) ──
 const TIPS = [
@@ -77,7 +78,11 @@ const TIPS = [
  'Atualize as fotos dos produtos sazonalmente — looks de verão no verão, inverno no inverno.',
 ];
 
-export function DashboardPage() {
+interface DashboardPageProps {
+  setProductForCreation?: (p: Product | null) => void;
+}
+
+export function DashboardPage({ setProductForCreation }: DashboardPageProps) {
  const { theme, navigateTo, setSettingsTab } = useUI();
  const { user } = useAuth();
  const { products } = useProducts();
@@ -96,7 +101,7 @@ export function DashboardPage() {
  }, []);
 
  // Queries diretas para criações recentes (não dependem de contexto de outra página)
- const [recentStills, setRecentStills] = useState<{ id: string; imageUrl: string; name: string; date: string }[]>([]);
+ const [recentStills, setRecentStills] = useState<{ id: string; imageUrl: string; name: string; date: string; productId?: string }[]>([]);
  const [recentProvadorLooks, setRecentProvadorLooks] = useState<{ id: string; imageUrl: string; clientId: string; date: string }[]>([]);
  const [totalStillsCount, setTotalStillsCount] = useState(0);
 
@@ -106,7 +111,7 @@ export function DashboardPage() {
  // Creative Still generations (últimas 10 para exibição)
  supabase
  .from('creative_still_generations')
- .select('id, variation_urls, variation_1_url, variation_2_url, status, created_at, settings_snapshot')
+ .select('id, variation_urls, variation_1_url, variation_2_url, status, created_at, settings_snapshot, product_id')
  .eq('user_id', user.id)
  .eq('status', 'completed')
  .order('created_at', { ascending: false })
@@ -119,6 +124,7 @@ export function DashboardPage() {
  id: g.id,
  imageUrl: urls[0] || '',
  name: g.settings_snapshot?.product_name || 'Still Criativo',
+ productId: g.product_id || undefined,
  date: g.created_at,
  };
  }).filter((s: any) => s.imageUrl));
@@ -218,7 +224,7 @@ export function DashboardPage() {
  {/* ÚLTIMAS CRIAÇÕES */}
  {(() => {
  // Combinar fontes de imagens geradas
- const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look' | 'still' | 'cenario'; date: string }[] = [];
+ const recentCreations: { id: string; imageUrl: string; name: string; type: 'studio' | 'provador' | 'look' | 'still' | 'cenario'; date: string; productId?: string }[] = [];
 
  // Adicionar looks do Provador (query direta)
  recentProvadorLooks.forEach(look => {
@@ -241,6 +247,7 @@ export function DashboardPage() {
  imageUrl: still.imageUrl,
  name: still.name,
  type: 'still',
+ productId: still.productId,
  date: still.date
  });
  });
@@ -259,6 +266,7 @@ export function DashboardPage() {
  imageUrl: frontImg.url,
  name: product.name,
  type: 'studio',
+ productId: product.id,
  date: session.createdAt || frontImg.createdAt || new Date().toISOString()
  });
  }
@@ -275,6 +283,7 @@ export function DashboardPage() {
  imageUrl: imgUrl,
  name: product.name,
  type: 'look',
+ productId: product.id,
  date: item.createdAt || item.created_at || new Date().toISOString()
  });
  }
@@ -291,6 +300,7 @@ export function DashboardPage() {
  imageUrl: imgUrl,
  name: product.name,
  type: 'cenario',
+ productId: product.id,
  date: item.createdAt || item.created_at || new Date().toISOString()
  });
  }
@@ -304,6 +314,7 @@ export function DashboardPage() {
  imageUrl: genImages.studioReady[0].images.front,
  name: product.name,
  type: 'studio',
+ productId: product.id,
  date: genImages.studioReady[0].createdAt || new Date().toISOString()
  });
  }
@@ -322,12 +333,19 @@ export function DashboardPage() {
    look: 'Look Composer',
    cenario: 'Cenário',
  };
- const navTarget: Record<string, () => void> = {
-   studio: () => navigateTo('product-studio'),
-   provador: () => navigateTo('provador'),
-   still: () => navigateTo('creative-still'),
-   look: () => navigateTo('look-composer'),
-   cenario: () => navigateTo('studio'),
+ const featurePage: Record<string, string> = {
+   studio: 'product-studio',
+   provador: 'provador',
+   still: 'creative-still',
+   look: 'look-composer',
+   cenario: 'studio',
+ };
+ const handleCreationClick = (creation: typeof recentCreations[0]) => {
+   if (creation.productId && creation.type !== 'provador' && setProductForCreation) {
+     const product = products.find(p => p.id === creation.productId);
+     if (product) setProductForCreation(product);
+   }
+   navigateTo((featurePage[creation.type] || 'create') as Page);
  };
 
  return (
@@ -352,7 +370,7 @@ export function DashboardPage() {
  {sortedCreations.map((creation) => (
  <div
  key={creation.id}
- onClick={() => navTarget[creation.type]?.()}
+ onClick={() => handleCreationClick(creation)}
  className={'flex-shrink-0 w-24 cursor-pointer group hover:opacity-80 transition-opacity'}
  >
  <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
