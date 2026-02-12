@@ -7,6 +7,7 @@ import { CREDIT_PACKAGES } from '../hooks/useCredits';
 import { usePlans } from '../contexts/PlansContext';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { supabase } from '../services/supabaseClient';
+import { ConfirmModal } from '../components/shared/ConfirmModal';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -20,6 +21,8 @@ interface SettingsPageProps {
  onCancelSubscription: () => void;
  onLogout: () => void;
 }
+
+const HISTORY_PAGE_SIZE = 20;
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
  userCredits,
@@ -40,6 +43,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  const [expandAllFeatures, setExpandAllFeatures] = useState(false);
 
+ // P1: Controlled input para nome do perfil + dirty state
+ const [profileName, setProfileName] = useState(user?.name || '');
+ const [isSavingProfile, setIsSavingProfile] = useState(false);
+ useEffect(() => { setProfileName(user?.name || ''); }, [user?.name]);
+ const isProfileDirty = profileName.trim() !== (user?.name || '');
+
+ // P3: Loading state para reset de senha
+ const [isSendingReset, setIsSendingReset] = useState(false);
+
+ // P5: Modal de confirmação para cancelar assinatura
+ const [showCancelModal, setShowCancelModal] = useState(false);
+ const [isCancelling, setIsCancelling] = useState(false);
+
+ // P10: Modal de confirmação para limpar histórico
+ const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+
+ // P11: Paginação do histórico
+ const [historyVisible, setHistoryVisible] = useState(HISTORY_PAGE_SIZE);
+
  // Company Settings
  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
  const saved = localStorage.getItem('vizzu_company_settings');
@@ -59,11 +81,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  callToAction: '',
  };
  });
+ const [initialCompanySettings] = useState(companySettings);
+ const isCompanyDirty = companySettings.name !== initialCompanySettings.name || companySettings.instagram !== initialCompanySettings.instagram;
 
  // Persistir company settings
  useEffect(() => {
  localStorage.setItem('vizzu_company_settings', JSON.stringify(companySettings));
  }, [companySettings]);
+
+ // Dirty state combinado
+ const isDirty = isProfileDirty || isCompanyDirty;
+
+ // P1: Salvar perfil de verdade
+ const handleSaveProfile = async () => {
+ if (!isDirty) return;
+ setIsSavingProfile(true);
+ try {
+ // Salvar nome via Supabase Auth
+ if (isProfileDirty && profileName.trim()) {
+ const { error } = await supabase.auth.updateUser({
+ data: { name: profileName.trim() }
+ });
+ if (error) throw error;
+ }
+ showToast('Configurações salvas!', 'success');
+ } catch (e: any) {
+ showToast(e.message || 'Erro ao salvar. Tente novamente.', 'error');
+ } finally {
+ setIsSavingProfile(false);
+ }
+ };
 
  // Lottie Theme Toggle
  const dotLottieRef = useRef<any>(null);
@@ -96,7 +143,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {[
  { id: 'profile' as SettingsTab, label: 'Perfil', icon: 'fa-user' },
  { id: 'plan' as SettingsTab, label: 'Planos & Créditos', icon: 'fa-credit-card' },
- { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
+ { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug', badge: 'Em breve' },
  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
  ].map(tab => (
  <button
@@ -112,6 +159,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  >
  <i className={`fas ${tab.icon} text-[10px]`}></i>
  {tab.label}
+ {'badge' in tab && tab.badge && (
+ <span className={(theme === 'dark' ? 'bg-neutral-600 text-neutral-300' : 'bg-gray-300 text-gray-600') + ' text-[8px] px-1.5 py-0.5 rounded-full font-medium ml-0.5'}>{tab.badge}</span>
+ )}
  </button>
  ))}
  </div>
@@ -126,12 +176,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
  {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
  </div>
- <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors'}>Alterar Foto</button>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
  <label htmlFor="profile-name" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
- <input type="text" id="profile-name" name="profileName" autoComplete="name" defaultValue={user?.name} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} />
+ <input type="text" id="profile-name" name="profileName" autoComplete="name" value={profileName} onChange={(e) => setProfileName(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} />
  </div>
  <div>
  <label htmlFor="profile-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
@@ -146,6 +195,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </p>
  <button
  onClick={async () => {
+ if (isSendingReset) return;
+ setIsSendingReset(true);
  try {
  const userEmail = user?.email;
  if (!userEmail) { showToast('Email do usuário não encontrado.', 'error'); return; }
@@ -156,12 +207,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  showToast('Email de redefinição enviado! Verifique sua caixa de entrada.', 'success');
  } catch (e: any) {
  showToast(e.message || 'Erro ao enviar email de redefinição.', 'error');
+ } finally {
+ setIsSendingReset(false);
  }
  }}
- className="px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+ disabled={isSendingReset}
+ className={'px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium transition-opacity flex items-center gap-2 ' + (isSendingReset ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90')}
  >
- <i className="fas fa-envelope text-[10px]"></i>
- Enviar email de redefinição
+ {isSendingReset ? (
+ <><i className="fas fa-circle-notch fa-spin text-[10px]"></i>Enviando...</>
+ ) : (
+ <><i className="fas fa-envelope text-[10px]"></i>Enviar email de redefinição</>
+ )}
  </button>
  </div>
  </div>
@@ -244,13 +301,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  </div>
 
- {/* Salvar */}
+ {/* P1: Salvar com dirty state + loading */}
  <button
- onClick={() => showToast('Configurações salvas!', 'success')}
- className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+ onClick={handleSaveProfile}
+ disabled={!isDirty || isSavingProfile}
+ className={'w-full py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ' +
+ (isDirty && !isSavingProfile
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+ : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
+ )}
  >
- <i className="fas fa-check"></i>
- Salvar Configurações
+ {isSavingProfile ? (
+ <><i className="fas fa-circle-notch fa-spin text-xs"></i>Salvando...</>
+ ) : (
+ <><i className="fas fa-check"></i>Salvar Configurações</>
+ )}
  </button>
  </div>
  )}
@@ -299,9 +364,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{userCredits.toLocaleString()}</p>
  </div>
  </div>
+ {/* P5: Cancelar com confirmação */}
  <div className={'mt-4 pt-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
  <button
- onClick={onCancelSubscription}
+ onClick={() => setShowCancelModal(true)}
  className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs transition-colors'}
  >
  Cancelar assinatura
@@ -351,7 +417,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  // Features na ordem mestre — todas listadas, mesma ordem em todos os cards
  const allFeatures = MASTER_FEATURES.map(f => ({ name: f, has: included.has(f) }));
  const collapsedFeatures = allFeatures.slice(0, MAX_COLLAPSED);
- const hiddenFeatures = allFeatures.slice(MAX_COLLAPSED);
 
  return (
  <div
@@ -390,7 +455,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  {isEnterprise && !isCurrentPlan && (
  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
- <span className={(theme === 'dark' ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white') + ' px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap'}>
+ <span className="bg-purple-600 text-white px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap">
  ENTERPRISE
  </span>
  </div>
@@ -458,19 +523,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  </ul>
 
+ {/* P6: Loading state nos botões de plano */}
  <button
  onClick={() => {
- if (isCurrentPlan) return;
+ if (isCurrentPlan || isCheckoutLoading) return;
  if (isEnterprise) {
  window.open('https://wa.me/5544991534082?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Enterprise%20da%20Vizzu.', '_blank');
  return;
  }
  onUpgradePlan(plan.id);
  }}
+ disabled={isCurrentPlan || (isCheckoutLoading && !isEnterprise)}
  className={
- 'w-full py-2.5 rounded-xl font-semibold text-sm transition-all ' +
+ 'w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ' +
  (isCurrentPlan
  ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
+ : isCheckoutLoading && !isEnterprise
+ ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
  : isPro
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
  : isTrial
@@ -479,7 +548,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )
  }
  >
- {isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{PLAN_CTA[plan.id] || 'Falar conosco'}</>) : (() => {
+ {isCheckoutLoading && !isCurrentPlan && !isEnterprise ? (
+ <><i className="fas fa-circle-notch fa-spin text-xs"></i>Processando...</>
+ ) : isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{PLAN_CTA[plan.id] || 'Falar conosco'}</>) : (() => {
  const currentIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === currentPlan.id);
  const planIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === plan.id);
  return planIndex < currentIndex ? 'Fazer downgrade' : (PLAN_CTA[plan.id] || 'Assinar');
@@ -513,7 +584,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <i className={'fas fa-lock text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
 
- {/* Créditos adicionais */}
+ {/* P6: Loading state nos botões de créditos */}
  <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-6'}>
  <div className="flex items-center gap-3 mb-4">
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
@@ -528,8 +599,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {CREDIT_PACKAGES.map(amount => (
  <button
  key={amount}
- onClick={() => onBuyCredits(amount)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300') + ' border rounded-xl p-3 transition-all text-center group'}
+ onClick={() => { if (!isCheckoutLoading) onBuyCredits(amount); }}
+ disabled={isCheckoutLoading}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300') + ' border rounded-xl p-3 transition-all text-center group' + (isCheckoutLoading ? ' opacity-60 cursor-not-allowed' : '')}
  >
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-xl'}>{amount}</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-1'}>créditos</p>
@@ -565,9 +637,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </details>
  </div>
 
- {/* Footer */}
+ {/* P7: Footer com link WhatsApp */}
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-center text-xs mt-6'}>
- Precisa de mais? <a href="#" className={(theme === 'dark' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-900') + ' underline'}>Entre em contato</a> para planos personalizados.
+ Precisa de mais? <a href="https://wa.me/5544991534082?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados%20da%20Vizzu." target="_blank" rel="noopener noreferrer" className={(theme === 'dark' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-900') + ' underline'}>Entre em contato</a> para planos personalizados.
  </p>
  </div>
  );
@@ -576,14 +648,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* ═══════ INTEGRAÇÕES ═══════ */}
  {settingsTab === 'integrations' && (
  <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4 font-serif'}>Integrações</h3>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Integrações</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Conecte o Vizzu com suas plataformas de e-commerce.</p>
  <div className="space-y-2">
  {[
  { icon: 'fab fa-shopify', name: 'Shopify', desc: 'Sincronize produtos' },
  { icon: 'fab fa-wordpress', name: 'WooCommerce', desc: 'Loja WordPress' },
  { icon: 'fas fa-store', name: 'VTEX', desc: 'VTEX IO' },
  ].map(item => (
- <div key={item.name} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between'}>
+ <div key={item.name} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between opacity-60'}>
  <div className="flex items-center gap-3">
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' ' + item.icon + ' text-sm'}></i>
@@ -593,7 +666,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.desc}</p>
  </div>
  </div>
- <button className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] transition-colors'}>Conectar</button>
+ <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-500 border-neutral-700' : 'bg-gray-100 text-gray-400 border-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] border'}>Em breve</span>
  </div>
  ))}
  </div>
@@ -607,7 +680,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Histórico</h3>
  {historyLogs.length > 0 && (
  <button
- onClick={() => { if (confirm('Limpar todo o histórico?')) setHistoryLogs([]); }}
+ onClick={() => setShowClearHistoryModal(true)}
  className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs flex items-center gap-1.5'}
  >
  <i className="fas fa-trash-alt"></i>
@@ -615,19 +688,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </button>
  )}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>{historyLogs.length} atividades registradas</p>
+ {/* P12: Esconder contador quando 0 */}
+ {historyLogs.length > 0 && (
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>{historyLogs.length} atividade{historyLogs.length !== 1 ? 's' : ''} registrada{historyLogs.length !== 1 ? 's' : ''}</p>
+ )}
 
  {historyLogs.length === 0 ? (
  <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-clock-rotate-left text-xl'}></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>As atividades aparecerão aqui</p>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade ainda</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Quando você gerar imagens ou editar produtos, as atividades aparecerão aqui.</p>
  </div>
  ) : (
  <div className="space-y-2">
- {historyLogs.map(log => {
+ {/* P11: Paginação com "Carregar mais" */}
+ {historyLogs.slice(0, historyVisible).map(log => {
  const statusConfig = {
  success: { icon: 'fa-check-circle', color: 'text-green-500', bg: theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50' },
  error: { icon: 'fa-times-circle', color: 'text-red-500', bg: theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50' },
@@ -660,7 +737,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </span>
  </div>
  <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs mb-2'}>{log.details}</p>
- <div className="flex items-center gap-3 text-[10px]">
+ {/* P14: flex-wrap para metadata */}
+ <div className="flex items-center gap-3 text-[10px] flex-wrap">
  <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
  <i className="fas fa-calendar mr-1"></i>
  {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -677,13 +755,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {log.itemsCount} item{log.itemsCount !== 1 ? 's' : ''}
  </span>
  )}
+ {/* P13: Underline no link de download */}
  {log.imageUrl && (
  <a
  href={log.imageUrl}
  target="_blank"
  rel="noopener noreferrer"
  download
- className="text-[#FF6B6B] hover:text-[#FF9F43] transition-colors"
+ className="text-[#FF6B6B] hover:text-[#FF9F43] transition-colors underline"
  onClick={(e) => e.stopPropagation()}
  >
  <i className="fas fa-download mr-1"></i>
@@ -696,11 +775,77 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  );
  })}
- </div>
+ {/* P11: Botão "Carregar mais" com contador */}
+ {historyVisible < historyLogs.length && (
+ <button
+ onClick={() => setHistoryVisible(v => v + HISTORY_PAGE_SIZE)}
+ className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200') + ' w-full py-2.5 rounded-xl text-xs font-medium border transition-colors flex items-center justify-center gap-2'}
+ >
+ <i className="fas fa-chevron-down text-[8px]"></i>
+ Carregar mais ({historyVisible} de {historyLogs.length})
+ </button>
+ )}
+ {historyVisible >= historyLogs.length && historyLogs.length > HISTORY_PAGE_SIZE && (
+ <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-center text-[10px] pt-2'}>
+ Mostrando todas as {historyLogs.length} atividades
+ </p>
  )}
  </div>
  )}
  </div>
+ )}
+ </div>
+
+ {/* ═══════ MODAIS ═══════ */}
+
+ {/* P5: Modal de cancelar assinatura */}
+ <ConfirmModal
+ isOpen={showCancelModal}
+ onCancel={() => setShowCancelModal(false)}
+ onConfirm={async () => {
+ setIsCancelling(true);
+ try {
+ onCancelSubscription();
+ setShowCancelModal(false);
+ } finally {
+ setIsCancelling(false);
+ }
+ }}
+ title="Cancelar assinatura?"
+ description={`Você está no plano ${currentPlan.name}. Ao cancelar, o acesso continuará até o fim do período atual.`}
+ consequences={[
+ 'Seus créditos restantes serão perdidos ao fim do período',
+ 'Você perderá acesso às ferramentas premium',
+ 'Gerações futuras ficarão limitadas ao plano gratuito',
+ ]}
+ confirmLabel="Cancelar assinatura"
+ cancelLabel="Manter plano"
+ variant="danger"
+ isLoading={isCancelling}
+ theme={theme}
+ />
+
+ {/* P10: Modal de limpar histórico */}
+ <ConfirmModal
+ isOpen={showClearHistoryModal}
+ onCancel={() => setShowClearHistoryModal(false)}
+ onConfirm={() => {
+ setHistoryLogs([]);
+ setShowClearHistoryModal(false);
+ setHistoryVisible(HISTORY_PAGE_SIZE);
+ showToast('Histórico limpo.', 'success');
+ }}
+ title="Limpar todo o histórico?"
+ description={`Isso removerá ${historyLogs.length} atividade${historyLogs.length !== 1 ? 's' : ''} do seu histórico.`}
+ consequences={[
+ 'Todas as atividades registradas serão removidas',
+ 'Esta ação não pode ser desfeita',
+ ]}
+ confirmLabel="Limpar histórico"
+ cancelLabel="Cancelar"
+ variant="warning"
+ theme={theme}
+ />
  </div>
  );
 };
