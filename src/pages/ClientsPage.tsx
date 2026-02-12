@@ -23,6 +23,8 @@ interface ClientsPageProps {
  createClientFromProvador: boolean;
  setCreateClientFromProvador: (v: boolean) => void;
  setProvadorClient: (client: Client | null) => void;
+ pendingClientDetail?: Client | null;
+ clearPendingClientDetail?: () => void;
 }
 
 export const ClientsPage: React.FC<ClientsPageProps> = ({
@@ -31,6 +33,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
  createClientFromProvador,
  setCreateClientFromProvador,
  setProvadorClient,
+ pendingClientDetail,
+ clearPendingClientDetail,
 }) => {
  const { theme, navigateTo, showToast, successNotification, setSuccessNotification } = useUI();
  const { openViewer } = useImageViewer();
@@ -77,6 +81,14 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
   window.addEventListener('keydown', handleEsc);
   return () => window.removeEventListener('keydown', handleEsc);
  }, [showCreateClient, showClientDetail, editingClient, showWhatsAppLookModal]);
+
+ // Abrir card do cliente quando vier do Dashboard
+ useEffect(() => {
+  if (pendingClientDetail) {
+   setShowClientDetail(pendingClientDetail);
+   clearPendingClientDetail?.();
+  }
+ }, [pendingClientDetail]);
 
  // Carregar looks quando abre detalhe do cliente
  useEffect(() => {

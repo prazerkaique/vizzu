@@ -7,7 +7,7 @@ import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { supabase } from '../services/supabaseClient';
-import type { Product } from '../types';
+import type { Product, Client } from '../types';
 
 // ── 50 dicas rotativas (carrossel automático) ──
 const TIPS = [
@@ -80,9 +80,10 @@ const TIPS = [
 
 interface DashboardPageProps {
   setProductForCreation?: (p: Product | null) => void;
+  onOpenClientDetail?: (client: Client) => void;
 }
 
-export function DashboardPage({ setProductForCreation }: DashboardPageProps) {
+export function DashboardPage({ setProductForCreation, onOpenClientDetail }: DashboardPageProps) {
  const { theme, navigateTo, setSettingsTab } = useUI();
  const { user } = useAuth();
  const { products } = useProducts();
@@ -341,7 +342,23 @@ export function DashboardPage({ setProductForCreation }: DashboardPageProps) {
    cenario: 'studio',
  };
  const handleCreationClick = (creation: typeof recentCreations[0]) => {
-   if (creation.productId && creation.type !== 'provador' && setProductForCreation) {
+   // Provador: abrir card do cliente
+   if (creation.type === 'provador') {
+     const look = recentProvadorLooks.find(l => l.id === creation.id);
+     if (look && onOpenClientDetail) {
+       const client = clients.find(c => c.id === look.clientId);
+       if (client) { onOpenClientDetail(client); return; }
+     }
+     navigateTo('provador' as Page);
+     return;
+   }
+   // Look Composer: ir para galeria (sem pré-selecionar produto)
+   if (creation.type === 'look') {
+     navigateTo('look-composer' as Page);
+     return;
+   }
+   // Demais: pré-selecionar produto e navegar
+   if (creation.productId && setProductForCreation) {
      const product = products.find(p => p.id === creation.productId);
      if (product) setProductForCreation(product);
    }

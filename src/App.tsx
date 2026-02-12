@@ -116,6 +116,7 @@ function App() {
 
  const [provadorClient, setProvadorClient] = useState<Client | null>(null);
  const [createClientFromProvador, setCreateClientFromProvador] = useState(false);
+ const [pendingClientDetail, setPendingClientDetail] = useState<Client | null>(null);
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
 
  const [whatsappTemplates] = useState<WhatsAppTemplate[]>(DEFAULT_WHATSAPP_TEMPLATES);
@@ -1000,11 +1001,11 @@ function App() {
  // Renderiza página para swipe adjacente (Instagram-style)
  const renderSwipePage = (page: Page): React.ReactNode => {
    switch (page) {
-     case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} />;
+     case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
      case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
-     case 'clients': return <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />;
+     case 'clients': return <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />;
      default: return null;
    }
  };
@@ -1018,7 +1019,7 @@ function App() {
  onBuyCredits={() => { setCreditModalContext({ creditsNeeded: 1, actionContext: 'generic' }); setShowCreditModal(true); }}
  renderSwipePage={renderSwipePage}
  >
- {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} />}
+ {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />}
  {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
 
  {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}
@@ -1186,7 +1187,7 @@ function App() {
  {currentPage === 'products' && <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />}
 
  {/* CLIENTS */}
- {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} />}
+ {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />}
 
  {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
 
