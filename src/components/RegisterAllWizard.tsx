@@ -159,6 +159,7 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
           brand: p.brand || null,
           color: p.color || null,
           category: p.category,
+          sku: `RA-${Date.now().toString(36).toUpperCase()}-${i}`,
           image_front_base64: frontImage,
         };
 
