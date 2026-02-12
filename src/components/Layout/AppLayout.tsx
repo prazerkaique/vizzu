@@ -114,7 +114,8 @@ export function AppLayout({
    active: boolean; startX: number; startY: number; startTime: number;
    decided: boolean; isHorizontal: boolean; isEdgeBack: boolean;
    direction: 'left' | 'right' | null; lastX: number; adjacentPage: Page | null;
- }>({ active: false, startX: 0, startY: 0, startTime: 0, decided: false, isHorizontal: false, isEdgeBack: false, direction: null, lastX: 0, adjacentPage: null });
+   target: HTMLElement | null;
+ }>({ active: false, startX: 0, startY: 0, startTime: 0, decided: false, isHorizontal: false, isEdgeBack: false, direction: null, lastX: 0, adjacentPage: null, target: null });
 
  useEffect(() => {
    const el = document.getElementById('swipe-root');
@@ -144,6 +145,7 @@ export function AppLayout({
        decided: false, isHorizontal: false,
        isEdgeBack: !isMain && t.clientX <= EDGE_ZONE,
        direction: null, lastX: t.clientX, adjacentPage: null,
+       target: e.target as HTMLElement,
      };
    };
 
@@ -168,6 +170,16 @@ export function AppLayout({
          s.decided = true;
          s.isHorizontal = Math.abs(dx) > Math.abs(dy);
          if (s.isHorizontal) {
+           // Don't hijack swipe from range inputs or horizontally scrollable containers
+           const tgt = s.target;
+           if (tgt) {
+             if (tgt.closest('input[type="range"]')) { s.active = false; return; }
+             let check: HTMLElement | null = tgt;
+             while (check && check.id !== 'swipe-root') {
+               if (check.scrollWidth > check.clientWidth + 1) { s.active = false; return; }
+               check = check.parentElement as HTMLElement;
+             }
+           }
            s.direction = dx < 0 ? 'left' : 'right';
            const adj = getAdjacentPage(s.direction);
            if (!adj) { s.active = false; return; }

@@ -301,6 +301,7 @@ export interface SavedModel {
   userId: string;
   name: string;
   gender: 'woman' | 'man';
+  modelType?: 'ai' | 'real';
 
   // Características físicas
   ethnicity: string;

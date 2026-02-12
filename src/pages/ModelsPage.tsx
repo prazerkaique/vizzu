@@ -6,6 +6,8 @@ import { supabase } from '../services/supabaseClient';
 import { generateModelImages } from '../lib/api/studio';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { ModelGridSkeleton } from '../components/LoadingSkeleton';
+import heic2any from 'heic2any';
+import { compressImage } from '../utils/imageCompression';
 
 // Componente de carrossel para cards de modelos
 const ModelCardCarousel: React.FC<{
@@ -183,8 +185,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const [renamingModel, setRenamingModel] = useState<SavedModel | null>(null);
  const [renameValue, setRenameValue] = useState('');
  const [savingRename, setSavingRename] = useState(false);
- const [modelWizardStep, setModelWizardStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+ const [modelWizardStep, setModelWizardStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
  const [newModel, setNewModel] = useState({
+ modelType: null as 'ai' | 'real' | null,
  name: '',
  gender: 'woman' as 'woman' | 'man',
  ethnicity: 'brazilian',
@@ -204,6 +207,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  hairNotes: '',
  skinNotes: '',
  });
+ const [realModelPhotos, setRealModelPhotos] = useState<{ front: string | null; back: string | null; face: string | null }>({ front: null, back: null, face: null });
+ const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
  const [savingModel, setSavingModel] = useState(false);
  const [generatingModelImages, setGeneratingModelImages] = useState(false);
  const [modelGenerationProgress, setModelGenerationProgress] = useState(0);
@@ -267,6 +272,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  userId: m.user_id,
  name: m.name,
  gender: m.gender,
+ modelType: (m.model_type as 'ai' | 'real') || 'ai',
  ethnicity: m.ethnicity,
  skinTone: m.skin_tone,
  bodyType: m.body_type,
@@ -363,6 +369,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const resetModelWizard = () => {
  setModelWizardStep(1);
  setNewModel({
+ modelType: null,
  name: '',
  gender: 'woman',
  ethnicity: 'brazilian',
@@ -382,9 +389,23 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  hairNotes: '',
  skinNotes: '',
  });
+ setRealModelPhotos({ front: null, back: null, face: null });
+ setUploadingPhoto(null);
  setEditingModel(null);
  setModelPreviewImages(null);
  setGeneratingModelImages(false);
+ };
+
+ // Processa arquivo de imagem (HEIC→PNG + compressão)
+ const processImageFile = async (file: File): Promise<string> => {
+ let processedFile: File | Blob = file;
+ if (file.type === 'image/heic' || file.type === 'image/heif' ||
+   file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+   const convertedBlob = await heic2any({ blob: file, toType: 'image/png', quality: 0.9 });
+   processedFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+ }
+ const result = await compressImage(processedFile);
+ return result.base64;
  };
 
  const generateModelPrompt = () => {
@@ -548,6 +569,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const modelData = {
  user_id: user.id,
  name: newModel.name.trim(),
+ model_type: 'ai',
  gender: newModel.gender,
  ethnicity: newModel.ethnicity,
  skin_tone: newModel.skinTone,
@@ -606,6 +628,83 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }
  };
 
+ const saveRealModel = async () => {
+ if (!user || !newModel.name.trim() || !realModelPhotos.front) return null;
+
+ setSavingModel(true);
+ try {
+   const modelId = crypto.randomUUID();
+   const uploadedImages: { front?: string; back?: string; face?: string } = {};
+
+   for (const type of ['front', 'back', 'face'] as const) {
+     const base64 = realModelPhotos[type];
+     if (!base64) continue;
+
+     const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
+     const byteCharacters = atob(base64Data);
+     const byteNumbers = new Array(byteCharacters.length);
+     for (let i = 0; i < byteCharacters.length; i++) {
+       byteNumbers[i] = byteCharacters.charCodeAt(i);
+     }
+     const byteArray = new Uint8Array(byteNumbers);
+     const mimeType = base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
+     const extension = mimeType.split('/')[1] === 'webp' ? 'webp' : mimeType.split('/')[1] === 'png' ? 'png' : 'jpg';
+     const blob = new Blob([byteArray], { type: mimeType });
+
+     const storagePath = `models/${user.id}/${modelId}/${type}.${extension}`;
+     const { error: uploadError } = await supabase.storage
+       .from('products')
+       .upload(storagePath, blob, { upsert: true });
+
+     if (uploadError) throw uploadError;
+
+     const { data: urlData } = supabase.storage.from('products').getPublicUrl(storagePath);
+     uploadedImages[type] = urlData.publicUrl;
+   }
+
+   const modelData = {
+     id: modelId,
+     user_id: user.id,
+     name: newModel.name.trim(),
+     model_type: 'real',
+     gender: newModel.gender,
+     ethnicity: 'other',
+     skin_tone: 'medium',
+     body_type: 'average',
+     age_range: 'adult',
+     height: 'medium',
+     hair_color: 'brown',
+     hair_style: 'straight',
+     eye_color: 'brown',
+     expression: 'neutral',
+     status: 'ready',
+     images: uploadedImages,
+     reference_image_url: uploadedImages.front || null,
+   };
+
+   const { data, error } = await supabase
+     .from('saved_models')
+     .insert(modelData)
+     .select()
+     .single();
+
+   if (error) throw error;
+
+   await loadSavedModels();
+   setShowCreateModel(false);
+   resetModelWizard();
+   showToast(`Modelo "${newModel.name}" criado com sucesso!`, 'success');
+   onModelCreated?.(data.id);
+   return data;
+ } catch (error) {
+   console.error('Erro ao salvar modelo real:', error);
+   showToast('Erro ao salvar modelo. Tente novamente.', 'error');
+   return null;
+ } finally {
+   setSavingModel(false);
+ }
+ };
+
  const deleteModel = useCallback(async (model: SavedModel) => {
  if (!user) return;
 
@@ -633,6 +732,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
     id: model.id,
     user_id: user.id,
     name: model.name,
+    model_type: model.modelType || 'ai',
     gender: model.gender,
     ethnicity: model.ethnicity,
     skin_tone: model.skinTone,
@@ -726,16 +826,22 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
   </div>
   {isDefaultModel(model.id) ? (
    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-white/90 text-[#FF6B6B]">Padrão</div>
+  ) : model.modelType === 'real' ? (
+   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-blue-500/90 text-white"><i className="fas fa-camera mr-0.5 text-[6px]"></i> Real</div>
   ) : (
-   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-white/90 text-neutral-600">Criado</div>
+   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wide uppercase bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white"><i className="fas fa-wand-magic-sparkles mr-0.5 text-[6px]"></i> IA</div>
   )}
   </div>
   <div className="p-3">
   <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'} title={model.name}>{model.name}</h3>
   <div className="flex flex-wrap gap-1">
    <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('gender', model.gender)}</span>
+   {model.modelType !== 'real' && (
+   <>
    <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('skinTone', model.skinTone)}</span>
    <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('ageRange', model.ageRange)}</span>
+   </>
+   )}
   </div>
   </div>
   </div>
@@ -932,35 +1038,231 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <i className="fas fa-times"></i>
  </button>
  </div>
- {/* Step Indicators */}
+ {/* Step Indicators — dinâmico por tipo de modelo */}
+ {(() => {
+ const steps = newModel.modelType === 'real'
+ ? [{ step: 1, label: 'Tipo' }, { step: 2, label: 'Fotos' }, { step: 3, label: 'Salvar' }]
+ : newModel.modelType === 'ai'
+ ? [{ step: 1, label: 'Tipo' }, { step: 2, label: 'Gênero' }, { step: 3, label: 'Físico' }, { step: 4, label: 'Aparência' }, { step: 5, label: 'Proporções' }, { step: 6, label: 'Finalizar' }]
+ : [{ step: 1, label: 'Tipo' }];
+ return (
  <div className="flex items-center justify-between gap-2">
- {[
- { step: 1, label: 'Gênero' },
- { step: 2, label: 'Físico' },
- { step: 3, label: 'Aparência' },
- { step: 4, label: 'Proporções' },
- { step: 5, label: 'Finalizar' },
- ].map(({ step, label }) => (
+ {steps.map(({ step, label }) => (
  <div key={step} className="flex-1 text-center">
  <div className={'mx-auto w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium mb-1 transition-all ' + (
- modelWizardStep === step
- ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : modelWizardStep > step
- ? (theme === 'dark' ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-[#FF6B6B]/10 text-[#FF6B6B]')
- : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400')
+   modelWizardStep === step
+   ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
+   : modelWizardStep > step
+   ? (theme === 'dark' ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-[#FF6B6B]/10 text-[#FF6B6B]')
+   : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400')
  )}>
- {modelWizardStep > step ? <i className="fas fa-check text-[10px]"></i> : step}
+   {modelWizardStep > step ? <i className="fas fa-check text-[10px]"></i> : step}
  </div>
  <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{label}</span>
  </div>
  ))}
  </div>
+ );
+ })()}
  </div>
 
  {/* Content */}
  <div className="flex-1 overflow-y-auto p-4">
- {/* Step 1: Gênero */}
+ {/* Step 1: Tipo de Modelo */}
  {modelWizardStep === 1 && (
+ <div className="space-y-4">
+ <div className="text-center mb-4">
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Que tipo de modelo?</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Crie com IA ou use fotos de uma pessoa real</p>
+ </div>
+ <div className="grid grid-cols-2 gap-4">
+ <button
+ onClick={() => { setNewModel({ ...newModel, modelType: 'ai' }); setModelWizardStep(2); }}
+ className={'p-6 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5' : 'border-gray-200 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5')}
+ >
+ <i className={'fas fa-wand-magic-sparkles text-4xl mb-3 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>Modelo IA</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>Criar modelo virtual personalizado</p>
+ <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
+ </button>
+ <button
+ onClick={() => { setNewModel({ ...newModel, modelType: 'real' }); setModelWizardStep(2); }}
+ className={'p-6 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-blue-500/50 hover:bg-blue-500/5' : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-500/5')}
+ >
+ <i className={'fas fa-camera text-4xl mb-3 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>Modelo Real</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>Enviar fotos de uma pessoa real</p>
+ <p className="text-green-500 text-[9px] font-medium mt-2">Grátis</p>
+ </button>
+ </div>
+ </div>
+ )}
+
+ {/* ═══ FLUXO MODELO REAL ═══ */}
+
+ {/* Step 2 (Real): Gênero + Upload de Fotos */}
+ {modelWizardStep === 2 && newModel.modelType === 'real' && (
+ <div className="space-y-4">
+ <div className="text-center mb-2">
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold font-serif'}>Envie as fotos do modelo</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Foto de frente é obrigatória. Costas e rosto são opcionais.</p>
+ </div>
+
+ {/* Gênero - toggle simples */}
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Gênero</label>
+ <div className="flex gap-2">
+ {MODEL_OPTIONS.gender.map(opt => (
+   <button
+   key={opt.id}
+   onClick={() => setNewModel({ ...newModel, gender: opt.id as 'woman' | 'man' })}
+   className={'flex-1 py-2 rounded-lg text-xs font-medium transition-colors ' + (
+     newModel.gender === opt.id
+     ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
+     : (theme === 'dark' ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600')
+   )}
+   >
+   <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' mr-1.5'}></i>{opt.label}
+   </button>
+ ))}
+ </div>
+ </div>
+
+ {/* Grid 3 colunas para upload de fotos */}
+ <div className="grid grid-cols-3 gap-3">
+ {(['front', 'back', 'face'] as const).map(type => {
+   const labels = { front: 'Frente', back: 'Costas', face: 'Rosto' };
+   const icons = { front: 'fa-user', back: 'fa-user-slash', face: 'fa-face-smile' };
+   const required = type === 'front';
+   const photo = realModelPhotos[type];
+   const isUploading = uploadingPhoto === type;
+   return (
+   <div key={type} className="text-center">
+     <label className="block cursor-pointer">
+     <div className={'aspect-[3/4] rounded-xl border-2 border-dashed overflow-hidden transition-all ' + (
+       photo
+       ? 'border-solid ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-300')
+       : required
+       ? (theme === 'dark' ? 'border-[#FF6B6B]/40 hover:border-[#FF6B6B]/70' : 'border-[#FF6B6B]/30 hover:border-[#FF6B6B]/60')
+       : (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-300 hover:border-gray-400')
+     )}>
+       {photo ? (
+       <div className="relative w-full h-full group">
+         <img src={photo} alt={labels[type]} className="w-full h-full object-cover" />
+         <button
+         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRealModelPhotos(prev => ({ ...prev, [type]: null })); }}
+         className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
+         >
+         <i className="fas fa-times"></i>
+         </button>
+       </div>
+       ) : isUploading ? (
+       <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+         <div className="animate-spin w-5 h-5 border-2 border-[#FF6B6B] border-t-transparent rounded-full"></div>
+         <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px]'}>Processando...</span>
+       </div>
+       ) : (
+       <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
+         <i className={'fas ' + icons[type] + ' text-xl ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
+         <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-medium'}>{labels[type]}</span>
+         {required && <span className="text-[8px] text-[#FF6B6B] font-medium">Obrigatório</span>}
+       </div>
+       )}
+     </div>
+     <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={async (e) => {
+       const file = e.target.files?.[0];
+       if (!file) return;
+       setUploadingPhoto(type);
+       try {
+       const base64 = await processImageFile(file);
+       setRealModelPhotos(prev => ({ ...prev, [type]: base64 }));
+       } catch (err) {
+       showToast('Erro ao processar imagem. Tente outro formato.', 'error');
+       }
+       setUploadingPhoto(null);
+       e.target.value = '';
+     }} />
+     </label>
+     <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1 block'}>{labels[type]} {required ? '' : '(opc.)'}</span>
+   </div>
+   );
+ })}
+ </div>
+
+ <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-lg border p-3'}>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>
+   <i className="fas fa-info-circle mr-1 text-blue-400"></i>
+   Use fotos com boa iluminação, fundo limpo e corpo inteiro visível para melhores resultados. Você é responsável por ter o consentimento da pessoa fotografada.
+ </p>
+ </div>
+ </div>
+ )}
+
+ {/* Step 3 (Real): Nome + Preview + Salvar */}
+ {modelWizardStep === 3 && newModel.modelType === 'real' && (
+ <div className="space-y-4">
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
+ <input
+   type="text"
+   value={newModel.name}
+   onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
+   placeholder="Ex: Maria, Pedro, Modelo Principal..."
+   maxLength={30}
+   className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
+ />
+ </div>
+
+ {/* Preview das fotos */}
+ <div className="grid grid-cols-3 gap-2">
+ {(['front', 'back', 'face'] as const).map(type => {
+   const labels = { front: 'Frente', back: 'Costas', face: 'Rosto' };
+   const photo = realModelPhotos[type];
+   if (!photo) return (
+   <div key={type} className={'aspect-[3/4] rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
+     <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-[10px]'}>{labels[type]}</span>
+   </div>
+   );
+   return (
+   <div key={type} className="text-center">
+     <div className={'aspect-[3/4] rounded-xl overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+     <img src={photo} alt={labels[type]} className="w-full h-full object-cover" />
+     </div>
+     <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type]}</span>
+   </div>
+   );
+ })}
+ </div>
+
+ {/* Resumo */}
+ <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-3'}>
+ <div className="flex items-center justify-between text-xs">
+   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Tipo</span>
+   <span className="text-blue-400 font-medium"><i className="fas fa-camera mr-1"></i>Modelo Real</span>
+ </div>
+ <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+ <div className="flex items-center justify-between text-xs">
+   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Gênero</span>
+   <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900')}>{newModel.gender === 'woman' ? 'Feminino' : 'Masculino'}</span>
+ </div>
+ <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+ <div className="flex items-center justify-between text-xs">
+   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Fotos</span>
+   <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900')}>{[realModelPhotos.front, realModelPhotos.back, realModelPhotos.face].filter(Boolean).length} de 3</span>
+ </div>
+ <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+ <div className="flex items-center justify-between text-xs">
+   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Créditos</span>
+   <span className="text-green-500 font-medium">Grátis</span>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* ═══ FLUXO MODELO IA ═══ */}
+
+ {/* Step 2 (IA): Gênero */}
+ {modelWizardStep === 2 && newModel.modelType === 'ai' && (
  <div className="space-y-4">
  <div className="text-center mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Selecione o Gênero</h3>
@@ -985,8 +1287,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  )}
 
- {/* Step 2: Físico */}
- {modelWizardStep === 2 && (
+ {/* Step 3 (IA): Físico */}
+ {modelWizardStep === 3 && newModel.modelType === 'ai' && (
  <div className="space-y-4">
  {/* Faixa Etária - Dropdown (8 opções) */}
  <div>
@@ -1099,8 +1401,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  )}
 
- {/* Step 3: Aparência */}
- {modelWizardStep === 3 && (
+ {/* Step 4 (IA): Aparência */}
+ {modelWizardStep === 4 && newModel.modelType === 'ai' && (
  <div className="space-y-4">
  {/* Tipo de Cabelo - Chips (desabilitado se careca) */}
  <div className={'transition-opacity ' + (newModel.hairLength === 'bald' ? 'opacity-40 pointer-events-none' : '')}>
@@ -1240,8 +1542,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  )}
 
- {/* Step 4: Proporções */}
- {modelWizardStep === 4 && (
+ {/* Step 5 (IA): Proporções */}
+ {modelWizardStep === 5 && newModel.modelType === 'ai' && (
  <div className="space-y-4">
  {/* Tamanho do Busto - Slider (3 opções, só para mulheres adultas) */}
  {newModel.gender === 'woman' && newModel.ageRange !== 'child' && (
@@ -1325,8 +1627,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  )}
 
- {/* Step 5: Criar e Visualizar */}
- {modelWizardStep === 5 && (
+ {/* Step 6 (IA): Criar e Visualizar */}
+ {modelWizardStep === 6 && newModel.modelType === 'ai' && (
  <div className="space-y-4">
  {/* Estado: Gerando */}
  {generatingModelImages && (
@@ -1494,17 +1796,69 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Footer */}
  <div className={'p-4 border-t flex justify-between gap-2 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
- {/* Steps 1-4: Cancelar/Voltar + Próximo */}
- {modelWizardStep < 5 && (
- <>
+
+ {/* Step 1 (Tipo): só Cancelar — avança ao clicar nos cards */}
+ {modelWizardStep === 1 && (
  <button
- onClick={() => modelWizardStep > 1 ? setModelWizardStep((modelWizardStep - 1) as 1 | 2 | 3 | 4 | 5) : (setShowCreateModel(false), setEditingModel(null))}
+ onClick={() => { setShowCreateModel(false); setEditingModel(null); }}
  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
- {modelWizardStep === 1 ? 'Cancelar' : 'Voltar'}
+ Cancelar
+ </button>
+ )}
+
+ {/* ═══ Footer Modelo REAL ═══ */}
+ {newModel.modelType === 'real' && modelWizardStep === 2 && (
+ <>
+ <button
+ onClick={() => { setNewModel({ ...newModel, modelType: null }); setModelWizardStep(1); }}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ >
+ Voltar
  </button>
  <button
- onClick={() => setModelWizardStep((modelWizardStep + 1) as 1 | 2 | 3 | 4 | 5)}
+ onClick={() => setModelWizardStep(3)}
+ disabled={!realModelPhotos.front}
+ className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium transition-opacity ' + (!realModelPhotos.front ? 'opacity-50 cursor-not-allowed' : '')}
+ >
+ Próximo
+ </button>
+ </>
+ )}
+ {newModel.modelType === 'real' && modelWizardStep === 3 && (
+ <>
+ <button
+ onClick={() => setModelWizardStep(2)}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ >
+ Voltar
+ </button>
+ <button
+ onClick={saveRealModel}
+ disabled={!newModel.name.trim() || savingModel}
+ className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (!newModel.name.trim() || savingModel ? 'opacity-50 cursor-not-allowed' : '')}
+ >
+ {savingModel ? (
+ <><div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>Salvando...</>
+ ) : (
+ <><i className="fas fa-check"></i>Salvar Modelo</>
+ )}
+ </button>
+ </>
+ )}
+
+ {/* ═══ Footer Modelo IA ═══ */}
+ {/* Steps 2-5 (IA): Voltar + Próximo */}
+ {newModel.modelType === 'ai' && modelWizardStep >= 2 && modelWizardStep <= 5 && (
+ <>
+ <button
+ onClick={() => modelWizardStep === 2 ? (setNewModel({ ...newModel, modelType: null }), setModelWizardStep(1)) : setModelWizardStep((modelWizardStep - 1) as 1 | 2 | 3 | 4 | 5 | 6)}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ >
+ Voltar
+ </button>
+ <button
+ onClick={() => setModelWizardStep((modelWizardStep + 1) as 1 | 2 | 3 | 4 | 5 | 6)}
  className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium"
  >
  Próximo
@@ -1512,8 +1866,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </>
  )}
 
- {/* Step 5: Estados diferentes */}
- {modelWizardStep === 5 && (
+ {/* Step 6 (IA): Criar e Visualizar */}
+ {newModel.modelType === 'ai' && modelWizardStep === 6 && (
  <>
  {/* Gerando: só mostra loading */}
  {generatingModelImages && (
@@ -1528,7 +1882,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {!generatingModelImages && !modelPreviewImages && (
  <>
  <button
- onClick={() => setModelWizardStep(4)}
+ onClick={() => setModelWizardStep(5)}
  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
  Voltar
@@ -1701,7 +2055,18 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </p>
  </div>
  )}
- {/* Características */}
+ {/* Características (só para modelos IA) */}
+ {showModelDetail.modelType === 'real' ? (
+ <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + ' rounded-xl border p-4'}>
+ <div className="flex items-center gap-2 mb-2">
+ <i className="fas fa-camera text-blue-400 text-sm"></i>
+ <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Modelo Real</h4>
+ </div>
+ <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
+ Criado com fotos reais. Gênero: {getModelLabel('gender', showModelDetail.gender)}.
+ </p>
+ </div>
+ ) : (
  <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50') + ' rounded-xl p-4'}>
  <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Características</h4>
  <div className="grid grid-cols-2 gap-2 text-xs">
@@ -1755,6 +2120,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}
  </div>
  </div>
+ )}
  </div>
  {/* Footer */}
  <div className={'p-4 border-t flex gap-2 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>

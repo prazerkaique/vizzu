@@ -1111,10 +1111,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  };
  const modelPromptParts: string[] = [];
  if (selectedModel) {
- if (selectedModel.ageRange) modelPromptParts.push(ageRangeDescriptions[selectedModel.ageRange] || selectedModel.ageRange);
- modelPromptParts.push(selectedModel.gender === 'woman' ? 'female' : 'male');
- if (selectedModel.ethnicity) modelPromptParts.push(selectedModel.ethnicity);
- if (selectedModel.ageRange !== 'child' && selectedModel.bodyType) modelPromptParts.push(selectedModel.bodyType);
+ if (selectedModel.modelType === 'real') {
+   // Modelo real: Gemini infere da foto de referência
+   modelPromptParts.push(selectedModel.gender === 'woman' ? 'female model' : 'male model');
+ } else {
+   if (selectedModel.ageRange) modelPromptParts.push(ageRangeDescriptions[selectedModel.ageRange] || selectedModel.ageRange);
+   modelPromptParts.push(selectedModel.gender === 'woman' ? 'female' : 'male');
+   if (selectedModel.ethnicity) modelPromptParts.push(selectedModel.ethnicity);
+   if (selectedModel.ageRange !== 'child' && selectedModel.bodyType) modelPromptParts.push(selectedModel.bodyType);
+ }
  }
  const modelPrompt = modelPromptParts.join(' ') || 'female brazilian average adult';
 
@@ -1318,12 +1323,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  backgroundPrompt: backgroundPromptFinal,
  solidColor: solidColorFinal,
  sceneHint: sceneHintFinal,
- modelDetails: selectedModel ? [
+ modelDetails: selectedModel ? (
+ selectedModel.modelType === 'real'
+ ? 'Use the reference image as the exact person. Preserve face, body shape, and all physical features exactly as shown in the reference photo.'
+ : [
  `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression`,
  selectedModel.physicalNotes ? `Physical: ${selectedModel.physicalNotes}` : '',
  selectedModel.hairNotes ? `Face & Hair: ${selectedModel.hairNotes}` : '',
  selectedModel.skinNotes ? `Skin: ${selectedModel.skinNotes}` : '',
- ].filter(Boolean).join('. ') : '',
+ ].filter(Boolean).join('. ')
+ ) : '',
  viewsMode: 'front', // Sempre 'front' na primeira chamada
  framing: framing, // Enquadramento selecionado pelo usuário
  // Resolução da imagem (2k ou 4k)
@@ -1375,12 +1384,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  backgroundPrompt: backgroundPromptFinal,
  solidColor: solidColorFinal,
  sceneHint: sceneHintFinal,
- modelDetails: selectedModel ? [
+ modelDetails: selectedModel ? (
+ selectedModel.modelType === 'real'
+ ? 'Use the reference image as the exact person. Preserve face, body shape, and all physical features exactly as shown in the reference photo. Back view, from behind.'
+ : [
  `${selectedModel.hairColor || ''} hair, ${selectedModel.hairStyle || ''}, ${selectedModel.expression || ''} expression, back view, from behind`,
  selectedModel.physicalNotes ? `Physical: ${selectedModel.physicalNotes}` : '',
  selectedModel.hairNotes ? `Face & Hair: ${selectedModel.hairNotes}` : '',
  selectedModel.skinNotes ? `Skin: ${selectedModel.skinNotes}` : '',
- ].filter(Boolean).join('. ') : 'back view, from behind',
+ ].filter(Boolean).join('. ')
+ ) : 'back view, from behind',
  viewsMode: 'front', // O workflow trata como 'front' mas usa as imagens de costas
  framing: framing, // Mesmo enquadramento da frente
  // Indicar que é imagem de costas para o n8n fazer UPDATE ao invés de INSERT
@@ -1798,13 +1811,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onClick={() => setLookMode('composer')}
  className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'composer' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
- Suas Peças <span className="opacity-60">(1 crédito)</span>
+ Suas Peças
  </button>
  <button
  onClick={() => setLookMode('describe')}
  className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${lookMode === 'describe' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : isDark ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600'}`}
  >
- Composição Genérica <span className="opacity-60">(1 crédito)</span>
+ Composição Genérica
  </button>
  </div>
 
@@ -2260,7 +2273,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera uma imagem frontal do look</p>
  </div>
  <div className="text-right">
- <span className="text-[#FF6B6B] font-semibold text-sm">{lookMode === 'composer' ? 20 : 10} créditos</span>
+ <span className="text-[#FF6B6B] font-semibold text-sm">{RESOLUTION_COST[resolution]} crédito{RESOLUTION_COST[resolution] > 1 ? 's' : ''}</span>
  </div>
  {viewsMode === 'front' && (
  <i className="fas fa-check-circle text-[#FF6B6B]"></i>
@@ -2282,7 +2295,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera duas imagens: vista frontal e traseira</p>
  </div>
  <div className="text-right">
- <span className="text-[#FF6B6B] font-semibold text-sm">{(lookMode === 'composer' ? 20 : 10) * 2} créditos</span>
+ <span className="text-[#FF6B6B] font-semibold text-sm">{RESOLUTION_COST[resolution] * 2} crédito{RESOLUTION_COST[resolution] * 2 > 1 ? 's' : ''}</span>
  </div>
  {viewsMode === 'front-back' && (
  <i className="fas fa-check-circle text-[#FF6B6B]"></i>

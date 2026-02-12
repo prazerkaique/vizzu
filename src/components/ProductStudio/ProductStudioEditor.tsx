@@ -1353,6 +1353,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const frontAngle = completedAngleStatuses.find(a => a.angle === 'front' && a.status === 'completed');
    if (!frontAngle?.url || !userId || !currentGenerationId) return;
 
+   const label = angleLabels[angleId as ProductStudioAngle] || angleId;
    setRetryingAngle(angleId);
 
    try {
@@ -1383,12 +1384,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
            : a
          )
        );
+       showToast(`Ângulo "${label}" gerado com sucesso!`, 'success');
      } else {
        // Falha — incrementar tentativas
        setRetryAttempts(prev => ({ ...prev, [angleId]: (prev[angleId] || 0) + 1 }));
+       showToast(`Ângulo "${label}" falhou novamente. Você pode reportar para reembolso.`, 'error');
      }
    } catch {
      setRetryAttempts(prev => ({ ...prev, [angleId]: (prev[angleId] || 0) + 1 }));
+     showToast(`Ângulo "${label}" falhou novamente. Você pode reportar para reembolso.`, 'error');
    } finally {
      setRetryingAngle(null);
    }
@@ -2823,9 +2827,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/30'}`}></div>
 
  {/* Container do conteúdo */}
- <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
+ <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-4 max-h-[100dvh] overflow-y-auto">
  {/* Motion personalizado em loop (crop 20% cada lado para esconder watermark) */}
- <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
+ <div className="w-44 h-44 mb-4 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0">
  <img
  src="/Scene-1.gif"
  alt=""
@@ -2835,18 +2839,18 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
 
  {/* Título */}
- <h2 className={`text-2xl font-bold font-serif mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <h2 className={`text-xl font-bold font-serif mb-1 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
  Criando suas fotos...
  </h2>
 
  {/* Frase de loading */}
- <p className={`text-sm mb-6 text-center min-h-[20px] transition-all duration-300 ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
+ <p className={`text-sm mb-4 text-center min-h-[20px] transition-all duration-300 ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
  {currentLoadingText}
  </p>
 
  {/* Barra de progresso */}
- <div className="w-full max-w-xs mb-4">
- <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
+ <div className="w-full max-w-xs mb-3">
+ <div className={`h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${currentProgress}%` }}
@@ -2870,8 +2874,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
 
  {/* Cards dos ângulos sendo gerados */}
- <div className="w-full max-w-xs mb-6">
- <div className="flex flex-col gap-2">
+ <div className="w-full max-w-xs mb-4">
+ <div className="flex flex-col gap-1.5">
  {selectedAngles.map((angleId, idx) => {
  // v9: usar estado REAL do polling incremental (se disponível)
  const angleStatus = completedAngleStatuses.find(a => a.angle === angleId);
@@ -2904,7 +2908,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return (
  <div
  key={angleId}
- className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-500 ${
+ className={`flex items-center gap-3 px-3 py-2 rounded-xl border transition-all duration-500 ${
  isAngleDone
  ? (theme === 'dark' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200')
  : isAngleFailed
@@ -2915,7 +2919,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }`}
  >
  {/* Ícone do ângulo */}
- <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all duration-500 ${
+ <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all duration-500 ${
  isAngleDone
  ? 'bg-green-500/20 text-green-400'
  : isAngleFailed
@@ -2950,7 +2954,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <img
  src={angleStatus.url}
  alt={label}
- className="w-8 h-8 rounded-lg object-cover border border-green-500/30"
+ className="w-7 h-7 rounded-lg object-cover border border-green-500/30"
  />
  )}
 
@@ -3000,6 +3004,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </p>
  );
  })()}
+ {retryingAngle && (
+   <p className="text-xs text-center mt-1 text-[#FF9F43]">
+     <i className="fas fa-sync-alt fa-spin mr-1"></i>
+     Retentando... pode levar até 1 minuto
+   </p>
+ )}
  </div>
 
  {/* Botões de ação — mudam conforme o estado */}
@@ -3014,7 +3024,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        <span>{completedAngleStatuses.some(a => a.status === 'completed') ? 'Ver resultados' : 'Fechar'}</span>
      </button>
      <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}>
-       Você pode tentar novamente os ângulos que falharam
+       Clique em "Tentar de novo" nos ângulos que falharam. Você pode minimizar — será notificado quando terminar.
      </p>
    </>
  ) : (

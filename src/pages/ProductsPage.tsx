@@ -488,6 +488,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    const body: Record<string, any> = {
    user_id: user?.id,
    name: newProduct.name,
+   sku: `MAN-${Date.now().toString(36).toUpperCase()}`,
    brand: newProduct.brand || null,
    color: newProduct.color || null,
    category: newProduct.category,

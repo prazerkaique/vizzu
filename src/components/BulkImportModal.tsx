@@ -532,7 +532,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, onComplete, userId,
           category: p.category || null,
           collection: p.collection || null,
           description: p.description || null,
-          sku: p.sku || null,
+          sku: p.sku || `XML-${Date.now().toString(36).toUpperCase()}-${i}`,
           price: p.price || null,
         };
 
