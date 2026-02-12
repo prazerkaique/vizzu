@@ -146,6 +146,12 @@ export interface Product {
   // NOVO: Flag para saber se tem foto de detalhe
   hasDetailImage?: boolean;
 
+  // Catálogo / Venda
+  price?: number;
+  priceSale?: number;
+  sizes?: string[];
+  isForSale?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -194,6 +200,7 @@ export interface LookCompositionItem {
   sku?: string;
   productId?: string;
   imageId?: string;
+  price?: number;
 }
 
 export interface LookComposition {

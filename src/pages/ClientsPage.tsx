@@ -404,15 +404,24 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
    accessory2: '⌚',
   };
   const items: string[] = [];
+  let totalPrice = 0;
   const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
   lookKeys.forEach(key => {
    const item = lookItems[key];
    if (item && item.name) {
     const emoji = lookEmojis[key] || '👔';
-    items.push(`${emoji} ${item.name} — Consulte`);
+    const priceStr = item.price
+     ? `R$ ${item.price.toFixed(2).replace('.', ',')}`
+     : 'Consulte';
+    items.push(`${emoji} ${item.name} — ${priceStr}`);
+    if (item.price) totalPrice += item.price;
    }
   });
-  return items.join('\n');
+  let result = items.join('\n');
+  if (totalPrice > 0) {
+   result += `\n\n💰 Total do look: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
+  }
+  return result;
  };
 
  const generateWhatsAppLookMessage = (client: Client, look: ClientLook): string => {

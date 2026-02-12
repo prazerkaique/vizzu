@@ -111,6 +111,11 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const [csGenerations, setCsGenerations] = useState<CreativeStillGeneration[]>([]);
   const [isLoadingCS, setIsLoadingCS] = useState(true);
 
+  // Sales tab inline edit
+  const [isEditingSales, setIsEditingSales] = useState(false);
+  const [salesForm, setSalesForm] = useState({ price: '', priceSale: '', sizes: [] as string[], isForSale: false });
+  const [isSavingSales, setIsSavingSales] = useState(false);
+
   // Delete & Edit states
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -164,13 +169,15 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const ccCount = ccImages.length;
 
   // ── Tabs ──
+  const hasSalesData = !!(product.price || product.isForSale);
   const tabs: Tab[] = useMemo(() => [
     { id: 'ps', label: 'Vizzu Product Studio®', icon: 'fa-camera', count: psCount },
     { id: 'cs', label: 'Vizzu Still Criativo®', icon: 'fa-gem', count: csCount },
     { id: 'lc', label: 'Vizzu Look Composer®', icon: 'fa-layer-group', count: lcCount },
     { id: 'sr', label: 'Vizzu Studio Ready®', icon: 'fa-cube', count: srCount },
     { id: 'cc', label: 'Vizzu Cenário Criativo®', icon: 'fa-mountain-sun', count: ccCount },
-  ], [psCount, csCount, lcCount, srCount, ccCount]);
+    { id: 'sales', label: 'Vendas', icon: 'fa-tag', count: hasSalesData ? 1 : 0 },
+  ], [psCount, csCount, lcCount, srCount, ccCount, hasSalesData]);
 
   // Auto-selecionar primeira aba com conteúdo
   const firstNonEmpty = tabs.find(t => t.count > 0)?.id || 'ps';
@@ -564,6 +571,161 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     );
   };
 
+  // ── Vendas Tab ──
+  const handleSaveSales = async () => {
+    if (!userId) return;
+    setIsSavingSales(true);
+    try {
+      const { error } = await supabase.from('products').update({
+        price: parseFloat(salesForm.price) || null,
+        price_sale: parseFloat(salesForm.priceSale) || null,
+        sizes: salesForm.sizes.length > 0 ? salesForm.sizes : [],
+        is_for_sale: salesForm.isForSale,
+      }).eq('id', product.id).eq('user_id', userId);
+      if (error) throw error;
+      showToast?.('Informações de venda salvas!', 'success');
+      setIsEditingSales(false);
+      onRefreshProduct?.();
+    } catch (e: any) {
+      showToast?.(e.message || 'Erro ao salvar', 'error');
+    } finally {
+      setIsSavingSales(false);
+    }
+  };
+
+  const startEditSales = () => {
+    setSalesForm({
+      price: product.price != null ? String(product.price) : '',
+      priceSale: product.priceSale != null ? String(product.priceSale) : '',
+      sizes: product.sizes || [],
+      isForSale: product.isForSale || false,
+    });
+    setIsEditingSales(true);
+  };
+
+  const renderSales = () => {
+    const hasPrice = product.price != null;
+    const displayPrice = product.priceSale ?? product.price;
+    const hasPromo = product.priceSale != null && product.price != null;
+    const fmtPrice = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
+
+    if (isEditingSales) {
+      return (
+        <div className={'rounded-xl p-4 space-y-4 ' + (isDark ? 'bg-neutral-900/50' : 'bg-gray-50')}>
+          <div className="flex items-center justify-between">
+            <h4 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Editar informações de venda</h4>
+          </div>
+          {/* Toggle à venda */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setSalesForm(f => ({ ...f, isForSale: !f.isForSale }))}
+              className={'w-8 rounded-full relative transition-colors cursor-pointer ' + (salesForm.isForSale ? 'bg-[#FF6B6B]' : (isDark ? 'bg-neutral-700' : 'bg-gray-300'))}
+              style={{ height: '18px' }}
+            >
+              <div className={'absolute top-0.5 rounded-full bg-white shadow transition-transform ' + (salesForm.isForSale ? 'translate-x-[14px]' : 'translate-x-0.5')} style={{ width: '14px', height: '14px' }}></div>
+            </div>
+            <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>Produto à venda</span>
+          </label>
+          {/* Preços */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço (R$)</label>
+              <input type="number" step="0.01" min="0" placeholder="89,90" value={salesForm.price} onChange={e => setSalesForm(f => ({ ...f, price: e.target.value }))} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+            </div>
+            <div>
+              <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço promo (R$)</label>
+              <input type="number" step="0.01" min="0" placeholder="Opcional" value={salesForm.priceSale} onChange={e => setSalesForm(f => ({ ...f, priceSale: e.target.value }))} className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+            </div>
+          </div>
+          {/* Tamanhos */}
+          <div>
+            <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1.5'}>Tamanhos disponíveis</label>
+            <div className="flex flex-wrap gap-1.5">
+              {['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único'].map(size => {
+                const active = salesForm.sizes.includes(size);
+                return (
+                  <button key={size} type="button" onClick={() => setSalesForm(f => ({ ...f, sizes: active ? f.sizes.filter(s => s !== size) : [...f.sizes, size] }))} className={'px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ' + (active ? 'bg-[#FF6B6B]/10 border-[#FF6B6B]/30 text-[#FF6B6B]' : (isDark ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-white border-gray-200 text-gray-400'))}>
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Botões */}
+          <div className="flex gap-2 pt-1">
+            <button onClick={() => setIsEditingSales(false)} className={(isDark ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-200 text-gray-600 hover:bg-gray-300') + ' flex-1 py-2 rounded-lg text-xs font-medium transition-colors'}>Cancelar</button>
+            <button onClick={handleSaveSales} disabled={isSavingSales} className={'flex-1 py-2 rounded-lg text-xs font-semibold text-white transition-all bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 flex items-center justify-center gap-1.5' + (isSavingSales ? ' opacity-70' : '')}>
+              {isSavingSales ? <><i className="fas fa-circle-notch fa-spin text-[10px]"></i>Salvando...</> : <><i className="fas fa-check text-[10px]"></i>Salvar</>}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (!hasPrice) {
+      return (
+        <div className={'rounded-xl p-6 text-center ' + (isDark ? 'bg-neutral-900/50' : 'bg-gray-50')}>
+          <div className={'w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+            <i className={'fas fa-tag text-lg ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
+          </div>
+          <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-3'}>Adicione um preço para disponibilizar este produto para venda via WhatsApp</p>
+          <button onClick={startEditSales} className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-xs font-medium hover:opacity-90 transition-opacity">
+            <i className="fas fa-plus mr-1.5"></i>Adicionar preço
+          </button>
+        </div>
+      );
+    }
+
+    // Display mode
+    return (
+      <div className="space-y-3">
+        {/* Card de preço */}
+        <div className={'rounded-xl p-4 ' + (isDark ? 'bg-neutral-900/50 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              {hasPromo ? (
+                <div className="flex items-baseline gap-2">
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-sm line-through'}>{fmtPrice(product.price!)}</span>
+                  <span className="text-xl font-bold text-[#FF6B6B]">{fmtPrice(product.priceSale!)}</span>
+                </div>
+              ) : (
+                <span className="text-xl font-bold text-[#FF9F43]">{fmtPrice(product.price!)}</span>
+              )}
+            </div>
+            <button onClick={startEditSales} className={(isDark ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-700') + ' text-xs transition-colors'}>
+              <i className="fas fa-pen mr-1"></i>Editar
+            </button>
+          </div>
+          {/* Status */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className={'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ' + (product.isForSale ? 'bg-green-500/10 text-green-500' : (isDark ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-200 text-gray-500'))}>
+              <i className={'fas ' + (product.isForSale ? 'fa-check-circle' : 'fa-pause-circle') + ' text-[8px]'}></i>
+              {product.isForSale ? 'À venda' : 'Fora de catálogo'}
+            </span>
+          </div>
+          {/* Tamanhos */}
+          {product.sizes && product.sizes.length > 0 && (
+            <div>
+              <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] uppercase tracking-wide mb-1.5'}>Tamanhos</p>
+              <div className="flex flex-wrap gap-1">
+                {product.sizes.map(s => (
+                  <span key={s} className={'px-2 py-0.5 rounded text-[10px] font-medium ' + (isDark ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-600')}>{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Preview WhatsApp */}
+        <div className={'rounded-xl p-3 border ' + (isDark ? 'bg-[#0b141a] border-neutral-800' : 'bg-[#e5ddd5] border-gray-200')}>
+          <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] uppercase tracking-wide mb-2'}><i className="fab fa-whatsapp mr-1"></i>Preview da mensagem</p>
+          <div className={'rounded-lg p-2.5 text-xs leading-relaxed ' + (isDark ? 'bg-[#005c4b] text-white/90' : 'bg-white text-gray-800 shadow-sm')}>
+            👕 {product.name} — {displayPrice != null ? fmtPrice(displayPrice) : 'Consulte'}{product.sizes && product.sizes.length > 0 ? `\n📏 Tamanhos: ${product.sizes.join(', ')}` : ''}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderEmpty = (featureName: string) => (
     <div className={'rounded-xl p-6 text-center ' + (isDark ? 'bg-neutral-900/50' : 'bg-gray-50')}>
       <i className={'fas fa-image text-2xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
@@ -579,6 +741,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     lc: renderLC,
     sr: renderSR,
     cc: renderCC,
+    sales: renderSales,
   };
 
   return (

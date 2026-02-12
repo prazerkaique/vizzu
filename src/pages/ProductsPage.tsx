@@ -77,7 +77,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showDeleteProductsModal, setShowDeleteProductsModal] = useState(false);
   const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
-  const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', brand: '', color: '', category: '', collection: '', price: '', priceSale: '', sizes: [] as string[], isForSale: false });
+  const [showSalesSection, setShowSalesSection] = useState(false);
   const [productAttributes, setProductAttributes] = useState<ProductAttributes>({});
 
   // Slots de upload dinâmicos pela categoria selecionada
@@ -491,6 +492,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    category: newProduct.category,
    collection: newProduct.collection || null,
    attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
+   price: parseFloat(newProduct.price) || null,
+   price_sale: parseFloat(newProduct.priceSale) || null,
+   sizes: newProduct.sizes.length > 0 ? newProduct.sizes : null,
+   is_for_sale: newProduct.isForSale,
    };
    for (const [angle, base64] of Object.entries(selectedImages)) {
    if (base64 && validAngles.has(angle)) {
@@ -509,7 +514,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
    setShowCreateProduct(false);
    clearAllImages();
-   setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
+   setNewProduct({ name: '', brand: '', color: '', category: '', collection: '', price: '', priceSale: '', sizes: [], isForSale: false }); setShowSalesSection(false);
    setProductAttributes({});
    setSuccessNotification('Produto criado com sucesso!');
    setTimeout(() => setSuccessNotification(null), 3000);
@@ -535,7 +540,12 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    color: product.color || '',
    category: product.category || '',
    collection: product.collection || '',
+   price: product.price != null ? String(product.price) : '',
+   priceSale: product.priceSale != null ? String(product.priceSale) : '',
+   sizes: product.sizes || [],
+   isForSale: product.isForSale || false,
    });
+   setShowSalesSection(!!(product.price || product.isForSale));
    // Carregar todas as imagens existentes no mapa
    const images: Record<string, string | null> = {};
    const oi = product.originalImages;
@@ -579,6 +589,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    category: newProduct.category,
    collection: newProduct.collection || null,
    attributes: Object.keys(productAttributes).length > 0 ? productAttributes : null,
+   price: parseFloat(newProduct.price) || null,
+   price_sale: parseFloat(newProduct.priceSale) || null,
+   sizes: newProduct.sizes.length > 0 ? newProduct.sizes : null,
+   is_for_sale: newProduct.isForSale,
    };
    for (const [angle, value] of Object.entries(selectedImages)) {
    if (value?.startsWith('data:') && validAngles.has(angle)) {
@@ -598,7 +612,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    setShowCreateProduct(false);
    setEditingProduct(null);
    clearAllImages();
-   setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' });
+   setNewProduct({ name: '', brand: '', color: '', category: '', collection: '', price: '', priceSale: '', sizes: [], isForSale: false }); setShowSalesSection(false);
    setProductAttributes({});
    showToast('Produto atualizado com sucesso!', 'success');
    addHistoryLog('Produto editado', `"${newProduct.name}" foi atualizado`, 'success', [], 'manual', 0);
@@ -777,8 +791,19 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  <div className="p-2">
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
- {/* Fix 18: tooltip em nomes truncados */}
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'} title={product.name}>{product.name}</p>
+ {product.price != null && (
+ <p className="text-[9px] font-medium mt-0.5">
+ {product.priceSale != null ? (
+ <>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' line-through mr-1'}>R$ {product.price.toFixed(2).replace('.', ',')}</span>
+ <span className="text-[#FF6B6B]">R$ {product.priceSale.toFixed(2).replace('.', ',')}</span>
+ </>
+ ) : (
+ <span className="text-[#FF9F43]">R$ {product.price.toFixed(2).replace('.', ',')}</span>
+ )}
+ </p>
+ )}
  </div>
  </div>
  );
@@ -1190,6 +1215,98 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  )}
 
+ {/* Seção: Informações de venda (colapsável) */}
+ <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border overflow-hidden'}>
+ <button
+ type="button"
+ onClick={() => setShowSalesSection(v => !v)}
+ className="w-full flex items-center justify-between p-3"
+ >
+ <div className="flex items-center gap-2">
+ <i className="fas fa-tag text-xs text-[#FF9F43]"></i>
+ <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Informações de venda</span>
+ {newProduct.price && <span className="text-[9px] text-[#FF9F43] font-medium">R$ {parseFloat(newProduct.price).toFixed(2).replace('.', ',')}</span>}
+ </div>
+ <i className={'fas text-[10px] transition-transform ' + (showSalesSection ? 'fa-chevron-up' : 'fa-chevron-down') + (theme === 'dark' ? ' text-neutral-500' : ' text-gray-400')}></i>
+ </button>
+ {showSalesSection && (
+ <div className="px-3 pb-3 space-y-3">
+ {/* Toggle à venda */}
+ <label className="flex items-center gap-2 cursor-pointer">
+ <div
+ onClick={() => setNewProduct(p => ({ ...p, isForSale: !p.isForSale }))}
+ className={'w-8 h-4.5 rounded-full relative transition-colors cursor-pointer ' + (newProduct.isForSale ? 'bg-[#FF6B6B]' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'))}
+ style={{ height: '18px' }}
+ >
+ <div className={'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ' + (newProduct.isForSale ? 'translate-x-[14px]' : 'translate-x-0.5')} style={{ width: '14px', height: '14px' }}></div>
+ </div>
+ <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>Produto à venda</span>
+ </label>
+
+ {/* Preço */}
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço (R$)</label>
+ <input
+ type="number"
+ step="0.01"
+ min="0"
+ placeholder="89,90"
+ value={newProduct.price}
+ onChange={e => setNewProduct(p => ({ ...p, price: e.target.value }))}
+ className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+ />
+ </div>
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço promo (R$)</label>
+ <input
+ type="number"
+ step="0.01"
+ min="0"
+ placeholder="Opcional"
+ value={newProduct.priceSale}
+ onChange={e => setNewProduct(p => ({ ...p, priceSale: e.target.value }))}
+ className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+ />
+ </div>
+ </div>
+
+ {/* Tamanhos */}
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1.5'}>Tamanhos disponíveis</label>
+ <div className="flex flex-wrap gap-1.5">
+ {['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único'].map(size => {
+ const isActive = newProduct.sizes.includes(size);
+ return (
+ <button
+ key={size}
+ type="button"
+ onClick={() => setNewProduct(p => ({
+ ...p,
+ sizes: isActive ? p.sizes.filter(s => s !== size) : [...p.sizes, size]
+ }))}
+ className={
+ 'px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ' +
+ (isActive
+ ? 'bg-[#FF6B6B]/10 border-[#FF6B6B]/30 text-[#FF6B6B]'
+ : (theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:border-neutral-600' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'))
+ }
+ >
+ {size}
+ </button>
+ );
+ })}
+ </div>
+ </div>
+
+ <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>
+ <i className="fas fa-info-circle mr-1"></i>
+ O preço aparecerá no WhatsApp do Provador e no agente de vendas
+ </p>
+ </div>
+ )}
+ </div>
+
  <button onClick={editingProduct ? handleSaveEditedProduct : handleCreateProduct} disabled={isCreatingProduct || !getImage('front')} className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
  {isCreatingProduct ? (
  <>
@@ -1220,7 +1337,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <button onClick={() => setShowDiscardConfirm(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2 rounded-lg text-xs font-medium transition-colors'}>
  Continuar editando
  </button>
- <button onClick={() => { setShowDiscardConfirm(false); setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); setNewProduct({ name: '', brand: '', color: '', category: '', collection: '' }); setProductAttributes({}); }} className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium transition-colors">
+ <button onClick={() => { setShowDiscardConfirm(false); setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); setNewProduct({ name: '', brand: '', color: '', category: '', collection: '', price: '', priceSale: '', sizes: [], isForSale: false }); setShowSalesSection(false); setProductAttributes({}); }} className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium transition-colors">
  Descartar
  </button>
  </div>

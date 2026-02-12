@@ -19,6 +19,7 @@ interface ParsedProduct {
   color?: string;
   category?: string;
   collection?: string;
+  price?: number;
   imageUrl?: string;
   imageBase64?: string;
   selected: boolean;
@@ -103,6 +104,12 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
       const getBrand = () => getTextContent('g\\:brand, brand');
       const getColor = () => getTextContent('g\\:color, color');
       const getProductType = () => getTextContent('g\\:product_type, product_type, g\\:product-type, product-type, category');
+      const getPrice = () => {
+        const raw = getTextContent('g\\:price, price, g\\:sale_price, sale_price');
+        if (!raw) return undefined;
+        const num = parseFloat(raw.replace(/[^\d.,]/g, '').replace(',', '.'));
+        return isNaN(num) ? undefined : num;
+      };
 
       const name = getTitle();
       if (name) {
@@ -113,6 +120,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
           brand: getBrand(),
           color: getColor(),
           category: matchCategory(getProductType()),
+          price: getPrice(),
           imageUrl: getImageLink(),
           selected: true
         });
@@ -215,6 +223,9 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
             const imageKey = row.image || row.imagem || row.foto || row.image_link || '';
             const imageBase64 = imageFiles[imageKey] || imageFiles[imageKey.split('/').pop() || ''];
 
+            const priceRaw = row.price || row.preco || row.valor || '';
+            const priceNum = parseFloat(priceRaw.replace(/[^\d.,]/g, '').replace(',', '.'));
+
             products.push({
               id: row.id || row.sku || `zip-${Date.now()}-${i}`,
               name,
@@ -223,6 +234,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
               color: row.color || row.cor || '',
               category: matchCategory(row.category || row.categoria || row.product_type || ''),
               collection: row.collection || row.colecao || '',
+              price: isNaN(priceNum) ? undefined : priceNum,
               imageBase64,
               selected: true
             });
@@ -241,6 +253,8 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
           const imageKey = item.image || item.imagem || item.foto || item.image_link || '';
           const imageBase64 = imageFiles[imageKey] || imageFiles[imageKey.split('/').pop() || ''];
 
+          const priceVal = parseFloat(String(item.price || item.preco || item.valor || '').replace(/[^\d.,]/g, '').replace(',', '.'));
+
           products.push({
             id: item.id || item.sku || `zip-${Date.now()}-${index}`,
             name,
@@ -249,6 +263,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
             color: item.color || item.cor || '',
             category: matchCategory(item.category || item.categoria || item.product_type || ''),
             collection: item.collection || item.colecao || '',
+            price: isNaN(priceVal) ? undefined : priceVal,
             imageBase64,
             selected: true
           });
@@ -423,6 +438,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
         color: p.color,
         category: p.category || '',
         collection: p.collection,
+        price: p.price,
         images,
         originalImages: imageBase64 ? {
           front: { name: 'imported', base64: imageBase64, type: 'front' }
@@ -855,6 +871,11 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                               <option key={cat} value={cat}>{cat}</option>
                             ))}
                           </select>
+                          {product.price != null && (
+                            <span className="text-[10px] text-[#FF9F43] font-medium">
+                              <i className="fas fa-coins mr-1"></i>R$ {product.price.toFixed(2).replace('.', ',')}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
