@@ -278,7 +278,7 @@ export function buildImportPayload(product: BulkProduct, userId: string): Record
     color: product.color || null,
     category: product.category || null,
     description: null,
-    sku: product.sku || null,
+    sku: product.sku || `BULK-${product.id.replace('bulk-', '').padStart(3, '0')}-${Date.now().toString(36).toUpperCase()}`,
     price: product.price || null,
     fit: product.fit || null,
     material: product.material || null,
