@@ -183,16 +183,21 @@ export function StepReview({ theme, products, setProducts, warnings, onStartImpo
                   />
 
                   {/* Preço */}
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={product.price ?? ''}
-                    onChange={e => updateField(product.id, 'price', e.target.value ? parseFloat(e.target.value) : undefined)}
-                    placeholder="Preço"
-                    className={`text-xs px-2 py-1.5 rounded-lg border ${
-                      isDark ? 'bg-white/5 border-white/10 text-neutral-300 placeholder-neutral-500' : 'bg-white border-gray-200 text-gray-700 placeholder-gray-400'
-                    }`}
-                  />
+                  <div className={`flex items-center text-xs rounded-lg border ${
+                    isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'
+                  }`}>
+                    <span className={`pl-2 shrink-0 ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>R$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={product.price ?? ''}
+                      onChange={e => updateField(product.id, 'price', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      placeholder="0,00"
+                      className={`w-full text-xs px-1.5 py-1.5 bg-transparent border-0 outline-none ${
+                        isDark ? 'text-neutral-300 placeholder-neutral-500' : 'text-gray-700 placeholder-gray-400'
+                      }`}
+                    />
+                  </div>
                 </div>
 
                 {/* Expand button */}

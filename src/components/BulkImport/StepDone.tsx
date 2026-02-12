@@ -6,9 +6,10 @@ interface StepDoneProps {
   importResults: ImportResults;
   onClose: () => void;
   onNewImport: () => void;
+  onRetryFailed?: () => void;
 }
 
-export function StepDone({ theme, importResults, onClose, onNewImport }: StepDoneProps) {
+export function StepDone({ theme, importResults, onClose, onNewImport, onRetryFailed }: StepDoneProps) {
   const isDark = theme === 'dark';
   const [showErrors, setShowErrors] = useState(false);
   const hasFailures = importResults.failed.length > 0;
@@ -76,7 +77,16 @@ export function StepDone({ theme, importResults, onClose, onNewImport }: StepDon
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-center gap-3 pt-2">
+      <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+        {hasFailures && onRetryFailed && (
+          <button
+            onClick={onRetryFailed}
+            className="px-4 py-2.5 rounded-xl text-sm font-medium bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+          >
+            <i className="fas fa-rotate-right mr-2"></i>
+            Reimportar {importResults.failed.length} falha{importResults.failed.length !== 1 ? 's' : ''}
+          </button>
+        )}
         <button
           onClick={onNewImport}
           className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${isDark ? 'bg-white/10 hover:bg-white/15 text-neutral-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}

@@ -12,20 +12,34 @@ interface StepImportingProps {
 
 const IMPORT_DELAY_MS = 3000;
 
+// Pedir permissão de notificação
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function sendNotification(title: string, body: string) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: '/favicon.ico' });
+  }
+}
+
 export function StepImporting({ theme, products, setProducts, userId, onComplete }: StepImportingProps) {
   const isDark = theme === 'dark';
-  const abortRef = useRef(false);
   const startedRef = useRef(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [avgTime, setAvgTime] = useState(0);
 
-  const selectedProducts = products.filter(p => p.selected);
+  const selectedProducts = products.filter(p => p.selected && p.importStatus !== 'success');
   const total = selectedProducts.length;
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    abortRef.current = false;
+
+    // Pedir permissão de push ao iniciar importação
+    requestNotificationPermission();
 
     const importAll = async () => {
       if (!userId) {
@@ -43,8 +57,6 @@ export function StepImporting({ theme, products, setProducts, userId, onComplete
       const times: number[] = [];
 
       for (let i = 0; i < selectedProducts.length; i++) {
-        if (abortRef.current) break;
-
         const product = selectedProducts[i];
         setCurrentIndex(i);
 
@@ -95,19 +107,24 @@ export function StepImporting({ theme, products, setProducts, userId, onComplete
         setAvgTime(times.reduce((a, b) => a + b, 0) / times.length);
 
         // Throttle entre importações
-        if (i < selectedProducts.length - 1 && !abortRef.current) {
+        if (i < selectedProducts.length - 1) {
           await delay(IMPORT_DELAY_MS);
         }
       }
 
-      if (!abortRef.current) {
-        onComplete(results);
+      // Notificação push ao finalizar
+      if (results.failed.length > 0) {
+        sendNotification('Vizzu — Importação finalizada', `${results.success.length} importados, ${results.failed.length} falhas`);
+      } else {
+        sendNotification('Vizzu — Importação concluída!', `${results.success.length} produtos importados com sucesso`);
       }
+
+      onComplete(results);
     };
 
     importAll();
 
-    return () => { abortRef.current = true; };
+    // NÃO abortar no unmount — importação continua em background
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const progress = total > 0 ? Math.round(((currentIndex + 1) / total) * 100) : 0;
@@ -174,11 +191,13 @@ export function StepImporting({ theme, products, setProducts, userId, onComplete
         ))}
       </div>
 
-      {/* Warning */}
-      <p className={`text-xs text-center ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
-        <i className="fas fa-info-circle mr-1"></i>
-        Não feche esta janela durante a importação
-      </p>
+      {/* Info — pode fechar */}
+      <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
+        <i className={`fas fa-bell text-sm mt-0.5 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}></i>
+        <p className={`text-xs ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+          Você pode fechar esta janela. A importação continuará em segundo plano e você será notificado quando terminar.
+        </p>
+      </div>
     </div>
   );
 }

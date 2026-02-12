@@ -31,7 +31,6 @@ export function BulkImportModal({ isOpen, onClose, onComplete, userId, theme }: 
   const [products, setProducts] = useState<BulkProduct[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [importResults, setImportResults] = useState<ImportResults>({ success: [], failed: [] });
-  const [isImporting, setIsImporting] = useState(false);
 
   const isDark = theme === 'dark';
 
@@ -40,18 +39,15 @@ export function BulkImportModal({ isOpen, onClose, onComplete, userId, theme }: 
     setProducts([]);
     setWarnings([]);
     setImportResults({ success: [], failed: [] });
-    setIsImporting(false);
   }, []);
 
   const handleClose = useCallback(() => {
-    if (isImporting) {
-      if (!window.confirm('Uma importação está em andamento. Tem certeza que deseja fechar? A importação será interrompida.')) {
-        return;
-      }
+    // Pode fechar livremente — a importação continua em background
+    if (step !== 'importing') {
+      handleReset();
     }
-    handleReset();
     onClose();
-  }, [isImporting, handleReset, onClose]);
+  }, [step, handleReset, onClose]);
 
   const handleZipParsed = useCallback(async (file: File) => {
     const result = await parseZipFolders(file);
@@ -66,12 +62,10 @@ export function BulkImportModal({ isOpen, onClose, onComplete, userId, theme }: 
 
   const handleStartImport = useCallback(() => {
     setStep('importing');
-    setIsImporting(true);
   }, []);
 
   const handleImportComplete = useCallback((results: ImportResults) => {
     setImportResults(results);
-    setIsImporting(false);
     if (results.success.length > 0) {
       onComplete?.();
     }
@@ -80,6 +74,17 @@ export function BulkImportModal({ isOpen, onClose, onComplete, userId, theme }: 
 
   const handleValidationComplete = useCallback(() => {
     setStep('done');
+  }, []);
+
+  // Reimportar apenas os que falharam (mantém dados, preços, etc.)
+  const handleRetryFailed = useCallback(() => {
+    setProducts(prev => prev.map(p =>
+      p.importStatus === 'error'
+        ? { ...p, importStatus: 'pending', importError: undefined }
+        : p
+    ));
+    setImportResults({ success: [], failed: [] });
+    setStep('importing');
   }, []);
 
   if (!isOpen) return null;
@@ -181,6 +186,7 @@ export function BulkImportModal({ isOpen, onClose, onComplete, userId, theme }: 
               importResults={importResults}
               onClose={handleClose}
               onNewImport={handleReset}
+              onRetryFailed={handleRetryFailed}
             />
           )}
         </div>
