@@ -22,10 +22,10 @@ export function StepDone({ theme, importResults, onClose, onNewImport, onRetryFa
         allFailed
           ? 'bg-red-500/10'
           : hasFailures
-            ? 'bg-amber-500/10'
-            : 'bg-emerald-500/10'
+            ? 'bg-[#FF9F43]/10'
+            : 'bg-[#FF6B6B]/10'
       }`}>
-        <i className={`fas ${allFailed ? 'fa-circle-xmark text-red-500' : hasFailures ? 'fa-triangle-exclamation text-amber-500' : 'fa-circle-check text-emerald-500'} text-4xl`}></i>
+        <i className={`fas ${allFailed ? 'fa-circle-xmark text-red-500' : hasFailures ? 'fa-triangle-exclamation text-[#FF9F43]' : 'fa-circle-check text-[#FF6B6B]'} text-4xl`}></i>
       </div>
 
       {/* Mensagem */}
@@ -40,7 +40,7 @@ export function StepDone({ theme, importResults, onClose, onNewImport, onRetryFa
         </h4>
         <p className={`text-sm mt-1 ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
           {importResults.success.length > 0 && (
-            <span className="text-emerald-500 font-medium">{importResults.success.length} produto{importResults.success.length !== 1 ? 's' : ''} importado{importResults.success.length !== 1 ? 's' : ''}</span>
+            <span className="text-[#FF6B6B] font-medium">{importResults.success.length} produto{importResults.success.length !== 1 ? 's' : ''} importado{importResults.success.length !== 1 ? 's' : ''}</span>
           )}
           {importResults.success.length > 0 && hasFailures && ' · '}
           {hasFailures && (

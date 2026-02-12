@@ -79,7 +79,7 @@ export function StepUpload({ theme, onZipParsed }: StepUploadProps) {
       )}
 
       {/* Guia */}
-      <div className={`rounded-xl p-4 ${isDark ? 'bg-white/5 border border-white/10' : 'bg-blue-50/50 border border-blue-100'}`}>
+      <div className={`rounded-xl p-4 ${isDark ? 'bg-white/5 border border-white/10' : 'bg-[#FF9F43]/5 border border-[#FF9F43]/15'}`}>
         <h4 className={`font-medium text-sm mb-3 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
           <i className={`fas fa-lightbulb text-xs ${isDark ? 'text-amber-400' : 'text-amber-500'}`}></i>
           Como organizar seu ZIP
@@ -95,7 +95,7 @@ export function StepUpload({ theme, onZipParsed }: StepUploadProps) {
               <div className="text-[#FF6B6B]">Bermuda Jeans/</div>
               <div className="ml-4">frente.jpg</div>
               <div className="ml-4">costas.jpg</div>
-              <div className={`${isDark ? 'text-blue-400' : 'text-blue-600'}`}>dados.csv <span className={isDark ? 'text-neutral-500' : 'text-gray-400'}>← opcional (preços, SKUs)</span></div>
+              <div className={`${isDark ? 'text-[#FF9F43]' : 'text-[#FF9F43]'}`}>dados.csv <span className={isDark ? 'text-neutral-500' : 'text-gray-400'}>← opcional (preços, SKUs)</span></div>
             </div>
           </div>
           <ul className="space-y-1 ml-1">

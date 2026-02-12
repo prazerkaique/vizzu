@@ -192,9 +192,9 @@ export function StepImporting({ theme, products, setProducts, userId, onComplete
       </div>
 
       {/* Info — pode fechar */}
-      <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
-        <i className={`fas fa-bell text-sm mt-0.5 ${isDark ? 'text-blue-400' : 'text-blue-500'}`}></i>
-        <p className={`text-xs ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
+      <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? 'bg-[#FF9F43]/10 border border-[#FF9F43]/20' : 'bg-[#FF9F43]/5 border border-[#FF9F43]/15'}`}>
+        <i className={`fas fa-bell text-sm mt-0.5 ${isDark ? 'text-[#FF9F43]' : 'text-[#FF9F43]'}`}></i>
+        <p className={`text-xs ${isDark ? 'text-[#FF9F43]/80' : 'text-[#FF9F43]/90'}`}>
           Você pode fechar esta janela. A importação continuará em segundo plano e você será notificado quando terminar.
         </p>
       </div>

@@ -30,6 +30,7 @@ export function AppLayout({
    isGeneratingLookComposer, lookComposerMinimized, lookComposerProgress, setLookComposerMinimized,
    isGeneratingProvador, provadorMinimized, provadorProgress, setProvadorMinimized,
    isGeneratingCreativeStill, creativeStillMinimized, creativeStillProgress, setCreativeStillMinimized,
+   pendingNotifications, clearPendingNotifications,
    minimizedModals, closeMinimizedModal,
  } = useGeneration();
 
@@ -49,7 +50,7 @@ export function AppLayout({
  const cy = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
  const dx = cx - dragRef.current.startX;
  const dy = cy - dragRef.current.startY;
- if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragRef.current.dragging = true;
+ if (Math.abs(dx) > 10 || Math.abs(dy) > 10) dragRef.current.dragging = true;
  if (dragRef.current.dragging) {
  ev.preventDefault();
  const newX = Math.max(0, Math.min(window.innerWidth - 300, dragRef.current.startPosX + dx));
@@ -62,8 +63,8 @@ export function AppLayout({
  window.removeEventListener('mouseup', handleEnd);
  window.removeEventListener('touchmove', handleMove);
  window.removeEventListener('touchend', handleEnd);
- // Resetar dragging após um breve delay para que o onClick possa checar o estado
- setTimeout(() => { dragRef.current.dragging = false; }, 50);
+ // Resetar dragging após delay suficiente para o click event do mobile chegar
+ setTimeout(() => { dragRef.current.dragging = false; }, 200);
  };
  window.addEventListener('mousemove', handleMove);
  window.addEventListener('mouseup', handleEnd);
@@ -71,9 +72,12 @@ export function AppLayout({
  window.addEventListener('touchend', handleEnd);
  }, []);
 
- const handleMinimizedClick = useCallback((restoreFn: () => void) => {
- if (!dragRef.current.dragging) restoreFn();
- }, []);
+ const handleMinimizedClick = useCallback((restoreFn: () => void, page?: Page) => {
+ if (!dragRef.current.dragging) {
+   restoreFn();
+   if (page) navigateTo(page);
+ }
+ }, [navigateTo]);
 
  // Detecta se está rodando como PWA standalone (sem UI do browser)
  const [isPWA, setIsPWA] = useState(false);
@@ -268,6 +272,13 @@ export function AppLayout({
 
  const isCreationPage = ['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage);
 
+ // Limpar badges de notificação quando está em página de criação
+ useEffect(() => {
+   if (isCreationPage || currentPage === 'create') {
+     clearPendingNotifications();
+   }
+ }, [currentPage, isCreationPage, clearPendingNotifications]);
+
  return (
  <div
  id="swipe-root"
@@ -326,9 +337,9 @@ export function AppLayout({
  {/* Botão CRIAR - Destacado no Centro */}
  <div className="py-2">
  <button
- onClick={() => navigateTo('create')}
+ onClick={() => { navigateTo('create'); clearPendingNotifications(); }}
  title="Criar"
- className={'w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
+ className={'relative w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
  (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio'
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white scale-[1.02]'
  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:scale-[1.02]'
@@ -336,6 +347,11 @@ export function AppLayout({
  }
  >
  <i className="fas fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
+ {pendingNotifications > 0 && (
+   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-white text-[#FF6B6B] text-[10px] font-bold shadow-md animate-bounce">
+     {pendingNotifications}
+   </span>
+ )}
  </button>
  </div>
 
@@ -526,10 +542,15 @@ export function AppLayout({
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
  {/* Botão CRIAR - Central destacado */}
- <button onClick={() => navigateTo('create')} className="relative -mt-5">
+ <button onClick={() => { navigateTo('create'); clearPendingNotifications(); }} className="relative -mt-5">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-transform ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-[#373632]')}>
  <img src="/vizzu-icon-white.png" alt="Vizzu" className="h-[38px] w-auto" />
  </div>
+ {pendingNotifications > 0 && (
+   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF6B6B] text-white text-[10px] font-bold shadow-md animate-bounce">
+     {pendingNotifications}
+   </span>
+ )}
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
  <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
@@ -583,7 +604,7 @@ export function AppLayout({
  {/* NOTIFICAÇÃO DE SUCESSO */}
  {successNotification && (
  <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] animate-fade-in">
- <div className="flex items-center gap-2 px-4 py-3 bg-green-500 text-white rounded-xl ">
+ <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl ">
  <i className="fas fa-check-circle"></i>
  <span className="text-sm font-medium">{successNotification}</span>
  </div>
@@ -637,7 +658,7 @@ export function AppLayout({
  style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
  onMouseDown={handleDragStart}
  onTouchStart={handleDragStart}
- onClick={() => handleMinimizedClick(() => setProductStudioMinimized(false))}
+ onClick={() => handleMinimizedClick(() => setProductStudioMinimized(false), 'product-studio')}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
@@ -669,7 +690,7 @@ export function AppLayout({
  style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
  onMouseDown={handleDragStart}
  onTouchStart={handleDragStart}
- onClick={() => handleMinimizedClick(() => setLookComposerMinimized(false))}
+ onClick={() => handleMinimizedClick(() => setLookComposerMinimized(false), 'look-composer')}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
@@ -701,7 +722,7 @@ export function AppLayout({
  style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
  onMouseDown={handleDragStart}
  onTouchStart={handleDragStart}
- onClick={() => handleMinimizedClick(() => setProvadorMinimized(false))}
+ onClick={() => handleMinimizedClick(() => setProvadorMinimized(false), 'provador')}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
@@ -733,7 +754,7 @@ export function AppLayout({
  style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
  onMouseDown={handleDragStart}
  onTouchStart={handleDragStart}
- onClick={() => handleMinimizedClick(() => setCreativeStillMinimized(false))}
+ onClick={() => handleMinimizedClick(() => setCreativeStillMinimized(false), 'creative-still')}
  >
  <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
  <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
@@ -764,7 +785,7 @@ export function AppLayout({
  <div
  onClick={dismissToast}
  className={`px-4 py-3 rounded-xl flex flex-col items-center gap-2 cursor-pointer shadow-lg transition-opacity hover:opacity-90 ${
- toast.type === 'success' ? 'bg-green-500 text-white' :
+ toast.type === 'success' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' :
  toast.type === 'error' ? 'bg-red-500 text-white' :
  'bg-neutral-800 text-white'
  }`}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 export type MinimizedModal = {
  id: string;
@@ -65,6 +65,10 @@ interface GenerationContextType {
  // Computed
  isAnyGenerationRunning: boolean;
 
+ // Notificações de geração concluída
+ pendingNotifications: number;
+ clearPendingNotifications: () => void;
+
  // Minimized Modals
  minimizedModals: MinimizedModal[];
  setMinimizedModals: React.Dispatch<React.SetStateAction<MinimizedModal[]>>;
@@ -102,6 +106,34 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  const [isGeneratingCreativeStill, setIsGeneratingCreativeStill] = useState(false);
  const [creativeStillMinimized, setCreativeStillMinimized] = useState(false);
  const [creativeStillProgress, setCreativeStillProgress] = useState(0);
+
+ // Notificações de geração concluída
+ const [pendingNotifications, setPendingNotifications] = useState(0);
+ const prevGeneratingRef = useRef({ ps: false, lc: false, pv: false, cs: false });
+
+ // Detectar quando uma geração finaliza (true → false) e incrementar badge
+ useEffect(() => {
+   const prev = prevGeneratingRef.current;
+   let newCompleted = 0;
+
+   if (prev.ps && !isGeneratingProductStudio) newCompleted++;
+   if (prev.lc && !isGeneratingLookComposer) newCompleted++;
+   if (prev.pv && !isGeneratingProvador) newCompleted++;
+   if (prev.cs && !isGeneratingCreativeStill) newCompleted++;
+
+   if (newCompleted > 0) {
+     setPendingNotifications(n => n + newCompleted);
+   }
+
+   prevGeneratingRef.current = {
+     ps: isGeneratingProductStudio,
+     lc: isGeneratingLookComposer,
+     pv: isGeneratingProvador,
+     cs: isGeneratingCreativeStill,
+   };
+ }, [isGeneratingProductStudio, isGeneratingLookComposer, isGeneratingProvador, isGeneratingCreativeStill]);
+
+ const clearPendingNotifications = () => setPendingNotifications(0);
 
  // Minimized Modals
  const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
@@ -205,6 +237,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      creativeStillMinimized, setCreativeStillMinimized,
      creativeStillProgress, setCreativeStillProgress,
      isAnyGenerationRunning,
+     pendingNotifications, clearPendingNotifications,
      minimizedModals, setMinimizedModals,
      closeMinimizedModal,
    }}>

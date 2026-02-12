@@ -78,7 +78,7 @@ export function StepValidation({ theme, products, importResults, onComplete }: S
               onClick={() => toggleFeedback(product.id)}
               className={`relative rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${
                 status === 'correct'
-                  ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                  ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/20'
                   : status === 'incorrect'
                     ? 'border-red-500 ring-2 ring-red-500/20'
                     : isDark ? 'border-white/10 hover:border-white/20' : 'border-gray-200 hover:border-gray-300'
@@ -100,7 +100,7 @@ export function StepValidation({ theme, products, importResults, onComplete }: S
               {/* Status badge */}
               {status && (
                 <div className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center ${
-                  status === 'correct' ? 'bg-emerald-500' : 'bg-red-500'
+                  status === 'correct' ? 'bg-[#FF6B6B]' : 'bg-red-500'
                 }`}>
                   <i className={`fas ${status === 'correct' ? 'fa-check' : 'fa-xmark'} text-white text-xs`}></i>
                 </div>

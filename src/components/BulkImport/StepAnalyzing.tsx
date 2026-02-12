@@ -141,8 +141,8 @@ export function StepAnalyzing({ theme, products, setProducts, userId, onComplete
             {/* Status */}
             <div className="shrink-0">
               {product.aiAnalyzed ? (
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <i className="fas fa-check text-emerald-500 text-xs"></i>
+                <div className="w-6 h-6 rounded-full bg-[#FF6B6B]/15 flex items-center justify-center">
+                  <i className="fas fa-check text-[#FF6B6B] text-xs"></i>
                 </div>
               ) : i === analyzed ? (
                 <div className="w-6 h-6 rounded-full border-2 border-[#FF6B6B] border-t-transparent animate-spin" />

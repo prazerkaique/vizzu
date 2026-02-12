@@ -1116,7 +1116,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Lista de detecções */}
  <div className="mt-6 space-y-2 text-center">
  <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
- <i className="fas fa-check-circle text-green-400"></i>
+ <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  <span>Tipo de produto</span>
  </div>
  <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
