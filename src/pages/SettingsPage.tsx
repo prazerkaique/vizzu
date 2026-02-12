@@ -8,6 +8,8 @@ import { usePlans } from '../contexts/PlansContext';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { supabase } from '../services/supabaseClient';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
+import DownloadModal from '../components/shared/DownloadModal';
+import type { DownloadableImage } from '../utils/downloadSizes';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -56,8 +58,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const [showCancelModal, setShowCancelModal] = useState(false);
  const [isCancelling, setIsCancelling] = useState(false);
 
- // P10: Modal de confirmação para limpar histórico
- const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
+ // Download de imagens do histórico
+ const [showHistoryDownload, setShowHistoryDownload] = useState(false);
 
  // P11: Paginação do histórico
  const [historyVisible, setHistoryVisible] = useState(HISTORY_PAGE_SIZE);
@@ -678,13 +680,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div>
  <div className="flex items-center justify-between mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Histórico</h3>
- {historyLogs.length > 0 && (
+ {historyLogs.some(l => l.imageUrl) && (
  <button
- onClick={() => setShowClearHistoryModal(true)}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs flex items-center gap-1.5'}
+ onClick={() => setShowHistoryDownload(true)}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' text-xs flex items-center gap-1.5 transition-colors'}
  >
- <i className="fas fa-trash-alt"></i>
- Limpar
+ <i className="fas fa-download"></i>
+ Baixar tudo
  </button>
  )}
  </div>
@@ -825,25 +827,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  theme={theme}
  />
 
- {/* P10: Modal de limpar histórico */}
- <ConfirmModal
- isOpen={showClearHistoryModal}
- onCancel={() => setShowClearHistoryModal(false)}
- onConfirm={() => {
- setHistoryLogs([]);
- setShowClearHistoryModal(false);
- setHistoryVisible(HISTORY_PAGE_SIZE);
- showToast('Histórico limpo.', 'success');
- }}
- title="Limpar todo o histórico?"
- description={`Isso removerá ${historyLogs.length} atividade${historyLogs.length !== 1 ? 's' : ''} do seu histórico.`}
- consequences={[
- 'Todas as atividades registradas serão removidas',
- 'Esta ação não pode ser desfeita',
- ]}
- confirmLabel="Limpar histórico"
- cancelLabel="Cancelar"
- variant="warning"
+ {/* Download de todas as imagens do histórico */}
+ <DownloadModal
+ isOpen={showHistoryDownload}
+ onClose={() => setShowHistoryDownload(false)}
+ productName="Historico-Vizzu"
+ images={historyLogs
+ .filter((l): l is typeof l & { imageUrl: string } => !!l.imageUrl)
+ .map((l, i): DownloadableImage => ({
+ url: l.imageUrl,
+ label: l.action || `Imagem ${i + 1}`,
+ featurePrefix: 'historico',
+ }))}
  theme={theme}
  />
  </div>
