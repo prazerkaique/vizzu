@@ -195,69 +195,46 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p));
   }, []);
 
-  // Ref para timers de deleção pendente (undo)
-  const deleteTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const deleteProduct = useCallback((product: Product) => {
+  const deleteProduct = useCallback(async (product: Product) => {
     // 1. Esconder otimisticamente
     setProducts(prev => prev.filter(p => p.id !== product.id));
 
-    // 2. Cancelar timer anterior se existir
-    if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
+    // 2. Deletar IMEDIATAMENTE do banco
+    try {
+      // Desvincular gerações (FK generations.product_id → products.id)
+      await supabase
+        .from('generations')
+        .update({ product_id: null })
+        .eq('product_id', product.id);
 
-    // 3. Agendar deleção real após 6.5s (toast dura 6s)
-    let cancelled = false;
-    deleteTimerRef.current = setTimeout(async () => {
-      if (cancelled) return;
-      try {
-        // Desvincular gerações (FK generations.product_id → products.id)
-        const { error: genError } = await supabase
-          .from('generations')
-          .update({ product_id: null })
-          .eq('product_id', product.id);
-        if (genError) console.error('Erro ao desvincular gerações:', genError);
+      // Deletar imagens
+      await supabase
+        .from('product_images')
+        .delete()
+        .eq('product_id', product.id);
 
-        const { error: imagesError } = await supabase
-          .from('product_images')
-          .delete()
-          .eq('product_id', product.id);
-        if (imagesError) console.error('Erro ao deletar imagens:', imagesError);
+      // Deletar produto
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', product.id);
 
-        const { error } = await supabase
-          .from('products')
-          .delete()
-          .eq('id', product.id);
-
-        if (error) {
-          console.error('Erro ao deletar produto:', error);
-          showToast('Erro ao excluir produto do servidor', 'error');
-          if (user?.id) loadUserProducts(user.id);
-          return;
-        }
-        addHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
-      } catch (e) {
-        console.error('Erro ao deletar produto:', e);
-        showToast('Erro ao excluir produto', 'error');
+      if (error) {
+        console.error('Erro ao deletar produto:', error);
+        showToast('Erro ao excluir produto: ' + error.message, 'error');
         if (user?.id) loadUserProducts(user.id);
+        return;
       }
-    }, 6500);
-
-    // 4. Toast com botão Desfazer
-    showToast(`"${product.name}" excluído`, 'success', {
-      label: 'Desfazer',
-      onClick: () => {
-        cancelled = true;
-        if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
-        setProducts(prev => [...prev, product].sort((a, b) =>
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        ));
-      }
-    });
+      showToast(`"${product.name}" excluído`, 'success');
+      addHistoryLog('Produto excluído', `"${product.name}" foi removido do catálogo`, 'success', [product], 'manual', 0);
+    } catch (e: any) {
+      console.error('Erro ao deletar produto:', e);
+      showToast('Erro ao excluir produto: ' + (e?.message || 'erro desconhecido'), 'error');
+      if (user?.id) loadUserProducts(user.id);
+    }
   }, [user, showToast, addHistoryLog, loadUserProducts]);
 
-  const bulkDeleteTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const deleteSelectedProducts = useCallback((selectedIds: string[], onDone?: () => void) => {
+  const deleteSelectedProducts = useCallback(async (selectedIds: string[], onDone?: () => void) => {
     const count = selectedIds.length;
     const productsToDelete = products.filter(p => selectedIds.includes(p.id));
 
@@ -265,57 +242,39 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
     onDone?.();
 
-    // 2. Cancelar timer anterior
-    if (bulkDeleteTimerRef.current) clearTimeout(bulkDeleteTimerRef.current);
+    // 2. Deletar IMEDIATAMENTE do banco
+    try {
+      // Desvincular gerações
+      await supabase
+        .from('generations')
+        .update({ product_id: null })
+        .in('product_id', selectedIds);
 
-    // 3. Agendar deleção real
-    let cancelled = false;
-    bulkDeleteTimerRef.current = setTimeout(async () => {
-      if (cancelled) return;
-      try {
-        // Desvincular gerações (FK generations.product_id → products.id)
-        const { error: genError } = await supabase
-          .from('generations')
-          .update({ product_id: null })
-          .in('product_id', selectedIds);
-        if (genError) console.error('Erro ao desvincular gerações:', genError);
+      // Deletar imagens
+      await supabase
+        .from('product_images')
+        .delete()
+        .in('product_id', selectedIds);
 
-        const { error: imagesError } = await supabase
-          .from('product_images')
-          .delete()
-          .in('product_id', selectedIds);
-        if (imagesError) console.error('Erro ao deletar imagens:', imagesError);
+      // Deletar produtos
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .in('id', selectedIds);
 
-        const { error } = await supabase
-          .from('products')
-          .delete()
-          .in('id', selectedIds);
-
-        if (error) {
-          console.error('Erro ao deletar produtos:', error);
-          showToast('Erro ao excluir produtos do servidor', 'error');
-          if (user?.id) loadUserProducts(user.id);
-          return;
-        }
-        addHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
-      } catch (e) {
-        console.error('Erro ao deletar produtos:', e);
-        showToast('Erro ao excluir produtos', 'error');
+      if (error) {
+        console.error('Erro ao deletar produtos:', error);
+        showToast('Erro ao excluir produtos: ' + error.message, 'error');
         if (user?.id) loadUserProducts(user.id);
+        return;
       }
-    }, 6500);
-
-    // 4. Toast com Desfazer
-    showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success', {
-      label: 'Desfazer',
-      onClick: () => {
-        cancelled = true;
-        if (bulkDeleteTimerRef.current) clearTimeout(bulkDeleteTimerRef.current);
-        setProducts(prev => [...prev, ...productsToDelete].sort((a, b) =>
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        ));
-      }
-    });
+      showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
+      addHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
+    } catch (e: any) {
+      console.error('Erro ao deletar produtos:', e);
+      showToast('Erro ao excluir produtos: ' + (e?.message || 'erro desconhecido'), 'error');
+      if (user?.id) loadUserProducts(user.id);
+    }
   }, [products, user, showToast, addHistoryLog, loadUserProducts]);
 
   const isProductOptimized = useCallback((product: Product): boolean => {
