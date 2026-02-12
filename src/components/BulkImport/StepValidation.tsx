@@ -62,9 +62,9 @@ export function StepValidation({ theme, products, importResults, onComplete }: S
         <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
           <i className={`fas fa-clipboard-check text-xl ${isDark ? 'text-neutral-300' : 'text-gray-600'}`}></i>
         </div>
-        <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Verificação rápida</h4>
+        <h4 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Tudo certo por aqui?</h4>
         <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-          Confira se a IA acertou os dados dos produtos abaixo
+          Dê uma olhada rápida se os nomes e categorias estão corretos
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export function StepValidation({ theme, products, importResults, onComplete }: S
       </div>
 
       <p className={`text-xs text-center ${isDark ? 'text-neutral-500' : 'text-gray-400'}`}>
-        Clique para marcar como correto (verde) ou incorreto (vermelho)
+        Toque no produto para aprovar ou reprovar
       </p>
 
       {/* CTA */}
