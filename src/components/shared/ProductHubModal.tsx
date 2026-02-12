@@ -821,7 +821,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
         {/* ═══ TABS ═══ */}
         <div className={'flex items-center gap-1 px-4 py-2.5 border-b overflow-x-auto no-scrollbar ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
-          {tabs.filter(t => t.count > 0 || t.id === activeTab).map(tab => (
+          {tabs.filter(t => t.count > 0 || t.id === activeTab || t.id === 'sales').map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
