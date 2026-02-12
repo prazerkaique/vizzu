@@ -148,7 +148,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
   const filteredProducts = useMemo(() => products
    .filter(product => {
-   const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.sku.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+   const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || (product.sku || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.id.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
    const categoryGroup = getCategoryGroupBySubcategory(product.category);
    const matchesCategoryGroup = !filterCategoryGroup || categoryGroup?.id === filterCategoryGroup;
    const matchesCategory = !filterCategory || product.category === filterCategory;
@@ -485,7 +485,6 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    const validAngles = new Set(currentUploadSlots.map(s => s.angle));
    const body: Record<string, any> = {
    user_id: user?.id,
-   sku: 'SKU-' + Date.now().toString().slice(-6),
    name: newProduct.name,
    brand: newProduct.brand || null,
    color: newProduct.color || null,
@@ -790,7 +789,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </button>
  </div>
  <div className="p-2">
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku ? `SKU ${product.sku}` : `ID ${product.id.slice(0, 8)}`}</p>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'} title={product.name}>{product.name}</p>
  {product.price != null && (
  <p className="text-[9px] font-medium mt-0.5">
@@ -1367,34 +1366,14 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <BulkImportModal
  isOpen={showBulkImport}
  onClose={() => setShowBulkImport(false)}
- onImport={(importedProducts) => {
- const newProducts = importedProducts.map(p => ({
- ...p,
- id: p.id || `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
- sku: p.sku || `SKU-${Date.now()}`,
- name: p.name || 'Produto Importado',
- category: p.category || '',
- images: p.images || [],
- createdAt: p.createdAt || new Date().toISOString(),
- } as Product));
-
- setProducts(prev => [...prev, ...newProducts]);
-
- // Log da importação
- const newLog: HistoryLog = {
- id: `log-${Date.now()}`,
- date: new Date().toISOString(),
- action: 'Importação em Massa',
- details: `${newProducts.length} produtos importados`,
- status: 'success',
- method: 'bulk',
- cost: 0,
- itemsCount: newProducts.length,
- };
- setHistoryLogs(prev => [newLog, ...prev]);
-
- // Notificação
- setSuccessNotification(`${newProducts.length} produtos importados com sucesso!`);
+ userId={user?.id}
+ onImport={() => {}}
+ onComplete={async () => {
+ if (user?.id) {
+ await loadUserProducts(user.id);
+ }
+ addHistoryLog('Importação em Massa', 'Produtos importados via importação em massa', 'success', [], 'bulk', 0);
+ setSuccessNotification('Produtos importados com sucesso!');
  setTimeout(() => setSuccessNotification(null), 3000);
  }}
  theme={theme}

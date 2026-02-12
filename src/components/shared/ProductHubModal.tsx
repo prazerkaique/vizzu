@@ -719,7 +719,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         <div className={'rounded-xl p-3 border ' + (isDark ? 'bg-[#0b141a] border-neutral-800' : 'bg-[#e5ddd5] border-gray-200')}>
           <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] uppercase tracking-wide mb-2'}><i className="fab fa-whatsapp mr-1"></i>Preview da mensagem</p>
           <div className={'rounded-lg p-2.5 text-xs leading-relaxed ' + (isDark ? 'bg-[#005c4b] text-white/90' : 'bg-white text-gray-800 shadow-sm')}>
-            👕 {product.name} — {displayPrice != null ? fmtPrice(displayPrice) : 'Consulte'}{product.sizes && product.sizes.length > 0 ? `\n📏 Tamanhos: ${product.sizes.join(', ')}` : ''}
+            • {product.name} — {displayPrice != null ? fmtPrice(displayPrice) : 'Consulte'}{product.sizes && product.sizes.length > 0 ? `\nTamanhos: ${product.sizes.join(', ')}` : ''}
           </div>
         </div>
       </div>
@@ -776,9 +776,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
           <div className="flex-1 min-w-0">
             <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold truncate'}>{product.name}</h3>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {product.sku && (
-                <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{product.sku}</span>
-              )}
+              <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>{product.sku ? `SKU ${product.sku}` : `ID ${product.id.slice(0, 8)}`}</span>
               {product.category && (
                 <span className={'text-[9px] px-1.5 py-0.5 rounded ' + (isDark ? 'bg-white/5 text-neutral-400' : 'bg-gray-100 text-gray-500')}>
                   {product.category}

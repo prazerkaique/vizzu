@@ -395,13 +395,13 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
 
  // WhatsApp look functions
  const formatLookItemsForMessage = (lookItems: LookComposition): string => {
-  const lookEmojis: Record<string, string> = {
-   head: '🧢',
-   top: '👕',
-   bottom: '👖',
-   feet: '👟',
-   accessory1: '💼',
-   accessory2: '⌚',
+  const lookLabels: Record<string, string> = {
+   head: 'Cabeça',
+   top: 'Top',
+   bottom: 'Bottom',
+   feet: 'Calçado',
+   accessory1: 'Acessório',
+   accessory2: 'Acessório',
   };
   const items: string[] = [];
   let totalPrice = 0;
@@ -409,23 +409,22 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
   lookKeys.forEach(key => {
    const item = lookItems[key];
    if (item && item.name) {
-    const emoji = lookEmojis[key] || '👔';
     const priceStr = item.price
      ? `R$ ${item.price.toFixed(2).replace('.', ',')}`
      : 'Consulte';
-    items.push(`${emoji} ${item.name} — ${priceStr}`);
+    items.push(`• ${item.name} — ${priceStr}`);
     if (item.price) totalPrice += item.price;
    }
   });
   let result = items.join('\n');
   if (totalPrice > 0) {
-   result += `\n\n💰 Total do look: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
+   result += `\n\nTotal do look: R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
   }
   return result;
  };
 
  const generateWhatsAppLookMessage = (client: Client, look: ClientLook): string => {
-  const baseMessage = `Oi ${client.firstName}! 😍\n\nMontei esse look especial pra você:`;
+  const baseMessage = `Oi ${client.firstName}!\n\nMontei esse look especial pra você:`;
   const lookItems = formatLookItemsForMessage(look.lookItems);
   return lookItems ? `${baseMessage}\n\n${lookItems}` : baseMessage;
  };
@@ -440,7 +439,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
    setSelectedLookForWhatsApp(null);
    setWhatsAppLookMessage('');
   } else {
-   setWhatsAppLookMessage(`Oi ${client.firstName}! 😍`);
+   setWhatsAppLookMessage(`Oi ${client.firstName}!`);
   }
  };
 

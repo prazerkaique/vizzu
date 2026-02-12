@@ -1,18 +1,29 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Product, ProductImage } from '../types';
+import { angleToApiField } from '../lib/productConfig';
 
 interface BulkImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImport: (products: Partial<Product>[]) => void;
+  onComplete?: () => void;
+  userId?: string;
   theme: 'light' | 'dark';
 }
 
 type ImportMethod = 'google' | 'xml' | 'zip' | null;
 type ImportStep = 'select' | 'configure' | 'preview' | 'importing' | 'done';
 
+interface ProductImages {
+  front?: string;
+  back?: string;
+  front_detail?: string;
+  back_detail?: string;
+}
+
 interface ParsedProduct {
   id: string;
+  sku?: string;
   name: string;
   description?: string;
   brand?: string;
@@ -20,14 +31,32 @@ interface ParsedProduct {
   category?: string;
   collection?: string;
   price?: number;
+  images: ProductImages;
   imageUrl?: string;
-  imageBase64?: string;
   selected: boolean;
 }
 
 const CATEGORIES = ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness', 'Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs', 'Calçados', 'Tênis', 'Sandálias', 'Botas', 'Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
-export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImportModalProps) {
+// Mapeamento de colunas CSV → ângulos de imagem
+const FRONT_COLUMNS = ['frente', 'front', 'image_front', 'image', 'imagem', 'foto', 'image_link'];
+const BACK_COLUMNS = ['costas', 'back', 'image_back', 'tras', 'verso'];
+const FRONT_DETAIL_COLUMNS = ['detalhe_frente', 'front_detail', 'detalhe', 'detail'];
+const BACK_DETAIL_COLUMNS = ['detalhe_costas', 'back_detail'];
+
+function findColumnValue(row: Record<string, string>, candidates: string[]): string {
+  for (const col of candidates) {
+    if (row[col]) return row[col];
+  }
+  return '';
+}
+
+function resolveImage(key: string, imageFiles: Record<string, string>): string | undefined {
+  if (!key) return undefined;
+  return imageFiles[key] || imageFiles[key.split('/').pop() || ''] || undefined;
+}
+
+export function BulkImportModal({ isOpen, onClose, onImport, onComplete, userId, theme }: BulkImportModalProps) {
   const [method, setMethod] = useState<ImportMethod>(null);
   const [step, setStep] = useState<ImportStep>('select');
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
@@ -35,6 +64,11 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
   const [error, setError] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
+  const [currentProductName, setCurrentProductName] = useState('');
+  const [importResults, setImportResults] = useState<{
+    success: string[];
+    failed: { name: string; error: string }[];
+  }>({ success: [], failed: [] });
 
   // Google Sheets state
   const [spreadsheetUrl, setSpreadsheetUrl] = useState('');
@@ -68,6 +102,8 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
     setError(null);
     setImportProgress(0);
     setImportedCount(0);
+    setCurrentProductName('');
+    setImportResults({ success: [], failed: [] });
     setSpreadsheetUrl('');
     setDriveFolder('');
     setZipFile(null);
@@ -79,6 +115,21 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
   const handleClose = () => {
     reset();
     onClose();
+  };
+
+  // Download CSV template
+  const downloadCsvTemplate = () => {
+    const headers = 'nome,marca,cor,categoria,preco,sku,frente,costas,detalhe_frente,detalhe_costas';
+    const row1 = 'Camiseta Polo,Nike,Branco,Camisetas,89.90,POLO-001,polo-frente.jpg,polo-costas.jpg,,';
+    const row2 = 'Bermuda Jeans,Levis,Azul,Bermudas,129.90,,bermuda-f.jpg,bermuda-c.jpg,bermuda-det.jpg,';
+    const csvContent = `${headers}\n${row1}\n${row2}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vizzu-modelo-importacao.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // Parse XML file (Google Shopping format)
@@ -96,8 +147,8 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
         return el?.textContent?.trim() || '';
       };
 
-      // Support both namespaced and non-namespaced tags
-      const getId = () => getTextContent('g\\:id, id') || `import-${Date.now()}-${index}`;
+      const getRealSku = () => getTextContent('g\\:id, id') || '';
+      const getId = () => getRealSku() || `import-${Date.now()}-${index}`;
       const getTitle = () => getTextContent('g\\:title, title');
       const getDescription = () => getTextContent('g\\:description, description');
       const getImageLink = () => getTextContent('g\\:image_link, image_link, g\\:image-link, image-link');
@@ -111,17 +162,41 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
         return isNaN(num) ? undefined : num;
       };
 
+      // Múltiplas imagens via additional_image_link
+      const getAdditionalImageLinks = (): string[] => {
+        const links: string[] = [];
+        const els = item.querySelectorAll(
+          'g\\:additional_image_link, additional_image_link, g\\:additional-image-link, additional-image-link'
+        );
+        els.forEach(el => {
+          const url = el.textContent?.trim();
+          if (url) links.push(url);
+        });
+        return links;
+      };
+
       const name = getTitle();
       if (name) {
+        const mainImage = getImageLink();
+        const additionalImages = getAdditionalImageLinks();
+
+        const images: ProductImages = {};
+        if (mainImage) images.front = mainImage;
+        if (additionalImages[0]) images.back = additionalImages[0];
+        if (additionalImages[1]) images.front_detail = additionalImages[1];
+        if (additionalImages[2]) images.back_detail = additionalImages[2];
+
         products.push({
           id: getId(),
+          sku: getRealSku() || undefined,
           name,
           description: getDescription(),
           brand: getBrand(),
           color: getColor(),
           category: matchCategory(getProductType()),
           price: getPrice(),
-          imageUrl: getImageLink(),
+          images,
+          imageUrl: mainImage,
           selected: true
         });
       }
@@ -141,7 +216,6 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
       }
     }
 
-    // Common mappings
     const mappings: Record<string, string> = {
       'shirt': 'Camisetas',
       't-shirt': 'Camisetas',
@@ -173,7 +247,6 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
 
   // Parse ZIP file
   const parseZipFile = async (file: File): Promise<ParsedProduct[]> => {
-    // Dynamic import of JSZip
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(file);
 
@@ -220,14 +293,25 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
 
           const name = row.name || row.title || row.nome || row.produto;
           if (name) {
-            const imageKey = row.image || row.imagem || row.foto || row.image_link || '';
-            const imageBase64 = imageFiles[imageKey] || imageFiles[imageKey.split('/').pop() || ''];
+            // Multi-ângulo
+            const images: ProductImages = {};
+            const frontKey = findColumnValue(row, FRONT_COLUMNS);
+            const backKey = findColumnValue(row, BACK_COLUMNS);
+            const frontDetailKey = findColumnValue(row, FRONT_DETAIL_COLUMNS);
+            const backDetailKey = findColumnValue(row, BACK_DETAIL_COLUMNS);
+
+            if (frontKey) images.front = resolveImage(frontKey, imageFiles);
+            if (backKey) images.back = resolveImage(backKey, imageFiles);
+            if (frontDetailKey) images.front_detail = resolveImage(frontDetailKey, imageFiles);
+            if (backDetailKey) images.back_detail = resolveImage(backDetailKey, imageFiles);
 
             const priceRaw = row.price || row.preco || row.valor || '';
             const priceNum = parseFloat(priceRaw.replace(/[^\d.,]/g, '').replace(',', '.'));
 
+            const realSku = row.sku || '';
             products.push({
               id: row.id || row.sku || `zip-${Date.now()}-${i}`,
+              sku: realSku || undefined,
               name,
               description: row.description || row.descricao || '',
               brand: row.brand || row.marca || '',
@@ -235,7 +319,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
               category: matchCategory(row.category || row.categoria || row.product_type || ''),
               collection: row.collection || row.colecao || '',
               price: isNaN(priceNum) ? undefined : priceNum,
-              imageBase64,
+              images,
               selected: true
             });
           }
@@ -250,13 +334,23 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
       items.forEach((item: any, index: number) => {
         const name = item.name || item.title || item.nome;
         if (name) {
-          const imageKey = item.image || item.imagem || item.foto || item.image_link || '';
-          const imageBase64 = imageFiles[imageKey] || imageFiles[imageKey.split('/').pop() || ''];
+          const images: ProductImages = {};
+          const frontKey = item.frente || item.front || item.image_front || item.image || item.imagem || item.foto || item.image_link || '';
+          const backKey = item.costas || item.back || item.image_back || '';
+          const frontDetailKey = item.detalhe_frente || item.front_detail || item.detalhe || item.detail || '';
+          const backDetailKey = item.detalhe_costas || item.back_detail || '';
+
+          if (frontKey) images.front = resolveImage(frontKey, imageFiles);
+          if (backKey) images.back = resolveImage(backKey, imageFiles);
+          if (frontDetailKey) images.front_detail = resolveImage(frontDetailKey, imageFiles);
+          if (backDetailKey) images.back_detail = resolveImage(backDetailKey, imageFiles);
 
           const priceVal = parseFloat(String(item.price || item.preco || item.valor || '').replace(/[^\d.,]/g, '').replace(',', '.'));
 
+          const realSku = item.sku || '';
           products.push({
             id: item.id || item.sku || `zip-${Date.now()}-${index}`,
+            sku: realSku || undefined,
             name,
             description: item.description || item.descricao || '',
             brand: item.brand || item.marca || '',
@@ -264,7 +358,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
             category: matchCategory(item.category || item.categoria || item.product_type || ''),
             collection: item.collection || item.colecao || '',
             price: isNaN(priceVal) ? undefined : priceVal,
-            imageBase64,
+            images,
             selected: true
           });
         }
@@ -278,7 +372,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
         products.push({
           id: `zip-${Date.now()}-${index}`,
           name: name.charAt(0).toUpperCase() + name.slice(1),
-          imageBase64: base64,
+          images: { front: base64 },
           selected: true
         });
       });
@@ -349,7 +443,6 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
     setIsLoading(true);
     setError(null);
 
-    // Extract spreadsheet ID from URL
     const match = spreadsheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
     if (!match) {
       setError('URL inválida. Use o link de compartilhamento do Google Sheets.');
@@ -357,7 +450,6 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
       return;
     }
 
-    // For now, show a message that this feature requires backend setup
     setTimeout(() => {
       setError('Esta funcionalidade requer configuração do Google API no backend. Entre em contato para ativar esta integração.');
       setIsLoading(false);
@@ -400,7 +492,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
     }
   };
 
-  // Import products
+  // Import products — chama N8N de verdade
   const handleImport = async () => {
     const selectedProducts = parsedProducts.filter(p => p.selected);
     if (selectedProducts.length === 0) {
@@ -408,58 +500,120 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
       return;
     }
 
+    if (!userId) {
+      setError('Usuário não autenticado. Faça login novamente.');
+      return;
+    }
+
+    const n8nUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+    if (!n8nUrl) {
+      setError('URL do webhook não configurada.');
+      return;
+    }
+
     setStep('importing');
     setImportProgress(0);
     setImportedCount(0);
+    setCurrentProductName('');
+    setImportResults({ success: [], failed: [] });
 
-    const productsToImport: Partial<Product>[] = [];
+    const results = { success: [] as string[], failed: [] as { name: string; error: string }[] };
 
     for (let i = 0; i < selectedProducts.length; i++) {
       const p = selectedProducts[i];
+      setCurrentProductName(p.name);
 
-      // Try to get image as base64
-      let imageBase64 = p.imageBase64;
-      if (!imageBase64 && p.imageUrl) {
-        imageBase64 = await urlToBase64(p.imageUrl) || undefined;
+      try {
+        const body: Record<string, any> = {
+          user_id: userId,
+          name: p.name,
+          brand: p.brand || null,
+          color: p.color || null,
+          category: p.category || null,
+          collection: p.collection || null,
+          description: p.description || null,
+          sku: p.sku || null,
+          price: p.price || null,
+        };
+
+        // Adicionar imagens por ângulo
+        const angleMap: [keyof ProductImages, string][] = [
+          ['front', 'front'],
+          ['back', 'back'],
+          ['front_detail', 'front-detail'],
+          ['back_detail', 'back-detail'],
+        ];
+
+        for (const [imgKey, angleKey] of angleMap) {
+          const value = p.images[imgKey];
+          if (!value) continue;
+
+          let base64Value = value;
+
+          // Se é URL (XML), converter para base64
+          if (value.startsWith('http')) {
+            const converted = await urlToBase64(value);
+            if (!converted) {
+              console.warn(`Falha ao baixar imagem ${imgKey} para ${p.name}`);
+              continue;
+            }
+            base64Value = converted;
+          }
+
+          body[angleToApiField(angleKey)] = base64Value;
+        }
+
+        // Fallback: imageUrl legado (XML com única imagem)
+        if (!body.image_front_base64 && p.imageUrl) {
+          const base64 = await urlToBase64(p.imageUrl);
+          if (base64) body.image_front_base64 = base64;
+        }
+
+        // Verificar se tem pelo menos a imagem de frente
+        if (!body.image_front_base64) {
+          results.failed.push({ name: p.name, error: 'Sem imagem de frente' });
+          setImportedCount(i + 1);
+          setImportProgress(Math.round(((i + 1) / selectedProducts.length) * 100));
+          continue;
+        }
+
+        const response = await fetch(`${n8nUrl}/vizzu/produto-importar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          results.success.push(p.name);
+        } else {
+          results.failed.push({ name: p.name, error: data.error || 'Erro desconhecido' });
+        }
+      } catch (err: any) {
+        results.failed.push({ name: p.name, error: err.message || 'Erro de rede' });
       }
 
-      const images: ProductImage[] = imageBase64 ? [{
-        name: 'imported',
-        base64: imageBase64,
-        type: 'front'
-      }] : [];
-
-      productsToImport.push({
-        id: `prod-${Date.now()}-${i}`,
-        sku: p.id || `SKU-${Date.now()}-${i}`,
-        name: p.name,
-        description: p.description,
-        brand: p.brand,
-        color: p.color,
-        category: p.category || '',
-        collection: p.collection,
-        price: p.price,
-        images,
-        originalImages: imageBase64 ? {
-          front: { name: 'imported', base64: imageBase64, type: 'front' }
-        } : undefined,
-        createdAt: new Date().toISOString(),
-      });
-
-      setImportProgress(Math.round(((i + 1) / selectedProducts.length) * 100));
       setImportedCount(i + 1);
-
-      // Small delay for visual feedback
-      await new Promise(resolve => setTimeout(resolve, 50));
+      setImportProgress(Math.round(((i + 1) / selectedProducts.length) * 100));
     }
 
-    onImport(productsToImport);
+    setImportResults(results);
+    setCurrentProductName('');
+
+    if (results.success.length > 0) {
+      onComplete?.();
+    }
+
     setStep('done');
   };
 
   if (!isOpen) return null;
 
   const selectedCount = parsedProducts.filter(p => p.selected).length;
+
+  // Contagem de fotos de um produto
+  const imageCount = (p: ParsedProduct) => Object.values(p.images).filter(Boolean).length;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 safe-area-all">
@@ -479,7 +633,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                 {step === 'configure' && method === 'zip' && 'Arquivo ZIP'}
                 {step === 'preview' && `${parsedProducts.length} produtos encontrados`}
                 {step === 'importing' && `Importando ${importedCount}/${selectedCount}...`}
-                {step === 'done' && `${importedCount} produtos importados!`}
+                {step === 'done' && (importResults.failed.length === 0 ? `${importResults.success.length} produtos importados!` : 'Importação concluída')}
               </p>
             </div>
           </div>
@@ -508,14 +662,36 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className={`${textPrimary} font-medium text-sm sm:text-base`}>Google Sheets + Drive</h4>
-                      <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-medium">Recomendado</span>
+                      <span className={`px-2 py-0.5 rounded-full ${isDark ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500'} text-[10px] font-medium`}>Em breve</span>
                     </div>
                     <p className={`${textSecondary} text-xs mt-1`}>
                       Importe direto de uma planilha Google com link para imagens no Drive
                     </p>
+                  </div>
+                  <i className={`fas fa-chevron-right ${textMuted} group-hover:translate-x-1 transition-transform`}></i>
+                </div>
+              </button>
+
+              {/* ZIP */}
+              <button
+                onClick={() => { setMethod('zip'); setStep('configure'); }}
+                className={`w-full p-4 rounded-xl border ${borderColor} ${bgHover} transition-all text-left group`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'} flex items-center justify-center shrink-0`}>
+                    <i className={`fas fa-file-archive text-xl ${isDark ? 'text-blue-400' : 'text-blue-600'}`}></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className={`${textPrimary} font-medium text-sm sm:text-base`}>Arquivo ZIP</h4>
+                      <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-medium">Recomendado</span>
+                    </div>
+                    <p className={`${textSecondary} text-xs mt-1`}>
+                      ZIP com planilha CSV + fotos dos produtos (frente, costas, detalhe)
+                    </p>
                     <div className={`${textMuted} text-[10px] mt-2 flex flex-wrap gap-2`}>
-                      <span><i className="fas fa-check text-green-500 mr-1"></i>Sincronização automática</span>
-                      <span><i className="fas fa-check text-green-500 mr-1"></i>Imagens do Drive</span>
+                      <span><i className="fas fa-check text-green-500 mr-1"></i>Múltiplas fotos por produto</span>
+                      <span><i className="fas fa-check text-green-500 mr-1"></i>Salva no servidor</span>
                     </div>
                   </div>
                   <i className={`fas fa-chevron-right ${textMuted} group-hover:translate-x-1 transition-transform`}></i>
@@ -539,29 +715,6 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                     <div className={`${textMuted} text-[10px] mt-2 flex flex-wrap gap-2`}>
                       <span><i className="fas fa-check text-green-500 mr-1"></i>Feed de e-commerce</span>
                       <span><i className="fas fa-check text-green-500 mr-1"></i>URLs de imagens</span>
-                    </div>
-                  </div>
-                  <i className={`fas fa-chevron-right ${textMuted} group-hover:translate-x-1 transition-transform`}></i>
-                </div>
-              </button>
-
-              {/* ZIP */}
-              <button
-                onClick={() => { setMethod('zip'); setStep('configure'); }}
-                className={`w-full p-4 rounded-xl border ${borderColor} ${bgHover} transition-all text-left group`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'} flex items-center justify-center shrink-0`}>
-                    <i className={`fas fa-file-archive text-xl ${isDark ? 'text-blue-400' : 'text-blue-600'}`}></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className={`${textPrimary} font-medium text-sm sm:text-base`}>Arquivo ZIP</h4>
-                    <p className={`${textSecondary} text-xs mt-1`}>
-                      ZIP contendo CSV/JSON + imagens dos produtos
-                    </p>
-                    <div className={`${textMuted} text-[10px] mt-2 flex flex-wrap gap-2`}>
-                      <span><i className="fas fa-check text-green-500 mr-1"></i>Imagens locais</span>
-                      <span><i className="fas fa-check text-green-500 mr-1"></i>Offline</span>
                     </div>
                   </div>
                   <i className={`fas fa-chevron-right ${textMuted} group-hover:translate-x-1 transition-transform`}></i>
@@ -603,35 +756,6 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                     <p className={`${textMuted} text-[10px] mt-1.5`}>
                       Se as imagens estão em uma pasta do Drive, cole o link aqui
                     </p>
-                  </div>
-
-                  {/* Expected format info */}
-                  <div className={`${isDark ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'} rounded-xl p-4 border`}>
-                    <p className={`${isDark ? 'text-green-400' : 'text-green-700'} text-xs font-medium mb-2`}>
-                      <i className="fas fa-info-circle mr-2"></i>Formato esperado da planilha:
-                    </p>
-                    <div className={`${isDark ? 'bg-neutral-900' : 'bg-white'} rounded-lg p-3 overflow-x-auto`}>
-                      <table className="text-[10px] w-full">
-                        <thead>
-                          <tr className={textSecondary}>
-                            <th className="text-left pr-3">name</th>
-                            <th className="text-left pr-3">brand</th>
-                            <th className="text-left pr-3">color</th>
-                            <th className="text-left pr-3">category</th>
-                            <th className="text-left">image</th>
-                          </tr>
-                        </thead>
-                        <tbody className={textMuted}>
-                          <tr>
-                            <td className="pr-3">Camiseta Básica</td>
-                            <td className="pr-3">Marca X</td>
-                            <td className="pr-3">Preto</td>
-                            <td className="pr-3">Camisetas</td>
-                            <td>produto1.jpg</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
                   </div>
 
                   {error && (
@@ -693,9 +817,12 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
     <item>
       <g:id>SKU-001</g:id>
       <g:title>Camiseta Básica</g:title>
-      <g:image_link>https://...</g:image_link>
+      <g:image_link>https://cdn.loja.com/frente.jpg</g:image_link>
+      <g:additional_image_link>https://cdn.loja.com/costas.jpg</g:additional_image_link>
+      <g:additional_image_link>https://cdn.loja.com/detalhe.jpg</g:additional_image_link>
       <g:brand>Marca</g:brand>
       <g:color>Preto</g:color>
+      <g:price>89.90 BRL</g:price>
       <g:product_type>Camisetas</g:product_type>
     </item>
   </channel>
@@ -717,6 +844,28 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
               {/* ZIP Config */}
               {method === 'zip' && (
                 <div className="space-y-4">
+                  {/* Guia passo-a-passo */}
+                  <div className={`${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} rounded-xl p-4 border`}>
+                    <p className={`${isDark ? 'text-blue-400' : 'text-blue-700'} text-xs font-semibold mb-3`}>
+                      <i className="fas fa-list-ol mr-2"></i>Como preparar seu ZIP:
+                    </p>
+                    <ol className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-xs space-y-1.5 list-decimal list-inside`}>
+                      <li>Baixe a <strong>planilha modelo</strong> abaixo</li>
+                      <li>Preencha com os dados dos seus produtos (nome, marca, cor, categoria, preco)</li>
+                      <li>Na coluna <strong>"frente"</strong>, coloque o nome exato do arquivo da foto de frente</li>
+                      <li>Repita para <strong>"costas"</strong>, <strong>"detalhe_frente"</strong> e <strong>"detalhe_costas"</strong> (opcionais)</li>
+                      <li>Coloque as fotos e a planilha <strong>na mesma pasta</strong></li>
+                      <li>Selecione tudo e <strong>compacte em ZIP</strong></li>
+                    </ol>
+                    <button
+                      onClick={downloadCsvTemplate}
+                      className="mt-3 px-4 py-2 rounded-lg text-xs font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 transition-opacity flex items-center gap-2"
+                    >
+                      <i className="fas fa-download"></i>
+                      Baixar planilha modelo (.csv)
+                    </button>
+                  </div>
+
                   <input
                     ref={zipInputRef}
                     type="file"
@@ -751,30 +900,26 @@ export function BulkImportModal({ isOpen, onClose, onImport, theme }: BulkImport
                     )}
                   </div>
 
-                  {/* ZIP format info */}
-                  <div className={`${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'} rounded-xl p-4 border`}>
-                    <p className={`${isDark ? 'text-blue-400' : 'text-blue-700'} text-xs font-medium mb-2`}>
-                      <i className="fas fa-info-circle mr-2"></i>Estrutura esperada do ZIP:
-                    </p>
-                    <div className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-[10px] space-y-1 font-mono`}>
-                      <p>📁 meus-produtos.zip</p>
-                      <p className="ml-4">├── produtos.csv <span className={textMuted}>(ou .json)</span></p>
-                      <p className="ml-4">├── produto1.jpg</p>
-                      <p className="ml-4">├── produto2.jpg</p>
-                      <p className="ml-4">└── ...</p>
-                    </div>
-                  </div>
-
-                  {/* CSV format example */}
+                  {/* Exemplo de estrutura */}
                   <details className={`${bgMuted} rounded-xl border ${borderColor}`}>
                     <summary className={`${textSecondary} text-xs cursor-pointer p-3 hover:${textPrimary} transition-colors`}>
-                      <i className="fas fa-file-csv mr-2"></i>Ver exemplo de CSV
+                      <i className="fas fa-folder-open mr-2"></i>Ver exemplo de estrutura do ZIP
                     </summary>
-                    <pre className={`${isDark ? 'bg-neutral-900 text-neutral-300' : 'bg-gray-100 text-gray-700'} m-3 mt-0 p-3 rounded-lg text-[10px] overflow-x-auto`}>
-{`name,brand,color,category,image
-Camiseta Básica,Marca X,Preto,Camisetas,produto1.jpg
-Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
-                    </pre>
+                    <div className={`${isDark ? 'bg-neutral-900 text-neutral-300' : 'bg-gray-100 text-gray-700'} m-3 mt-0 p-3 rounded-lg text-[10px] font-mono space-y-0.5`}>
+                      <p>meus-produtos.zip</p>
+                      <p className="ml-3">produtos.csv</p>
+                      <p className="ml-3">polo-frente.jpg</p>
+                      <p className="ml-3">polo-costas.jpg</p>
+                      <p className="ml-3">bermuda-f.jpg</p>
+                      <p className="ml-3">bermuda-c.jpg</p>
+                      <p className="ml-3">bermuda-det.jpg</p>
+                    </div>
+                    <div className={`${isDark ? 'bg-neutral-900 text-neutral-300' : 'bg-gray-100 text-gray-700'} m-3 mt-1 p-3 rounded-lg text-[10px] overflow-x-auto`}>
+                      <p className={`${textMuted} text-[9px] mb-1`}>produtos.csv:</p>
+                      <pre>{`nome,marca,cor,categoria,preco,sku,frente,costas,detalhe_frente,detalhe_costas
+Camiseta Polo,Nike,Branco,Camisetas,89.90,POLO-001,polo-frente.jpg,polo-costas.jpg,,
+Bermuda Jeans,Levis,Azul,Bermudas,129.90,,bermuda-f.jpg,bermuda-c.jpg,bermuda-det.jpg,`}</pre>
+                    </div>
                   </details>
 
                   {error && (
@@ -823,21 +968,28 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                         <i className={`${product.selected ? 'fas fa-check-square text-[#FF6B6B]' : `far fa-square ${textMuted}`} text-lg`}></i>
                       </button>
 
-                      {/* Image preview */}
-                      <div className={`w-12 h-12 rounded-lg ${bgMuted} overflow-hidden shrink-0`}>
-                        {product.imageBase64 || product.imageUrl ? (
-                          <img
-                            src={product.imageBase64 || product.imageUrl}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '';
-                              (e.target as HTMLImageElement).className = 'hidden';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <i className={`fas fa-image ${textMuted} text-sm`}></i>
+                      {/* Image preview + badge */}
+                      <div className="relative shrink-0">
+                        <div className={`w-12 h-12 rounded-lg ${bgMuted} overflow-hidden`}>
+                          {(product.images.front || product.imageUrl) ? (
+                            <img
+                              src={product.images.front || product.imageUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '';
+                                (e.target as HTMLImageElement).className = 'hidden';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <i className={`fas fa-image ${textMuted} text-sm`}></i>
+                            </div>
+                          )}
+                        </div>
+                        {imageCount(product) > 0 && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[9px] font-bold flex items-center justify-center">
+                            {imageCount(product)}
                           </div>
                         )}
                       </div>
@@ -851,6 +1003,11 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                           className={`w-full ${textPrimary} font-medium text-sm bg-transparent border-none p-0 focus:outline-none focus:ring-0`}
                         />
                         <div className="flex flex-wrap items-center gap-2 mt-1">
+                          {product.sku && (
+                            <span className={`${textMuted} text-[10px]`}>
+                              <i className="fas fa-barcode mr-1"></i>SKU {product.sku}
+                            </span>
+                          )}
                           {product.brand && (
                             <span className={`${textMuted} text-[10px]`}>
                               <i className="fas fa-tag mr-1"></i>{product.brand}
@@ -873,10 +1030,27 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                           </select>
                           {product.price != null && (
                             <span className="text-[10px] text-[#FF9F43] font-medium">
-                              <i className="fas fa-coins mr-1"></i>R$ {product.price.toFixed(2).replace('.', ',')}
+                              R$ {product.price.toFixed(2).replace('.', ',')}
                             </span>
                           )}
                         </div>
+                        {/* Angle pills */}
+                        {imageCount(product) > 0 && (
+                          <div className="flex gap-1 mt-1.5">
+                            {product.images.front && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#FF6B6B]/15 text-[#FF6B6B]">Frente</span>
+                            )}
+                            {product.images.back && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-green-500/15 text-green-500">Costas</span>
+                            )}
+                            {product.images.front_detail && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#FF9F43]/15 text-[#FF9F43]">Det. F</span>
+                            )}
+                            {product.images.back_detail && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#FF9F43]/15 text-[#FF9F43]">Det. C</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -901,29 +1075,58 @@ Vestido Floral,Marca Y,Rosa,Vestidos,produto2.jpg`}
                 <i className="fas fa-sync-alt text-white text-2xl animate-spin"></i>
               </div>
               <h4 className={`${textPrimary} font-semibold text-lg mb-2`}>Importando produtos...</h4>
-              <p className={`${textSecondary} text-sm mb-4`}>
+              <p className={`${textSecondary} text-sm mb-1`}>
                 {importedCount} de {selectedCount} produtos
               </p>
+              {currentProductName && (
+                <p className={`${textMuted} text-xs mb-4 truncate max-w-xs mx-auto`}>
+                  Salvando "{currentProductName}"...
+                </p>
+              )}
               <div className={`w-full ${bgMuted} rounded-full h-2 overflow-hidden`}>
                 <div
                   className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all duration-300"
                   style={{ width: `${importProgress}%` }}
                 />
               </div>
-              <p className={`${textMuted} text-xs mt-2`}>{importProgress}%</p>
+              <p className={`${textMuted} text-xs mt-2`}>Enviando para o servidor... {importProgress}%</p>
             </div>
           )}
 
           {/* Step 5: Done */}
           {step === 'done' && (
-            <div className="py-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-check text-white text-3xl"></i>
+            <div className="py-6 text-center">
+              <div className={`w-20 h-20 rounded-full ${importResults.failed.length === 0
+                ? 'bg-gradient-to-br from-green-500 to-emerald-400'
+                : 'bg-gradient-to-br from-yellow-500 to-orange-400'} flex items-center justify-center mx-auto mb-4`}>
+                <i className={`fas ${importResults.failed.length === 0 ? 'fa-check' : 'fa-exclamation'} text-white text-3xl`}></i>
               </div>
-              <h4 className={`${textPrimary} font-semibold text-lg mb-2`}>Importação concluída!</h4>
-              <p className={`${textSecondary} text-sm`}>
-                {importedCount} produtos foram adicionados ao seu catálogo
-              </p>
+              <h4 className={`${textPrimary} font-semibold text-lg mb-3`}>
+                {importResults.failed.length === 0 ? 'Importação concluída!' : 'Importação parcial'}
+              </h4>
+
+              {importResults.success.length > 0 && (
+                <p className="text-green-500 text-sm mb-1">
+                  <i className="fas fa-check-circle mr-1"></i>
+                  {importResults.success.length} {importResults.success.length === 1 ? 'produto importado' : 'produtos importados'} com sucesso
+                </p>
+              )}
+
+              {importResults.failed.length > 0 && (
+                <div className="mt-3 text-left">
+                  <p className="text-red-500 text-sm mb-2 text-center">
+                    <i className="fas fa-times-circle mr-1"></i>
+                    {importResults.failed.length} {importResults.failed.length === 1 ? 'produto falhou' : 'produtos falharam'}
+                  </p>
+                  <div className={`${bgMuted} rounded-lg p-3 max-h-32 overflow-y-auto`}>
+                    {importResults.failed.map((f, i) => (
+                      <div key={i} className={`${textSecondary} text-xs py-1 ${i > 0 ? `border-t ${borderColor}` : ''}`}>
+                        <span className={textPrimary}>{f.name}</span>: {f.error}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
