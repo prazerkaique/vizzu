@@ -15,6 +15,7 @@ import heic2any from 'heic2any';
 import { compressImage, formatFileSize } from '../utils/imageCompression';
 import { getProductType, UPLOAD_SLOTS_CONFIG, DETAIL_TIPS, angleToApiField, angleToOriginalImagesKey, type UploadSlotConfig } from '../lib/productConfig';
 import { ProductGridSkeleton } from '../components/LoadingSkeleton';
+import { RegisterAllWizard } from '../components/RegisterAllWizard';
 
 const CATEGORY_GROUPS = [
  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
@@ -87,6 +88,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [detectedProducts, setDetectedProducts] = useState<Array<{ type: string; color: string; pattern: string; material?: string; gender?: string; suggestedName?: string; confidence: number }>>([]);
   const [showProductSelector, setShowProductSelector] = useState(false);
+  const [showRegisterAll, setShowRegisterAll] = useState(false);
   const [longPressProductId, setLongPressProductId] = useState<string | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -990,14 +992,44 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  ))}
  </div>
 
+ {/* Cadastrar Todos */}
+ <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' border-t pt-3 mt-3'}>
+ <button
+ onClick={() => { setShowProductSelector(false); setShowRegisterAll(true); }}
+ className="w-full py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 transition-opacity"
+ >
+ <i className="fas fa-layer-group mr-2"></i>
+ Cadastrar todos ({detectedProducts.length} produtos)
+ </button>
+ </div>
+
  <button
  onClick={() => setShowProductSelector(false)}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}
+ className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-2 py-2 text-xs font-medium'}
  >
  Preencher manualmente
  </button>
  </div>
  </div>
+)}
+
+{/* REGISTER ALL WIZARD */}
+{showRegisterAll && detectedProducts.length > 0 && (
+ <RegisterAllWizard
+ theme={theme}
+ detectedProducts={detectedProducts as any}
+ frontImage={getImage('front')!}
+ userId={user?.id || ''}
+ onComplete={() => {
+   setShowRegisterAll(false);
+   setDetectedProducts([]);
+   setShowCreateProduct(false);
+   clearAllImages();
+   if (user?.id) loadUserProducts(user.id);
+   showToast('Produtos cadastrados com sucesso!', 'success');
+ }}
+ onClose={() => setShowRegisterAll(false)}
+ />
 )}
 
 {/* CREATE PRODUCT MODAL */}

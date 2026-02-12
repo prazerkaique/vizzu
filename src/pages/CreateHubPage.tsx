@@ -59,7 +59,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-white/90 text-[#FF6B6B] text-[9px] font-bold rounded-full uppercase whitespace-nowrap">IA</span>
     <span className="flex items-center gap-1 px-2 py-0.5 bg-white/15 backdrop-blur-sm rounded-full text-sm text-white/90 whitespace-nowrap">
-    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1 crédito/foto
+    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1-2 créditos/foto
     </span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Product Studio®</h3>
@@ -96,7 +96,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-white/90 text-[#FF6B6B] text-[9px] font-bold rounded-full uppercase whitespace-nowrap">Novo</span>
     <span className="flex items-center gap-1 px-2 py-0.5 bg-white/15 backdrop-blur-sm rounded-full text-sm text-white/90 whitespace-nowrap">
-    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1 crédito
+    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1-2 créditos
     </span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Provador®</h3>
@@ -133,7 +133,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-white/90 text-[#FF6B6B] text-[9px] font-bold rounded-full uppercase whitespace-nowrap">IA</span>
     <span className="flex items-center gap-1 px-2 py-0.5 bg-white/15 backdrop-blur-sm rounded-full text-sm text-white/90 whitespace-nowrap">
-    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1 crédito
+    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1-2 créditos
     </span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Look Composer®</h3>
@@ -170,7 +170,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="flex items-center gap-2 mb-2">
     <span className="px-2 py-0.5 bg-white/90 text-[#FF6B6B] text-[9px] font-bold rounded-full uppercase whitespace-nowrap">Novo</span>
     <span className="flex items-center gap-1 px-2 py-0.5 bg-white/15 backdrop-blur-sm rounded-full text-sm text-white/90 whitespace-nowrap">
-    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1 crédito
+    <i className="fas fa-coins text-[#FF9F43] text-[10px]"></i>1-2 créditos
     </span>
     </div>
     <h3 className="text-xl font-bold text-white mb-1 font-serif">Vizzu Still Criativo®</h3>
