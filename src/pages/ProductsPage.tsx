@@ -5,7 +5,7 @@ import { useProducts } from '../contexts/ProductsContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
 import { useDebounce } from '../hooks/useDebounce';
-import { BulkImportModal } from '../components/BulkImportModal';
+import { BulkImportModal } from '../components/BulkImport/BulkImportModal';
 import { analyzeProductImage } from '../lib/api/studio';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES } from '../types';
 import { OptimizedImage } from '../components/OptimizedImage';
