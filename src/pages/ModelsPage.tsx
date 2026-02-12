@@ -1185,25 +1185,34 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="space-y-4">
  <div className="text-center mb-4">
  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Que tipo de modelo?</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Crie com IA ou use fotos de uma pessoa real</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Crie com IA, use fotos reais ou se coloque como modelo</p>
  </div>
- <div className="grid grid-cols-2 gap-4">
+ <div className="grid grid-cols-3 gap-3">
  <button
  onClick={() => { setNewModel({ ...newModel, modelType: 'ai' }); setModelWizardStep(2); }}
- className={'p-6 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5' : 'border-gray-200 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5')}
+ className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5' : 'border-gray-200 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5')}
  >
- <i className={'fas fa-wand-magic-sparkles text-4xl mb-3 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>Modelo IA</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>Criar modelo virtual personalizado</p>
+ <i className={'fas fa-wand-magic-sparkles text-3xl mb-2 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Modelo IA</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Criar modelo virtual personalizado</p>
  <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
  </button>
  <button
  onClick={() => { setNewModel({ ...newModel, modelType: 'real' }); setModelWizardStep(2); }}
- className={'p-6 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-blue-500/50 hover:bg-blue-500/5' : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-500/5')}
+ className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-blue-500/50 hover:bg-blue-500/5' : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-500/5')}
  >
- <i className={'fas fa-camera text-4xl mb-3 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>Modelo Real</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>Enviar fotos de uma pessoa real</p>
+ <i className={'fas fa-camera text-3xl mb-2 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Modelo Real</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Enviar fotos de uma pessoa real</p>
+ <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
+ </button>
+ <button
+ onClick={() => { setNewModel({ ...newModel, modelType: 'real' }); setModelWizardStep(2); }}
+ className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-[#FF9F43]/50 hover:bg-[#FF9F43]/5' : 'border-gray-200 hover:border-[#FF9F43]/50 hover:bg-[#FF9F43]/5')}
+ >
+ <i className={'fas fa-user-circle text-3xl mb-2 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Você</p>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Se coloque como modelo da sua marca</p>
  <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
  </button>
  </div>
