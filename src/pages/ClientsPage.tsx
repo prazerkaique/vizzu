@@ -45,6 +45,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
  const [selectedLookForWhatsApp, setSelectedLookForWhatsApp] = useState<ClientLook | null>(null);
  const [whatsAppLookMessage, setWhatsAppLookMessage] = useState('');
  const [isSendingWhatsAppLook, setIsSendingWhatsAppLook] = useState(false);
+ const [loadingClientLooks, setLoadingClientLooks] = useState(false);
  const [editingClient, setEditingClient] = useState<Client | null>(null);
  const [editClientPhotos, setEditClientPhotos] = useState<ClientPhoto[]>([]);
  const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -81,6 +82,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
  useEffect(() => {
   const loadLooksForDetail = async () => {
    if (showClientDetail && user) {
+    setLoadingClientLooks(true);
     try {
      const { data, error } = await supabase
       .from('client_looks')
@@ -103,6 +105,8 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
      }
     } catch (error) {
      console.error('Erro ao carregar looks do cliente:', error);
+    } finally {
+     setLoadingClientLooks(false);
     }
    } else {
     setClientDetailLooks([]);
@@ -429,6 +433,12 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
   return lookItems ? `${baseMessage}\n\n${lookItems}` : baseMessage;
  };
 
+ const openWhatsAppForSpecificLook = (client: Client, look: ClientLook) => {
+  setSelectedLookForWhatsApp(look);
+  setWhatsAppLookMessage(generateWhatsAppLookMessage(client, look));
+  setShowWhatsAppLookModal(client);
+ };
+
  const openWhatsAppLookModal = (client: Client) => {
   setShowWhatsAppLookModal(client);
   if (clientDetailLooks.length === 1) {
@@ -568,7 +578,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
       <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
        <div className={'divide-y ' + (theme === 'dark' ? 'divide-neutral-800' : 'divide-gray-100')}>
         {filteredClients.map(client => (
-         <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => { setProvadorClient(client); navigateTo('provador'); }}>
+         <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => setShowClientDetail(client)}>
           <div className="flex items-center gap-3">
            <div className="relative">
             {getClientPhoto(client) ? (
@@ -728,24 +738,25 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
     </div>
    )}
 
-   {/* CLIENT DETAIL MODAL */}
+   {/* CLIENT PROFILE CARD */}
    {showClientDetail && (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowClientDetail(null)}>
-     <div className="bg-neutral-900 rounded-t-2xl md:rounded-2xl border border-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet cursor-pointer" onClick={(e) => { e.stopPropagation(); setProvadorClient(showClientDetail); setShowClientDetail(null); navigateTo('provador'); }}>
+     <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md overflow-hidden flex flex-col safe-area-bottom-sheet'} style={{ maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pt-3 pb-1 flex justify-center">
-       <div className="bg-gray-300 w-10 h-1 rounded-full"></div>
+       <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
       </div>
-      <div className="bg-neutral-800 px-4 py-5 text-center relative border-b border-neutral-700">
-       <button onClick={(e) => { e.stopPropagation(); setShowClientDetail(null); }} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-300 hidden md:flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+      {/* Header */}
+      <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' px-4 py-5 text-center relative border-b'}>
+       <button onClick={() => setShowClientDetail(null)} className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-400 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700') + ' absolute top-3 right-3 w-7 h-7 rounded-full hidden md:flex items-center justify-center transition-colors'}>
         <i className="fas fa-times text-xs"></i>
        </button>
        <div className="relative inline-block">
         {getClientPhoto(showClientDetail) ? (
-         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className="w-16 h-16 rounded-full border-2 border-neutral-600 mx-auto" size="thumb" />
+         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className={'w-16 h-16 rounded-full border-2 mx-auto ' + (theme === 'dark' ? 'border-neutral-600' : 'border-gray-300')} size="thumb" />
         ) : (
-         <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center mx-auto">
-          <span className="text-xl font-medium text-neutral-400">{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
+         <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-16 h-16 rounded-full flex items-center justify-center mx-auto'}>
+          <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xl font-medium'}>{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
          </div>
         )}
         {showClientDetail.hasProvadorIA && (
@@ -754,13 +765,26 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
          </div>
         )}
        </div>
-       <h2 className="text-base font-semibold text-white mt-2">{showClientDetail.firstName} {showClientDetail.lastName}</h2>
-       <p className="text-neutral-400 text-xs">{formatWhatsApp(showClientDetail.whatsapp)}</p>
+       <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mt-2'}>{showClientDetail.firstName} {showClientDetail.lastName}</h2>
+       <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(showClientDetail.whatsapp)}</p>
+       <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+        <span className={'px-2 py-1 rounded-full text-[10px] font-medium ' + (showClientDetail.status === 'active' ? 'bg-green-500/20 text-green-400' : showClientDetail.status === 'vip' ? 'bg-amber-500/20 text-amber-400' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
+         {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
+        </span>
+        {showClientDetail.hasProvadorIA && (
+         <span className="px-2 py-1 bg-[#FF6B6B]/20 text-[#FF6B6B] rounded-full text-[10px] font-medium">
+          <i className="fas fa-camera mr-1"></i>Provador IA
+         </span>
+        )}
+       </div>
       </div>
-      <div className="p-4 space-y-3">
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+       {/* Fotos Cadastradas */}
        {showClientDetail.photos && showClientDetail.photos.length > 0 && (
         <div>
-         <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2">Fotos Cadastradas</p>
+         <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2'}>Fotos Cadastradas</p>
          <div className="flex gap-2">
           {showClientDetail.photos.map(photo => (
            <div key={photo.type} className="relative">
@@ -771,59 +795,133 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
          </div>
         </div>
        )}
-       <div className="flex flex-wrap gap-1.5">
-        <span className={'px-2 py-1 rounded-full text-[10px] font-medium ' + (showClientDetail.status === 'active' ? 'bg-green-500/20 text-green-400' : showClientDetail.status === 'vip' ? 'bg-amber-500/20 text-amber-400' : 'bg-neutral-800 text-neutral-400')}>
-         {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
-        </span>
-        {showClientDetail.hasProvadorIA && (
-         <span className="px-2 py-1 bg-[#FF6B6B]/20 text-[#FF6B6B] rounded-full text-[10px] font-medium">
-          <i className="fas fa-camera mr-1"></i>Vizzu Provador®
-         </span>
+
+       {/* Email */}
+       {showClientDetail.email && (
+        <div className={(theme === 'dark' ? 'bg-neutral-800 ' : 'bg-gray-100 ') + 'flex items-center gap-2.5 p-2.5 rounded-lg'}>
+         <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-envelope text-xs'}></i>
+         <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs'}>{showClientDetail.email}</span>
+        </div>
+       )}
+
+       {/* Observações */}
+       {showClientDetail.notes && (
+        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' p-2.5 rounded-lg'}>
+         <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1'}>Observações</p>
+         <p className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs'}>{showClientDetail.notes}</p>
+        </div>
+       )}
+
+       {/* Looks Gallery */}
+       <div>
+        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1'}>
+         <i className="fas fa-images text-[#FF6B6B]"></i>
+         Looks Gerados {!loadingClientLooks && `(${clientDetailLooks.length})`}
+        </p>
+
+        {loadingClientLooks ? (
+         <div className="flex items-center justify-center py-6">
+          <div className={(theme === 'dark' ? 'border-neutral-600' : 'border-gray-300') + ' w-5 h-5 border-2 rounded-full animate-spin border-t-transparent'}></div>
+          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs ml-2'}>Carregando looks...</span>
+         </div>
+        ) : clientDetailLooks.length > 0 ? (
+         <div className="space-y-3">
+          {clientDetailLooks.map(look => {
+           const lookKeys = ['head', 'top', 'bottom', 'feet', 'accessory1', 'accessory2'] as const;
+           const items = lookKeys.filter(k => look.lookItems[k]?.name).map(k => look.lookItems[k]!);
+           const totalPrice = items.reduce((sum, it) => sum + (it.price || 0), 0);
+
+           return (
+            <div key={look.id} className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-xl border overflow-hidden'}>
+             <div className="flex">
+              {/* Look Image */}
+              <div className="w-28 flex-shrink-0">
+               <OptimizedImage
+                src={look.imageUrl}
+                alt="Look"
+                className="w-full h-full min-h-[120px] cursor-zoom-in"
+                objectFit="cover"
+                size="preview"
+                onClick={() => openViewer(look.imageUrl, { alt: 'Look' })}
+               />
+              </div>
+              {/* Look Details */}
+              <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+               <div>
+                {items.length > 0 ? (
+                 <div className="space-y-1">
+                  {items.map((item, idx) => (
+                   <div key={idx} className="flex items-center justify-between gap-1">
+                    <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] truncate'}>{item.name}</span>
+                    {item.price ? (
+                     <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] flex-shrink-0'}>
+                      R$ {item.price.toFixed(2).replace('.', ',')}
+                     </span>
+                    ) : null}
+                   </div>
+                  ))}
+                 </div>
+                ) : (
+                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] italic'}>Sem itens detalhados</p>
+                )}
+                {totalPrice > 0 && (
+                 <div className={'mt-1.5 pt-1.5 border-t ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+                  <span className="text-[10px] font-semibold text-[#FF6B6B]">Total: R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
+                 </div>
+                )}
+               </div>
+               {/* Actions Row */}
+               <div className="flex items-center justify-between mt-2">
+                <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>
+                 {new Date(look.createdAt).toLocaleDateString('pt-BR')}
+                </span>
+                <div className="flex items-center gap-1.5">
+                 <button
+                  onClick={() => openWhatsAppForSpecificLook(showClientDetail, look)}
+                  className="w-7 h-7 rounded-full bg-green-500/15 text-green-500 hover:bg-green-500/25 flex items-center justify-center transition-colors"
+                  title="Enviar via WhatsApp"
+                 >
+                  <i className="fab fa-whatsapp text-xs"></i>
+                 </button>
+                 <button
+                  onClick={() => openViewer(look.imageUrl, { alt: 'Look' })}
+                  className={(theme === 'dark' ? 'bg-neutral-700/50 text-neutral-400 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}
+                  title="Ampliar"
+                 >
+                  <i className="fas fa-expand text-[10px]"></i>
+                 </button>
+                </div>
+               </div>
+              </div>
+             </div>
+            </div>
+           );
+          })}
+         </div>
+        ) : (
+         <div className={(theme === 'dark' ? 'bg-neutral-800/30' : 'bg-gray-50') + ' rounded-xl p-6 text-center'}>
+          <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-images text-2xl mb-2'}></i>
+          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Nenhum look gerado ainda</p>
+          <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>Use o Vizzu Provador para criar looks</p>
+         </div>
         )}
        </div>
-       {showClientDetail.email && (
-        <div className="flex items-center gap-2.5 p-2.5 bg-neutral-800 rounded-lg">
-         <i className="fas fa-envelope text-neutral-500 text-xs"></i>
-         <span className="text-xs text-neutral-300">{showClientDetail.email}</span>
-        </div>
-       )}
-       {showClientDetail.notes && (
-        <div className="p-2.5 bg-neutral-800 rounded-lg">
-         <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-1">Observações</p>
-         <p className="text-xs text-neutral-300">{showClientDetail.notes}</p>
-        </div>
-       )}
-       {/* Looks Salvos */}
-       {clientDetailLooks.length > 0 && (
-        <div>
-         <p className="text-[9px] font-medium text-neutral-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-          <i className="fas fa-images text-[#FF6B6B]"></i>
-          Looks Gerados ({clientDetailLooks.length})
-         </p>
-         <div className="grid grid-cols-4 gap-2">
-          {clientDetailLooks.map(look => (
-           <div key={look.id} className="relative group">
-            <OptimizedImage
-             src={look.imageUrl}
-             alt="Look"
-             className="w-full aspect-[3/4] rounded-lg border border-neutral-700 cursor-zoom-in hover:border-neutral-500 transition-colors"
-             onClick={() => openViewer(look.imageUrl, { alt: 'Look' })}
-             size="preview"
-            />
-            <div className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[8px] py-0.5 px-1 rounded text-center truncate">
-             {new Date(look.createdAt).toLocaleDateString('pt-BR')}
-            </div>
-           </div>
-          ))}
-         </div>
-        </div>
-       )}
-       <div className="grid grid-cols-2 gap-2 pt-2">
-        <button onClick={(e) => { e.stopPropagation(); startEditingClient(showClientDetail); }} className="py-2.5 bg-neutral-800 hover:bg-gray-300 text-blue-400 border border-neutral-700 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
-         <i className="fas fa-pen text-[10px]"></i>Editar
+      </div>
+
+      {/* Footer */}
+      <div className={(theme === 'dark' ? 'border-neutral-800 bg-neutral-900' : 'border-gray-200 bg-white') + ' border-t px-4 py-3'}>
+       <div className="flex items-center gap-2">
+        <button
+         onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); navigateTo('provador'); }}
+         className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-xs flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-[#FF6B6B]/20"
+        >
+         <i className="fas fa-shirt text-[10px]"></i>Vizzu Provador
         </button>
-        <button onClick={(e) => { e.stopPropagation(); handleDeleteClient(showClientDetail.id); }} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors">
-         <i className="fas fa-trash text-[10px]"></i>Excluir
+        <button onClick={() => startEditingClient(showClientDetail)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white border-neutral-700' : 'bg-gray-100 text-gray-500 hover:text-gray-700 border-gray-200') + ' w-10 h-10 rounded-xl border flex items-center justify-center transition-colors'} title="Editar">
+         <i className="fas fa-pen text-xs"></i>
+        </button>
+        <button onClick={() => { if (confirm('Excluir cliente ' + showClientDetail.firstName + ' ' + showClientDetail.lastName + '?')) { handleDeleteClient(showClientDetail.id); setShowClientDetail(null); } }} className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center transition-colors" title="Excluir">
+         <i className="fas fa-trash text-xs"></i>
         </button>
        </div>
       </div>
