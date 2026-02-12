@@ -160,7 +160,6 @@ interface ModelsPageProps {
  showCreateModel: boolean;
  setShowCreateModel: (v: boolean) => void;
  userCredits?: number;
- onDeductCredits?: (amount: number, reason: string) => boolean;
  onModelCreated?: (modelId: string) => void;
 }
 
@@ -170,7 +169,6 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  showCreateModel,
  setShowCreateModel,
  userCredits = 0,
- onDeductCredits,
  onModelCreated,
 }) => {
  // Combinar modelos default + do usuário
@@ -481,13 +479,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const generateModelPreview = async () => {
  if (!user || !newModel.name.trim()) return;
 
- // Verificar e debitar créditos (2 créditos para criar modelo)
- if (onDeductCredits) {
- const success = onDeductCredits(MODEL_CREATION_COST, 'Criar Modelo IA');
- if (!success) {
+ // Verificar créditos (débito feito pelo workflow N8N)
+ if ((userCredits ?? 0) < MODEL_CREATION_COST) {
  showToast('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.', 'error');
  return;
- }
  }
 
  setGeneratingModelImages(true);
@@ -659,13 +654,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const generateRealModelPreview = async () => {
  if (!user || !newModel.name.trim() || !realModelPhotos.front) return;
 
- // Debitar créditos
- if (onDeductCredits) {
-   const success = onDeductCredits(MODEL_CREATION_COST, 'Criar Modelo Real');
-   if (!success) {
-     showToast('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.', 'error');
-     return;
-   }
+ // Verificar créditos (débito feito pelo workflow N8N)
+ if ((userCredits ?? 0) < MODEL_CREATION_COST) {
+   showToast('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.', 'error');
+   return;
  }
 
  setGeneratingModelImages(true);

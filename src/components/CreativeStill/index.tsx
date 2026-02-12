@@ -58,7 +58,6 @@ export interface CreativeStillProps {
   products: Product[];
   userCredits: number;
   userId?: string;
-  onDeductCredits: (amount: number, reason: string) => boolean;
   onAddHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => void;
   onCheckCredits?: (creditsNeeded: number, actionContext: string) => boolean;
   currentPlan?: Plan;
@@ -114,7 +113,6 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   products,
   userCredits,
   userId,
-  onDeductCredits,
   onAddHistoryLog,
   onCheckCredits,
   currentPlan,

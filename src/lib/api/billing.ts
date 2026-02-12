@@ -353,51 +353,6 @@ export async function checkCheckoutStatus(params: CheckCheckoutStatusParams): Pr
 }
 
 // ═══════════════════════════════════════════════════════════════
-// USAR CRÉDITOS (DEDUZIR)
-// ═══════════════════════════════════════════════════════════════
-
-interface UseCreditsParams {
-  userId: string;
-  amount: number;
-  description: string;
-  referenceId?: string; // ID da geração, por exemplo
-}
-
-interface UseCreditsResponse {
-  success: boolean;
-  credits_used: number;
-  new_balance: number;
-  transaction_id: string;
-  error?: string;
-}
-
-/**
- * Deduz créditos da conta do usuário
- */
-export async function useCredits(params: UseCreditsParams): Promise<UseCreditsResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/use-credits`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      user_id: params.userId,
-      amount: params.amount,
-      description: params.description,
-      reference_id: params.referenceId,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro ao usar créditos');
-  }
-
-  return data;
-}
-
-// ═══════════════════════════════════════════════════════════════
 // HELPER: CALCULAR DIAS ATÉ RENOVAÇÃO
 // ═══════════════════════════════════════════════════════════════
 

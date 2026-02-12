@@ -19,7 +19,6 @@ interface LookComposerProps {
  products: Product[];
  userCredits: number;
  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
- onDeductCredits: (amount: number, reason: string) => boolean;
  onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => void;
  onImport?: () => void;
  currentPlan?: Plan;
@@ -104,7 +103,6 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  products,
  userCredits,
  onUpdateProduct,
- onDeductCredits,
  onAddHistoryLog,
  onImport,
  currentPlan,
@@ -655,7 +653,6 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  products={products}
  userCredits={userCredits}
  onUpdateProduct={onUpdateProduct}
- onDeductCredits={onDeductCredits}
  onAddHistoryLog={onAddHistoryLog}
  onBack={handleBackToList}
  onCheckCredits={onCheckCredits}

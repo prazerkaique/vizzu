@@ -68,7 +68,6 @@ interface ProductStudioEditorProps {
  product: Product;
  userCredits: number;
  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
- onDeductCredits: (amount: number, reason: string) => boolean;
  onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => void;
  onBack: () => void;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
@@ -158,7 +157,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  product,
  userCredits,
  onUpdateProduct,
- onDeductCredits,
  onAddHistoryLog,
  onBack,
  onCheckCredits,

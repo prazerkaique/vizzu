@@ -14,7 +14,6 @@ interface ProductStudioProps {
  products: Product[];
  userCredits: number;
  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
- onDeductCredits: (amount: number, reason: string) => boolean;
  onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number) => void;
  onImport?: () => void;
  currentPlan?: Plan;
@@ -64,7 +63,6 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  products,
  userCredits,
  onUpdateProduct,
- onDeductCredits,
  onAddHistoryLog,
  onImport,
  currentPlan,
@@ -278,7 +276,6 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  product={selectedProduct}
  userCredits={userCredits}
  onUpdateProduct={onUpdateProduct}
- onDeductCredits={onDeductCredits}
  onAddHistoryLog={onAddHistoryLog}
  onBack={handleBackToList}
  onCheckCredits={onCheckCredits}

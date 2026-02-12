@@ -151,7 +151,6 @@ function App() {
  billingPeriod,
  daysUntilRenewal,
  isCheckoutLoading,
- deductCredits,
  deductEditCredits,
  purchaseCredits,
  upgradePlan,
@@ -560,10 +559,6 @@ function App() {
  window.addEventListener('keydown', handleEsc);
  return () => window.removeEventListener('keydown', handleEsc);
  }, [showVideoTutorial]);
-
- const handleDeductCredits = (amount: number, reason: string): boolean => {
- return deductCredits(amount, reason);
- };
 
  // CLIENT LOOKS - Funções para gerenciar looks salvos
 
@@ -1004,7 +999,7 @@ function App() {
      case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
-     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
+     case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
      case 'clients': return <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />;
      default: return null;
    }
@@ -1030,7 +1025,6 @@ function App() {
  products={products}
  userCredits={userCredits}
  onUpdateProduct={handleUpdateProduct}
- onDeductCredits={handleDeductCredits}
  onAddHistoryLog={addHistoryLog}
  onImport={() => navigateTo('products')}
  currentPlan={currentPlan}
@@ -1110,7 +1104,6 @@ function App() {
  products={products}
  userCredits={userCredits}
  onUpdateProduct={handleUpdateProduct}
- onDeductCredits={handleDeductCredits}
  onAddHistoryLog={addHistoryLog}
  onImport={() => navigateTo('products')}
  currentPlan={currentPlan}
@@ -1160,7 +1153,6 @@ function App() {
  products={products}
  userCredits={userCredits}
  userId={user?.id}
- onDeductCredits={handleDeductCredits}
  onAddHistoryLog={addHistoryLog}
  onCheckCredits={checkCreditsAndShowModal}
  currentPlan={currentPlan}
@@ -1181,7 +1173,7 @@ function App() {
  )}
 
  {/* MODELS */}
- {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onDeductCredits={deductCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />}
+ {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />}
 
  {/* PRODUCTS */}
  {currentPage === 'products' && <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />}

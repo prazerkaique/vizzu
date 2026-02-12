@@ -1018,8 +1018,8 @@ interface GenerateModelImagesResponse {
 }
 
 /**
- * Gera as 3 imagens do modelo salvo (frente, costas, rosto)
- * Custo: 0 créditos (custo é ao usar o modelo no Studio)
+ * Gera as imagens do modelo (frente e costas)
+ * Custo: 2 créditos (debitados pelo workflow N8N)
  */
 export async function generateModelImages(params: GenerateModelImagesParams): Promise<GenerateModelImagesResponse> {
   const controller = new AbortController();

@@ -18,7 +18,6 @@ interface LookComposerEditorProps {
  products: Product[];
  userCredits: number;
  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
- onDeductCredits: (amount: number, reason: string) => boolean;
  onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number, imageUrl?: string) => void;
  onBack: () => void;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
@@ -284,7 +283,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  products,
  userCredits,
  onUpdateProduct,
- onDeductCredits,
  onAddHistoryLog,
  onBack,
  onCheckCredits,
@@ -1507,11 +1505,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }
  });
 
- // Deduzir créditos
- if (onDeductCredits) {
- const viewsLabel = viewsMode === 'front-back' ? 'Frente e Costas' : 'Frente';
- onDeductCredits(creditsNeeded, `Look Composer - ${lookMode === 'composer' ? 'Com peças' : 'Descrito'} (${viewsLabel})`);
- }
+ // Créditos debitados pelo workflow N8N (não debitar no frontend para evitar débito duplo)
 
  // Log de sucesso
  if (onAddHistoryLog) {
