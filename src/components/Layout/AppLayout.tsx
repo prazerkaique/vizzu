@@ -30,7 +30,7 @@ export function AppLayout({
    isGeneratingLookComposer, lookComposerMinimized, lookComposerProgress, setLookComposerMinimized,
    isGeneratingProvador, provadorMinimized, provadorProgress, setProvadorMinimized,
    isGeneratingCreativeStill, creativeStillMinimized, creativeStillProgress, setCreativeStillMinimized,
-   pendingNotifications, clearPendingNotifications,
+   completedFeatures, clearCompletedFeature, clearAllCompletedFeatures,
    minimizedModals, closeMinimizedModal,
  } = useGeneration();
 
@@ -272,12 +272,14 @@ export function AppLayout({
 
  const isCreationPage = ['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage);
 
- // Limpar badges de notificação quando está em página de criação
+ // Limpar badge da feature específica quando navega para ela
  useEffect(() => {
-   if (isCreationPage || currentPage === 'create') {
-     clearPendingNotifications();
+   if (isCreationPage) {
+     clearCompletedFeature(currentPage);
+   } else if (currentPage === 'create') {
+     // Não limpa automaticamente — badges ficam nos cards do hub
    }
- }, [currentPage, isCreationPage, clearPendingNotifications]);
+ }, [currentPage, isCreationPage, clearCompletedFeature]);
 
  return (
  <div
@@ -337,7 +339,7 @@ export function AppLayout({
  {/* Botão CRIAR - Destacado no Centro */}
  <div className="py-2">
  <button
- onClick={() => { navigateTo('create'); clearPendingNotifications(); }}
+ onClick={() => navigateTo('create')}
  title="Criar"
  className={'relative w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ' +
  (currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio'
@@ -347,9 +349,9 @@ export function AppLayout({
  }
  >
  <i className="fas fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
- {pendingNotifications > 0 && (
+ {completedFeatures.length > 0 && (
    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-white text-[#FF6B6B] text-[10px] font-bold shadow-md animate-bounce">
-     {pendingNotifications}
+     {completedFeatures.length}
    </span>
  )}
  </button>
@@ -542,13 +544,13 @@ export function AppLayout({
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
  {/* Botão CRIAR - Central destacado */}
- <button onClick={() => { navigateTo('create'); clearPendingNotifications(); }} className="relative -mt-5">
+ <button onClick={() => navigateTo('create')} className="relative -mt-5">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-transform ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-[#373632]')}>
  <img src="/vizzu-icon-white.png" alt="Vizzu" className="h-[38px] w-auto" />
  </div>
- {pendingNotifications > 0 && (
+ {completedFeatures.length > 0 && (
    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF6B6B] text-white text-[10px] font-bold shadow-md animate-bounce">
-     {pendingNotifications}
+     {completedFeatures.length}
    </span>
  )}
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>

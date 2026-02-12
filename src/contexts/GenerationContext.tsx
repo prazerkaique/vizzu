@@ -65,9 +65,10 @@ interface GenerationContextType {
  // Computed
  isAnyGenerationRunning: boolean;
 
- // Notificações de geração concluída
- pendingNotifications: number;
- clearPendingNotifications: () => void;
+ // Notificações de geração concluída (lista de pages: 'product-studio', 'provador', etc.)
+ completedFeatures: string[];
+ clearCompletedFeature: (page: string) => void;
+ clearAllCompletedFeatures: () => void;
 
  // Minimized Modals
  minimizedModals: MinimizedModal[];
@@ -107,22 +108,22 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  const [creativeStillMinimized, setCreativeStillMinimized] = useState(false);
  const [creativeStillProgress, setCreativeStillProgress] = useState(0);
 
- // Notificações de geração concluída
- const [pendingNotifications, setPendingNotifications] = useState(0);
+ // Notificações de geração concluída — lista de pages ('product-studio', 'provador', etc.)
+ const [completedFeatures, setCompletedFeatures] = useState<string[]>([]);
  const prevGeneratingRef = useRef({ ps: false, lc: false, pv: false, cs: false });
 
- // Detectar quando uma geração finaliza (true → false) e incrementar badge
+ // Detectar quando uma geração finaliza (true → false) e adicionar a page à lista
  useEffect(() => {
    const prev = prevGeneratingRef.current;
-   let newCompleted = 0;
+   const newFeatures: string[] = [];
 
-   if (prev.ps && !isGeneratingProductStudio) newCompleted++;
-   if (prev.lc && !isGeneratingLookComposer) newCompleted++;
-   if (prev.pv && !isGeneratingProvador) newCompleted++;
-   if (prev.cs && !isGeneratingCreativeStill) newCompleted++;
+   if (prev.ps && !isGeneratingProductStudio) newFeatures.push('product-studio');
+   if (prev.lc && !isGeneratingLookComposer) newFeatures.push('look-composer');
+   if (prev.pv && !isGeneratingProvador) newFeatures.push('provador');
+   if (prev.cs && !isGeneratingCreativeStill) newFeatures.push('creative-still');
 
-   if (newCompleted > 0) {
-     setPendingNotifications(n => n + newCompleted);
+   if (newFeatures.length > 0) {
+     setCompletedFeatures(prev => [...prev, ...newFeatures]);
    }
 
    prevGeneratingRef.current = {
@@ -133,7 +134,8 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
    };
  }, [isGeneratingProductStudio, isGeneratingLookComposer, isGeneratingProvador, isGeneratingCreativeStill]);
 
- const clearPendingNotifications = () => setPendingNotifications(0);
+ const clearCompletedFeature = (page: string) => setCompletedFeatures(prev => prev.filter(f => f !== page));
+ const clearAllCompletedFeatures = () => setCompletedFeatures([]);
 
  // Minimized Modals
  const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
@@ -237,7 +239,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      creativeStillMinimized, setCreativeStillMinimized,
      creativeStillProgress, setCreativeStillProgress,
      isAnyGenerationRunning,
-     pendingNotifications, clearPendingNotifications,
+     completedFeatures, clearCompletedFeature, clearAllCompletedFeatures,
      minimizedModals, setMinimizedModals,
      closeMinimizedModal,
    }}>

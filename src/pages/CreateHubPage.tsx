@@ -1,5 +1,6 @@
 import React from 'react';
 import { useUI } from '../contexts/UIContext';
+import { useGeneration } from '../contexts/GenerationContext';
 
 interface CreateHubPageProps {
   userCredits: number;
@@ -7,6 +8,7 @@ interface CreateHubPageProps {
 
 export function CreateHubPage({ userCredits }: CreateHubPageProps) {
   const { theme, navigateTo, setSettingsTab, setShowVideoTutorial } = useUI();
+  const { completedFeatures, clearCompletedFeature } = useGeneration();
 
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 transition-colors duration-200 ' + (theme === 'dark' ? '' : 'bg-cream')}>
@@ -46,7 +48,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
     {/* Card 1: Vizzu Product Studio */}
     <div
-    onClick={() => navigateTo('product-studio')}
+    onClick={() => { clearCompletedFeature('product-studio'); navigateTo('product-studio'); }}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
@@ -72,12 +74,18 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     </div>
     </div>
     </div>
+    {completedFeatures.includes('product-studio') && (
+    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full shadow-lg animate-bounce">
+    <i className="fas fa-check-circle text-[#FF6B6B] text-xs"></i>
+    <span className="text-[#FF6B6B] text-[10px] font-bold">Pronto!</span>
+    </div>
+    )}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
     </div>
 
     {/* Card 2: Vizzu Provador */}
     <div
-    onClick={() => navigateTo('provador')}
+    onClick={() => { clearCompletedFeature('provador'); navigateTo('provador'); }}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
@@ -103,12 +111,18 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     </div>
     </div>
     </div>
+    {completedFeatures.includes('provador') && (
+    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full shadow-lg animate-bounce">
+    <i className="fas fa-check-circle text-[#FF6B6B] text-xs"></i>
+    <span className="text-[#FF6B6B] text-[10px] font-bold">Pronto!</span>
+    </div>
+    )}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
     </div>
 
     {/* Card 3: Vizzu Look Composer */}
     <div
-    onClick={() => navigateTo('look-composer')}
+    onClick={() => { clearCompletedFeature('look-composer'); navigateTo('look-composer'); }}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
@@ -134,12 +148,18 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     </div>
     </div>
     </div>
+    {completedFeatures.includes('look-composer') && (
+    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full shadow-lg animate-bounce">
+    <i className="fas fa-check-circle text-[#FF6B6B] text-xs"></i>
+    <span className="text-[#FF6B6B] text-[10px] font-bold">Pronto!</span>
+    </div>
+    )}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
     </div>
 
     {/* Card 4: Vizzu Still Criativo */}
     <div
-    onClick={() => navigateTo('creative-still')}
+    onClick={() => { clearCompletedFeature('creative-still'); navigateTo('creative-still'); }}
     className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
@@ -165,6 +185,12 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     </div>
     </div>
     </div>
+    {completedFeatures.includes('creative-still') && (
+    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full shadow-lg animate-bounce">
+    <i className="fas fa-check-circle text-[#FF6B6B] text-xs"></i>
+    <span className="text-[#FF6B6B] text-[10px] font-bold">Pronto!</span>
+    </div>
+    )}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
     </div>
     </div>
