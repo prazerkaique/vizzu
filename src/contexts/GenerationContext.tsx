@@ -62,6 +62,14 @@ interface GenerationContextType {
  creativeStillProgress: number;
  setCreativeStillProgress: React.Dispatch<React.SetStateAction<number>>;
 
+ // Models
+ isGeneratingModels: boolean;
+ setIsGeneratingModels: React.Dispatch<React.SetStateAction<boolean>>;
+ modelsMinimized: boolean;
+ setModelsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
+ modelsProgress: number;
+ setModelsProgress: React.Dispatch<React.SetStateAction<number>>;
+
  // Computed
  isAnyGenerationRunning: boolean;
 
@@ -108,9 +116,14 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  const [creativeStillMinimized, setCreativeStillMinimized] = useState(false);
  const [creativeStillProgress, setCreativeStillProgress] = useState(0);
 
+ // Models
+ const [isGeneratingModels, setIsGeneratingModels] = useState(false);
+ const [modelsMinimized, setModelsMinimized] = useState(false);
+ const [modelsProgress, setModelsProgress] = useState(0);
+
  // Notificações de geração concluída — lista de pages ('product-studio', 'provador', etc.)
  const [completedFeatures, setCompletedFeatures] = useState<string[]>([]);
- const prevGeneratingRef = useRef({ ps: false, lc: false, pv: false, cs: false });
+ const prevGeneratingRef = useRef({ ps: false, lc: false, pv: false, cs: false, md: false });
 
  // Detectar quando uma geração finaliza (true → false) e adicionar a page à lista
  useEffect(() => {
@@ -121,6 +134,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
    if (prev.lc && !isGeneratingLookComposer) newFeatures.push('look-composer');
    if (prev.pv && !isGeneratingProvador) newFeatures.push('provador');
    if (prev.cs && !isGeneratingCreativeStill) newFeatures.push('creative-still');
+   if (prev.md && !isGeneratingModels) newFeatures.push('models');
 
    if (newFeatures.length > 0) {
      setCompletedFeatures(prev => [...prev, ...newFeatures]);
@@ -131,8 +145,9 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      lc: isGeneratingLookComposer,
      pv: isGeneratingProvador,
      cs: isGeneratingCreativeStill,
+     md: isGeneratingModels,
    };
- }, [isGeneratingProductStudio, isGeneratingLookComposer, isGeneratingProvador, isGeneratingCreativeStill]);
+ }, [isGeneratingProductStudio, isGeneratingLookComposer, isGeneratingProvador, isGeneratingCreativeStill, isGeneratingModels]);
 
  const clearCompletedFeature = (page: string) => setCompletedFeatures(prev => prev.filter(f => f !== page));
  const clearAllCompletedFeatures = () => setCompletedFeatures([]);
@@ -186,7 +201,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  }, [isGeneratingProvador]);
 
  const provadorLoadingText = PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...';
- const localGenerating = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer || isGeneratingCreativeStill;
+ const localGenerating = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer || isGeneratingCreativeStill || isGeneratingModels;
 
  // BroadcastChannel: sincronizar estado de geração entre abas
  useEffect(() => {
@@ -238,6 +253,9 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      isGeneratingCreativeStill, setIsGeneratingCreativeStill,
      creativeStillMinimized, setCreativeStillMinimized,
      creativeStillProgress, setCreativeStillProgress,
+     isGeneratingModels, setIsGeneratingModels,
+     modelsMinimized, setModelsMinimized,
+     modelsProgress, setModelsProgress,
      isAnyGenerationRunning,
      completedFeatures, clearCompletedFeature, clearAllCompletedFeatures,
      minimizedModals, setMinimizedModals,

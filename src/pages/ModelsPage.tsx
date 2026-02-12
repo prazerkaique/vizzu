@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SavedModel, MODEL_OPTIONS } from '../types';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useGeneration } from '../contexts/GenerationContext';
 import { supabase } from '../services/supabaseClient';
 import { generateModelImages } from '../lib/api/studio';
 import { OptimizedImage } from '../components/OptimizedImage';
@@ -176,6 +177,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const isDefaultModel = (id: string) => id.startsWith('default-');
  const { theme, navigateTo, showToast } = useUI();
  const { user } = useAuth();
+ const { isGeneratingModels, setIsGeneratingModels, modelsMinimized, setModelsMinimized, modelsProgress, setModelsProgress } = useGeneration();
 
  // Model states
  const [showModelDetail, setShowModelDetail] = useState<SavedModel | null>(null);
@@ -486,8 +488,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }
 
  setGeneratingModelImages(true);
+ setIsGeneratingModels(true);
  setModelPreviewImages(null);
  setModelGenerationProgress(0);
+ setModelsProgress(0);
  setModelGenerationStep('front');
 
  const modelId = 'preview-' + Date.now();
@@ -511,6 +515,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setModelGenerationStep('back');
  }
  setModelGenerationProgress(progress);
+ setModelsProgress(progress);
  if (progress >= 95) clearInterval(progressInterval);
  }, 1000);
 
@@ -542,6 +547,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  clearInterval(progressInterval);
  setModelGenerationProgress(100);
+ setModelsProgress(100);
  setModelGenerationStep('done');
  localStorage.removeItem('vizzu_pending_model');
 
@@ -557,6 +563,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  showToast('Erro ao gerar preview do modelo. Tente novamente.', 'error');
  } finally {
  setGeneratingModelImages(false);
+ setIsGeneratingModels(false);
+ setModelsMinimized(false);
  }
  };
 
@@ -661,8 +669,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }
 
  setGeneratingModelImages(true);
+ setIsGeneratingModels(true);
  setModelPreviewImages(null);
  setModelGenerationProgress(0);
+ setModelsProgress(0);
  setModelGenerationStep('front');
 
  const modelId = 'preview-' + Date.now();
@@ -691,6 +701,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    showToast('Erro ao enviar fotos de referência. Tente novamente.', 'error');
    localStorage.removeItem('vizzu_pending_model');
    setGeneratingModelImages(false);
+   setIsGeneratingModels(false);
    return;
  }
 
@@ -706,6 +717,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
      setModelGenerationStep('back');
    }
    setModelGenerationProgress(progress);
+   setModelsProgress(progress);
    if (progress >= 95) clearInterval(progressInterval);
  }, 1000);
 
@@ -743,6 +755,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
    clearInterval(progressInterval);
    setModelGenerationProgress(100);
+   setModelsProgress(100);
    setModelGenerationStep('done');
    localStorage.removeItem('vizzu_pending_model');
 
@@ -758,6 +771,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    showToast('Erro ao gerar preview do modelo. Tente novamente.', 'error');
  } finally {
    setGeneratingModelImages(false);
+   setIsGeneratingModels(false);
+   setModelsMinimized(false);
  }
  };
 
@@ -1125,8 +1140,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
 
  {/* CREATE MODEL WIZARD MODAL */}
- {showCreateModel && (
- <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateModel(false); setEditingModel(null); }}>
+ {showCreateModel && !modelsMinimized && (
+ <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { if (!generatingModelImages) { setShowCreateModel(false); setEditingModel(null); } }}>
  <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
@@ -1361,6 +1376,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
  </div>
  </div>
+ <button
+   onClick={() => { setModelsMinimized(true); }}
+   className="mt-3 w-full py-2.5 rounded-xl text-sm font-medium transition-colors bg-white/10 hover:bg-white/20 text-[#FF6B6B] border border-[#FF6B6B]/20"
+ >
+   <i className="fas fa-compress-alt mr-2"></i>Minimizar e continuar navegando
+ </button>
  </div>
  )}
 
@@ -1905,6 +1926,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
  </div>
  </div>
+ <button
+   onClick={() => { setModelsMinimized(true); }}
+   className="mt-3 w-full py-2.5 rounded-xl text-sm font-medium transition-colors bg-white/10 hover:bg-white/20 text-[#FF6B6B] border border-[#FF6B6B]/20"
+ >
+   <i className="fas fa-compress-alt mr-2"></i>Minimizar e continuar navegando
+ </button>
  </div>
  )}
 

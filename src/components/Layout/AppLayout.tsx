@@ -30,6 +30,7 @@ export function AppLayout({
    isGeneratingLookComposer, lookComposerMinimized, lookComposerProgress, setLookComposerMinimized,
    isGeneratingProvador, provadorMinimized, provadorProgress, setProvadorMinimized,
    isGeneratingCreativeStill, creativeStillMinimized, creativeStillProgress, setCreativeStillMinimized,
+   isGeneratingModels, modelsMinimized, modelsProgress, setModelsMinimized,
    completedFeatures, clearCompletedFeature, clearAllCompletedFeatures,
    minimizedModals, closeMinimizedModal,
  } = useGeneration();
@@ -784,6 +785,38 @@ export function AppLayout({
  ></div>
  </div>
  <span className="text-white text-xs font-medium">{Math.round(creativeStillProgress)}%</span>
+ </div>
+ </div>
+ <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+ <i className="fas fa-expand"></i>
+ </button>
+ </div>
+ </div>
+ )}
+
+ {/* Modelos - Minimizado */}
+ {isGeneratingModels && modelsMinimized && (
+ <div
+ className="fixed z-50 cursor-grab active:cursor-grabbing select-none touch-none"
+ style={minimizedBarPos.x === -1 ? { bottom: 24, right: 24 } : { left: minimizedBarPos.x, top: minimizedBarPos.y }}
+ onMouseDown={handleDragStart}
+ onTouchStart={handleDragStart}
+ onClick={() => handleMinimizedClick(() => setModelsMinimized(false), 'models')}
+ >
+ <div className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-2xl p-4 flex items-center gap-4 min-w-[280px] shadow-lg">
+ <div className="w-10 h-10 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
+ </div>
+ <div className="flex-1">
+ <p className="text-white text-sm font-medium">Criando Modelo</p>
+ <div className="flex items-center gap-2 mt-1">
+ <div className="flex-1 h-1.5 bg-white/30 rounded-full overflow-hidden">
+ <div
+ className="h-full bg-white rounded-full transition-all duration-500"
+ style={{ width: `${modelsProgress}%` }}
+ ></div>
+ </div>
+ <span className="text-white text-xs font-medium">{modelsProgress}%</span>
  </div>
  </div>
  <button className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">

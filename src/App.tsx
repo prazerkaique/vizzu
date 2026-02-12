@@ -109,6 +109,7 @@ function App() {
    isGeneratingCreativeStill, setIsGeneratingCreativeStill,
    creativeStillMinimized, setCreativeStillMinimized,
    creativeStillProgress, setCreativeStillProgress,
+   isGeneratingModels,
    isAnyGenerationRunning,
    minimizedModals, setMinimizedModals,
    closeMinimizedModal,
@@ -1172,8 +1173,12 @@ function App() {
  </div>
  )}
 
- {/* MODELS */}
- {currentPage === 'models' && <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />}
+ {/* MODELS — manter montado durante geração minimizada */}
+ {(currentPage === 'models' || isGeneratingModels) && (
+   <div style={{ display: currentPage === 'models' ? undefined : 'none' }}>
+     <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />
+   </div>
+ )}
 
  {/* PRODUCTS */}
  {currentPage === 'products' && <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />}

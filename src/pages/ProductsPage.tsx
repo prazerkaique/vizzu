@@ -274,7 +274,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const processImageFile = async (file: File): Promise<string> => {
    try {
    let processedFile: File | Blob = file;
-   if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+   const fileName = file.name.toLowerCase();
+   const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
+     fileName.endsWith('.heic') || fileName.endsWith('.heif') ||
+     (file.type === '' && (fileName.endsWith('.heic') || fileName.endsWith('.heif')));
+   if (isHeic) {
    const convertedBlob = await heic2any({
    blob: file,
    toType: 'image/png',
@@ -292,36 +296,39 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }
   };
 
-  const handleFileSelect = (files: FileList, target: string = 'front') => {
+  const handleFileSelect = async (files: FileList, target: string = 'front') => {
    if (files.length > 0) {
    const file = files[0];
-   const reader = new FileReader();
-   reader.onload = () => {
-   const base64 = reader.result as string;
+   try {
+   const base64 = await processImageFile(file);
    setImage(target, base64);
    if (target === 'front') {
    analyzeProductImageWithAI(base64);
    }
    setShowCreateProduct(true);
-   };
-   reader.readAsDataURL(file);
+   } catch (error) {
+   console.error('Erro ao processar imagem:', error);
+   showToast('Erro ao processar imagem. Tente outro formato.', 'error');
+   }
    }
   };
 
-  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>, angle: string) => {
+  const handleImageDrop = async (e: React.DragEvent<HTMLDivElement>, angle: string) => {
    e.preventDefault();
    e.stopPropagation();
    const file = e.dataTransfer.files[0];
-   if (file && file.type.startsWith('image/')) {
-   const reader = new FileReader();
-   reader.onload = (event) => {
-   const base64 = event.target?.result as string;
+   const fileName = file?.name?.toLowerCase() || '';
+   if (file && (file.type.startsWith('image/') || fileName.endsWith('.heic') || fileName.endsWith('.heif'))) {
+   try {
+   const base64 = await processImageFile(file);
    setImage(angle, base64);
    if (angle === 'front') {
    analyzeProductImageWithAI(base64);
    }
-   };
-   reader.readAsDataURL(file);
+   } catch (error) {
+   console.error('Erro ao processar imagem:', error);
+   showToast('Erro ao processar imagem. Tente outro formato.', 'error');
+   }
    }
   };
 
