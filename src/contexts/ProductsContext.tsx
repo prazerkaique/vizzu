@@ -210,6 +210,13 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     deleteTimerRef.current = setTimeout(async () => {
       if (cancelled) return;
       try {
+        // Desvincular gerações (FK generations.product_id → products.id)
+        const { error: genError } = await supabase
+          .from('generations')
+          .update({ product_id: null })
+          .eq('product_id', product.id);
+        if (genError) console.error('Erro ao desvincular gerações:', genError);
+
         const { error: imagesError } = await supabase
           .from('product_images')
           .delete()
@@ -266,6 +273,13 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     bulkDeleteTimerRef.current = setTimeout(async () => {
       if (cancelled) return;
       try {
+        // Desvincular gerações (FK generations.product_id → products.id)
+        const { error: genError } = await supabase
+          .from('generations')
+          .update({ product_id: null })
+          .in('product_id', selectedIds);
+        if (genError) console.error('Erro ao desvincular gerações:', genError);
+
         const { error: imagesError } = await supabase
           .from('product_images')
           .delete()
