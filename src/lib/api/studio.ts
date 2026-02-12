@@ -999,6 +999,7 @@ interface GenerateModelImagesParams {
   userId: string;
   modelProfile: SavedModelProfile;
   prompt?: string; // Prompt otimizado para Flux 2.0
+  referenceImageUrls?: { front?: string; back?: string; face?: string };
 }
 
 interface GenerateModelImagesResponse {
@@ -1035,6 +1036,7 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
         userId: params.userId,
         modelProfile: params.modelProfile,
         prompt: params.prompt,
+        referenceImageUrls: params.referenceImageUrls,
       }),
       signal: controller.signal,
     });

@@ -215,6 +215,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const [modelGenerationStep, setModelGenerationStep] = useState<'front' | 'back' | 'done'>('front');
  const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string } | null>(null);
  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+ const [draggingPhotoType, setDraggingPhotoType] = useState<'front' | 'back' | 'face' | null>(null);
+ const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'face' | null>(null);
+ const [realModelReferenceUrls, setRealModelReferenceUrls] = useState<{ front?: string; back?: string; face?: string }>({});
 
  // Filtros da página de Modelos
  const [modelFilterGender, setModelFilterGender] = useState<string>('');
@@ -391,6 +394,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  });
  setRealModelPhotos({ front: null, back: null, face: null });
  setUploadingPhoto(null);
+ setDraggingPhotoType(null);
+ setShowPhotoSourcePicker(null);
+ setRealModelReferenceUrls({});
  setEditingModel(null);
  setModelPreviewImages(null);
  setGeneratingModelImages(false);
@@ -628,42 +634,148 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }
  };
 
- const saveRealModel = async () => {
- if (!user || !newModel.name.trim() || !realModelPhotos.front) return null;
+ // Upload base64 para Supabase Storage e retorna URL pública
+ const uploadBase64ToStorage = async (base64: string, storagePath: string): Promise<string> => {
+   const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
+   const byteCharacters = atob(base64Data);
+   const byteNumbers = new Array(byteCharacters.length);
+   for (let i = 0; i < byteCharacters.length; i++) {
+     byteNumbers[i] = byteCharacters.charCodeAt(i);
+   }
+   const byteArray = new Uint8Array(byteNumbers);
+   const mimeType = base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
+   const blob = new Blob([byteArray], { type: mimeType });
 
- setSavingModel(true);
+   const { error: uploadError } = await supabase.storage
+     .from('products')
+     .upload(storagePath, blob, { upsert: true });
+   if (uploadError) throw uploadError;
+
+   const { data: urlData } = supabase.storage.from('products').getPublicUrl(storagePath);
+   return urlData.publicUrl;
+ };
+
+ // Gera preview do modelo real via IA (upload referências → N8N → Gemini)
+ const generateRealModelPreview = async () => {
+ if (!user || !newModel.name.trim() || !realModelPhotos.front) return;
+
+ // Debitar créditos
+ if (onDeductCredits) {
+   const success = onDeductCredits(MODEL_CREATION_COST, 'Criar Modelo Real');
+   if (!success) {
+     showToast('Créditos insuficientes. Você precisa de 2 créditos para criar um modelo.', 'error');
+     return;
+   }
+ }
+
+ setGeneratingModelImages(true);
+ setModelPreviewImages(null);
+ setModelGenerationProgress(0);
+ setModelGenerationStep('front');
+
+ const modelId = 'preview-' + Date.now();
+
+ // F5 recovery
+ localStorage.setItem('vizzu_pending_model', JSON.stringify({
+   modelId,
+   modelName: newModel.name.trim(),
+   startTime: Date.now(),
+ }));
+
+ // Upload fotos de referência para Storage
+ const uploadedRefUrls: { front?: string; back?: string; face?: string } = {};
  try {
-   const modelId = crypto.randomUUID();
-   const uploadedImages: { front?: string; back?: string; face?: string } = {};
-
    for (const type of ['front', 'back', 'face'] as const) {
      const base64 = realModelPhotos[type];
      if (!base64) continue;
-
-     const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
-     const byteCharacters = atob(base64Data);
-     const byteNumbers = new Array(byteCharacters.length);
-     for (let i = 0; i < byteCharacters.length; i++) {
-       byteNumbers[i] = byteCharacters.charCodeAt(i);
-     }
-     const byteArray = new Uint8Array(byteNumbers);
      const mimeType = base64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
      const extension = mimeType.split('/')[1] === 'webp' ? 'webp' : mimeType.split('/')[1] === 'png' ? 'png' : 'jpg';
-     const blob = new Blob([byteArray], { type: mimeType });
-
-     const storagePath = `models/${user.id}/${modelId}/${type}.${extension}`;
-     const { error: uploadError } = await supabase.storage
-       .from('products')
-       .upload(storagePath, blob, { upsert: true });
-
-     if (uploadError) throw uploadError;
-
-     const { data: urlData } = supabase.storage.from('products').getPublicUrl(storagePath);
-     uploadedImages[type] = urlData.publicUrl;
+     const storagePath = `models/${user.id}/${modelId}/ref-${type}.${extension}`;
+     uploadedRefUrls[type] = await uploadBase64ToStorage(base64, storagePath);
    }
+   setRealModelReferenceUrls(uploadedRefUrls);
+ } catch (error) {
+   console.error('Erro ao fazer upload das fotos de referência:', error);
+   showToast('Erro ao enviar fotos de referência. Tente novamente.', 'error');
+   localStorage.removeItem('vizzu_pending_model');
+   setGeneratingModelImages(false);
+   return;
+ }
 
+ // Progress bar linear 100s
+ const totalDuration = 100;
+ let elapsed = 0;
+ const progressInterval = setInterval(() => {
+   elapsed++;
+   const progress = Math.min(Math.round((elapsed / totalDuration) * 95), 95);
+   if (elapsed < totalDuration * 0.45) {
+     setModelGenerationStep('front');
+   } else {
+     setModelGenerationStep('back');
+   }
+   setModelGenerationProgress(progress);
+   if (progress >= 95) clearInterval(progressInterval);
+ }, 1000);
+
+ try {
+   const prompt = [
+     'Professional fashion model photo, INSPIRED BY the reference person.',
+     'Preserve: exact face features, body shape, skin tone, hair from reference.',
+     '',
+     '📸 Fixed settings:',
+     '• Background: neutral gray (#B0B0B0)',
+     '• Outfit: white t-shirt with Vizzu logo + blue jeans',
+     '• Lighting: professional studio',
+     '• Camera: Canon EOS R5, 85mm f/1.4',
+   ].join('\n');
+
+   const result = await generateModelImages({
+     modelId,
+     userId: user.id,
+     modelProfile: {
+       name: newModel.name.trim(),
+       gender: newModel.gender,
+       ethnicity: 'other',
+       skinTone: 'medium',
+       bodyType: 'average',
+       ageRange: 'adult',
+       height: 'medium',
+       hairColor: 'brown',
+       hairStyle: 'straight',
+       eyeColor: 'brown',
+       expression: 'neutral',
+     },
+     prompt,
+     referenceImageUrls: uploadedRefUrls,
+   });
+
+   clearInterval(progressInterval);
+   setModelGenerationProgress(100);
+   setModelGenerationStep('done');
+   localStorage.removeItem('vizzu_pending_model');
+
+   if (result.success && result.model?.images) {
+     setModelPreviewImages(result.model.images);
+   } else {
+     throw new Error(result.error || 'Erro ao gerar preview');
+   }
+ } catch (error) {
+   clearInterval(progressInterval);
+   localStorage.removeItem('vizzu_pending_model');
+   console.error('Erro ao gerar preview modelo real:', error);
+   showToast('Erro ao gerar preview do modelo. Tente novamente.', 'error');
+ } finally {
+   setGeneratingModelImages(false);
+ }
+ };
+
+ // Salva modelo real APÓS geração pela IA
+ const saveRealModelGenerated = async () => {
+ if (!user || !newModel.name.trim() || !modelPreviewImages) return null;
+
+ setSavingModel(true);
+ try {
    const modelData = {
-     id: modelId,
      user_id: user.id,
      name: newModel.name.trim(),
      model_type: 'real',
@@ -678,8 +790,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
      eye_color: 'brown',
      expression: 'neutral',
      status: 'ready',
-     images: uploadedImages,
-     reference_image_url: uploadedImages.front || null,
+     images: modelPreviewImages,
+     reference_image_url: realModelReferenceUrls.front || null,
    };
 
    const { data, error } = await supabase
@@ -1041,7 +1153,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Step Indicators — dinâmico por tipo de modelo */}
  {(() => {
  const steps = newModel.modelType === 'real'
- ? [{ step: 1, label: 'Tipo' }, { step: 2, label: 'Fotos' }, { step: 3, label: 'Salvar' }]
+ ? [{ step: 1, label: 'Tipo' }, { step: 2, label: 'Fotos' }, { step: 3, label: 'Gerar' }]
  : newModel.modelType === 'ai'
  ? [{ step: 1, label: 'Tipo' }, { step: 2, label: 'Gênero' }, { step: 3, label: 'Físico' }, { step: 4, label: 'Aparência' }, { step: 5, label: 'Proporções' }, { step: 6, label: 'Finalizar' }]
  : [{ step: 1, label: 'Tipo' }];
@@ -1092,7 +1204,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <i className={'fas fa-camera text-4xl mb-3 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>Modelo Real</p>
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>Enviar fotos de uma pessoa real</p>
- <p className="text-green-500 text-[9px] font-medium mt-2">Grátis</p>
+ <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
  </button>
  </div>
  </div>
@@ -1128,29 +1240,49 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
 
- {/* Grid 3 colunas para upload de fotos */}
+ {/* Grid 3 colunas para upload de fotos — Drag & Drop + Click → Picker */}
  <div className="grid grid-cols-3 gap-3">
  {(['front', 'back', 'face'] as const).map(type => {
-   const labels = { front: 'Frente', back: 'Costas', face: 'Rosto' };
-   const icons = { front: 'fa-user', back: 'fa-user-slash', face: 'fa-face-smile' };
+   const labels: Record<string, string> = { front: 'Frente', back: 'Costas', face: 'Rosto' };
+   const icons: Record<string, string> = { front: 'fa-user', back: 'fa-user-slash', face: 'fa-face-smile' };
    const required = type === 'front';
    const photo = realModelPhotos[type];
    const isUploading = uploadingPhoto === type;
+   const isDragging = draggingPhotoType === type;
    return (
    <div key={type} className="text-center">
-     <label className="block cursor-pointer">
-     <div className={'aspect-[3/4] rounded-xl border-2 border-dashed overflow-hidden transition-all ' + (
+     <div
+     className={'aspect-[3/4] rounded-xl border-2 border-dashed overflow-hidden transition-all cursor-pointer ' + (
        photo
        ? 'border-solid ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-300')
+       : isDragging
+       ? 'border-[#FF6B6B] bg-[#FF6B6B]/10'
        : required
        ? (theme === 'dark' ? 'border-[#FF6B6B]/40 hover:border-[#FF6B6B]/70' : 'border-[#FF6B6B]/30 hover:border-[#FF6B6B]/60')
        : (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-300 hover:border-gray-400')
-     )}>
+     )}
+     onClick={() => { if (!photo && !isUploading) setShowPhotoSourcePicker(type); }}
+     onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!photo) setDraggingPhotoType(type); }}
+     onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDraggingPhotoType(null); }}
+     onDrop={async (e) => {
+       e.preventDefault(); e.stopPropagation(); setDraggingPhotoType(null);
+       const file = e.dataTransfer.files?.[0];
+       if (!file || !file.type.startsWith('image/')) return;
+       setUploadingPhoto(type);
+       try {
+       const base64 = await processImageFile(file);
+       setRealModelPhotos(prev => ({ ...prev, [type]: base64 }));
+       } catch (err) {
+       showToast('Erro ao processar imagem. Tente outro formato.', 'error');
+       }
+       setUploadingPhoto(null);
+     }}
+     >
        {photo ? (
        <div className="relative w-full h-full group">
          <img src={photo} alt={labels[type]} className="w-full h-full object-cover" />
          <button
-         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setRealModelPhotos(prev => ({ ...prev, [type]: null })); }}
+         onClick={(e) => { e.stopPropagation(); setRealModelPhotos(prev => ({ ...prev, [type]: null })); }}
          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
          >
          <i className="fas fa-times"></i>
@@ -1163,26 +1295,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
        </div>
        ) : (
        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
-         <i className={'fas ' + icons[type] + ' text-xl ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
-         <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-medium'}>{labels[type]}</span>
-         {required && <span className="text-[8px] text-[#FF6B6B] font-medium">Obrigatório</span>}
+         <i className={'fas ' + (isDragging ? 'fa-cloud-arrow-down text-[#FF6B6B]' : icons[type] + ' ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')) + ' text-xl'}></i>
+         <span className={(isDragging ? 'text-[#FF6B6B]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-[10px] font-medium'}>{isDragging ? 'Soltar aqui' : labels[type]}</span>
+         {!isDragging && required && <span className="text-[8px] text-[#FF6B6B] font-medium">Obrigatório</span>}
        </div>
        )}
      </div>
-     <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={async (e) => {
-       const file = e.target.files?.[0];
-       if (!file) return;
-       setUploadingPhoto(type);
-       try {
-       const base64 = await processImageFile(file);
-       setRealModelPhotos(prev => ({ ...prev, [type]: base64 }));
-       } catch (err) {
-       showToast('Erro ao processar imagem. Tente outro formato.', 'error');
-       }
-       setUploadingPhoto(null);
-       e.target.value = '';
-     }} />
-     </label>
      <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1 block'}>{labels[type]} {required ? '' : '(opc.)'}</span>
    </div>
    );
@@ -1198,9 +1316,91 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  )}
 
- {/* Step 3 (Real): Nome + Preview + Salvar */}
+ {/* Step 3 (Real): Gerar + Preview + Salvar */}
  {modelWizardStep === 3 && newModel.modelType === 'real' && (
  <div className="space-y-4">
+
+ {/* Sub-estado A: Gerando */}
+ {generatingModelImages && (
+ <div className="text-center py-4">
+ <div className="w-20 h-20 mx-auto mb-4 rounded-xl overflow-hidden flex items-center justify-center">
+ <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
+ </div>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+ {modelGenerationStep === 'front' && 'Gerando imagem de frente...'}
+ {modelGenerationStep === 'back' && 'Gerando imagem de costas...'}
+ {modelGenerationStep === 'done' && 'Finalizando...'}
+ </p>
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-3 mb-4'}>
+ <div className="flex items-center justify-between gap-2 text-xs">
+ {[
+ { key: 'front', label: 'Frente', icon: 'fa-user' },
+ { key: 'back', label: 'Costas', icon: 'fa-person-walking-arrow-right' },
+ ].map((step) => {
+ const isCompleted = (step.key === 'front' && modelGenerationProgress >= 50) || (step.key === 'back' && modelGenerationProgress >= 95);
+ const isCurrent = modelGenerationStep === step.key;
+ return (
+ <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
+ <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')}`}>
+ {isCompleted ? <i className="fas fa-check text-white text-xs"></i> : isCurrent ? <i className="fas fa-spinner fa-spin text-white text-xs"></i> : <i className={`fas ${step.icon} ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>}
+ </div>
+ <span className={`${isCompleted ? 'text-[#FF6B6B]' : isCurrent ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>{step.label}</span>
+ </div>
+ );
+ })}
+ </div>
+ </div>
+ <div className="px-2">
+ <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
+ <div className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500" style={{ width: `${modelGenerationProgress}%` }}></div>
+ </div>
+ <div className="flex justify-between items-center mt-2">
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Processando</span>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
+ </div>
+ </div>
+ </div>
+ )}
+
+ {/* Sub-estado B: Preview pronto */}
+ {!generatingModelImages && modelPreviewImages && (
+ <>
+ <div className="text-center mb-2">
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
+ <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-sm font-medium">
+ <i className="fas fa-check-circle mr-1 text-[#FF6B6B]"></i>Modelo criado com sucesso!
+ </p>
+ </div>
+ <div className="grid grid-cols-2 gap-3">
+ {['front', 'back'].map((type) => {
+ const imgUrl = modelPreviewImages[type as keyof typeof modelPreviewImages];
+ const lbls: Record<string, string> = { front: 'Frente', back: 'Costas' };
+ return (
+ <div key={type} className="text-center">
+ <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ {imgUrl ? (
+ <OptimizedImage src={imgUrl} alt={type} className="w-full h-full" objectFit="contain" size="preview" />
+ ) : (
+ <div className="w-full h-full flex items-center justify-center">
+ <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
+ </div>
+ )}
+ </div>
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{lbls[type]}</span>
+ </div>
+ );
+ })}
+ </div>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mt-2'}>
+ Gostou? Salve o modelo ou gere outro com as mesmas fotos.
+ </p>
+ </>
+ )}
+
+ {/* Sub-estado C: Aguardando gerar */}
+ {!generatingModelImages && !modelPreviewImages && (
+ <>
  <div>
  <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
  <input
@@ -1213,25 +1413,30 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  />
  </div>
 
- {/* Preview das fotos */}
+ {/* Preview das fotos de referência */}
+ <div>
+ <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium block mb-1.5'}>
+ <i className="fas fa-image mr-1"></i>Fotos de referência
+ </label>
  <div className="grid grid-cols-3 gap-2">
  {(['front', 'back', 'face'] as const).map(type => {
-   const labels = { front: 'Frente', back: 'Costas', face: 'Rosto' };
+   const labels: Record<string, string> = { front: 'Frente', back: 'Costas', face: 'Rosto' };
    const photo = realModelPhotos[type];
    if (!photo) return (
-   <div key={type} className={'aspect-[3/4] rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
+   <div key={type} className={'aspect-[3/4] rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
      <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-[10px]'}>{labels[type]}</span>
    </div>
    );
    return (
    <div key={type} className="text-center">
-     <div className={'aspect-[3/4] rounded-xl overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+     <div className={'aspect-[3/4] rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
      <img src={photo} alt={labels[type]} className="w-full h-full object-cover" />
      </div>
      <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type]}</span>
    </div>
    );
  })}
+ </div>
  </div>
 
  {/* Resumo */}
@@ -1253,9 +1458,19 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
  <div className="flex items-center justify-between text-xs">
    <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Créditos</span>
-   <span className="text-green-500 font-medium">Grátis</span>
+   <span className="text-[#FF6B6B] font-medium">2 créditos</span>
  </div>
  </div>
+
+ <div className={(theme === 'dark' ? 'bg-blue-900/20 border-blue-800/30' : 'bg-blue-50 border-blue-200') + ' rounded-lg border p-3'}>
+ <p className={(theme === 'dark' ? 'text-blue-300' : 'text-blue-700') + ' text-[10px] leading-relaxed'}>
+   <i className="fas fa-wand-magic-sparkles mr-1"></i>
+   A IA vai gerar imagens padronizadas (fundo cinza, roupa Vizzu) preservando a aparência da pessoa nas fotos.
+ </p>
+ </div>
+ </>
+ )}
+
  </div>
  )}
 
@@ -1827,6 +2042,18 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}
  {newModel.modelType === 'real' && modelWizardStep === 3 && (
  <>
+ {/* Gerando */}
+ {generatingModelImages && (
+ <div className="flex-1 text-center">
+ <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+ <i className="fas fa-spinner fa-spin mr-2"></i>Gerando imagens...
+ </span>
+ </div>
+ )}
+
+ {/* Sem preview: Voltar + Criar Modelo */}
+ {!generatingModelImages && !modelPreviewImages && (
+ <>
  <button
  onClick={() => setModelWizardStep(2)}
  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
@@ -1834,16 +2061,45 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  Voltar
  </button>
  <button
- onClick={saveRealModel}
- disabled={!newModel.name.trim() || savingModel}
- className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (!newModel.name.trim() || savingModel ? 'opacity-50 cursor-not-allowed' : '')}
+ onClick={generateRealModelPreview}
+ disabled={!newModel.name.trim()}
+ className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (!newModel.name.trim() ? 'opacity-50 cursor-not-allowed' : '')}
+ >
+ <i className="fas fa-wand-magic-sparkles"></i>
+ Criar Modelo
+ </button>
+ </>
+ )}
+
+ {/* Com preview: Descartar + Gerar Outro + Salvar */}
+ {!generatingModelImages && modelPreviewImages && (
+ <>
+ <button
+ onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
+ className={(theme === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
+ >
+ <i className="fas fa-trash"></i>
+ </button>
+ <button
+ onClick={() => { setModelPreviewImages(null); generateRealModelPreview(); }}
+ className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-2 py-2 border rounded-lg text-sm font-medium transition-colors'}
+ title="Gerar Outro"
+ >
+ <i className="fas fa-redo"></i>
+ </button>
+ <button
+ onClick={saveRealModelGenerated}
+ disabled={savingModel}
+ className={'px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-opacity ' + (savingModel ? 'opacity-50 cursor-not-allowed' : '')}
  >
  {savingModel ? (
  <><div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>Salvando...</>
  ) : (
- <><i className="fas fa-check"></i>Salvar Modelo</>
+ <><i className="fas fa-check"></i>Salvar</>
  )}
  </button>
+ </>
+ )}
  </>
  )}
 
@@ -2001,6 +2257,65 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </>
  )}
  </div>
+ </div>
+ </div>
+ )}
+
+ {/* PHOTO SOURCE PICKER — Bottom sheet Galeria/Câmera */}
+ {showPhotoSourcePicker && (
+ <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
+ <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+ Adicionar foto: {{ front: 'Frente', back: 'Costas', face: 'Rosto' }[showPhotoSourcePicker]}
+ </h3>
+ <div className="grid grid-cols-2 gap-3">
+ <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <i className="fas fa-images text-[#FF6B6B]"></i>
+ </div>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+ <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={async (e) => {
+   const file = e.target.files?.[0];
+   if (!file) return;
+   const slotType = showPhotoSourcePicker!;
+   setShowPhotoSourcePicker(null);
+   setUploadingPhoto(slotType);
+   try {
+     const base64 = await processImageFile(file);
+     setRealModelPhotos(prev => ({ ...prev, [slotType]: base64 }));
+   } catch (err) {
+     showToast('Erro ao processar imagem. Tente outro formato.', 'error');
+   }
+   setUploadingPhoto(null);
+   e.target.value = '';
+ }} />
+ </label>
+ <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <i className="fas fa-camera text-[#FF9F43]"></i>
+ </div>
+ <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+ <input type="file" accept="image/*,.heic,.heif" capture="environment" className="hidden" onChange={async (e) => {
+   const file = e.target.files?.[0];
+   if (!file) return;
+   const slotType = showPhotoSourcePicker!;
+   setShowPhotoSourcePicker(null);
+   setUploadingPhoto(slotType);
+   try {
+     const base64 = await processImageFile(file);
+     setRealModelPhotos(prev => ({ ...prev, [slotType]: base64 }));
+   } catch (err) {
+     showToast('Erro ao processar imagem. Tente outro formato.', 'error');
+   }
+   setUploadingPhoto(null);
+   e.target.value = '';
+ }} />
+ </label>
+ </div>
+ <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+ Cancelar
+ </button>
  </div>
  </div>
  )}
