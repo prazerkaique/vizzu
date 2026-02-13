@@ -2022,25 +2022,25 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="flex gap-1">
  <button
  onClick={() => setBackgroundMode('preset')}
- className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'preset' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+ className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'preset' ? (isDark ? 'bg-neutral-700 text-white hc-selected' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
  >
  <i className="fas fa-images mr-1"></i>Presets
  </button>
  <button
  onClick={() => setBackgroundMode('upload')}
- className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'upload' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+ className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'upload' ? (isDark ? 'bg-neutral-700 text-white hc-selected' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
  >
  <i className="fas fa-upload mr-1"></i>Upload
  </button>
  <button
  onClick={() => setBackgroundMode('prompt')}
- className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'prompt' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+ className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'prompt' ? (isDark ? 'bg-neutral-700 text-white hc-selected' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
  >
  <i className="fas fa-pen mr-1"></i>Prompt
  </button>
  <button
  onClick={() => setBackgroundMode('saved')}
- className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'saved' ? (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
+ className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${backgroundMode === 'saved' ? (isDark ? 'bg-neutral-700 text-white hc-selected' : 'bg-gray-300 text-gray-900') : isDark ? 'bg-neutral-800/50 text-neutral-400' : 'bg-gray-100 text-gray-500'}`}
  >
  <i className="fas fa-bookmark mr-1"></i>Salvos
  </button>

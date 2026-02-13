@@ -191,12 +191,79 @@ html.theme-hc .bg-orange-600 {
 }
 
 /* ────────────────────────────────────────────────── */
-/*  BACKGROUNDS MARCA COM OPACIDADE → HIGHLIGHT      */
-/*  Usado como indicador de seleção — mais visível   */
+/*  BACKGROUNDS MARCA COM OPACIDADE (sem borda brand)*/
+/*  Contextos NÃO-seleção: pills, hints, subtle bg  */
 /* ────────────────────────────────────────────────── */
 html.theme-hc [class*="bg-[#FF6B6B]/"],
 html.theme-hc [class*="bg-[#FF9F43]/"] {
   background-color: rgba(255,255,255,0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════ */
+/*  INVERSÃO DE SELEÇÃO                               */
+/*  Regra: selecionado = fundo BRANCO + texto PRETO   */
+/*  NÃO-selecionado = fundo escuro + texto claro      */
+/* ═══════════════════════════════════════════════════ */
+
+/* A) Gradientes com opacidade (sidebar, PS apresentação/acabamento/fundos) */
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]/"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF9F43]/"] {
+  background: #fff !important;
+  color: #000 !important;
+}
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]/"] [class*="text-"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF9F43]/"] [class*="text-"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]/"] i,
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF9F43]/"] i {
+  color: #000 !important;
+}
+
+/* B) bg-white/10 + border-white (PS/CS ângulos, PS view mode, Admin reports) */
+html.theme-hc [class*="bg-white/1"][class*="border-white/"] {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+html.theme-hc [class*="bg-white/1"][class*="border-white/"] [class*="text-"],
+html.theme-hc [class*="bg-white/1"][class*="border-white/"] i {
+  color: #000 !important;
+}
+
+/* C) bg-brand/ + border-brand (LC pose, seleções com borda de marca) */
+html.theme-hc [class*="bg-[#FF6B6B]/"][class*="border-[#FF6B6B]"] {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+html.theme-hc [class*="bg-[#FF6B6B]/"][class*="border-[#FF6B6B]"] [class*="text-"],
+html.theme-hc [class*="bg-[#FF6B6B]/"][class*="border-[#FF6B6B]"] i {
+  color: #000 !important;
+}
+
+/* D) Elementos sólidos DENTRO de inversão → escuro (evita branco-sobre-branco) */
+html.theme-hc [class*="from-[#FF6B6B]/"] [class*="bg-gradient"][class*="from-[#FF6B6B]"],
+html.theme-hc [class*="from-[#FF6B6B]/"] .bg-\[\#FF6B6B\],
+html.theme-hc [class*="from-[#FF6B6B]/"] .bg-\[\#FF9F43\],
+html.theme-hc [class*="bg-white/1"][class*="border-white/"] [class*="bg-gradient"][class*="from-[#FF6B6B]"],
+html.theme-hc [class*="bg-[#FF6B6B]/"][class*="border-[#FF6B6B]"] [class*="bg-gradient"][class*="from-[#FF6B6B]"] {
+  background: #222 !important;
+  color: #fff !important;
+}
+html.theme-hc [class*="from-[#FF6B6B]/"] [class*="bg-gradient"][class*="from-[#FF6B6B]"] i,
+html.theme-hc [class*="from-[#FF6B6B]/"] .bg-\[\#FF6B6B\] i,
+html.theme-hc [class*="bg-white/1"][class*="border-white/"] [class*="bg-gradient"][class*="from-[#FF6B6B]"] i,
+html.theme-hc [class*="bg-[#FF6B6B]/"][class*="border-[#FF6B6B]"] [class*="bg-gradient"][class*="from-[#FF6B6B]"] i {
+  color: #fff !important;
+}
+
+/* E) Classe utilitária para componentes com bg-neutral selecionado */
+html.theme-hc .hc-selected {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+html.theme-hc .hc-selected [class*="text-"],
+html.theme-hc .hc-selected i {
+  color: #000 !important;
 }
 
 /* ────────────────────────────────────────────────── */
@@ -240,14 +307,7 @@ html.theme-hc [class*="bg-gradient"][class*="from-emerald-"] {
   color: #000 !important;
 }
 
-/* ────────────────────────────────────────────────── */
-/*  GRADIENTES COM OPACIDADE → HIGHLIGHT ESCURO      */
-/*  (Seleção de cards, não CTAs)                     */
-/*  IMPORTANTE: vem DEPOIS do sólido para ter        */
-/*  prioridade via cascata (mesma especificidade).    */
-/* ────────────────────────────────────────────────── */
-html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]/"],
-html.theme-hc [class*="bg-gradient"][class*="from-[#FF9F43]/"],
+/* Gradientes purple com opacidade → highlight sutil (não é seleção de marca) */
 html.theme-hc [class*="bg-gradient"][class*="from-[#A855F7]/"] {
   background: rgba(255,255,255,0.15) !important;
   color: inherit !important;
@@ -277,12 +337,15 @@ html.theme-hc [class*="border-[#FF6B9D]"],
 html.theme-hc [class*="border-red-"],
 html.theme-hc [class*="border-green-"],
 html.theme-hc [class*="border-emerald-"],
-html.theme-hc [class*="border-amber-"],
 html.theme-hc [class*="border-yellow-"],
 html.theme-hc [class*="border-blue-"],
 html.theme-hc [class*="border-purple-"],
 html.theme-hc [class*="border-orange-"] {
   border-color: #666 !important;
+}
+/* Amber borders → branco (indicador de seleção em CS variações) */
+html.theme-hc [class*="border-amber-"] {
+  border-color: #fff !important;
 }
 
 /* Preservar border-t-transparent (spinners) */
@@ -311,6 +374,10 @@ html.theme-hc [class*="ring-emerald-"],
 html.theme-hc [class*="ring-blue-"],
 html.theme-hc [class*="ring-purple-"] {
   --tw-ring-color: rgba(255,255,255,0.3) !important;
+}
+/* Amber rings → branco forte (seleção CS variações) */
+html.theme-hc [class*="ring-amber-"] {
+  --tw-ring-color: rgba(255,255,255,0.6) !important;
 }
 
 /* ────────────────────────────────────────────────── */

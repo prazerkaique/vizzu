@@ -156,7 +156,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onClick={() => setSettingsTab(tab.id)}
  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
  settingsTab === tab.id
- ? theme !== 'light' ? 'bg-neutral-700 text-white' : 'bg-gray-900 text-white'
+ ? theme !== 'light' ? 'bg-neutral-700 text-white hc-selected' : 'bg-gray-900 text-white'
  : theme !== 'light'
  ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
