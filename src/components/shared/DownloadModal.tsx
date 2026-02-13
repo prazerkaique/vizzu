@@ -187,6 +187,7 @@ export default function DownloadModal({
       userId: user.id,
       userEmail: user.email,
       userName: user.name,
+      userPlan: user.plan,
       rating,
       comment: ratingComment.trim() || undefined,
       productName,

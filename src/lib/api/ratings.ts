@@ -11,6 +11,7 @@ export interface DownloadRatingParams {
   userId: string;
   userEmail: string;
   userName: string;
+  userPlan?: string;
   rating: number;          // 1-5
   comment?: string;
   productName?: string;
@@ -46,6 +47,7 @@ export async function submitDownloadRating(params: DownloadRatingParams): Promis
       body: JSON.stringify({
         user_name: params.userName,
         user_email: params.userEmail,
+        user_plan: params.userPlan || 'N/A',
         rating: params.rating,
         comment: params.comment || 'Sem comentário',
         product_name: params.productName || 'N/A',
