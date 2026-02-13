@@ -135,7 +135,10 @@ export function useOnboarding(): UseOnboardingReturn {
 
   const [isSavingTourToggle, setIsSavingTourToggle] = useState(false);
 
-  const isTourEnabled = user?.tourEnabled !== false;
+  // isTourEnabled: true se há algum tour ainda não visto no localStorage
+  const isTourEnabled = TOUR_FEATURE_IDS.some(
+    id => localStorage.getItem(`${LS_TOUR_PREFIX}${id}`) !== 'true'
+  );
   const isDismissed = localStorage.getItem(LS_DISMISSED) === 'true';
 
   const steps: OnboardingStep[] = useMemo(() => {
@@ -154,7 +157,7 @@ export function useOnboarding(): UseOnboardingReturn {
 
   const currentStep = useMemo(() => steps.find(s => !s.isCompleted) || null, [steps]);
 
-  const isOnboardingActive = isTourEnabled && !isDismissed && completedCount < totalSteps;
+  const isOnboardingActive = !isDismissed && completedCount < totalSteps;
 
   const dismissOnboarding = useCallback(() => {
     localStorage.setItem(LS_DISMISSED, 'true');
@@ -172,10 +175,11 @@ export function useOnboarding(): UseOnboardingReturn {
     window.dispatchEvent(new Event('storage'));
   }, []);
 
+  // localStorage é a fonte de verdade imediata (síncrono)
+  // Supabase é só persistência entre sessões (async)
   const shouldShowTour = useCallback((featureId: string): boolean => {
-    if (!isTourEnabled) return false;
     return localStorage.getItem(`${LS_TOUR_PREFIX}${featureId}`) !== 'true';
-  }, [isTourEnabled]);
+  }, []);
 
   const markTourComplete = useCallback((featureId: string) => {
     localStorage.setItem(`${LS_TOUR_PREFIX}${featureId}`, 'true');
@@ -205,10 +209,11 @@ export function useOnboarding(): UseOnboardingReturn {
           localStorage.removeItem(`${LS_COMPLETED_PREFIX}${id}`);
         });
       } else {
-        // Ao desativar: marcar todos os tours como vistos
+        // Ao desativar: marcar todos os tours como vistos + dispensar stepper
         TOUR_FEATURE_IDS.forEach(id => {
           localStorage.setItem(`${LS_TOUR_PREFIX}${id}`, 'true');
         });
+        localStorage.setItem(LS_DISMISSED, 'true');
       }
 
       window.dispatchEvent(new Event('storage'));
