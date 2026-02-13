@@ -260,7 +260,6 @@ export default function DownloadModal({
               toolRating={toolRating}
               comment={ratingComment}
               isSubmitting={isSubmittingRating}
-              featureSource={featureSource}
               onRatingChange={setRating}
               onToolRatingChange={setToolRating}
               onCommentChange={setRatingComment}
@@ -636,21 +635,12 @@ function Step2Format({
 // STEP 3 — Avaliação pós-download
 // ═══════════════════════════════════════════════════════════════
 
-const FEATURE_LABELS: Record<string, string> = {
-  'product-studio': 'Product Studio',
-  'creative-still': 'Still Criativo',
-  'look-composer': 'Look Composer',
-  'studio-ready': 'Studio Ready',
-  'cenario': 'Cenário Criativo',
-};
-
 function Step3Rating({
   isDark,
   rating,
   toolRating,
   comment,
   isSubmitting,
-  featureSource,
   onRatingChange,
   onToolRatingChange,
   onCommentChange,
@@ -662,14 +652,12 @@ function Step3Rating({
   toolRating: number;
   comment: string;
   isSubmitting: boolean;
-  featureSource: string;
   onRatingChange: (v: number) => void;
   onToolRatingChange: (v: number) => void;
   onCommentChange: (v: string) => void;
   onSubmit: () => void;
   onSkip: () => void;
 }) {
-  const featureLabel = FEATURE_LABELS[featureSource] || 'ferramenta';
 
   return (
     <div className="px-5 py-6 flex flex-col items-center text-center">
@@ -698,7 +686,7 @@ function Step3Rating({
       <div className={'w-full mb-1 pt-4 border-t ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
         <p className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
           <i className="fas fa-wand-magic-sparkles mr-1.5 text-[#FF6B6B] text-[10px]" />
-          Experiência com o {featureLabel}
+          Experiência com o Vizzu
         </p>
         <StarRating value={toolRating} onChange={onToolRatingChange} />
       </div>
