@@ -90,6 +90,7 @@ export interface ProductGeneratedImages {
   cenarioCriativo: GeneratedImageSet[];
   modeloIA: GeneratedImageSet[];
   productStudio: ProductStudioSession[];
+  colorize?: ColorVariant[];
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -110,6 +111,20 @@ export interface ProductStudioSession {
   productId: string;
   images: ProductStudioImage[];
   status: 'generating' | 'ready' | 'error';
+  createdAt: string;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Colorize - Variações de cor do produto
+// ═══════════════════════════════════════════════════════════════
+
+export interface ColorVariant {
+  id: string;            // product_images.id
+  generationId: string;  // FK → generations.id
+  color: string;         // "Azul Marinho"
+  url: string;           // URL pública da imagem gerada
+  storagePath: string;   // path no Supabase Storage
+  status: 'generating' | 'completed' | 'failed';
   createdAt: string;
 }
 
