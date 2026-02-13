@@ -191,11 +191,18 @@ html.theme-hc .bg-orange-600 {
 }
 
 /* ────────────────────────────────────────────────── */
-/*  BACKGROUNDS COM OPACIDADE / SHADES CLARAS        */
-/*  Info boxes, highlights, banners sutis             */
+/*  BACKGROUNDS MARCA COM OPACIDADE → HIGHLIGHT      */
+/*  Usado como indicador de seleção — mais visível   */
 /* ────────────────────────────────────────────────── */
 html.theme-hc [class*="bg-[#FF6B6B]/"],
-html.theme-hc [class*="bg-[#FF9F43]/"],
+html.theme-hc [class*="bg-[#FF9F43]/"] {
+  background-color: rgba(255,255,255,0.18) !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  BACKGROUNDS SEMÂNTICOS COM OPACIDADE → SUTIL     */
+/*  Info boxes, warnings, highlights neutros          */
+/* ────────────────────────────────────────────────── */
 html.theme-hc [class*="bg-[#A855F7]/"],
 html.theme-hc [class*="bg-[#FF6B9D]/"],
 html.theme-hc .bg-red-50, html.theme-hc .bg-red-100,
@@ -219,10 +226,9 @@ html.theme-hc [class*="bg-indigo-"][class*="/"] {
 }
 
 /* ────────────────────────────────────────────────── */
-/*  GRADIENTES → BRANCO SÓLIDO                       */
+/*  GRADIENTES SÓLIDOS → BRANCO (CTAs, botões)       */
+/*  Aplica APENAS a gradientes sem opacidade.         */
 /* ────────────────────────────────────────────────── */
-
-/* Container com gradiente colorido */
 html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]"],
 html.theme-hc [class*="bg-gradient"][class*="from-[#A855F7]"],
 html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B9D]"],
@@ -234,17 +240,18 @@ html.theme-hc [class*="bg-gradient"][class*="from-emerald-"] {
   color: #000 !important;
 }
 
-/* Gradient stops neutros (barras de progresso) */
-html.theme-hc [class*="from-[#FF6B6B]"] { --tw-gradient-from: #fff !important; }
-html.theme-hc [class*="to-[#FF9F43]"]   { --tw-gradient-to: #ddd !important; }
-html.theme-hc [class*="to-[#FF6B9D]"]   { --tw-gradient-to: #ddd !important; }
-html.theme-hc [class*="from-[#A855F7]"] { --tw-gradient-from: #fff !important; }
-html.theme-hc [class*="from-amber-"]    { --tw-gradient-from: #fff !important; }
-html.theme-hc [class*="from-emerald-"]  { --tw-gradient-from: #fff !important; }
-html.theme-hc [class*="from-red-"]      { --tw-gradient-from: #fff !important; }
-html.theme-hc [class*="to-indigo-"]     { --tw-gradient-to: #ddd !important; }
-html.theme-hc [class*="to-teal-"]       { --tw-gradient-to: #ddd !important; }
-html.theme-hc [class*="to-orange-"]     { --tw-gradient-to: #ddd !important; }
+/* ────────────────────────────────────────────────── */
+/*  GRADIENTES COM OPACIDADE → HIGHLIGHT ESCURO      */
+/*  (Seleção de cards, não CTAs)                     */
+/*  IMPORTANTE: vem DEPOIS do sólido para ter        */
+/*  prioridade via cascata (mesma especificidade).    */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]/"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF9F43]/"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#A855F7]/"] {
+  background: rgba(255,255,255,0.15) !important;
+  color: inherit !important;
+}
 
 /* Inline style gradients (ex: DownloadProgressModal) */
 html.theme-hc [style*="linear-gradient"] {
@@ -253,10 +260,18 @@ html.theme-hc [style*="linear-gradient"] {
 }
 
 /* ────────────────────────────────────────────────── */
-/*  BORDAS COLORIDAS → CINZA                         */
+/*  BORDAS DE MARCA → BRANCO (indicador de seleção)  */
+/*  A borda branca é o sinal principal de que algo    */
+/*  está selecionado no modo alto contraste.          */
 /* ────────────────────────────────────────────────── */
 html.theme-hc [class*="border-[#FF6B6B]"],
-html.theme-hc [class*="border-[#FF9F43]"],
+html.theme-hc [class*="border-[#FF9F43]"] {
+  border-color: #fff !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  BORDAS SEMÂNTICAS COLORIDAS → CINZA              */
+/* ────────────────────────────────────────────────── */
 html.theme-hc [class*="border-[#A855F7]"],
 html.theme-hc [class*="border-[#FF6B9D]"],
 html.theme-hc [class*="border-red-"],
@@ -283,14 +298,19 @@ html.theme-hc [class*="border-white/"] {
 /* ────────────────────────────────────────────────── */
 /*  RINGS COLORIDOS → BRANCO                         */
 /* ────────────────────────────────────────────────── */
+/* Rings de marca → branco forte (reforça seleção) */
 html.theme-hc [class*="ring-[#FF6B6B]"],
-html.theme-hc [class*="ring-[#FF9F43]"],
+html.theme-hc [class*="ring-[#FF9F43]"] {
+  --tw-ring-color: rgba(255,255,255,0.6) !important;
+}
+
+/* Rings semânticos → cinza */
 html.theme-hc [class*="ring-red-"],
 html.theme-hc [class*="ring-green-"],
 html.theme-hc [class*="ring-emerald-"],
 html.theme-hc [class*="ring-blue-"],
 html.theme-hc [class*="ring-purple-"] {
-  --tw-ring-color: rgba(255,255,255,0.4) !important;
+  --tw-ring-color: rgba(255,255,255,0.3) !important;
 }
 
 /* ────────────────────────────────────────────────── */
