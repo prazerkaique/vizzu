@@ -8,6 +8,7 @@ export interface User {
   email: string;
   avatar: string;
   plan: string;
+  tourEnabled?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -39,7 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: session.user.user_metadata?.full_name || 'Usuário',
           email: userEmail || '',
           avatar: session.user.user_metadata?.avatar_url || '',
-          plan: 'Free'
+          plan: 'Free',
+          tourEnabled: session.user.user_metadata?.tour_enabled !== false,
         });
         setIsAuthenticated(true);
       }
@@ -65,7 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: session.user.user_metadata?.full_name || 'Usuário',
           email: userEmail || '',
           avatar: session.user.user_metadata?.avatar_url || '',
-          plan: 'Free'
+          plan: 'Free',
+          tourEnabled: session.user.user_metadata?.tour_enabled !== false,
         });
         setIsAuthenticated(true);
       } else {

@@ -1,13 +1,16 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useProducts } from '../contexts/ProductsContext';
 import { useClients } from '../contexts/ClientsContext';
 import { useGeneration } from '../contexts/GenerationContext';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
 import type { Page } from '../contexts/UIContext';
 
 // ═══════════════════════════════════════════════════════════════
 // useOnboarding — Hook central do Copiloto de Primeiro Uso
 // Gerencia: stepper do Dashboard + tour guiado por feature
-// Persistência: 100% localStorage (sem Supabase)
+// Toggle global: Supabase user_metadata.tour_enabled
+// Tours individuais: localStorage vizzu_tour_seen_{feature}
 // ═══════════════════════════════════════════════════════════════
 
 export interface OnboardingStep {
@@ -31,6 +34,9 @@ export interface UseOnboardingReturn {
   resetOnboarding: () => void;
   shouldShowTour: (featureId: string) => boolean;
   markTourComplete: (featureId: string) => void;
+  isTourEnabled: boolean;
+  isSavingTourToggle: boolean;
+  setTourEnabled: (enabled: boolean) => Promise<boolean>;
 }
 
 // ── Definição estática das 5 etapas ──
@@ -77,6 +83,9 @@ const STEP_DEFINITIONS = [
   },
 ];
 
+// ── Feature IDs usados nos tours ──
+const TOUR_FEATURE_IDS = ['products', 'product-studio', 'look-composer', 'creative-still', 'provador'];
+
 // ── localStorage keys ──
 const LS_DISMISSED = 'vizzu_onboarding_dismissed';
 const LS_COMPLETED_PREFIX = 'vizzu_onboarding_completed_';
@@ -122,7 +131,11 @@ export function useOnboarding(): UseOnboardingReturn {
   const { products } = useProducts();
   const { clientLooks } = useClients();
   const { completedFeatures } = useGeneration();
+  const { user } = useAuth();
 
+  const [isSavingTourToggle, setIsSavingTourToggle] = useState(false);
+
+  const isTourEnabled = user?.tourEnabled !== false;
   const isDismissed = localStorage.getItem(LS_DISMISSED) === 'true';
 
   const steps: OnboardingStep[] = useMemo(() => {
@@ -141,11 +154,10 @@ export function useOnboarding(): UseOnboardingReturn {
 
   const currentStep = useMemo(() => steps.find(s => !s.isCompleted) || null, [steps]);
 
-  const isOnboardingActive = !isDismissed && completedCount < totalSteps;
+  const isOnboardingActive = isTourEnabled && !isDismissed && completedCount < totalSteps;
 
   const dismissOnboarding = useCallback(() => {
     localStorage.setItem(LS_DISMISSED, 'true');
-    // Forçar re-render — o componente que chama vai re-renderizar por state change
     window.dispatchEvent(new Event('storage'));
   }, []);
 
@@ -159,11 +171,44 @@ export function useOnboarding(): UseOnboardingReturn {
   }, []);
 
   const shouldShowTour = useCallback((featureId: string): boolean => {
+    if (!isTourEnabled) return false;
     return localStorage.getItem(`${LS_TOUR_PREFIX}${featureId}`) !== 'true';
-  }, []);
+  }, [isTourEnabled]);
 
   const markTourComplete = useCallback((featureId: string) => {
     localStorage.setItem(`${LS_TOUR_PREFIX}${featureId}`, 'true');
+  }, []);
+
+  // Toggle global do tour — salva no Supabase user_metadata
+  const setTourEnabled = useCallback(async (enabled: boolean): Promise<boolean> => {
+    setIsSavingTourToggle(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { tour_enabled: enabled }
+      });
+      if (error) throw error;
+
+      if (enabled) {
+        // Ao ativar: limpar tudo para reiniciar os tours
+        localStorage.removeItem(LS_DISMISSED);
+        TOUR_FEATURE_IDS.forEach(id => {
+          localStorage.removeItem(`${LS_TOUR_PREFIX}${id}`);
+          localStorage.removeItem(`${LS_COMPLETED_PREFIX}${id}`);
+        });
+      } else {
+        // Ao desativar: marcar todos os tours como vistos
+        TOUR_FEATURE_IDS.forEach(id => {
+          localStorage.setItem(`${LS_TOUR_PREFIX}${id}`, 'true');
+        });
+      }
+
+      window.dispatchEvent(new Event('storage'));
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setIsSavingTourToggle(false);
+    }
   }, []);
 
   return {
@@ -177,5 +222,8 @@ export function useOnboarding(): UseOnboardingReturn {
     resetOnboarding,
     shouldShowTour,
     markTourComplete,
+    isTourEnabled,
+    isSavingTourToggle,
+    setTourEnabled,
   };
 }

@@ -10,6 +10,7 @@ import { supabase } from '../services/supabaseClient';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
 import DownloadModal from '../components/shared/DownloadModal';
 import type { DownloadableImage } from '../utils/downloadSizes';
+import { useOnboarding } from '../hooks/useOnboarding';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -42,6 +43,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
  const { allPlans, masterFeatures, planIncluded, planPersona, planCta } = usePlans();
+ const { isTourEnabled, isSavingTourToggle, setTourEnabled } = useOnboarding();
 
  const [expandAllFeatures, setExpandAllFeatures] = useState(false);
 
@@ -300,6 +302,57 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
  />
  </div>
+ </div>
+ </div>
+
+ {/* Copiloto / Tour guiado */}
+ <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <div className="flex items-center justify-between">
+ <div className="flex-1">
+ <div className="flex items-center gap-2">
+ <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' fas fa-compass text-sm'}></i>
+ <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Copiloto de Primeiro Uso</h3>
+ </div>
+ <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>
+ {isTourEnabled
+ ? 'Ativo \u2014 as ferramentas mostram um passo a passo'
+ : 'Desativado \u2014 nenhum tour ser\u00e1 exibido'}
+ </p>
+ {!isTourEnabled && (
+ <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+ Ao ativar, o tour ser\u00e1 reiniciado em todas as ferramentas.
+ </p>
+ )}
+ </div>
+ <button
+ onClick={async () => {
+ const success = await setTourEnabled(!isTourEnabled);
+ if (success) {
+ showToast(
+ !isTourEnabled ? 'Tour ativado! Visite qualquer ferramenta.' : 'Tour desativado.',
+ 'success'
+ );
+ } else {
+ showToast('Erro ao salvar. Tente novamente.', 'error');
+ }
+ }}
+ disabled={isSavingTourToggle}
+ className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${
+ isSavingTourToggle ? 'opacity-50 cursor-wait' :
+ isTourEnabled
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'
+ }`}
+ >
+ {isSavingTourToggle ? (
+ <div className="absolute inset-0 flex items-center justify-center">
+ <i className="fas fa-circle-notch fa-spin text-white text-[10px]"></i>
+ </div>
+ ) : (
+ <div className={'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ' +
+ (isTourEnabled ? 'translate-x-7' : 'translate-x-1')}></div>
+ )}
+ </button>
  </div>
  </div>
 
