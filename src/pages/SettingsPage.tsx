@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CompanySettings } from '../types';
 import { useUI, type SettingsTab } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { CREDIT_PACKAGES } from '../hooks/useCredits';
 import { usePlans } from '../contexts/PlansContext';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import type { VizzuTheme } from '../contexts/UIContext';
 import { supabase } from '../services/supabaseClient';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
 import DownloadModal from '../components/shared/DownloadModal';
@@ -116,11 +116,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  }
  };
 
- // Lottie Theme Toggle
- const dotLottieRef = useRef<any>(null);
- const dotLottieRefCallback = useCallback((dotLottie: any) => {
- dotLottieRef.current = dotLottie;
- }, []);
+ // Theme options
+ const themeOptions: { value: VizzuTheme; label: string; icon: string; desc: string }[] = [
+   { value: 'light', label: 'Claro', icon: 'fa-sun', desc: 'Tema padrão' },
+   { value: 'dark', label: 'Escuro', icon: 'fa-moon', desc: 'Reduz fadiga visual' },
+   { value: 'high-contrast', label: 'Alto Contraste', icon: 'fa-circle-half-stroke', desc: 'Acessibilidade AA' },
+ ];
 
  return (
  <div className="flex-1 overflow-y-auto p-4 md:p-6">
@@ -128,15 +129,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* Header */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-cog text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-cog text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Configurações</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic hidden md:block'}>Gerencie sua conta e preferências</p>
+ <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Configurações</h1>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic hidden md:block'}>Gerencie sua conta e preferências</p>
  </div>
  </div>
- <button onClick={onLogout} className={'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 transition-colors ' + (theme === 'dark' ? 'hover:bg-red-500/10' : 'hover:bg-red-50')}>
+ <button onClick={onLogout} className={'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 transition-colors ' + (theme !== 'light' ? 'hover:bg-red-500/10' : 'hover:bg-red-50')}>
  <i className="fas fa-sign-out-alt"></i>
  <span className="hidden md:inline">Sair</span>
  </button>
@@ -155,8 +156,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onClick={() => setSettingsTab(tab.id)}
  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
  settingsTab === tab.id
- ? theme === 'dark' ? 'bg-neutral-700 text-white' : 'bg-gray-900 text-white'
- : theme === 'dark'
+ ? theme !== 'light' ? 'bg-neutral-700 text-white' : 'bg-gray-900 text-white'
+ : theme !== 'light'
  ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
  }`}
@@ -164,7 +165,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <i className={`fas ${tab.icon} text-[10px]`}></i>
  {tab.label}
  {'badge' in tab && tab.badge && (
- <span className={(theme === 'dark' ? 'bg-neutral-600 text-neutral-300' : 'bg-gray-300 text-gray-600') + ' text-[8px] px-1.5 py-0.5 rounded-full font-medium ml-0.5'}>{tab.badge}</span>
+ <span className={(theme !== 'light' ? 'bg-neutral-600 text-neutral-300' : 'bg-gray-300 text-gray-600') + ' text-[8px] px-1.5 py-0.5 rounded-full font-medium ml-0.5'}>{tab.badge}</span>
  )}
  </button>
  ))}
@@ -174,27 +175,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {settingsTab === 'profile' && (
  <div className="space-y-4">
  {/* Dados pessoais */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Dados Pessoais</h3>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Dados Pessoais</h3>
  <div className="flex items-center gap-3 mb-5">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
- {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center overflow-hidden'}>
+ {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-user text-lg'}></i>}
  </div>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
- <label htmlFor="profile-name" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
- <input type="text" id="profile-name" name="profileName" autoComplete="name" value={profileName} onChange={(e) => setProfileName(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} />
+ <label htmlFor="profile-name" className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome</label>
+ <input type="text" id="profile-name" name="profileName" autoComplete="name" value={profileName} onChange={(e) => setProfileName(e.target.value)} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} />
  </div>
  <div>
- <label htmlFor="profile-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
- <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
+ <label htmlFor="profile-email" className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Email</label>
+ <input type="email" id="profile-email" name="profileEmail" autoComplete="email" defaultValue={user?.email} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-neutral-500' : 'bg-gray-100 border-gray-200 text-gray-500') + ' w-full px-3 py-2.5 border rounded-lg text-sm'} disabled />
  </div>
  </div>
  {/* Alterar Senha — via email */}
- <div className={'mt-5 pt-5 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-xs mb-2'}>Alterar Senha</h4>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
+ <div className={'mt-5 pt-5 border-t ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-xs mb-2'}>Alterar Senha</h4>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
  Para sua segurança, a troca de senha é feita por email.
  </p>
  <button
@@ -228,26 +229,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Empresa */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Empresa</h3>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Empresa</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome da Empresa</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Nome da Empresa</label>
  <input
  type="text"
  value={companySettings.name}
  onChange={(e) => setCompanySettings({ ...companySettings, name: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
  placeholder="Sua Loja"
  />
  </div>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Instagram</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Instagram</label>
  <input
  type="text"
  value={companySettings.instagram || ''}
  onChange={(e) => setCompanySettings({ ...companySettings, instagram: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
  placeholder="@sualoja"
  />
  </div>
@@ -255,19 +256,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Plano atual + CTA */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Plano Atual</h3>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Plano Atual</h3>
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
  <i className="fas fa-crown text-[9px]"></i>
  {currentPlan.name}
  </span>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{currentPlan.limit} gerações/mês</span>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{currentPlan.limit} gerações/mês</span>
  </div>
  <button
  onClick={() => setSettingsTab('plan')}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white') + ' px-4 py-2 rounded-lg text-xs font-semibold transition-colors'}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white') + ' px-4 py-2 rounded-lg text-xs font-semibold transition-colors'}
  >
  Trocar Plano
  </button>
@@ -275,51 +276,53 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Tema */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
- <div className="flex items-center justify-between">
- <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Tema</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-0.5'}>
- {theme === 'dark' ? 'Modo escuro ativo' : 'Modo claro ativo'}
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Tema</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
+   Escolha a aparência do Vizzu
  </p>
- </div>
- <div
- onClick={() => {
- setTheme(theme === 'dark' ? 'light' : 'dark');
- if (dotLottieRef.current) {
- dotLottieRef.current.postStateMachineEvent('OnPointerDown');
- }
- }}
- className="cursor-pointer hover:scale-110 transition-transform"
- style={{ width: 80, height: 80 }}
- >
- <DotLottieReact
- dotLottieRefCallback={dotLottieRefCallback}
- src="https://lottie.host/97eaa266-6a0b-45c7-917f-97933914029a/GtkUp9Odq8.lottie"
- autoplay
- useFrameInterpolation
- stateMachineId="StateMachine1"
- style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
- />
- </div>
+ <div className="flex gap-2">
+   {themeOptions.map((opt) => {
+     const isActive = theme === opt.value;
+     return (
+       <button
+         key={opt.value}
+         onClick={() => setTheme(opt.value)}
+         className={
+           'flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-center transition-all border ' +
+           (isActive
+             ? theme !== 'light'
+               ? 'bg-white/10 border-white/30 text-white ring-2 ring-white/20'
+               : 'bg-gray-900 border-gray-900 text-white ring-2 ring-gray-900/20'
+             : theme !== 'light'
+               ? 'bg-neutral-800/50 border-neutral-700/50 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+               : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700')
+         }
+       >
+         <i className={'fas ' + opt.icon + ' text-sm'} />
+         <span className="text-[11px] font-semibold">{opt.label}</span>
+         <span className={'text-[9px] ' + (isActive ? 'opacity-70' : 'opacity-50')}>{opt.desc}</span>
+       </button>
+     );
+   })}
  </div>
  </div>
 
  {/* Copiloto / Tour guiado */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
  <div className="flex items-center justify-between">
  <div className="flex-1">
  <div className="flex items-center gap-2">
- <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' fas fa-compass text-sm'}></i>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Copiloto de Primeiro Uso</h3>
+ <i className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' fas fa-compass text-sm'}></i>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Copiloto de Primeiro Uso</h3>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>
  {isTourEnabled
  ? 'Ativo \u2014 as ferramentas mostram um passo a passo'
  : 'Desativado \u2014 nenhum tour ser\u00e1 exibido'}
  </p>
  {!isTourEnabled && (
- <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+ <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
  Ao ativar, o tour ser\u00e1 reiniciado em todas as ferramentas.
  </p>
  )}
@@ -341,7 +344,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  isSavingTourToggle ? 'opacity-50 cursor-wait' :
  isTourEnabled
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
- : theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'
+ : theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300'
  }`}
  >
  {isSavingTourToggle ? (
@@ -363,7 +366,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={'w-full py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ' +
  (isDirty && !isSavingProfile
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
- : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
+ : (theme !== 'light' ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
  )}
  >
  {isSavingProfile ? (
@@ -389,24 +392,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div>
  {/* Header */}
  <div className="text-center mb-8">
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold mb-2 font-serif'}>Planos e Preços</h2>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-base'}>Escolha o plano ideal para seu negócio</p>
+ <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-3xl font-bold mb-2 font-serif'}>Planos e Preços</h2>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-base'}>Escolha o plano ideal para seu negócio</p>
  </div>
 
  {/* Card de assinatura atual */}
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white/80 backdrop-blur-xl border-gray-200') + ' border rounded-2xl p-5 mb-8 max-w-2xl mx-auto'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white/80 backdrop-blur-xl border-gray-200') + ' border rounded-2xl p-5 mb-8 max-w-2xl mx-auto'}>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Plano Atual</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{currentPlan.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Plano Atual</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{currentPlan.name}</p>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Período de Cobrança</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{billingPeriod === 'yearly' ? 'Anual' : 'Mensal'}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Período de Cobrança</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{billingPeriod === 'yearly' ? 'Anual' : 'Mensal'}</p>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Próxima Cobrança</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Próxima Cobrança</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>
  {(() => {
  const d = new Date();
  d.setDate(d.getDate() + daysUntilRenewal);
@@ -415,15 +418,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </p>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Créditos Restantes</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{userCredits.toLocaleString()}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Créditos Restantes</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{userCredits.toLocaleString()}</p>
  </div>
  </div>
  {/* P5: Cancelar com confirmação */}
- <div className={'mt-4 pt-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
+ <div className={'mt-4 pt-3 border-t ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
  <button
  onClick={() => setShowCancelModal(true)}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-xs transition-colors'}
  >
  Cancelar assinatura
  </button>
@@ -432,14 +435,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  {/* Toggle Mensal/Anual */}
  <div className="flex items-center justify-center gap-3 mb-6">
- <span className={(billingPeriod === 'monthly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>Mensal</span>
+ <span className={(billingPeriod === 'monthly' ? (theme !== 'light' ? 'text-white' : 'text-gray-900') : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>Mensal</span>
  <button
  onClick={() => onSetBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
- className={((billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'))) + ' relative w-12 h-6 rounded-full transition-colors'}
+ className={((billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300'))) + ' relative w-12 h-6 rounded-full transition-colors'}
  >
  <div className={'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ' + (billingPeriod === 'yearly' ? 'translate-x-7' : 'translate-x-1')}></div>
  </button>
- <span className={(billingPeriod === 'yearly' ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>
+ <span className={(billingPeriod === 'yearly' ? (theme !== 'light' ? 'text-white' : 'text-gray-900') : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')) + ' text-sm font-medium'}>
  Anual
  </span>
  </div>
@@ -448,12 +451,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="flex items-center justify-center gap-4 mb-8">
  <div className="flex -space-x-2">
  {[1,2,3,4].map(i => (
- <div key={i} className={(theme === 'dark' ? 'bg-neutral-700 border-neutral-900' : 'bg-gray-200 border-white') + ' w-6 h-6 rounded-full border-2 flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-400') + ' fas fa-user text-[7px]'}></i>
+ <div key={i} className={(theme !== 'light' ? 'bg-neutral-700 border-neutral-900' : 'bg-gray-200 border-white') + ' w-6 h-6 rounded-full border-2 flex items-center justify-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-400') + ' fas fa-user text-[7px]'}></i>
  </div>
  ))}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Usado por <span className={theme === 'dark' ? 'text-white font-medium' : 'text-gray-900 font-medium'}>+500 criadores</span> no Brasil</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Usado por <span className={theme !== 'light' ? 'text-white font-medium' : 'text-gray-900 font-medium'}>+500 criadores</span> no Brasil</p>
  </div>
 
  {/* Cards dos Planos */}
@@ -479,10 +482,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={
  'relative rounded-2xl p-5 transition-all flex flex-col ' +
  (isCurrentPlan
- ? (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-[#FF9F43]' : 'bg-white border-2 border-[#FF9F43] shadow-sm')
+ ? (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-2 border-[#FF9F43]' : 'bg-white border-2 border-[#FF9F43] shadow-sm')
  : isTrial
- ? (theme === 'dark' ? 'bg-neutral-900/40 backdrop-blur-xl border border-dashed border-neutral-700' : 'bg-gray-50/80 border border-dashed border-gray-300')
- : (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 hover:border-neutral-600' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
+ ? (theme !== 'light' ? 'bg-neutral-900/40 backdrop-blur-xl border border-dashed border-neutral-700' : 'bg-gray-50/80 border border-dashed border-gray-300')
+ : (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 hover:border-neutral-600' : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm')
  )
  }
  >
@@ -496,14 +499,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  {isPro && !isCurrentPlan && (
  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
- <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-200' : 'bg-gray-800 text-white') + ' px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap'}>
+ <span className={(theme !== 'light' ? 'bg-neutral-700 text-neutral-200' : 'bg-gray-800 text-white') + ' px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap'}>
  MAIS POPULAR
  </span>
  </div>
  )}
  {isPremier && !isCurrentPlan && (
  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
- <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-200' : 'bg-gray-800 text-white') + ' px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap'}>
+ <span className={(theme !== 'light' ? 'bg-neutral-700 text-neutral-200' : 'bg-gray-800 text-white') + ' px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap'}>
  MELHOR VALOR
  </span>
  </div>
@@ -517,17 +520,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
 
  <div className="pt-1 flex flex-col flex-1">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{plan.name}</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>{persona}</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{plan.name}</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>{persona}</p>
 
  {/* Gerações em destaque */}
  <div className="mb-3">
  {isEnterprise ? (
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-extrabold'}>Sob consulta</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-extrabold'}>Sob consulta</span>
  ) : (
  <>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-3xl font-extrabold'}>{plan.limit}</span>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs ml-1'}>gerações{isTrial ? '' : '/mês'}</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-3xl font-extrabold'}>{plan.limit}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs ml-1'}>gerações{isTrial ? '' : '/mês'}</span>
  </>
  )}
  </div>
@@ -535,27 +538,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* Preço */}
  <div className="mb-1">
  {isEnterprise ? (
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Personalizado</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Personalizado</span>
  ) : isTrial ? (
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Grátis</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>Grátis</span>
  ) : (
  <>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>
  R$ {Number.isInteger(price) ? price : price.toFixed(2).replace('.', ',')}
  </span>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>/mês</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>/mês</span>
  </>
  )}
  </div>
 
  {/* Economia anual */}
  {!isTrial && !isEnterprise && billingPeriod === 'yearly' ? (
- <p className={(theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600') + ' text-[10px] font-medium mb-3'}>
+ <p className={(theme !== 'light' ? 'text-emerald-400' : 'text-emerald-600') + ' text-[10px] font-medium mb-3'}>
  <i className="fas fa-tag text-[8px] mr-1"></i>
  Economize R$ {annualSavings.toLocaleString('pt-BR')}/ano
  </p>
  ) : (
- <div className="mb-3 h-[14px]">{isTrial && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}{isEnterprise && <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Valores sob medida para sua operação</span>}</div>
+ <div className="mb-3 h-[14px]">{isTrial && <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Uso único, não renova</span>}{isEnterprise && <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Valores sob medida para sua operação</span>}</div>
  )}
 
  {/* Features — mesma ordem em todos os cards */}
@@ -563,17 +566,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {(expandAllFeatures ? allFeatures : collapsedFeatures).map((feat, i) => (
  <li key={i} className="flex items-start gap-2 text-[11px]">
  {feat.has ? (
- <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme === 'dark' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
+ <i className={'fas fa-check text-[9px] mt-0.5 shrink-0 ' + (theme !== 'light' ? 'text-emerald-400/70' : 'text-emerald-500/70')}></i>
  ) : (
  <span className="w-[9px] shrink-0"></span>
  )}
- <span className={feat.has ? (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
+ <span className={feat.has ? (theme !== 'light' ? 'text-neutral-300' : 'text-gray-600') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}>{feat.name}</span>
  </li>
  ))}
  {expandAllFeatures && !isTrial && !isEnterprise && (
- <li className={'flex items-center justify-between text-[10px] pt-1 mt-1 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <span className={theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}>Crédito extra</span>
- <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
+ <li className={'flex items-center justify-between text-[10px] pt-1 mt-1 border-t ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
+ <span className={theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'}>Crédito extra</span>
+ <span className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
  </li>
  )}
  </ul>
@@ -592,14 +595,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={
  'w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ' +
  (isCurrentPlan
- ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-500 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
+ ? (theme !== 'light' ? 'bg-neutral-800 text-neutral-500 cursor-default' : 'bg-gray-100 text-gray-400 cursor-default')
  : isCheckoutLoading && !isEnterprise
- ? (theme === 'dark' ? 'bg-neutral-800 text-neutral-400 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
+ ? (theme !== 'light' ? 'bg-neutral-800 text-neutral-400 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
  : isPro
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
  : isTrial
- ? (theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300')
- : (theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white')
+ ? (theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300')
+ : (theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-gray-900 hover:bg-gray-800 text-white')
  )
  }
  >
@@ -621,7 +624,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div className="text-center mb-6">
  <button
  onClick={() => setExpandAllFeatures(!expandAllFeatures)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-neutral-200' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium inline-flex items-center gap-1.5 transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-neutral-200' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium inline-flex items-center gap-1.5 transition-colors'}
  >
  <i className={'fas fa-chevron-down text-[8px] transition-transform ' + (expandAllFeatures ? 'rotate-180' : '')}></i>
  {expandAllFeatures ? 'Ver menos' : 'Ver tudo'}
@@ -630,24 +633,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  {/* Meios de pagamento */}
  <div className="flex items-center justify-center gap-3 mb-8">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Pagamento seguro via</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Pagamento seguro via</span>
  <div className="flex items-center gap-2">
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Pix</span>
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Cartão</span>
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Boleto</span>
+ <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Pix</span>
+ <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Cartão</span>
+ <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 border-neutral-700' : 'bg-gray-100 text-gray-500 border-gray-200') + ' px-2 py-0.5 rounded text-[10px] font-medium border'}>Boleto</span>
  </div>
- <i className={'fas fa-lock text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
+ <i className={'fas fa-lock text-[9px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
 
  {/* P6: Loading state nos botões de créditos */}
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-6'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-6'}>
  <div className="flex items-center gap-3 mb-4">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
- <i className={'fas fa-coins text-sm ' + (theme === 'dark' ? 'text-neutral-300' : 'text-gray-600')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
+ <i className={'fas fa-coins text-sm ' + (theme !== 'light' ? 'text-neutral-300' : 'text-gray-600')}></i>
  </div>
  <div>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Créditos adicionais</h4>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por crédito no plano {currentPlan.name}</p>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Créditos adicionais</h4>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por crédito no plano {currentPlan.name}</p>
  </div>
  </div>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -656,11 +659,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  key={amount}
  onClick={() => { if (!isCheckoutLoading) onBuyCredits(amount); }}
  disabled={isCheckoutLoading}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300') + ' border rounded-xl p-3 transition-all text-center group' + (isCheckoutLoading ? ' opacity-60 cursor-not-allowed' : '')}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 hover:border-neutral-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300') + ' border rounded-xl p-3 transition-all text-center group' + (isCheckoutLoading ? ' opacity-60 cursor-not-allowed' : '')}
  >
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-bold text-xl'}>{amount}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-1'}>créditos</p>
- <p className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' font-semibold text-xs'}>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-bold text-xl'}>{amount}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-1'}>créditos</p>
+ <p className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' font-semibold text-xs'}>
  R$ {(amount * currentPlan.creditPrice).toFixed(2).replace('.', ',')}
  </p>
  </button>
@@ -669,23 +672,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* FAQ */}
- <div className={(theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5'}>
  <details className="group">
- <summary className={(theme === 'dark' ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-600') + ' font-medium text-sm cursor-pointer flex items-center justify-between'}>
+ <summary className={(theme !== 'light' ? 'text-white hover:text-neutral-300' : 'text-gray-900 hover:text-gray-600') + ' font-medium text-sm cursor-pointer flex items-center justify-between'}>
  Perguntas Frequentes
  <i className="fas fa-chevron-down text-xs transition-transform group-open:rotate-180"></i>
  </summary>
- <div className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' mt-4 space-y-3 text-xs'}>
+ <div className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' mt-4 space-y-3 text-xs'}>
  <div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>O que são créditos?</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>O que são créditos?</p>
  <p>Cada foto gerada consome 1 crédito. Fotos em 4K consomem 2 créditos. Criar um modelo IA custa 2 créditos.</p>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Posso mudar de plano?</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Posso mudar de plano?</p>
  <p>Sim! Você pode fazer upgrade ou downgrade a qualquer momento.</p>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Os créditos acumulam?</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium mb-1'}>Os créditos acumulam?</p>
  <p>Créditos do plano não acumulam para o próximo mês. Créditos comprados avulso não expiram.</p>
  </div>
  </div>
@@ -693,8 +696,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* P7: Footer com link WhatsApp */}
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-center text-xs mt-6'}>
- Precisa de mais? <a href="https://wa.me/5544991534082?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados%20da%20Vizzu." target="_blank" rel="noopener noreferrer" className={(theme === 'dark' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-900') + ' underline'}>Entre em contato</a> para planos personalizados.
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-center text-xs mt-6'}>
+ Precisa de mais? <a href="https://wa.me/5544991534082?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados%20da%20Vizzu." target="_blank" rel="noopener noreferrer" className={(theme !== 'light' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-900') + ' underline'}>Entre em contato</a> para planos personalizados.
  </p>
  </div>
  );
@@ -703,25 +706,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* ═══════ INTEGRAÇÕES ═══════ */}
  {settingsTab === 'integrations' && (
  <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Integrações</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Conecte o Vizzu com suas plataformas de e-commerce.</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Integrações</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Conecte o Vizzu com suas plataformas de e-commerce.</p>
  <div className="space-y-2">
  {[
  { icon: 'fab fa-shopify', name: 'Shopify', desc: 'Sincronize produtos' },
  { icon: 'fab fa-wordpress', name: 'WooCommerce', desc: 'Loja WordPress' },
  { icon: 'fas fa-store', name: 'VTEX', desc: 'VTEX IO' },
  ].map(item => (
- <div key={item.name} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between opacity-60'}>
+ <div key={item.name} className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between opacity-60'}>
  <div className="flex items-center gap-3">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' ' + item.icon + ' text-sm'}></i>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' ' + item.icon + ' text-sm'}></i>
  </div>
  <div>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{item.name}</h4>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.desc}</p>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>{item.name}</h4>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{item.desc}</p>
  </div>
  </div>
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-500 border-neutral-700' : 'bg-gray-100 text-gray-400 border-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] border'}>Em breve</span>
+ <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-500 border-neutral-700' : 'bg-gray-100 text-gray-400 border-gray-200') + ' px-3 py-1.5 rounded-lg font-medium text-[10px] border'}>Em breve</span>
  </div>
  ))}
  </div>
@@ -732,11 +735,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {settingsTab === 'history' && (
  <div>
  <div className="flex items-center justify-between mb-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Histórico</h3>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Histórico</h3>
  {historyLogs.some(l => l.imageUrl) && (
  <button
  onClick={() => setShowHistoryDownload(true)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' text-xs flex items-center gap-1.5 transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900') + ' text-xs flex items-center gap-1.5 transition-colors'}
  >
  <i className="fas fa-download"></i>
  Baixar tudo
@@ -745,25 +748,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  {/* P12: Esconder contador quando 0 */}
  {historyLogs.length > 0 && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>{historyLogs.length} atividade{historyLogs.length !== 1 ? 's' : ''} registrada{historyLogs.length !== 1 ? 's' : ''}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>{historyLogs.length} atividade{historyLogs.length !== 1 ? 's' : ''} registrada{historyLogs.length !== 1 ? 's' : ''}</p>
  )}
 
  {historyLogs.length === 0 ? (
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-clock-rotate-left text-xl'}></i>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-clock-rotate-left text-xl'}></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade ainda</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Quando você gerar imagens ou editar produtos, as atividades aparecerão aqui.</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhuma atividade ainda</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Quando você gerar imagens ou editar produtos, as atividades aparecerão aqui.</p>
  </div>
  ) : (
  <div className="space-y-2">
  {/* P11: Paginação com "Carregar mais" */}
  {historyLogs.slice(0, historyVisible).map(log => {
  const statusConfig = {
- success: { icon: 'fa-check-circle', color: 'text-green-500', bg: theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50' },
- error: { icon: 'fa-times-circle', color: 'text-red-500', bg: theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50' },
- pending: { icon: 'fa-clock', color: 'text-yellow-500', bg: theme === 'dark' ? 'bg-yellow-500/10' : 'bg-yellow-50' },
+ success: { icon: 'fa-check-circle', color: 'text-green-500', bg: theme !== 'light' ? 'bg-green-500/10' : 'bg-green-50' },
+ error: { icon: 'fa-times-circle', color: 'text-red-500', bg: theme !== 'light' ? 'bg-red-500/10' : 'bg-red-50' },
+ pending: { icon: 'fa-clock', color: 'text-yellow-500', bg: theme !== 'light' ? 'bg-yellow-500/10' : 'bg-yellow-50' },
  };
  const methodConfig: Record<string, { icon: string; label: string }> = {
  manual: { icon: 'fa-hand', label: 'Manual' },
@@ -778,23 +781,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const date = log.date ? new Date(log.date) : new Date();
 
  return (
- <div key={log.id} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300') + ' rounded-xl border p-4 transition-colors'}>
+ <div key={log.id} className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300') + ' rounded-xl border p-4 transition-colors'}>
  <div className="flex items-start gap-3">
  <div className={status.bg + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
  <i className={'fas ' + status.icon + ' ' + status.color}></i>
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 mb-1">
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{log.action}</h4>
- <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1'}>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{log.action}</h4>
+ <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500') + ' text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1'}>
  <i className={'fas ' + method.icon + ' text-[8px]'}></i>
  {method.label}
  </span>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs mb-2'}>{log.details}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs mb-2'}>{log.details}</p>
  {/* P14: flex-wrap para metadata */}
  <div className="flex items-center gap-3 text-[10px] flex-wrap">
- <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
+ <span className={theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'}>
  <i className="fas fa-calendar mr-1"></i>
  {date.toLocaleDateString('pt-BR')} às {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
  </span>
@@ -805,7 +808,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </span>
  )}
  {log.itemsCount && log.itemsCount > 0 && (
- <span className={theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}>
+ <span className={theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'}>
  <i className="fas fa-box mr-1"></i>
  {log.itemsCount} item{log.itemsCount !== 1 ? 's' : ''}
  </span>
@@ -834,14 +837,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {historyVisible < historyLogs.length && (
  <button
  onClick={() => setHistoryVisible(v => v + HISTORY_PAGE_SIZE)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200') + ' w-full py-2.5 rounded-xl text-xs font-medium border transition-colors flex items-center justify-center gap-2'}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200') + ' w-full py-2.5 rounded-xl text-xs font-medium border transition-colors flex items-center justify-center gap-2'}
  >
  <i className="fas fa-chevron-down text-[8px]"></i>
  Carregar mais ({historyVisible} de {historyLogs.length})
  </button>
  )}
  {historyVisible >= historyLogs.length && historyLogs.length > HISTORY_PAGE_SIZE && (
- <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-center text-[10px] pt-2'}>
+ <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-center text-[10px] pt-2'}>
  Mostrando todas as {historyLogs.length} atividades
  </p>
  )}

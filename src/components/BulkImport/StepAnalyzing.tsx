@@ -1,3 +1,4 @@
+import type { VizzuTheme } from '../../contexts/UIContext';
 import React, { useEffect, useRef } from 'react';
 import type { BulkProduct } from './types';
 import { analyzeProductImage } from '../../lib/api/studio';
@@ -5,7 +6,7 @@ import { AI_TYPE_TO_CATEGORY, assignAngles, delay } from './utils';
 import { getProductType } from '../../lib/productConfig';
 
 interface StepAnalyzingProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   products: BulkProduct[];
   setProducts: React.Dispatch<React.SetStateAction<BulkProduct[]>>;
   userId?: string;
@@ -15,7 +16,7 @@ interface StepAnalyzingProps {
 const AI_DELAY_MS = 2000;
 
 export function StepAnalyzing({ theme, products, setProducts, userId, onComplete }: StepAnalyzingProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const abortRef = useRef(false);
   const startedRef = useRef(false);
 

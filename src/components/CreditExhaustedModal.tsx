@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { Plan, CREDIT_PACKAGES } from '../hooks/useCredits';
 import { usePlans } from '../contexts/PlansContext';
 import { supabase } from '../services/supabaseClient';
+import type { VizzuTheme } from '../contexts/UIContext';
 
 interface Props {
  isOpen: boolean;
@@ -19,7 +20,7 @@ interface Props {
  onBuyCredits: (amount: number) => void;
  onUpgradePlan: (planId: string) => void;
  onSetBillingPeriod: (period: 'monthly' | 'yearly') => void;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
 }
 
 // Textos de contexto da ação
@@ -52,7 +53,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  const [generationsToday, setGenerationsToday] = useState<number | null>(null);
 
  const { plans } = usePlans();
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
  const isInsufficient = currentCredits > 0 && currentCredits < creditsNeeded;
  const isZero = currentCredits === 0;
  const isTrial = currentPlan.id === 'free';

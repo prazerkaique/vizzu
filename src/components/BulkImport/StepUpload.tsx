@@ -1,8 +1,9 @@
+import type { VizzuTheme } from '../../contexts/UIContext';
 import React, { useState, useRef, useCallback } from 'react';
 import { downloadTemplateCsv } from './utils';
 
 interface StepUploadProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   onZipParsed: (file: File) => Promise<void>;
 }
 
@@ -11,7 +12,7 @@ export function StepUpload({ theme, onZipParsed }: StepUploadProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.name.endsWith('.zip')) {

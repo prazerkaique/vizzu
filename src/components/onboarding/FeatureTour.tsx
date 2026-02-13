@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { TourExitConfirm } from './TourExitConfirm';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 // ═══════════════════════════════════════════════════════════════
 // FeatureTour — Tour guiado com spotlight + tooltip
@@ -18,7 +19,7 @@ export interface TourStop {
 interface FeatureTourProps {
   featureId: string;
   stops: TourStop[];
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
 }
 
 interface SpotlightRect {
@@ -40,7 +41,7 @@ export function FeatureTour({ featureId, stops, theme }: FeatureTourProps) {
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const [isVisible, setIsVisible] = useState(false);
   const observerRef = useRef<ResizeObserver | null>(null);
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const isActive = shouldShowTour(featureId);
 

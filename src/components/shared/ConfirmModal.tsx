@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useEffect, useRef } from 'react';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface ConfirmModalProps {
  isOpen: boolean;
@@ -16,7 +17,7 @@ interface ConfirmModalProps {
  cancelLabel?: string;
  variant?: 'danger' | 'warning' | 'default';
  isLoading?: boolean;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -57,10 +58,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
  const isWarning = variant === 'warning';
 
  const iconConfig = isDanger
- ? { icon: 'fa-triangle-exclamation', bg: theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50', color: 'text-red-500' }
+ ? { icon: 'fa-triangle-exclamation', bg: theme !== 'light' ? 'bg-red-500/10' : 'bg-red-50', color: 'text-red-500' }
  : isWarning
- ? { icon: 'fa-triangle-exclamation', bg: theme === 'dark' ? 'bg-yellow-500/10' : 'bg-yellow-50', color: 'text-yellow-500' }
- : { icon: 'fa-circle-question', bg: theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100', color: theme === 'dark' ? 'text-neutral-300' : 'text-gray-600' };
+ ? { icon: 'fa-triangle-exclamation', bg: theme !== 'light' ? 'bg-yellow-500/10' : 'bg-yellow-50', color: 'text-yellow-500' }
+ : { icon: 'fa-circle-question', bg: theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100', color: theme !== 'light' ? 'text-neutral-300' : 'text-gray-600' };
 
  const confirmBtnClass = isDanger
  ? 'bg-red-600 hover:bg-red-700 text-white'
@@ -79,7 +80,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
  {/* Modal */}
  <div className={
  'relative w-full max-w-sm rounded-2xl border p-6 shadow-2xl ' +
- (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')
+ (theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')
  }>
  {/* Icon */}
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center mb-4 ' + iconConfig.bg}>
@@ -87,13 +88,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
  </div>
 
  {/* Title */}
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-bold mb-1'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-base font-bold mb-1'}>
  {title}
  </h3>
 
  {/* Description */}
  {description && (
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-3'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm mb-3'}>
  {description}
  </p>
  )}
@@ -103,13 +104,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
  <div className={
  'rounded-lg p-3 mb-4 ' +
  (isDanger
- ? (theme === 'dark' ? 'bg-red-500/5 border border-red-500/20' : 'bg-red-50 border border-red-100')
- : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200'))
+ ? (theme !== 'light' ? 'bg-red-500/5 border border-red-500/20' : 'bg-red-50 border border-red-100')
+ : (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200'))
  }>
  <ul className="space-y-1">
  {consequences.map((c, i) => (
- <li key={i} className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs flex items-start gap-2'}>
- <i className={'fas fa-circle text-[4px] mt-1.5 shrink-0 ' + (isDanger ? 'text-red-400' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
+ <li key={i} className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs flex items-start gap-2'}>
+ <i className={'fas fa-circle text-[4px] mt-1.5 shrink-0 ' + (isDanger ? 'text-red-400' : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'))}></i>
  {c}
  </li>
  ))}
@@ -125,7 +126,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
  disabled={isLoading}
  className={
  'flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ' +
- (theme === 'dark'
+ (theme !== 'light'
  ? 'bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700'
  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200')
  }

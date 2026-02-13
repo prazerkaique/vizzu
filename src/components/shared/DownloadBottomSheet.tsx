@@ -5,6 +5,7 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { DOWNLOAD_PRESETS, getDownloadUrl, buildFilename, type DownloadPreset } from '../../utils/downloadSizes';
 import { smartDownload } from '../../utils/downloadHelper';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface DownloadBottomSheetProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface DownloadBottomSheetProps {
   imageLabel: string;
   productName: string;
   featurePrefix: string;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
   onDownloadStart?: () => void;
   onDownloadEnd?: (success: boolean) => void;
 }
@@ -29,7 +30,7 @@ export default function DownloadBottomSheet({
   onDownloadStart,
   onDownloadEnd,
 }: DownloadBottomSheetProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const sheetRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef(0);
 

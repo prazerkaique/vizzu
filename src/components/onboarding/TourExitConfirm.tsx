@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface TourExitConfirmProps {
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
   onContinue: () => void;
   onExit: () => void;
 }
 
 export function TourExitConfirm({ theme, onContinue, onExit }: TourExitConfirmProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {

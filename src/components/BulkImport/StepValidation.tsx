@@ -1,8 +1,9 @@
+import type { VizzuTheme } from '../../contexts/UIContext';
 import React, { useMemo, useState } from 'react';
 import type { BulkProduct, ImportResults } from './types';
 
 interface StepValidationProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   products: BulkProduct[];
   importResults: ImportResults;
   onComplete: () => void;
@@ -11,7 +12,7 @@ interface StepValidationProps {
 const MAX_SAMPLE = 10;
 
 export function StepValidation({ theme, products, importResults, onComplete }: StepValidationProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   // Selecionar amostra aleatória dos produtos importados com sucesso
   const sample = useMemo(() => {

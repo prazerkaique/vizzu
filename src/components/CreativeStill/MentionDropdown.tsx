@@ -4,13 +4,14 @@
 
 import React, { useRef, useEffect } from 'react';
 import type { MentionItem } from './promptParser';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface MentionDropdownProps {
   items: MentionItem[];
   selectedIndex: number;
   onSelect: (item: MentionItem) => void;
   visible: boolean;
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string; darkBg: string; darkText: string }> = {
@@ -33,7 +34,7 @@ export const MentionDropdown: React.FC<MentionDropdownProps> = ({
   theme,
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   // Scroll item selecionado para visível
   useEffect(() => {

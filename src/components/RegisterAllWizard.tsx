@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import type { VizzuTheme } from '../contexts/UIContext';
 import type { DetectedProduct } from '../lib/api/studio';
 import { getProductType, UPLOAD_SLOTS_CONFIG, angleToApiField } from '../lib/productConfig';
 import { compressImage } from '../utils/imageCompression';
@@ -54,7 +55,7 @@ interface WizardProduct {
 }
 
 interface RegisterAllWizardProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   detectedProducts: DetectedProduct[];
   frontImage: string;
   userId: string;
@@ -65,7 +66,7 @@ interface RegisterAllWizardProps {
 const IMPORT_DELAY_MS = 3000;
 
 export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId, onComplete, onClose }: RegisterAllWizardProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadTarget, setUploadTarget] = useState<string>('');
 

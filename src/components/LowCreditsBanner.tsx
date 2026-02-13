@@ -4,11 +4,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
+import type { VizzuTheme } from '../contexts/UIContext';
 
 interface Props {
   userCredits: number;
   currentPlanId: string;
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
   onBuyCredits: () => void;
 }
 
@@ -21,7 +22,7 @@ export const LowCreditsBanner: React.FC<Props> = ({
   const [dismissed, setDismissed] = useState(false);
   const [generationsToday, setGenerationsToday] = useState<number | null>(null);
 
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const isTrialExhausted = currentPlanId === 'free' && userCredits === 0;
   const isLowCredits = userCredits > 0 && userCredits <= 3;
   const isZero = userCredits === 0 && currentPlanId !== 'free';

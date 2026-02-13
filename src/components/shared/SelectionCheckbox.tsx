@@ -1,4 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
+import type { VizzuTheme } from '../../contexts/UIContext';
 // VIZZU - Selection Checkbox (modo seleção em cards de imagem)
 // ═══════════════════════════════════════════════════════════════
 
@@ -6,7 +7,7 @@ interface SelectionCheckboxProps {
   isSelected: boolean;
   isSelectionMode: boolean;
   onToggle: () => void;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 export default function SelectionCheckbox({
@@ -15,7 +16,7 @@ export default function SelectionCheckbox({
   onToggle,
   theme = 'dark',
 }: SelectionCheckboxProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   if (!isSelectionMode) return null;
 

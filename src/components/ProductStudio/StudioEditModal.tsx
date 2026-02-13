@@ -8,7 +8,7 @@ import { Product, ProductStudioImage, ProductStudioSession } from '../../types';
 import { editStudioImage, saveEditedImage, StudioBackground, StudioShadow } from '../../lib/api/studio';
 import { ZoomableImage } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 
 interface StudioEditModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ interface StudioEditModalProps {
   onImageUpdated: (angle: string, newUrl: string) => void;
   onSaveAsNew?: (newImageUrl: string) => Promise<{ success: boolean }>;
   onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 type ModalMode = 'input' | 'generating' | 'compare';
@@ -72,7 +72,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const hasEnoughCredits = totalAvailable >= creditCost;
   const willUseRegular = editBalance < creditCost;
 
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   // ── Helpers ────────────────────────────────────────────────
 

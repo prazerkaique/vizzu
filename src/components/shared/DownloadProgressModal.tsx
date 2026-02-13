@@ -3,11 +3,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { ZipProgress } from '../../utils/zipDownload';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface DownloadProgressModalProps {
   isOpen: boolean;
   progress: ZipProgress;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
   onCancel?: () => void;
 }
 
@@ -17,7 +18,7 @@ export default function DownloadProgressModal({
   theme = 'dark',
   onCancel,
 }: DownloadProgressModalProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   if (!isOpen) return null;
 

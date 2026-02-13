@@ -11,7 +11,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
   const { completedFeatures, clearCompletedFeature } = useGeneration();
 
   return (
-    <div className={'flex-1 overflow-y-auto p-4 md:p-6 transition-colors duration-200 ' + (theme === 'dark' ? '' : 'bg-cream')}>
+    <div className={'flex-1 overflow-y-auto p-4 md:p-6 transition-colors duration-200 ' + (theme !== 'light' ? '' : 'bg-cream')}>
     <style>{`
     .creation-card {
     transition: all 0.3s ease;
@@ -34,12 +34,12 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     {/* Header */}
     <div className="mb-6">
     <div className="flex items-center gap-3 mb-2">
-    <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
-    <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+    <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+    <i className={'fas fa-wand-magic-sparkles text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
     </div>
     <div>
-    <h1 className={'text-xl font-extrabold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
-    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-600') + ' text-xs font-serif italic'}>Escolha uma ferramenta para criar com IA</p>
+    <h1 className={'text-xl font-extrabold ' + (theme !== 'light' ? 'text-white' : 'text-[#1A1A1A]')}>Vizzu Creation</h1>
+    <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-600') + ' text-xs font-serif italic'}>Escolha uma ferramenta para criar com IA</p>
     </div>
     </div>
     </div>
@@ -49,7 +49,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     {/* Card 1: Vizzu Product Studio */}
     <div
     onClick={() => { clearCompletedFeature('product-studio'); navigateTo('product-studio'); }}
-    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-product-studio.webp)' }}></div>
@@ -86,7 +86,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     {/* Card 2: Vizzu Provador */}
     <div
     onClick={() => { clearCompletedFeature('provador'); navigateTo('provador'); }}
-    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-provador.webp)' }}></div>
@@ -123,7 +123,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     {/* Card 3: Vizzu Look Composer */}
     <div
     onClick={() => { clearCompletedFeature('look-composer'); navigateTo('look-composer'); }}
-    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-look-composer.webp)' }}></div>
@@ -160,7 +160,7 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     {/* Card 4: Vizzu Still Criativo */}
     <div
     onClick={() => { clearCompletedFeature('creative-still'); navigateTo('creative-still'); }}
-    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
+    className={'creation-card group relative overflow-hidden rounded-xl cursor-pointer active:opacity-90 ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border-2 border-gray-200')}
     style={{ minHeight: '240px', height: 'auto' }}
     >
     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/banner-still-criativo.webp)' }}></div>
@@ -196,23 +196,23 @@ export function CreateHubPage({ userCredits }: CreateHubPageProps) {
     </div>
 
     {/* Em Breve - Faixa compacta */}
-    <div className={'mt-4 rounded-xl ' + (theme === 'dark' ? 'bg-neutral-800/30 border border-neutral-700/50' : 'bg-gray-200/30 border border-gray-300/50')}>
+    <div className={'mt-4 rounded-xl ' + (theme !== 'light' ? 'bg-neutral-800/30 border border-neutral-700/50' : 'bg-gray-200/30 border border-gray-300/50')}>
     <div className="px-5 py-3 flex items-center gap-3">
-    <i className={'fas fa-sparkles text-sm ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}></i>
-    <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm font-serif italic'}>Mais ferramentas em breve</span>
+    <i className={'fas fa-sparkles text-sm ' + (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')}></i>
+    <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm font-serif italic'}>Mais ferramentas em breve</span>
     </div>
     </div>
 
     {/* Quick Stats */}
-    <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4 mt-4 transition-colors duration-200'}>
+    <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4 mt-4 transition-colors duration-200'}>
     <div className="flex items-center justify-between">
     <div className="flex items-center gap-3">
-    <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
-    <i className={'fas fa-coins ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+    <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+    <i className={'fas fa-coins ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
     </div>
     <div>
-    <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
-    <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits.toLocaleString()}</p>
+    <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Seus Créditos</p>
+    <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{userCredits.toLocaleString()}</p>
     </div>
     </div>
     <button

@@ -16,7 +16,7 @@ import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { FeatureTour } from '../onboarding/FeatureTour';
@@ -28,7 +28,7 @@ import { useOnboarding } from '../../hooks/useOnboarding';
 // ============================================================
 
 interface Props {
- theme: 'dark' | 'light';
+ theme: VizzuTheme;
  clients: Client[];
  products: Product[];
  collections: string[];
@@ -629,12 +629,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  ${isActive
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white scale-105 '
  : isComplete
- ? theme === 'dark' ? 'bg-white/5 text-neutral-300 border border-white/10' : 'bg-white/60 text-gray-600 border border-gray-200/50'
+ ? theme !== 'light' ? 'bg-white/5 text-neutral-300 border border-white/10' : 'bg-white/60 text-gray-600 border border-gray-200/50'
  : canNavigate
- ? theme === 'dark'
+ ? theme !== 'light'
  ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
- : theme === 'dark'
+ : theme !== 'light'
  ? 'bg-neutral-900 text-neutral-600'
  : 'bg-gray-50 text-gray-300'
  }
@@ -646,7 +646,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  ? 'bg-white/20'
  : isComplete
  ? 'bg-white/10 text-green-400'
- : theme === 'dark'
+ : theme !== 'light'
  ? 'bg-neutral-700'
  : 'bg-gray-200'
  }`}>
@@ -664,13 +664,13 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  );
 
  const renderStep1 = () => (
- <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
- <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
- <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+ <div className={`${theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
+ <div className={`p-4 border-b ${theme !== 'light' ? 'border-neutral-800' : 'border-gray-100'}`}>
+ <h3 className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
  <span className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center text-white text-xs">1</span>
  Selecionar Cliente
  </h3>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
  Escolha um cliente cadastrado ou adicione um novo
  </p>
  </div>
@@ -692,13 +692,13 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <i className="fas fa-times"></i>
  </button>
  </div>
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-lg`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-semibold text-lg`}>
  {selectedClient.firstName} {selectedClient.lastName}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
  {formatWhatsApp(selectedClient.whatsapp)}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-xs mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'} text-xs mt-1`}>
  {selectedClient.photos?.length || 1} foto(s) cadastrada(s)
  </p>
 
@@ -714,14 +714,14 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Buscar clientes */}
  <div data-tour="provador-client-search" className="mb-4">
  <div className="relative">
- <i className={`fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
+ <i className={`fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ${theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
  <input
  type="text"
  id="provador-client-search"
  name="clientSearch"
  placeholder="Buscar cliente..."
  className={`w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500'
  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
  }`}
@@ -737,7 +737,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  key={client.id}
  onClick={() => handleSelectClient(client)}
  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'border-neutral-800 hover:border-neutral-600 hover:bg-neutral-800'
  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
  }`}
@@ -749,27 +749,27 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  size="thumb"
  />
  <div className="flex-1 min-w-0">
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
  {client.firstName} {client.lastName}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
  {client.photos?.length || 1} foto(s)
  </p>
  </div>
- <i className={`fas fa-chevron-right text-xs ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+ <i className={`fas fa-chevron-right text-xs ${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
  </div>
  ))
  ) : (
  <div className="text-center py-8">
  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 ${
- theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+ theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100'
  }`}>
- <i className={`fas fa-user-plus text-2xl ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+ <i className={`fas fa-user-plus text-2xl ${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
  </div>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm mb-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-sm mb-1`}>
  Nenhum cliente com foto cadastrada
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'} text-xs`}>
  Cadastre um cliente para usar o Provador
  </p>
  </div>
@@ -781,7 +781,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  data-tour="provador-client-create"
  onClick={onCreateClient}
  className={`w-full mt-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700'
  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
  }`}
@@ -796,20 +796,20 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  );
 
  const renderStep2 = () => (
- <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
- <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
- <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+ <div className={`${theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
+ <div className={`p-4 border-b ${theme !== 'light' ? 'border-neutral-800' : 'border-gray-100'}`}>
+ <h3 className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
  <span className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center text-white text-xs">2</span>
  Selecionar Foto
  </h3>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
  Escolha a foto que sera usada ou adicione uma nova
  </p>
  </div>
 
  {/* Preview do cliente selecionado */}
  {selectedClient && (
- <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/50' : 'border-gray-100 bg-gray-50'}`}>
+ <div className={`px-4 py-3 border-b ${theme !== 'light' ? 'border-neutral-800 bg-neutral-800/50' : 'border-gray-100 bg-gray-50'}`}>
  <div className="flex items-center gap-3">
  <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
@@ -818,10 +818,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  size="thumb"
  />
  <div>
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium text-sm`}>
  {selectedClient.firstName} {selectedClient.lastName}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
  {selectedClient.photos?.length || 1} foto(s) disponivel(is)
  </p>
  </div>
@@ -845,8 +845,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  key={photoType.id}
  className={`rounded-xl border overflow-hidden transition-all ${
  isSelected
- ? theme === 'dark' ? 'border-neutral-400 ring-1 ring-neutral-400/20' : 'border-gray-400 ring-1 ring-gray-400/20'
- : theme === 'dark'
+ ? theme !== 'light' ? 'border-neutral-400 ring-1 ring-neutral-400/20' : 'border-gray-400 ring-1 ring-gray-400/20'
+ : theme !== 'light'
  ? 'border-neutral-800'
  : 'border-gray-200'
  }`}
@@ -868,19 +868,19 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  />
  ) : (
  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
- theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+ theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100'
  }`}>
  <i className={`fas ${photoType.icon} text-lg ${
- theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'
+ theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'
  }`}></i>
  </div>
  )}
 
  <div className="flex-1">
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium`}>
  {photoType.label}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
  {hasPhoto ? 'Toque para selecionar' : 'Nao cadastrada'}
  </p>
  </div>
@@ -892,7 +892,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  )}
 
  {hasPhoto && !isSelected && (
- <i className={`fas fa-chevron-right ${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
+ <i className={`fas fa-chevron-right ${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'}`}></i>
  )}
  </div>
 
@@ -902,7 +902,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <button
  onClick={() => handleOpenPhotoOptions(photoType.id)}
  className={`w-full py-2.5 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
  }`}
@@ -918,9 +918,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
 
  {/* Botao para adicionar nova foto */}
  <div className={`mt-4 p-4 rounded-xl border border-dashed ${
- theme === 'dark' ? 'border-neutral-700 bg-neutral-800/30' : 'border-gray-300 bg-gray-50'
+ theme !== 'light' ? 'border-neutral-700 bg-neutral-800/30' : 'border-gray-300 bg-gray-50'
  }`}>
- <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-600'} text-sm text-center mb-3`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-400' : 'text-gray-600'} text-sm text-center mb-3`}>
  <i className="fas fa-lightbulb text-yellow-500 mr-2"></i>
  Cliente na loja? Tire uma foto agora!
  </p>
@@ -938,7 +938,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <button
  onClick={() => setCurrentStep(1)}
  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 text-white hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
  }`}
@@ -957,7 +957,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  ) : (
  <div className="text-center py-8">
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-sm`}>
  Selecione um cliente primeiro
  </p>
  <button
@@ -974,23 +974,23 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {showPhotoOptions && (
  <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
  <div className={`w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl overflow-hidden safe-area-bottom-sheet ${
- theme === 'dark' ? 'bg-neutral-900' : 'bg-white'
+ theme !== 'light' ? 'bg-neutral-900' : 'bg-white'
  }`}>
- <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+ <div className={`p-4 border-b ${theme !== 'light' ? 'border-neutral-800' : 'border-gray-100'}`}>
  <div className="flex items-center justify-between">
- <h4 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold`}>
+ <h4 className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-semibold`}>
  Adicionar Foto
  </h4>
  <button
  onClick={() => setShowPhotoOptions(false)}
  className={`w-8 h-8 rounded-full flex items-center justify-center ${
- theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'
+ theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-500'
  }`}
  >
  <i className="fas fa-times text-sm"></i>
  </button>
  </div>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
  Foto de {PHOTO_TYPES.find(p => p.id === uploadingPhotoType)?.label.toLowerCase()}
  </p>
  </div>
@@ -1001,7 +1001,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => cameraInputRef.current?.click()}
  disabled={isUploadingPhoto}
  className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 hover:bg-neutral-700'
  : 'bg-gray-50 hover:bg-gray-100'
  }`}
@@ -1010,10 +1010,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <i className="fas fa-camera text-white text-lg"></i>
  </div>
  <div className="text-left">
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium`}>
  Camera
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
  Tirar foto agora
  </p>
  </div>
@@ -1024,21 +1024,21 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={() => photoInputRef.current?.click()}
  disabled={isUploadingPhoto}
  className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 hover:bg-neutral-700'
  : 'bg-gray-50 hover:bg-gray-100'
  }`}
  >
  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
- theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
+ theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'
  }`}>
- <i className={`fas fa-images text-lg ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}></i>
+ <i className={`fas fa-images text-lg ${theme !== 'light' ? 'text-neutral-300' : 'text-gray-600'}`}></i>
  </div>
  <div className="text-left">
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium`}>
  Galeria
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
  Escolher da galeria
  </p>
  </div>
@@ -1047,7 +1047,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {isUploadingPhoto && (
  <div className="flex items-center justify-center gap-2 py-2">
  <i className="fas fa-spinner fa-spin text-[#FF9F43]"></i>
- <span className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
+ <span className={`${theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'} text-sm`}>
  Processando...
  </span>
  </div>
@@ -1081,9 +1081,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  );
 
  const renderStep3 = () => (
- <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
- <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
- <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+ <div className={`${theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
+ <div className={`p-4 border-b ${theme !== 'light' ? 'border-neutral-800' : 'border-gray-100'}`}>
+ <h3 className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
  <span className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center text-white text-xs">3</span>
  Montar Look
  {Object.keys(lookComposition).length > 0 && (
@@ -1092,7 +1092,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </span>
  )}
  </h3>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
  Selecione as pecas que compoem o look
  </p>
  </div>
@@ -1100,8 +1100,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Preview lateral do cliente */}
  <div className="flex">
  {/* Preview da foto do cliente (sempre visivel) */}
- <div className={`w-1/4 p-3 border-r ${theme === 'dark' ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-100 bg-gray-50'}`}>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] font-medium uppercase tracking-wide mb-2`}>
+ <div className={`w-1/4 p-3 border-r ${theme !== 'light' ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-100 bg-gray-50'}`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] font-medium uppercase tracking-wide mb-2`}>
  Cliente
  </p>
  {selectedClient && (
@@ -1111,10 +1111,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  alt={selectedClient.firstName}
  className="w-full aspect-[3/4] object-cover rounded-xl mb-2"
  />
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-xs truncate`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium text-xs truncate`}>
  {selectedClient.firstName}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] capitalize`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] capitalize`}>
  Foto: {selectedPhotoType}
  </p>
  </div>
@@ -1130,7 +1130,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  value={collectionFilter}
  onChange={(e) => setCollectionFilter(e.target.value)}
  className={`w-full px-3 py-2 border rounded-xl text-xs mb-3 ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 border-neutral-700 text-white'
  : 'bg-gray-50 border-gray-200 text-gray-900'
  }`}
@@ -1154,12 +1154,12 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {/* Navegacao */}
- <div className={`p-4 border-t ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
+ <div className={`p-4 border-t ${theme !== 'light' ? 'border-neutral-800' : 'border-gray-100'}`}>
  <div className="flex gap-3">
  <button
  onClick={() => setCurrentStep(2)}
  className={`flex-1 py-3 rounded-xl font-medium text-sm transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 text-white hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
  }`}
@@ -1179,13 +1179,13 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  );
 
  const renderStep4 = () => (
- <div className={`${theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
- <div className={`p-4 border-b ${theme === 'dark' ? 'border-neutral-800' : 'border-gray-100'}`}>
- <h3 className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
+ <div className={`${theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 '} rounded-2xl border overflow-hidden`}>
+ <div className={`p-4 border-b ${theme !== 'light' ? 'border-neutral-800' : 'border-gray-100'}`}>
+ <h3 className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-semibold text-base flex items-center gap-2`}>
  <span className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center text-white text-xs">4</span>
  Gerar e Enviar
  </h3>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs mt-1`}>
  Gere a imagem e envie para o cliente
  </p>
  </div>
@@ -1195,25 +1195,25 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Coluna Esquerda - Imagem */}
  <div className="md:w-1/2 p-4">
  <div className={`aspect-[3/4] rounded-xl overflow-hidden relative ${
- theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100'
+ theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100'
  }`}>
  {isGenerating ? (
  <div className="flex flex-col items-center justify-center h-full p-6">
  <div className="w-20 h-20 mb-3 rounded-xl overflow-hidden flex items-center justify-center">
  <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} text-xs font-medium mb-2 text-center`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-800'} text-xs font-medium mb-2 text-center`}>
  {loadingText}
  </p>
  <div className={`w-full max-w-[150px] h-1.5 rounded-full overflow-hidden ${
- theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
+ theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'
  }`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all duration-300"
  style={{ width: `${Math.min(generationProgress, 100)}%` }}
  />
  </div>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] mt-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-[10px] mt-1`}>
  {Math.round(Math.min(generationProgress, 100))}%
  </p>
  </div>
@@ -1248,14 +1248,14 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Toggle Antes/Depois */}
  <div className="absolute top-2 left-2 z-10">
  <div className={`flex rounded-lg overflow-hidden text-[10px] ${
- theme === 'dark' ? 'bg-black/50' : 'bg-white/80'
+ theme !== 'light' ? 'bg-black/50' : 'bg-white/80'
  }`}>
  <button
  onClick={() => setShowBeforeAfter('before')}
  className={`px-2 py-1 font-medium transition-colors ${
  showBeforeAfter === 'before'
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : theme === 'dark'
+ : theme !== 'light'
  ? 'text-white hover:bg-white/10'
  : 'text-gray-700 hover:bg-gray-200'
  }`}
@@ -1267,7 +1267,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  className={`px-2 py-1 font-medium transition-colors ${
  showBeforeAfter === 'after'
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : theme === 'dark'
+ : theme !== 'light'
  ? 'text-white hover:bg-white/10'
  : 'text-gray-700 hover:bg-gray-200'
  }`}
@@ -1305,7 +1305,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <div className="absolute inset-0 flex items-center justify-center">
  <div className="text-center">
  <i className="fas fa-wand-magic-sparkles text-[#FF9F43] text-2xl mb-2"></i>
- <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'} text-xs`}>
  Clique em Criar
  </p>
  </div>
@@ -1313,8 +1313,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  ) : (
  <div className="flex flex-col items-center justify-center h-full">
- <i className={`fas fa-image text-3xl mb-2 ${theme === 'dark' ? 'text-neutral-700' : 'text-gray-300'}`}></i>
- <p className={`${theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'} text-xs`}>Preview</p>
+ <i className={`fas fa-image text-3xl mb-2 ${theme !== 'light' ? 'text-neutral-700' : 'text-gray-300'}`}></i>
+ <p className={`${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'} text-xs`}>Preview</p>
  </div>
  )}
  </div>
@@ -1325,7 +1325,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={handleSaveLook}
  disabled={savingLook}
  className={`w-full mt-2 py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
  : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
  } border`}
@@ -1341,7 +1341,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Galeria de looks salvos */}
  {selectedClient && clientLooks.length > 0 && (
  <div className="mt-3">
- <p className={`${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'} text-[10px] mb-1.5 flex items-center gap-1`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'} text-[10px] mb-1.5 flex items-center gap-1`}>
  <i className="fas fa-images"></i> Looks salvos ({clientLooks.length})
  </p>
  <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -1375,11 +1375,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {/* Coluna Direita - Acoes */}
- <div className={`md:w-1/2 p-4 ${theme === 'dark' ? 'md:border-l md:border-neutral-800' : 'md:border-l md:border-gray-100'}`}>
+ <div className={`md:w-1/2 p-4 ${theme !== 'light' ? 'md:border-l md:border-neutral-800' : 'md:border-l md:border-gray-100'}`}>
  {/* Info do cliente */}
  {selectedClient && (
  <div className={`flex items-center gap-3 p-3 rounded-xl mb-4 ${
- theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50'
+ theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-50'
  }`}>
  <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
@@ -1388,10 +1388,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  size="thumb"
  />
  <div className="flex-1 min-w-0">
- <p className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
+ <p className={`${theme !== 'light' ? 'text-white' : 'text-gray-900'} font-medium text-sm truncate`}>
  {selectedClient.firstName} {selectedClient.lastName}
  </p>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}>
  {formatWhatsApp(selectedClient.whatsapp)}
  </p>
  </div>
@@ -1399,11 +1399,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  )}
 
  {/* Mensagem WhatsApp - Preview ou Edição */}
- <div className={`mb-3 p-3 rounded-xl border ${theme === 'dark' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'}`}>
+ <div className={`mb-3 p-3 rounded-xl border ${theme !== 'light' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'}`}>
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-1.5">
  <i className="fab fa-whatsapp text-green-500 text-sm"></i>
- <span className={`text-[10px] font-medium uppercase tracking-wide ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+ <span className={`text-[10px] font-medium uppercase tracking-wide ${theme !== 'light' ? 'text-green-400' : 'text-green-600'}`}>
  Mensagem que será enviada
  </span>
  </div>
@@ -1415,7 +1415,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
  isGeneratingAIMessage
  ? 'bg-[#FF9F43]/20 text-[#FF9F43]'
- : theme === 'dark'
+ : theme !== 'light'
  ? 'bg-neutral-700 text-[#FF9F43] hover:bg-neutral-600'
  : 'bg-[#FF9F43]/10 text-[#FF9F43] hover:bg-[#FF9F43]/15'
  }`}
@@ -1431,10 +1431,10 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  title={isEditingMessage ? "Fechar edição" : "Editar mensagem"}
  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
  isEditingMessage
- ? theme === 'dark'
+ ? theme !== 'light'
  ? 'bg-green-500/30 text-green-400'
  : 'bg-green-200 text-green-700'
- : theme === 'dark'
+ : theme !== 'light'
  ? 'bg-neutral-700 text-neutral-400 hover:bg-neutral-600'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
  }`}
@@ -1455,7 +1455,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  rows={8}
  placeholder="Escreva sua mensagem personalizada..."
  className={`w-full px-3 py-2 border rounded-lg text-xs resize-none ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800/50 border-green-500/20 text-white placeholder-neutral-500'
  : 'bg-white/50 border-green-200 text-gray-900 placeholder-gray-400'
  }`}
@@ -1464,14 +1464,14 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  ) : (
  /* Modo preview - mensagem completa (editada ou gerada) */
- <div className={`text-xs whitespace-pre-wrap ${theme === 'dark' ? 'text-neutral-200' : 'text-gray-700'}`}>
+ <div className={`text-xs whitespace-pre-wrap ${theme !== 'light' ? 'text-neutral-200' : 'text-gray-700'}`}>
  {getFinalMessage()}
  </div>
  )}
  </div>
 
  {/* Seletor de Resolução */}
- <div className={`rounded-xl p-4 mb-3 ${theme === 'dark' ? 'bg-neutral-800/50 border border-neutral-700' : 'bg-gray-50 border border-gray-200'}`}>
+ <div className={`rounded-xl p-4 mb-3 ${theme !== 'light' ? 'bg-neutral-800/50 border border-neutral-700' : 'bg-gray-50 border border-gray-200'}`}>
  <ResolutionSelector
  resolution={resolution}
  onChange={handleResolutionChange}
@@ -1509,7 +1509,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={handleSendWhatsApp}
  disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
  className={`flex-1 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-green-400'
  : 'bg-white hover:bg-gray-50 border-gray-200 text-green-600'
  } border`}
@@ -1520,7 +1520,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onClick={handleDownload}
  disabled={!selectedClient || (!generatedImage && !selectedSavedLook)}
  className={`flex-1 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
  : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
  } border`}
@@ -1534,7 +1534,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <button
  onClick={() => setShowReportModal(true)}
  className={`w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-400'
  : 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-600'
  } border`}
@@ -1547,7 +1547,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <button
  onClick={() => setCurrentStep(3)}
  className={`w-full py-2.5 text-sm ${
- theme === 'dark' ? 'text-neutral-500 hover:text-neutral-400' : 'text-gray-500 hover:text-gray-600'
+ theme !== 'light' ? 'text-neutral-500 hover:text-neutral-400' : 'text-gray-500 hover:text-gray-600'
  }`}
  >
  <i className="fas fa-arrow-left mr-2"></i>Voltar para o Look
@@ -1575,7 +1575,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <button
  onClick={onBack}
  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg'
  : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm'
  }`}
@@ -1584,24 +1584,24 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </button>
  )}
  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-white/10 border border-white/15 backdrop-blur-xl'
  : 'bg-white/60 border border-gray-200/60 shadow-sm backdrop-blur-xl'
  }`}>
- <i className={`fas fa-shirt text-lg ${theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]'}`}></i>
+ <i className={`fas fa-shirt text-lg ${theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]'}`}></i>
  </div>
  <div>
- <h1 className={`text-xl font-extrabold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <h1 className={`text-xl font-extrabold ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
  Vizzu Provador<sup className="text-[10px] font-normal ml-0.5">®</sup>
  </h1>
- <p className={`${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-sm font-serif italic`}>
+ <p className={`${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-sm font-serif italic`}>
  Vista seus clientes virtualmente
  </p>
  </div>
  </div>
  <div className="flex items-center gap-2">
  <span className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-900 border border-neutral-800 text-neutral-400'
  : 'bg-gray-100 border border-gray-200 text-gray-500'
  }`}>
@@ -1612,7 +1612,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  <button
  onClick={handleReset}
  className={`p-2 rounded-lg text-sm transition-colors ${
- theme === 'dark'
+ theme !== 'light'
  ? 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:bg-neutral-800 hover:text-white'
  : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
  }`}
@@ -1639,7 +1639,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
- <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/30'}`}></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme !== 'light' ? 'bg-black/80' : 'bg-white/30'}`}></div>
 
  {/* Container do conteudo */}
  <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-6">
@@ -1649,43 +1649,43 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {/* Titulo */}
- <h2 className={`text-2xl font-bold font-serif mb-2 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <h2 className={`text-2xl font-bold font-serif mb-2 text-center ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
  Criando seu look...
  </h2>
 
  {/* Frase de loading dinamica */}
- <p className={`text-sm mb-6 text-center min-h-[20px] ${theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'}`}>
+ <p className={`text-sm mb-6 text-center min-h-[20px] ${theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'}`}>
  {loadingText}
  </p>
 
  {/* Barra de progresso */}
  <div className="w-full max-w-xs mb-4">
- <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
+ <div className={`h-2 rounded-full overflow-hidden ${theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] transition-all duration-300"
  style={{ width: `${Math.min(generationProgress, 100)}%` }}
  ></div>
  </div>
- <p className={`text-sm font-medium text-center mt-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <p className={`text-sm font-medium text-center mt-2 ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
  {Math.round(Math.min(generationProgress, 100))}%
  </p>
  </div>
 
  {/* Info do cliente */}
  {selectedClient && (
- <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
+ <div className={`rounded-xl p-4 border mb-6 w-full max-w-xs ${theme !== 'light' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="flex items-center gap-3">
  <OptimizedImage
  src={getClientPhoto(selectedClient) || ''}
  alt={selectedClient.firstName}
- className={`w-12 h-12 rounded-full border-2 ${theme === 'dark' ? 'border-white/20' : 'border-gray-200'}`}
+ className={`w-12 h-12 rounded-full border-2 ${theme !== 'light' ? 'border-white/20' : 'border-gray-200'}`}
  size="thumb"
  />
  <div className="flex-1 min-w-0">
- <p className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <p className={`text-sm font-medium truncate ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
  {selectedClient.firstName} {selectedClient.lastName}
  </p>
- <p className={`text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
+ <p className={`text-xs ${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {Object.keys(lookComposition).length} peca(s) selecionada(s)
  </p>
  </div>
@@ -1696,7 +1696,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {/* Botao Minimizar */}
  <button
  onClick={() => onSetMinimized(true)}
- className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
+ className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
  >
  <i className="fas fa-minus"></i>
  <span>Minimizar e continuar navegando</span>

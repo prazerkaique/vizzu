@@ -1,10 +1,11 @@
+import type { VizzuTheme } from '../../contexts/UIContext';
 import React, { useState, useCallback } from 'react';
 import type { BulkProduct } from './types';
 import { ALL_CATEGORIES, assignAngles } from './utils';
 import { getProductType, UPLOAD_SLOTS_CONFIG } from '../../lib/productConfig';
 
 interface StepReviewProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   products: BulkProduct[];
   setProducts: React.Dispatch<React.SetStateAction<BulkProduct[]>>;
   warnings: string[];
@@ -13,7 +14,7 @@ interface StepReviewProps {
 }
 
 export function StepReview({ theme, products, setProducts, warnings, onStartImport, onBack }: StepReviewProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const selectedCount = products.filter(p => p.selected).length;

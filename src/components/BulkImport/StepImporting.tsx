@@ -1,9 +1,10 @@
+import type { VizzuTheme } from '../../contexts/UIContext';
 import React, { useEffect, useRef, useState } from 'react';
 import type { BulkProduct, ImportResults } from './types';
 import { buildImportPayload, delay, formatTimeRemaining } from './utils';
 
 interface StepImportingProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   products: BulkProduct[];
   setProducts: React.Dispatch<React.SetStateAction<BulkProduct[]>>;
   userId?: string;
@@ -26,7 +27,7 @@ function sendNotification(title: string, body: string) {
 }
 
 export function StepImporting({ theme, products, setProducts, userId, onComplete }: StepImportingProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const startedRef = useRef(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [avgTime, setAvgTime] = useState(0);

@@ -913,9 +913,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
   <div
   key={model.id}
   onClick={() => setShowModelDetail(model)}
-  className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800 hover:border-neutral-500' : 'bg-white border border-gray-100 ')}
+  className={'rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] group ' + (theme !== 'light' ? 'bg-neutral-900 border border-neutral-800 hover:border-neutral-500' : 'bg-white border border-gray-100 ')}
   >
-  <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5')}>
+  <div className={'relative aspect-[3/4] flex items-center justify-center ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5')}>
   {images.length > 0 ? (
    <ModelCardCarousel images={images} modelName={model.name} onCardClick={() => setShowModelDetail(model)} />
   ) : (
@@ -923,7 +923,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    <div className={'w-20 h-20 rounded-full mx-auto flex items-center justify-center ' + (model.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
     <i className="fas fa-user text-3xl text-white"></i>
    </div>
-   <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
+   <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs mt-3'}>
     {model.status === 'generating' ? 'Gerando imagens...' : model.status === 'error' ? 'Erro na geração' : 'Clique para ver'}
    </p>
    </div>
@@ -952,13 +952,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
   )}
   </div>
   <div className="p-3">
-  <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'} title={model.name}>{model.name}</h3>
+  <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1.5 truncate'} title={model.name}>{model.name}</h3>
   <div className="flex flex-wrap gap-1">
-   <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('gender', model.gender)}</span>
+   <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('gender', model.gender)}</span>
    {model.modelType !== 'real' && (
    <>
-   <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('skinTone', model.skinTone)}</span>
-   <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('ageRange', model.ageRange)}</span>
+   <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('skinTone', model.skinTone)}</span>
+   <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-100 text-gray-600') + ' px-1.5 py-0.5 rounded text-[9px]'}>{getModelLabel('ageRange', model.ageRange)}</span>
    </>
    )}
   </div>
@@ -975,16 +975,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Header */}
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-user-tie text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-user-tie text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Modelos Salvos</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Crie e gerencie seus modelos de IA</p>
+ <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Modelos Salvos</h1>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Crie e gerencie seus modelos de IA</p>
  </div>
  </div>
  <div className="flex items-center gap-2">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
  {savedModels.length}/{getModelLimit()} modelos
  {!canCreateModel() && <span className="text-red-400 ml-1">(limite atingido)</span>}
  </span>
@@ -1000,18 +1000,18 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
 
  {/* Filtros */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 mb-4'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 mb-4'}>
  <div className="flex flex-wrap gap-2">
  {/* Busca */}
  <div className="flex-shrink-0 w-40">
  <div className="relative">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
  <input
  type="text"
  placeholder="Buscar..."
  value={modelFilterSearch}
  onChange={(e) => setModelFilterSearch(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'}
  />
  </div>
  </div>
@@ -1019,7 +1019,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <select
  value={modelFilterGender}
  onChange={(e) => setModelFilterGender(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Gênero</option>
  <option value="woman">Feminino</option>
@@ -1029,7 +1029,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <select
  value={modelFilterSkinTone}
  onChange={(e) => setModelFilterSkinTone(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Tom de Pele</option>
  {MODEL_OPTIONS.skinTone.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
@@ -1038,7 +1038,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <select
  value={modelFilterAge}
  onChange={(e) => setModelFilterAge(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Idade</option>
  {MODEL_OPTIONS.ageRange.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
@@ -1047,7 +1047,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <select
  value={modelFilterBodyType}
  onChange={(e) => setModelFilterBodyType(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-2 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Tipo Físico</option>
  {MODEL_OPTIONS.bodyType.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
@@ -1062,7 +1062,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setModelFilterAge('');
  setModelFilterBodyType('');
  }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-2 py-1.5 text-xs transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-2 py-1.5 text-xs transition-colors'}
  >
  <i className="fas fa-times mr-1"></i>Limpar
  </button>
@@ -1074,12 +1074,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {isLoadingModels && savedModels.length === 0 ? (
  <ModelGridSkeleton theme={theme} count={8} />
  ) : allModels.length === 0 ? (
- <div className={'rounded-2xl p-12 text-center ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 ')}>
+ <div className={'rounded-2xl p-12 text-center ' + (theme !== 'light' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-100 ')}>
  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 flex items-center justify-center">
  <i className="fas fa-user-tie text-3xl text-[#FF6B6B]"></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Nenhum modelo criado</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Nenhum modelo criado</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm mb-6 max-w-md mx-auto'}>
  Crie modelos personalizados para usar no Vizzu Studio. Defina características como gênero, etnia, tipo de corpo e muito mais.
  </p>
  <button
@@ -1093,7 +1093,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  {/* Banner de geração pendente */}
  {pendingModelBanner && (
- <div className={(theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700') + ' border rounded-xl p-4 mb-4 flex items-center gap-3'}>
+ <div className={(theme !== 'light' ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700') + ' border rounded-xl p-4 mb-4 flex items-center gap-3'}>
  <div className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full flex-shrink-0"></div>
  <div>
  <p className="font-medium text-sm">Modelo "{pendingModelBanner}" está sendo gerado</p>
@@ -1106,7 +1106,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {filteredDefaultModels.length > 0 && (
  <>
  <div className="flex items-center gap-2 mb-3">
- <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
+ <h2 className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Modelos Padrão</h2>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
  {filteredDefaultModels.map(model => renderModelCard(model))}
@@ -1118,8 +1118,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {filteredUserModels.length > 0 && (
  <>
  <div className="flex items-center gap-2 mb-3">
- <h2 className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Meus Modelos</h2>
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>({filteredUserModels.length})</span>
+ <h2 className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs font-semibold uppercase tracking-wide'}>Meus Modelos</h2>
+ <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>({filteredUserModels.length})</span>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
  {filteredUserModels.map(model => renderModelCard(model))}
@@ -1129,9 +1129,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Nenhum resultado com filtros */}
  {filteredDefaultModels.length === 0 && filteredUserModels.length === 0 && (
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-filter-circle-xmark text-3xl mb-3'}></i>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Nenhum modelo encontrado com os filtros selecionados</p>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-8 text-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-filter-circle-xmark text-3xl mb-3'}></i>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>Nenhum modelo encontrado com os filtros selecionados</p>
  </div>
  )}
  </>
@@ -1142,18 +1142,18 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* CREATE MODEL WIZARD MODAL */}
  {showCreateModel && !modelsMinimized && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { if (!generatingModelImages) { setShowCreateModel(false); setEditingModel(null); } }}>
- <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  {/* Header com Steps */}
- <div className={'p-4 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+ <div className={'p-4 border-b ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-200')}>
  <div className="flex items-center justify-between mb-3">
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>
+ <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>
  {editingModel ? 'Editar Modelo' : 'Criar Modelo'}
  </h2>
- <button onClick={() => { setShowCreateModel(false); setEditingModel(null); }} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+ <button onClick={() => { setShowCreateModel(false); setEditingModel(null); }} className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
  <i className="fas fa-times"></i>
  </button>
  </div>
@@ -1172,12 +1172,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    modelWizardStep === step
    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
    : modelWizardStep > step
-   ? (theme === 'dark' ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-[#FF6B6B]/10 text-[#FF6B6B]')
-   : (theme === 'dark' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400')
+   ? (theme !== 'light' ? 'bg-[#FF6B6B]/20 text-[#FF6B6B]' : 'bg-[#FF6B6B]/10 text-[#FF6B6B]')
+   : (theme !== 'light' ? 'bg-neutral-800 text-neutral-500' : 'bg-gray-100 text-gray-400')
  )}>
    {modelWizardStep > step ? <i className="fas fa-check text-[10px]"></i> : step}
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{label}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{label}</span>
  </div>
  ))}
  </div>
@@ -1191,35 +1191,35 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {modelWizardStep === 1 && (
  <div className="space-y-4">
  <div className="text-center mb-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Que tipo de modelo?</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Crie com IA, use fotos reais ou se coloque como modelo</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Que tipo de modelo?</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Crie com IA, use fotos reais ou se coloque como modelo</p>
  </div>
  <div className="grid grid-cols-3 gap-3">
  <button
  onClick={() => { setNewModel({ ...newModel, modelType: 'ai' }); setModelWizardStep(2); }}
- className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5' : 'border-gray-200 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5')}
+ className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme !== 'light' ? 'border-neutral-800 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5' : 'border-gray-200 hover:border-[#FF6B6B]/50 hover:bg-[#FF6B6B]/5')}
  >
- <i className={'fas fa-wand-magic-sparkles text-3xl mb-2 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Modelo IA</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Criar modelo virtual personalizado</p>
+ <i className={'fas fa-wand-magic-sparkles text-3xl mb-2 ' + (theme !== 'light' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Modelo IA</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Criar modelo virtual personalizado</p>
  <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
  </button>
  <button
  onClick={() => { setNewModel({ ...newModel, modelType: 'real' }); setModelWizardStep(2); }}
- className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-blue-500/50 hover:bg-blue-500/5' : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-500/5')}
+ className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme !== 'light' ? 'border-neutral-800 hover:border-blue-500/50 hover:bg-blue-500/5' : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-500/5')}
  >
- <i className={'fas fa-camera text-3xl mb-2 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Modelo Real</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Enviar fotos de uma pessoa real</p>
+ <i className={'fas fa-camera text-3xl mb-2 ' + (theme !== 'light' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Modelo Real</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Enviar fotos de uma pessoa real</p>
  <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
  </button>
  <button
  onClick={() => { setNewModel({ ...newModel, modelType: 'real' }); setModelWizardStep(2); }}
- className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme === 'dark' ? 'border-neutral-800 hover:border-[#FF9F43]/50 hover:bg-[#FF9F43]/5' : 'border-gray-200 hover:border-[#FF9F43]/50 hover:bg-[#FF9F43]/5')}
+ className={'p-4 rounded-xl border-2 transition-all text-center ' + (theme !== 'light' ? 'border-neutral-800 hover:border-[#FF9F43]/50 hover:bg-[#FF9F43]/5' : 'border-gray-200 hover:border-[#FF9F43]/50 hover:bg-[#FF9F43]/5')}
  >
- <i className={'fas fa-user-circle text-3xl mb-2 ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-400')}></i>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Você</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Se coloque como modelo da sua marca</p>
+ <i className={'fas fa-user-circle text-3xl mb-2 ' + (theme !== 'light' ? 'text-neutral-400' : 'text-gray-400')}></i>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Você</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1 leading-tight'}>Se coloque como modelo da sua marca</p>
  <p className="text-[#FF6B6B] text-[9px] font-medium mt-2">2 créditos</p>
  </button>
  </div>
@@ -1232,13 +1232,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {modelWizardStep === 2 && newModel.modelType === 'real' && (
  <div className="space-y-4">
  <div className="text-center mb-2">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold font-serif'}>Envie as fotos do modelo</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Foto de frente é obrigatória. Costas e rosto são opcionais.</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold font-serif'}>Envie as fotos do modelo</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Foto de frente é obrigatória. Costas e rosto são opcionais.</p>
  </div>
 
  {/* Gênero - toggle simples */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Gênero</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Gênero</label>
  <div className="flex gap-2">
  {MODEL_OPTIONS.gender.map(opt => (
    <button
@@ -1247,7 +1247,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    className={'flex-1 py-2 rounded-lg text-xs font-medium transition-colors ' + (
      newModel.gender === opt.id
      ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
-     : (theme === 'dark' ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600')
+     : (theme !== 'light' ? 'bg-neutral-800 text-neutral-300' : 'bg-gray-200 text-gray-600')
    )}
    >
    <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' mr-1.5'}></i>{opt.label}
@@ -1270,12 +1270,12 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
      <div
      className={'aspect-[3/4] rounded-xl border-2 border-dashed overflow-hidden transition-all cursor-pointer ' + (
        photo
-       ? 'border-solid ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-300')
+       ? 'border-solid ' + (theme !== 'light' ? 'border-neutral-700' : 'border-gray-300')
        : isDragging
        ? 'border-[#FF6B6B] bg-[#FF6B6B]/10'
        : required
-       ? (theme === 'dark' ? 'border-[#FF6B6B]/40 hover:border-[#FF6B6B]/70' : 'border-[#FF6B6B]/30 hover:border-[#FF6B6B]/60')
-       : (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-300 hover:border-gray-400')
+       ? (theme !== 'light' ? 'border-[#FF6B6B]/40 hover:border-[#FF6B6B]/70' : 'border-[#FF6B6B]/30 hover:border-[#FF6B6B]/60')
+       : (theme !== 'light' ? 'border-neutral-700 hover:border-neutral-600' : 'border-gray-300 hover:border-gray-400')
      )}
      onClick={() => { if (!photo && !isUploading) setShowPhotoSourcePicker(type); }}
      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!photo) setDraggingPhotoType(type); }}
@@ -1307,24 +1307,24 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
        ) : isUploading ? (
        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
          <div className="animate-spin w-5 h-5 border-2 border-[#FF6B6B] border-t-transparent rounded-full"></div>
-         <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px]'}>Processando...</span>
+         <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px]'}>Processando...</span>
        </div>
        ) : (
        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
-         <i className={'fas ' + (isDragging ? 'fa-cloud-arrow-down text-[#FF6B6B]' : icons[type] + ' ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')) + ' text-xl'}></i>
-         <span className={(isDragging ? 'text-[#FF6B6B]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')) + ' text-[10px] font-medium'}>{isDragging ? 'Soltar aqui' : labels[type]}</span>
+         <i className={'fas ' + (isDragging ? 'fa-cloud-arrow-down text-[#FF6B6B]' : icons[type] + ' ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')) + ' text-xl'}></i>
+         <span className={(isDragging ? 'text-[#FF6B6B]' : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')) + ' text-[10px] font-medium'}>{isDragging ? 'Soltar aqui' : labels[type]}</span>
          {!isDragging && required && <span className="text-[8px] text-[#FF6B6B] font-medium">Obrigatório</span>}
        </div>
        )}
      </div>
-     <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1 block'}>{labels[type]} {required ? '' : '(opc.)'}</span>
+     <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1 block'}>{labels[type]} {required ? '' : '(opc.)'}</span>
    </div>
    );
  })}
  </div>
 
- <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-lg border p-3'}>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-lg border p-3'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] leading-relaxed'}>
    <i className="fas fa-info-circle mr-1 text-blue-400"></i>
    Use fotos com boa iluminação, fundo limpo e corpo inteiro visível para melhores resultados. Você é responsável por ter o consentimento da pessoa fotografada.
  </p>
@@ -1342,13 +1342,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="w-20 h-20 mx-auto mb-4 rounded-xl overflow-hidden flex items-center justify-center">
  <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
  {modelGenerationStep === 'front' && 'Gerando imagem de frente...'}
  {modelGenerationStep === 'back' && 'Gerando imagem de costas...'}
  {modelGenerationStep === 'done' && 'Finalizando...'}
  </p>
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-3 mb-4'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-3 mb-4'}>
  <div className="flex items-center justify-between gap-2 text-xs">
  {[
  { key: 'front', label: 'Frente', icon: 'fa-user' },
@@ -1358,22 +1358,22 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const isCurrent = modelGenerationStep === step.key;
  return (
  <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
- <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')}`}>
- {isCompleted ? <i className="fas fa-check text-white text-xs"></i> : isCurrent ? <i className="fas fa-spinner fa-spin text-white text-xs"></i> : <i className={`fas ${step.icon} ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>}
+ <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300')}`}>
+ {isCompleted ? <i className="fas fa-check text-white text-xs"></i> : isCurrent ? <i className="fas fa-spinner fa-spin text-white text-xs"></i> : <i className={`fas ${step.icon} ${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>}
  </div>
- <span className={`${isCompleted ? 'text-[#FF6B6B]' : isCurrent ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>{step.label}</span>
+ <span className={`${isCompleted ? 'text-[#FF6B6B]' : isCurrent ? (theme !== 'light' ? 'text-white' : 'text-gray-900') : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>{step.label}</span>
  </div>
  );
  })}
  </div>
  </div>
  <div className="px-2">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
  <div className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500" style={{ width: `${modelGenerationProgress}%` }}></div>
  </div>
  <div className="flex justify-between items-center mt-2">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Processando</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Processando</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
  </div>
  </div>
  <button
@@ -1389,7 +1389,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {!generatingModelImages && modelPreviewImages && (
  <>
  <div className="text-center mb-2">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
  <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-sm font-medium">
  <i className="fas fa-check-circle mr-1 text-[#FF6B6B]"></i>Modelo criado com sucesso!
  </p>
@@ -1400,21 +1400,21 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const lbls: Record<string, string> = { front: 'Frente', back: 'Costas' };
  return (
  <div key={type} className="text-center">
- <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
  {imgUrl ? (
  <OptimizedImage src={imgUrl} alt={type} className="w-full h-full" objectFit="contain" size="preview" />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
  </div>
  )}
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{lbls[type]}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{lbls[type]}</span>
  </div>
  );
  })}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mt-2'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mt-2'}>
  Gostou? Salve o modelo ou gere outro com as mesmas fotos.
  </p>
  </>
@@ -1424,20 +1424,20 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {!generatingModelImages && !modelPreviewImages && (
  <>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
  <input
    type="text"
    value={newModel.name}
    onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
    placeholder="Ex: Maria, Pedro, Modelo Principal..."
    maxLength={30}
-   className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
+   className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
  />
  </div>
 
  {/* Preview das fotos de referência */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium block mb-1.5'}>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium block mb-1.5'}>
  <i className="fas fa-image mr-1"></i>Fotos de referência
  </label>
  <div className="grid grid-cols-3 gap-2">
@@ -1445,16 +1445,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    const labels: Record<string, string> = { front: 'Frente', back: 'Costas', face: 'Rosto' };
    const photo = realModelPhotos[type];
    if (!photo) return (
-   <div key={type} className={'aspect-[3/4] rounded-lg flex items-center justify-center ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
-     <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' text-[10px]'}>{labels[type]}</span>
+   <div key={type} className={'aspect-[3/4] rounded-lg flex items-center justify-center ' + (theme !== 'light' ? 'bg-neutral-800/50' : 'bg-gray-100')}>
+     <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-300') + ' text-[10px]'}>{labels[type]}</span>
    </div>
    );
    return (
    <div key={type} className="text-center">
-     <div className={'aspect-[3/4] rounded-lg overflow-hidden border ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+     <div className={'aspect-[3/4] rounded-lg overflow-hidden border ' + (theme !== 'light' ? 'border-neutral-700' : 'border-gray-200')}>
      <img src={photo} alt={labels[type]} className="w-full h-full object-cover" />
      </div>
-     <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type]}</span>
+     <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type]}</span>
    </div>
    );
  })}
@@ -1462,30 +1462,30 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
 
  {/* Resumo */}
- <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-3'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-3'}>
  <div className="flex items-center justify-between text-xs">
-   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Tipo</span>
+   <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500')}>Tipo</span>
    <span className="text-blue-400 font-medium"><i className="fas fa-camera mr-1"></i>Modelo Real</span>
  </div>
- <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+ <div className={'h-px my-2 ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
  <div className="flex items-center justify-between text-xs">
-   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Gênero</span>
-   <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900')}>{newModel.gender === 'woman' ? 'Feminino' : 'Masculino'}</span>
+   <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500')}>Gênero</span>
+   <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900')}>{newModel.gender === 'woman' ? 'Feminino' : 'Masculino'}</span>
  </div>
- <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+ <div className={'h-px my-2 ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
  <div className="flex items-center justify-between text-xs">
-   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Fotos</span>
-   <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900')}>{[realModelPhotos.front, realModelPhotos.back, realModelPhotos.face].filter(Boolean).length} de 3</span>
+   <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500')}>Fotos</span>
+   <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900')}>{[realModelPhotos.front, realModelPhotos.back, realModelPhotos.face].filter(Boolean).length} de 3</span>
  </div>
- <div className={'h-px my-2 ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
+ <div className={'h-px my-2 ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200')}></div>
  <div className="flex items-center justify-between text-xs">
-   <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')}>Créditos</span>
+   <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500')}>Créditos</span>
    <span className="text-[#FF6B6B] font-medium">2 créditos</span>
  </div>
  </div>
 
- <div className={(theme === 'dark' ? 'bg-blue-900/20 border-blue-800/30' : 'bg-blue-50 border-blue-200') + ' rounded-lg border p-3'}>
- <p className={(theme === 'dark' ? 'text-blue-300' : 'text-blue-700') + ' text-[10px] leading-relaxed'}>
+ <div className={(theme !== 'light' ? 'bg-blue-900/20 border-blue-800/30' : 'bg-blue-50 border-blue-200') + ' rounded-lg border p-3'}>
+ <p className={(theme !== 'light' ? 'text-blue-300' : 'text-blue-700') + ' text-[10px] leading-relaxed'}>
    <i className="fas fa-wand-magic-sparkles mr-1"></i>
    A IA vai gerar imagens padronizadas (fundo cinza, roupa Vizzu) preservando a aparência da pessoa nas fotos.
  </p>
@@ -1502,8 +1502,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {modelWizardStep === 2 && newModel.modelType === 'ai' && (
  <div className="space-y-4">
  <div className="text-center mb-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Selecione o Gênero</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Escolha o gênero do modelo que você deseja criar</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-1 font-serif'}>Selecione o Gênero</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>Escolha o gênero do modelo que você deseja criar</p>
  </div>
  <div className="grid grid-cols-2 gap-4">
  {MODEL_OPTIONS.gender.map(opt => (
@@ -1513,11 +1513,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={'p-6 rounded-xl border-2 transition-all text-center ' + (
  newModel.gender === opt.id
  ? 'border-[#FF6B6B]/50 bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15'
- : (theme === 'dark' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-neutral-500')
+ : (theme !== 'light' ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-neutral-500')
  )}
  >
- <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-[#FF6B6B]' : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'))}></i>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>{opt.label}</p>
+ <i className={'fas ' + (opt.id === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-4xl mb-3 ' + (newModel.gender === opt.id ? 'text-[#FF6B6B]' : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'))}></i>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-base font-medium'}>{opt.label}</p>
  </button>
  ))}
  </div>
@@ -1529,11 +1529,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="space-y-4">
  {/* Faixa Etária - Dropdown (8 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Faixa Etária</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Faixa Etária</label>
  <select
  value={newModel.ageRange}
  onChange={(e) => setNewModel({ ...newModel, ageRange: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer'}
  >
  {MODEL_OPTIONS.ageRange.map(opt => (
  <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -1543,11 +1543,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Etnia - Dropdown (6 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Etnia</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Etnia</label>
  <select
  value={newModel.ethnicity}
  onChange={(e) => setNewModel({ ...newModel, ethnicity: e.target.value })}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 rounded-lg border text-sm cursor-pointer'}
  >
  {MODEL_OPTIONS.ethnicity.map(opt => (
  <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -1557,7 +1557,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Tom de Pele - Chips (4 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tom de Pele</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tom de Pele</label>
  <div className="flex flex-wrap gap-2">
  {MODEL_OPTIONS.skinTone.map(opt => (
  <button
@@ -1566,7 +1566,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
  newModel.skinTone === opt.id
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+ : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
  )}
  >
  {opt.label}
@@ -1577,7 +1577,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Tipo de Corpo - Chips (5 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Corpo</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Corpo</label>
  <div className="flex flex-wrap gap-2">
  {MODEL_OPTIONS.bodyType.map(opt => (
  <button
@@ -1586,7 +1586,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
  newModel.bodyType === opt.id
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+ : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
  )}
  >
  {opt.label}
@@ -1597,7 +1597,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Altura - Slider (3 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
  Altura: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.height.find(h => h.id === newModel.height)?.label}</span>
  </label>
  <input
@@ -1606,7 +1606,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={2}
  value={MODEL_OPTIONS.height.findIndex(h => h.id === newModel.height)}
  onChange={(e) => setNewModel({ ...newModel, height: MODEL_OPTIONS.height[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1617,7 +1617,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
  />
- <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+ <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400')}>
  <span>Baixa</span>
  <span>Média</span>
  <span>Alta</span>
@@ -1626,13 +1626,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Observações */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Físicas <span className="text-neutral-500">(opcional)</span></label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Físicas <span className="text-neutral-500">(opcional)</span></label>
  <textarea
  value={newModel.physicalNotes}
  onChange={(e) => setNewModel({ ...newModel, physicalNotes: e.target.value })}
  placeholder="Ex: Ombros largos, pernas longas, tatuagens visíveis..."
  rows={2}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs resize-none'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs resize-none'}
  />
  </div>
  </div>
@@ -1643,7 +1643,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="space-y-4">
  {/* Tipo de Cabelo - Chips (desabilitado se careca) */}
  <div className={'transition-opacity ' + (newModel.hairLength === 'bald' ? 'opacity-40 pointer-events-none' : '')}>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cabelo</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Tipo de Cabelo</label>
  <div className="flex flex-wrap gap-2">
  {MODEL_OPTIONS.hairStyle.map(opt => (
  <button
@@ -1651,10 +1651,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  onClick={() => setNewModel({ ...newModel, hairStyle: opt.id })}
  className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
  newModel.hairLength === 'bald'
- ? (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')
+ ? (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')
  : newModel.hairStyle === opt.id
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+ : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
  )}
  >
  {opt.label}
@@ -1665,7 +1665,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Cor do Cabelo - Chips (desabilitado se careca) */}
  <div className={'transition-opacity ' + (newModel.hairLength === 'bald' ? 'opacity-40 pointer-events-none' : '')}>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor do Cabelo</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor do Cabelo</label>
  <div className="flex flex-wrap gap-2">
  {MODEL_OPTIONS.hairColor.map(opt => (
  <button
@@ -1673,10 +1673,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  onClick={() => setNewModel({ ...newModel, hairColor: opt.id })}
  className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
  newModel.hairLength === 'bald'
- ? (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')
+ ? (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')
  : newModel.hairColor === opt.id
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+ : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
  )}
  >
  {opt.label}
@@ -1687,7 +1687,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Tamanho do Cabelo - Slider */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
  Tamanho do Cabelo: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.hairLength.find(h => h.id === newModel.hairLength)?.label}</span>
  </label>
  <input
@@ -1696,7 +1696,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={5}
  value={MODEL_OPTIONS.hairLength.findIndex(h => h.id === newModel.hairLength)}
  onChange={(e) => setNewModel({ ...newModel, hairLength: MODEL_OPTIONS.hairLength[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1707,7 +1707,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
  />
- <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+ <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400')}>
  <span>Careca</span>
  <span>Muito longo</span>
  </div>
@@ -1715,19 +1715,19 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Observações Rosto e Cabelo */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Rosto e Cabelo <span className="text-neutral-500">(opcional)</span></label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações Rosto e Cabelo <span className="text-neutral-500">(opcional)</span></label>
  <input
  type="text"
  value={newModel.hairNotes}
  onChange={(e) => setNewModel({ ...newModel, hairNotes: e.target.value })}
  placeholder="Ex: Franja, mechas loiras, rosto oval, queixo marcado..."
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
  />
  </div>
 
  {/* Cor dos Olhos - Chips (5 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor dos Olhos</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Cor dos Olhos</label>
  <div className="flex flex-wrap gap-2">
  {MODEL_OPTIONS.eyeColor.map(opt => (
  <button
@@ -1736,7 +1736,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
  newModel.eyeColor === opt.id
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+ : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
  )}
  >
  {opt.label}
@@ -1747,7 +1747,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Expressão - Chips (5 opções) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Expressão</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Expressão</label>
  <div className="flex flex-wrap gap-2">
  {MODEL_OPTIONS.expression.map(opt => (
  <button
@@ -1756,7 +1756,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  className={'px-4 py-2 rounded-full text-sm font-medium transition-all ' + (
  newModel.expression === opt.id
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
- : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
+ : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100')
  )}
  >
  {opt.label}
@@ -1767,13 +1767,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Observações da Pele */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações da Pele <span className="text-neutral-500">(opcional)</span></label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Observações da Pele <span className="text-neutral-500">(opcional)</span></label>
  <input
  type="text"
  value={newModel.skinNotes}
  onChange={(e) => setNewModel({ ...newModel, skinNotes: e.target.value })}
  placeholder="Ex: Sardas, manchas, vitiligo, cicatrizes..."
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 rounded-lg border text-xs'}
  />
  </div>
  </div>
@@ -1785,7 +1785,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Tamanho do Busto - Slider (3 opções, só para mulheres adultas) */}
  {newModel.gender === 'woman' && newModel.ageRange !== 'child' && (
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
  Tamanho do Busto: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.bustSize.find(b => b.id === newModel.bustSize)?.label}</span>
  </label>
  <input
@@ -1794,7 +1794,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={2}
  value={MODEL_OPTIONS.bustSize.findIndex(b => b.id === newModel.bustSize)}
  onChange={(e) => setNewModel({ ...newModel, bustSize: MODEL_OPTIONS.bustSize[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1805,7 +1805,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
  />
- <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+ <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400')}>
  <span>Pequeno</span>
  <span>Médio</span>
  <span>Grande</span>
@@ -1815,7 +1815,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Tipo de Cintura - Slider (3 opções, não para crianças) */}
  {newModel.ageRange !== 'child' && <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>
  Tipo de Cintura: <span className="text-[#FF6B6B]">{MODEL_OPTIONS.waistType.find(w => w.id === newModel.waistType)?.label}</span>
  </label>
  <input
@@ -1824,7 +1824,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  max={2}
  value={MODEL_OPTIONS.waistType.findIndex(w => w.id === newModel.waistType)}
  onChange={(e) => setNewModel({ ...newModel, waistType: MODEL_OPTIONS.waistType[Number(e.target.value)].id })}
- className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + `
+ className={'w-full h-2 rounded-full appearance-none cursor-pointer ' + (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200') + `
  [&::-webkit-slider-thumb]:appearance-none
  [&::-webkit-slider-thumb]:w-5
  [&::-webkit-slider-thumb]:h-5
@@ -1835,7 +1835,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  [&::-webkit-slider-thumb]:cursor-pointer
  [&::-webkit-slider-thumb]:`}
  />
- <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400')}>
+ <div className={'flex justify-between text-[10px] mt-1.5 ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400')}>
  <span>Fina</span>
  <span>Média</span>
  <span>Larga</span>
@@ -1844,9 +1844,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Mensagem informativa para crianças */}
  {newModel.ageRange === 'child' && (
- <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-child text-lg mb-2'}></i>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-child text-lg mb-2'}></i>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
  Proporções corporais não se aplicam a modelos infantis.
  </p>
  </div>
@@ -1854,9 +1854,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Mensagem para homens */}
  {newModel.gender === 'man' && newModel.ageRange !== 'child' && (
- <div className={(theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-info-circle text-lg mb-2'}></i>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-xl p-4 text-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-info-circle text-lg mb-2'}></i>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
  Para modelos masculinos, apenas a cintura é configurável nesta etapa.
  </p>
  </div>
@@ -1873,15 +1873,15 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="w-20 h-20 mx-auto mb-4 rounded-xl overflow-hidden flex items-center justify-center">
  <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg mb-1'}>Criando seu modelo...</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
  {modelGenerationStep === 'front' && 'Gerando imagem de frente...'}
  {modelGenerationStep === 'back' && 'Gerando imagem de costas...'}
  {modelGenerationStep === 'done' && 'Finalizando...'}
  </p>
 
  {/* Steps */}
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-3 mb-4'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl p-3 mb-4'}>
  <div className="flex items-center justify-between gap-2 text-xs">
  {[
  { key: 'front', label: 'Frente', icon: 'fa-user' },
@@ -1894,17 +1894,17 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  return (
  <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
- isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300')
+ isCompleted ? 'bg-green-500' : isCurrent ? 'bg-[#FF6B6B]/100' : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300')
  }`}>
  {isCompleted ? (
  <i className="fas fa-check text-white text-xs"></i>
  ) : isCurrent ? (
  <i className="fas fa-spinner fa-spin text-white text-xs"></i>
  ) : (
- <i className={`fas ${step.icon} ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>
+ <i className={`fas ${step.icon} ${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'} text-xs`}></i>
  )}
  </div>
- <span className={`${isCompleted ? 'text-[#FF6B6B]' : isCurrent ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>
+ <span className={`${isCompleted ? 'text-[#FF6B6B]' : isCurrent ? (theme !== 'light' ? 'text-white' : 'text-gray-900') : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')} text-[10px]`}>
  {step.label}
  </span>
  </div>
@@ -1915,15 +1915,15 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  {/* Barra de Progresso */}
  <div className="px-2">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200') + ' h-2 rounded-full overflow-hidden'}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${modelGenerationProgress}%` }}
  ></div>
  </div>
  <div className="flex justify-between items-center mt-2">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Processando</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Processando</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{modelGenerationProgress}%</span>
  </div>
  </div>
  <button
@@ -1939,7 +1939,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {!generatingModelImages && modelPreviewImages && (
  <>
  <div className="text-center mb-2">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-lg'}>{newModel.name}</h3>
  <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-sm font-medium">
  <i className="fas fa-check-circle mr-1 text-[#FF6B6B]"></i>Modelo criado com sucesso!
  </p>
@@ -1951,7 +1951,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const labels = { front: 'Frente', back: 'Costas' };
  return (
  <div key={type} className="text-center">
- <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ <div className={'aspect-[3/4] rounded-xl overflow-hidden mb-1 ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
  {imgUrl ? (
  <OptimizedImage
  src={imgUrl}
@@ -1962,16 +1962,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-xl'}></i>
  </div>
  )}
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type as keyof typeof labels]}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>{labels[type as keyof typeof labels]}</span>
  </div>
  );
  })}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mt-2'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs text-center mt-2'}>
  Gostou? Salve o modelo ou gere outro com as mesmas características.
  </p>
  </>
@@ -1982,28 +1982,28 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  {/* Nome do modelo */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
+ <label className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs font-medium block mb-2'}>Nome do Modelo</label>
  <input
  type="text"
  value={newModel.name}
  onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
  placeholder="Ex: Amanda, João, Modelo Principal..."
  maxLength={30}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2.5 rounded-lg border text-sm'}
  />
  </div>
 
  {/* Preview humanizado do modelo */}
- <div className={(theme === 'dark' ? 'bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF6B6B]/20' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5 border-[#FF6B6B]/20') + ' rounded-xl p-4 border'}>
+ <div className={(theme !== 'light' ? 'bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10 border-[#FF6B6B]/20' : 'bg-gradient-to-br from-[#FF6B6B]/5 to-[#FF9F43]/5 border-[#FF6B6B]/20') + ' rounded-xl p-4 border'}>
  <div className="flex items-start gap-3">
  <div className={'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ' + (newModel.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
  <i className={'fas ' + (newModel.gender === 'woman' ? 'fa-venus' : 'fa-mars') + ' text-white text-lg'}></i>
  </div>
  <div className="flex-1">
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-1.5'}>
  <i className="fas fa-sparkles text-[#FF6B6B] mr-1"></i>O que será gerado
  </p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-800') + ' text-sm leading-relaxed'}>
  {newModel.name || (newModel.gender === 'woman' ? 'Ela' : 'Ele')} terá{' '}
  <span className="text-[#FF6B6B] font-medium">olhos {getModelLabel('eyeColor', newModel.eyeColor).toLowerCase()}</span>
  {newModel.hairLength === 'bald' ? (
@@ -2024,7 +2024,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}.{' '}
  Expressão <span className="text-[#FF6B6B] font-medium">{getModelLabel('expression', newModel.expression).toLowerCase()}</span>.
  </p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
  <i className="fas fa-camera mr-1"></i>
  Serão geradas 3 imagens: rosto, frente e costas
  </p>
@@ -2038,13 +2038,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
 
  {/* Footer */}
- <div className={'p-4 border-t flex justify-between gap-2 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+ <div className={'p-4 border-t flex justify-between gap-2 ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-200')}>
 
  {/* Step 1 (Tipo): só Cancelar — avança ao clicar nos cards */}
  {modelWizardStep === 1 && (
  <button
  onClick={() => { setShowCreateModel(false); setEditingModel(null); }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
  Cancelar
  </button>
@@ -2055,7 +2055,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => { setNewModel({ ...newModel, modelType: null }); setModelWizardStep(1); }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
  Voltar
  </button>
@@ -2073,7 +2073,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Gerando */}
  {generatingModelImages && (
  <div className="flex-1 text-center">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
  <i className="fas fa-spinner fa-spin mr-2"></i>Gerando imagens...
  </span>
  </div>
@@ -2084,7 +2084,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => setModelWizardStep(2)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
  Voltar
  </button>
@@ -2104,13 +2104,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
- className={(theme === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
  >
  <i className="fas fa-trash"></i>
  </button>
  <button
  onClick={() => { setModelPreviewImages(null); generateRealModelPreview(); }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-2 py-2 border rounded-lg text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-2 py-2 border rounded-lg text-sm font-medium transition-colors'}
  title="Gerar Outro"
  >
  <i className="fas fa-redo"></i>
@@ -2137,7 +2137,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => modelWizardStep === 2 ? (setNewModel({ ...newModel, modelType: null }), setModelWizardStep(1)) : setModelWizardStep((modelWizardStep - 1) as 1 | 2 | 3 | 4 | 5 | 6)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
  Voltar
  </button>
@@ -2156,7 +2156,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Gerando: só mostra loading */}
  {generatingModelImages && (
  <div className="flex-1 text-center">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
  <i className="fas fa-spinner fa-spin mr-2"></i>Gerando imagens...
  </span>
  </div>
@@ -2167,7 +2167,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => setModelWizardStep(5)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' px-4 py-2 text-sm font-medium transition-colors'}
  >
  Voltar
  </button>
@@ -2187,13 +2187,13 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <>
  <button
  onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
- className={(theme === 'dark' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
  >
  <i className="fas fa-trash"></i>
  </button>
  <button
  onClick={() => { setModelPreviewImages(null); generateModelPreview(); }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-2 py-2 border rounded-lg text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-2 py-2 border rounded-lg text-sm font-medium transition-colors'}
  title="Gerar Outro"
  >
  <i className="fas fa-redo"></i>
@@ -2203,28 +2203,28 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <div className="relative">
  <button
  onClick={() => setShowCreateDropdown(!showCreateDropdown)}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-3 py-2 border rounded-lg text-sm font-medium transition-colors flex items-center gap-1'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white border-neutral-700' : 'text-gray-600 hover:text-gray-800 border-gray-300') + ' px-3 py-2 border rounded-lg text-sm font-medium transition-colors flex items-center gap-1'}
  >
  <i className="fas fa-plus"></i>
  Criar
  <i className={'fas fa-chevron-' + (showCreateDropdown ? 'up' : 'down') + ' text-xs ml-1'}></i>
  </button>
  {showCreateDropdown && (
- <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' absolute bottom-full mb-2 right-0 rounded-xl border overflow-hidden min-w-[180px] z-10'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-gray-200') + ' absolute bottom-full mb-2 right-0 rounded-xl border overflow-hidden min-w-[180px] z-10'}>
  <button
  onClick={() => {
  setShowCreateDropdown(false);
  setShowCreateModel(false);
  navigateTo('product-studio');
  }}
- className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+ className={(theme !== 'light' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-camera text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-camera text-xs ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="font-medium">Studio Ready</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Foto profissional</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Foto profissional</p>
  </div>
  </button>
  <button
@@ -2233,14 +2233,14 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setShowCreateModel(false);
  navigateTo('lifestyle');
  }}
- className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+ className={(theme !== 'light' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-mountain-sun text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-mountain-sun text-xs ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="font-medium">Cenário Criativo</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Com ambiente</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Com ambiente</p>
  </div>
  </button>
  <button
@@ -2249,14 +2249,14 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setShowCreateModel(false);
  navigateTo('look-composer');
  }}
- className={(theme === 'dark' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
+ className={(theme !== 'light' ? 'hover:bg-neutral-700 text-white' : 'hover:bg-gray-50 text-gray-900') + ' w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors'}
  >
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-layer-group text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-layer-group text-xs ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <p className="font-medium">Look Composer</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Montar look</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Montar look</p>
  </div>
  </button>
  </div>
@@ -2292,17 +2292,17 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* PHOTO SOURCE PICKER — Bottom sheet Galeria/Câmera */}
  {showPhotoSourcePicker && (
  <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
  Adicionar foto: {{ front: 'Frente', back: 'Costas', face: 'Rosto' }[showPhotoSourcePicker]}
  </h3>
  <div className="grid grid-cols-2 gap-3">
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <label className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-images text-[#FF6B6B]"></i>
  </div>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
  <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={async (e) => {
    const file = e.target.files?.[0];
    if (!file) return;
@@ -2319,11 +2319,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    e.target.value = '';
  }} />
  </label>
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <label className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-camera text-[#FF9F43]"></i>
  </div>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
  <input type="file" accept="image/*,.heic,.heif" capture="environment" className="hidden" onChange={async (e) => {
    const file = e.target.files?.[0];
    if (!file) return;
@@ -2341,7 +2341,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }} />
  </label>
  </div>
- <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+ <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
  Cancelar
  </button>
  </div>
@@ -2351,15 +2351,15 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* MODEL DETAIL MODAL */}
  {showModelDetail && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowModelDetail(null)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pt-3 pb-1 flex justify-center">
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  {/* Header */}
- <div className={'p-4 border-b flex items-center justify-between ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>{showModelDetail.name}</h2>
- <button onClick={() => setShowModelDetail(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
+ <div className={'p-4 border-b flex items-center justify-between ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-200')}>
+ <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>{showModelDetail.name}</h2>
+ <button onClick={() => setShowModelDetail(null)} className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' transition-colors'}>
  <i className="fas fa-times"></i>
  </button>
  </div>
@@ -2371,7 +2371,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {['front', 'back'].map((type) => {
  const imgUrl = showModelDetail.images[type as keyof typeof showModelDetail.images];
  return (
- <div key={type} className={'aspect-[3/4] rounded-xl overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ <div key={type} className={'aspect-[3/4] rounded-xl overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
  {imgUrl ? (
  <OptimizedImage
  src={imgUrl}
@@ -2381,7 +2381,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-2xl'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-2xl'}></i>
  </div>
  )}
  </div>
@@ -2389,76 +2389,76 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  })}
  </div>
  ) : (
- <div className={'rounded-xl p-8 mb-4 text-center ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ <div className={'rounded-xl p-8 mb-4 text-center ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
  <div className={'w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center ' + (showModelDetail.gender === 'woman' ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43]' : 'bg-gradient-to-br from-blue-400 to-indigo-500')}>
  <i className="fas fa-user text-3xl text-white"></i>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-sm'}>
  {showModelDetail.status === 'generating' ? 'Gerando imagens...' : 'Nenhuma imagem gerada'}
  </p>
  </div>
  )}
  {/* Características (só para modelos IA) */}
  {showModelDetail.modelType === 'real' ? (
- <div className={(theme === 'dark' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + ' rounded-xl border p-4'}>
+ <div className={(theme !== 'light' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + ' rounded-xl border p-4'}>
  <div className="flex items-center gap-2 mb-2">
  <i className="fas fa-camera text-blue-400 text-sm"></i>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Modelo Real</h4>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Modelo Real</h4>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs'}>
  Criado com fotos reais. Gênero: {getModelLabel('gender', showModelDetail.gender)}.
  </p>
  </div>
  ) : (
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-50') + ' rounded-xl p-4'}>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Características</h4>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-50') + ' rounded-xl p-4'}>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-3'}>Características</h4>
  <div className="grid grid-cols-2 gap-2 text-xs">
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Gênero:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('gender', showModelDetail.gender)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Gênero:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('gender', showModelDetail.gender)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Etnia:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('ethnicity', showModelDetail.ethnicity)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Etnia:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('ethnicity', showModelDetail.ethnicity)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Pele:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('skinTone', showModelDetail.skinTone)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Pele:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('skinTone', showModelDetail.skinTone)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Corpo:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('bodyType', showModelDetail.bodyType)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Corpo:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('bodyType', showModelDetail.bodyType)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Idade:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('ageRange', showModelDetail.ageRange)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Idade:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('ageRange', showModelDetail.ageRange)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Altura:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('height', showModelDetail.height)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Altura:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('height', showModelDetail.height)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Cabelo:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('hairColor', showModelDetail.hairColor)} - {getModelLabel('hairStyle', showModelDetail.hairStyle)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Cabelo:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('hairColor', showModelDetail.hairColor)} - {getModelLabel('hairStyle', showModelDetail.hairStyle)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Olhos:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('eyeColor', showModelDetail.eyeColor)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Olhos:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('eyeColor', showModelDetail.eyeColor)}</span>
  </div>
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Expressão:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('expression', showModelDetail.expression)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Expressão:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('expression', showModelDetail.expression)}</span>
  </div>
  {showModelDetail.gender === 'woman' && showModelDetail.bustSize && (
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Busto:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('bustSize', showModelDetail.bustSize)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Busto:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('bustSize', showModelDetail.bustSize)}</span>
  </div>
  )}
  {showModelDetail.waistType && (
  <div className="flex justify-between">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500')}>Cintura:</span>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('waistType', showModelDetail.waistType)}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500')}>Cintura:</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>{getModelLabel('waistType', showModelDetail.waistType)}</span>
  </div>
  )}
  </div>
@@ -2466,7 +2466,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  )}
  </div>
  {/* Footer */}
- <div className={'p-4 border-t flex gap-2 ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+ <div className={'p-4 border-t flex gap-2 ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-200')}>
  {!isDefaultModel(showModelDetail.id) && (
  <>
  <button
@@ -2474,7 +2474,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setDeleteModelTarget(showModelDetail);
  setShowDeleteModelConfirm(true);
  }}
- className={(theme === 'dark' ? 'text-red-400 hover:bg-red-500/10' : 'text-red-500 hover:bg-red-50') + ' px-4 py-2 rounded-lg text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-red-400 hover:bg-red-500/10' : 'text-red-500 hover:bg-red-50') + ' px-4 py-2 rounded-lg text-sm font-medium transition-colors'}
  >
  <i className="fas fa-trash mr-2"></i>Excluir
  </button>
@@ -2484,7 +2484,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setRenamingModel(showModelDetail);
  setShowModelDetail(null);
  }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100') + ' px-4 py-2 rounded-lg text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800' : 'text-gray-500 hover:bg-gray-100') + ' px-4 py-2 rounded-lg text-sm font-medium transition-colors'}
  >
  <i className="fas fa-edit mr-2"></i>Renomear
  </button>
@@ -2508,8 +2508,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* RENAME MODEL MODAL */}
  {renamingModel && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setRenamingModel(null)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-sm p-6'} onClick={(e) => e.stopPropagation()}>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Renomear Modelo</h3>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-sm p-6'} onClick={(e) => e.stopPropagation()}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-4'}>Renomear Modelo</h3>
  <input
  type="text"
  value={renameValue}
@@ -2530,14 +2530,14 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  })();
  }
  }}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/50'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/50'}
  placeholder="Nome do modelo"
  autoFocus
  />
  <div className="flex gap-3 mt-4">
  <button
  onClick={() => setRenamingModel(null)}
- className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors'}
  >
  Cancelar
  </button>
@@ -2565,16 +2565,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* DELETE CONFIRM MODAL */}
  {showDeleteModelConfirm && deleteModelTarget && (
  <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDeleteModelConfirm(false)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-xs p-5'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-xs p-5'} onClick={(e) => e.stopPropagation()}>
  <div className="text-center mb-4">
  <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-3">
   <i className="fas fa-trash text-red-500"></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Excluir "{deleteModelTarget.name}"?</h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>Esta ação pode ser desfeita nos próximos segundos.</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Excluir "{deleteModelTarget.name}"?</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>Esta ação pode ser desfeita nos próximos segundos.</p>
  </div>
  <div className="flex gap-2">
- <button onClick={() => setShowDeleteModelConfirm(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors'}>
+ <button onClick={() => setShowDeleteModelConfirm(false)} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors'}>
   Cancelar
  </button>
  <button onClick={() => { deleteModel(deleteModelTarget); setShowDeleteModelConfirm(false); setShowModelDetail(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors">

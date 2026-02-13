@@ -14,6 +14,7 @@ import { ProductCompositionPicker } from './ProductCompositionPicker';
 import { usePromptMentions } from './usePromptMentions';
 import { parsePromptMentions, buildMentionMap } from './promptParser';
 import type { CompositionProduct, ParsedPrompt } from './promptParser';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -139,7 +140,7 @@ export interface CreativeStillGenerateParams {
 interface CreativeStillEditorProps {
   product: Product;
   products: Product[];
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
   userCredits: number;
   userId?: string;
   currentPlan?: Plan;
@@ -164,7 +165,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   onOpenPlanModal,
   isGenerating,
 }) => {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   // ── States ──
   const [selectedAngles, setSelectedAngles] = useState<string[]>(['front']);

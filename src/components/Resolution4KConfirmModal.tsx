@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState } from 'react';
+import type { VizzuTheme } from '../contexts/UIContext';
 
 // localStorage keys
 const STORAGE_KEY_CONFIRMED = 'vizzu_4k_confirmed';
@@ -13,7 +14,7 @@ interface Resolution4KConfirmModalProps {
  isOpen: boolean;
  onConfirm: () => void;
  onCancel: () => void;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
 }
 
 // Helper para verificar se usuário já confirmou o aviso do 4K
@@ -63,7 +64,7 @@ export const Resolution4KConfirmModal: React.FC<Resolution4KConfirmModalProps> =
  theme = 'dark',
 }) => {
  const [dontAskAgain, setDontAskAgain] = useState(false);
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
 
  if (!isOpen) return null;
 

@@ -646,12 +646,12 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="max-w-6xl mx-auto">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-box text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-box text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Produtos</h1>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seu catálogo</p>
+ <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Produtos</h1>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seu catálogo</p>
  </div>
  </div>
  <div className="flex items-center gap-2">
@@ -664,18 +664,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  </div>
 
- <div data-tour="products-filters" className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 mb-4'}>
+ <div data-tour="products-filters" className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 mb-4'}>
  <div className="flex flex-wrap gap-2">
  <div className="flex-shrink-0 w-44">
  <div className="relative">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
- <input data-tour="products-search" type="text" id="product-search" name="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
+ <input data-tour="products-search" type="text" id="product-search" name="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
  </div>
  </div>
  <select
  value={filterCategoryGroup}
  onChange={(e) => { setFilterCategoryGroup(e.target.value); setFilterCategory(''); }}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Categoria</option>
  {CATEGORY_GROUPS.map(group => (
@@ -686,7 +686,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <select
  value={filterCategory}
  onChange={(e) => setFilterCategory(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}
  >
  <option value="">Subcategoria</option>
  {CATEGORY_GROUPS.find(g => g.id === filterCategoryGroup)?.items.map(cat => (
@@ -694,12 +694,12 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  ))}
  </select>
  )}
- <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
+ <select value={filterColor} onChange={(e) => setFilterColor(e.target.value)} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
  <option value="">Cor</option>
  {COLORS.filter(c => filterCounts.colorCounts[c]).map(color => <option key={color} value={color}>{color} ({filterCounts.colorCounts[color]})</option>)}
  </select>
  {allCollections.length > 0 && (
- <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
+ <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' flex-shrink-0 px-2.5 py-1.5 border rounded-lg text-xs'}>
  <option value="">Coleção</option>
  {allCollections.map(col => <option key={col} value={col}>{col}{filterCounts.collectionCounts[col] ? ` (${filterCounts.collectionCounts[col]})` : ''}</option>)}
  </select>
@@ -711,13 +711,13 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  )}
  </div>
  <div className="flex items-center justify-between mt-2">
- <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px]'}>
+ <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-500') + ' text-[10px]'}>
  {totalPages > 1
  ? `Página ${currentPage} de ${totalPages} — ${filteredProducts.length} produtos`
  : `${filteredProducts.length} de ${products.length} produtos`}
  </p>
  {filteredProducts.length > 0 && (
- <button onClick={selectAllProducts} className={(theme === 'dark' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-800') + ' text-xs flex items-center gap-1.5 px-2 py-0.5 rounded-lg hover:bg-black/5 transition-colors'}>
+ <button onClick={selectAllProducts} className={(theme !== 'light' ? 'text-neutral-300 hover:text-white' : 'text-gray-600 hover:text-gray-800') + ' text-xs flex items-center gap-1.5 px-2 py-0.5 rounded-lg hover:bg-black/5 transition-colors'}>
  <i className={`fas fa-${selectedProducts.length === filteredProducts.length ? 'check-square' : 'square'} text-xs`}></i>
  {selectedProducts.length === filteredProducts.length ? 'Desmarcar todos' : 'Selecionar todos'}
  </button>
@@ -727,10 +727,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
  {/* Barra de ações para produtos selecionados */}
  {selectedProducts.length > 0 && (
- <div className={(theme === 'dark' ? 'bg-white/5 border-white/10 backdrop-blur-xl' : 'bg-white/40 border-gray-200/40 backdrop-blur-xl shadow-sm') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
+ <div className={(theme !== 'light' ? 'bg-white/5 border-white/10 backdrop-blur-xl' : 'bg-white/40 border-gray-200/40 backdrop-blur-xl shadow-sm') + ' rounded-xl border p-3 mb-4 flex items-center justify-between'}>
  <div className="flex items-center gap-2">
  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] font-medium text-sm">{selectedProducts.length} selecionado{selectedProducts.length > 1 ? 's' : ''}</span>
- <button onClick={() => setSelectedProducts([])} className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs'}>
+ <button onClick={() => setSelectedProducts([])} className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs'}>
  <i className="fas fa-times mr-1"></i>Cancelar
  </button>
  </div>
@@ -740,7 +740,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  )}
 
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
  {/* Fix 9: skeleton loading inicial */}
  {isInitialLoad ? (
  <ProductGridSkeleton theme={theme} count={12} />
@@ -754,7 +754,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  key={product.id}
  {...(productIdx === 0 ? { 'data-tour': 'products-card' } : {})}
  data-product-id={product.id}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (isSelected ? (theme === 'dark' ? 'ring-2 ring-neutral-500' : 'ring-2 ring-gray-400') : '')}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (isSelected ? (theme !== 'light' ? 'ring-2 ring-neutral-500' : 'ring-2 ring-gray-400') : '')}
  onTouchStart={() => handleProductTouchStart(product.id)}
  onTouchEnd={() => handleProductTouchEnd(product.id)}
  onTouchMove={handleProductTouchMove}
@@ -769,7 +769,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  }
  }}
  >
- <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={getProductDisplayImage(product)} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform pointer-events-none" />
  {/* Badge de produto otimizado */}
  {isProductOptimized(product) && (
@@ -804,13 +804,13 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </button>
  </div>
  <div className="p-2">
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku ? `SKU ${product.sku}` : `ID ${product.id.slice(0, 8)}`}</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'} title={product.name}>{product.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku ? `SKU ${product.sku}` : `ID ${product.id.slice(0, 8)}`}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'} title={product.name}>{product.name}</p>
  {product.price != null && (
  <p className="text-[9px] font-medium mt-0.5">
  {product.priceSale != null ? (
  <>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' line-through mr-1'}>R$ {product.price.toFixed(2).replace('.', ',')}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' line-through mr-1'}>R$ {product.price.toFixed(2).replace('.', ',')}</span>
  <span className="text-[#FF6B6B]">R$ {product.priceSale.toFixed(2).replace('.', ',')}</span>
  </>
  ) : (
@@ -831,7 +831,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <button
   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
   disabled={currentPage === 1}
-  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white disabled:text-neutral-700' : 'text-gray-500 hover:text-gray-900 disabled:text-gray-300') + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors disabled:cursor-not-allowed'}
+  className={(theme !== 'light' ? 'text-neutral-400 hover:text-white disabled:text-neutral-700' : 'text-gray-500 hover:text-gray-900 disabled:text-gray-300') + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors disabled:cursor-not-allowed'}
  >
   <i className="fas fa-chevron-left text-[10px]"></i>
  </button>
@@ -844,7 +844,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   }, [])
   .map((item, idx) =>
    typeof item === 'string' ? (
-    <span key={`dot-${idx}`} className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' w-6 text-center text-xs'}>...</span>
+    <span key={`dot-${idx}`} className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' w-6 text-center text-xs'}>...</span>
    ) : (
     <button
      key={item}
@@ -852,7 +852,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
      className={
       (item === currentPage
        ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white font-semibold'
-       : (theme === 'dark' ? 'text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'))
+       : (theme !== 'light' ? 'text-neutral-400 hover:bg-neutral-800 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'))
       + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors'
      }
     >
@@ -863,7 +863,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <button
   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
   disabled={currentPage === totalPages}
-  className={(theme === 'dark' ? 'text-neutral-400 hover:text-white disabled:text-neutral-700' : 'text-gray-500 hover:text-gray-900 disabled:text-gray-300') + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors disabled:cursor-not-allowed'}
+  className={(theme !== 'light' ? 'text-neutral-400 hover:text-white disabled:text-neutral-700' : 'text-gray-500 hover:text-gray-900 disabled:text-gray-300') + ' w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-colors disabled:cursor-not-allowed'}
  >
   <i className="fas fa-chevron-right text-[10px]"></i>
  </button>
@@ -873,17 +873,17 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Fix 1: estado vazio diferenciado */}
  {!isInitialLoad && filteredProducts.length === 0 && (
  <div className="p-8 text-center">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + (hasActiveFilters ? ' fas fa-filter-circle-xmark text-xl' : ' fas fa-box text-xl')}></i>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + (hasActiveFilters ? ' fas fa-filter-circle-xmark text-xl' : ' fas fa-box text-xl')}></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
  {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
  </h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
  {hasActiveFilters ? 'Tente ajustar os filtros ou a busca' : 'Adicione seu primeiro produto'}
  </p>
  {hasActiveFilters ? (
- <button onClick={clearAllFilters} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs transition-colors'}>
+ <button onClick={clearAllFilters} className={(theme !== 'light' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' mt-3 px-4 py-2 rounded-lg font-medium text-xs transition-colors'}>
  <i className="fas fa-times mr-1.5"></i>Limpar filtros
  </button>
  ) : (
@@ -899,17 +899,17 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
 {showPhotoSourcePicker && (
  <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowPhotoSourcePicker(null)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
  Adicionar foto: {currentUploadSlots.find(s => s.angle === showPhotoSourcePicker)?.label || showPhotoSourcePicker}
  </h3>
  <div className="grid grid-cols-2 gap-3">
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <label className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-images text-[#FF6B6B]"></i>
  </div>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
  <input
  type="file"
  accept="image/*,.heic,.heif"
@@ -930,11 +930,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  }}
  />
  </label>
- <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+ <label className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+ <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
  <i className="fas fa-camera text-[#FF9F43]"></i>
  </div>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
  <input
  type="file"
  accept="image/*,.heic,.heif"
@@ -957,7 +957,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  />
  </label>
  </div>
- <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+ <button onClick={() => setShowPhotoSourcePicker(null)} className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
  Cancelar
  </button>
  </div>
@@ -967,16 +967,16 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 {/* PRODUCT SELECTOR MODAL - Quando múltiplos produtos são detectados na imagem */}
 {showProductSelector && detectedProducts.length > 1 && (
  <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowProductSelector(false)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[80vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[80vh] overflow-y-auto'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4 md:hidden'}></div>
 
  <div className="flex items-center gap-3 mb-4">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-wand-magic-sparkles ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-wand-magic-sparkles ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Múltiplos produtos detectados</h3>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Qual produto deseja cadastrar agora?</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Múltiplos produtos detectados</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Qual produto deseja cadastrar agora?</p>
  </div>
  </div>
 
@@ -985,28 +985,28 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <button
  key={index}
  onClick={() => handleSelectDetectedProduct(product)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-neutral-500 hover:bg-neutral-800/50') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/80' : 'bg-gray-50 border-gray-200 hover:border-neutral-500 hover:bg-neutral-800/50') + ' w-full p-4 border rounded-xl flex items-center gap-4 transition-all text-left'}
  >
- <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-200') + ' w-12 h-12 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-tshirt text-xl'}></i>
+ <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-gray-200') + ' w-12 h-12 rounded-lg flex items-center justify-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-tshirt text-xl'}></i>
  </div>
  <div className="flex-1">
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{product.suggestedName || product.type}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>{product.suggestedName || product.type}</p>
  <div className="flex flex-wrap gap-1.5 mt-1">
- <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.type}</span>
- <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.color}</span>
+ <span className={(theme !== 'light' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.type}</span>
+ <span className={(theme !== 'light' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.color}</span>
  {product.pattern && product.pattern !== 'Liso' && (
- <span className={(theme === 'dark' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.pattern}</span>
+ <span className={(theme !== 'light' ? 'bg-gray-300 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px]'}>{product.pattern}</span>
  )}
  </div>
  </div>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-chevron-right'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-chevron-right'}></i>
  </button>
  ))}
  </div>
 
  {/* Cadastrar Todos */}
- <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-gray-200') + ' border-t pt-3 mt-3'}>
+ <div className={(theme !== 'light' ? 'border-neutral-700' : 'border-gray-200') + ' border-t pt-3 mt-3'}>
  <button
  onClick={() => { setShowProductSelector(false); setShowRegisterAll(true); }}
  className="w-full py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 transition-opacity"
@@ -1018,7 +1018,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
  <button
  onClick={() => setShowProductSelector(false)}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-2 py-2 text-xs font-medium'}
+ className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-2 py-2 text-xs font-medium'}
  >
  Preencher manualmente
  </button>
@@ -1053,18 +1053,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  if (hasData) { setShowDiscardConfirm(true); return; }
  setShowCreateProduct(false); clearAllImages(); setEditingProduct(null);
  }}>
- <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-700/50' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' relative rounded-t-2xl md:rounded-2xl border w-full max-w-md p-5 max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pb-2 flex justify-center -mt-1">
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  <div className="flex items-center justify-between mb-4">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold font-serif'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold font-serif'}>{editingProduct ? 'Editar Produto' : 'Criar Produto'}</h3>
  <button onClick={() => {
  const hasData = !!(getImage('front') || newProduct.name || newProduct.category);
  if (hasData) { setShowDiscardConfirm(true); return; }
  setShowCreateProduct(false); clearAllImages(); setEditingProduct(null);
- }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+ }} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
  <i className="fas fa-times text-xs"></i>
  </button>
  </div>
@@ -1078,7 +1078,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  const image = getImage(slot.angle);
  return (
  <div key={slot.angle} className="flex flex-col">
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 flex items-center gap-1'}>
  <i className={`fas ${slot.icon} text-[8px]`} style={{ color: slot.required ? slot.accentColor : undefined }}></i>
  {slot.label} {slot.required && <span className="text-[#FF6B6B]">*</span>}
  </label>
@@ -1098,9 +1098,9 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  </div>
  ) : (
- <div onDrop={(e) => handleImageDrop(e, slot.angle)} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker(slot.angle)} className={(theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
+ <div onDrop={(e) => handleImageDrop(e, slot.angle)} onDragOver={handleDragOver} onClick={() => setShowPhotoSourcePicker(slot.angle)} className={(theme !== 'light' ? 'border-neutral-700 hover:border-neutral-500 bg-neutral-800/50' : 'border-gray-300 hover:border-gray-400 bg-gray-50') + ' aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all cursor-pointer'}>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-plus text-sm'}></i>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[8px]'}>Adicionar</span>
  </div>
  )}
  </div>
@@ -1108,13 +1108,13 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  };
  return (
  <>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>Fotos do Produto</p>
  <div className="grid grid-cols-2 gap-2">
  {mainSlots.map(renderSlot)}
  </div>
  {detailSlots.length > 0 && (
  <>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide mt-3 mb-2'}>
  {currentProductType === 'footwear' ? 'Sola (opcional)' : 'Close-up / Detalhe (opcional)'}
  </p>
  <div className="grid grid-cols-2 gap-2">
@@ -1123,8 +1123,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </>
  )}
  {/* Dica contextual */}
- <div className={(theme === 'dark' ? 'bg-[#FF9F43]/10 border-[#FF9F43]/30' : 'bg-orange-50 border-[#FF9F43]/20') + ' rounded-lg p-2 mt-3 border'}>
- <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' text-[10px] flex items-start gap-1.5'}>
+ <div className={(theme !== 'light' ? 'bg-[#FF9F43]/10 border-[#FF9F43]/30' : 'bg-orange-50 border-[#FF9F43]/20') + ' rounded-lg p-2 mt-3 border'}>
+ <p className={(theme !== 'light' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' text-[10px] flex items-start gap-1.5'}>
  <i className="fas fa-lightbulb mt-0.5"></i>
  <span><strong>Dica:</strong> {DETAIL_TIPS[currentProductType]} Sem essas fotos, a IA gera normalmente mas pode não reproduzir detalhes com precisão.</span>
  </p>
@@ -1136,7 +1136,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
  {/* OVERLAY DE ANÁLISE IA - Tela imersiva de loading */}
  {isAnalyzingImage && (
- <div className={`absolute inset-0 z-50 backdrop-blur-2xl flex flex-col items-center justify-center rounded-2xl ${theme === 'dark' ? 'bg-neutral-900/70 border border-white/10' : 'bg-white/30 border border-gray-200/40'}`}>
+ <div className={`absolute inset-0 z-50 backdrop-blur-2xl flex flex-col items-center justify-center rounded-2xl ${theme !== 'light' ? 'bg-neutral-900/70 border border-white/10' : 'bg-white/30 border border-gray-200/40'}`}>
  {/* Animação central */}
  <div className="relative mb-6">
  {/* Círculo externo pulsante */}
@@ -1148,27 +1148,27 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
 
  {/* Texto */}
- <h3 className={`text-lg font-semibold mb-2 font-serif ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Analisando imagem...</h3>
- <p className={`text-sm text-center px-8 mb-4 ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-500'}`}>
+ <h3 className={`text-lg font-semibold mb-2 font-serif ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>Analisando imagem...</h3>
+ <p className={`text-sm text-center px-8 mb-4 ${theme !== 'light' ? 'text-neutral-300' : 'text-gray-500'}`}>
  Nossa IA está identificando o produto, cor, marca e categoria
  </p>
 
  {/* Barra de progresso animada */}
- <div className={`w-48 h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-white/20' : 'bg-gray-200'}`}>
+ <div className={`w-48 h-1.5 rounded-full overflow-hidden ${theme !== 'light' ? 'bg-white/20' : 'bg-gray-200'}`}>
  <div className="h-full w-1/2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full animate-loading"></div>
  </div>
 
  {/* Lista de detecções */}
  <div className="mt-6 space-y-2 text-center">
- <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
+ <div className={`flex items-center gap-2 text-xs ${theme !== 'light' ? 'text-neutral-300' : 'text-gray-600'}`}>
  <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  <span>Tipo de produto</span>
  </div>
- <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-300' : 'text-gray-600'}`}>
+ <div className={`flex items-center gap-2 text-xs ${theme !== 'light' ? 'text-neutral-300' : 'text-gray-600'}`}>
  <i className="fas fa-spinner fa-spin text-[#FF9F43]"></i>
  <span>Cor e padrão</span>
  </div>
- <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-neutral-400/50' : 'text-gray-400'}`}>
+ <div className={`flex items-center gap-2 text-xs ${theme !== 'light' ? 'text-neutral-400/50' : 'text-gray-400'}`}>
  <i className="fas fa-circle text-[#FF9F43]/30"></i>
  <span>Marca e caimento</span>
  </div>
@@ -1177,7 +1177,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Botão cancelar */}
  <button
  onClick={() => setIsAnalyzingImage(false)}
- className={`mt-6 px-4 py-2 rounded-lg text-xs font-medium transition-all ${theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+ className={`mt-6 px-4 py-2 rounded-lg text-xs font-medium transition-all ${theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
  >
  Preencher manualmente
  </button>
@@ -1187,25 +1187,25 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Form Fields */}
  <div className="space-y-3">
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
- <input type="text" id="new-product-name" name="productName" autoComplete="off" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome do Produto *</label>
+ <input type="text" id="new-product-name" name="productName" autoComplete="off" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Camiseta Básica Branca" />
  </div>
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
- <input type="text" id="new-product-brand" name="productBrand" autoComplete="off" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Marca</label>
+ <input type="text" id="new-product-brand" name="productBrand" autoComplete="off" value={newProduct.brand} onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} placeholder="Ex: Nike" />
  </div>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
- <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+ <select value={newProduct.color} onChange={(e) => setNewProduct({...newProduct, color: e.target.value})} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
  <option value="">Selecione</option>
  {COLORS.map(color => <option key={color} value={color}>{color}</option>)}
  </select>
  </div>
  </div>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
- <select value={newProduct.category} onChange={(e) => { setNewProduct({...newProduct, category: e.target.value}); setProductAttributes({}); }} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
+ <select value={newProduct.category} onChange={(e) => { setNewProduct({...newProduct, category: e.target.value}); setProductAttributes({}); }} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}>
  <option value="">Selecione</option>
  {CATEGORY_GROUPS.map(group => (
  <optgroup key={group.label} label={group.label}>
@@ -1215,13 +1215,13 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </select>
  </div>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
  <input
   list="collections-list"
   value={newProduct.collection}
   onChange={(e) => setNewProduct({...newProduct, collection: e.target.value})}
   placeholder="Ex: Verão 2026"
-  className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+  className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
  />
  {allCollections.length > 0 && (
   <datalist id="collections-list">
@@ -1232,19 +1232,19 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
  {/* Atributos condicionais por categoria */}
  {newProduct.category && CATEGORY_ATTRIBUTES[newProduct.category] && (
- <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-xl border'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' p-3 rounded-xl border'}>
  <div className="flex items-center gap-2 mb-2">
- <i className={(theme === 'dark' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-sliders text-xs'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
+ <i className={(theme !== 'light' ? 'text-[#FF6B6B]' : 'text-[#FF6B6B]') + ' fas fa-sliders text-xs'}></i>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Atributos de {newProduct.category}</span>
  </div>
  <div className={`grid gap-3 ${CATEGORY_ATTRIBUTES[newProduct.category].length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
  {CATEGORY_ATTRIBUTES[newProduct.category].map(attr => (
  <div key={attr.id}>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>{attr.label}</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>{attr.label}</label>
  <select
  value={productAttributes[attr.id] || ''}
  onChange={(e) => setProductAttributes(prev => ({ ...prev, [attr.id]: e.target.value }))}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
  >
  <option value="">Selecione</option>
  {attr.options.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
@@ -1252,7 +1252,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  ))}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-2'}>
+ <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-2'}>
  <i className="fas fa-info-circle mr-1"></i>
  Esses atributos ajudam a IA a gerar imagens mais precisas
  </p>
@@ -1260,7 +1260,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  )}
 
  {/* Seção: Informações de venda (colapsável) */}
- <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border overflow-hidden'}>
  <button
  type="button"
  onClick={() => setShowSalesSection(v => !v)}
@@ -1268,10 +1268,10 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  >
  <div className="flex items-center gap-2">
  <i className="fas fa-tag text-xs text-[#FF9F43]"></i>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Informações de venda</span>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] font-medium uppercase tracking-wide'}>Informações de venda</span>
  {newProduct.price && <span className="text-[9px] text-[#FF9F43] font-medium">R$ {parseFloat(newProduct.price).toFixed(2).replace('.', ',')}</span>}
  </div>
- <i className={'fas text-[10px] transition-transform ' + (showSalesSection ? 'fa-chevron-up' : 'fa-chevron-down') + (theme === 'dark' ? ' text-neutral-500' : ' text-gray-400')}></i>
+ <i className={'fas text-[10px] transition-transform ' + (showSalesSection ? 'fa-chevron-up' : 'fa-chevron-down') + (theme !== 'light' ? ' text-neutral-500' : ' text-gray-400')}></i>
  </button>
  {showSalesSection && (
  <div className="px-3 pb-3 space-y-3">
@@ -1279,18 +1279,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <label className="flex items-center gap-2 cursor-pointer">
  <div
  onClick={() => setNewProduct(p => ({ ...p, isForSale: !p.isForSale }))}
- className={'w-8 h-4.5 rounded-full relative transition-colors cursor-pointer ' + (newProduct.isForSale ? 'bg-[#FF6B6B]' : (theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-300'))}
+ className={'w-8 h-4.5 rounded-full relative transition-colors cursor-pointer ' + (newProduct.isForSale ? 'bg-[#FF6B6B]' : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300'))}
  style={{ height: '18px' }}
  >
  <div className={'absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ' + (newProduct.isForSale ? 'translate-x-[14px]' : 'translate-x-0.5')} style={{ width: '14px', height: '14px' }}></div>
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>Produto à venda</span>
+ <span className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>Produto à venda</span>
  </label>
 
  {/* Preço */}
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço (R$)</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço (R$)</label>
  <input
  type="number"
  step="0.01"
@@ -1298,11 +1298,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  placeholder="89,90"
  value={newProduct.price}
  onChange={e => setNewProduct(p => ({ ...p, price: e.target.value }))}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
  />
  </div>
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço promo (R$)</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Preço promo (R$)</label>
  <input
  type="number"
  step="0.01"
@@ -1310,14 +1310,14 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  placeholder="Opcional"
  value={newProduct.priceSale}
  onChange={e => setNewProduct(p => ({ ...p, priceSale: e.target.value }))}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full px-3 py-2 border rounded-lg text-sm'}
  />
  </div>
  </div>
 
  {/* Tamanhos */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1.5'}>Tamanhos disponíveis</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1.5'}>Tamanhos disponíveis</label>
  <div className="flex flex-wrap gap-1.5">
  {['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único'].map(size => {
  const isActive = newProduct.sizes.includes(size);
@@ -1333,7 +1333,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  'px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ' +
  (isActive
  ? 'bg-[#FF6B6B]/10 border-[#FF6B6B]/30 text-[#FF6B6B]'
- : (theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:border-neutral-600' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'))
+ : (theme !== 'light' ? 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:border-neutral-600' : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'))
  }
  >
  {size}
@@ -1343,7 +1343,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  </div>
 
- <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>
+ <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>
  <i className="fas fa-info-circle mr-1"></i>
  O preço aparecerá no WhatsApp do Provador e no agente de vendas
  </p>
@@ -1371,14 +1371,14 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Fix 6: modal de confirmação de descarte */}
  {showDiscardConfirm && (
  <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDiscardConfirm(false)}>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-700' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-xs p-5 text-center'} onClick={(e) => e.stopPropagation()}>
- <div className={'w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ' + (theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-50')}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-700' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-xs p-5 text-center'} onClick={(e) => e.stopPropagation()}>
+ <div className={'w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ' + (theme !== 'light' ? 'bg-amber-500/20' : 'bg-amber-50')}>
  <i className="fas fa-exclamation-triangle text-amber-500 text-lg"></i>
  </div>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>Descartar alterações?</h4>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-4'}>Você tem dados não salvos que serão perdidos.</p>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>Descartar alterações?</h4>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-4'}>Você tem dados não salvos que serão perdidos.</p>
  <div className="flex gap-2">
- <button onClick={() => setShowDiscardConfirm(false)} className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2 rounded-lg text-xs font-medium transition-colors'}>
+ <button onClick={() => setShowDiscardConfirm(false)} className={(theme !== 'light' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2 rounded-lg text-xs font-medium transition-colors'}>
  Continuar editando
  </button>
  <button onClick={() => { setShowDiscardConfirm(false); setShowCreateProduct(false); clearAllImages(); setEditingProduct(null); setNewProduct({ name: '', brand: '', color: '', category: '', collection: '', price: '', priceSale: '', sizes: [], isForSale: false }); setShowSalesSection(false); setProductAttributes({}); }} className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium transition-colors">
@@ -1427,24 +1427,24 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {/* Modal de confirmação de exclusão de produtos */}
  {showDeleteProductsModal && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}>
- <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-sm p-5 safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden pb-3 flex justify-center -mt-1">
- <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+ <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
  </div>
  <div className="flex items-center gap-3 mb-4">
  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
  <i className="fas fa-trash text-red-500"></i>
  </div>
  <div>
- <h4 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium'}>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium'}>
  {deleteProductTarget ? 'Excluir Produto' : `Excluir ${selectedProducts.length} Produto${selectedProducts.length > 1 ? 's' : ''}`}
  </h4>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Esta ação não pode ser desfeita</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>Esta ação não pode ser desfeita</p>
  </div>
  </div>
 
- <p className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-sm mb-4'}>
+ <p className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-600') + ' text-sm mb-4'}>
  {deleteProductTarget
  ? <>Tem certeza que deseja excluir <strong>"{deleteProductTarget.name}"</strong>?</>
  : <>Tem certeza que deseja excluir <strong>{selectedProducts.length} produto{selectedProducts.length > 1 ? 's' : ''}</strong> selecionado{selectedProducts.length > 1 ? 's' : ''}?</>
@@ -1454,7 +1454,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="flex gap-2">
  <button
  onClick={() => { setShowDeleteProductsModal(false); setDeleteProductTarget(null); }}
- className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
+ className={(theme !== 'light' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors'}
  >
  Cancelar
  </button>

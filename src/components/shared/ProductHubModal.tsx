@@ -14,6 +14,7 @@ import DownloadModal, { type DownloadImageGroup } from './DownloadModal';
 import { ImageEditModal } from './ImageEditModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 import { editStudioImage, saveCreativeStillEdit, saveLookComposerEdit } from '../../lib/api/studio';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 // ── Types ──
 
@@ -38,7 +39,7 @@ export interface ProductHubModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product;
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
   userId?: string;
   navigateTo: (page: string) => void;
   setProductForCreation: (p: Product | null) => void;
@@ -104,7 +105,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   resolution = '2k',
   defaultTab,
 }) => {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const { openViewer } = useImageViewer();
 
   // CS data (não está no Product, precisa buscar)

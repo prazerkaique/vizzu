@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import type { VizzuTheme } from '../../contexts/UIContext';
 import type { BulkProduct, BulkStep, ImportResults } from './types';
 import { parseZipFolders } from './utils';
 import { StepUpload } from './StepUpload';
@@ -14,7 +15,7 @@ interface BulkImportModalProps {
   onImport: (products: any[]) => void; // compat legacy
   onComplete?: () => void;
   userId?: string;
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
 }
 
 const STEPS: { key: BulkStep; label: string }[] = [
@@ -32,7 +33,7 @@ export function BulkImportModal({ isOpen, onClose, onComplete, userId, theme }: 
   const [warnings, setWarnings] = useState<string[]>([]);
   const [importResults, setImportResults] = useState<ImportResults>({ success: [], failed: [] });
 
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const handleReset = useCallback(() => {
     setStep('upload');

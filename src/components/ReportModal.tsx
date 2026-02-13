@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ReportGenerationType } from '../lib/api/reports';
+import type { VizzuTheme } from '../contexts/UIContext';
 
 interface Props {
   isOpen: boolean;
@@ -7,7 +8,7 @@ interface Props {
   onSubmit: (observation: string) => Promise<void>;
   generationType: ReportGenerationType;
   productName?: string;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 const TYPE_LABELS: Record<ReportGenerationType, string> = {
@@ -27,7 +28,7 @@ export const ReportModal: React.FC<Props> = ({
 }) => {
   const [observation, setObservation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   useEffect(() => {
     if (isOpen) {

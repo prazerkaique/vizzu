@@ -7,7 +7,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, ProductStudioSession, ProductStudioAngle } from '../../types';
 import { ZoomableImage } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { getProductType as getProductTypeFromConfig } from '../../lib/productConfig';
@@ -36,7 +36,7 @@ interface ProductStudioResultProps {
  onImageUpdated?: (angle: string, newUrl: string) => void;
  onImageSavedAsNew?: (angle: string, newUrl: string) => void;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
 }
 
 // Labels dos ângulos em português
@@ -281,7 +281,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
 
  if (showReveal) {
  return (
- <div className={'min-h-screen flex items-center justify-center ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+ <div className={'min-h-screen flex items-center justify-center ' + (theme !== 'light' ? 'bg-black' : 'bg-gray-50')}>
  <div className="w-72 h-72">
  <DotLottieReact
  src="https://lottie.host/c73f7881-d168-4dee-be3a-3c73bd916083/vnLD4LVey6.lottie"
@@ -295,7 +295,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  }
 
  return (
- <div className={'min-h-screen flex flex-col overflow-y-auto ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}>
+ <div className={'min-h-screen flex flex-col overflow-y-auto ' + (theme !== 'light' ? 'bg-black' : 'bg-gray-50')}>
 
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* HEADER - Gradient Pink → Orange */}
@@ -340,17 +340,17 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  <div className="lg:col-span-3 flex flex-col">
  <div
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden flex flex-col'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden flex flex-col'}
  >
  {/* Switch Original/Gerada */}
- <div className={'flex items-center justify-between px-4 py-2 border-b ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>
+ <div className={'flex items-center justify-between px-4 py-2 border-b ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>
  {showOriginal ? 'Imagem Original' : 'Imagem Gerada'}
  </span>
  <button
  onClick={() => setShowOriginal(!showOriginal)}
  className={'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' +
- (theme === 'dark'
+ (theme !== 'light'
  ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
  }
@@ -363,7 +363,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {/* Área da Imagem com Zoom Hover */}
  <div
  ref={imageContainerRef}
- className={'relative flex items-center justify-center p-4 md:p-6 min-h-[280px] md:min-h-[400px] cursor-zoom-in overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800/50' : 'bg-gray-100')}
+ className={'relative flex items-center justify-center p-4 md:p-6 min-h-[280px] md:min-h-[400px] cursor-zoom-in overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800/50' : 'bg-gray-100')}
  onMouseEnter={() => setIsHovering(true)}
  onMouseLeave={() => setIsHovering(false)}
  onMouseMove={handleMouseMove}
@@ -402,7 +402,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  />
 
  {/* Ícone de lupa (desktop) */}
- <div className={'hidden lg:flex absolute bottom-3 right-3 w-8 h-8 rounded-lg items-center justify-center transition-all pointer-events-none ' + (theme === 'dark' ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
+ <div className={'hidden lg:flex absolute bottom-3 right-3 w-8 h-8 rounded-lg items-center justify-center transition-all pointer-events-none ' + (theme !== 'light' ? 'bg-black/60 text-white' : 'bg-white/80 text-gray-700')}>
  <i className="fas fa-search-plus text-sm"></i>
  </div>
 
@@ -421,14 +421,14 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </>
  ) : (
  <div className="flex flex-col items-center gap-2">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-3xl'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-3xl'}></i>
  </div>
  )}
  </div>
 
  {/* Botões de Ângulos */}
- <div className={'px-3 py-3 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-100')}>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2 text-center'}>
+ <div className={'px-3 py-3 border-t ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2 text-center'}>
  Ângulos Gerados
  </p>
  <div className="flex items-center justify-center gap-1.5 flex-wrap">
@@ -444,10 +444,10 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  (isActive
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white '
  : isGenerated
- ? (theme === 'dark'
+ ? (theme !== 'light'
  ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
  : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
- : (theme === 'dark'
+ : (theme !== 'light'
  ? 'bg-neutral-800/50 text-neutral-600 cursor-not-allowed'
  : 'bg-gray-50 text-gray-400 cursor-not-allowed')
  )
@@ -470,20 +470,20 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  <div className="lg:col-span-2 flex flex-col gap-3">
 
  {/* Card Informações */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold mb-3 flex items-center gap-2'}>
  <i className="fas fa-chart-simple text-[#FF6B6B] text-[10px]"></i>
  Informações
  </h3>
 
  <div className="space-y-2">
  <div className="flex items-center gap-2">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-7 h-7 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-clock text-[10px]'}></i>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-7 h-7 rounded-lg flex items-center justify-center'}>
+ <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-clock text-[10px]'}></i>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide'}>Gerado</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{timeAgo}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide'}>Gerado</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{timeAgo}</p>
  </div>
  </div>
 
@@ -492,7 +492,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  <i className="fas fa-check text-green-400 text-[10px]"></i>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide'}>Status</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide'}>Status</p>
  <p className="text-green-400 text-xs font-medium">{images.length} imagem{images.length > 1 ? 's' : ''} gerada{images.length > 1 ? 's' : ''}</p>
  </div>
  </div>
@@ -524,8 +524,8 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </button>
 
  {/* Ações Rápidas - Grid compacto */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wide mb-2'}>
  Ações Rápidas
  </p>
 
@@ -543,16 +543,16 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {/* Zoom */}
  <button
  onClick={() => setShowZoomModal(true)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
  >
- <i className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-expand text-sm'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Ampliar</span>
+ <i className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-expand text-sm'}></i>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Ampliar</span>
  </button>
 
  {/* Report */}
  <button
  onClick={() => setShowReportModal(true)}
- className={(theme === 'dark' ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 border-amber-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ className={(theme !== 'light' ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 border-amber-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
  >
  <i className="fas fa-flag text-amber-400 text-sm"></i>
  <span className="text-amber-400 text-[9px]">Report</span>
@@ -561,7 +561,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {/* Descartar */}
  <button
  onClick={() => setShowDeleteModal(true)}
- className={(theme === 'dark' ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30' : 'bg-red-50 hover:bg-red-100 border-red-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ className={(theme !== 'light' ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30' : 'bg-red-50 hover:bg-red-100 border-red-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
  >
  <i className="fas fa-trash text-red-400 text-sm"></i>
  <span className="text-red-400 text-[9px]">Excluir</span>
@@ -649,13 +649,13 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {showExitModal && (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowExitModal(false)}></div>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 '}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 '}>
  <div className="text-center mb-4">
  <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-3">
  <i className="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-bold font-serif'}>Sair sem salvar?</h3>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-1'}>As imagens geradas serão perdidas</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-base font-bold font-serif'}>Sair sem salvar?</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-1'}>As imagens geradas serão perdidas</p>
  </div>
 
  <div className="flex flex-col gap-2">
@@ -667,13 +667,13 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  </button>
  <button
  onClick={() => confirmExit(false)}
- className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' w-full py-2.5 rounded-xl font-semibold text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' w-full py-2.5 rounded-xl font-semibold text-sm'}
  >
  Sair sem Salvar
  </button>
  <button
  onClick={() => setShowExitModal(false)}
- className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' w-full py-2 text-xs font-medium'}
+ className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' w-full py-2 text-xs font-medium'}
  >
  Cancelar
  </button>
@@ -700,19 +700,19 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
  {showDeleteModal && (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)}></div>
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 '}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' relative z-10 w-full max-w-sm rounded-2xl border p-5 '}>
  <div className="text-center mb-4">
  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-3">
  <i className="fas fa-trash text-red-500 text-xl"></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-bold font-serif'}>Descartar imagens?</h3>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-1'}>Esta ação não pode ser desfeita</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-base font-bold font-serif'}>Descartar imagens?</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-1'}>Esta ação não pode ser desfeita</p>
  </div>
 
  <div className="flex gap-2">
  <button
  onClick={() => setShowDeleteModal(false)}
- className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl font-semibold text-sm'}
+ className={(theme !== 'light' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' flex-1 py-2.5 rounded-xl font-semibold text-sm'}
  >
  Cancelar
  </button>

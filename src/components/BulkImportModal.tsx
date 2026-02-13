@@ -1,3 +1,4 @@
+import type { VizzuTheme } from '../contexts/UIContext';
 import React, { useState, useRef, useCallback } from 'react';
 import { Product, ProductImage } from '../types';
 import { angleToApiField } from '../lib/productConfig';
@@ -8,7 +9,7 @@ interface BulkImportModalProps {
   onImport: (products: Partial<Product>[]) => void;
   onComplete?: () => void;
   userId?: string;
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
 }
 
 type ImportMethod = 'google' | 'xml' | 'zip' | null;
@@ -85,7 +86,7 @@ export function BulkImportModal({ isOpen, onClose, onImport, onComplete, userId,
   const fileInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
 
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const bgCard = isDark ? 'bg-neutral-900' : 'bg-white';
   const bgMuted = isDark ? 'bg-neutral-800' : 'bg-gray-50';
   const bgHover = isDark ? 'hover:bg-neutral-700' : 'hover:bg-gray-100';

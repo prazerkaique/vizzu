@@ -1,11 +1,12 @@
 import React from 'react';
+import type { VizzuTheme } from '../contexts/UIContext';
 
 interface LoadingSkeletonProps {
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ theme = 'dark' }) => {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   return (
     <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (isDark ? 'bg-black' : 'bg-gray-50')}>
@@ -54,11 +55,11 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ theme = 'dark'
 };
 
 // Skeleton para grid de produtos (usado em vários lugares)
-export const ProductGridSkeleton: React.FC<{ theme?: 'dark' | 'light'; count?: number }> = ({
+export const ProductGridSkeleton: React.FC<{ theme?: VizzuTheme; count?: number }> = ({
   theme = 'dark',
   count = 20
 }) => {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3 animate-pulse">
@@ -76,11 +77,11 @@ export const ProductGridSkeleton: React.FC<{ theme?: 'dark' | 'light'; count?: n
 };
 
 // Skeleton para grid de modelos (cards portrait 3/4)
-export const ModelGridSkeleton: React.FC<{ theme?: 'dark' | 'light'; count?: number }> = ({
+export const ModelGridSkeleton: React.FC<{ theme?: VizzuTheme; count?: number }> = ({
   theme = 'dark',
   count = 8
 }) => {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-pulse">

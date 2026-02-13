@@ -5,6 +5,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface ProductCompositionPickerProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface ProductCompositionPickerProps {
   products: Product[];
   excludeProductId: string;
   alreadyAddedIds: string[];
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
 }
 
 function getProductThumb(product: Product): string | null {
@@ -40,7 +41,7 @@ export const ProductCompositionPicker: React.FC<ProductCompositionPickerProps> =
   theme,
 }) => {
   const [search, setSearch] = useState('');
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const filtered = useMemo(() => {
     const available = products.filter(

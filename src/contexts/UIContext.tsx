@@ -3,6 +3,9 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 // Types (mesmos do App.tsx)
 export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
 export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history';
+export type VizzuTheme = 'light' | 'dark' | 'high-contrast';
+
+const VALID_THEMES: VizzuTheme[] = ['light', 'dark', 'high-contrast'];
 
 interface ToastAction {
   label: string;
@@ -17,8 +20,8 @@ interface Toast {
 
 interface UIContextType {
   // Theme
-  theme: 'dark' | 'light';
-  setTheme: React.Dispatch<React.SetStateAction<'dark' | 'light'>>;
+  theme: VizzuTheme;
+  setTheme: React.Dispatch<React.SetStateAction<VizzuTheme>>;
 
   // Navigation
   currentPage: Page;
@@ -53,9 +56,10 @@ const UIContext = createContext<UIContextType | null>(null);
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
   // Theme
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+  const [theme, setTheme] = useState<VizzuTheme>(() => {
     const saved = localStorage.getItem('vizzu_theme');
-    return (saved as 'dark' | 'light') || 'light';
+    if (saved && VALID_THEMES.includes(saved as VizzuTheme)) return saved as VizzuTheme;
+    return 'light';
   });
 
   // Navigation
@@ -120,13 +124,14 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('vizzu_currentPage', currentPage);
   }, [currentPage]);
 
-  // Persist theme + update PWA meta
+  // Persist theme + update PWA meta + toggle HC class
   useEffect(() => {
     localStorage.setItem('vizzu_theme', theme);
     const themeColorMeta = document.querySelector('meta[name="theme-color"]:not([media])') || document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#F8F6F2');
+      themeColorMeta.setAttribute('content', theme === 'light' ? '#F8F6F2' : '#000000');
     }
+    document.documentElement.classList.toggle('theme-hc', theme === 'high-contrast');
   }, [theme]);
 
   // Persist sidebar

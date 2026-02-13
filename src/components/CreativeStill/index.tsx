@@ -17,7 +17,7 @@ import { CreativeStillEditor, CreativeStillGenerateParams } from './CreativeStil
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
 import { ProductHubModal } from '../shared/ProductHubModal';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { CREATIVE_STILL_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -57,7 +57,7 @@ const GENDERS = ['Masculino', 'Feminino', 'Unissex'];
 // ═══════════════════════════════════════════════════════════════
 
 export interface CreativeStillProps {
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
   products: Product[];
   userCredits: number;
   userId?: string;
@@ -159,7 +159,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [visibleWithStills, setVisibleWithStills] = useState(20);
   const [visibleWithoutStills, setVisibleWithoutStills] = useState(20);
 
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const { openViewer } = useImageViewer();
   const { navigateTo, showToast } = useUI();
   const [hubProduct, setHubProduct] = useState<Product | null>(null);

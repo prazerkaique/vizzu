@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { ZoomableImage } from '../ImageViewer';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 
 interface GenerateResult {
   success: boolean;
@@ -30,7 +30,7 @@ export interface ImageEditModalProps {
   onSave: (newImageUrl: string) => Promise<{ success: boolean }>;
   onSaveAsNew?: (newImageUrl: string) => Promise<{ success: boolean }>;
   onDeductEditCredits?: (amount: number) => Promise<{ success: boolean; source?: string }>;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 type ModalMode = 'input' | 'generating' | 'compare';
@@ -87,7 +87,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
   const totalAvailable = editBalance + regularBalance;
   const hasEnoughCredits = totalAvailable >= creditCost;
   const willUseRegular = editBalance < creditCost;
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   // ── Helpers ────────────────────────────────────────────────
 

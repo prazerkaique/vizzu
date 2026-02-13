@@ -13,7 +13,7 @@ import { ImageEditModal } from '../shared/ImageEditModal';
 import { ProductHubModal } from '../shared/ProductHubModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 import { supabase } from '../../services/supabaseClient';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { LOOK_COMPOSER_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -26,7 +26,7 @@ interface LookComposerProps {
  onImport?: () => void;
  currentPlan?: Plan;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
  userId?: string;
  savedModels: SavedModel[];
  onSaveModel?: (model: SavedModel) => void;
@@ -135,7 +135,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onDeductEditCredits,
  setProductForCreation,
 }) => {
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
  const { navigateTo, showToast } = useUI();
  const { shouldShowTour } = useOnboarding();
 
@@ -1663,6 +1663,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   images={downloadModalLook.images}
   theme={theme}
  />
+
  )}
 
  {/* Download Modal — todos os looks (agrupado) */}

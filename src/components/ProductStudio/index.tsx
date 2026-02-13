@@ -8,7 +8,7 @@ import { Product, HistoryLog } from '../../types';
 import { ProductStudioEditor } from './ProductStudioEditor';
 import { Plan } from '../../hooks/useCredits';
 import { ProductHubModal } from '../shared/ProductHubModal';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { PRODUCT_STUDIO_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -22,7 +22,7 @@ interface ProductStudioProps {
  currentPlan?: Plan;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
  onOpenPlanModal?: () => void;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
  userId?: string;
  // Estados de geração em background
  isGenerating?: boolean;
@@ -306,7 +306,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  // Página 1 - Lista de produtos
  return (
  <div
- className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? 'bg-black' : 'bg-gray-50')}
+ className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme !== 'light' ? 'bg-black' : 'bg-gray-50')}
  style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 1rem))' }}
  >
  <div className="max-w-7xl mx-auto">
@@ -319,30 +319,30 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {onBack && (
  <button
  onClick={onBack}
- className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (theme === 'dark' ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}
+ className={'w-10 h-10 rounded-xl flex items-center justify-center transition-all ' + (theme !== 'light' ? 'bg-white/10 backdrop-blur-xl border border-white/20 text-neutral-300 hover:text-white hover:bg-white/15 shadow-lg' : 'bg-white/60 backdrop-blur-xl border border-gray-200/60 text-gray-500 hover:text-gray-700 hover:bg-white/80 shadow-sm')}
  >
  <i className="fas fa-arrow-left text-sm"></i>
  </button>
  )}
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas fa-cube text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas fa-cube text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
  <div className="flex items-center gap-2">
- <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Vizzu Product Studio®</h1>
+ <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Vizzu Product Studio®</h1>
  {currentPlan && (
- <span className={(theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF9F43]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
+ <span className={(theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF9F43]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-2 py-0.5 text-[9px] font-medium rounded-full uppercase tracking-wide'}>
  {currentPlan.name}
  </span>
  )}
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Fotos profissionais em fundo studio</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Fotos profissionais em fundo studio</p>
  </div>
  </div>
  <div className="flex items-center gap-2">
- <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme === 'dark' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
+ <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (theme !== 'light' ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
  <i className="fas fa-coins text-[#FF9F43] text-xs"></i>
- <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
+ <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
  </div>
  {pendingProducts.length > 0 && (
  <button
@@ -359,18 +359,18 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* CARD EXPLICATIVO - Logo abaixo do header */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div data-tour="studio-info-card" className={(theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white/60 border-gray-200/60 shadow-sm') + ' rounded-xl p-4 border mb-4 backdrop-blur-xl'}>
+ <div data-tour="studio-info-card" className={(theme !== 'light' ? 'bg-white/5 border-white/10' : 'bg-white/60 border-gray-200/60 shadow-sm') + ' rounded-xl p-4 border mb-4 backdrop-blur-xl'}>
  <div className="flex items-start gap-4">
- <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-white/10' : 'bg-gray-100')}>
- <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-camera text-lg'}></i>
+ <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme !== 'light' ? 'bg-white/10' : 'bg-gray-100')}>
+ <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-camera text-lg'}></i>
  </div>
  <div className="flex-1">
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fotos profissionais de produto</h3>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fotos profissionais de produto</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed'}>
  Gere fotos do seu produto em múltiplos ângulos com fundo cinza neutro de estúdio. Ideal para e-commerce, catálogos e marketplaces.
  </p>
  <div className="flex items-center gap-3 mt-2">
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
  <i className="fas fa-coins text-[#FF9F43] mr-1"></i>1 crédito por foto
  </span>
  </div>
@@ -382,7 +382,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* SEARCH BAR */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  <div data-tour="studio-search" className="relative mb-4">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
  <input
  type="text"
  id="product-studio-search"
@@ -390,12 +390,12 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  placeholder="Buscar produtos..."
  value={searchTerm}
  onChange={(e) => setSearchTerm(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 ') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-gray-400' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 ') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none'}
  />
  {searchTerm && (
  <button
  onClick={() => setSearchTerm('')}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' absolute right-3 top-1/2 -translate-y-1/2'}
+ className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' absolute right-3 top-1/2 -translate-y-1/2'}
  >
  <i className="fas fa-times text-xs"></i>
  </button>
@@ -405,21 +405,21 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* FILTERS */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div data-tour="studio-filters" className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border mb-4'}>
+ <div data-tour="studio-filters" className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border mb-4'}>
  <button
  onClick={() => setShowFilters(!showFilters)}
  className="w-full p-3 flex items-center justify-between"
  >
  <div className="flex items-center gap-2">
- <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-filter text-xs'}></i>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar e ordenar</span>
+ <i className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-filter text-xs'}></i>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] font-medium uppercase tracking-wide'}>Filtrar e ordenar</span>
  {hasActiveFilters && (
  <span className="px-1.5 py-0.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] rounded-full">{
  [filterCategory, filterCollection, filterColor, filterGender, sortBy !== 'recent' ? sortBy : ''].filter(Boolean).length
  }</span>
  )}
  </div>
- <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-' + (showFilters ? 'up' : 'down') + ' text-xs'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-chevron-' + (showFilters ? 'up' : 'down') + ' text-xs'}></i>
  </button>
 
  {showFilters && (
@@ -437,13 +437,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
  {/* Categoria Principal */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria</label>
  <select
  id="ps-filter-category-group"
  name="filterCategoryGroup"
  value={filterCategoryGroup}
  onChange={(e) => { setFilterCategoryGroup(e.target.value); setFilterCategory(''); }}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
  >
  <option value="">Todas</option>
  {CATEGORY_GROUPS.map(group => (
@@ -454,14 +454,14 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
  {/* Subcategoria (condicional) */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Subcategoria</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Subcategoria</label>
  <select
  id="ps-filter-subcategory"
  name="filterSubcategory"
  value={filterCategory}
  onChange={(e) => setFilterCategory(e.target.value)}
  disabled={!filterCategoryGroup}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white disabled:opacity-50' : 'bg-gray-50 border-gray-200 text-gray-900 disabled:opacity-50') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white disabled:opacity-50' : 'bg-gray-50 border-gray-200 text-gray-900 disabled:opacity-50') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
  >
  <option value="">Todas</option>
  {filterCategoryGroup && CATEGORY_GROUPS.find(g => g.id === filterCategoryGroup)?.items.map(cat => (
@@ -472,13 +472,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
  {/* Coleção */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Coleção</label>
  <select
  id="ps-filter-collection"
  name="filterCollection"
  value={filterCollection}
  onChange={(e) => setFilterCollection(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
  >
  <option value="">Todas</option>
  {COLLECTIONS.map(col => (
@@ -489,13 +489,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
  {/* Cor */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
  <select
  id="ps-filter-color"
  name="filterColor"
  value={filterColor}
  onChange={(e) => setFilterColor(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
  >
  <option value="">Todas</option>
  {COLORS.map(color => (
@@ -506,13 +506,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
  {/* Gênero */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Gênero</label>
  <select
  id="ps-filter-gender"
  name="filterGender"
  value={filterGender}
  onChange={(e) => setFilterGender(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
  >
  <option value="">Todos</option>
  {GENDERS.map(gender => (
@@ -523,13 +523,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
 
  {/* Ordenar */}
  <div>
- <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Ordenar</label>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Ordenar</label>
  <select
  id="ps-sort"
  name="sortBy"
  value={sortBy}
  onChange={(e) => setSortBy(e.target.value as 'recent' | 'a-z' | 'z-a')}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-2.5 py-2 border rounded-lg text-xs'}
  >
  <option value="recent">Recentes</option>
  <option value="a-z">A → Z</option>
@@ -544,35 +544,35 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* BANNER - Seus Produtos + Status de Otimização */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4 mb-4'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4 mb-4'}>
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-6">
  {/* Total */}
  <div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Total</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>{filteredProducts.length}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Total</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-2xl font-bold'}>{filteredProducts.length}</p>
  </div>
  {/* Divider */}
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200') + ' w-px h-10'}></div>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200') + ' w-px h-10'}></div>
  {/* Otimizados */}
  <div>
- <p className={(theme === 'dark' ? 'text-green-400' : 'text-green-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
+ <p className={(theme !== 'light' ? 'text-green-400' : 'text-green-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
  <i className="fas fa-check text-[8px]"></i> Otimizados
  </p>
- <p className={(theme === 'dark' ? 'text-green-400' : 'text-green-600') + ' text-2xl font-bold'}>{optimizedProducts.length}</p>
+ <p className={(theme !== 'light' ? 'text-green-400' : 'text-green-600') + ' text-2xl font-bold'}>{optimizedProducts.length}</p>
  </div>
  {/* Pendentes */}
  <div>
- <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-orange-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
+ <p className={(theme !== 'light' ? 'text-[#FF9F43]' : 'text-orange-600') + ' text-[10px] uppercase tracking-wide flex items-center gap-1'}>
  <i className="fas fa-clock text-[8px]"></i> Pendentes
  </p>
- <p className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-orange-600') + ' text-2xl font-bold'}>{pendingProducts.length}</p>
+ <p className={(theme !== 'light' ? 'text-[#FF9F43]' : 'text-orange-600') + ' text-2xl font-bold'}>{pendingProducts.length}</p>
  </div>
  </div>
  {currentPlan && (
  <div className="text-right">
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
- <span className={(theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF9F43]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] uppercase tracking-wide'}>Plano</p>
+ <span className={(theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/20 to-[#FF9F43]/20 text-[#FF9F43]' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white') + ' px-3 py-1 text-sm font-medium rounded-full'}>
  {currentPlan.name}
  </span>
  </div>
@@ -596,19 +596,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  className="w-full flex items-center justify-between mb-3 group"
  >
  <div className="flex items-center gap-2">
- <div className={(theme === 'dark' ? 'bg-[#FF9F43]/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas fa-clock text-[10px]'}></i>
+ <div className={(theme !== 'light' ? 'bg-[#FF9F43]/20' : 'bg-orange-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+ <i className={(theme !== 'light' ? 'text-[#FF9F43]' : 'text-[#FF9F43]') + ' fas fa-clock text-[10px]'}></i>
  </div>
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+ <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
  Pendentes de otimização
  </h2>
- <span className={(theme === 'dark' ? 'bg-[#FF9F43]/20 text-[#FF9F43]' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+ <span className={(theme !== 'light' ? 'bg-[#FF9F43]/20 text-[#FF9F43]' : 'bg-orange-100 text-orange-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
  {pendingProducts.length > visiblePending
  ? `${Math.min(visiblePending, pendingProducts.length)} de ${pendingProducts.length}`
  : pendingProducts.length}
  </span>
  </div>
- <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+ <div className={(theme !== 'light' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
  <i className={'fas fa-chevron-' + (pendingCollapsed ? 'down' : 'up') + ' text-xs'}></i>
  </div>
  </button>
@@ -622,9 +622,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  key={product.id}
  data-product-id={product.id}
  onClick={() => handleSelectProduct(product)}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-gray-400' : 'bg-white border-gray-200 hover:border-gray-400 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 hover:border-gray-400' : 'bg-white border-gray-200 hover:border-gray-400 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
@@ -633,10 +633,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  </div>
  </div>
  <div className="p-2.5">
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
  {product.category && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
  )}
  </div>
  </div>
@@ -650,7 +650,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  <div className="flex justify-center mt-4">
  <button
  onClick={() => setVisiblePending(prev => prev + PRODUCTS_PER_PAGE)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 ') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 ') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
  >
  <i className="fas fa-chevron-down text-xs"></i>
  Carregar mais ({pendingProducts.length - visiblePending} restantes)
@@ -671,19 +671,19 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  className="w-full flex items-center justify-between mb-3 group"
  >
  <div className="flex items-center gap-2">
- <div className={(theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
- <i className={(theme === 'dark' ? 'text-green-400' : 'text-green-500') + ' fas fa-check text-[10px]'}></i>
+ <div className={(theme !== 'light' ? 'bg-green-500/20' : 'bg-green-100') + ' w-6 h-6 rounded-lg flex items-center justify-center'}>
+ <i className={(theme !== 'light' ? 'text-green-400' : 'text-green-500') + ' fas fa-check text-[10px]'}></i>
  </div>
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
+ <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>
  Produtos Otimizados
  </h2>
- <span className={(theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
+ <span className={(theme !== 'light' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') + ' px-2 py-0.5 text-[10px] font-medium rounded-full'}>
  {optimizedProducts.length > visibleOptimized
  ? `${Math.min(visibleOptimized, optimizedProducts.length)} de ${optimizedProducts.length}`
  : optimizedProducts.length}
  </span>
  </div>
- <div className={(theme === 'dark' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
+ <div className={(theme !== 'light' ? 'text-neutral-500 group-hover:text-white' : 'text-gray-400 group-hover:text-gray-600') + ' transition-colors'}>
  <i className={'fas fa-chevron-' + (optimizedCollapsed ? 'down' : 'up') + ' text-xs'}></i>
  </div>
  </button>
@@ -698,9 +698,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  key={product.id}
  data-product-id={product.id}
  onClick={() => handleSelectProduct(product)}
- className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-green-500/50' : 'bg-white border-gray-200 hover:border-green-300 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+ className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 hover:border-green-500/50' : 'bg-white border-gray-200 hover:border-green-300 ') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  {/* Tag Otimizado */}
  <div className="absolute top-2 left-2 px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] font-bold rounded-full flex items-center gap-1 ">
@@ -725,10 +725,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  </div>
  </div>
  <div className="p-2.5">
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
  {product.category && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
  )}
  </div>
  </div>
@@ -742,7 +742,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  <div className="flex justify-center mt-4">
  <button
  onClick={() => setVisibleOptimized(prev => prev + PRODUCTS_PER_PAGE)}
- className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 ') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 ') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
  >
  <i className="fas fa-chevron-down text-xs"></i>
  Carregar mais ({optimizedProducts.length - visibleOptimized} restantes)
@@ -753,20 +753,20 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  )}
  </>
  ) : (
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-8 text-center'}>
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-[#FF9F43]') + ' fas fa-search text-xl'}></i>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-8 text-center'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-[#FF9F43]') + ' fas fa-search text-xl'}></i>
  </div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>
  {hasActiveFilters ? 'Nenhum produto encontrado' : 'Nenhum produto'}
  </h3>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
  {hasActiveFilters ? 'Tente ajustar os filtros' : 'Importe produtos para começar'}
  </p>
  {hasActiveFilters ? (
  <button
  onClick={clearFilters}
- className={(theme === 'dark' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
+ className={(theme !== 'light' ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200') + ' px-4 py-2 rounded-lg font-medium text-xs transition-colors'}
  >
  Limpar filtros
  </button>
@@ -788,16 +788,16 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {showProductModal && (
  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-2xl border w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'}>
  {/* Header */}
- <div className={(theme === 'dark' ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
+ <div className={(theme !== 'light' ? 'border-neutral-800' : 'border-gray-200') + ' border-b p-4 flex items-center justify-between'}>
  <div>
- <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Selecione o produto para otimizar</h2>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Produtos ainda não otimizados ({filteredPendingProducts.length})</p>
+ <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>Selecione o produto para otimizar</h2>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Produtos ainda não otimizados ({filteredPendingProducts.length})</p>
  </div>
  <button
  onClick={() => setShowProductModal(false)}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-800/50 transition-colors'}
  >
  <i className="fas fa-times"></i>
  </button>
@@ -806,7 +806,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* Filtros */}
  <div className="p-4 flex flex-col sm:flex-row gap-3">
  <div className="flex-1 relative">
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
  <input
  type="text"
  id="ps-modal-search"
@@ -814,7 +814,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  placeholder="Buscar produto..."
  value={productSearchTerm}
  onChange={(e) => setProductSearchTerm(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-gray-400'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white placeholder-neutral-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400') + ' w-full pl-10 pr-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:border-gray-400'}
  autoFocus
  />
  </div>
@@ -823,7 +823,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  name="productModalCategory"
  value={productFilterCategoryGroup}
  onChange={(e) => { setProductFilterCategoryGroup(e.target.value); setProductFilterCategory(''); }}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
  >
  <option value="">Categoria</option>
  {CATEGORY_GROUPS.map(group => (
@@ -836,7 +836,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  name="productModalSubcategory"
  value={productFilterCategory}
  onChange={(e) => setProductFilterCategory(e.target.value)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' px-4 py-2.5 border rounded-xl text-sm sm:w-40'}
  >
  <option value="">Subcategoria</option>
  {CATEGORY_GROUPS.find(g => g.id === productFilterCategoryGroup)?.items.map(cat => (
@@ -856,9 +856,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  <div
  key={product.id}
  onClick={() => handleSelectProductFromModal(product)}
- className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-gray-400' : 'bg-gray-50 border-gray-200 hover:border-gray-400') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-gray-400' : 'bg-gray-50 border-gray-200 hover:border-gray-400') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
- <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
@@ -867,10 +867,10 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  </div>
  </div>
  <div className="p-2.5">
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate mt-0.5'}>{product.name}</p>
  {product.category && (
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] mt-1'}>{product.category}</p>
  )}
  </div>
  </div>
@@ -879,13 +879,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  </div>
  ) : (
  <div className="text-center py-12">
- <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
- <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-check-circle text-xl'}></i>
+ <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+ <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-check-circle text-xl'}></i>
  </div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm mb-1'}>
  {productSearchTerm || productFilterCategoryGroup || productFilterCategory ? 'Nenhum produto encontrado' : 'Todos os produtos estão otimizados!'}
  </p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
  {productSearchTerm || productFilterCategoryGroup || productFilterCategory ? 'Tente ajustar os filtros' : 'Importe novos produtos para continuar'}
  </p>
  </div>

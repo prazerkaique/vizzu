@@ -11,7 +11,7 @@ import { OptimizedImage } from '../OptimizedImage';
 import { getOptimizedImageUrl } from '../../utils/imageUrl';
 import { ZoomableImage } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
@@ -42,7 +42,7 @@ interface LookComposerResultProps {
  onDelete: () => void;
  onBack: () => void;
  onNewLook?: () => void; // Criar novo look com o mesmo produto
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
  editBalance?: number;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  onImageUpdated?: (view: 'front' | 'back', newUrl: string) => void;
@@ -122,7 +122,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
  const imageContainerRef = useRef<HTMLDivElement>(null);
 
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
 
  // Calcular tempo desde a geração
  useEffect(() => {

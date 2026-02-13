@@ -534,12 +534,12 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
     <div className="max-w-5xl mx-auto">
      <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
-       <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
-        <i className={'fas fa-users text-sm ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+       <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+        <i className={'fas fa-users text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
        </div>
        <div>
-        <h1 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Clientes</h1>
-        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seus clientes</p>
+        <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Clientes</h1>
+        <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seus clientes</p>
        </div>
       </div>
       <button onClick={() => setShowCreateClient(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
@@ -548,78 +548,78 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
      </div>
 
      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
-       <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.length}</p>
-       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Total</p>
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
+       <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.length}</p>
+       <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Total</p>
       </div>
-      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
-       <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.filter(c => c.status === 'active').length}</p>
-       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Ativos</p>
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
+       <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.filter(c => c.status === 'active').length}</p>
+       <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Ativos</p>
       </div>
-      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
-       <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clientsWithProvador.length}</p>
-       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Provador IA</p>
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
+       <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clientsWithProvador.length}</p>
+       <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Provador IA</p>
       </div>
-      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
-       <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.filter(c => c.status === 'vip').length}</p>
-       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>VIP</p>
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl p-3 border'}>
+       <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xl font-bold'}>{clients.filter(c => c.status === 'vip').length}</p>
+       <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>VIP</p>
       </div>
      </div>
 
      {clients.length > 0 && (
       <div className="mb-4">
        <div className="relative">
-        <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
-        <input type="text" id="client-search" name="clientSearch" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-gray-200 text-gray-900 ') + ' w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm'} />
+        <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
+        <input type="text" id="client-search" name="clientSearch" placeholder="Buscar por nome, WhatsApp ou e-mail..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-gray-200 text-gray-900 ') + ' w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm'} />
        </div>
       </div>
      )}
 
      {clients.length === 0 ? (
-      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-8 text-center'}>
-       <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
-        <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-users text-xl'}></i>
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-8 text-center'}>
+       <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-purple-100') + ' w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3'}>
+        <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-purple-400') + ' fas fa-users text-xl'}></i>
        </div>
-       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum cliente cadastrado</h3>
-       <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Adicione clientes para usar o Vizzu Provador®</p>
+       <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium mb-1'}>Nenhum cliente cadastrado</h3>
+       <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Adicione clientes para usar o Vizzu Provador®</p>
        <button onClick={() => setShowCreateClient(true)} className="px-4 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
         <i className="fas fa-plus mr-1.5"></i>Adicionar Cliente
        </button>
       </div>
      ) : (
-      <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
-       <div className={'divide-y ' + (theme === 'dark' ? 'divide-neutral-800' : 'divide-gray-100')}>
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border overflow-hidden'}>
+       <div className={'divide-y ' + (theme !== 'light' ? 'divide-neutral-800' : 'divide-gray-100')}>
         {filteredClients.map(client => (
-         <div key={client.id} className={(theme === 'dark' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => setShowClientDetail(client)}>
+         <div key={client.id} className={(theme !== 'light' ? 'hover:bg-neutral-800/50' : 'hover:bg-gray-50') + ' p-3 transition-colors cursor-pointer'} onClick={() => setShowClientDetail(client)}>
           <div className="flex items-center gap-3">
            <div className="relative">
             {getClientPhoto(client) ? (
              <OptimizedImage src={getClientPhoto(client)} alt={client.firstName} className="w-10 h-10 rounded-full" size="thumb" />
             ) : (
-             <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
-              <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
+             <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-10 h-10 rounded-full flex items-center justify-center'}>
+              <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-medium'}>{client.firstName[0]}{client.lastName[0]}</span>
              </div>
             )}
             {client.hasProvadorIA && (
-             <div className={'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
-              <i className={'fas fa-camera text-[6px] ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+             <div className={'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+              <i className={'fas fa-camera text-[6px] ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
              </div>
             )}
            </div>
            <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-             <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{client.firstName} {client.lastName}</h3>
+             <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{client.firstName} {client.lastName}</h3>
              {client.photos && client.photos.length > 1 && (
-              <span className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-purple-100 text-purple-600') + ' text-[8px] px-1.5 py-0.5 rounded-full'}>{client.photos.length} fotos</span>
+              <span className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-purple-100 text-purple-600') + ' text-[8px] px-1.5 py-0.5 rounded-full'}>{client.photos.length} fotos</span>
              )}
             </div>
-            <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(client.whatsapp)}</p>
+            <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(client.whatsapp)}</p>
            </div>
            <div className="flex items-center gap-1.5">
-            <button onClick={(e) => { e.stopPropagation(); startEditingClient(client); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-100 hover:bg-gray-200') + ' w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400' : 'text-gray-500')} title="Editar">
+            <button onClick={(e) => { e.stopPropagation(); startEditingClient(client); }} className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-gray-300' : 'bg-gray-100 hover:bg-gray-200') + ' w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme !== 'light' ? 'text-neutral-400' : 'text-gray-500')} title="Editar">
              <i className="fas fa-pen text-xs"></i>
             </button>
-            <button onClick={(e) => { e.stopPropagation(); if (confirm('Excluir cliente ' + client.firstName + ' ' + client.lastName + '?')) handleDeleteClient(client.id); }} className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-red-500/20' : 'bg-gray-100 hover:bg-red-100') + ' w-8 h-8 rounded-lg text-red-500 flex items-center justify-center transition-colors'} title="Excluir">
+            <button onClick={(e) => { e.stopPropagation(); if (confirm('Excluir cliente ' + client.firstName + ' ' + client.lastName + '?')) handleDeleteClient(client.id); }} className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-red-500/20' : 'bg-gray-100 hover:bg-red-100') + ' w-8 h-8 rounded-lg text-red-500 flex items-center justify-center transition-colors'} title="Excluir">
              <i className="fas fa-trash text-xs"></i>
             </button>
            </div>
@@ -635,20 +635,20 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
    {/* CREATE CLIENT MODAL */}
    {showCreateClient && (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }}>
-     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
+     <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pt-3 pb-1 flex justify-center">
-       <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+       <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
       </div>
-      <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
-       <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
-       <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' hidden md:flex w-7 h-7 rounded-full items-center justify-center transition-colors'}>
+      <div className={'sticky top-0 border-b px-4 py-3 flex items-center justify-between z-10 ' + (theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
+       <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Novo Cliente</h3>
+       <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' hidden md:flex w-7 h-7 rounded-full items-center justify-center transition-colors'}>
         <i className="fas fa-times text-xs"></i>
        </button>
       </div>
       <div className="p-4 space-y-4">
        <div>
-        <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 block'}>
+        <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 block'}>
          <i className="fas fa-camera text-[#FF6B6B] mr-1"></i>Fotos para Provador IA
         </label>
         <div className="grid grid-cols-3 gap-2">
@@ -660,7 +660,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
              onClick={() => { if (existingPhoto) return; setShowClientPhotoSourcePicker({ photoType: photoType.id, mode: 'create' }); }}
              onDragOver={handleDragOver}
              onDrop={(e) => handleClientPhotoDrop(e, photoType.id)}
-             className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#FF9F43]/50 bg-[#FF9F43]/10' : (theme === 'dark' ? 'border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'border-gray-300 hover:border-neutral-500 hover:bg-gray-50'))}
+             className={'relative aspect-square rounded-lg overflow-hidden border border-dashed transition-all cursor-pointer ' + (existingPhoto ? 'border-[#FF9F43]/50 bg-[#FF9F43]/10' : (theme !== 'light' ? 'border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'border-gray-300 hover:border-neutral-500 hover:bg-gray-50'))}
             >
              {existingPhoto ? (
               <>
@@ -669,7 +669,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] py-0.5 font-medium"><i className="fas fa-check mr-0.5"></i>{photoType.label}</div>
               </>
              ) : (
-              <div className={(theme === 'dark' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
+              <div className={(theme !== 'light' ? 'text-neutral-600' : 'text-purple-400') + ' flex flex-col items-center justify-center h-full'}>
                <i className={'fas ' + photoType.icon + ' text-lg mb-1'}></i>
                <span className="text-[9px] font-medium">{photoType.label}</span>
                <span className="text-[7px] opacity-60 mt-0.5">ou arraste</span>
@@ -695,46 +695,46 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        </div>
        <div className="grid grid-cols-2 gap-3">
         <div>
-         <label htmlFor="client-firstName" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Nome *</label>
-         <input type="text" id="client-firstName" name="firstName" autoComplete="given-name" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+         <label htmlFor="client-firstName" className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Nome *</label>
+         <input type="text" id="client-firstName" name="firstName" autoComplete="given-name" value={newClient.firstName} onChange={(e) => setNewClient(prev => ({ ...prev, firstName: e.target.value }))} placeholder="Maria" className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
         </div>
         <div>
-         <label htmlFor="client-lastName" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Sobrenome *</label>
-         <input type="text" id="client-lastName" name="lastName" autoComplete="family-name" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
+         <label htmlFor="client-lastName" className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Sobrenome *</label>
+         <input type="text" id="client-lastName" name="lastName" autoComplete="family-name" value={newClient.lastName} onChange={(e) => setNewClient(prev => ({ ...prev, lastName: e.target.value }))} placeholder="Silva" className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'} />
         </div>
        </div>
        <div>
-        <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Gênero *</label>
+        <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Gênero *</label>
         <div className="flex gap-2">
-         <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-500' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-neutral-500')}`}>
+         <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'female' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'female' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white' : (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-500' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-neutral-500')}`}>
           <i className="fas fa-venus mr-1.5"></i>Feminino
          </button>
-         <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'male' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'male' ? 'bg-blue-500 text-white' : (theme === 'dark' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-blue-400')}`}>
+         <button type="button" onClick={() => setNewClient(prev => ({ ...prev, gender: 'male' }))} className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${newClient.gender === 'male' ? 'bg-blue-500 text-white' : (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-blue-500/50' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:border-blue-400')}`}>
           <i className="fas fa-mars mr-1.5"></i>Masculino
          </button>
         </div>
        </div>
        <div>
-        <label htmlFor="client-whatsapp" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>WhatsApp *</label>
+        <label htmlFor="client-whatsapp" className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>WhatsApp *</label>
         <div className="relative">
          <i className="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm"></i>
-         <input type="tel" id="client-whatsapp" name="whatsapp" autoComplete="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
+         <input type="tel" id="client-whatsapp" name="whatsapp" autoComplete="tel" value={newClient.whatsapp} onChange={(e) => setNewClient(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
         </div>
        </div>
        <div>
-        <label htmlFor="client-email" className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>E-mail (opcional)</label>
+        <label htmlFor="client-email" className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>E-mail (opcional)</label>
         <div className="relative">
-         <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
-         <input type="email" id="client-email" name="email" autoComplete="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
+         <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
+         <input type="email" id="client-email" name="email" autoComplete="email" value={newClient.email} onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))} placeholder="maria@email.com" className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-sm'} />
         </div>
        </div>
        <div>
-        <label className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Observações (opcional)</label>
-        <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'} />
+        <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1 block'}>Observações (opcional)</label>
+        <textarea value={newClient.notes} onChange={(e) => setNewClient(prev => ({ ...prev, notes: e.target.value }))} placeholder="Preferências, tamanhos, etc..." rows={2} className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm resize-none'} />
        </div>
        {/* Botões de ação */}
        <div className="flex gap-2 pt-2">
-        <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-gray-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-3 rounded-xl font-medium text-sm transition-colors md:hidden'}>
+        <button onClick={() => { setShowCreateClient(false); setNewClient({ firstName: '', lastName: '', whatsapp: '', email: '', gender: '', photos: [], notes: '' }); }} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-300 hover:bg-gray-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + ' flex-1 py-3 rounded-xl font-medium text-sm transition-colors md:hidden'}>
          Cancelar
         </button>
         <button onClick={handleCreateClient} disabled={!newClient.firstName || !newClient.lastName || !newClient.whatsapp || isSavingClient || processingClientPhoto} className="flex-1 md:w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed">
@@ -753,34 +753,34 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
    {/* CLIENT PROFILE CARD */}
    {showClientDetail && (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowClientDetail(null)}>
-     <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md overflow-hidden flex flex-col safe-area-bottom-sheet'} style={{ maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
+     <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-md overflow-hidden flex flex-col safe-area-bottom-sheet'} style={{ maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
       {/* Drag handle - mobile */}
       <div className="md:hidden pt-3 pb-1 flex justify-center">
-       <div className={(theme === 'dark' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
+       <div className={(theme !== 'light' ? 'bg-neutral-600' : 'bg-gray-300') + ' w-10 h-1 rounded-full'}></div>
       </div>
       {/* Header */}
-      <div className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' px-4 py-5 text-center relative border-b'}>
-       <button onClick={() => setShowClientDetail(null)} className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-400 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700') + ' absolute top-3 right-3 w-7 h-7 rounded-full hidden md:flex items-center justify-center transition-colors'}>
+      <div className={(theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' px-4 py-5 text-center relative border-b'}>
+       <button onClick={() => setShowClientDetail(null)} className={(theme !== 'light' ? 'bg-neutral-700 text-neutral-400 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700') + ' absolute top-3 right-3 w-7 h-7 rounded-full hidden md:flex items-center justify-center transition-colors'}>
         <i className="fas fa-times text-xs"></i>
        </button>
        <div className="relative inline-block">
         {getClientPhoto(showClientDetail) ? (
-         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className={'w-16 h-16 rounded-full border-2 mx-auto ' + (theme === 'dark' ? 'border-neutral-600' : 'border-gray-300')} size="thumb" />
+         <OptimizedImage src={getClientPhoto(showClientDetail)} alt={showClientDetail.firstName} className={'w-16 h-16 rounded-full border-2 mx-auto ' + (theme !== 'light' ? 'border-neutral-600' : 'border-gray-300')} size="thumb" />
         ) : (
-         <div className={(theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-16 h-16 rounded-full flex items-center justify-center mx-auto'}>
-          <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xl font-medium'}>{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
+         <div className={(theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200') + ' w-16 h-16 rounded-full flex items-center justify-center mx-auto'}>
+          <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xl font-medium'}>{showClientDetail.firstName[0]}{showClientDetail.lastName[0]}</span>
          </div>
         )}
         {showClientDetail.hasProvadorIA && (
-         <div className={'absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center backdrop-blur-xl border-2 ' + (theme === 'dark' ? 'bg-white/10 border-white/15' : 'bg-white/60 border-gray-200/60 shadow-sm')}>
-          <i className={'fas fa-camera text-[8px] ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+         <div className={'absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center backdrop-blur-xl border-2 ' + (theme !== 'light' ? 'bg-white/10 border-white/15' : 'bg-white/60 border-gray-200/60 shadow-sm')}>
+          <i className={'fas fa-camera text-[8px] ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
          </div>
         )}
        </div>
-       <h2 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mt-2'}>{showClientDetail.firstName} {showClientDetail.lastName}</h2>
-       <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(showClientDetail.whatsapp)}</p>
+       <h2 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-base font-semibold mt-2'}>{showClientDetail.firstName} {showClientDetail.lastName}</h2>
+       <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>{formatWhatsApp(showClientDetail.whatsapp)}</p>
        <div className="flex flex-wrap gap-1.5 justify-center mt-2">
-        <span className={'px-2 py-1 rounded-full text-[10px] font-medium ' + (showClientDetail.status === 'active' ? 'bg-green-500/20 text-green-400' : showClientDetail.status === 'vip' ? 'bg-amber-500/20 text-amber-400' : (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
+        <span className={'px-2 py-1 rounded-full text-[10px] font-medium ' + (showClientDetail.status === 'active' ? 'bg-green-500/20 text-green-400' : showClientDetail.status === 'vip' ? 'bg-amber-500/20 text-amber-400' : (theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
          {showClientDetail.status === 'active' ? 'Ativo' : showClientDetail.status === 'vip' ? 'VIP' : 'Inativo'}
         </span>
         {showClientDetail.hasProvadorIA && (
@@ -796,7 +796,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        {/* Fotos Cadastradas */}
        {showClientDetail.photos && showClientDetail.photos.length > 0 && (
         <div>
-         <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2'}>Fotos Cadastradas</p>
+         <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2'}>Fotos Cadastradas</p>
          <div className="flex gap-2">
           {showClientDetail.photos.map(photo => (
            <div key={photo.type} className="relative">
@@ -810,31 +810,31 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
 
        {/* Email */}
        {showClientDetail.email && (
-        <div className={(theme === 'dark' ? 'bg-neutral-800 ' : 'bg-gray-100 ') + 'flex items-center gap-2.5 p-2.5 rounded-lg'}>
-         <i className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-envelope text-xs'}></i>
-         <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs'}>{showClientDetail.email}</span>
+        <div className={(theme !== 'light' ? 'bg-neutral-800 ' : 'bg-gray-100 ') + 'flex items-center gap-2.5 p-2.5 rounded-lg'}>
+         <i className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' fas fa-envelope text-xs'}></i>
+         <span className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs'}>{showClientDetail.email}</span>
         </div>
        )}
 
        {/* Observações */}
        {showClientDetail.notes && (
-        <div className={(theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100') + ' p-2.5 rounded-lg'}>
-         <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1'}>Observações</p>
-         <p className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs'}>{showClientDetail.notes}</p>
+        <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' p-2.5 rounded-lg'}>
+         <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-1'}>Observações</p>
+         <p className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-600') + ' text-xs'}>{showClientDetail.notes}</p>
         </div>
        )}
 
        {/* Looks Gallery */}
        <div>
-        <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1'}>
+        <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] font-medium uppercase tracking-wide mb-2 flex items-center gap-1'}>
          <i className="fas fa-images text-[#FF6B6B]"></i>
          Looks Gerados {!loadingClientLooks && `(${clientDetailLooks.length})`}
         </p>
 
         {loadingClientLooks ? (
          <div className="flex items-center justify-center py-6">
-          <div className={(theme === 'dark' ? 'border-neutral-600' : 'border-gray-300') + ' w-5 h-5 border-2 rounded-full animate-spin border-t-transparent'}></div>
-          <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs ml-2'}>Carregando looks...</span>
+          <div className={(theme !== 'light' ? 'border-neutral-600' : 'border-gray-300') + ' w-5 h-5 border-2 rounded-full animate-spin border-t-transparent'}></div>
+          <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs ml-2'}>Carregando looks...</span>
          </div>
         ) : clientDetailLooks.length > 0 ? (
          <div className="space-y-3">
@@ -844,7 +844,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
            const totalPrice = items.reduce((sum, it) => sum + (it.price || 0), 0);
 
            return (
-            <div key={look.id} className={(theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-xl border overflow-hidden'}>
+            <div key={look.id} className={(theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700/50' : 'bg-gray-50 border-gray-200') + ' rounded-xl border overflow-hidden'}>
              <div className="flex">
               {/* Look Image */}
               <div className="w-28 flex-shrink-0">
@@ -864,9 +864,9 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
                  <div className="space-y-1">
                   {items.map((item, idx) => (
                    <div key={idx} className="flex items-center justify-between gap-1">
-                    <span className={(theme === 'dark' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] truncate'}>{item.name}</span>
+                    <span className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' text-[10px] truncate'}>{item.name}</span>
                     {item.price ? (
-                     <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] flex-shrink-0'}>
+                     <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] flex-shrink-0'}>
                       R$ {item.price.toFixed(2).replace('.', ',')}
                      </span>
                     ) : null}
@@ -874,17 +874,17 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
                   ))}
                  </div>
                 ) : (
-                 <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] italic'}>Sem itens detalhados</p>
+                 <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] italic'}>Sem itens detalhados</p>
                 )}
                 {totalPrice > 0 && (
-                 <div className={'mt-1.5 pt-1.5 border-t ' + (theme === 'dark' ? 'border-neutral-700' : 'border-gray-200')}>
+                 <div className={'mt-1.5 pt-1.5 border-t ' + (theme !== 'light' ? 'border-neutral-700' : 'border-gray-200')}>
                   <span className="text-[10px] font-semibold text-[#FF6B6B]">Total: R$ {totalPrice.toFixed(2).replace('.', ',')}</span>
                  </div>
                 )}
                </div>
                {/* Actions Row */}
                <div className="flex items-center justify-between mt-2">
-                <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>
+                <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px]'}>
                  {new Date(look.createdAt).toLocaleDateString('pt-BR')}
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -897,7 +897,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
                  </button>
                  <button
                   onClick={() => openViewer(look.imageUrl, { alt: 'Look' })}
-                  className={(theme === 'dark' ? 'bg-neutral-700/50 text-neutral-400 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}
+                  className={(theme !== 'light' ? 'bg-neutral-700/50 text-neutral-400 hover:text-white' : 'bg-gray-200 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center transition-colors'}
                   title="Ampliar"
                  >
                   <i className="fas fa-expand text-[10px]"></i>
@@ -911,17 +911,17 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
           })}
          </div>
         ) : (
-         <div className={(theme === 'dark' ? 'bg-neutral-800/30' : 'bg-gray-50') + ' rounded-xl p-6 text-center'}>
-          <i className={(theme === 'dark' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-images text-2xl mb-2'}></i>
-          <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Nenhum look gerado ainda</p>
-          <p className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>Use o Vizzu Provador para criar looks</p>
+         <div className={(theme !== 'light' ? 'bg-neutral-800/30' : 'bg-gray-50') + ' rounded-xl p-6 text-center'}>
+          <i className={(theme !== 'light' ? 'text-neutral-700' : 'text-gray-300') + ' fas fa-images text-2xl mb-2'}></i>
+          <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Nenhum look gerado ainda</p>
+          <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-0.5'}>Use o Vizzu Provador para criar looks</p>
          </div>
         )}
        </div>
       </div>
 
       {/* Footer */}
-      <div className={(theme === 'dark' ? 'border-neutral-800 bg-neutral-900' : 'border-gray-200 bg-white') + ' border-t px-4 py-3'}>
+      <div className={(theme !== 'light' ? 'border-neutral-800 bg-neutral-900' : 'border-gray-200 bg-white') + ' border-t px-4 py-3'}>
        <div className="flex items-center gap-2">
         <button
          onClick={() => { setProvadorClient(showClientDetail); setShowClientDetail(null); navigateTo('provador'); }}
@@ -929,7 +929,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
         >
          <i className="fas fa-shirt text-[10px]"></i>Vizzu Provador
         </button>
-        <button onClick={() => startEditingClient(showClientDetail)} className={(theme === 'dark' ? 'bg-neutral-800 text-neutral-400 hover:text-white border-neutral-700' : 'bg-gray-100 text-gray-500 hover:text-gray-700 border-gray-200') + ' w-10 h-10 rounded-xl border flex items-center justify-center transition-colors'} title="Editar">
+        <button onClick={() => startEditingClient(showClientDetail)} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 hover:text-white border-neutral-700' : 'bg-gray-100 text-gray-500 hover:text-gray-700 border-gray-200') + ' w-10 h-10 rounded-xl border flex items-center justify-center transition-colors'} title="Editar">
          <i className="fas fa-pen text-xs"></i>
         </button>
         <button onClick={() => { if (confirm('Excluir cliente ' + showClientDetail.firstName + ' ' + showClientDetail.lastName + '?')) { handleDeleteClient(showClientDetail.id); setShowClientDetail(null); } }} className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 flex items-center justify-center transition-colors" title="Excluir">
@@ -1175,17 +1175,17 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
    {/* CLIENT PHOTO SOURCE PICKER */}
    {showClientPhotoSourcePicker && (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center" onClick={() => setShowClientPhotoSourcePicker(null)}>
-     <div className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
-      <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
-      <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
+     <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl w-full max-w-md p-5 pb-8 border-t'} onClick={(e) => e.stopPropagation()}>
+      <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-gray-300') + ' w-10 h-1 rounded-full mx-auto mb-4'}></div>
+      <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium text-center mb-4'}>
        Adicionar foto - {PHOTO_TYPES.find(p => p.id === showClientPhotoSourcePicker.photoType)?.label}
       </h3>
       <div className="grid grid-cols-2 gap-3">
-       <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-        <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+       <label className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+        <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-[#FF6B6B]/15') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
          <i className="fas fa-images text-[#FF6B6B]"></i>
         </div>
-        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
+        <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Galeria</span>
         <input
          type="file"
          accept="image/*,.heic,.heif"
@@ -1203,11 +1203,11 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
          }}
         />
        </label>
-       <label className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
-        <div className={(theme === 'dark' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
+       <label className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-500' : 'bg-gray-50 border-gray-200 hover:border-neutral-500') + ' border rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all'}>
+        <div className={(theme !== 'light' ? 'bg-gray-300' : 'bg-orange-100') + ' w-12 h-12 rounded-full flex items-center justify-center'}>
          <i className="fas fa-camera text-[#FF9F43]"></i>
         </div>
-        <span className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
+        <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Câmera</span>
         <input
          type="file"
          accept="image/*,.heic,.heif"
@@ -1227,7 +1227,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
         />
        </label>
       </div>
-      <button onClick={() => setShowClientPhotoSourcePicker(null)} className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
+      <button onClick={() => setShowClientPhotoSourcePicker(null)} className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full mt-4 py-2 text-xs font-medium'}>
        Cancelar
       </button>
      </div>

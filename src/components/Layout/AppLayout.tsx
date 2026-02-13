@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useUI, type Page } from '../../contexts/UIContext';
+import { useUI, type Page, type VizzuTheme } from '../../contexts/UIContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGeneration } from '../../contexts/GenerationContext';
 import { LowCreditsBanner } from '../LowCreditsBanner';
@@ -297,23 +297,23 @@ export function AppLayout({
  return (
  <div
  id="swipe-root"
- className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme === 'dark' ? 'bg-black' : 'bg-cream')}
+ className={'h-[100dvh] flex flex-col md:flex-row overflow-hidden ' + (theme !== 'light' ? 'bg-black' : 'bg-cream')}
  >
 
  {/* DESKTOP SIDEBAR */}
- <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-20' : 'w-52') + ' ' + (theme === 'dark' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
- <div className={'p-4 border-b flex flex-col items-center relative ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
+ <aside className={'hidden md:flex flex-col border-r transition-all duration-200 ' + (sidebarCollapsed ? 'w-20' : 'w-52') + ' ' + (theme !== 'light' ? 'bg-neutral-950/95 backdrop-blur-xl border-neutral-800/50' : 'bg-[#efebe6] border-[#e5e6ea]')}>
+ <div className={'p-4 border-b flex flex-col items-center relative ' + (theme !== 'light' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
  <button onClick={() => navigateTo('dashboard')} className="hover:opacity-80 transition-opacity">
  {sidebarCollapsed
- ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-10 w-10" style={theme === 'dark' ? { filter: 'brightness(0) invert(1)' } : undefined} />
- : <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-16" />
+ ? <img src="/favicon-96x96.png" alt="Vizzu" className="h-10 w-10" style={theme !== 'light' ? { filter: 'brightness(0) invert(1)' } : undefined} />
+ : <img src={theme !== 'light' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-16" />
  }
  </button>
- {!sidebarCollapsed && <span className={'text-[9px] -mt-2.5 font-serif italic ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
+ {!sidebarCollapsed && <span className={'text-[9px] -mt-2.5 font-serif italic ' + (theme !== 'light' ? 'text-neutral-600' : 'text-[#373632]/60')}>Estúdio de Bolso</span>}
  <button
  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
  title={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
- className={'absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full flex items-center justify-center transition-colors z-10 border ' + (theme === 'dark' ? 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-800' : 'bg-white border-gray-200 text-[#373632]/50 hover:text-[#373632] shadow-sm')}
+ className={'absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full flex items-center justify-center transition-colors z-10 border ' + (theme !== 'light' ? 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-800' : 'bg-white border-gray-200 text-[#373632]/50 hover:text-[#373632] shadow-sm')}
  >
  <i className={'fas ' + (sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left') + ' text-[9px]'}></i>
  </button>
@@ -326,8 +326,8 @@ export function AppLayout({
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'dashboard'
- ? (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -341,8 +341,8 @@ export function AppLayout({
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'products'
- ? (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -377,8 +377,8 @@ export function AppLayout({
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'models'
- ? (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -392,32 +392,32 @@ export function AppLayout({
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' +
  (currentPage === 'clients'
- ? (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
  <i className="fas fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
  </button>
  </nav>
- <div className={'p-3 border-t space-y-2 ' + (theme === 'dark' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
- <div className={(theme === 'dark' ? 'bg-neutral-900' : 'bg-white/40') + ' rounded-xl p-3 transition-all' + (userCredits <= 5 ? ' ring-2 ring-red-500/50' : '')}>
+ <div className={'p-3 border-t space-y-2 ' + (theme !== 'light' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
+ <div className={(theme !== 'light' ? 'bg-neutral-900' : 'bg-white/40') + ' rounded-xl p-3 transition-all' + (userCredits <= 5 ? ' ring-2 ring-red-500/50' : '')}>
  {!sidebarCollapsed ? (
  <>
  <div className="flex items-center justify-between mb-1.5">
- <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60')}>Créditos</span>
- <button onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }} className={(theme === 'dark' ? 'text-[#FF6B6B] hover:text-[#FF6B6B]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
+ <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme !== 'light' ? 'text-neutral-400' : 'text-[#373632]/60')}>Créditos</span>
+ <button onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }} className={(theme !== 'light' ? 'text-[#FF6B6B] hover:text-[#FF6B6B]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
- <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
+ <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
+ <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
  <div className={((userCredits <= currentPlan.limit * 0.2 ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full')} style={{ width: Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
  </div>
  {userCredits <= 5 && <p className="text-[9px] text-red-400 mt-1.5 font-medium">Saldo baixo</p>}
  </>
  ) : (
  <div className="text-center">
- <p className={'text-xs font-bold ' + (userCredits <= 5 ? 'text-red-400' : (theme === 'dark' ? 'text-white' : 'text-[#373632]'))}>{userCredits}</p>
- <p className={'text-[8px] ' + (userCredits <= 5 ? 'text-red-400/70' : (theme === 'dark' ? 'text-neutral-500' : 'text-[#373632]/40'))}>cred.</p>
+ <p className={'text-xs font-bold ' + (userCredits <= 5 ? 'text-red-400' : (theme !== 'light' ? 'text-white' : 'text-[#373632]'))}>{userCredits}</p>
+ <p className={'text-[8px] ' + (userCredits <= 5 ? 'text-red-400/70' : (theme !== 'light' ? 'text-neutral-500' : 'text-[#373632]/40'))}>cred.</p>
  </div>
  )}
  </div>
@@ -429,8 +429,8 @@ export function AppLayout({
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : 'justify-between') + ' ' +
  (currentPage === 'settings'
- ? (theme === 'dark' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
  )
  }
  >
@@ -447,29 +447,29 @@ export function AppLayout({
  </button>
  {/* Dropdown Up */}
  {showSettingsDropdown && !sidebarCollapsed && (
- <div className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-[#e5e6ea]') + ' absolute bottom-full mb-1 left-0 right-0 rounded-xl border overflow-hidden z-50'}>
+ <div className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700' : 'bg-white border-[#e5e6ea]') + ' absolute bottom-full mb-1 left-0 right-0 rounded-xl border overflow-hidden z-50'}>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('profile'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-user w-4 text-[10px] text-center"></i>Perfil
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-credit-card w-4 text-[10px] text-center"></i>Planos & Créditos
  </button>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('integrations'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
  </button>
- <div className={(theme === 'dark' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
+ <div className={(theme !== 'light' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('history'); setShowSettingsDropdown(false); }}
- className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme === 'dark' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-clock-rotate-left w-4 text-[10px] text-center"></i>Histórico
  </button>
@@ -477,13 +477,13 @@ export function AppLayout({
  )}
  </div>
  <div className={'flex items-center gap-2.5 px-2 py-2 ' + (sidebarCollapsed ? 'justify-center' : '')}>
- <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/40')}>
- {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme === 'dark' ? 'text-white/70' : 'text-[#373632]/60')}></i>}
+ <div className={'w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-white/40')}>
+ {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <i className={'fas fa-user text-xs ' + (theme !== 'light' ? 'text-white/70' : 'text-[#373632]/60')}></i>}
  </div>
  {!sidebarCollapsed && (
  <div className="flex-1 min-w-0">
- <p className={'text-xs font-medium truncate ' + (theme === 'dark' ? 'text-white' : 'text-[#373632]')}>{user?.name}</p>
- <p className={'text-[9px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-[#373632]/60')}>Plano {currentPlan.name}</p>
+ <p className={'text-xs font-medium truncate ' + (theme !== 'light' ? 'text-white' : 'text-[#373632]')}>{user?.name}</p>
+ <p className={'text-[9px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-[#373632]/60')}>Plano {currentPlan.name}</p>
  </div>
  )}
  </div>
@@ -498,7 +498,7 @@ export function AppLayout({
   <LowCreditsBanner
    userCredits={userCredits}
    currentPlanId={currentPlan?.id || 'free'}
-   theme={theme as 'dark' | 'light'}
+   theme={theme as VizzuTheme}
    onBuyCredits={onBuyCredits}
   />
  )}
@@ -506,23 +506,23 @@ export function AppLayout({
  {/* MOBILE TOP HEADER */}
  {!isCreationPage && (
  <div
- className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme === 'dark' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-cream/95 border-gray-200 backdrop-blur-sm')}
+ className={'md:hidden fixed top-0 left-0 right-0 z-40 px-4 py-2.5 flex items-center justify-between border-b ' + (theme !== 'light' ? 'bg-neutral-950/95 border-neutral-800 backdrop-blur-sm' : 'bg-cream/95 border-gray-200 backdrop-blur-sm')}
  style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
  >
  <button onClick={() => navigateTo('dashboard')} className="flex items-center hover:opacity-80 transition-opacity">
- <img src={theme === 'dark' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-11" />
+ <img src={theme !== 'light' ? '/Logo2White.png' : '/Logo2Black.png'} alt="Vizzu" className="h-11" />
  </button>
  <div className="flex items-center gap-2">
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
- className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ' + (userCredits <= 5 ? 'bg-red-500/15 text-red-400 border border-red-500/30' : (theme === 'dark' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200'))}
+ className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ' + (userCredits <= 5 ? 'bg-red-500/15 text-red-400 border border-red-500/30' : (theme !== 'light' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200'))}
  >
  <i className={'fas fa-coins text-[10px] ' + (userCredits <= 5 ? 'text-red-400' : 'text-[#FF9F43]')}></i>
  <span>{userCredits} créditos</span>
  </button>
  <button
  onClick={() => navigateTo('settings')}
- className={'w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme === 'dark' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')}
+ className={'w-8 h-8 rounded-lg flex items-center justify-center transition-colors ' + (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-800' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-cog text-sm"></i>
  </button>
@@ -545,14 +545,14 @@ export function AppLayout({
  {/* MOBILE BOTTOM NAVIGATION */}
  {!isCreationPage && (
  <nav
- className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme === 'dark' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 ')}
+ className={'md:hidden fixed bottom-0 left-0 right-0 border-t px-2 py-1 z-40 pwa-bottom-nav ' + (theme !== 'light' ? 'bg-neutral-950 border-neutral-900' : 'bg-white border-gray-200 ')}
  >
  <div className="flex items-center justify-around">
- <button onClick={() => navigateTo('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('dashboard')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'dashboard' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-home text-sm"></i>
  <span className="text-[9px] font-medium">Home</span>
  </button>
- <button onClick={() => navigateTo('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('products')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'products' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-box text-sm"></i>
  <span className="text-[9px] font-medium">Produtos</span>
  </button>
@@ -566,13 +566,13 @@ export function AppLayout({
      {completedFeatures.length}
    </span>
  )}
- <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
+ <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
- <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-user-tie text-sm"></i>
  <span className="text-[9px] font-medium">Modelos</span>
  </button>
- <button onClick={() => navigateTo('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme === 'dark' ? 'text-white' : 'text-neutral-900') : (theme === 'dark' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <button onClick={() => navigateTo('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-users text-sm"></i>
  <span className="text-[9px] font-medium">Clientes</span>
  </button>
@@ -584,7 +584,7 @@ export function AppLayout({
  {/* VIDEO TUTORIAL MODAL */}
  {showVideoTutorial && (
  <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowVideoTutorial(null)}>
- <div className={'relative w-full max-w-4xl rounded-t-2xl md:rounded-2xl overflow-hidden safe-area-bottom-sheet ' + (theme === 'dark' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
+ <div className={'relative w-full max-w-4xl rounded-t-2xl md:rounded-2xl overflow-hidden safe-area-bottom-sheet ' + (theme !== 'light' ? 'bg-neutral-900' : 'bg-white')} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
  <div className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 z-30">
  <div className="bg-white/30 w-10 h-1 rounded-full"></div>
@@ -601,11 +601,11 @@ export function AppLayout({
  <p className="text-white/60 text-sm">Vídeo em breve...</p>
  </div>
  </div>
- <div className={'p-5 border-t ' + (theme === 'dark' ? 'border-neutral-800' : 'border-gray-200')}>
+ <div className={'p-5 border-t ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-200')}>
  <div className="flex items-center justify-between">
  <div>
- <h3 className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}</h3>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{showVideoTutorial === 'studio' ? 'Transforme suas fotos de produto em imagens profissionais' : 'Vista seus clientes virtualmente e aumente suas vendas'}</p>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-bold font-serif'}>{showVideoTutorial === 'studio' ? 'Vizzu Studio®' : 'Vizzu Provador®'}</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm'}>{showVideoTutorial === 'studio' ? 'Transforme suas fotos de produto em imagens profissionais' : 'Vista seus clientes virtualmente e aumente suas vendas'}</p>
  </div>
  <button onClick={() => { setShowVideoTutorial(null); navigateTo(showVideoTutorial); }} className={'px-6 py-3 text-white font-bold rounded-xl flex items-center gap-2 ' + (showVideoTutorial === 'studio' ? 'bg-gradient-to-r from-[#A855F7] via-indigo-500 to-[#A855F7]' : 'bg-gradient-to-r from-[#FF6B6B] via-[#FF6B9D] to-[#FF9F43]')}>
  <i className="fas fa-rocket"></i>Começar Agora<i className="fas fa-arrow-right text-sm"></i>
@@ -632,16 +632,16 @@ export function AppLayout({
  {minimizedModals.map((modal) => (
  <div
  key={modal.id}
- className={(theme === 'dark' ? 'bg-neutral-900/95 backdrop-blur-xl border-neutral-700' : 'bg-white/95 backdrop-blur-xl border-gray-200') + ' rounded-xl border p-3 min-w-[200px] cursor-pointer hover:scale-105 transition-all animate-fade-in'}
+ className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-xl border-neutral-700' : 'bg-white/95 backdrop-blur-xl border-gray-200') + ' rounded-xl border p-3 min-w-[200px] cursor-pointer hover:scale-105 transition-all animate-fade-in'}
  onClick={() => restoreModal(modal.id)}
  >
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme === 'dark' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
- <i className={'fas ' + modal.icon + ' text-xs ' + (theme === 'dark' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
+ <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ <i className={'fas ' + modal.icon + ' text-xs ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <div>
- <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium truncate max-w-[120px]'}>{modal.title}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-medium truncate max-w-[120px]'}>{modal.title}</p>
  {modal.progress !== undefined && (
  <div className="flex items-center gap-1.5">
  <div className="w-16 h-1 bg-gray-300 rounded-full overflow-hidden">
@@ -654,7 +654,7 @@ export function AppLayout({
  </div>
  <button
  onClick={(e) => { e.stopPropagation(); closeMinimizedModal(modal.id); }}
- className={(theme === 'dark' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' p-1 transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-500 hover:text-white' : 'text-gray-400 hover:text-gray-600') + ' p-1 transition-colors'}
  >
  <i className="fas fa-times text-xs"></i>
  </button>

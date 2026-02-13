@@ -12,6 +12,7 @@ import { supabase } from '../../services/supabaseClient';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface LookComposerEditorProps {
  product: Product;
@@ -21,7 +22,7 @@ interface LookComposerEditorProps {
  onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number, imageUrl?: string) => void;
  onBack: () => void;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
  userId?: string;
  savedModels: SavedModel[];
  onSaveModel?: (model: SavedModel) => void;
@@ -405,7 +406,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  const currentProgress = onSetProgress ? generationProgress : localProgress;
  const currentLoadingText = onSetLoadingText ? generationText : localLoadingText;
 
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
 
  // Carregar fundos salvos do localStorage
  useEffect(() => {
@@ -2683,7 +2684,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {/* MODAL DE LOADING - Com steps e thumbnails */}
  {isGenerating && !isMinimized && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
- <div className={`absolute inset-0 backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/30'}`}></div>
+ <div className={`absolute inset-0 backdrop-blur-2xl ${theme !== 'light' ? 'bg-black/80' : 'bg-white/30'}`}></div>
  <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
  {/* Motion GIF (padrão Vizzu — Scene-1.gif) */}
  <div className="w-64 h-64 mb-6 rounded-2xl overflow-hidden flex items-center justify-center">
@@ -2691,15 +2692,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
 
  {/* Header */}
- <h2 className={`text-xl font-bold font-serif mb-1 text-center ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+ <h2 className={`text-xl font-bold font-serif mb-1 text-center ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
  {viewsMode === 'front-back' ? 'Criando 2 imagens...' : 'Criando seu look...'}
  </h2>
- <p className={`text-xs mb-5 text-center ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
+ <p className={`text-xs mb-5 text-center ${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {viewsMode === 'front-back' && currentProgress >= 48 ? 'Gerando imagem de costas' : 'Vestindo cada peça com IA'}
  </p>
 
  {/* Steps List - Grid 2 colunas */}
- <div className={`w-full max-w-md rounded-2xl p-4 mb-5 border ${theme === 'dark' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
+ <div className={`w-full max-w-md rounded-2xl p-4 mb-5 border ${theme !== 'light' ? 'bg-neutral-900/80 border-neutral-800' : 'bg-white/80 border-gray-200/60 shadow-sm'}`}>
  <div className="grid grid-cols-2 gap-3">
  {loadingSteps.map((step, index) => {
  const isCompleted = index < currentGenerationStep;
@@ -2725,7 +2726,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ? 'bg-green-500'
  : isCurrent
  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] animate-pulse'
- : theme === 'dark' ? 'bg-neutral-700' : 'bg-gray-200'
+ : theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'
  }`}>
  {isCompleted ? (
  <i className="fas fa-check text-white text-[10px]"></i>
@@ -2743,7 +2744,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ? 'border-green-500/50'
  : isCurrent
  ? 'border-[#FF9F43]'
- : theme === 'dark' ? 'border-neutral-700' : 'border-gray-200'
+ : theme !== 'light' ? 'border-neutral-700' : 'border-gray-200'
  }`}>
  <OptimizedImage
  src={step.thumbnail}
@@ -2758,13 +2759,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ? 'border-green-500/50 bg-green-500/10'
  : isCurrent
  ? 'border-[#FF9F43] bg-[#FF9F43]/10'
- : theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-gray-50'
+ : theme !== 'light' ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-gray-50'
  }`}>
  <i className={`fas ${
  step.type === 'setup' ? 'fa-user' :
  step.type === 'finalize' ? 'fa-wand-magic-sparkles' : 'fa-shirt'
  } ${
- isCompleted ? 'text-green-400' : isCurrent ? 'text-[#FF9F43]' : theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'
+ isCompleted ? 'text-green-400' : isCurrent ? 'text-[#FF9F43]' : theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'
  } text-xs`}></i>
  </div>
  )}
@@ -2774,8 +2775,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  isCompleted
  ? 'text-green-400'
  : isCurrent
- ? theme === 'dark' ? 'text-white' : 'text-gray-900'
- : theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'
+ ? theme !== 'light' ? 'text-white' : 'text-gray-900'
+ : theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'
  }`}>
  {displayLabel}
  </span>
@@ -2787,26 +2788,26 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  {/* Progress Bar */}
  <div className="w-full max-w-md mb-5">
- <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
+ <div className={`h-2 rounded-full overflow-hidden ${theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
  style={{ width: `${currentProgress}%` }}
  ></div>
  </div>
  <div className="flex justify-between items-center mt-2">
- <span className={`text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'}`}>
+ <span className={`text-xs ${theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'}`}>
  {viewsMode === 'front-back'
  ? currentProgress < 48 ? 'Imagem de frente' : 'Imagem de costas'
  : 'Processando'}
  </span>
- <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{currentProgress}%</span>
+ <span className={`text-sm font-bold ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>{currentProgress}%</span>
  </div>
  </div>
 
  {/* Minimize Button */}
  <button
  onClick={handleMinimize}
- className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-white/80 hover:bg-white text-gray-700 border border-gray-200/60 shadow-sm'}`}
+ className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-white/80 hover:bg-white text-gray-700 border border-gray-200/60 shadow-sm'}`}
  >
  <i className="fas fa-minus"></i>
  <span>Minimizar e continuar navegando</span>

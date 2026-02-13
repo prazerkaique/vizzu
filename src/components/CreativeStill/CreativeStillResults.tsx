@@ -4,7 +4,7 @@ import { CreativeStillGeneration, Product } from '../../types';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
@@ -26,7 +26,7 @@ const LOADING_PHRASES = [
 ];
 
 interface Props {
- theme: 'dark' | 'light';
+ theme: VizzuTheme;
  generation: CreativeStillGeneration | null;
  product: Product | null;
  resolution: '2k' | '4k';
@@ -94,7 +94,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  const { user } = useAuth();
  const { showToast } = useUI();
 
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
 
  const variationUrls = useMemo(() => getVariationUrls(generation), [generation]);
  const variationsRequested = generation?.variations_requested ?? variationsCountProp;

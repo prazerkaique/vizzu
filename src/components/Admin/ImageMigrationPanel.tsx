@@ -16,11 +16,12 @@ import {
   MigrationLog,
 } from '../../utils/imageMigration';
 import { formatFileSize, COMPRESSION_ENABLED, COMPRESSION_QUALITY } from '../../utils/imageCompression';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 interface Props {
   userId?: string;
   onClose?: () => void;
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 'dark' }) => {
@@ -29,7 +30,7 @@ export const ImageMigrationPanel: React.FC<Props> = ({ userId, onClose, theme = 
   const [dryRun, setDryRun] = useState(true); // Começa em modo simulação por segurança
   const [migrationType, setMigrationType] = useState<'full' | 'products' | 'storage'>('full');
 
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const handleRunMigration = async () => {
     if (isRunning) return;

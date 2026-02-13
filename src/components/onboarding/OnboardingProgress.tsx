@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUI } from '../../contexts/UIContext';
+import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { TourExitConfirm } from './TourExitConfirm';
 
@@ -9,14 +9,14 @@ import { TourExitConfirm } from './TourExitConfirm';
 // ═══════════════════════════════════════════════════════════════
 
 interface OnboardingProgressProps {
-  theme: 'dark' | 'light';
+  theme: VizzuTheme;
 }
 
 export function OnboardingProgress({ theme }: OnboardingProgressProps) {
   const { navigateTo } = useUI();
   const { steps, currentStep, completedCount, totalSteps, dismissOnboarding } = useOnboarding();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
 
   const allDone = completedCount === totalSteps;
 

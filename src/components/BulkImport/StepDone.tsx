@@ -1,8 +1,9 @@
+import type { VizzuTheme } from '../../contexts/UIContext';
 import React, { useState } from 'react';
 import type { ImportResults } from './types';
 
 interface StepDoneProps {
-  theme: 'light' | 'dark';
+  theme: VizzuTheme;
   importResults: ImportResults;
   onClose: () => void;
   onNewImport: () => void;
@@ -10,7 +11,7 @@ interface StepDoneProps {
 }
 
 export function StepDone({ theme, importResults, onClose, onNewImport, onRetryFailed }: StepDoneProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const [showErrors, setShowErrors] = useState(false);
   const hasFailures = importResults.failed.length > 0;
   const allFailed = importResults.success.length === 0 && hasFailures;

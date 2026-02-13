@@ -11,6 +11,7 @@ import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload
 import { smartDownload } from '../../utils/downloadHelper';
 import { submitDownloadRating } from '../../lib/api/ratings';
 import { useAuth } from '../../contexts/AuthContext';
+import type { VizzuTheme } from '../../contexts/UIContext';
 
 // ── Types ──
 
@@ -30,7 +31,7 @@ interface DownloadModalProps {
   images?: DownloadableImage[];
   /** Modo agrupado — imagens por feature (usado no ProductHubModal) */
   groups?: DownloadImageGroup[];
-  theme?: 'dark' | 'light';
+  theme?: VizzuTheme;
 }
 
 // ── Component ──
@@ -44,7 +45,7 @@ export default function DownloadModal({
   groups,
   theme = 'dark',
 }: DownloadModalProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme !== 'light';
   const { user } = useAuth();
 
   // ── Flatten images ──

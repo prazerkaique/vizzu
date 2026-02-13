@@ -203,16 +203,16 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  const isTopPlan = currentPlan.id === 'enterprise' || currentPlan.id === 'premier';
 
  return (
- <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme === 'dark' ? '' : 'bg-cream')}>
+ <div className={'flex-1 overflow-y-auto p-4 md:p-6 ' + (theme !== 'light' ? '' : 'bg-cream')}>
  <div className="max-w-5xl mx-auto">
  {/* Header com boas-vindas */}
  <div className="flex items-center justify-between mb-6">
  <div>
  <div className="flex items-center gap-2 mb-1">
- <h1 className={'text-xl font-extrabold ' + (theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
- <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>
+ <h1 className={'text-xl font-extrabold ' + (theme !== 'light' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
+ <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
  Bem-vindo, <span className="font-medium">{userName}</span>
  </p>
  </div>
@@ -372,16 +372,16 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  };
 
  return (
- <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <div className={'rounded-2xl p-5 mb-4 ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
  <i className={'fas fa-sparkles text-sm text-[#FF6B6B]'}></i>
- <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
+ <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
  </div>
  {sortedCreations.length > 0 && (
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('history'); }}
- className={(theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
+ className={(theme !== 'light' ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' text-xs font-medium transition-colors'}
  >
  Ver todas <i className="fas fa-arrow-right ml-1"></i>
  </button>
@@ -396,7 +396,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  onClick={() => handleCreationClick(creation)}
  className={'flex-shrink-0 w-24 cursor-pointer group hover:opacity-80 transition-opacity'}
  >
- <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ <div className={'w-24 h-24 rounded-xl overflow-hidden mb-2 relative ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
  <OptimizedImage src={creation.imageUrl} size="thumb" alt="" className="w-full h-full" />
  <div className="absolute bottom-1 right-1 flex items-center gap-0.5">
   {creation.imageUrl?.includes('/edit_') && (
@@ -409,7 +409,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
   </div>
  </div>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{creation.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] truncate'}>{creation.name}</p>
  </div>
  ))}
 
@@ -418,19 +418,19 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  onClick={() => navigateTo('create')}
  className={'flex-shrink-0 w-24 cursor-pointer group'}
  >
- <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme === 'dark' ? 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-[#373632]/30 hover:bg-gray-100')}>
+ <div className={'w-24 h-24 rounded-xl flex items-center justify-center transition-all border-2 border-dashed ' + (theme !== 'light' ? 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800' : 'bg-gray-50 border-gray-300 hover:border-[#373632]/30 hover:bg-gray-100')}>
  <div className="text-center">
- <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-[#373632]/10')}>
- <i className={'fas fa-plus ' + (theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/70')}></i>
+ <div className={'w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1 ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-[#373632]/10')}>
+ <i className={'fas fa-plus ' + (theme !== 'light' ? 'text-neutral-400' : 'text-[#373632]/70')}></i>
  </div>
  </div>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] text-center mt-2'}>Criar</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-[10px] text-center mt-2'}>Criar</p>
  </div>
 
  {/* Placeholder se não houver criações */}
  {sortedCreations.length === 0 && (
- <div className={'flex-1 flex items-center justify-center py-4 ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}>
+ <div className={'flex-1 flex items-center justify-center py-4 ' + (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')}>
  <div className="text-center">
  <i className="fas fa-wand-magic-sparkles text-2xl mb-2 opacity-50"></i>
  <p className="text-xs">Suas criações aparecerão aqui</p>
@@ -445,43 +445,43 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  {/* STATS GRID - 4 Cards (buttons para acessibilidade) */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
  {/* Produtos Cadastrados */}
- <button onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-box text-sm text-[#FF6B6B]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
+ <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
  </button>
 
  {/* Produtos com Imagens IA */}
- <button onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-wand-magic-sparkles text-sm text-[#A855F7]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos com imagens IA</p>
+ <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos com imagens IA</p>
  </button>
 
  {/* Imagens Geradas */}
- <button onClick={() => { navigateTo('settings'); setSettingsTab('history'); }} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => { navigateTo('settings'); setSettingsTab('history'); }} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-images text-sm text-[#FF9F43]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{dashboardStats.totalGenerations}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
+ <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{dashboardStats.totalGenerations}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
  </button>
 
  {/* Clientes Cadastrados */}
- <button onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <button onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-start justify-between mb-2">
  <i className="fas fa-users text-sm text-[#4ADE80]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme === 'dark' ? 'text-neutral-600' : 'text-gray-300')}></i>
+ <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
- <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
+ <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
  </button>
  </div>
 
@@ -510,17 +510,17 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  ];
 
  return (
- <div className={'rounded-2xl p-5 mb-4 ' + (theme === 'dark' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ <div className={'rounded-2xl p-5 mb-4 ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
- <i className={'fas fa-chart-bar text-sm ' + (theme === 'dark' ? 'text-indigo-400' : 'text-indigo-500')}></i>
- <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
+ <i className={'fas fa-chart-bar text-sm ' + (theme !== 'light' ? 'text-indigo-400' : 'text-indigo-500')}></i>
+ <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>{totalCredits} créditos usados</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>{totalCredits} créditos usados</span>
  </div>
 
  {totalCredits === 0 ? (
- <div className={'text-center py-4 ' + (theme === 'dark' ? 'text-neutral-500' : 'text-gray-400')}>
+ <div className={'text-center py-4 ' + (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')}>
  <i className="fas fa-chart-pie text-2xl mb-2 opacity-50"></i>
  <p className="text-xs">Nenhum crédito usado ainda</p>
  </div>
@@ -528,11 +528,11 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <div className="space-y-3">
  {categories.map((cat) => (
  <div key={cat.label} className="flex items-center gap-3">
- <span className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-36 truncate'}>{cat.label}</span>
- <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-gray-200')}>
+ <span className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs w-36 truncate'}>{cat.label}</span>
+ <div className={'flex-1 h-2 rounded-full overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200')}>
  <div className={`h-full rounded-full bg-gradient-to-r ${cat.gradient} transition-all`} style={{ width: `${cat.pct}%` }} />
  </div>
- <span className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{cat.pct}%</span>
+ <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs w-10 text-right'}>{cat.pct}%</span>
  </div>
  ))}
  </div>
@@ -544,18 +544,18 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  {/* DICAS + PLANO - Grid 2:1 */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  {/* Carrossel de dicas - 2 colunas */}
- <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
+ <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme !== 'light' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#373632]/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex items-center gap-4 w-full">
- <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-neutral-800' : 'bg-white/70')}>
+ <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-white/70')}>
  <i className="fas fa-lightbulb text-lg text-[#FF9F43]"></i>
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 mb-1">
- <h3 className={'text-sm font-semibold ' + (theme === 'dark' ? 'text-white' : 'text-gray-900')}>Dica</h3>
- <span className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{tipIndex + 1}/{TIPS.length}</span>
+ <h3 className={'text-sm font-semibold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Dica</h3>
+ <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{tipIndex + 1}/{TIPS.length}</span>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm transition-opacity duration-300'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm transition-opacity duration-300'}>
  {TIPS[tipIndex]}
  </p>
  </div>
@@ -563,7 +563,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  </div>
 
  {/* Plano - 1 coluna */}
- <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme === 'dark' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
+ <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme !== 'light' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex flex-col w-full">
  <div className="flex items-center gap-3 mb-2">
@@ -571,14 +571,14 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <i className="fas fa-crown text-white"></i>
  </div>
  <div className="flex-1 min-w-0">
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
- <p className={(theme === 'dark' ? 'text-white' : 'text-[#373632]') + ' text-xl font-bold'}>{currentPlan.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-[10px] uppercase tracking-wide'}>Seu plano</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-[#373632]') + ' text-xl font-bold'}>{currentPlan.name}</p>
  </div>
  </div>
- <p className={(theme === 'dark' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-xs mb-2'}>{userCredits.toLocaleString()} créditos disponíveis</p>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-[#373632]/60') + ' text-xs mb-2'}>{userCredits.toLocaleString()} créditos disponíveis</p>
  <button
  onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }}
- className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90')}
+ className={'w-full py-2 rounded-lg font-medium text-xs transition-all flex items-center justify-center gap-1 ' + (theme !== 'light' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/20' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90')}
  >
  {isTopPlan ? 'Gerenciar plano' : 'Upgrade'} <i className="fas fa-arrow-right text-[10px]"></i>
  </button>

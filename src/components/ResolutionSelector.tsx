@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React from 'react';
+import type { VizzuTheme } from '../contexts/UIContext';
 
 export type Resolution = '2k' | '4k';
 
@@ -12,7 +13,7 @@ interface ResolutionSelectorProps {
  onChange: (resolution: Resolution) => void;
  canUse4K: boolean; // baseado no plano (Pro/Business/Scale)
  onUpgradeClick: () => void; // abre modal de planos
- theme?: 'dark' | 'light';
+ theme?: VizzuTheme;
  disabled?: boolean;
 }
 
@@ -24,7 +25,7 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
  theme = 'dark',
  disabled = false,
 }) => {
- const isDark = theme === 'dark';
+ const isDark = theme !== 'light';
 
  const handleClick = (res: Resolution) => {
  if (disabled) return;

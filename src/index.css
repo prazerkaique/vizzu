@@ -87,6 +87,95 @@ body.image-viewer-open {
   outline-offset: 2px;
 }
 
+/* ═══════════════════════════════════════════════════════════════ */
+/* ALTO CONTRASTE — Tema Noir (Acessibilidade AA)                */
+/* Base: herda estilos do dark. Overrides: remove cores de marca */
+/* e aumenta contraste para 7:1+ (AAA) em texto.                 */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Background raiz */
+html.theme-hc,
+html.theme-hc body {
+  background-color: #000 !important;
+}
+
+/* ── Gradientes de marca → branco sólido ── */
+html.theme-hc .bg-gradient-to-r.from-\[\#FF6B6B\],
+html.theme-hc .bg-gradient-to-br.from-\[\#FF6B6B\] {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+html.theme-hc .from-\[\#FF6B6B\] { --tw-gradient-from: #fff !important; }
+html.theme-hc .to-\[\#FF9F43\] { --tw-gradient-to: #ccc !important; }
+
+/* ── Textos de marca → branco puro ── */
+html.theme-hc .text-\[\#FF6B6B\] { color: #fff !important; }
+html.theme-hc .text-\[\#FF9F43\] { color: #fff !important; }
+html.theme-hc .text-\[\#FF6B6B\]\/70 { color: rgba(255,255,255,0.7) !important; }
+html.theme-hc .text-\[\#FF9F43\]\/70 { color: rgba(255,255,255,0.7) !important; }
+
+/* ── Backgrounds de marca → branco ── */
+html.theme-hc .bg-\[\#FF6B6B\] { background-color: #fff !important; color: #000 !important; }
+html.theme-hc .bg-\[\#FF9F43\] { background-color: #fff !important; color: #000 !important; }
+html.theme-hc .bg-\[\#FF6B6B\]\/10 { background-color: rgba(255,255,255,0.1) !important; }
+html.theme-hc .bg-\[\#FF9F43\]\/10 { background-color: rgba(255,255,255,0.1) !important; }
+
+/* ── Textos secundários: forçar contraste alto ── */
+html.theme-hc .text-neutral-400 { color: #d4d4d4 !important; }
+html.theme-hc .text-neutral-500 { color: #d4d4d4 !important; }
+html.theme-hc .text-neutral-600 { color: #a3a3a3 !important; }
+
+/* ── Bordas mais visíveis ── */
+html.theme-hc .border-neutral-800 { border-color: #555 !important; }
+html.theme-hc .border-neutral-700 { border-color: #666 !important; }
+html.theme-hc .border-neutral-900 { border-color: #444 !important; }
+
+/* ── Ring/outline de marca → branco ── */
+html.theme-hc .ring-\[\#FF6B6B\] { --tw-ring-color: #fff !important; }
+html.theme-hc .ring-\[\#FF6B6B\]\/25 { --tw-ring-color: rgba(255,255,255,0.25) !important; }
+html.theme-hc .ring-\[\#FF6B6B\]\/40 { --tw-ring-color: rgba(255,255,255,0.4) !important; }
+
+/* ── Focus ring alto contraste: 3px branco ── */
+html.theme-hc *:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 2px;
+}
+
+/* ── Shadows → removidas (limpo, noir) ── */
+html.theme-hc .shadow-lg,
+html.theme-hc .shadow-md,
+html.theme-hc .shadow-sm,
+html.theme-hc .shadow-2xl {
+  box-shadow: none !important;
+}
+
+/* ── Animações reduzidas (acessibilidade) ── */
+html.theme-hc *,
+html.theme-hc *::before,
+html.theme-hc *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.05s !important;
+}
+
+/* ── Scrollbar alto contraste ── */
+html.theme-hc ::-webkit-scrollbar-thumb {
+  background: #666;
+}
+html.theme-hc ::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* Respeitar preferência de redução de movimento do SO (todos os temas) */
+@media (prefers-reduced-motion: reduce) {
+  .animate-loading,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none !important;
+  }
+}
+
 /* Line Clamp */
 .line-clamp-2 {
   display: -webkit-box;
