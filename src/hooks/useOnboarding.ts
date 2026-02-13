@@ -158,6 +158,8 @@ export function useOnboarding(): UseOnboardingReturn {
 
   const dismissOnboarding = useCallback(() => {
     localStorage.setItem(LS_DISMISSED, 'true');
+    // Desligar toggle global no Supabase (fire-and-forget)
+    supabase.auth.updateUser({ data: { tour_enabled: false } });
     window.dispatchEvent(new Event('storage'));
   }, []);
 
@@ -177,6 +179,8 @@ export function useOnboarding(): UseOnboardingReturn {
 
   const markTourComplete = useCallback((featureId: string) => {
     localStorage.setItem(`${LS_TOUR_PREFIX}${featureId}`, 'true');
+    // Desligar toggle global no Supabase (fire-and-forget)
+    supabase.auth.updateUser({ data: { tour_enabled: false } });
   }, []);
 
   // Toggle global do tour — salva no Supabase user_metadata
