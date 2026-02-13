@@ -34,6 +34,7 @@ export interface UseOnboardingReturn {
   resetOnboarding: () => void;
   shouldShowTour: (featureId: string) => boolean;
   markTourComplete: (featureId: string) => void;
+  dismissAllTours: () => void;
   isTourEnabled: boolean;
   isSavingTourToggle: boolean;
   setTourEnabled: (enabled: boolean) => Promise<boolean>;
@@ -192,6 +193,16 @@ export function useOnboarding(): UseOnboardingReturn {
     }
   }, []);
 
+  // Cancelar tours de TODAS as features de uma vez (usado quando o usuário sai do tour)
+  const dismissAllTours = useCallback(() => {
+    TOUR_FEATURE_IDS.forEach(id => {
+      localStorage.setItem(`${LS_TOUR_PREFIX}${id}`, 'true');
+    });
+    localStorage.setItem(LS_DISMISSED, 'true');
+    supabase.auth.updateUser({ data: { tour_enabled: false } });
+    window.dispatchEvent(new Event('storage'));
+  }, []);
+
   // Toggle global do tour — localStorage primeiro (síncrono), Supabase depois (persistência)
   const setTourEnabled = useCallback(async (enabled: boolean): Promise<boolean> => {
     setIsSavingTourToggle(true);
@@ -232,6 +243,7 @@ export function useOnboarding(): UseOnboardingReturn {
     resetOnboarding,
     shouldShowTour,
     markTourComplete,
+    dismissAllTours,
     isTourEnabled,
     isSavingTourToggle,
     setTourEnabled,

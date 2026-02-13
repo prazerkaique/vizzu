@@ -33,7 +33,7 @@ const TOOLTIP_GAP = 12; // px entre spotlight e tooltip
 const MAX_SPOTLIGHT_HEIGHT = 200; // cap para elementos muito altos
 
 export function FeatureTour({ featureId, stops, theme }: FeatureTourProps) {
-  const { shouldShowTour, markTourComplete } = useOnboarding();
+  const { shouldShowTour, markTourComplete, dismissAllTours } = useOnboarding();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
@@ -185,10 +185,10 @@ export function FeatureTour({ featureId, stops, theme }: FeatureTourProps) {
   }, [currentIndex]);
 
   const handleExit = useCallback(() => {
-    markTourComplete(featureId);
+    dismissAllTours();
     setShowExitConfirm(false);
     setIsVisible(false);
-  }, [featureId, markTourComplete]);
+  }, [dismissAllTours]);
 
   if (!isActive) return null;
 
