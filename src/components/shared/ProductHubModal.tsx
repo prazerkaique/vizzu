@@ -6,15 +6,14 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Product, CreativeStillGeneration, ColorVariant } from '../../types';
+import { Product, CreativeStillGeneration } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
 import DownloadModal, { type DownloadImageGroup } from './DownloadModal';
 import { ImageEditModal } from './ImageEditModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
-import { editStudioImage, saveCreativeStillEdit, saveLookComposerEdit, generateColorize, pollColorizeGenerationsBatch } from '../../lib/api/studio';
-import { COLOR_FAMILIES, COLOR_HEX_MAP, LIGHT_COLORS } from '../../constants/colors';
+import { editStudioImage, saveCreativeStillEdit, saveLookComposerEdit } from '../../lib/api/studio';
 
 // ── Types ──
 
@@ -126,13 +125,6 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const pendingDeleteTimer = useRef<NodeJS.Timeout | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  // Colorize states
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [isGeneratingColors, setIsGeneratingColors] = useState(false);
-  const [colorizeInProgress, setColorizeInProgress] = useState<Map<string, { generationId: string; color: string }>>(new Map());
-  const [localColorVariants, setLocalColorVariants] = useState<ColorVariant[]>([]);
-  const [expandedFamily, setExpandedFamily] = useState<string | null>(null);
-
   useEffect(() => {
     if (!isOpen || !product?.id || !userId) {
       setCsGenerations([]);
@@ -161,73 +153,6 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     };
   }, []);
 
-  // Sync localColorVariants with product data
-  useEffect(() => {
-    setLocalColorVariants(product.generatedImages?.colorize || []);
-  }, [product.generatedImages?.colorize]);
-
-  // Reset colorize state when modal opens/closes
-  useEffect(() => {
-    if (!isOpen) {
-      setSelectedColors([]);
-      setIsGeneratingColors(false);
-      setColorizeInProgress(new Map());
-      setExpandedFamily(null);
-    }
-  }, [isOpen]);
-
-  // Poll colorize generations in progress
-  useEffect(() => {
-    if (colorizeInProgress.size === 0) return;
-    const interval = setInterval(async () => {
-      const ids = [...colorizeInProgress.values()].map(v => v.generationId);
-      try {
-        const results = await pollColorizeGenerationsBatch(ids);
-        let anyDone = false;
-        const newInProgress = new Map(colorizeInProgress);
-
-        for (const r of results) {
-          if (r.status === 'completed' && r.imageUrl) {
-            anyDone = true;
-            // Find which color this generation belongs to
-            const entry = [...newInProgress.entries()].find(([, v]) => v.generationId === r.id);
-            if (entry) {
-              const [key, val] = entry;
-              setLocalColorVariants(prev => [...prev, {
-                id: r.id,
-                generationId: r.id,
-                color: val.color,
-                url: r.imageUrl!,
-                storagePath: '',
-                status: 'completed',
-                createdAt: new Date().toISOString(),
-              }]);
-              newInProgress.delete(key);
-            }
-          } else if (r.status === 'failed') {
-            anyDone = true;
-            const entry = [...newInProgress.entries()].find(([, v]) => v.generationId === r.id);
-            if (entry) {
-              showToast?.(`Erro ao gerar cor "${entry[1].color}"`, 'error');
-              newInProgress.delete(entry[0]);
-            }
-          }
-        }
-
-        if (anyDone) {
-          setColorizeInProgress(newInProgress);
-          if (newInProgress.size === 0) {
-            onRefreshProduct?.();
-          }
-        }
-      } catch (err) {
-        console.error('[Hub/Colorize] Erro no polling:', err);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [colorizeInProgress, showToast, onRefreshProduct]);
-
   // ── Contagens por feature ──
   const psSessions = product.generatedImages?.productStudio || [];
   const psCount = psSessions.reduce((sum, s) => sum + s.images.length, 0);
@@ -243,8 +168,6 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const ccImages = product.generatedImages?.cenarioCriativo || [];
   const ccCount = ccImages.length;
 
-  const colrCount = localColorVariants.length + colorizeInProgress.size;
-
   // ── Tabs ──
   const hasSalesData = !!(product.price || product.isForSale);
   const tabs: Tab[] = useMemo(() => [
@@ -253,9 +176,8 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     { id: 'lc', label: 'Vizzu Look Composer®', icon: 'fa-layer-group', count: lcCount },
     { id: 'sr', label: 'Vizzu Studio Ready®', icon: 'fa-cube', count: srCount },
     { id: 'cc', label: 'Vizzu Cenário Criativo®', icon: 'fa-mountain-sun', count: ccCount },
-    { id: 'colr', label: 'Vizzu Cores®', icon: 'fa-palette', count: colrCount },
     { id: 'sales', label: 'Vendas', icon: 'fa-tag', count: hasSalesData ? 1 : 0 },
-  ], [psCount, csCount, lcCount, srCount, ccCount, colrCount, hasSalesData]);
+  ], [psCount, csCount, lcCount, srCount, ccCount, hasSalesData]);
 
   // Auto-selecionar primeira aba com conteúdo
   const firstNonEmpty = tabs.find(t => t.count > 0)?.id || 'ps';
@@ -263,7 +185,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      if (defaultTab && tabs.find(t => t.id === defaultTab && (t.count > 0 || t.id === 'colr'))) {
+      if (defaultTab && tabs.find(t => t.id === defaultTab && t.count > 0)) {
         setActiveTab(defaultTab);
       } else {
         const first = tabs.find(t => t.count > 0)?.id || 'ps';
@@ -411,11 +333,8 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     const ccImgs: DownloadableImage[] = ccImages.map(img => ({ url: img.images.front, label: 'Cenário', featurePrefix: 'VCenario' }));
     if (ccImgs.length) groups.push({ label: 'Vizzu Cenário Criativo®', featurePrefix: 'VCenario', images: ccImgs });
 
-    const colrImgs: DownloadableImage[] = localColorVariants.map(v => ({ url: v.url, label: v.color, featurePrefix: 'VColorize' }));
-    if (colrImgs.length) groups.push({ label: 'Vizzu Cores®', featurePrefix: 'VColorize', images: colrImgs });
-
     return groups;
-  }, [psSessions, csGenerations, lcLooks, srImages, ccImages, localColorVariants]);
+  }, [psSessions, csGenerations, lcLooks, srImages, ccImages]);
 
   const totalDownloadableImages = downloadGroups.reduce((sum, g) => sum + g.images.length, 0);
 
@@ -807,255 +726,6 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     );
   };
 
-  // ── Colorize handlers ──
-  const handleGenerateColors = useCallback(async () => {
-    if (!userId || selectedColors.length === 0) return;
-
-    // Resolve melhor imagem do produto (PS front > original front > primeira)
-    const ps = product.generatedImages?.productStudio || [];
-    let imageUrl = '';
-    for (let i = ps.length - 1; i >= 0; i--) {
-      const front = ps[i].images.find(img => img.angle === 'front');
-      if (front?.url) { imageUrl = front.url; break; }
-      if (ps[i].images[0]?.url) { imageUrl = ps[i].images[0].url; break; }
-    }
-    if (!imageUrl) {
-      imageUrl = product.originalImages?.front?.url || product.images?.[0]?.url || '';
-    }
-    if (!imageUrl) {
-      showToast?.('Produto sem imagem disponível para colorize', 'error');
-      return;
-    }
-
-    setIsGeneratingColors(true);
-    const newInProgress = new Map(colorizeInProgress);
-
-    for (const color of selectedColors) {
-      try {
-        const result = await generateColorize({
-          userId,
-          productId: product.id,
-          imageUrl,
-          sourceColor: product.color || 'Original',
-          targetColor: color,
-          productName: product.name,
-          productCategory: product.category || '',
-          resolution,
-        });
-        if (result.success && result.generation_id) {
-          newInProgress.set(`${product.id}-${color}`, { generationId: result.generation_id, color });
-        } else {
-          showToast?.(`Erro ao iniciar colorize "${color}"`, 'error');
-        }
-      } catch (err) {
-        console.error('[Hub/Colorize] Erro ao gerar:', err);
-        showToast?.(`Erro ao gerar cor "${color}"`, 'error');
-      }
-    }
-
-    setColorizeInProgress(newInProgress);
-    setSelectedColors([]);
-    setIsGeneratingColors(false);
-  }, [userId, selectedColors, product, colorizeInProgress, resolution, showToast]);
-
-  const handleToggleColor = useCallback((colorName: string) => {
-    setSelectedColors(prev => {
-      if (prev.includes(colorName)) return prev.filter(c => c !== colorName);
-      if (prev.length >= 5) return prev;
-      return [...prev, colorName];
-    });
-  }, []);
-
-  const handleDeleteColorVariant = useCallback(async (variant: ColorVariant) => {
-    try {
-      // Delete from product_images
-      await supabase.from('product_images').delete().eq('id', variant.id);
-      // Delete generation record
-      if (variant.generationId) {
-        await supabase.from('generations').delete().eq('id', variant.generationId);
-      }
-      setLocalColorVariants(prev => prev.filter(v => v.id !== variant.id));
-      showToast?.('Variação de cor excluída', 'success');
-      onRefreshProduct?.();
-    } catch (err) {
-      console.error('[Hub/Colorize] Erro ao deletar:', err);
-      showToast?.('Erro ao excluir variação', 'error');
-    }
-  }, [showToast, onRefreshProduct]);
-
-  // ── Render Colorize ──
-  const renderColorize = () => {
-    const existingColors = new Set(localColorVariants.map(v => v.color));
-    const inProgressColors = new Set([...colorizeInProgress.values()].map(v => v.color));
-    const productColor = product.color || '';
-
-    return (
-      <div className="space-y-4">
-        {/* ── Color Picker ── */}
-        <div className={'rounded-xl p-3 ' + (isDark ? 'bg-neutral-900/50' : 'bg-gray-50')}>
-          <div className="flex items-center justify-between mb-3">
-            <h4 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-semibold'}>
-              <i className="fas fa-palette text-[#FF6B6B] mr-1.5 text-[10px]"></i>
-              Escolher cores
-            </h4>
-            {selectedColors.length > 0 && (
-              <span className="text-[10px] text-[#FF6B6B] font-medium">
-                {selectedColors.length}/5 selecionada{selectedColors.length > 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-
-          {/* Famílias de cor */}
-          <div className="space-y-1">
-            {COLOR_FAMILIES.map(family => {
-              const isExpanded = expandedFamily === family.id;
-              const familyHasSelected = family.colors.some(c => selectedColors.includes(c.name));
-
-              return (
-                <div key={family.id}>
-                  <button
-                    onClick={() => setExpandedFamily(isExpanded ? null : family.id)}
-                    className={
-                      'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all ' +
-                      (isExpanded
-                        ? (isDark ? 'bg-neutral-800 text-white' : 'bg-gray-200 text-gray-900')
-                        : familyHasSelected
-                          ? (isDark ? 'bg-neutral-800/60 text-[#FF6B6B]' : 'bg-[#FF6B6B]/5 text-[#FF6B6B]')
-                          : (isDark ? 'text-neutral-400 hover:bg-neutral-800/40' : 'text-gray-500 hover:bg-gray-100'))
-                    }
-                  >
-                    <span className="flex items-center gap-2">
-                      <i className={'fas ' + family.icon + ' text-[9px]'}></i>
-                      {family.label}
-                      {familyHasSelected && !isExpanded && (
-                        <span className="text-[9px] bg-[#FF6B6B]/20 text-[#FF6B6B] px-1 rounded">{family.colors.filter(c => selectedColors.includes(c.name)).length}</span>
-                      )}
-                    </span>
-                    <i className={'fas fa-chevron-' + (isExpanded ? 'up' : 'down') + ' text-[8px] opacity-50'}></i>
-                  </button>
-
-                  {isExpanded && (
-                    <div className="flex flex-wrap gap-1.5 px-1 py-2">
-                      {family.colors.map(color => {
-                        const isSelected = selectedColors.includes(color.name);
-                        const isExisting = existingColors.has(color.name);
-                        const isInProgress = inProgressColors.has(color.name);
-                        const isProductColor = color.name.toLowerCase() === productColor.toLowerCase();
-                        const isDisabled = isExisting || isInProgress || isProductColor;
-                        const isLight = LIGHT_COLORS.has(color.name);
-
-                        return (
-                          <button
-                            key={color.name}
-                            onClick={() => !isDisabled && handleToggleColor(color.name)}
-                            disabled={isDisabled}
-                            className={
-                              'flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border ' +
-                              (isDisabled
-                                ? (isDark ? 'border-neutral-800 text-neutral-600 opacity-50 cursor-not-allowed' : 'border-gray-200 text-gray-300 opacity-50 cursor-not-allowed')
-                                : isSelected
-                                  ? 'border-[#FF6B6B] bg-[#FF6B6B]/10 text-[#FF6B6B]'
-                                  : (isDark ? 'border-neutral-700 text-neutral-300 hover:border-neutral-500' : 'border-gray-200 text-gray-600 hover:border-gray-400'))
-                            }
-                          >
-                            <span
-                              className={'w-3 h-3 rounded-full flex-shrink-0 ' + (isLight ? 'border border-gray-300' : '')}
-                              style={{ backgroundColor: color.hex }}
-                            ></span>
-                            {color.name}
-                            {isExisting && <i className="fas fa-check text-[7px] text-green-500"></i>}
-                            {isInProgress && <i className="fas fa-spinner fa-spin text-[7px]"></i>}
-                            {isProductColor && <span className="text-[7px] opacity-50">(atual)</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Botão Gerar ── */}
-        {selectedColors.length > 0 && (
-          <button
-            onClick={handleGenerateColors}
-            disabled={isGeneratingColors}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {isGeneratingColors ? (
-              <><i className="fas fa-circle-notch fa-spin text-xs"></i>Iniciando...</>
-            ) : (
-              <>
-                <i className="fas fa-palette text-xs"></i>
-                Gerar {selectedColors.length} cor{selectedColors.length > 1 ? 'es' : ''} — {selectedColors.length} crédito{selectedColors.length > 1 ? 's' : ''}
-              </>
-            )}
-          </button>
-        )}
-
-        {/* ── In-progress cards ── */}
-        {colorizeInProgress.size > 0 && (
-          <div>
-            <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>
-              <i className="fas fa-spinner fa-spin mr-1 text-[8px]"></i>
-              Gerando...
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[...colorizeInProgress.entries()].map(([key, val]) => (
-                <div
-                  key={key}
-                  className={'rounded-lg border aspect-square flex flex-col items-center justify-center gap-2 ' +
-                    (isDark ? 'border-neutral-800 bg-neutral-900/50' : 'border-gray-200 bg-gray-50')}
-                >
-                  <span
-                    className={'w-8 h-8 rounded-full animate-pulse ' + (LIGHT_COLORS.has(val.color) ? 'border border-gray-300' : '')}
-                    style={{ backgroundColor: COLOR_HEX_MAP[val.color] || '#888' }}
-                  ></span>
-                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] font-medium'}>{val.color}</span>
-                  <div className={'w-4 h-4 border-2 rounded-full animate-spin border-t-transparent ' + (isDark ? 'border-neutral-600' : 'border-gray-300')}></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Galeria de variações geradas ── */}
-        {localColorVariants.length > 0 && (
-          <div>
-            <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-medium uppercase tracking-wide mb-2'}>
-              {localColorVariants.length} variação{localColorVariants.length > 1 ? 'ões' : ''} de cor
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {localColorVariants.map(variant => (
-                <div key={variant.id} className="relative group">
-                  {renderImageWithActions(
-                    variant.url,
-                    `${product.name} — ${variant.color}`,
-                    `colr-${variant.id}`,
-                    async () => { await handleDeleteColorVariant(variant); },
-                    { url: variant.url, name: `${product.name} — ${variant.color}`, tab: 'colr', imageId: variant.id },
-                    { bottomLabel: variant.color }
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Empty state (sem variações e sem seleção) ── */}
-        {localColorVariants.length === 0 && colorizeInProgress.size === 0 && selectedColors.length === 0 && (
-          <div className={'rounded-xl p-4 text-center ' + (isDark ? 'bg-neutral-900/30' : 'bg-gray-50/50')}>
-            <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[11px]'}>
-              Selecione cores acima para gerar variações do produto
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const renderEmpty = (featureName: string) => (
     <div className={'rounded-xl p-6 text-center ' + (isDark ? 'bg-neutral-900/50' : 'bg-gray-50')}>
       <i className={'fas fa-image text-2xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
@@ -1071,7 +741,6 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     lc: renderLC,
     sr: renderSR,
     cc: renderCC,
-    colr: renderColorize,
     sales: renderSales,
   };
 
@@ -1150,7 +819,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
         {/* ═══ TABS ═══ */}
         <div className={'flex items-center gap-1 px-4 py-2.5 border-b overflow-x-auto no-scrollbar ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
-          {tabs.filter(t => t.count > 0 || t.id === activeTab || t.id === 'sales' || t.id === 'colr').map(tab => (
+          {tabs.filter(t => t.count > 0 || t.id === activeTab || t.id === 'sales').map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}

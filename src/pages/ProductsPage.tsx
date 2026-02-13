@@ -16,7 +16,6 @@ import { compressImage, formatFileSize } from '../utils/imageCompression';
 import { getProductType, UPLOAD_SLOTS_CONFIG, DETAIL_TIPS, angleToApiField, angleToOriginalImagesKey, type UploadSlotConfig } from '../lib/productConfig';
 import { ProductGridSkeleton } from '../components/LoadingSkeleton';
 import { RegisterAllWizard } from '../components/RegisterAllWizard';
-import { COLOR_HEX_MAP, LIGHT_COLORS } from '../constants/colors';
 
 const CATEGORY_GROUPS = [
  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
@@ -52,7 +51,6 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const { openViewer } = useImageViewer();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
-  const [defaultHubTab, setDefaultHubTab] = useState<string | undefined>(undefined);
   const [showOptimizedImage, setShowOptimizedImage] = useState(true);
   const [selectedImages, setSelectedImages] = useState<Record<string, string | null>>({});
   const [uploadTarget, setUploadTarget] = useState<string>('front');
@@ -800,36 +798,6 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <i className="fas fa-trash text-[8px]"></i>
  </button>
  </div>
- {/* Swatches de variações de cor */}
- {(product.generatedImages?.colorize?.length ?? 0) > 0 && (
- <div
-  className="flex items-center gap-0.5 px-2 py-1 overflow-hidden cursor-pointer"
-  onClick={(e) => { e.stopPropagation(); setDefaultHubTab('colr'); setShowProductDetail(product); }}
-  title="Ver variações de cor"
- >
-  {/* Cor original */}
-  {product.color && COLOR_HEX_MAP[product.color] && (
-   <span
-    className={'w-4 h-4 rounded-full flex-shrink-0 ring-1 ring-offset-1 ' + (theme === 'dark' ? 'ring-neutral-600 ring-offset-neutral-800' : 'ring-gray-300 ring-offset-white') + (LIGHT_COLORS.has(product.color) ? ' border border-gray-300' : '')}
-    style={{ backgroundColor: COLOR_HEX_MAP[product.color] }}
-    title={product.color}
-   ></span>
-  )}
-  {product.generatedImages!.colorize!.slice(0, 4).map(v => (
-   <span
-    key={v.id}
-    className={'w-4 h-4 rounded-full flex-shrink-0 ' + (LIGHT_COLORS.has(v.color) ? 'border border-gray-300' : '')}
-    style={{ backgroundColor: COLOR_HEX_MAP[v.color] || '#888' }}
-    title={v.color}
-   ></span>
-  ))}
-  {product.generatedImages!.colorize!.length > 4 && (
-   <span className={(theme === 'dark' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500') + ' w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[7px] font-bold'}>
-    +{product.generatedImages!.colorize!.length - 4}
-   </span>
-  )}
- </div>
- )}
  <div className="p-2">
  <p className={(theme === 'dark' ? 'text-neutral-500' : 'text-gray-400') + ' text-[8px] font-medium uppercase tracking-wide'}>{product.sku ? `SKU ${product.sku}` : `ID ${product.id.slice(0, 8)}`}</p>
  <p className={(theme === 'dark' ? 'text-white' : 'text-gray-900') + ' text-[10px] font-medium truncate'} title={product.name}>{product.name}</p>
@@ -1420,19 +1388,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  {showProductDetail && (
  <ProductHubModal
  isOpen={!!showProductDetail}
- onClose={() => { setShowProductDetail(null); setDefaultHubTab(undefined); }}
+ onClose={() => setShowProductDetail(null)}
  product={showProductDetail}
  theme={theme}
  userId={user?.id}
  navigateTo={navigateTo}
  setProductForCreation={setProductForCreation}
- onEditProduct={(p) => { setShowProductDetail(null); setDefaultHubTab(undefined); startEditProduct(p); }}
+ onEditProduct={(p) => { setShowProductDetail(null); startEditProduct(p); }}
  showToast={showToast}
  onRefreshProduct={() => user?.id && loadUserProducts(user.id)}
  editBalance={userCredits || 0}
  regularBalance={userCredits || 0}
  resolution={currentPlan?.maxResolution === '4k' ? '4k' : '2k'}
- defaultTab={defaultHubTab}
  />
  )}
 

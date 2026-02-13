@@ -47,7 +47,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         const formattedProducts: Product[] = productsData.map(p => {
           const allImages = p.product_images || [];
 
-          const generatedTypes = ['studio_ready', 'cenario_criativo', 'modelo_ia', 'product_studio', 'colorize'];
+          const generatedTypes = ['studio_ready', 'cenario_criativo', 'modelo_ia', 'product_studio'];
           const originalImages = allImages.filter((img: any) =>
             !generatedTypes.includes(img.type)
           );
@@ -56,7 +56,6 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
           const generatedCenario = allImages.filter((img: any) => img.type === 'cenario_criativo');
           const generatedModelo = allImages.filter((img: any) => img.type === 'modelo_ia');
           const generatedProductStudio = allImages.filter((img: any) => img.type === 'product_studio');
-          const generatedColorize = allImages.filter((img: any) => img.type === 'colorize');
 
           const formattedOriginalImages = originalImages.map((img: any) => ({
             id: img.id,
@@ -155,21 +154,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
                 };
               });
             })(),
-            productStudio: formattedProductStudio,
-            colorize: generatedColorize.map((img: any) => {
-              const meta = typeof img.metadata === 'string'
-                ? JSON.parse(img.metadata)
-                : (img.metadata || {});
-              return {
-                id: img.id,
-                generationId: img.generation_id || '',
-                color: meta.target_color || meta.color || 'Desconhecida',
-                url: img.url,
-                storagePath: img.storage_path || '',
-                status: 'completed' as const,
-                createdAt: img.created_at,
-              };
-            }),
+            productStudio: formattedProductStudio
           };
 
           return {
