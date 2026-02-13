@@ -179,8 +179,13 @@ export function useOnboarding(): UseOnboardingReturn {
 
   const markTourComplete = useCallback((featureId: string) => {
     localStorage.setItem(`${LS_TOUR_PREFIX}${featureId}`, 'true');
-    // Desligar toggle global no Supabase (fire-and-forget)
-    supabase.auth.updateUser({ data: { tour_enabled: false } });
+    // Se TODAS as features já foram vistas, desligar toggle global
+    const allSeen = TOUR_FEATURE_IDS.every(id =>
+      localStorage.getItem(`${LS_TOUR_PREFIX}${id}`) === 'true'
+    );
+    if (allSeen) {
+      supabase.auth.updateUser({ data: { tour_enabled: false } });
+    }
   }, []);
 
   // Toggle global do tour — salva no Supabase user_metadata
