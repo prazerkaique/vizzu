@@ -89,68 +89,240 @@ body.image-viewer-open {
 
 /* ═══════════════════════════════════════════════════════════════ */
 /* ALTO CONTRASTE — Tema Noir (Acessibilidade AA)                */
-/* Base: herda estilos do dark. Overrides: remove cores de marca */
-/* e aumenta contraste para 7:1+ (AAA) em texto.                 */
+/* Base: herda estilos do dark. Overrides: neutraliza TODAS as   */
+/* cores para preto/branco/cinza. Seletores de atributo cobrem   */
+/* todas as shades e variantes de opacidade de cada cor.          */
 /* ═══════════════════════════════════════════════════════════════ */
 
-/* Background raiz */
+/* ── Background raiz ── */
 html.theme-hc,
 html.theme-hc body {
   background-color: #000 !important;
 }
 
-/* ── Gradientes de marca → branco sólido ── */
-html.theme-hc .bg-gradient-to-r.from-\[\#FF6B6B\],
-html.theme-hc .bg-gradient-to-br.from-\[\#FF6B6B\] {
+/* Safety: cream/light backgrounds que possam vazar */
+html.theme-hc [class*="bg-[#f7f5f2]"] { background-color: #000 !important; }
+
+/* ────────────────────────────────────────────────── */
+/*  TEXTOS COLORIDOS → BRANCO                        */
+/*  Cada regra cobre TODAS as shades + opacidades    */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="text-[#FF6B6B]"],
+html.theme-hc [class*="text-[#FF9F43]"],
+html.theme-hc [class*="text-[#FF6B9D]"],
+html.theme-hc [class*="text-[#A855F7]"],
+html.theme-hc [class*="text-[#7C3AED]"],
+html.theme-hc [class*="text-[#FF5252]"],
+html.theme-hc [class*="text-[#FF5555]"],
+html.theme-hc [class*="text-[#4ADE80]"],
+html.theme-hc [class*="text-red-"],
+html.theme-hc [class*="text-green-"],
+html.theme-hc [class*="text-emerald-"],
+html.theme-hc [class*="text-amber-"],
+html.theme-hc [class*="text-yellow-"],
+html.theme-hc [class*="text-blue-"],
+html.theme-hc [class*="text-purple-"],
+html.theme-hc [class*="text-orange-"],
+html.theme-hc [class*="text-indigo-"],
+html.theme-hc [class*="text-cyan-"],
+html.theme-hc [class*="text-teal-"],
+html.theme-hc [class*="text-pink-"],
+html.theme-hc [class*="text-violet-"],
+html.theme-hc [class*="text-rose-"],
+html.theme-hc [class*="text-lime-"],
+html.theme-hc [class*="text-sky-"],
+html.theme-hc [class*="text-fuchsia-"] {
+  color: #fff !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  BACKGROUNDS SÓLIDOS COLORIDOS → BRANCO + PRETO   */
+/*  Botões, badges, checkboxes preenchidos            */
+/* ────────────────────────────────────────────────── */
+html.theme-hc .bg-\[\#FF6B6B\],
+html.theme-hc .bg-\[\#FF9F43\],
+html.theme-hc .bg-\[\#A855F7\],
+html.theme-hc .bg-\[\#FF6B9D\],
+html.theme-hc .bg-red-500,
+html.theme-hc .bg-red-600,
+html.theme-hc .bg-red-700,
+html.theme-hc .bg-green-500,
+html.theme-hc .bg-green-600,
+html.theme-hc .bg-emerald-500,
+html.theme-hc .bg-emerald-600,
+html.theme-hc .bg-amber-500,
+html.theme-hc .bg-amber-600,
+html.theme-hc .bg-yellow-500,
+html.theme-hc .bg-yellow-600,
+html.theme-hc .bg-yellow-700,
+html.theme-hc .bg-blue-500,
+html.theme-hc .bg-blue-600,
+html.theme-hc .bg-purple-500,
+html.theme-hc .bg-purple-600,
+html.theme-hc .bg-orange-500,
+html.theme-hc .bg-orange-600 {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  BACKGROUNDS COM OPACIDADE / SHADES CLARAS        */
+/*  Info boxes, highlights, banners sutis             */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="bg-[#FF6B6B]/"],
+html.theme-hc [class*="bg-[#FF9F43]/"],
+html.theme-hc [class*="bg-[#A855F7]/"],
+html.theme-hc [class*="bg-[#FF6B9D]/"],
+html.theme-hc .bg-red-50, html.theme-hc .bg-red-100,
+html.theme-hc [class*="bg-red-"][class*="/"],
+html.theme-hc .bg-green-50, html.theme-hc .bg-green-100,
+html.theme-hc [class*="bg-green-"][class*="/"],
+html.theme-hc .bg-emerald-50, html.theme-hc .bg-emerald-100,
+html.theme-hc [class*="bg-emerald-"][class*="/"],
+html.theme-hc .bg-amber-50, html.theme-hc .bg-amber-100,
+html.theme-hc [class*="bg-amber-"][class*="/"],
+html.theme-hc .bg-yellow-50, html.theme-hc .bg-yellow-100,
+html.theme-hc [class*="bg-yellow-"][class*="/"],
+html.theme-hc .bg-blue-50, html.theme-hc .bg-blue-100,
+html.theme-hc [class*="bg-blue-"][class*="/"],
+html.theme-hc .bg-purple-50, html.theme-hc .bg-purple-100,
+html.theme-hc [class*="bg-purple-"][class*="/"],
+html.theme-hc .bg-orange-50, html.theme-hc .bg-orange-100,
+html.theme-hc [class*="bg-orange-"][class*="/"],
+html.theme-hc [class*="bg-indigo-"][class*="/"] {
+  background-color: rgba(255,255,255,0.08) !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  GRADIENTES → BRANCO SÓLIDO                       */
+/* ────────────────────────────────────────────────── */
+
+/* Container com gradiente colorido */
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B6B]"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#A855F7]"],
+html.theme-hc [class*="bg-gradient"][class*="from-[#FF6B9D]"],
+html.theme-hc [class*="bg-gradient"][class*="from-red-"],
+html.theme-hc [class*="bg-gradient"][class*="from-purple-"],
+html.theme-hc [class*="bg-gradient"][class*="from-amber-"],
+html.theme-hc [class*="bg-gradient"][class*="from-emerald-"] {
   background: #fff !important;
   color: #000 !important;
 }
 
-html.theme-hc .from-\[\#FF6B6B\] { --tw-gradient-from: #fff !important; }
-html.theme-hc .to-\[\#FF9F43\] { --tw-gradient-to: #ccc !important; }
+/* Gradient stops neutros (barras de progresso) */
+html.theme-hc [class*="from-[#FF6B6B]"] { --tw-gradient-from: #fff !important; }
+html.theme-hc [class*="to-[#FF9F43]"]   { --tw-gradient-to: #ddd !important; }
+html.theme-hc [class*="to-[#FF6B9D]"]   { --tw-gradient-to: #ddd !important; }
+html.theme-hc [class*="from-[#A855F7]"] { --tw-gradient-from: #fff !important; }
+html.theme-hc [class*="from-amber-"]    { --tw-gradient-from: #fff !important; }
+html.theme-hc [class*="from-emerald-"]  { --tw-gradient-from: #fff !important; }
+html.theme-hc [class*="from-red-"]      { --tw-gradient-from: #fff !important; }
+html.theme-hc [class*="to-indigo-"]     { --tw-gradient-to: #ddd !important; }
+html.theme-hc [class*="to-teal-"]       { --tw-gradient-to: #ddd !important; }
+html.theme-hc [class*="to-orange-"]     { --tw-gradient-to: #ddd !important; }
 
-/* ── Textos de marca → branco puro ── */
-html.theme-hc .text-\[\#FF6B6B\] { color: #fff !important; }
-html.theme-hc .text-\[\#FF9F43\] { color: #fff !important; }
-html.theme-hc .text-\[\#FF6B6B\]\/70 { color: rgba(255,255,255,0.7) !important; }
-html.theme-hc .text-\[\#FF9F43\]\/70 { color: rgba(255,255,255,0.7) !important; }
+/* Inline style gradients (ex: DownloadProgressModal) */
+html.theme-hc [style*="linear-gradient"] {
+  background: #fff !important;
+  color: #000 !important;
+}
 
-/* ── Backgrounds de marca → branco ── */
-html.theme-hc .bg-\[\#FF6B6B\] { background-color: #fff !important; color: #000 !important; }
-html.theme-hc .bg-\[\#FF9F43\] { background-color: #fff !important; color: #000 !important; }
-html.theme-hc .bg-\[\#FF6B6B\]\/10 { background-color: rgba(255,255,255,0.1) !important; }
-html.theme-hc .bg-\[\#FF9F43\]\/10 { background-color: rgba(255,255,255,0.1) !important; }
+/* ────────────────────────────────────────────────── */
+/*  BORDAS COLORIDAS → CINZA                         */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="border-[#FF6B6B]"],
+html.theme-hc [class*="border-[#FF9F43]"],
+html.theme-hc [class*="border-[#A855F7]"],
+html.theme-hc [class*="border-[#FF6B9D]"],
+html.theme-hc [class*="border-red-"],
+html.theme-hc [class*="border-green-"],
+html.theme-hc [class*="border-emerald-"],
+html.theme-hc [class*="border-amber-"],
+html.theme-hc [class*="border-yellow-"],
+html.theme-hc [class*="border-blue-"],
+html.theme-hc [class*="border-purple-"],
+html.theme-hc [class*="border-orange-"] {
+  border-color: #666 !important;
+}
 
-/* ── Textos secundários: forçar contraste alto ── */
-html.theme-hc .text-neutral-400 { color: #d4d4d4 !important; }
-html.theme-hc .text-neutral-500 { color: #d4d4d4 !important; }
-html.theme-hc .text-neutral-600 { color: #a3a3a3 !important; }
+/* Preservar border-t-transparent (spinners) */
+html.theme-hc .border-t-transparent { border-top-color: transparent !important; }
 
-/* ── Bordas mais visíveis ── */
-html.theme-hc .border-neutral-800 { border-color: #555 !important; }
-html.theme-hc .border-neutral-700 { border-color: #666 !important; }
-html.theme-hc .border-neutral-900 { border-color: #444 !important; }
+/* Bordas neutras → mais visíveis */
+html.theme-hc [class*="border-neutral-"],
+html.theme-hc [class*="border-zinc-"],
+html.theme-hc [class*="border-white/"] {
+  border-color: #555 !important;
+}
 
-/* ── Ring/outline de marca → branco ── */
-html.theme-hc .ring-\[\#FF6B6B\] { --tw-ring-color: #fff !important; }
-html.theme-hc .ring-\[\#FF6B6B\]\/25 { --tw-ring-color: rgba(255,255,255,0.25) !important; }
-html.theme-hc .ring-\[\#FF6B6B\]\/40 { --tw-ring-color: rgba(255,255,255,0.4) !important; }
+/* ────────────────────────────────────────────────── */
+/*  RINGS COLORIDOS → BRANCO                         */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="ring-[#FF6B6B]"],
+html.theme-hc [class*="ring-[#FF9F43]"],
+html.theme-hc [class*="ring-red-"],
+html.theme-hc [class*="ring-green-"],
+html.theme-hc [class*="ring-emerald-"],
+html.theme-hc [class*="ring-blue-"],
+html.theme-hc [class*="ring-purple-"] {
+  --tw-ring-color: rgba(255,255,255,0.4) !important;
+}
 
-/* ── Focus ring alto contraste: 3px branco ── */
+/* ────────────────────────────────────────────────── */
+/*  TEXTOS SECUNDÁRIOS → MAIOR CONTRASTE             */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="text-neutral-4"],
+html.theme-hc [class*="text-neutral-5"],
+html.theme-hc [class*="text-neutral-6"],
+html.theme-hc [class*="text-zinc-4"],
+html.theme-hc [class*="text-zinc-5"],
+html.theme-hc [class*="text-gray-4"],
+html.theme-hc [class*="text-gray-5"] {
+  color: #d4d4d4 !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  INLINE STYLE COLORS (slot accent, dinâmicos)     */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [style*="#22c55e"],
+html.theme-hc [style*="#3b82f6"],
+html.theme-hc [style*="#8b5cf6"] {
+  color: #fff !important;
+  border-color: #666 !important;
+  background-color: #555 !important;
+}
+
+html.theme-hc [style*="#FF6B6B"],
+html.theme-hc [style*="#FF9F43"] {
+  color: #fff !important;
+  border-color: #666 !important;
+}
+
+/* ────────────────────────────────────────────────── */
+/*  OPACIDADES BAIXAS → MÍNIMO 80%                   */
+/* ────────────────────────────────────────────────── */
+html.theme-hc .opacity-40 { opacity: 0.8 !important; }
+html.theme-hc .opacity-50 { opacity: 0.8 !important; }
+html.theme-hc .opacity-60 { opacity: 0.85 !important; }
+
+/* ────────────────────────────────────────────────── */
+/*  FOCUS RING — 3px branco                          */
+/* ────────────────────────────────────────────────── */
 html.theme-hc *:focus-visible {
   outline: 3px solid #fff !important;
   outline-offset: 2px;
 }
 
-/* ── Shadows → removidas (limpo, noir) ── */
-html.theme-hc .shadow-lg,
-html.theme-hc .shadow-md,
-html.theme-hc .shadow-sm,
-html.theme-hc .shadow-2xl {
+/* ────────────────────────────────────────────────── */
+/*  SHADOWS → removidas (estilo noir limpo)          */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="shadow-"] {
   box-shadow: none !important;
 }
 
-/* ── Animações reduzidas (acessibilidade) ── */
+/* ────────────────────────────────────────────────── */
+/*  ANIMAÇÕES REDUZIDAS (acessibilidade)             */
+/* ────────────────────────────────────────────────── */
 html.theme-hc *,
 html.theme-hc *::before,
 html.theme-hc *::after {
@@ -159,7 +331,9 @@ html.theme-hc *::after {
   transition-duration: 0.05s !important;
 }
 
-/* ── Scrollbar alto contraste ── */
+/* ────────────────────────────────────────────────── */
+/*  SCROLLBAR                                        */
+/* ────────────────────────────────────────────────── */
 html.theme-hc ::-webkit-scrollbar-thumb {
   background: #666;
 }
