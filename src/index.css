@@ -104,6 +104,31 @@ html.theme-hc body {
 html.theme-hc [class*="bg-[#f7f5f2]"] { background-color: #000 !important; }
 
 /* ────────────────────────────────────────────────── */
+/*  BG-WHITE → ESCURO (previne branco-sobre-branco)  */
+/*  Badges, pills e cards com bg-white + texto que   */
+/*  foi overrideado para branco ficam ilegíveis.     */
+/*  Solução: fundo escuro no HC.                     */
+/* ────────────────────────────────────────────────── */
+html.theme-hc .bg-white {
+  background-color: #222 !important;
+  color: #fff !important;
+}
+html.theme-hc [class*="bg-white/9"] { background-color: #222 !important; }
+html.theme-hc [class*="bg-white/8"] { background-color: #2a2a2a !important; }
+html.theme-hc [class*="bg-white/7"] { background-color: #333 !important; }
+html.theme-hc [class*="bg-white/6"] { background-color: #333 !important; }
+
+/* ────────────────────────────────────────────────── */
+/*  OVERLAYS DE IMAGEM → QUASE OPACOS               */
+/*  Cards com banners (CreateHub) usam gradientes     */
+/*  from-black/70 → to-black/20. Substituir por      */
+/*  overlay flat escuro para legibilidade total.      */
+/* ────────────────────────────────────────────────── */
+html.theme-hc [class*="bg-gradient"][class*="from-black/"] {
+  background: rgba(0,0,0,0.88) !important;
+}
+
+/* ────────────────────────────────────────────────── */
 /*  TEXTOS COLORIDOS → BRANCO                        */
 /*  Cada regra cobre TODAS as shades + opacidades    */
 /* ────────────────────────────────────────────────── */
