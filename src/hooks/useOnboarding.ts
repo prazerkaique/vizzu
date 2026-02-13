@@ -192,37 +192,33 @@ export function useOnboarding(): UseOnboardingReturn {
     }
   }, []);
 
-  // Toggle global do tour — salva no Supabase user_metadata
+  // Toggle global do tour — localStorage primeiro (síncrono), Supabase depois (persistência)
   const setTourEnabled = useCallback(async (enabled: boolean): Promise<boolean> => {
     setIsSavingTourToggle(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: { tour_enabled: enabled }
+
+    // 1. Atualizar localStorage IMEDIATAMENTE (nunca falha)
+    if (enabled) {
+      localStorage.removeItem(LS_DISMISSED);
+      TOUR_FEATURE_IDS.forEach(id => {
+        localStorage.removeItem(`${LS_TOUR_PREFIX}${id}`);
+        localStorage.removeItem(`${LS_COMPLETED_PREFIX}${id}`);
       });
-      if (error) throw error;
-
-      if (enabled) {
-        // Ao ativar: limpar tudo para reiniciar os tours
-        localStorage.removeItem(LS_DISMISSED);
-        TOUR_FEATURE_IDS.forEach(id => {
-          localStorage.removeItem(`${LS_TOUR_PREFIX}${id}`);
-          localStorage.removeItem(`${LS_COMPLETED_PREFIX}${id}`);
-        });
-      } else {
-        // Ao desativar: marcar todos os tours como vistos + dispensar stepper
-        TOUR_FEATURE_IDS.forEach(id => {
-          localStorage.setItem(`${LS_TOUR_PREFIX}${id}`, 'true');
-        });
-        localStorage.setItem(LS_DISMISSED, 'true');
-      }
-
-      window.dispatchEvent(new Event('storage'));
-      return true;
-    } catch {
-      return false;
-    } finally {
-      setIsSavingTourToggle(false);
+    } else {
+      TOUR_FEATURE_IDS.forEach(id => {
+        localStorage.setItem(`${LS_TOUR_PREFIX}${id}`, 'true');
+      });
+      localStorage.setItem(LS_DISMISSED, 'true');
     }
+
+    // 2. Persistir no Supabase (fire-and-forget, não bloqueia UX)
+    try {
+      await supabase.auth.updateUser({ data: { tour_enabled: enabled } });
+    } catch {
+      // Supabase falhou — tudo bem, localStorage já está correto
+    }
+
+    setIsSavingTourToggle(false);
+    return true;
   }, []);
 
   return {
