@@ -1175,7 +1175,7 @@ function App() {
 
  {/* MODELS — manter montado durante geração minimizada */}
  {(currentPage === 'models' || isGeneratingModels) && (
-   <div style={{ display: currentPage === 'models' ? undefined : 'none' }}>
+   <div style={{ display: currentPage === 'models' ? 'contents' : 'none' }}>
      <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />
    </div>
  )}
