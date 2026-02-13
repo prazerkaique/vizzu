@@ -17,7 +17,8 @@ export interface DownloadRatingParams {
   productName?: string;
   featureSource?: string;  // 'product-studio', 'look-composer', etc.
   imageCount: number;
-  imageUrls?: string[];    // URLs das imagens baixadas (para planilha)
+  imageUrls?: string[];    // URLs das imagens geradas (para planilha)
+  originalImageUrl?: string; // URL da foto original do produto (antes da IA)
 }
 
 export async function submitDownloadRating(params: DownloadRatingParams): Promise<{ success: boolean }> {
@@ -54,6 +55,7 @@ export async function submitDownloadRating(params: DownloadRatingParams): Promis
         product_name: params.productName || 'N/A',
         feature_source: params.featureSource || 'N/A',
         image_urls: (params.imageUrls || []).join(', '),
+        original_image_url: params.originalImageUrl || '',
       }),
     });
   } catch (e) {

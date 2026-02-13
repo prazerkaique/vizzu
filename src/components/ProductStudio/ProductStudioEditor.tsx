@@ -3171,6 +3171,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
   isOpen={showDownloadModal}
   onClose={() => setShowDownloadModal(false)}
   productName={product.name}
+  originalImageUrl={product.originalImages?.front?.url || product.images?.[0]?.url}
   images={downloadableImages}
   theme={theme}
  />

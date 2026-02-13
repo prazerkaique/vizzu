@@ -511,6 +511,7 @@ export const CreativeStillResults: React.FC<Props> = ({
   isOpen={showDownloadModal}
   onClose={() => setShowDownloadModal(false)}
   productName={product?.name || 'Creative Still'}
+  originalImageUrl={product?.originalImages?.front?.url || product?.images?.[0]?.url}
   images={downloadableImages}
   theme={theme}
  />

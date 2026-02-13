@@ -879,6 +879,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         isOpen={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
         productName={product.name}
+        originalImageUrl={product.originalImages?.front?.url || product.images?.[0]?.url}
         groups={downloadGroups}
         theme={theme}
       />

@@ -24,6 +24,8 @@ interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
+  /** URL da foto original do produto (antes da IA) — para rating */
+  originalImageUrl?: string;
   /** Modo flat — lista simples de imagens (usado nas features) */
   images?: DownloadableImage[];
   /** Modo agrupado — imagens por feature (usado no ProductHubModal) */
@@ -37,6 +39,7 @@ export default function DownloadModal({
   isOpen,
   onClose,
   productName,
+  originalImageUrl,
   images,
   groups,
   theme = 'dark',
@@ -194,6 +197,7 @@ export default function DownloadModal({
       featureSource,
       imageCount: selectedImages.length || allImages.length,
       imageUrls: (selectedImages.length > 0 ? selectedImages : allImages).map(img => img.url),
+      originalImageUrl,
     });
     setIsSubmittingRating(false);
     onClose();

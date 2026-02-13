@@ -777,6 +777,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
   isOpen={showDownloadModal}
   onClose={() => setShowDownloadModal(false)}
   productName={product.name}
+  originalImageUrl={product.originalImages?.front?.url || product.images?.[0]?.url}
   images={downloadableImages}
   theme={theme}
  />
