@@ -5,9 +5,12 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { OptimizedImage } from '../OptimizedImage';
 import DownloadProgressModal from './DownloadProgressModal';
+import { StarRating } from './StarRating';
 import { DOWNLOAD_PRESETS, getDownloadUrl, buildFilename, type DownloadableImage, type DownloadPreset } from '../../utils/downloadSizes';
 import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload';
 import { smartDownload } from '../../utils/downloadHelper';
+import { submitDownloadRating } from '../../lib/api/ratings';
+import { useAuth } from '../../contexts/AuthContext';
 
 // ── Types ──
 
@@ -39,6 +42,7 @@ export default function DownloadModal({
   theme = 'dark',
 }: DownloadModalProps) {
   const isDark = theme === 'dark';
+  const { user } = useAuth();
 
   // ── Flatten images ──
   const allImages = useMemo(() => {
@@ -50,11 +54,16 @@ export default function DownloadModal({
   const isGrouped = !!groups && groups.length > 0;
 
   // ── State ──
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selected, setSelected] = useState<Set<number>>(() => new Set(allImages.map((_, i) => i)));
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(() => new Set(groups?.map((_, i) => i) || []));
   const [zipProgress, setZipProgress] = useState<ZipProgress | null>(null);
   const zipAbortRef = useRef<AbortController | null>(null);
+
+  // ── Rating state (Step 3) ──
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
   // Reset ao abrir
   useEffect(() => {
@@ -63,6 +72,9 @@ export default function DownloadModal({
       setSelected(new Set(allImages.map((_, i) => i)));
       setExpandedGroups(new Set(groups?.map((_, i) => i) || []));
       setZipProgress(null);
+      setRating(0);
+      setRatingComment('');
+      setIsSubmittingRating(false);
     }
   }, [isOpen, allImages.length]);
 
@@ -133,7 +145,7 @@ export default function DownloadModal({
       const url = getDownloadUrl(img.url, preset);
       const filename = buildFilename(productName, img.featurePrefix, img.label, preset);
       await smartDownload(url, { filename });
-      onClose();
+      setStep(3);
       return;
     }
 
@@ -143,8 +155,8 @@ export default function DownloadModal({
     await generateZipFromImages(selectedImages, productName, setZipProgress, abort.signal, [preset]);
     setZipProgress(null);
     zipAbortRef.current = null;
-    onClose();
-  }, [selectedImages, productName, onClose]);
+    setStep(3);
+  }, [selectedImages, productName]);
 
   const handleDownloadAll = useCallback(async () => {
     if (selectedImages.length === 0) return;
@@ -154,13 +166,36 @@ export default function DownloadModal({
     await generateZipFromImages(selectedImages, productName, setZipProgress, abort.signal);
     setZipProgress(null);
     zipAbortRef.current = null;
-    onClose();
-  }, [selectedImages, productName, onClose]);
+    setStep(3);
+  }, [selectedImages, productName]);
 
   const handleCancelZip = useCallback(() => {
     zipAbortRef.current?.abort();
     setZipProgress(null);
   }, []);
+
+  // ── Rating handler ──
+  const featureSource = useMemo(() => {
+    const prefix = selectedImages[0]?.featurePrefix || allImages[0]?.featurePrefix || '';
+    return prefix.replace(/^V/, '').replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '') || 'download';
+  }, [selectedImages, allImages]);
+
+  const handleSubmitRating = useCallback(async () => {
+    if (rating === 0 || !user) return;
+    setIsSubmittingRating(true);
+    await submitDownloadRating({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name,
+      rating,
+      comment: ratingComment.trim() || undefined,
+      productName,
+      featureSource,
+      imageCount: selectedImages.length || allImages.length,
+    });
+    setIsSubmittingRating(false);
+    onClose();
+  }, [rating, ratingComment, user, productName, featureSource, selectedImages.length, allImages.length, onClose]);
 
   // ── Render ──
   if (!isOpen) return null;
@@ -199,7 +234,7 @@ export default function DownloadModal({
               onContinue={() => setStep(2)}
               onClose={onClose}
             />
-          ) : (
+          ) : step === 2 ? (
             <Step2Format
               isDark={isDark}
               productName={productName}
@@ -208,6 +243,17 @@ export default function DownloadModal({
               onClose={onClose}
               onPresetDownload={handlePresetDownload}
               onDownloadAll={handleDownloadAll}
+            />
+          ) : (
+            <Step3Rating
+              isDark={isDark}
+              rating={rating}
+              comment={ratingComment}
+              isSubmitting={isSubmittingRating}
+              onRatingChange={setRating}
+              onCommentChange={setRatingComment}
+              onSubmit={handleSubmitRating}
+              onSkip={onClose}
             />
           )}
         </div>
@@ -571,6 +617,104 @@ function Step2Format({
         ))}
       </div>
     </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 3 — Avaliação pós-download
+// ═══════════════════════════════════════════════════════════════
+
+function Step3Rating({
+  isDark,
+  rating,
+  comment,
+  isSubmitting,
+  onRatingChange,
+  onCommentChange,
+  onSubmit,
+  onSkip,
+}: {
+  isDark: boolean;
+  rating: number;
+  comment: string;
+  isSubmitting: boolean;
+  onRatingChange: (v: number) => void;
+  onCommentChange: (v: string) => void;
+  onSubmit: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="px-5 py-6 flex flex-col items-center text-center">
+      {/* Ícone de sucesso */}
+      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center mb-4">
+        <i className="fas fa-check text-white text-lg" />
+      </div>
+
+      <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-base font-bold mb-1'}>
+        Download concluído!
+      </h3>
+      <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-6'}>
+        Como ficaram suas imagens?
+      </p>
+
+      {/* Estrelas */}
+      <StarRating value={rating} onChange={onRatingChange} />
+
+      {/* Comentário (aparece após clicar estrela) */}
+      {rating > 0 && (
+        <div className="w-full mt-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <textarea
+            value={comment}
+            onChange={(e) => onCommentChange(e.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="Quer contar mais? (opcional)"
+            className={
+              'w-full rounded-xl px-4 py-3 text-sm resize-none transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/40 ' +
+              (isDark
+                ? 'bg-white/[0.06] border border-white/[0.08] text-white placeholder-neutral-600'
+                : 'bg-[#f7f5f2] border border-gray-200 text-gray-800 placeholder-gray-400')
+            }
+          />
+          <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] text-right mt-1'}>
+            {comment.length}/500
+          </p>
+        </div>
+      )}
+
+      {/* Botões */}
+      <div className="flex items-center gap-3 w-full mt-5">
+        <button
+          onClick={onSkip}
+          className={
+            'flex-1 py-3 rounded-xl text-sm font-medium transition-colors ' +
+            (isDark
+              ? 'text-neutral-400 hover:text-white hover:bg-white/[0.06]'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100')
+          }
+        >
+          Pular
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={rating === 0 || isSubmitting}
+          className={
+            'flex-1 py-3 rounded-xl text-sm font-bold transition-all ' +
+            (rating > 0
+              ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90 shadow-lg shadow-[#FF6B6B]/25 active:scale-[0.98]'
+              : isDark
+                ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed')
+          }
+        >
+          {isSubmitting ? (
+            <i className="fas fa-spinner fa-spin" />
+          ) : (
+            <>Enviar <i className="fas fa-paper-plane ml-1.5 text-xs" /></>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
