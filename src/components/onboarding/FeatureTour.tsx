@@ -30,6 +30,7 @@ interface SpotlightRect {
 
 const PADDING = 8; // px ao redor do elemento target
 const TOOLTIP_GAP = 12; // px entre spotlight e tooltip
+const MAX_SPOTLIGHT_HEIGHT = 200; // cap para elementos muito altos
 
 export function FeatureTour({ featureId, stops, theme }: FeatureTourProps) {
   const { shouldShowTour, markTourComplete } = useOnboarding();
@@ -55,43 +56,63 @@ export function FeatureTour({ featureId, stops, theme }: FeatureTourProps) {
     }
 
     const rect = targetEl.getBoundingClientRect();
+    const rawHeight = rect.height + PADDING * 2;
+    const cappedHeight = Math.min(rawHeight, MAX_SPOTLIGHT_HEIGHT);
     const spotlight: SpotlightRect = {
       top: rect.top - PADDING,
       left: rect.left - PADDING,
       width: rect.width + PADDING * 2,
-      height: rect.height + PADDING * 2,
+      height: cappedHeight,
     };
     setSpotlightRect(spotlight);
 
     // Calcular posição do tooltip
     const placement = stops[currentIndex].placement;
     const tooltipWidth = Math.min(320, window.innerWidth - 32);
+    const tooltipHeight = 180; // estimativa conservadora
     const style: React.CSSProperties = { maxWidth: tooltipWidth };
 
+    const centerX = Math.max(16, Math.min(
+      spotlight.left + spotlight.width / 2 - tooltipWidth / 2,
+      window.innerWidth - tooltipWidth - 16
+    ));
+
     switch (placement) {
-      case 'bottom':
-        style.top = spotlight.top + spotlight.height + TOOLTIP_GAP;
-        style.left = Math.max(16, Math.min(
-          spotlight.left + spotlight.width / 2 - tooltipWidth / 2,
-          window.innerWidth - tooltipWidth - 16
-        ));
+      case 'bottom': {
+        let top = spotlight.top + spotlight.height + TOOLTIP_GAP;
+        // Se o tooltip sairia pela parte inferior, muda pra top
+        if (top + tooltipHeight > window.innerHeight - 16) {
+          top = Math.max(16, spotlight.top - tooltipHeight - TOOLTIP_GAP);
+        }
+        style.top = top;
+        style.left = centerX;
         break;
-      case 'top':
-        style.bottom = window.innerHeight - spotlight.top + TOOLTIP_GAP;
-        style.left = Math.max(16, Math.min(
-          spotlight.left + spotlight.width / 2 - tooltipWidth / 2,
-          window.innerWidth - tooltipWidth - 16
-        ));
+      }
+      case 'top': {
+        let topVal = spotlight.top - tooltipHeight - TOOLTIP_GAP;
+        // Se sairia pela parte superior, muda pra bottom
+        if (topVal < 16) {
+          topVal = spotlight.top + spotlight.height + TOOLTIP_GAP;
+        }
+        style.top = Math.max(16, topVal);
+        style.left = centerX;
         break;
+      }
       case 'right':
-        style.top = Math.max(16, spotlight.top + spotlight.height / 2 - 60);
+        style.top = Math.max(16, Math.min(
+          spotlight.top + spotlight.height / 2 - 60,
+          window.innerHeight - tooltipHeight - 16
+        ));
         style.left = Math.min(
           spotlight.left + spotlight.width + TOOLTIP_GAP,
           window.innerWidth - tooltipWidth - 16
         );
         break;
       case 'left':
-        style.top = Math.max(16, spotlight.top + spotlight.height / 2 - 60);
+        style.top = Math.max(16, Math.min(
+          spotlight.top + spotlight.height / 2 - 60,
+          window.innerHeight - tooltipHeight - 16
+        ));
         style.right = window.innerWidth - spotlight.left + TOOLTIP_GAP;
         break;
     }

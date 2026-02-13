@@ -740,8 +740,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* ÚLTIMOS LOOKS */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div data-tour="look-gallery" className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border mb-6 overflow-hidden'}>
- <div className="p-4 flex items-center justify-between">
+ <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border mb-6 overflow-hidden'}>
+ <div data-tour="look-gallery" className="p-4 flex items-center justify-between">
  <div className="flex items-center gap-3">
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={(isDark ? 'text-neutral-200' : 'text-[#1A1A1A]') + ' fas fa-clock text-sm'}></i>
@@ -883,8 +883,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* EXPLORAR POR PRODUTO */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {allProductsForExplore.length > 0 && (
- <div data-tour="look-with-products" className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden'}>
- <div className="p-4">
+ <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden'}>
+ <div data-tour="look-with-products" className="p-4">
  <div className="flex items-center gap-3">
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-purple-500/20' : 'bg-purple-100')}>
  <i className={(isDark ? 'text-purple-400' : 'text-purple-500') + ' fas fa-shirt text-sm'}></i>

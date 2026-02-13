@@ -636,8 +636,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
         {/* ── ÚLTIMOS STILLS ── */}
         {recentStills.length > 0 && (
-          <div data-tour="still-recent-gallery" className="mb-8">
-            <div className="flex items-center justify-between mb-3">
+          <div className="mb-8">
+            <div data-tour="still-recent-gallery" className="flex items-center justify-between mb-3">
               <h2 className={(isDark ? 'text-neutral-200' : 'text-gray-800') + ' text-sm font-bold'}>
                 <i className="fas fa-clock-rotate-left mr-2 text-xs opacity-50"></i>
                 Últimos Stills
@@ -789,8 +789,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           <>
             {/* ═══ SEÇÃO: Sem Still Criativo ═══ */}
             {productsWithoutStills.length > 0 && (
-              <div data-tour="still-without-products" className="mb-6">
+              <div className="mb-6">
                 <button
+                  data-tour="still-without-products"
                   onClick={() => setWithoutStillsCollapsed(!withoutStillsCollapsed)}
                   className="w-full flex items-center justify-between mb-3 group"
                 >
@@ -875,8 +876,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
             {/* ═══ SEÇÃO: Produtos com Still Criativo ═══ */}
             {productsWithStills.length > 0 && (
-              <div data-tour="still-with-products" className="mb-6">
+              <div className="mb-6">
                 <button
+                  data-tour="still-with-products"
                   onClick={() => setWithStillsCollapsed(!withStillsCollapsed)}
                   className="w-full flex items-center justify-between mb-3 group"
                 >

@@ -589,8 +589,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* SEÇÃO: Pendentes de Otimização (PRIMEIRO) */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {pendingProducts.length > 0 && (
- <div data-tour="studio-product-list" className="mb-6">
+ <div className="mb-6">
  <button
+ data-tour="studio-product-list"
  onClick={() => setPendingCollapsed(!pendingCollapsed)}
  className="w-full flex items-center justify-between mb-3 group"
  >
@@ -663,8 +664,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* SEÇÃO: Produtos Otimizados (SEGUNDO) */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {optimizedProducts.length > 0 && (
- <div data-tour="studio-optimized" className="mb-6">
+ <div className="mb-6">
  <button
+ data-tour="studio-optimized"
  onClick={() => setOptimizedCollapsed(!optimizedCollapsed)}
  className="w-full flex items-center justify-between mb-3 group"
  >
