@@ -193,10 +193,11 @@ export default function DownloadModal({
       productName,
       featureSource,
       imageCount: selectedImages.length || allImages.length,
+      imageUrls: (selectedImages.length > 0 ? selectedImages : allImages).map(img => img.url),
     });
     setIsSubmittingRating(false);
     onClose();
-  }, [rating, ratingComment, user, productName, featureSource, selectedImages.length, allImages.length, onClose]);
+  }, [rating, ratingComment, user, productName, featureSource, selectedImages, allImages, onClose]);
 
   // ── Render ──
   if (!isOpen) return null;
