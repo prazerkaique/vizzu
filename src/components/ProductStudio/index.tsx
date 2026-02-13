@@ -9,6 +9,9 @@ import { ProductStudioEditor } from './ProductStudioEditor';
 import { Plan } from '../../hooks/useCredits';
 import { ProductHubModal } from '../shared/ProductHubModal';
 import { useUI } from '../../contexts/UIContext';
+import { FeatureTour } from '../onboarding/FeatureTour';
+import { PRODUCT_STUDIO_TOUR_STOPS } from '../onboarding/tourStops';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 interface ProductStudioProps {
  products: Product[];
@@ -91,6 +94,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  const [showProductModal, setShowProductModal] = useState(false);
  const [hubProduct, setHubProduct] = useState<Product | null>(null);
  const { navigateTo, showToast } = useUI();
+ const { shouldShowTour } = useOnboarding();
  const [productSearchTerm, setProductSearchTerm] = useState('');
  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
  const [productFilterCategory, setProductFilterCategory] = useState('');
@@ -355,7 +359,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* CARD EXPLICATIVO - Logo abaixo do header */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div className={(theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white/60 border-gray-200/60 shadow-sm') + ' rounded-xl p-4 border mb-4 backdrop-blur-xl'}>
+ <div data-tour="studio-info-card" className={(theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white/60 border-gray-200/60 shadow-sm') + ' rounded-xl p-4 border mb-4 backdrop-blur-xl'}>
  <div className="flex items-start gap-4">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme === 'dark' ? 'bg-white/10' : 'bg-gray-100')}>
  <i className={(theme === 'dark' ? 'text-neutral-400' : 'text-gray-500') + ' fas fa-camera text-lg'}></i>
@@ -377,7 +381,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* SEARCH BAR */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div className="relative mb-4">
+ <div data-tour="studio-search" className="relative mb-4">
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm'}></i>
  <input
  type="text"
@@ -401,7 +405,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* FILTERS */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border mb-4'}>
+ <div data-tour="studio-filters" className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border mb-4'}>
  <button
  onClick={() => setShowFilters(!showFilters)}
  className="w-full p-3 flex items-center justify-between"
@@ -585,7 +589,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* SEÇÃO: Pendentes de Otimização (PRIMEIRO) */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {pendingProducts.length > 0 && (
- <div className="mb-6">
+ <div data-tour="studio-product-list" className="mb-6">
  <button
  onClick={() => setPendingCollapsed(!pendingCollapsed)}
  className="w-full flex items-center justify-between mb-3 group"
@@ -659,7 +663,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  {/* SEÇÃO: Produtos Otimizados (SEGUNDO) */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {optimizedProducts.length > 0 && (
- <div className="mb-6">
+ <div data-tour="studio-optimized" className="mb-6">
  <button
  onClick={() => setOptimizedCollapsed(!optimizedCollapsed)}
  className="w-full flex items-center justify-between mb-3 group"
@@ -902,6 +906,7 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
    showToast={showToast}
  />
  )}
+ {shouldShowTour('product-studio') && <FeatureTour featureId="product-studio" stops={PRODUCT_STUDIO_TOUR_STOPS} theme={theme} />}
  </div>
  );
 };

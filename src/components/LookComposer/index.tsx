@@ -14,6 +14,9 @@ import { ProductHubModal } from '../shared/ProductHubModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 import { supabase } from '../../services/supabaseClient';
 import { useUI } from '../../contexts/UIContext';
+import { FeatureTour } from '../onboarding/FeatureTour';
+import { LOOK_COMPOSER_TOUR_STOPS } from '../onboarding/tourStops';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 interface LookComposerProps {
  products: Product[];
@@ -134,6 +137,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 }) => {
  const isDark = theme === 'dark';
  const { navigateTo, showToast } = useUI();
+ const { shouldShowTour } = useOnboarding();
 
  // Estados principais
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -718,11 +722,12 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  </div>
  <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
- <div className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
+ <div data-tour="look-credits" className={'hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
  <i className="fas fa-coins text-[#FF6B6B] text-xs"></i>
  <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>{userCredits}</span>
  </div>
  <button
+ data-tour="look-new"
  onClick={handleNewLook}
  className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-xs sm:text-sm hover:opacity-90 transition-opacity"
  >
@@ -735,7 +740,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* ÚLTIMOS LOOKS */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border mb-6 overflow-hidden'}>
+ <div data-tour="look-gallery" className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border mb-6 overflow-hidden'}>
  <div className="p-4 flex items-center justify-between">
  <div className="flex items-center gap-3">
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
@@ -878,7 +883,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* EXPLORAR POR PRODUTO */}
  {/* ═══════════════════════════════════════════════════════════════ */}
  {allProductsForExplore.length > 0 && (
- <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden'}>
+ <div data-tour="look-with-products" className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-2xl border overflow-hidden'}>
  <div className="p-4">
  <div className="flex items-center gap-3">
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center ' + (isDark ? 'bg-purple-500/20' : 'bg-purple-100')}>
@@ -1670,6 +1675,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
   theme={theme}
  />
  )}
+ {shouldShowTour('look-composer') && <FeatureTour featureId="look-composer" stops={LOOK_COMPOSER_TOUR_STOPS} theme={theme} />}
  </div>
  );
 };

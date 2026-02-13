@@ -16,6 +16,9 @@ import { compressImage, formatFileSize } from '../utils/imageCompression';
 import { getProductType, UPLOAD_SLOTS_CONFIG, DETAIL_TIPS, angleToApiField, angleToOriginalImagesKey, type UploadSlotConfig } from '../lib/productConfig';
 import { ProductGridSkeleton } from '../components/LoadingSkeleton';
 import { RegisterAllWizard } from '../components/RegisterAllWizard';
+import { FeatureTour } from '../components/onboarding/FeatureTour';
+import { PRODUCTS_TOUR_STOPS } from '../components/onboarding/tourStops';
+import { useOnboarding } from '../hooks/useOnboarding';
 
 const CATEGORY_GROUPS = [
  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
@@ -49,6 +52,7 @@ interface ProductsPageProps {
 
 export function ProductsPage({ productForCreation, setProductForCreation }: ProductsPageProps) {
   const { openViewer } = useImageViewer();
+  const { shouldShowTour } = useOnboarding();
   const [showCreateProduct, setShowCreateProduct] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState<Product | null>(null);
   const [showOptimizedImage, setShowOptimizedImage] = useState(true);
@@ -651,21 +655,21 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  </div>
  <div className="flex items-center gap-2">
- <button onClick={() => setShowBulkImport(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
+ <button data-tour="products-import" onClick={() => setShowBulkImport(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs hover:opacity-90 transition-opacity">
  <i className="fas fa-file-import mr-1.5"></i>Importar
  </button>
- <button onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
+ <button data-tour="products-add" onClick={() => setShowCreateProduct(true)} className="px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs">
  <i className="fas fa-plus mr-1.5"></i>Novo
  </button>
  </div>
  </div>
 
- <div className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 mb-4'}>
+ <div data-tour="products-filters" className={(theme === 'dark' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3 mb-4'}>
  <div className="flex flex-wrap gap-2">
  <div className="flex-shrink-0 w-44">
  <div className="relative">
  <i className={(theme === 'dark' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]'}></i>
- <input type="text" id="product-search" name="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
+ <input data-tour="products-search" type="text" id="product-search" name="search" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={(theme === 'dark' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full pl-7 pr-2 py-1.5 border rounded-lg text-xs'} />
  </div>
  </div>
  <select
@@ -742,12 +746,13 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <ProductGridSkeleton theme={theme} count={12} />
  ) : filteredProducts.length > 0 ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 p-3">
- {paginatedProducts.map(product => {
+ {paginatedProducts.map((product, productIdx) => {
  const imgCount = getGeneratedImageCount(product);
  const isSelected = selectedProducts.includes(product.id);
  return (
  <div
  key={product.id}
+ {...(productIdx === 0 ? { 'data-tour': 'products-card' } : {})}
  data-product-id={product.id}
  className={(theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200') + ' rounded-lg overflow-hidden cursor-pointer transition-colors group relative select-none ' + (isSelected ? (theme === 'dark' ? 'ring-2 ring-neutral-500' : 'ring-2 ring-gray-400') : '')}
  onTouchStart={() => handleProductTouchStart(product.id)}
@@ -1476,6 +1481,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  </div>
  </div>
  )}
+    {shouldShowTour('products') && <FeatureTour featureId="products" stops={PRODUCTS_TOUR_STOPS} theme={theme} />}
     </>
   );
 }

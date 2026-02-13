@@ -6,6 +6,8 @@ import { useClients } from '../contexts/ClientsContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { OnboardingProgress } from '../components/onboarding/OnboardingProgress';
+import { useOnboarding } from '../hooks/useOnboarding';
 import { supabase } from '../services/supabaseClient';
 import type { Product, Client } from '../types';
 
@@ -90,6 +92,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  const { clients, clientLooks } = useClients();
  const { historyLogs } = useHistory();
  const { userCredits, currentPlan } = useCredits({ userId: user?.id });
+ const { isOnboardingActive } = useOnboarding();
 
  // Carrossel de dicas — troca a cada 10s
  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * TIPS.length));
@@ -221,6 +224,9 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <span className="hidden md:inline">Novo Projeto</span>
  </button>
  </div>
+
+ {/* COPILOTO ONBOARDING */}
+ {isOnboardingActive && <OnboardingProgress theme={theme} />}
 
  {/* ÚLTIMAS CRIAÇÕES */}
  {(() => {

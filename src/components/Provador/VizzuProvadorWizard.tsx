@@ -19,6 +19,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
+import { FeatureTour } from '../onboarding/FeatureTour';
+import { PROVADOR_TOUR_STOPS } from '../onboarding/tourStops';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 // ============================================================
 // TIPOS E CONSTANTES
@@ -136,6 +139,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  // Auth & UI para reports
  const { user } = useAuth();
  const { showToast } = useUI();
+ const { shouldShowTour } = useOnboarding();
 
  // Reveal animation: generating → done transition
  useEffect(() => {
@@ -609,7 +613,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  // ============================================================
 
  const renderStepIndicators = () => (
- <div className="flex items-center justify-center gap-2 mb-6">
+ <div data-tour="provador-steps" className="flex items-center justify-center gap-2 mb-6">
  {WIZARD_STEPS.map((step) => {
  const isActive = currentStep === step.id;
  const isComplete = isStepComplete(step.id);
@@ -708,7 +712,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  ) : (
  <>
  {/* Buscar clientes */}
- <div className="mb-4">
+ <div data-tour="provador-client-search" className="mb-4">
  <div className="relative">
  <i className={`fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs ${theme === 'dark' ? 'text-neutral-500' : 'text-gray-400'}`}></i>
  <input
@@ -726,7 +730,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {/* Lista de clientes */}
- <div className="space-y-2 max-h-80 overflow-y-auto">
+ <div data-tour="provador-client-list" className="space-y-2 max-h-80 overflow-y-auto">
  {clientsWithProvador.length > 0 ? (
  clientsWithProvador.map((client) => (
  <div
@@ -774,6 +778,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
 
  {/* Botao de adicionar cliente */}
  <button
+ data-tour="provador-client-create"
  onClick={onCreateClient}
  className={`w-full mt-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
  theme === 'dark'
@@ -1721,6 +1726,11 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  productName={selectedClient?.firstName || undefined}
  theme={theme}
  />
+
+ {/* ONBOARDING TOUR */}
+ {shouldShowTour('provador') && (
+ <FeatureTour featureId="provador" stops={PROVADOR_TOUR_STOPS} theme={theme} />
+ )}
  </div>
  );
 };

@@ -18,6 +18,9 @@ import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
 import { ProductHubModal } from '../shared/ProductHubModal';
 import { useUI } from '../../contexts/UIContext';
+import { FeatureTour } from '../onboarding/FeatureTour';
+import { CREATIVE_STILL_TOUR_STOPS } from '../onboarding/tourStops';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES (exportadas para o Results)
@@ -128,6 +131,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   onDeductEditCredits,
   setProductForCreation: setProductForCreationProp,
 }) => {
+  const { shouldShowTour } = useOnboarding();
   const [view, setView] = useState<View>('listing');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
@@ -632,7 +636,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
         {/* ── ÚLTIMOS STILLS ── */}
         {recentStills.length > 0 && (
-          <div className="mb-8">
+          <div data-tour="still-recent-gallery" className="mb-8">
             <div className="flex items-center justify-between mb-3">
               <h2 className={(isDark ? 'text-neutral-200' : 'text-gray-800') + ' text-sm font-bold'}>
                 <i className="fas fa-clock-rotate-left mr-2 text-xs opacity-50"></i>
@@ -681,7 +685,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         )}
 
         {/* ── BUSCA ── */}
-        <div className="relative mb-4">
+        <div data-tour="still-search" className="relative mb-4">
           <i className={'fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm ' + (isDark ? 'text-neutral-600' : 'text-gray-400')}></i>
           <input
             type="text"
@@ -698,7 +702,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         </div>
 
         {/* ── FILTROS ── */}
-        <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border mb-4'}>
+        <div data-tour="still-filters" className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border mb-4'}>
           <button onClick={() => setShowFilters(!showFilters)} className="w-full p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <i className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' fas fa-filter text-xs'}></i>
@@ -785,7 +789,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           <>
             {/* ═══ SEÇÃO: Sem Still Criativo ═══ */}
             {productsWithoutStills.length > 0 && (
-              <div className="mb-6">
+              <div data-tour="still-without-products" className="mb-6">
                 <button
                   onClick={() => setWithoutStillsCollapsed(!withoutStillsCollapsed)}
                   className="w-full flex items-center justify-between mb-3 group"
@@ -871,7 +875,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
             {/* ═══ SEÇÃO: Produtos com Still Criativo ═══ */}
             {productsWithStills.length > 0 && (
-              <div className="mb-6">
+              <div data-tour="still-with-products" className="mb-6">
                 <button
                   onClick={() => setWithStillsCollapsed(!withStillsCollapsed)}
                   className="w-full flex items-center justify-between mb-3 group"
@@ -1046,6 +1050,11 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           defaultTab="cs"
           showToast={showToast}
         />
+      )}
+
+      {/* ONBOARDING TOUR */}
+      {shouldShowTour('creative-still') && (
+        <FeatureTour featureId="creative-still" stops={CREATIVE_STILL_TOUR_STOPS} theme={theme} />
       )}
     </div>
   );
