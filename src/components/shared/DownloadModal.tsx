@@ -24,8 +24,8 @@ interface DownloadModalProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
-  /** URL da foto original do produto (antes da IA) — para rating */
-  originalImageUrl?: string;
+  /** URL(s) da foto original do produto (antes da IA) — para rating. Array para features com múltiplos ângulos */
+  originalImageUrl?: string | string[];
   /** Modo flat — lista simples de imagens (usado nas features) */
   images?: DownloadableImage[];
   /** Modo agrupado — imagens por feature (usado no ProductHubModal) */
@@ -65,6 +65,7 @@ export default function DownloadModal({
 
   // ── Rating state (Step 3) ──
   const [rating, setRating] = useState(0);
+  const [toolRating, setToolRating] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
@@ -76,6 +77,7 @@ export default function DownloadModal({
       setExpandedGroups(new Set(groups?.map((_, i) => i) || []));
       setZipProgress(null);
       setRating(0);
+      setToolRating(0);
       setRatingComment('');
       setIsSubmittingRating(false);
     }
@@ -192,16 +194,17 @@ export default function DownloadModal({
       userName: user.name,
       userPlan: user.plan,
       rating,
+      toolRating: toolRating || undefined,
       comment: ratingComment.trim() || undefined,
       productName,
       featureSource,
       imageCount: selectedImages.length || allImages.length,
       imageUrls: (selectedImages.length > 0 ? selectedImages : allImages).map(img => img.url),
-      originalImageUrl,
+      originalImageUrls: Array.isArray(originalImageUrl) ? originalImageUrl : originalImageUrl ? [originalImageUrl] : [],
     });
     setIsSubmittingRating(false);
     onClose();
-  }, [rating, ratingComment, user, productName, featureSource, selectedImages, allImages, onClose]);
+  }, [rating, toolRating, ratingComment, user, productName, featureSource, selectedImages, allImages, originalImageUrl, onClose]);
 
   // ── Render ──
   if (!isOpen) return null;
@@ -254,9 +257,12 @@ export default function DownloadModal({
             <Step3Rating
               isDark={isDark}
               rating={rating}
+              toolRating={toolRating}
               comment={ratingComment}
               isSubmitting={isSubmittingRating}
+              featureSource={featureSource}
               onRatingChange={setRating}
+              onToolRatingChange={setToolRating}
               onCommentChange={setRatingComment}
               onSubmit={handleSubmitRating}
               onSkip={onClose}
@@ -630,25 +636,41 @@ function Step2Format({
 // STEP 3 — Avaliação pós-download
 // ═══════════════════════════════════════════════════════════════
 
+const FEATURE_LABELS: Record<string, string> = {
+  'product-studio': 'Product Studio',
+  'creative-still': 'Still Criativo',
+  'look-composer': 'Look Composer',
+  'studio-ready': 'Studio Ready',
+  'cenario': 'Cenário Criativo',
+};
+
 function Step3Rating({
   isDark,
   rating,
+  toolRating,
   comment,
   isSubmitting,
+  featureSource,
   onRatingChange,
+  onToolRatingChange,
   onCommentChange,
   onSubmit,
   onSkip,
 }: {
   isDark: boolean;
   rating: number;
+  toolRating: number;
   comment: string;
   isSubmitting: boolean;
+  featureSource: string;
   onRatingChange: (v: number) => void;
+  onToolRatingChange: (v: number) => void;
   onCommentChange: (v: string) => void;
   onSubmit: () => void;
   onSkip: () => void;
 }) {
+  const featureLabel = FEATURE_LABELS[featureSource] || 'ferramenta';
+
   return (
     <div className="px-5 py-6 flex flex-col items-center text-center">
       {/* Ícone de sucesso */}
@@ -659,16 +681,31 @@ function Step3Rating({
       <h3 className={(isDark ? 'text-white' : 'text-[#373632]') + ' text-base font-bold mb-1'}>
         Download concluído!
       </h3>
-      <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-6'}>
-        Como ficaram suas imagens?
+      <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mb-5'}>
+        Avalie sua experiência
       </p>
 
-      {/* Estrelas */}
-      <StarRating value={rating} onChange={onRatingChange} />
+      {/* Rating da imagem gerada */}
+      <div className="w-full mb-4">
+        <p className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+          <i className="fas fa-image mr-1.5 text-[#FF9F43] text-[10px]" />
+          Qualidade da imagem gerada
+        </p>
+        <StarRating value={rating} onChange={onRatingChange} />
+      </div>
 
-      {/* Comentário (aparece após clicar estrela) */}
-      {rating > 0 && (
-        <div className="w-full mt-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {/* Rating da ferramenta */}
+      <div className={'w-full mb-1 pt-4 border-t ' + (isDark ? 'border-white/[0.06]' : 'border-gray-100')}>
+        <p className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' text-xs font-medium mb-2'}>
+          <i className="fas fa-wand-magic-sparkles mr-1.5 text-[#FF6B6B] text-[10px]" />
+          Experiência com o {featureLabel}
+        </p>
+        <StarRating value={toolRating} onChange={onToolRatingChange} />
+      </div>
+
+      {/* Comentário (aparece após dar qualquer nota) */}
+      {(rating > 0 || toolRating > 0) && (
+        <div className="w-full mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <textarea
             value={comment}
             onChange={(e) => onCommentChange(e.target.value)}

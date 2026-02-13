@@ -12,13 +12,14 @@ export interface DownloadRatingParams {
   userEmail: string;
   userName: string;
   userPlan?: string;
-  rating: number;          // 1-5
+  rating: number;              // 1-5 — nota da imagem gerada
+  toolRating?: number;         // 1-5 — nota da ferramenta
   comment?: string;
   productName?: string;
-  featureSource?: string;  // 'product-studio', 'look-composer', etc.
+  featureSource?: string;      // 'product-studio', 'look-composer', etc.
   imageCount: number;
-  imageUrls?: string[];    // URLs das imagens geradas (para planilha)
-  originalImageUrl?: string; // URL da foto original do produto (antes da IA)
+  imageUrls?: string[];        // URLs das imagens geradas (para planilha)
+  originalImageUrls?: string[]; // URLs da(s) foto(s) original(is) do produto (antes da IA)
 }
 
 export async function submitDownloadRating(params: DownloadRatingParams): Promise<{ success: boolean }> {
@@ -30,6 +31,7 @@ export async function submitDownloadRating(params: DownloadRatingParams): Promis
       user_email: params.userEmail,
       user_name: params.userName,
       rating: params.rating,
+      tool_rating: params.toolRating || null,
       comment: params.comment || null,
       product_name: params.productName || null,
       feature_source: params.featureSource || null,
@@ -42,6 +44,11 @@ export async function submitDownloadRating(params: DownloadRatingParams): Promis
   }
 
   // 2. Notificar admin via N8N (e-mail) — fire and forget
+  const originalBullets = (params.originalImageUrls || [])
+    .filter(Boolean)
+    .map(url => `• ${url}`)
+    .join('\n');
+
   try {
     fetch(`${N8N_BASE_URL}/vizzu/rating-notification`, {
       method: 'POST',
@@ -51,11 +58,12 @@ export async function submitDownloadRating(params: DownloadRatingParams): Promis
         user_email: params.userEmail,
         user_plan: params.userPlan || 'N/A',
         rating: params.rating,
+        tool_rating: params.toolRating || 0,
         comment: params.comment || 'Sem comentário',
         product_name: params.productName || 'N/A',
         feature_source: params.featureSource || 'N/A',
         image_urls: (params.imageUrls || []).join(', '),
-        original_image_url: params.originalImageUrl || '',
+        original_image_url: originalBullets,
       }),
     });
   } catch (e) {
