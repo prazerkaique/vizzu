@@ -1,0 +1,41 @@
+{
+  "name": "vizzu-shopify-gateway",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "shopify app dev",
+    "build": "npx prisma generate && react-router build",
+    "start": "react-router-serve ./build/server/index.js",
+    "deploy": "npx prisma generate && npx prisma migrate deploy && react-router build",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:generate": "npx prisma generate",
+    "shopify": "shopify",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "@react-router/node": "^7.9.1",
+    "@react-router/serve": "^7.9.1",
+    "@shopify/shopify-app-react-router": "^1.0.0",
+    "@shopify/shopify-app-session-storage-prisma": "^7.0.0",
+    "isbot": "^5.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router": "^7.9.1"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.9.1",
+    "@react-router/fs-routes": "^7.9.1",
+    "@shopify/app-bridge-react": "^4.1.6",
+    "@shopify/cli": "^3.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "prisma": "^6.2.1",
+    "typescript": "^5.5.0",
+    "vite": "^6.0.0",
+    "vite-tsconfig-paths": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=20.10.0"
+  }
+}

@@ -1,0 +1,32 @@
+name = "Vizzu"
+client_id = "e9260de59c507f8bca8ac84d439f0d20"
+application_url = "https://vizzu.pro"
+embedded = true
+handle = "vizzu"
+
+[access_scopes]
+scopes = "read_products,write_products,write_files,read_files"
+
+[auth]
+redirect_urls = [
+  "https://vizzu.pro/shopify/auth/callback",
+]
+
+[webhooks]
+api_version = "2026-01"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["products/update", "products/create", "products/delete"]
+uri = "/webhooks"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "/webhooks"
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "vizzu-test-store.myshopify.com"
