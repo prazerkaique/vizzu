@@ -117,10 +117,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  };
 
  // Theme options
- const themeOptions: { value: VizzuTheme; label: string; icon: string; desc: string }[] = [
-   { value: 'light', label: 'Claro', icon: 'fa-sun', desc: 'Tema padrão' },
-   { value: 'dark', label: 'Escuro', icon: 'fa-moon', desc: 'Reduz fadiga visual' },
-   { value: 'high-contrast', label: 'Alto Contraste', icon: 'fa-circle-half-stroke', desc: 'Acessibilidade AA' },
+ const themeOptions: { value: VizzuTheme; label: string }[] = [
+   { value: 'light', label: '☀ Claro' },
+   { value: 'dark', label: '☾ Escuro' },
+   { value: 'high-contrast', label: '◑ Alto Contraste AA' },
  ];
 
  return (
@@ -281,31 +281,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-3'}>
    Escolha a aparência do Vizzu
  </p>
- <div className="flex gap-2">
-   {themeOptions.map((opt) => {
-     const isActive = theme === opt.value;
-     return (
-       <button
-         key={opt.value}
-         onClick={() => setTheme(opt.value)}
-         className={
-           'flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-center transition-all border ' +
-           (isActive
-             ? theme !== 'light'
-               ? 'bg-white/10 border-white/30 text-white ring-2 ring-white/20'
-               : 'bg-gray-900 border-gray-900 text-white ring-2 ring-gray-900/20'
-             : theme !== 'light'
-               ? 'bg-neutral-800/50 border-neutral-700/50 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
-               : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700')
-         }
-       >
-         <i className={'fas ' + opt.icon + ' text-sm'} />
-         <span className="text-[11px] font-semibold">{opt.label}</span>
-         <span className={'text-[9px] ' + (isActive ? 'opacity-70' : 'opacity-50')}>{opt.desc}</span>
-       </button>
-     );
-   })}
- </div>
+ <select
+   value={theme}
+   onChange={(e) => setTheme(e.target.value as VizzuTheme)}
+   className="w-full max-w-xs px-3 py-2 rounded-lg text-sm font-medium border-2 border-gray-900 bg-white text-gray-900 dark:border-white dark:bg-black dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
+   style={{ borderColor: theme !== 'light' ? '#fff' : '#111', backgroundColor: theme !== 'light' ? '#000' : '#fff', color: theme !== 'light' ? '#fff' : '#111' }}
+ >
+   {themeOptions.map((opt) => (
+     <option key={opt.value} value={opt.value}>{opt.label}</option>
+   ))}
+ </select>
  </div>
 
  {/* Copiloto / Tour guiado */}
