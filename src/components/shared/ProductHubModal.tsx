@@ -14,6 +14,7 @@ import DownloadModal, { type DownloadImageGroup } from './DownloadModal';
 import { ImageEditModal } from './ImageEditModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 import { editStudioImage, saveCreativeStillEdit, saveLookComposerEdit } from '../../lib/api/studio';
+import { EcommerceExportButton } from './EcommerceExportButton';
 import type { VizzuTheme } from '../../contexts/UIContext';
 
 // ── Types ──
@@ -338,6 +339,11 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   }, [psSessions, csGenerations, lcLooks, srImages, ccImages]);
 
   const totalDownloadableImages = downloadGroups.reduce((sum, g) => sum + g.images.length, 0);
+
+  // Export e-commerce: imagens flat para o botão genérico
+  const allExportableImages = useMemo(() => {
+    return downloadGroups.flatMap(g => g.images.map(img => ({ url: img.url, label: img.label })));
+  }, [downloadGroups]);
 
   // ── Image action overlay ──
   const renderImageWithActions = (
@@ -801,6 +807,13 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
                 <span className="text-[10px] font-semibold">{totalDownloadableImages}</span>
               </button>
             )}
+            <EcommerceExportButton
+              images={allExportableImages}
+              productId={product.id}
+              tool="product-hub"
+              compact
+              className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-gray-100 hover:bg-gray-200') + ' h-8 px-2.5 rounded-full flex items-center justify-center gap-1.5 transition-colors'}
+            />
             {onEditProduct && (
               <button
                 onClick={() => { onEditProduct(product); onClose(); }}
@@ -884,6 +897,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         groups={downloadGroups}
         theme={theme}
       />
+
 
       {/* Edit Modal */}
       {editingImage && (

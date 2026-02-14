@@ -22,6 +22,8 @@ import { useSystemLoad } from '../../hooks/useSystemLoad';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { StudioEditModal } from './StudioEditModal';
+import { EcommerceExportButton } from '../shared/EcommerceExportButton';
+import type { ExportableImage } from '../shared/EcommerceExportModal';
 
 // ═══════════════════════════════════════════════════════════════
 // PENDING GENERATION (sobrevive ao F5 / fechamento do app)
@@ -1963,17 +1965,26 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Vestir Cliente</span>
  </button>
 
- {/* Download */}
+ {/* Download + Export */}
+ <div className="flex gap-2 w-full">
  <button
  onClick={() => setShowDownloadModal(true)}
  disabled={generatedImages.length === 0}
- className={(theme !== 'light' ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white/60 border-gray-200/60 hover:border-gray-300') + ' w-full p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-xl disabled:opacity-40'}
+ className={(theme !== 'light' ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white/60 border-gray-200/60 hover:border-gray-300') + ' flex-1 p-3 rounded-xl border transition-all flex items-center gap-2 backdrop-blur-xl disabled:opacity-40'}
  >
  <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-download text-xs ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
  </div>
  <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>Download ({generatedImages.length})</span>
  </button>
+ <EcommerceExportButton
+  images={generatedImages.map(img => ({ url: img.url, label: angleLabels[img.angle] || img.angle }))}
+  productId={product.id}
+  tool="product_studio"
+  compact
+  className={(theme !== 'light' ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white/60 border-gray-200/60 hover:border-gray-300') + ' p-3 rounded-xl border transition-all flex items-center justify-center backdrop-blur-xl'}
+ />
+ </div>
  </div>
  </div>
  )}

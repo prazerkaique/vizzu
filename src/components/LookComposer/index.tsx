@@ -8,6 +8,8 @@ import { Product, HistoryLog, SavedModel, LookComposition } from '../../types';
 import { LookComposerEditor } from './LookComposerEditor';
 import DownloadModal, { type DownloadImageGroup } from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
+import { EcommerceExportButton } from '../shared/EcommerceExportButton';
+import type { ExportableImage } from '../shared/EcommerceExportModal';
 import { Plan } from '../../hooks/useCredits';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { ProductHubModal } from '../shared/ProductHubModal';
@@ -1305,17 +1307,29 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
  )}
 
+ <div className="flex gap-2 w-full">
  <button
  onClick={() => {
   const imgs: DownloadableImage[] = [{ url: selectedLook.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' }];
   if (selectedLook.backImageUrl) imgs.push({ url: selectedLook.backImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
   setDownloadModalLook({ images: imgs, productName: selectedLook.productName });
  }}
- className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+ className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
  >
  <i className="fas fa-download"></i>
  Download ({selectedLook.imageCount} {selectedLook.imageCount === 1 ? 'imagem' : 'imagens'})
  </button>
+ <EcommerceExportButton
+  images={(() => {
+   const imgs: ExportableImage[] = [{ url: selectedLook.imageUrl, label: 'Frente' }];
+   if (selectedLook.backImageUrl) imgs.push({ url: selectedLook.backImageUrl, label: 'Costas' });
+   return imgs;
+  })()}
+  productId={selectedLook.productId}
+  tool="look_composer"
+  compact
+ />
+ </div>
 
  <button
  onClick={() => setEditingGalleryLook(true)}
@@ -1445,18 +1459,28 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  </div>
 
  {modalSelectedLook && (
- <div className="mt-3">
+ <div className="mt-3 flex gap-2">
  <button
  onClick={() => {
   const imgs: DownloadableImage[] = [{ url: modalSelectedLook.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' }];
   if (modalSelectedLook.backImageUrl) imgs.push({ url: modalSelectedLook.backImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
   setDownloadModalLook({ images: imgs, productName: modalSelectedLook.productName });
  }}
- className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+ className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
  >
  <i className="fas fa-download"></i>
  Download ({modalSelectedLook.imageCount} {modalSelectedLook.imageCount === 1 ? 'imagem' : 'imagens'})
  </button>
+ <EcommerceExportButton
+  images={(() => {
+   const imgs: ExportableImage[] = [{ url: modalSelectedLook.imageUrl, label: 'Frente' }];
+   if (modalSelectedLook.backImageUrl) imgs.push({ url: modalSelectedLook.backImageUrl, label: 'Costas' });
+   return imgs;
+  })()}
+  productId={modalSelectedLook.productId}
+  tool="look_composer"
+  compact
+ />
  </div>
  )}
  </div>

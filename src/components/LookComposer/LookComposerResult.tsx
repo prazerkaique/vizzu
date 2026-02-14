@@ -7,6 +7,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Product, LookComposition, SavedModel } from '../../types';
 import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
+import { EcommerceExportButton } from '../shared/EcommerceExportButton';
 import { OptimizedImage } from '../OptimizedImage';
 import { getOptimizedImageUrl } from '../../utils/imageUrl';
 import { ZoomableImage } from '../ImageViewer';
@@ -640,14 +641,21 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </button>
  )}
 
- {/* Download */}
+ {/* Download + Export */}
+ <div className="flex gap-2">
  <button
   onClick={() => setShowDownloadModal(true)}
-  className="w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90"
+  className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90"
  >
   <i className="fas fa-download"></i>
-  Download ({downloadableImages.length} {downloadableImages.length === 1 ? 'imagem' : 'imagens'})
+  Download ({downloadableImages.length})
  </button>
+ <EcommerceExportButton
+  images={downloadableImages.map(img => ({ url: img.url, label: img.label }))}
+  productId={product.id}
+  tool="look-composer"
+ />
+ </div>
 
  {/* Ações Rápidas - Grid compacto */}
  <div className={(isDark ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-3'}>

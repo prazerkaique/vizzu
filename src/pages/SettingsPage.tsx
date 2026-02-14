@@ -11,6 +11,7 @@ import { ConfirmModal } from '../components/shared/ConfirmModal';
 import DownloadModal from '../components/shared/DownloadModal';
 import type { DownloadableImage } from '../utils/downloadSizes';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { useShopifyConnection } from '../hooks/useShopifyConnection';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -26,6 +27,97 @@ interface SettingsPageProps {
 }
 
 const HISTORY_PAGE_SIZE = 20;
+
+const SHOPIFY_APP_URL = 'https://vizzu-shopify-gateway.vercel.app';
+
+function ShopifyIntegrationCard({ theme }: { theme: VizzuTheme }) {
+  const { connection, isConnected, isLoading, disconnect } = useShopifyConnection();
+  const { showToast } = useUI();
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  const handleDisconnect = async () => {
+    if (!window.confirm('Desconectar a loja Shopify? Você poderá reconectar depois.')) return;
+    setIsDisconnecting(true);
+    const ok = await disconnect();
+    setIsDisconnecting(false);
+    if (ok) showToast('Shopify desconectado', 'success');
+    else showToast('Erro ao desconectar', 'error');
+  };
+
+  if (isLoading) {
+    return (
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between'}>
+        <div className="flex items-center gap-3">
+          <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
+            <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' fab fa-shopify text-sm'} />
+          </div>
+          <div>
+            <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>Shopify</h4>
+            <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Carregando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConnected && connection) {
+    return (
+      <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3'}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#96bf48' }}>
+              <i className="fab fa-shopify text-white text-sm" />
+            </div>
+            <div>
+              <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs flex items-center gap-1.5'}>
+                {connection.store_name || connection.store_domain}
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" />
+              </h4>
+              <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
+                {connection.store_domain}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleDisconnect}
+            disabled={isDisconnecting}
+            className={(theme !== 'light' ? 'text-neutral-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500') + ' text-[10px] transition-colors'}
+          >
+            {isDisconnecting ? 'Desconectando...' : 'Desconectar'}
+          </button>
+        </div>
+        {connection.last_sync_at && (
+          <p className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px] mt-2 ml-12'}>
+            Última sync: {new Date(connection.last_sync_at).toLocaleString('pt-BR')}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-3 flex items-center justify-between'}>
+      <div className="flex items-center gap-3">
+        <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' w-9 h-9 rounded-lg flex items-center justify-center'}>
+          <i className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' fab fa-shopify text-sm'} />
+        </div>
+        <div>
+          <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-medium text-xs'}>Shopify</h4>
+          <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Sincronize produtos e imagens</p>
+        </div>
+      </div>
+      <a
+        href={SHOPIFY_APP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="px-3 py-1.5 rounded-lg font-medium text-[10px] border text-white border-transparent"
+        style={{ background: 'linear-gradient(135deg, #FF6B6B, #FF9F43)' }}
+      >
+        Conectar
+      </a>
+    </div>
+  );
+}
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
  userCredits,
@@ -694,8 +786,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Integrações</h3>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Conecte o Vizzu com suas plataformas de e-commerce.</p>
  <div className="space-y-2">
+
+ {/* Shopify — funcional */}
+ <ShopifyIntegrationCard theme={theme} />
+
+ {/* WooCommerce e VTEX — em breve */}
  {[
- { icon: 'fab fa-shopify', name: 'Shopify', desc: 'Sincronize produtos' },
  { icon: 'fab fa-wordpress', name: 'WooCommerce', desc: 'Loja WordPress' },
  { icon: 'fas fa-store', name: 'VTEX', desc: 'VTEX IO' },
  ].map(item => (

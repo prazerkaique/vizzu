@@ -11,6 +11,7 @@ import { ImageEditModal } from '../shared/ImageEditModal';
 import { editStudioImage, saveCreativeStillEdit, saveCreativeStillSaveAsNew } from '../../lib/api/studio';
 import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
+import { EcommerceExportButton } from '../shared/EcommerceExportButton';
 
 const LOADING_PHRASES = [
  "Preparando a composição criativa...",
@@ -451,12 +452,21 @@ export const CreativeStillResults: React.FC<Props> = ({
  {/* Ações */}
  <div className={'rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center gap-3 ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-gray-200 ')}>
  {variationUrls.length > 0 && (
+  <>
   <button
    onClick={() => setShowDownloadModal(true)}
    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-[#FF6B6B]/20 transition-all"
   >
    <i className="fas fa-download text-xs"></i>Download ({variationUrls.length})
   </button>
+  {product && (
+  <EcommerceExportButton
+   images={variationUrls.map((url, i) => ({ url, label: `Variação ${i + 1}` }))}
+   productId={product.id}
+   tool="creative-still"
+  />
+  )}
+  </>
  )}
  <button
  onClick={onGenerateAgain}

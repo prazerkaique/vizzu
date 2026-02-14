@@ -28,6 +28,7 @@ const VizzuLookComposer = lazyRetry(() => import('./components/LookComposer').th
 const ProductStudio = lazyRetry(() => import('./components/ProductStudio').then(m => ({ default: m.ProductStudio })));
 const VizzuProvadorWizard = lazyRetry(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
 const CreativeStill = lazyRetry(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
+const ShopifyConnectHandler = lazyRetry(() => import('./components/ShopifyConnectHandler').then(m => ({ default: m.ShopifyConnectHandler })));
 
 import { Product, Client, ClientPhoto, ClientLook, WhatsAppTemplate, LookComposition, SavedModel } from './types';
 import { useUI, type Page } from './contexts/UIContext';
@@ -1187,6 +1188,11 @@ function App() {
  {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />}
 
  {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
+
+ {/* Shopify deep link handler */}
+ <Suspense fallback={null}>
+   <ShopifyConnectHandler />
+ </Suspense>
 
  {/* Modal de Créditos Esgotados */}
  <CreditExhaustedModal
