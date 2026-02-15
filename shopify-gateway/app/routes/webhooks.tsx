@@ -203,7 +203,7 @@ async function handleProductCreate(
     return;
   }
 
-  // Importar IMEDIATAMENTE com os dados REST (pode ter menos imagens)
+  // Chamado via PRODUCTS_UPDATE — imagens já estão processadas no payload REST
   const normalized = normalizeWebhookProduct(payload);
 
   try {
@@ -361,9 +361,10 @@ async function handleProductUpdate(
     );
 
     if (!maps || maps.length === 0) {
-      // Produto não existe no Vizzu — PRODUCTS_CREATE já cuida da importação.
-      // Não importar aqui para evitar race condition (409 duplicate).
-      console.log(`[webhook] Product ${shopifyGid} not in Vizzu yet, skipping (PRODUCTS_CREATE handles import)`);
+      // Produto não existe no Vizzu — importar agora.
+      // PRODUCTS_CREATE é ignorado, só PRODUCTS_UPDATE importa (imagens já processadas).
+      console.log(`[webhook] Product ${shopifyGid} not in Vizzu, importing via PRODUCTS_UPDATE`);
+      await handleProductCreate(shop, connection, payload);
       return;
     }
 
@@ -499,12 +500,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // ─── Product Sync (auto_sync) ────────────────────────
     case "PRODUCTS_CREATE": {
-      const conn = await getAutoSyncConnection(shop);
-      if (conn) {
-        await handleProductCreate(shop, conn, payload);
-      } else {
-        console.log(`[Webhook] Produto criado em ${shop} (auto_sync OFF)`);
-      }
+      // Ignorar — PRODUCTS_UPDATE dispara logo depois com TODAS as imagens já processadas.
+      // Importar aqui causa race condition e imagens incompletas.
+      console.log(`[Webhook] PRODUCTS_CREATE de ${shop} — ignorado (PRODUCTS_UPDATE importará)`);
+      void 0;
       break;
     }
 
