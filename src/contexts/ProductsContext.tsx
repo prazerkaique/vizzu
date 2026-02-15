@@ -162,14 +162,15 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
             productStudio: formattedProductStudio
           };
 
-          // Detectar se precisa análise de ângulos:
-          // Só faz sentido com 2+ imagens originais (1 foto = front por definição)
+          // Detectar se precisa análise de ângulos/categoria:
+          // - 1 imagem: analisa para detectar categoria (Gemini Vision)
+          // - 2+ imagens: analisa para detectar ângulos + categoria
           // Se já tem ângulos variados (back, detail, etc), análise já foi feita → não pedir de novo
           const distinctAngles = new Set(originalImages.map((img: any) => img.angle).filter(Boolean));
           const alreadyAnalyzed = distinctAngles.size >= 2; // tem pelo menos 2 ângulos diferentes
           const hasUnmappedImages = unmappedImages.length > 0 && originalImages.length > 1;
           const hasNoCategory = !p.category || p.category === 'Sem categoria' || p.category === '';
-          const needsAnalysis = !alreadyAnalyzed && originalImages.length > 1 && (hasUnmappedImages || hasNoCategory);
+          const needsAnalysis = !alreadyAnalyzed && originalImages.length >= 1 && (hasUnmappedImages || hasNoCategory);
 
           // Coletar TODAS as imagens originais para enviar ao Gemini (mapeadas + não mapeadas)
           const allOriginalImagesForAnalysis = originalImages

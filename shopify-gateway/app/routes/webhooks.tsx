@@ -205,8 +205,8 @@ async function handleProductCreate(
 
   const shopifyGid = `gid://shopify/Product/${payload.id}`;
 
-  // Esperar 8s para Shopify processar imagens antes de buscar via GraphQL
-  await sleep(8000);
+  // Esperar 15s para Shopify processar TODAS as imagens antes de buscar via GraphQL
+  await sleep(15000);
 
   // Dedup: checar se outro webhook já importou enquanto dormíamos
   try {
@@ -443,12 +443,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // ─── Product Sync (auto_sync) ────────────────────────
     case "PRODUCTS_CREATE": {
-      // Ignorar PRODUCTS_CREATE — PRODUCTS_UPDATE dispara logo depois com dados completos.
-      // Se importássemos aqui, teríamos race condition com PRODUCTS_UPDATE (ambos importam).
-      // O handleProductUpdate já chama handleProductCreate como fallback se o produto não existe.
       const conn = await getAutoSyncConnection(shop);
       if (conn) {
-        console.log(`[Webhook] PRODUCTS_CREATE de ${shop} — aguardando PRODUCTS_UPDATE para importar`);
+        await handleProductCreate(shop, conn, payload);
       } else {
         console.log(`[Webhook] Produto criado em ${shop} (auto_sync OFF)`);
       }
