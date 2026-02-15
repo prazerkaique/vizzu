@@ -1,0 +1,812 @@
+/* ============================================================
+   Vizzu Design System — Shopify Gateway
+   ============================================================ */
+
+/* --- Custom Properties --- */
+:root {
+  /* Brand */
+  --vizzu-coral: #FF6B6B;
+  --vizzu-orange: #FF9F43;
+  --vizzu-gradient: linear-gradient(135deg, #FF6B6B, #FF9F43);
+  --vizzu-gradient-hover: linear-gradient(135deg, #FF5252, #FF8C2A);
+  --vizzu-gradient-subtle: linear-gradient(135deg, rgba(255,107,107,0.08), rgba(255,159,67,0.08));
+
+  /* Backgrounds */
+  --vizzu-bg: #f7f5f2;
+  --vizzu-bg-card: #ffffff;
+  --vizzu-bg-muted: #f9fafb;
+
+  /* Text */
+  --vizzu-text: #1a1a1a;
+  --vizzu-text-secondary: #6b7280;
+  --vizzu-text-muted: #9ca3af;
+
+  /* Status */
+  --vizzu-success-bg: #ecfdf5;
+  --vizzu-success-border: #a7f3d0;
+  --vizzu-success-text: #065f46;
+  --vizzu-success-dot: #22c55e;
+
+  --vizzu-warning-bg: #fffbeb;
+  --vizzu-warning-border: #fde68a;
+  --vizzu-warning-text: #92400e;
+  --vizzu-warning-dot: #f59e0b;
+
+  --vizzu-error-bg: #fef2f2;
+  --vizzu-error-border: #fecaca;
+  --vizzu-error-text: #991b1b;
+  --vizzu-error-dot: #ef4444;
+
+  --vizzu-info-bg: #eff6ff;
+  --vizzu-info-border: #bfdbfe;
+  --vizzu-info-text: #1e40af;
+
+  /* Borders & Radius */
+  --vizzu-radius: 12px;
+  --vizzu-radius-sm: 8px;
+  --vizzu-radius-lg: 16px;
+  --vizzu-radius-pill: 9999px;
+  --vizzu-border: #e5e7eb;
+  --vizzu-border-card: #f0ebe5;
+
+  /* Shadows */
+  --vizzu-shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --vizzu-shadow-md: 0 4px 12px rgba(0,0,0,0.07);
+  --vizzu-shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+
+  /* Fonts */
+  --vizzu-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --vizzu-font-serif: 'Inria Serif', Georgia, serif;
+
+  /* Transitions */
+  --vizzu-ease: 0.2s ease;
+}
+
+/* --- Global Wrapper --- */
+.vizzu-app-wrapper {
+  font-family: var(--vizzu-font);
+  color: var(--vizzu-text);
+  background: var(--vizzu-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Topbar (logo em todas as páginas) --- */
+.vizzu-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  background: var(--vizzu-bg-card);
+  border-bottom: 2px solid transparent;
+  border-image: var(--vizzu-gradient) 1;
+  box-shadow: var(--vizzu-shadow-sm);
+}
+
+.vizzu-topbar-logo {
+  height: 38px;
+  width: auto;
+  display: block;
+}
+
+.vizzu-topbar-tagline {
+  font-size: 13px;
+  color: var(--vizzu-text-muted);
+  padding-left: 14px;
+  border-left: 1px solid var(--vizzu-border);
+  line-height: 1.3;
+}
+
+/* --- Page --- */
+.vizzu-page {
+  padding: 24px;
+  font-family: var(--vizzu-font);
+  color: var(--vizzu-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Header / Logo (legacy, usado na home) --- */
+.vizzu-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.vizzu-logo {
+  font-family: var(--vizzu-font-serif);
+  font-size: 36px;
+  font-weight: 700;
+  background: var(--vizzu-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.vizzu-logo-img {
+  height: 56px;
+  width: auto;
+  display: block;
+}
+
+/* --- Typography --- */
+.vizzu-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--vizzu-text);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.vizzu-subtitle {
+  font-size: 15px;
+  color: var(--vizzu-text-secondary);
+  margin: 0 0 28px 0;
+  line-height: 1.5;
+}
+
+.vizzu-section-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--vizzu-text);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vizzu-section-title i {
+  color: var(--vizzu-coral);
+  font-size: 16px;
+}
+
+.vizzu-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vizzu-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 4px 0;
+}
+
+.vizzu-serif {
+  font-family: var(--vizzu-font-serif);
+  font-style: italic;
+}
+
+/* --- Cards --- */
+.vizzu-card {
+  background: var(--vizzu-bg-card);
+  border-radius: var(--vizzu-radius);
+  border: 1px solid var(--vizzu-border-card);
+  padding: 24px;
+  box-shadow: var(--vizzu-shadow-sm);
+  transition: box-shadow var(--vizzu-ease);
+}
+
+.vizzu-card--hover:hover {
+  box-shadow: var(--vizzu-shadow-md);
+}
+
+/* --- Connection Card --- */
+.vizzu-connection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.vizzu-connection-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.vizzu-connection-info strong {
+  display: block;
+  font-size: 16px;
+  margin-top: 2px;
+}
+
+.vizzu-connection-info .vizzu-domain {
+  font-size: 13px;
+  color: var(--vizzu-text-secondary);
+  margin-top: 2px;
+}
+
+.vizzu-connection-meta {
+  font-size: 13px;
+  color: var(--vizzu-text-secondary);
+  margin-top: 8px;
+  padding-left: 60px;
+}
+
+/* --- Icon Box --- */
+.vizzu-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--vizzu-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.vizzu-icon-box--gradient {
+  background: var(--vizzu-gradient);
+  color: white;
+}
+
+.vizzu-icon-box--success {
+  background: var(--vizzu-success-bg);
+  color: var(--vizzu-success-text);
+}
+
+.vizzu-icon-box--warning {
+  background: var(--vizzu-warning-bg);
+  color: var(--vizzu-warning-text);
+}
+
+.vizzu-icon-box--muted {
+  background: var(--vizzu-bg-muted);
+  color: var(--vizzu-text-muted);
+}
+
+/* --- Stats Grid --- */
+.vizzu-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.vizzu-stat {
+  background: var(--vizzu-bg-card);
+  border-radius: var(--vizzu-radius);
+  border: 1px solid var(--vizzu-border-card);
+  padding: 20px 24px;
+  box-shadow: var(--vizzu-shadow-sm);
+}
+
+.vizzu-stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  background: var(--vizzu-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.vizzu-stat-label {
+  font-size: 13px;
+  color: var(--vizzu-text-secondary);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- Actions Grid --- */
+.vizzu-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.vizzu-action-card {
+  background: var(--vizzu-bg-card);
+  border-radius: var(--vizzu-radius);
+  border: 1px solid var(--vizzu-border-card);
+  padding: 24px;
+  box-shadow: var(--vizzu-shadow-sm);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all var(--vizzu-ease);
+}
+
+.vizzu-action-card:hover {
+  box-shadow: var(--vizzu-shadow-md);
+  border-color: var(--vizzu-coral);
+  transform: translateY(-2px);
+}
+
+.vizzu-action-card:active {
+  transform: translateY(0);
+}
+
+.vizzu-action-card strong {
+  display: block;
+  font-size: 15px;
+  margin-top: 14px;
+}
+
+.vizzu-action-card p {
+  color: var(--vizzu-text-secondary);
+  font-size: 13px;
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.vizzu-action-card .vizzu-arrow {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform var(--vizzu-ease);
+  font-size: 12px;
+  color: var(--vizzu-coral);
+}
+
+.vizzu-action-card:hover .vizzu-arrow {
+  transform: translateX(3px);
+}
+
+/* --- Buttons --- */
+.vizzu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--vizzu-radius);
+  font-weight: 600;
+  font-size: 14px;
+  font-family: var(--vizzu-font);
+  border: none;
+  cursor: pointer;
+  transition: all var(--vizzu-ease);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.vizzu-btn--full {
+  width: 100%;
+}
+
+.vizzu-btn--primary {
+  background: var(--vizzu-gradient);
+  color: white;
+}
+
+.vizzu-btn--primary:hover:not(:disabled) {
+  background: var(--vizzu-gradient-hover);
+  box-shadow: var(--vizzu-shadow-md);
+}
+
+.vizzu-btn--secondary {
+  background: var(--vizzu-bg-muted);
+  color: var(--vizzu-text);
+  border: 1px solid var(--vizzu-border);
+}
+
+.vizzu-btn--secondary:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.vizzu-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vizzu-btn--sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+/* --- Badges --- */
+.vizzu-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--vizzu-radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vizzu-badge--connected {
+  background: var(--vizzu-success-bg);
+  color: var(--vizzu-success-text);
+}
+
+.vizzu-badge--disconnected {
+  background: var(--vizzu-warning-bg);
+  color: var(--vizzu-warning-text);
+}
+
+.vizzu-badge--error {
+  background: var(--vizzu-error-bg);
+  color: var(--vizzu-error-text);
+}
+
+/* --- Status Dot --- */
+.vizzu-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.vizzu-dot--green {
+  background: var(--vizzu-success-dot);
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.15);
+}
+
+.vizzu-dot--orange {
+  background: var(--vizzu-warning-dot);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+}
+
+.vizzu-dot--red {
+  background: var(--vizzu-error-dot);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+}
+
+/* --- Alerts --- */
+.vizzu-alert {
+  padding: 16px 20px;
+  border-radius: var(--vizzu-radius);
+  border: 1px solid;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vizzu-alert i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.vizzu-alert--success {
+  background: var(--vizzu-success-bg);
+  border-color: var(--vizzu-success-border);
+  color: var(--vizzu-success-text);
+}
+
+.vizzu-alert--warning {
+  background: var(--vizzu-warning-bg);
+  border-color: var(--vizzu-warning-border);
+  color: var(--vizzu-warning-text);
+}
+
+.vizzu-alert--error {
+  background: var(--vizzu-error-bg);
+  border-color: var(--vizzu-error-border);
+  color: var(--vizzu-error-text);
+}
+
+.vizzu-alert--info {
+  background: var(--vizzu-info-bg);
+  border-color: var(--vizzu-info-border);
+  color: var(--vizzu-info-text);
+}
+
+/* --- Import Cards Row --- */
+.vizzu-import-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.vizzu-import-card {
+  flex: 1;
+  min-width: 280px;
+  background: var(--vizzu-bg-card);
+  border-radius: var(--vizzu-radius);
+  padding: 24px;
+  border: 1px solid var(--vizzu-border-card);
+  box-shadow: var(--vizzu-shadow-sm);
+  transition: border-color var(--vizzu-ease), box-shadow var(--vizzu-ease);
+}
+
+.vizzu-import-card:hover {
+  border-color: var(--vizzu-coral);
+  box-shadow: var(--vizzu-shadow-md);
+}
+
+.vizzu-import-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vizzu-import-card h3 i {
+  color: var(--vizzu-coral);
+}
+
+.vizzu-import-card p {
+  color: var(--vizzu-text-secondary);
+  font-size: 14px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+/* --- Table --- */
+.vizzu-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.vizzu-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vizzu-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vizzu-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 10px 16px;
+  border-bottom: 2px solid var(--vizzu-border);
+}
+
+.vizzu-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.vizzu-table tr:last-child td {
+  border-bottom: none;
+}
+
+.vizzu-table tr:hover td {
+  background: var(--vizzu-bg-muted);
+}
+
+.vizzu-table-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--vizzu-radius-sm);
+  object-fit: cover;
+  background: #f3f4f6;
+  display: block;
+}
+
+.vizzu-table-thumb-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--vizzu-radius-sm);
+  background: var(--vizzu-gradient-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vizzu-coral);
+  font-size: 16px;
+}
+
+.vizzu-table-date {
+  font-size: 13px;
+  color: var(--vizzu-text-secondary);
+  white-space: nowrap;
+}
+
+/* --- Empty State --- */
+.vizzu-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.vizzu-empty i {
+  font-size: 48px;
+  color: var(--vizzu-text-muted);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.vizzu-empty p {
+  color: var(--vizzu-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.vizzu-empty p + p {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--vizzu-text-muted);
+}
+
+/* --- Settings Sections --- */
+.vizzu-settings-section {
+  background: var(--vizzu-bg-card);
+  border-radius: var(--vizzu-radius);
+  border: 1px solid var(--vizzu-border-card);
+  padding: 24px;
+  box-shadow: var(--vizzu-shadow-sm);
+}
+
+.vizzu-settings-section h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vizzu-settings-section h2 i {
+  color: var(--vizzu-coral);
+  font-size: 16px;
+}
+
+.vizzu-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.vizzu-settings-row strong {
+  min-width: 100px;
+  font-size: 14px;
+}
+
+.vizzu-settings-row span {
+  font-size: 14px;
+  color: var(--vizzu-text-secondary);
+}
+
+.vizzu-settings-description {
+  font-size: 14px;
+  color: var(--vizzu-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.vizzu-settings-link {
+  color: var(--vizzu-coral);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.vizzu-settings-link:hover {
+  text-decoration: underline;
+}
+
+/* --- Polling indicator --- */
+.vizzu-polling {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--vizzu-warning-bg);
+  border: 1px solid var(--vizzu-warning-border);
+  border-radius: var(--vizzu-radius);
+  font-size: 13px;
+  color: var(--vizzu-warning-text);
+}
+
+/* --- Checkbox / Toggle --- */
+.vizzu-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--vizzu-text);
+  margin-top: 12px;
+}
+
+.vizzu-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--vizzu-coral);
+}
+
+.vizzu-checkbox-label span {
+  color: var(--vizzu-text-secondary);
+}
+
+/* --- Shop Info Banner --- */
+.vizzu-shop-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--vizzu-bg-card);
+  border-radius: var(--vizzu-radius);
+  border: 1px solid var(--vizzu-border-card);
+  box-shadow: var(--vizzu-shadow-sm);
+}
+
+.vizzu-shop-banner-info {
+  flex: 1;
+}
+
+.vizzu-shop-banner-info .vizzu-shop-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.vizzu-shop-banner-info .vizzu-shop-count {
+  font-size: 14px;
+  color: var(--vizzu-text-secondary);
+  margin-top: 2px;
+}
+
+/* --- Spinner --- */
+.vizzu-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: vizzu-spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+.vizzu-spinner--dark {
+  border-color: rgba(0,0,0,0.1);
+  border-top-color: var(--vizzu-coral);
+}
+
+/* --- Divider --- */
+.vizzu-divider {
+  height: 1px;
+  background: var(--vizzu-border);
+  margin: 20px 0;
+  border: none;
+}
+
+/* --- Animations --- */
+@keyframes vizzu-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vizzu-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vizzu-spin {
+  to { transform: rotate(360deg); }
+}
+
+.vizzu-animate-fade {
+  animation: vizzu-fade-in 0.3s ease forwards;
+}
+
+.vizzu-animate-slide {
+  animation: vizzu-slide-up 0.35s ease forwards;
+  opacity: 0;
+}
+
+/* Staggered animation for children */
+.vizzu-stagger > * {
+  animation: vizzu-slide-up 0.35s ease forwards;
+  opacity: 0;
+}
+
+.vizzu-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.vizzu-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.vizzu-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.vizzu-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.vizzu-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.vizzu-stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+/* --- Spacing Helpers --- */
+.vizzu-mb-8 { margin-bottom: 8px; }
+.vizzu-mb-12 { margin-bottom: 12px; }
+.vizzu-mb-16 { margin-bottom: 16px; }
+.vizzu-mb-20 { margin-bottom: 20px; }
+.vizzu-mb-24 { margin-bottom: 24px; }
+.vizzu-mb-32 { margin-bottom: 32px; }
+.vizzu-mt-16 { margin-top: 16px; }
+.vizzu-mt-24 { margin-top: 24px; }
+.vizzu-gap-16 { gap: 16px; }

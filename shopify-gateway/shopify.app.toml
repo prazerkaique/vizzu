@@ -1,6 +1,6 @@
 name = "Vizzu"
 client_id = "e9260de59c507f8bca8ac84d439f0d20"
-application_url = "https://vizzu.pro"
+application_url = "https://vizzu-shopify-gateway.vercel.app"
 embedded = true
 handle = "vizzu"
 
@@ -9,7 +9,7 @@ scopes = "read_products,write_products,write_files,read_files"
 
 [auth]
 redirect_urls = [
-  "https://vizzu.pro/shopify/auth/callback",
+  "https://vizzu-shopify-gateway.vercel.app/auth/callback",
 ]
 
 [webhooks]
@@ -21,6 +21,10 @@ uri = "/webhooks"
 
 [[webhooks.subscriptions]]
 topics = ["products/update", "products/create", "products/delete"]
+uri = "/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["bulk_operations/finish"]
 uri = "/webhooks"
 
 [[webhooks.subscriptions]]
