@@ -190,7 +190,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ─── PRODUCT CREATE: busca via GraphQL (dados completos) ──
+// ─── PRODUCT CREATE: importa via REST imediato + agenda re-fetch GraphQL ──
 
 async function handleProductCreate(
   shop: string,
@@ -203,55 +203,10 @@ async function handleProductCreate(
     return;
   }
 
-  const shopifyGid = `gid://shopify/Product/${payload.id}`;
-
-  // Esperar 5s para Shopify processar imagens antes de buscar via GraphQL
-  await sleep(5000);
-
-  // Dedup: checar se outro webhook já importou enquanto dormíamos
-  try {
-    const existing = await supabaseQuery<{ id: string }[]>(
-      "ecommerce_product_map",
-      "GET",
-      {
-        filters: `connection_id=eq.${connection.id}&external_product_id=eq.${encodeURIComponent(shopifyGid)}&select=id`,
-      }
-    );
-    if (existing && existing.length > 0) {
-      console.log(`[webhook] Product ${shopifyGid} already imported, skipping`);
-      return;
-    }
-  } catch (e) {
-    // Se falhar o check, continua (melhor importar duplicado que não importar)
-    console.warn("[webhook] Dedup check failed:", e);
-  }
+  // Importar IMEDIATAMENTE com os dados REST (pode ter menos imagens)
+  const normalized = normalizeWebhookProduct(payload);
 
   try {
-    const { admin } = await unauthenticated.admin(shop);
-
-    const gqlResponse = await admin.graphql(
-      `query getProduct($id: ID!) {
-        product(id: $id) {
-          ${PRODUCT_FIELDS}
-        }
-      }`,
-      { variables: { id: shopifyGid } }
-    );
-
-    const { data } = await gqlResponse.json();
-
-    if (!data?.product) {
-      console.error(`[webhook] Produto ${shopifyGid} não encontrado via GraphQL`);
-      await logSync(connection, "create", "failed", {
-        shopify_product_id: shopifyGid,
-        error: "Product not found via GraphQL",
-      });
-      return;
-    }
-
-    const normalized = normalizeGraphQLProduct(data.product);
-    console.log(`[webhook] Product fetched via GraphQL: ${normalized.title} (${normalized.media.length} images)`);
-
     const response = await fetch(
       `${N8N_WEBHOOK_URL}/vizzu/shopify/import`,
       {
@@ -278,13 +233,111 @@ async function handleProductCreate(
       images_count: normalized.media.length,
     });
 
-    console.log(`[webhook] Product created: ${normalized.title} (${shop})`);
+    console.log(`[webhook] Product created: ${normalized.title} (${normalized.media.length} images from REST)`);
   } catch (e) {
     console.error("[webhook] Error creating product:", e);
     await logSync(connection, "create", "failed", {
-      shopify_product_id: shopifyGid,
+      shopify_product_id: `gid://shopify/Product/${payload.id}`,
       error: String(e),
     });
+  }
+}
+
+// ─── PRODUCT IMAGE SYNC: busca imagens via GraphQL e sincroniza ──
+
+async function syncProductImages(
+  shop: string,
+  connection: ConnectionForSync,
+  shopifyGid: string,
+  vizzuProductId: string
+) {
+  const SUPABASE_URL = "https://dbdqiqehuapcicejnzyd.supabase.co";
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODUyMzEyNSwiZXhwIjoyMDg0MDk5MTI1fQ.YXOfEa4rdguHXVbSSYOlMN6oNsmC-qfrGRwh61vRoQM";
+
+  try {
+    const { admin } = await unauthenticated.admin(shop);
+
+    const gqlResponse = await admin.graphql(
+      `query getProduct($id: ID!) {
+        product(id: $id) {
+          ${PRODUCT_FIELDS}
+        }
+      }`,
+      { variables: { id: shopifyGid } }
+    );
+
+    const { data } = await gqlResponse.json();
+    if (!data?.product) return;
+
+    const product = data.product;
+    const gqlMedia = (product.media?.edges || [])
+      .filter(({ node: m }: any) => m.image?.url)
+      .map(({ node: m }: any, idx: number) => ({
+        id: m.id,
+        url: m.image.url,
+        alt_text: m.image.altText || "",
+        width: m.image.width,
+        height: m.image.height,
+        position: idx,
+      }));
+
+    // Buscar imagens que já existem no Vizzu
+    const existingImages = await supabaseQuery<{ url: string }[]>(
+      "product_images",
+      "GET",
+      {
+        filters: `product_id=eq.${vizzuProductId}&type=eq.original&select=url`,
+      }
+    );
+
+    const existingUrls = new Set((existingImages || []).map((img) => img.url));
+
+    // Inserir imagens faltantes
+    let added = 0;
+    for (let i = 0; i < gqlMedia.length; i++) {
+      const media = gqlMedia[i];
+      if (existingUrls.has(media.url)) continue;
+
+      const ext = media.url.toLowerCase().includes(".png") ? "png" : "jpg";
+      const contentType = ext === "png" ? "image/png" : "image/jpeg";
+      const fileName = `shopify-${i}.${ext}`;
+      const storagePath = `external/shopify/${vizzuProductId}/${fileName}`;
+
+      try {
+        await supabaseQuery("product_images", "POST", {
+          body: {
+            product_id: vizzuProductId,
+            user_id: connection.user_id,
+            type: "original",
+            storage_path: storagePath,
+            url: media.url,
+            file_name: fileName,
+            file_size: null,
+            mime_type: contentType,
+            width: media.width || null,
+            height: media.height || null,
+            display_order: i,
+            is_primary: false,
+            angle: null,
+            metadata: {
+              shopify_media_id: media.id,
+              alt_text: media.alt_text || null,
+              source: "shopify_sync",
+              cdn: "shopify",
+            },
+          },
+        });
+        added++;
+      } catch (imgErr: any) {
+        console.error(`[webhook] Error adding image ${i}:`, imgErr.message || imgErr);
+      }
+    }
+
+    if (added > 0) {
+      console.log(`[webhook] Synced ${added} new images for product ${vizzuProductId}`);
+    }
+  } catch (e) {
+    console.error("[webhook] Error syncing images:", e);
   }
 }
 
@@ -335,6 +388,9 @@ async function handleProductUpdate(
         is_for_sale: (payload.status || "active").toLowerCase() === "active",
       },
     });
+
+    // Sincronizar imagens via GraphQL (pega as que faltam)
+    await syncProductImages(shop, connection, shopifyGid, vizzuProductId);
 
     // Atualizar sync_status no map
     await supabaseQuery("ecommerce_product_map", "PATCH", {
