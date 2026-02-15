@@ -308,9 +308,9 @@ async function handleProductUpdate(
     );
 
     if (!maps || maps.length === 0) {
-      // Produto não existe no Vizzu — importar como novo
-      console.log(`[webhook] Product ${shopifyGid} not in Vizzu, importing as new`);
-      await handleProductCreate(shop, connection, payload);
+      // Produto não existe no Vizzu — PRODUCTS_CREATE já cuida da importação.
+      // Não importar aqui para evitar race condition (409 duplicate).
+      console.log(`[webhook] Product ${shopifyGid} not in Vizzu yet, skipping (PRODUCTS_CREATE handles import)`);
       return;
     }
 
