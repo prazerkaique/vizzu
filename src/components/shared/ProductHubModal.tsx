@@ -115,7 +115,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
   // Sales tab inline edit
   const [isEditingSales, setIsEditingSales] = useState(false);
-  const [salesForm, setSalesForm] = useState({ price: '', priceSale: '', sizes: [] as string[], isForSale: false });
+  const [salesForm, setSalesForm] = useState({ price: '', priceSale: '', sizes: [] as string[], isForSale: false, isSet: false });
   const [isSavingSales, setIsSavingSales] = useState(false);
 
   // Delete & Edit states
@@ -588,6 +588,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         price_sale: parseFloat(salesForm.priceSale) || null,
         sizes: salesForm.sizes.length > 0 ? salesForm.sizes : [],
         is_for_sale: salesForm.isForSale,
+        is_set: salesForm.isSet,
       }).eq('id', product.id).eq('user_id', userId);
       if (error) throw error;
       showToast?.('Informações de venda salvas!', 'success');
@@ -606,6 +607,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
       priceSale: product.priceSale != null ? String(product.priceSale) : '',
       sizes: product.sizes || [],
       isForSale: product.isForSale || false,
+      isSet: product.isSet || false,
     });
     setIsEditingSales(true);
   };
@@ -622,6 +624,20 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
           <div className="flex items-center justify-between">
             <h4 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>Editar informações de venda</h4>
           </div>
+          {/* Toggle conjunto */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setSalesForm(f => ({ ...f, isSet: !f.isSet }))}
+              className={'w-8 rounded-full relative transition-colors cursor-pointer ' + (salesForm.isSet ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : (isDark ? 'bg-neutral-700' : 'bg-gray-300'))}
+              style={{ height: '18px' }}
+            >
+              <div className={'absolute top-0.5 rounded-full bg-white shadow transition-transform ' + (salesForm.isSet ? 'translate-x-[14px]' : 'translate-x-0.5')} style={{ width: '14px', height: '14px' }}></div>
+            </div>
+            <div>
+              <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>Produto conjunto</span>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px]'}>2+ peças vendidas juntas (ex: pijama, biquini)</p>
+            </div>
+          </label>
           {/* Toggle à venda */}
           <label className="flex items-center gap-2 cursor-pointer">
             <div

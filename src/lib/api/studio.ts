@@ -153,6 +153,8 @@ interface ProductStudioV2Params {
   productNotes?: string;
   // Resolução da imagem gerada
   resolution?: '2k' | '4k';
+  // Foco do conjunto: full (inteiro), top (só cima), bottom (só baixo)
+  setFocus?: 'full' | 'top' | 'bottom';
 }
 
 interface ProductStudioV2Result {
@@ -226,6 +228,8 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
         product_notes: params.productNotes || '',
         // Resolução da imagem (2k ou 4k)
         resolution: params.resolution || '2k',
+        // Foco do conjunto (full/top/bottom) — só para produtos conjunto
+        set_focus: params.setFocus || undefined,
       }),
     });
   } catch (fetchError) {
@@ -1374,6 +1378,70 @@ export async function saveCreativeStillSaveAsNew(params: {
     } catch {
       return { success: false, error: 'Resposta inválida do servidor.' };
     }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANÁLISE DE ÂNGULOS DO PRODUTO (Lazy — chamada on-demand)
+// ═══════════════════════════════════════════════════════════════
+
+interface AnalyzeProductAnglesParams {
+  productId: string;
+  userId: string;
+  images: { id: string; url: string }[];
+}
+
+interface AnalyzeProductAnglesResponse {
+  success: boolean;
+  productType?: string;
+  category?: string;
+  angles?: { imageId: string; angle: string }[];
+  error?: string;
+}
+
+/**
+ * Analisa TODAS as imagens de um produto em 1 chamada ao Gemini Vision.
+ * Detecta: tipo do produto, categoria PT-BR, e ângulo de cada imagem.
+ * Atualiza products.category + product_images.angle no Supabase.
+ * Chamada lazy — só quando o usuário abre um produto que precisa análise.
+ */
+export async function analyzeProductAngles(params: AnalyzeProductAnglesParams): Promise<AnalyzeProductAnglesResponse> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/analyze-product-angles`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        productId: params.productId,
+        userId: params.userId,
+        images: params.images,
+      }),
+    });
+
+    if (response.status === 502 || response.status === 504) {
+      return { success: false, error: 'Timeout do servidor. Tente novamente.' };
+    }
+
+    const text = await response.text();
+    if (!text) {
+      return { success: false, error: 'Resposta vazia do servidor.' };
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return { success: false, error: 'Resposta inválida do servidor.' };
+    }
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Erro ao analisar produto.' };
+    }
+
+    return data;
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
   }

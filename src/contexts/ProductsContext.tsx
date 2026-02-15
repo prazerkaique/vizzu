@@ -65,6 +65,8 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
             type: img.type === 'original' ? 'front' : img.type
           }));
 
+          // Detectar imagens sem ângulo definido (importadas do Shopify)
+          const unmappedImages: { id: string; url: string }[] = [];
           const originalImagesObj: any = {};
           originalImages.forEach((img: any) => {
             let angle = img.angle || (img.type === 'original' ? 'front' : img.type);
@@ -79,6 +81,9 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
                 url: img.url,
                 storagePath: img.storage_path
               };
+            } else if (img.url) {
+              // Imagem que não foi mapeada (ângulo duplicado ou null)
+              unmappedImages.push({ id: img.id, url: img.url });
             }
           });
 
@@ -157,6 +162,20 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
             productStudio: formattedProductStudio
           };
 
+          // Detectar se precisa análise de ângulos:
+          // Só faz sentido com 2+ imagens originais (1 foto = front por definição)
+          // Se já tem ângulos variados (back, detail, etc), análise já foi feita → não pedir de novo
+          const distinctAngles = new Set(originalImages.map((img: any) => img.angle).filter(Boolean));
+          const alreadyAnalyzed = distinctAngles.size >= 2; // tem pelo menos 2 ângulos diferentes
+          const hasUnmappedImages = unmappedImages.length > 0 && originalImages.length > 1;
+          const hasNoCategory = !p.category || p.category === 'Sem categoria' || p.category === '';
+          const needsAnalysis = !alreadyAnalyzed && originalImages.length > 1 && (hasUnmappedImages || hasNoCategory);
+
+          // Coletar TODAS as imagens originais para enviar ao Gemini (mapeadas + não mapeadas)
+          const allOriginalImagesForAnalysis = originalImages
+            .filter((img: any) => img.url)
+            .map((img: any) => ({ id: img.id, url: img.url }));
+
           return {
             id: p.id,
             sku: p.sku,
@@ -171,10 +190,13 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
             price: p.price ? parseFloat(p.price) : undefined,
             priceSale: p.price_sale ? parseFloat(p.price_sale) : undefined,
             sizes: p.sizes || [],
+            isSet: p.is_set || false,
             isForSale: p.is_for_sale || false,
             images: formattedOriginalImages,
             originalImages: originalImagesObj,
             generatedImages: generatedImages,
+            needsAngleAnalysis: needsAnalysis,
+            unmappedOriginalImages: needsAnalysis ? allOriginalImagesForAnalysis : undefined,
             createdAt: p.created_at,
             updatedAt: p.updated_at
           };

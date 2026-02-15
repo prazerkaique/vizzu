@@ -205,8 +205,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Estados de seleção de ângulos
  const [selectedAngles, setSelectedAngles] = useState<ProductStudioAngle[]>(['front']);
 
+ // Estado do foco do conjunto (full/top/bottom) — só para produtos isSet
+ const [setFocus, setSetFocus] = useState<'full' | 'top' | 'bottom'>('full');
+
  // Estado do estilo de apresentação (Ghost Mannequin ou Flat Lay)
- const [presentationStyle, setPresentationStyle] = useState<ProductPresentationStyle>('ghost-mannequin');
+ const [presentationStyle, setPresentationStyle] = useState<ProductPresentationStyle>('flat-lay');
  const [showPresentationTooltip, setShowPresentationTooltip] = useState(false);
  const [expandedStyleImage, setExpandedStyleImage] = useState<{ url: string; label: string } | null>(null);
 
@@ -1207,6 +1210,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  studioShadow,
  productNotes: productNotes.trim(),
  resolution,
+ setFocus: product.isSet ? setFocus : undefined,
  });
 
  // ═══ v9: Resposta imediata com generation_id + status 'processing' ═══
@@ -2137,6 +2141,45 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  </div>
 
+ {/* Foco do Conjunto - Apenas para produtos conjunto */}
+ {product.isSet && productType === 'clothing' && (
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-4'}>
+ <i className={"fas fa-layer-group mr-2 " + (theme !== 'light' ? 'text-neutral-400' : 'text-gray-500')}></i>O que otimizar?
+ </h3>
+ <div className="grid grid-cols-3 gap-2">
+ {([
+   { value: 'full' as const, icon: 'fa-link', label: 'Conjunto' },
+   { value: 'top' as const, icon: 'fa-arrow-up', label: 'Parte de cima' },
+   { value: 'bottom' as const, icon: 'fa-arrow-down', label: 'Parte de baixo' },
+ ]).map(opt => (
+ <button key={opt.value}
+ onClick={() => setSetFocus(opt.value)}
+ className={'p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 ' +
+ (setFocus === opt.value
+ ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 border-[#FF9F43]'
+ : (theme !== 'light'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300'))}>
+ <div className={'w-10 h-10 rounded-lg flex items-center justify-center ' +
+ (setFocus === opt.value
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'))}>
+ <i className={'fas ' + opt.icon + ' text-lg ' + (setFocus === opt.value ? 'text-white' : (theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+ </div>
+ <span className={(setFocus === opt.value ? (theme !== 'light' ? 'text-neutral-200' : 'text-gray-700') : (theme !== 'light' ? 'text-neutral-400' : 'text-gray-600')) + ' text-[10px] font-medium text-center'}>
+ {opt.label}
+ </span>
+ {setFocus === opt.value && <i className="fas fa-check-circle text-green-400 text-xs"></i>}
+ </button>
+ ))}
+ </div>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] mt-2'}>
+ Este produto tem 2+ peças. Escolha gerar o conjunto completo ou peças separadas.
+ </p>
+ </div>
+ )}
+
  {/* Estilo de Apresentação - Apenas para roupas */}
  {productType === 'clothing' && (
  <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200 ') + ' rounded-xl border p-4'}>
@@ -2160,6 +2203,33 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  Exemplos de cada estilo:
  </p>
  <div className="grid grid-cols-2 gap-3">
+ {/* Flat Lay Example */}
+ <div className="text-center">
+ <div
+ className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme !== 'light' ? 'border-neutral-500' : 'border-gray-300')}
+ onClick={(e) => {
+ e.stopPropagation();
+ setExpandedStyleImage({
+ url: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png',
+ label: 'Flat Lay'
+ });
+ }}
+ >
+ <OptimizedImage
+ src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png"
+ alt="Flat Lay"
+ className="w-full h-32 object-cover"
+ size="thumb"
+ />
+ <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
+ <i className="fas fa-search-plus text-white text-lg"></i>
+ </div>
+ </div>
+ <span className="text-neutral-400 text-xs font-semibold">Flat Lay</span>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
+ Deitado, vista de cima
+ </p>
+ </div>
  {/* Ghost Mannequin Example */}
  <div className="text-center">
  <div
@@ -2187,33 +2257,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  Vestido em corpo invisível
  </p>
  </div>
- {/* Flat Lay Example */}
- <div className="text-center">
- <div
- className={'relative rounded-lg overflow-hidden border-2 mb-2 cursor-pointer transition-all hover:scale-105 ' + (theme !== 'light' ? 'border-blue-500/50' : 'border-blue-300')}
- onClick={(e) => {
- e.stopPropagation();
- setExpandedStyleImage({
- url: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png',
- label: 'Flat Lay'
- });
- }}
- >
- <OptimizedImage
- src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png"
- alt="Flat Lay"
- className="w-full h-32 object-cover"
- size="thumb"
- />
- <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
- <i className="fas fa-search-plus text-white text-lg"></i>
- </div>
- </div>
- <span className="text-blue-400 text-xs font-semibold">Flat Lay</span>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-1'}>
- Deitado, vista de cima
- </p>
- </div>
  </div>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] text-center mt-3'}>
  <i className="fas fa-search-plus mr-1"></i>
@@ -2225,33 +2268,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
 
  <div className="grid grid-cols-2 gap-3">
- {/* Ghost Mannequin */}
- <button
- onClick={() => setPresentationStyle('ghost-mannequin')}
- className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
- (presentationStyle === 'ghost-mannequin'
- ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 border-[#FF9F43]'
- : (theme !== 'light'
- ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
- : 'bg-gray-50 border-gray-200 hover:border-gray-300')
- )
- }
- >
- <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' +
- (presentationStyle === 'ghost-mannequin'
- ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
- : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'))
- }>
- <i className={'fas fa-person text-xl ' + (presentationStyle === 'ghost-mannequin' ? 'text-white' : (theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'))}></i>
- </div>
- <span className={(presentationStyle === 'ghost-mannequin' ? (theme !== 'light' ? 'text-neutral-200' : 'text-gray-700') : (theme !== 'light' ? 'text-neutral-400' : 'text-gray-600')) + ' text-xs font-medium'}>
- Ghost Mannequin
- </span>
- {presentationStyle === 'ghost-mannequin' && (
- <i className="fas fa-check-circle text-green-400 text-sm"></i>
- )}
- </button>
-
  {/* Flat Lay */}
  <button
  onClick={() => setPresentationStyle('flat-lay')}
@@ -2275,6 +2291,33 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  Flat Lay
  </span>
  {presentationStyle === 'flat-lay' && (
+ <i className="fas fa-check-circle text-green-400 text-sm"></i>
+ )}
+ </button>
+
+ {/* Ghost Mannequin */}
+ <button
+ onClick={() => setPresentationStyle('ghost-mannequin')}
+ className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ' +
+ (presentationStyle === 'ghost-mannequin'
+ ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 border-[#FF9F43]'
+ : (theme !== 'light'
+ ? 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+ : 'bg-gray-50 border-gray-200 hover:border-gray-300')
+ )
+ }
+ >
+ <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' +
+ (presentationStyle === 'ghost-mannequin'
+ ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+ : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'))
+ }>
+ <i className={'fas fa-person text-xl ' + (presentationStyle === 'ghost-mannequin' ? 'text-white' : (theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'))}></i>
+ </div>
+ <span className={(presentationStyle === 'ghost-mannequin' ? (theme !== 'light' ? 'text-neutral-200' : 'text-gray-700') : (theme !== 'light' ? 'text-neutral-400' : 'text-gray-600')) + ' text-xs font-medium'}>
+ Ghost Mannequin
+ </span>
+ {presentationStyle === 'ghost-mannequin' && (
  <i className="fas fa-check-circle text-green-400 text-sm"></i>
  )}
  </button>

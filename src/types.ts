@@ -147,6 +147,14 @@ export interface Product {
   // NOVO: Flag para saber se tem foto de detalhe
   hasDetailImage?: boolean;
 
+  // Flag para análise lazy de ângulos (produtos importados do Shopify)
+  needsAngleAnalysis?: boolean;
+  // Imagens originais que não foram mapeadas a um ângulo (angle null)
+  unmappedOriginalImages?: { id: string; url: string }[];
+
+  // Conjunto (2+ peças vendidas juntas, ex: pijama, biquíni)
+  isSet?: boolean;
+
   // Catálogo / Venda
   price?: number;
   priceSale?: number;
