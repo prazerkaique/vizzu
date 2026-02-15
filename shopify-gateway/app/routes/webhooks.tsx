@@ -205,8 +205,8 @@ async function handleProductCreate(
 
   const shopifyGid = `gid://shopify/Product/${payload.id}`;
 
-  // Esperar 15s para Shopify processar TODAS as imagens antes de buscar via GraphQL
-  await sleep(15000);
+  // Esperar 5s para Shopify processar imagens antes de buscar via GraphQL
+  await sleep(5000);
 
   // Dedup: checar se outro webhook já importou enquanto dormíamos
   try {
