@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 export type MinimizedModal = {
  id: string;
@@ -75,8 +75,14 @@ interface GenerationContextType {
 
  // Notificações de geração concluída (lista de pages: 'product-studio', 'provador', etc.)
  completedFeatures: string[];
+ addCompletedFeature: (page: string) => void;
  clearCompletedFeature: (page: string) => void;
  clearAllCompletedFeatures: () => void;
+
+ // Notificações por produto (feature → product IDs com geração recém-concluída)
+ completedProducts: Record<string, string[]>;
+ addCompletedProduct: (page: string, productId: string) => void;
+ clearCompletedProduct: (page: string, productId: string) => void;
 
  // Minimized Modals
  minimizedModals: MinimizedModal[];
@@ -121,9 +127,22 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  const [modelsMinimized, setModelsMinimized] = useState(false);
  const [modelsProgress, setModelsProgress] = useState(0);
 
- // Notificações de geração concluída — lista de pages ('product-studio', 'provador', etc.)
- const [completedFeatures, setCompletedFeatures] = useState<string[]>([]);
+ // Notificações de geração concluída — persistido em localStorage para sobreviver a refresh/saída
+ const COMPLETED_FEATURES_KEY = 'vizzu-completed-features';
+ const readCompletedFeatures = (): string[] => {
+   try { return JSON.parse(localStorage.getItem(COMPLETED_FEATURES_KEY) || '[]'); } catch { return []; }
+ };
+ const [completedFeatures, setCompletedFeatures] = useState<string[]>(readCompletedFeatures);
  const prevGeneratingRef = useRef({ ps: false, lc: false, pv: false, cs: false, md: false });
+
+ const addCompletedFeature = useCallback((page: string) => {
+   setCompletedFeatures(prev => {
+     if (prev.includes(page)) return prev;
+     const next = [...prev, page];
+     try { localStorage.setItem(COMPLETED_FEATURES_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+     return next;
+   });
+ }, []);
 
  // Detectar quando uma geração finaliza (true → false) e adicionar a page à lista
  useEffect(() => {
@@ -137,7 +156,11 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
    if (prev.md && !isGeneratingModels) newFeatures.push('models');
 
    if (newFeatures.length > 0) {
-     setCompletedFeatures(prev => [...prev, ...newFeatures]);
+     setCompletedFeatures(prev => {
+       const merged = [...new Set([...prev, ...newFeatures])];
+       try { localStorage.setItem(COMPLETED_FEATURES_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
+       return merged;
+     });
    }
 
    prevGeneratingRef.current = {
@@ -149,8 +172,45 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
    };
  }, [isGeneratingProductStudio, isGeneratingLookComposer, isGeneratingProvador, isGeneratingCreativeStill, isGeneratingModels]);
 
- const clearCompletedFeature = (page: string) => setCompletedFeatures(prev => prev.filter(f => f !== page));
- const clearAllCompletedFeatures = () => setCompletedFeatures([]);
+ const clearCompletedFeature = useCallback((page: string) => {
+   setCompletedFeatures(prev => {
+     const next = prev.filter(f => f !== page);
+     try { localStorage.setItem(COMPLETED_FEATURES_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+     return next;
+   });
+ }, []);
+ const clearAllCompletedFeatures = useCallback(() => {
+   setCompletedFeatures([]);
+   try { localStorage.setItem(COMPLETED_FEATURES_KEY, '[]'); } catch { /* ignore */ }
+ }, []);
+
+ // Notificações por produto — persistido em localStorage para sobreviver a refresh/saída
+ const COMPLETED_PRODUCTS_KEY = 'vizzu-completed-products';
+ const readCompletedProducts = (): Record<string, string[]> => {
+   try { return JSON.parse(localStorage.getItem(COMPLETED_PRODUCTS_KEY) || '{}'); } catch { return {}; }
+ };
+ const [completedProducts, setCompletedProducts] = useState<Record<string, string[]>>(readCompletedProducts);
+ const addCompletedProduct = useCallback((page: string, productId: string) => {
+   setCompletedProducts(prev => {
+     const existing = prev[page] || [];
+     if (existing.includes(productId)) return prev;
+     const next = { ...prev, [page]: [...existing, productId] };
+     try { localStorage.setItem(COMPLETED_PRODUCTS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+     return next;
+   });
+ }, []);
+ const clearCompletedProduct = useCallback((page: string, productId: string) => {
+   setCompletedProducts(prev => {
+     const existing = prev[page];
+     if (!existing) return prev;
+     const filtered = existing.filter(id => id !== productId);
+     const next = filtered.length === 0
+       ? (({ [page]: _, ...rest }) => rest)(prev)
+       : { ...prev, [page]: filtered };
+     try { localStorage.setItem(COMPLETED_PRODUCTS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+     return next;
+   });
+ }, []);
 
  // Minimized Modals
  const [minimizedModals, setMinimizedModals] = useState<MinimizedModal[]>([]);
@@ -257,7 +317,8 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      modelsMinimized, setModelsMinimized,
      modelsProgress, setModelsProgress,
      isAnyGenerationRunning,
-     completedFeatures, clearCompletedFeature, clearAllCompletedFeatures,
+     completedFeatures, addCompletedFeature, clearCompletedFeature, clearAllCompletedFeatures,
+     completedProducts, addCompletedProduct, clearCompletedProduct,
      minimizedModals, setMinimizedModals,
      closeMinimizedModal,
    }}>

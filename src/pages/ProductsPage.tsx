@@ -6,7 +6,7 @@ import { useHistory } from '../contexts/HistoryContext';
 import { useCredits } from '../hooks/useCredits';
 import { useDebounce } from '../hooks/useDebounce';
 import { BulkImportModal } from '../components/BulkImport/BulkImportModal';
-import { analyzeProductImage } from '../lib/api/studio';
+import { analyzeProductImage, analyzeProductAngles } from '../lib/api/studio';
 import { Product, HistoryLog, ProductAttributes, CATEGORY_ATTRIBUTES } from '../types';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { useImageViewer } from '../components/ImageViewer';
@@ -95,6 +95,8 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [showRegisterAll, setShowRegisterAll] = useState(false);
   const [longPressProductId, setLongPressProductId] = useState<string | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [analyzingProductId, setAnalyzingProductId] = useState<string | null>(null);
+  const [pendingAnalysisProductId, setPendingAnalysisProductId] = useState<string | null>(null);
 
   const { theme, navigateTo, setSettingsTab, successNotification, setSuccessNotification, showToast } = useUI();
   const { user } = useAuth();
@@ -112,6 +114,18 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
     const t = setTimeout(() => setIsInitialLoad(false), 3000);
     return () => clearTimeout(t);
   }, []);
+
+  // Abrir modal do produto após análise lazy de ângulos (espera products atualizar)
+  useEffect(() => {
+    if (pendingAnalysisProductId) {
+      const updated = products.find(p => p.id === pendingAnalysisProductId);
+      if (updated && !updated.needsAngleAnalysis) {
+        setShowOptimizedImage(true);
+        setShowProductDetail(updated);
+        setPendingAnalysisProductId(null);
+      }
+    }
+  }, [products, pendingAnalysisProductId]);
 
   // Fix 6: proteção contra fechamento acidental do modal
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
@@ -240,7 +254,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    }, 500);
   };
 
-  const handleProductTouchEnd = (productId: string) => {
+  const handleProductTouchEnd = async (productId: string) => {
    if (longPressTimer.current) {
    clearTimeout(longPressTimer.current);
    longPressTimer.current = null;
@@ -252,8 +266,33 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
    } else {
    const product = products.find(p => p.id === productId);
    if (product) {
+   if (product.needsAngleAnalysis && product.unmappedOriginalImages?.length && user?.id) {
+     setAnalyzingProductId(product.id);
+     try {
+       const result = await analyzeProductAngles({
+         productId: product.id,
+         userId: user.id,
+         images: product.unmappedOriginalImages,
+       });
+       if (result.success) {
+         setPendingAnalysisProductId(product.id);
+         await loadUserProducts(user.id);
+       } else {
+         showToast('Não foi possível analisar automaticamente.', 'info');
+         setShowOptimizedImage(true);
+         setShowProductDetail(product);
+       }
+     } catch {
+       showToast('Erro na análise.', 'info');
+       setShowOptimizedImage(true);
+       setShowProductDetail(product);
+     } finally {
+       setAnalyzingProductId(null);
+     }
+   } else {
    setShowOptimizedImage(true);
    setShowProductDetail(product);
+   }
    }
    }
    }
@@ -758,10 +797,34 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  onTouchStart={() => handleProductTouchStart(product.id)}
  onTouchEnd={() => handleProductTouchEnd(product.id)}
  onTouchMove={handleProductTouchMove}
- onClick={(e) => {
+ onClick={async (e) => {
  if (window.matchMedia('(pointer: fine)').matches) {
  if (selectedProducts.length > 0) {
  toggleProductSelection(product.id);
+ } else if (product.needsAngleAnalysis && product.unmappedOriginalImages?.length && user?.id) {
+ // Análise lazy: detectar categoria + ângulos com IA
+ setAnalyzingProductId(product.id);
+ try {
+ const result = await analyzeProductAngles({
+   productId: product.id,
+   userId: user.id,
+   images: product.unmappedOriginalImages,
+ });
+ if (result.success) {
+   setPendingAnalysisProductId(product.id);
+   await loadUserProducts(user.id);
+ } else {
+   showToast('Não foi possível analisar automaticamente. Você pode organizar manualmente.', 'info');
+   setShowOptimizedImage(true);
+   setShowProductDetail(product);
+ }
+ } catch {
+ showToast('Erro na análise. Você pode organizar manualmente.', 'info');
+ setShowOptimizedImage(true);
+ setShowProductDetail(product);
+ } finally {
+ setAnalyzingProductId(null);
+ }
  } else {
  setShowOptimizedImage(true);
  setShowProductDetail(product);
@@ -783,6 +846,19 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm text-white text-[7px] font-bold rounded-full flex items-center gap-1 pointer-events-none">
  <i className="fas fa-images text-[6px]"></i>
  {imgCount}
+ </div>
+ )}
+ {/* Overlay: produto precisa análise de ângulos */}
+ {product.needsAngleAnalysis && !isProductOptimized(product) && (
+ <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
+ <span className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] font-bold px-2.5 py-1 rounded-full animate-pulse">Clique para organizar</span>
+ </div>
+ )}
+ {/* Overlay de análise em andamento */}
+ {analyzingProductId === product.id && (
+ <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+ <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
+ <p className="text-white text-[8px] font-medium text-center px-2">Analisando com IA...</p>
  </div>
  )}
  {/* Fix 5: checkbox com a11y */}

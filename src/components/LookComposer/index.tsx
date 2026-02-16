@@ -16,6 +16,7 @@ import { ProductHubModal } from '../shared/ProductHubModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 import { supabase } from '../../services/supabaseClient';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
+import { useGeneration } from '../../contexts/GenerationContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { LOOK_COMPOSER_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -138,7 +139,8 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  setProductForCreation,
 }) => {
  const isDark = theme !== 'light';
- const { navigateTo, showToast } = useUI();
+ const { currentPage, navigateTo, showToast } = useUI();
+ const { completedProducts, clearCompletedProduct } = useGeneration();
  const { shouldShowTour } = useOnboarding();
 
  // Estados principais
@@ -305,6 +307,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  }, [products, allGeneratedLooks]);
 
  // Todos os produtos para a seção "Explorar por Produto" (com e sem looks)
+ const newProductIds = completedProducts['look-composer'] || [];
  const allProductsForExplore = useMemo(() => {
  const lookMap = new Map(productsWithLooks.map(pwl => [pwl.product.id, pwl]));
  const result: ProductWithLooks[] = [];
@@ -325,8 +328,11 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  }
  });
 
- // Ordenar: com looks primeiro (por quantidade desc), depois sem looks (por data desc)
+ // Ordenar: novos primeiro, depois com looks (desc), depois sem looks (por data desc)
  return result.sort((a, b) => {
+ const aNew = newProductIds.includes(a.product.id) ? 1 : 0;
+ const bNew = newProductIds.includes(b.product.id) ? 1 : 0;
+ if (aNew !== bNew) return bNew - aNew;
  if (a.lookCount > 0 && b.lookCount === 0) return -1;
  if (a.lookCount === 0 && b.lookCount > 0) return 1;
  if (a.lookCount > 0 && b.lookCount > 0) return b.lookCount - a.lookCount;
@@ -335,7 +341,18 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  const dateB = b.product.createdAt ? new Date(b.product.createdAt).getTime() : 0;
  return dateB - dateA;
  });
- }, [products, productsWithLooks]);
+ }, [products, productsWithLooks, newProductIds]);
+
+ // Auto-scroll até o primeiro produto com badge "Novo!" ao entrar na página
+ useEffect(() => {
+   if (currentPage === 'look-composer') {
+     const timer = setTimeout(() => {
+       const el = document.querySelector('[data-new-product="look-composer"]');
+       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+     }, 500);
+     return () => clearTimeout(timer);
+   }
+ }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
  // Reset paginação quando filtros do modal mudam
  useEffect(() => {
@@ -907,7 +924,7 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  return (
  <div
  key={pwl.product.id}
- onClick={() => hasLooks ? handleOpenProductModal(pwl) : setSelectedProduct(pwl.product)}
+ onClick={() => { clearCompletedProduct('look-composer', pwl.product.id); hasLooks ? handleOpenProductModal(pwl) : setSelectedProduct(pwl.product); }}
  className={(isDark ? 'bg-neutral-800 border-neutral-700 hover:border-[#A855F7]/50' : 'bg-gray-50 border-gray-200 hover:border-[#A855F7]/30') + ' rounded-xl border overflow-hidden cursor-pointer transition-all group'}
  >
  <div className={(isDark ? 'bg-neutral-700' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
@@ -921,6 +938,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  ) : (
  <div className="w-full h-full flex items-center justify-center">
  <i className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-image text-2xl'}></i>
+ </div>
+ )}
+ {/* Badge Novo! */}
+ {newProductIds.includes(pwl.product.id) && (
+ <div data-new-product="look-composer" className="absolute bottom-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-white rounded-full shadow-lg animate-bounce">
+   <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B6B] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B6B]"></span></span>
+   <span className="text-[#FF6B6B] text-[9px] font-bold">Novo!</span>
  </div>
  )}
  {/* Badges */}

@@ -114,6 +114,8 @@ function App() {
    isAnyGenerationRunning,
    minimizedModals, setMinimizedModals,
    closeMinimizedModal,
+   addCompletedProduct,
+   addCompletedFeature,
  } = useGeneration();
 
  const [provadorClient, setProvadorClient] = useState<Client | null>(null);
@@ -312,213 +314,209 @@ function App() {
  }
  }, [user]);
 
- // Checar gerações concluídas em segundo plano ao abrir o app
+ // ─── Checar gerações concluídas em segundo plano ───
+ // Roda no mount E quando o usuário volta à aba (visibilitychange)
+ const bgCheckRunningRef = useRef(false);
+ const userIdRef = useRef(user?.id);
+ userIdRef.current = user?.id;
+
  useEffect(() => {
  if (!user?.id) return;
 
- const checkBackgroundGenerations = async () => {
- try {
- const notifiedKey = `vizzu_bg_notified_${user.id}`;
- const notifiedIds: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+ const checkBackgroundGenerations = async (silent = false) => {
+   const userId = userIdRef.current;
+   if (!userId || bgCheckRunningRef.current) return;
+   bgCheckRunningRef.current = true;
 
- // ─── 1. Checar gerações PENDENTES no localStorage ───
- const pendingInProgress: { page: string; name: string }[] = [];
+   try {
+   const notifiedKey = `vizzu_bg_notified_${userId}`;
+   const notifiedIds: string[] = JSON.parse(localStorage.getItem(notifiedKey) || '[]');
+   const TIMEOUT_MIN = 30; // timeout generoso — Gemini pode demorar
 
- // Product Studio pendente
- const psPendingRaw = localStorage.getItem('vizzu-pending-product-studio');
- if (psPendingRaw) {
- try {
- const psPending = JSON.parse(psPendingRaw);
- const elapsedMin = (Date.now() - psPending.startTime) / 1000 / 60;
- if (elapsedMin > 10) {
- localStorage.removeItem('vizzu-pending-product-studio');
- } else {
- const { data: gen } = await supabase
- .from('generations')
- .select('id, status, output_urls')
- .eq('user_id', user.id)
- .eq('product_id', psPending.productId)
- .order('created_at', { ascending: false })
- .limit(1)
- .maybeSingle();
+   // ─── 1. Checar gerações PENDENTES no localStorage ───
+   const pendingInProgress: { page: string; name: string }[] = [];
 
- if (gen?.status === 'completed' && gen?.output_urls) {
- localStorage.removeItem('vizzu-pending-product-studio');
- if (!notifiedIds.includes(`ps-${gen.id}`)) {
- notifiedIds.push(`ps-${gen.id}`);
- }
- } else if (gen?.status === 'failed' || gen?.status === 'error') {
- localStorage.removeItem('vizzu-pending-product-studio');
- } else {
- pendingInProgress.push({ page: 'product-studio', name: psPending.productName || 'Product Studio' });
- }
- }
- } catch { localStorage.removeItem('vizzu-pending-product-studio'); }
- }
+   // Helper genérico para checar pending entry
+   const checkPending = async (
+     key: string,
+     page: string,
+     nameField: string,
+     buildQuery: (pending: any) => Promise<{ data: any }>,
+     checkCompleted: (data: any) => boolean,
+     onCompleted?: (pending: any) => void,
+   ) => {
+     const raw = localStorage.getItem(key);
+     if (!raw) return;
+     try {
+       const pending = JSON.parse(raw);
+       const elapsedMin = (Date.now() - pending.startTime) / 1000 / 60;
+       if (elapsedMin > TIMEOUT_MIN) {
+         localStorage.removeItem(key);
+         return;
+       }
+       const { data } = await buildQuery(pending);
+       if (data && checkCompleted(data)) {
+         localStorage.removeItem(key);
+         onCompleted?.(pending);
+         if (!notifiedIds.includes(`${page}-${data.id}`)) {
+           notifiedIds.push(`${page}-${data.id}`);
+         }
+       } else if (data?.status === 'failed' || data?.status === 'error') {
+         localStorage.removeItem(key);
+       } else {
+         pendingInProgress.push({ page, name: pending[nameField] || page });
+       }
+     } catch { localStorage.removeItem(key); }
+   };
 
- // Look Composer pendente
- const lcPendingRaw = localStorage.getItem('vizzu_pending_generation');
- if (lcPendingRaw) {
- try {
- const lcPending = JSON.parse(lcPendingRaw);
- const elapsedMin = (Date.now() - lcPending.startTime) / 1000 / 60;
- if (elapsedMin > 5) {
- localStorage.removeItem('vizzu_pending_generation');
- } else {
- const { data: gen } = await supabase
- .from('generations')
- .select('id, status, output_image_url')
- .eq('user_id', user.id)
- .eq('product_id', lcPending.productId)
- .eq('type', 'modelo_ia')
- .order('created_at', { ascending: false })
- .limit(1)
- .maybeSingle();
+   // Product Studio — filtrar por status='completed' para evitar pegar registros stuck em 'processing'
+   await checkPending(
+     'vizzu-pending-product-studio', 'product-studio', 'productName',
+     (p) => supabase.from('generations').select('id, status, output_urls')
+       .eq('user_id', userId).eq('product_id', p.productId || '')
+       .eq('status', 'completed').not('output_urls', 'is', null)
+       .order('created_at', { ascending: false }).limit(1).maybeSingle() as any,
+     (d) => d.status === 'completed' && d.output_urls,
+     (p) => { if (p.productId) addCompletedProduct('product-studio', p.productId); addCompletedFeature('product-studio'); },
+   );
 
- if (gen?.status === 'completed' && gen?.output_image_url) {
- localStorage.removeItem('vizzu_pending_generation');
- if (!notifiedIds.includes(`lc-${gen.id}`)) {
- notifiedIds.push(`lc-${gen.id}`);
- }
- } else if (gen?.status === 'failed' || gen?.status === 'error') {
- localStorage.removeItem('vizzu_pending_generation');
- } else {
- pendingInProgress.push({ page: 'look-composer', name: lcPending.productName || 'Look Composer' });
- }
- }
- } catch { localStorage.removeItem('vizzu_pending_generation'); }
- }
+   // Look Composer
+   await checkPending(
+     'vizzu_pending_generation', 'look-composer', 'productName',
+     (p) => supabase.from('generations').select('id, status, output_image_url')
+       .eq('user_id', userId).eq('product_id', p.productId || '')
+       .eq('type', 'modelo_ia').eq('status', 'completed').not('output_image_url', 'is', null)
+       .order('created_at', { ascending: false }).limit(1).maybeSingle() as any,
+     (d) => d.status === 'completed' && d.output_image_url,
+     (p) => { if (p.productId) addCompletedProduct('look-composer', p.productId); addCompletedFeature('look-composer'); },
+   );
 
- // Provador pendente
- const provPendingRaw = localStorage.getItem('vizzu-pending-provador');
- if (provPendingRaw) {
- try {
- const provPending = JSON.parse(provPendingRaw);
- const elapsedMin = (Date.now() - provPending.startTime) / 1000 / 60;
- if (elapsedMin > 10) {
- localStorage.removeItem('vizzu-pending-provador');
- } else {
- const { data: gen } = await supabase
- .from('generations')
- .select('id, status, output_image_url')
- .eq('user_id', user.id)
- .eq('type', 'provador')
- .order('created_at', { ascending: false })
- .limit(1)
- .maybeSingle();
+   // Provador
+   await checkPending(
+     'vizzu-pending-provador', 'provador', 'clientName',
+     () => supabase.from('generations').select('id, status, output_image_url')
+       .eq('user_id', userId).eq('type', 'provador')
+       .eq('status', 'completed').not('output_image_url', 'is', null)
+       .order('created_at', { ascending: false }).limit(1).maybeSingle() as any,
+     (d) => d.status === 'completed' && d.output_image_url,
+     () => { addCompletedFeature('provador'); },
+   );
 
- if (gen?.status === 'completed' && gen?.output_image_url) {
- localStorage.removeItem('vizzu-pending-provador');
- if (!notifiedIds.includes(`prov-${gen.id}`)) {
- notifiedIds.push(`prov-${gen.id}`);
- }
- } else if (gen?.status === 'failed' || gen?.status === 'error') {
- localStorage.removeItem('vizzu-pending-provador');
- } else {
- pendingInProgress.push({ page: 'provador', name: provPending.clientName || 'Provador' });
- }
- }
- } catch { localStorage.removeItem('vizzu-pending-provador'); }
- }
+   // Creative Still
+   await checkPending(
+     'vizzu-pending-creative-still', 'creative-still', 'productName',
+     (p) => supabase.from('creative_still_generations').select('id, status, product_id, variation_urls')
+       .eq('user_id', userId).eq('product_id', p.productId || '')
+       .eq('status', 'completed')
+       .order('created_at', { ascending: false }).limit(1).maybeSingle() as any,
+     (d) => d.status === 'completed' && d.variation_urls?.length > 0,
+     (p) => { if (p.productId) addCompletedProduct('creative-still', p.productId); addCompletedFeature('creative-still'); },
+   );
 
- // Toast para gerações EM ANDAMENTO
- if (pendingInProgress.length > 0) {
- const first = pendingInProgress[0];
- const toastMsg = pendingInProgress.length === 1
- ? `Geração de "${first.name}" em andamento...`
- : `${pendingInProgress.length} gerações em andamento...`;
- showToast(toastMsg, 'info', {
- label: 'Ver',
- onClick: () => {
- navigateTo(first.page as any);
- showToast(`Abra "${first.name}" para ver o progresso`, 'info');
- }
- });
- }
+   // Models
+   await checkPending(
+     'vizzu_pending_model', 'models', 'modelName',
+     () => supabase.from('saved_models').select('id, status, images')
+       .eq('user_id', userId).eq('status', 'ready')
+       .order('created_at', { ascending: false }).limit(1).maybeSingle() as any,
+     (d) => d.status === 'ready' && d.images && (d.images.front || d.images.back),
+     () => { addCompletedFeature('models'); },
+   );
 
- // ─── 2. Checar gerações CONCLUÍDAS nas últimas 24h ───
- const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+   // Toast para gerações EM ANDAMENTO (só na primeira vez, não no retorno silencioso)
+   if (!silent && pendingInProgress.length > 0) {
+     const first = pendingInProgress[0];
+     const toastMsg = pendingInProgress.length === 1
+       ? `Geração de "${first.name}" em andamento...`
+       : `${pendingInProgress.length} gerações em andamento...`;
+     showToast(toastMsg, 'info', {
+       label: 'Ver',
+       onClick: () => {
+         navigateTo(first.page as any);
+         showToast(`Abra "${first.name}" para ver o progresso`, 'info');
+       }
+     });
+   }
 
- const { data: stills } = await supabase
- .from('creative_still_generations')
- .select('id, created_at')
- .eq('user_id', user.id)
- .eq('status', 'completed')
- .gte('created_at', since);
+   // ─── 2. Checar gerações CONCLUÍDAS nas últimas 24h (cross-device) ───
+   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
- const { data: looks } = await supabase
- .from('client_looks')
- .select('id, created_at')
- .eq('user_id', user.id)
- .gte('created_at', since);
+   const [{ data: stills }, { data: looks }, { data: psGenerations }, { data: lcGenerations }, { data: provGenerations }] = await Promise.all([
+     supabase.from('creative_still_generations').select('id, product_id, created_at')
+       .eq('user_id', userId).eq('status', 'completed').gte('created_at', since),
+     supabase.from('client_looks').select('id, created_at')
+       .eq('user_id', userId).gte('created_at', since),
+     supabase.from('generations').select('id, product_id, created_at')
+       .eq('user_id', userId).eq('status', 'completed').not('output_urls', 'is', null).gte('created_at', since),
+     supabase.from('generations').select('id, product_id, created_at')
+       .eq('user_id', userId).eq('status', 'completed').eq('type', 'modelo_ia').not('output_image_url', 'is', null).gte('created_at', since),
+     supabase.from('generations').select('id, created_at')
+       .eq('user_id', userId).eq('status', 'completed').eq('type', 'provador').not('output_image_url', 'is', null).gte('created_at', since),
+   ]);
 
- const { data: psGenerations } = await supabase
- .from('generations')
- .select('id, created_at')
- .eq('user_id', user.id)
- .eq('status', 'completed')
- .not('output_urls', 'is', null)
- .gte('created_at', since);
+   // Filtrar apenas os que não foram notificados
+   const newStills = (stills || []).filter(s => !notifiedIds.includes(`still-${s.id}`));
+   const newLooks = (looks || []).filter(l => !notifiedIds.includes(`look-${l.id}`));
+   const newPS = (psGenerations || []).filter(g => !notifiedIds.includes(`ps-${g.id}`));
+   const newLC = (lcGenerations || []).filter(g => !notifiedIds.includes(`lc-${g.id}`));
+   const newProv = (provGenerations || []).filter(g => !notifiedIds.includes(`prov-${g.id}`));
+   const total = newStills.length + newLooks.length + newPS.length + newLC.length + newProv.length;
 
- const { data: lcGenerations } = await supabase
- .from('generations')
- .select('id, created_at')
- .eq('user_id', user.id)
- .eq('status', 'completed')
- .eq('type', 'modelo_ia')
- .not('output_image_url', 'is', null)
- .gte('created_at', since);
+   // Marcar produtos e features com geração concluída para badges
+   newStills.forEach(s => { if (s.product_id) addCompletedProduct('creative-still', s.product_id); });
+   newPS.forEach(g => { if (g.product_id) addCompletedProduct('product-studio', g.product_id); });
+   newLC.forEach(g => { if (g.product_id) addCompletedProduct('look-composer', g.product_id); });
+   if (newStills.length > 0) addCompletedFeature('creative-still');
+   if (newPS.length > 0) addCompletedFeature('product-studio');
+   if (newLC.length > 0) addCompletedFeature('look-composer');
+   if (newProv.length > 0) addCompletedFeature('provador');
 
- const { data: provGenerations } = await supabase
- .from('generations')
- .select('id, created_at')
- .eq('user_id', user.id)
- .eq('status', 'completed')
- .eq('type', 'provador')
- .not('output_image_url', 'is', null)
- .gte('created_at', since);
+   if (total > 0 && !silent) {
+     const targetPage = newStills.length > 0 ? 'creative-still'
+       : newPS.length > 0 ? 'product-studio'
+       : newLC.length > 0 ? 'look-composer'
+       : 'provador';
+     showToast(
+       total === 1
+         ? 'A criação da imagem foi concluída em segundo plano.'
+         : `${total} criações foram concluídas em segundo plano.`,
+       'success',
+       { label: 'Ver', onClick: () => navigateTo(targetPage as any) }
+     );
+   }
 
- // Filtrar apenas os que não foram notificados (inclui os marcados na etapa 1)
- const newStills = (stills || []).filter(s => !notifiedIds.includes(`still-${s.id}`));
- const newLooks = (looks || []).filter(l => !notifiedIds.includes(`look-${l.id}`));
- const newPS = (psGenerations || []).filter(g => !notifiedIds.includes(`ps-${g.id}`));
- const newLC = (lcGenerations || []).filter(g => !notifiedIds.includes(`lc-${g.id}`));
- const newProv = (provGenerations || []).filter(g => !notifiedIds.includes(`prov-${g.id}`));
- const total = newStills.length + newLooks.length + newPS.length + newLC.length + newProv.length;
-
- if (total > 0) {
- const targetPage = newStills.length > 0 ? 'creative-still'
- : newPS.length > 0 ? 'product-studio'
- : newLC.length > 0 ? 'look-composer'
- : 'provador';
- showToast(
- total === 1
- ? 'A criação da imagem foi concluída em segundo plano.'
- : `${total} criações foram concluídas em segundo plano.`,
- 'success',
- { label: 'Ver', onClick: () => navigateTo(targetPage as any) }
- );
- }
-
- // Salvar todos os notificados (inclui os da etapa 1 + etapa 2)
- const allNotified = [
- ...notifiedIds,
- ...newStills.map(s => `still-${s.id}`),
- ...newLooks.map(l => `look-${l.id}`),
- ...newPS.map(g => `ps-${g.id}`),
- ...newLC.map(g => `lc-${g.id}`),
- ...newProv.map(g => `prov-${g.id}`),
- ];
- // Manter apenas últimos 200 para não crescer infinitamente
- localStorage.setItem(notifiedKey, JSON.stringify(allNotified.slice(-200)));
- } catch (e) {
- console.error('Erro ao checar gerações em background:', e);
- }
+   // Salvar todos os notificados
+   const allNotified = [
+     ...notifiedIds,
+     ...newStills.map(s => `still-${s.id}`),
+     ...newLooks.map(l => `look-${l.id}`),
+     ...newPS.map(g => `ps-${g.id}`),
+     ...newLC.map(g => `lc-${g.id}`),
+     ...newProv.map(g => `prov-${g.id}`),
+   ];
+   localStorage.setItem(notifiedKey, JSON.stringify(allNotified.slice(-200)));
+   } catch (e) {
+     console.error('Erro ao checar gerações em background:', e);
+   } finally {
+     bgCheckRunningRef.current = false;
+   }
  };
 
- // Pequeno delay para não competir com o carregamento inicial
- const timeout = setTimeout(checkBackgroundGenerations, 3000);
- return () => clearTimeout(timeout);
+ // Rodar check no mount (delay curto para não competir com auth)
+ const timeout = setTimeout(() => checkBackgroundGenerations(false), 1500);
+
+ // Re-checar quando o usuário volta à aba (visibilitychange)
+ const handleVisibilityChange = () => {
+   if (document.visibilityState === 'visible') {
+     setTimeout(() => checkBackgroundGenerations(true), 500);
+   }
+ };
+ document.addEventListener('visibilitychange', handleVisibilityChange);
+
+ return () => {
+   clearTimeout(timeout);
+   document.removeEventListener('visibilitychange', handleVisibilityChange);
+ };
  }, [user?.id]);
 
  // TODO: Habilitar quando tabela generation_reports existir no Supabase

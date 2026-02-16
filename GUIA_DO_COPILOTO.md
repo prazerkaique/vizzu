@@ -5,6 +5,71 @@
 
 ---
 
+## PREMISSAS OBRIGATÓRIAS DE DEBUGGING
+
+> **LEIA ANTES DE QUALQUER CORREÇÃO DE BUG. ESTAS REGRAS SÃO INEGOCIÁVEIS.**
+
+### 1. VERIFICAR OS DADOS ANTES DE MUDAR CÓDIGO
+
+Antes de alterar qualquer código para corrigir um bug, **consultar a fonte de verdade** (banco de dados, API, logs) para confirmar ONDE o problema realmente está.
+
+**Método obrigatório:**
+```
+# Exemplo: "só aparece 1 imagem no produto"
+# ANTES de mexer no código, verificar no Supabase:
+curl -s "https://dbdqiqehuapcicejnzyd.supabase.co/rest/v1/product_images?product_id=eq.XXX&select=id,url,type,angle" \
+  -H "apikey: SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer SERVICE_ROLE_KEY"
+```
+
+**Se os dados estão corretos no banco** → o problema é no frontend (exibição).
+**Se os dados estão errados no banco** → o problema é no backend (importação/processamento).
+**Se os dados nem chegam no banco** → o problema é no gateway/webhook/N8N.
+
+### 2. NUNCA ALTERAR CÓDIGO ÀS CEGAS
+
+- **PROIBIDO** fazer mais de 1 tentativa de correção sem antes consultar os dados reais
+- **PROIBIDO** assumir onde está o problema sem evidência concreta
+- **PROIBIDO** ficar num ciclo de "muda código → deploy → não funcionou → muda de novo"
+- Cada correção deve ser baseada em **diagnóstico confirmado**, não em suposição
+
+### 3. FLUXO OBRIGATÓRIO DE DEBUGGING
+
+```
+1. User reporta bug
+2. ANTES DE TUDO: consultar dados reais (Supabase, API, logs Vercel)
+3. Identificar em QUAL camada o problema está:
+   - Gateway (webhook recebeu?) → verificar logs Vercel
+   - N8N (processou corretamente?) → verificar output do workflow
+   - Supabase (dados salvos?) → query direta no banco
+   - Frontend (exibindo?) → verificar mapeamento/renderização
+4. SÓ ENTÃO alterar o código da camada correta
+5. Validar com query no banco APÓS o fix
+```
+
+### 4. QUERIES ÚTEIS DE DIAGNÓSTICO
+
+```bash
+# Produtos recentes
+curl -s "$SUPABASE_URL/rest/v1/products?order=created_at.desc&limit=5&select=id,name,created_at" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+
+# Imagens de um produto
+curl -s "$SUPABASE_URL/rest/v1/product_images?product_id=eq.XXX&select=id,url,type,angle,display_order" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+
+# Product map (Shopify ↔ Vizzu)
+curl -s "$SUPABASE_URL/rest/v1/ecommerce_product_map?connection_id=eq.XXX&select=*&order=created_at.desc&limit=5" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+
+# Sync log recente
+curl -s "$SUPABASE_URL/rest/v1/ecommerce_sync_log?order=created_at.desc&limit=5&select=event_type,status,details,created_at" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+
+# Créditos do usuário
+curl -s "$SUPABASE_URL/rest/v1/user_credits?user_id=eq.XXX&select=*" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+```
+
+> **Contexto**: Esta regra foi criada após um incidente onde 6+ tentativas de correção falharam porque o problema foi assumido no gateway/N8N, quando na verdade os dados estavam corretos no banco e o bug era no mapeamento de ângulos no frontend. Uma única query no Supabase teria revelado isso em 5 segundos.
+
+---
+
 ## Sobre o Dono do Projeto
 
 - **Idioma**: Sempre comunicar em **português brasileiro**
@@ -679,6 +744,7 @@ Todas as tabelas têm RLS ativado. Padrão: `auth.uid() = user_id`.
 | `/vizzu/use-credits` | Debitar créditos |
 | `/vizzu/get-transactions` | Histórico de créditos |
 | `/vizzu/checkout-status` | Status do pagamento |
+| `/vizzu/generate-model-images` | Gerar imagens de modelo (IA ou Real com referência) |
 
 **WhatsApp**: Integração via Evolution API para enviar imagens.
 
@@ -767,9 +833,15 @@ Somente estes valores são aceitos (constraint `credit_transactions_type_check`)
 "jsonBody": "={{ $json.patch_body }}"
 ```
 
-#### 8. Limitações do Code Node
-- **`fetch` NÃO existe** no Code node do N8N (erro: `fetch is not defined`). Para chamadas HTTP, SEMPRE usar nós HTTP Request separados.
+#### 8. Limitações do Code Node (Task Runner Sandbox)
+- **`fetch` NÃO existe** no Code node do N8N (erro: `fetch is not defined`). Usar `this.helpers.httpRequest` ou nós HTTP Request separados.
+- **`require()` é BLOQUEADO** no Task Runner sandbox — `crypto`, `form-data`, `fs` etc. todos proibidos. `globalThis.crypto` também é undefined. A env var `NODE_FUNCTION_ALLOW_BUILTIN` tem bug no N8N 2.6.4 e pode não funcionar.
+  - **Solução para crypto**: usar nó **Execute Command** (`node -e "require('crypto')..."`) que roda FORA do sandbox do Task Runner
+  - **Upload multipart**: usar `this.helpers.request({ formData: { ... } })` em vez de `require('form-data')` — funciona sem liberar módulo
+  - **HTTP**: usar `this.helpers.httpRequest` (GET/POST/PATCH com JSON) ou `this.helpers.request` (upload binário com `formData`)
+  - **Padrão de workflow**: Webhook → Code node (Supabase, sem crypto) → Execute Command (decrypt) → Code node (API externa) → Respond
 - **Módulos externos** só funcionam se listados em `NODE_FUNCTION_ALLOW_EXTERNAL` (atualmente: `moment,lodash,moment-with-locales`)
+- **`process.env` NÃO funciona** no Code node. Hardcodar valores ou usar `$executionId` para identificação.
 - Para lógica condicional (ex: criar customer só se não existe), usar o Code node para decidir e o HTTP Request para executar. O Code node referencia dados de outros nós via `$('NomeDoNó').first().json`.
 
 ---
@@ -1054,4 +1126,110 @@ O nó **"Construir Prompt3"** precisa de reforço no prompt para:
 
 ---
 
-*Última atualização: 03 de Fevereiro de 2026 — Sessão 4*
+---
+
+## Sistema de Download — Arquitetura
+
+### DownloadModal (componente central)
+- **Arquivo**: `src/components/shared/DownloadModal.tsx`
+- Fluxo em 2 etapas: selecionar imagens → escolher formato/tamanho ou ZIP
+- Dois modos via props mutuamente exclusivas:
+  - `images` (flat) — lista simples de imagens, usado nas features
+  - `groups` (agrupado) — imagens por feature/contexto, usado no Hub e "Download all"
+- UX: step badges (1/2), instrução textual, ring selection, CTA com contagem
+
+### 6 Presets de download
+| Preset | Resolução | Formato | Uso |
+|--------|-----------|---------|-----|
+| Original | Nativa | PNG | Edição, impressão |
+| E-commerce | 2048px | WebP | Lojas online |
+| Marketplaces | 1200px | JPEG | ML, Shopee, Amazon |
+| Redes Sociais | 1080px | JPEG | Instagram, Facebook |
+| Web | 800px | WebP | Blogs, emails |
+| Miniatura | 400px | WebP | Thumbnails |
+
+### Arquivos do sistema de download
+- `src/components/shared/DownloadModal.tsx` — Modal centralizado
+- `src/components/shared/DownloadProgressModal.tsx` — Progresso do ZIP
+- `src/utils/downloadSizes.ts` — 6 presets, `getDownloadUrl()`, `buildFilename()`, tipo `DownloadableImage`
+- `src/utils/zipDownload.ts` — Geração de ZIP com JSZip (dynamic import)
+- `src/utils/downloadHelper.ts` — `smartDownload()` (fetch→blob→anchor)
+
+### Proxy de redimensionamento
+Usa wsrv.nl: `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=${width}&output=${format}`
+
+### Onde o DownloadModal está presente
+Product Studio Editor, CS Results, LC (individual + all), GenerationHistory, ImageViewer, ProductHubModal
+
+---
+
+## Padrões de UI Reutilizáveis
+
+### Listas separadas de produtos (split list)
+Padrão usado no Product Studio e Creative Still: separar produtos em duas seções colapsáveis com paginação.
+
+**Estrutura:**
+1. **Seção "pendente"** (âmbar) — produtos sem conteúdo gerado → click abre editor
+2. **Seção "completa"** (verde/coral) — produtos com conteúdo → click abre visualizador/Hub
+
+**Implementação:**
+- `useMemo` para split: `productsWithX` / `productsWithoutX`
+- States: `withXCollapsed`, `withoutXCollapsed`, `visibleWithX`, `visibleWithoutX`
+- `useEffect` para resetar paginação quando filtros mudam
+- Header clicável (colapsa/expande) com badge de contagem
+
+**Arquivos de referência:**
+- `src/components/ProductStudio/index.tsx` (linhas 590-750) — `optimizedProducts` / `pendingProducts`
+- `src/components/CreativeStill/index.tsx` — `productsWithStills` / `productsWithoutStills`
+
+### ProductHubModal — defaultTab
+Prop `defaultTab?: string` permite abrir o modal numa aba específica. Útil quando o contexto de origem já indica qual feature o usuário quer ver.
+
+---
+
+## Modelos — Modelo Real com IA (Sessão 13-14)
+
+### Fluxo
+O wizard de criação de modelos tem 3 opções no Step 1:
+1. **Modelo IA** — cria modelo virtual a partir de descrição textual (6 steps)
+2. **Modelo Real** — envia fotos de uma pessoa real → IA gera imagens padronizadas (3 steps)
+3. **Você** — mesma funcionalidade do Modelo Real, posicionado para o dono se colocar como modelo da marca
+
+### Modelo Real — Como funciona
+1. Usuário envia foto(s) de referência (frente obrigatória, costas e rosto opcionais)
+2. Fotos são enviadas ao Supabase Storage (`models/{userId}/{modelId}/ref-{type}.{ext}`)
+3. Frontend chama `generateModelImages()` com `referenceImageUrls` (URLs públicas)
+4. N8N: "Gerar Frente" baixa foto de referência + logo Vizzu → envia ao Gemini com prompt de preservação de identidade
+5. N8N: "Gerar Costas" usa apenas a frente gerada + logo (não reenvia a referência)
+6. Resultado: imagens padronizadas (fundo cinza #B0B0B0, roupa Vizzu, iluminação profissional) preservando aparência da pessoa
+
+### N8N Workflow
+- Arquivo: `n8n-workflows/generate-model-images-v2.json` (gitignored, contém API keys)
+- Modelo Gemini: `gemini-3-pro-image-preview` — **NÃO trocar** (é o que funciona para este workflow)
+- generationConfig: `{ responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: '3:4' } }`
+- **Sem `imageSize: '4K'`** — causava falhas intermitentes (Gemini retornava só texto)
+- Retry automático: 2 tentativas com 3s de delay
+- Detecção de safety blocks com mensagem clara
+
+### Drag & Drop nos slots de foto
+- `onDragOver` → borda coral + bg coral/10
+- `onDragLeave` → volta ao normal
+- `onDrop` → processa arquivo via `processImageFile()`
+- Click → abre Photo Source Picker (bottom sheet com Galeria + Câmera)
+
+### Supabase Storage — Policies para modelos
+```sql
+-- INSERT: upload de fotos de referência
+CREATE POLICY "Users upload own model photos" ON storage.objects
+FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'products' AND (storage.foldername(name))[1] = 'models' AND (storage.foldername(name))[2] = auth.uid()::text);
+
+-- UPDATE: sobrescrever fotos existentes
+CREATE POLICY "Users update own model photos" ON storage.objects
+FOR UPDATE TO authenticated
+USING (bucket_id = 'products' AND (storage.foldername(name))[1] = 'models' AND (storage.foldername(name))[2] = auth.uid()::text);
+```
+
+---
+
+*Última atualização: 12 de Fevereiro de 2026 — Sessão 14*

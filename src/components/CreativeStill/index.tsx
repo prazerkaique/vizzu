@@ -18,6 +18,7 @@ import { OptimizedImage } from '../OptimizedImage';
 import { useImageViewer } from '../ImageViewer';
 import { ProductHubModal } from '../shared/ProductHubModal';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
+import { useGeneration } from '../../contexts/GenerationContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { CREATIVE_STILL_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -132,6 +133,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   setProductForCreation: setProductForCreationProp,
 }) => {
   const { shouldShowTour } = useOnboarding();
+  const { addCompletedProduct, completedProducts, clearCompletedProduct } = useGeneration();
   const [view, setView] = useState<View>('listing');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
@@ -161,7 +163,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
   const isDark = theme !== 'light';
   const { openViewer } = useImageViewer();
-  const { navigateTo, showToast } = useUI();
+  const { currentPage, navigateTo, showToast } = useUI();
   const [hubProduct, setHubProduct] = useState<Product | null>(null);
 
   // ── Produto pré-selecionado (vindo de outra página) ──
@@ -236,6 +238,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   }, [products, searchQuery, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender, sortBy]);
 
   // ── Separar produtos com/sem stills ──
+  const newProductIds = completedProducts['creative-still'] || [];
   const { productsWithStills, productsWithoutStills } = useMemo(() => {
     const withStills: Product[] = [];
     const withoutStills: Product[] = [];
@@ -246,8 +249,27 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         withoutStills.push(product);
       }
     });
+    // Produtos com geração recém-concluída sempre no topo
+    const sortNew = (a: Product, b: Product) => {
+      const aNew = newProductIds.includes(a.id) ? 1 : 0;
+      const bNew = newProductIds.includes(b.id) ? 1 : 0;
+      return bNew - aNew;
+    };
+    withStills.sort(sortNew);
+    withoutStills.sort(sortNew);
     return { productsWithStills: withStills, productsWithoutStills: withoutStills };
-  }, [filteredProducts, generations]);
+  }, [filteredProducts, generations, newProductIds]);
+
+  // Auto-scroll até o primeiro produto com badge "Novo!" ao entrar na página
+  useEffect(() => {
+    if (currentPage === 'creative-still') {
+      const timer = setTimeout(() => {
+        const el = document.querySelector('[data-new-product="creative-still"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset paginação quando filtros mudam
   useEffect(() => {
@@ -270,6 +292,18 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     onSetProgress?.(10);
     setLoadingText('');
     setView('results');
+
+    // Salvar pending no localStorage para sobreviver F5/fechamento
+    try {
+      localStorage.setItem('vizzu-pending-creative-still', JSON.stringify({
+        productId: params.product.id,
+        productName: params.product.name,
+        userId,
+        startTime: Date.now(),
+      }));
+    } catch (e) {
+      console.error('[CS] Erro ao salvar pending:', e);
+    }
 
     // Upload referências para Storage (evita armazenar base64 no banco)
     const referenceUrls: string[] = [];
@@ -338,6 +372,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
     if (insertError || !insertedGen) {
       console.error('[CS] Erro ao criar geração:', insertError);
+      localStorage.removeItem('vizzu-pending-creative-still');
       setIsGenerating(false);
       onSetGenerating?.(false);
       setCurrentGeneration({
@@ -454,6 +489,12 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       setCurrentGeneration(result);
       loadGenerations();
 
+      // Limpar pending e notificar produto como novo
+      localStorage.removeItem('vizzu-pending-creative-still');
+      if (result.status === 'completed') {
+        addCompletedProduct('creative-still', params.product.id);
+      }
+
       // Log de histórico
       if (result.status === 'completed' && onAddHistoryLog) {
         onAddHistoryLog(
@@ -468,6 +509,12 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     } catch (err) {
       clearInterval(progressInterval);
       console.error('[CS] Erro durante geração:', err);
+      // Se foi interrupção de rede (F5/fechamento), manter pending key
+      const errMsg = (err as any)?.message || '';
+      const isNetworkAbort = errMsg.includes('Failed to fetch') || errMsg.includes('Load failed') || errMsg.includes('NetworkError') || errMsg.includes('AbortError');
+      if (!isNetworkAbort) {
+        localStorage.removeItem('vizzu-pending-creative-still');
+      }
       await supabase
         .from('creative_still_generations')
         .update({ status: 'failed', error_message: 'Erro ao gerar imagem.' })
@@ -821,6 +868,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                         <button
                           key={product.id}
                           onClick={() => {
+                            clearCompletedProduct('creative-still', product.id);
                             setSelectedProduct(product);
                             setView('editor');
                           }}
@@ -832,6 +880,13 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                              </div>
+                            )}
+                            {/* Badge Novo! */}
+                            {newProductIds.includes(product.id) && (
+                              <div data-new-product="creative-still" className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-white rounded-full shadow-lg animate-bounce">
+                                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B6B] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B6B]"></span></span>
+                                <span className="text-[#FF6B6B] text-[9px] font-bold">Novo!</span>
                               </div>
                             )}
                             {/* Hover overlay */}
@@ -908,7 +963,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                       return (
                         <button
                           key={product.id}
-                          onClick={() => setHubProduct(product)}
+                          onClick={() => { clearCompletedProduct('creative-still', product.id); setHubProduct(product); }}
                           className={'group relative rounded-xl overflow-hidden border transition-all hover:scale-[1.03] text-left ' + (isDark ? 'bg-neutral-900 border-neutral-800 hover:border-[#FF6B6B]/50' : 'bg-white border-gray-200 hover:border-[#FF6B6B]/40 shadow-sm')}
                         >
                           <div className="aspect-square relative overflow-hidden">
@@ -917,6 +972,13 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <i className={'fas fa-image text-2xl ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+                              </div>
+                            )}
+                            {/* Badge Novo! */}
+                            {newProductIds.includes(product.id) && (
+                              <div data-new-product="creative-still" className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-white rounded-full shadow-lg animate-bounce">
+                                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B6B] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B6B]"></span></span>
+                                <span className="text-[#FF6B6B] text-[9px] font-bold">Novo!</span>
                               </div>
                             )}
                             {/* Badge stills */}

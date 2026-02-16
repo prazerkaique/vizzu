@@ -9,6 +9,7 @@ import { ProductStudioEditor } from './ProductStudioEditor';
 import { Plan } from '../../hooks/useCredits';
 import { ProductHubModal } from '../shared/ProductHubModal';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
+import { useGeneration } from '../../contexts/GenerationContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { PRODUCT_STUDIO_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -93,7 +94,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
  const [showProductModal, setShowProductModal] = useState(false);
  const [hubProduct, setHubProduct] = useState<Product | null>(null);
- const { navigateTo, showToast } = useUI();
+ const { currentPage, navigateTo, showToast } = useUI();
+ const { completedProducts, clearCompletedProduct } = useGeneration();
  const { shouldShowTour } = useOnboarding();
  const [productSearchTerm, setProductSearchTerm] = useState('');
  const [productFilterCategoryGroup, setProductFilterCategoryGroup] = useState('');
@@ -220,7 +222,8 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  return sessions.reduce((acc, session) => acc + session.images.length, 0);
  };
 
- // Separar produtos otimizados dos não otimizados
+ // Separar produtos otimizados dos não otimizados, com novos no topo
+ const newProductIds = completedProducts['product-studio'] || [];
  const { optimizedProducts, pendingProducts } = useMemo(() => {
  const optimized: Product[] = [];
  const pending: Product[] = [];
@@ -233,10 +236,31 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  }
  });
 
+ // Produtos com geração recém-concluída sempre no topo
+ const sortNew = (a: Product, b: Product) => {
+   const aNew = newProductIds.includes(a.id) ? 1 : 0;
+   const bNew = newProductIds.includes(b.id) ? 1 : 0;
+   return bNew - aNew;
+ };
+ optimized.sort(sortNew);
+ pending.sort(sortNew);
+
  return { optimizedProducts: optimized, pendingProducts: pending };
- }, [filteredProducts]);
+ }, [filteredProducts, newProductIds]);
+
+ // Auto-scroll até o primeiro produto com badge "Novo!" ao entrar na página
+ useEffect(() => {
+   if (currentPage === 'product-studio') {
+     const timer = setTimeout(() => {
+       const el = document.querySelector('[data-new-product="product-studio"]');
+       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+     }, 500);
+     return () => clearTimeout(timer);
+   }
+ }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
  const handleSelectProduct = (product: Product) => {
+ clearCompletedProduct('product-studio', product.id);
  setSelectedProduct(product);
  };
 
@@ -626,6 +650,12 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  >
  <div className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' aspect-square relative overflow-hidden'}>
  <OptimizedImage src={productImage} size="preview" alt={product.name} className="w-full h-full group-hover:scale-105 transition-transform" />
+ {newProductIds.includes(product.id) && (
+ <div data-new-product="product-studio" className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-white rounded-full shadow-lg animate-bounce">
+   <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B6B] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B6B]"></span></span>
+   <span className="text-[#FF6B6B] text-[9px] font-bold">Novo!</span>
+ </div>
+ )}
  <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button className="w-full py-1.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-[10px]">
  <i className="fas fa-wand-magic-sparkles mr-1"></i>Otimizar
@@ -707,6 +737,13 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  <i className="fas fa-sparkles text-[6px]"></i>
  Otimizado
  </div>
+ {/* Badge Novo! */}
+ {newProductIds.includes(product.id) && (
+ <div data-new-product="product-studio" className="absolute top-8 left-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-white rounded-full shadow-lg animate-bounce">
+   <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF6B6B] opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B6B]"></span></span>
+   <span className="text-[#FF6B6B] text-[9px] font-bold">Novo!</span>
+ </div>
+ )}
  {/* Contador de fotos */}
  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-sm text-white text-[8px] font-medium rounded-full flex items-center gap-1">
  <i className="fas fa-images text-[6px]"></i>

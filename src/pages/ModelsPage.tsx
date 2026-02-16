@@ -6,6 +6,7 @@ import { useGeneration } from '../contexts/GenerationContext';
 import { supabase } from '../services/supabaseClient';
 import { generateModelImages } from '../lib/api/studio';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { useImageViewer } from '../components/ImageViewer';
 import { ModelGridSkeleton } from '../components/LoadingSkeleton';
 import heic2any from 'heic2any';
 import { compressImage } from '../utils/imageCompression';
@@ -178,6 +179,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const { theme, navigateTo, showToast } = useUI();
  const { user } = useAuth();
  const { isGeneratingModels, setIsGeneratingModels, modelsMinimized, setModelsMinimized, modelsProgress, setModelsProgress } = useGeneration();
+
+ const { openViewer } = useImageViewer();
 
  // Model states
  const [showModelDetail, setShowModelDetail] = useState<SavedModel | null>(null);
@@ -2376,8 +2379,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  <OptimizedImage
  src={imgUrl}
  alt={type === 'front' ? 'Frente' : 'Costas'}
- className="w-full h-full"
+ className="w-full h-full cursor-pointer"
  size="preview"
+ onClick={() => openViewer(imgUrl, { alt: `${showModelDetail.name} - ${type === 'front' ? 'Frente' : 'Costas'}` })}
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">

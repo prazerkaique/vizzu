@@ -17,6 +17,7 @@ import { supabase } from '../../services/supabaseClient';
 import { getProductType, CLOTHING_CATEGORIES, FOOTWEAR_CATEGORIES, HEADWEAR_CATEGORIES, BAG_CATEGORIES, ACCESSORY_CATEGORIES } from '../../lib/productConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
+import { useGeneration } from '../../contexts/GenerationContext';
 import { useProducts } from '../../contexts/ProductsContext';
 import { useSystemLoad } from '../../hooks/useSystemLoad';
 import { ReportModal } from '../ReportModal';
@@ -181,6 +182,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onDeductEditCredits,
 }) => {
  const { showToast } = useUI();
+ const { addCompletedProduct } = useGeneration();
  const { checkLoad } = useSystemLoad();
  const { loadUserProducts } = useProducts();
 
@@ -347,6 +349,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const successAngles = pollResult.completedAngles.filter(a => a.status === 'completed');
 
    if (successAngles.length > 0) {
+     addCompletedProduct('product-studio', product.id);
      const newImages: ProductStudioImage[] = successAngles.map((item, idx) => ({
        id: item.id || `${pending.generationId}-${idx}`,
        url: item.url!,
@@ -443,6 +446,34 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    return 'completed';
  }
 
+ // Fallback: se o generationId-alvo está stuck em 'processing' sem ângulos
+ // por >2 min, verificar se outra geração do mesmo produto já completou
+ if (pollResult.completedAngles.length === 0) {
+   const elapsedMs = Date.now() - pending.startTime;
+   if (elapsedMs > 120000) {
+     const { data: altGen } = await supabase
+       .from('generations')
+       .select('id, status, output_urls')
+       .eq('user_id', userId)
+       .eq('product_id', pending.productId)
+       .eq('status', 'completed')
+       .not('output_urls', 'is', null)
+       .neq('id', pending.generationId!)
+       .order('created_at', { ascending: false })
+       .limit(1)
+       .maybeSingle();
+
+     if (altGen) {
+       console.log('[Polling v9] Fallback: geração alternativa completou:', altGen.id);
+       // Redirecionar o generationId pendente para o que completou
+       // Na próxima iteração, pollStudioGeneration usará o ID correto
+       pending.generationId = altGen.id;
+       savePendingPSGeneration(pending);
+       // Não retornar — deixar polling continuar com novo ID
+     }
+   }
+ }
+
  return 'polling';
  }
 
@@ -463,6 +494,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (!hasResults) return 'polling';
 
  clearPendingPSGeneration();
+ addCompletedProduct('product-studio', product.id);
 
  const urls = generation.output_urls as Array<{ angle: string; url: string; id?: string }>;
  const newImages: ProductStudioImage[] = (Array.isArray(urls) ? urls : []).map((item, idx) => ({
@@ -1256,6 +1288,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // ═══ Fallback v8: resposta completa (todos os resultados de uma vez) ═══
  clearPendingPSGeneration();
+ addCompletedProduct('product-studio', product.id);
 
  if (!response.success || !response.results) {
  throw new Error(response.message || 'Erro ao gerar imagens');

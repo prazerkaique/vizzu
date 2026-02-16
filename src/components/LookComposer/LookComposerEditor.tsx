@@ -13,6 +13,7 @@ import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import type { VizzuTheme } from '../../contexts/UIContext';
+import { useGeneration } from '../../contexts/GenerationContext';
 
 interface LookComposerEditorProps {
  product: Product;
@@ -309,6 +310,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  editBalance = 0,
  onDeductEditCredits,
 }) => {
+ const { addCompletedProduct } = useGeneration();
  // Estado da fase atual
  const [currentStep, setCurrentStep] = useState<Step>('product');
 
@@ -459,6 +461,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  if (generation?.output_image_url && generation.status === 'completed') {
  clearPendingGeneration();
+ if (product) addCompletedProduct('look-composer', product.id);
  // Marcar como notificado para não duplicar toast no startup check
  if (userId) {
  const notifiedKey = `vizzu_bg_notified_${userId}`;
@@ -1526,6 +1529,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  // Limpar estado pendente - geração concluída com sucesso
  clearPendingGeneration();
+ if (product) addCompletedProduct('look-composer', product.id);
 
  // Marcar como notificado para não duplicar toast no startup check
  if (userId && frontGenerationId) {

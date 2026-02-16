@@ -65,16 +65,20 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
             type: img.type === 'original' ? 'front' : img.type
           }));
 
-          // Detectar imagens sem ângulo definido (importadas do Shopify)
+          // Mapear imagens por ângulo (só ângulos REAIS do banco, nunca inventar)
           const unmappedImages: { id: string; url: string }[] = [];
           const originalImagesObj: any = {};
           originalImages.forEach((img: any) => {
-            let angle = img.angle || (img.type === 'original' ? 'front' : img.type);
+            let angle = img.angle;
             // Mapear angles do Supabase para camelCase do TypeScript
             if (angle === 'front_detail') angle = 'frontDetail';
             else if (angle === 'back_detail') angle = 'backDetail';
             // Compatibilidade: detail genérico → frontDetail
             else if (angle === 'detail' && !originalImagesObj.frontDetail) angle = 'frontDetail';
+            // Sem ângulo e tipo 'original' → primeira vira 'front', resto fica unmapped
+            if (!angle && img.type === 'original' && !originalImagesObj.front) {
+              angle = 'front';
+            }
             if (angle && !originalImagesObj[angle]) {
               originalImagesObj[angle] = {
                 id: img.id,
@@ -82,7 +86,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
                 storagePath: img.storage_path
               };
             } else if (img.url) {
-              // Imagem que não foi mapeada (ângulo duplicado ou null)
+              // Imagem sem ângulo confirmado → vai pra unmapped (Gemini analisará depois)
               unmappedImages.push({ id: img.id, url: img.url });
             }
           });
@@ -345,22 +349,33 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
   const getOriginalImages = useCallback((product: Product): { url: string; label: string }[] => {
     const images: { url: string; label: string }[] = [];
+    const angleLabels: Record<string, string> = {
+      front: 'Frente', back: 'Costas', detail: 'Detalhe',
+      frontDetail: 'Detalhe Frente', backDetail: 'Detalhe Costas',
+      'side-left': 'Lateral Esq.', 'side-right': 'Lateral Dir.',
+      '45-left': '45° Esq.', '45-right': '45° Dir.',
+      top: 'Topo', folded: 'Dobrada',
+    };
 
-    if (product.originalImages?.front?.url) {
-      images.push({ url: product.originalImages.front.url, label: 'Frente' });
-    }
-    if (product.originalImages?.back?.url) {
-      images.push({ url: product.originalImages.back.url, label: 'Costas' });
-    }
-    if (product.originalImages?.detail?.url) {
-      images.push({ url: product.originalImages.detail.url, label: 'Detalhe' });
+    // 1. Imagens com ângulo confirmado (análise Gemini já rodou)
+    const addedUrls = new Set<string>();
+    if (product.originalImages) {
+      for (const [angle, imgData] of Object.entries(product.originalImages)) {
+        const img = imgData as { url?: string };
+        if (img?.url) {
+          images.push({ url: img.url, label: angleLabels[angle] || 'Imagem' });
+          addedUrls.add(img.url);
+        }
+      }
     }
 
-    if (images.length === 0 && product.images) {
+    // 2. Imagens sem ângulo (Shopify import, aguardando análise Gemini)
+    if (product.images) {
       product.images.forEach((img, idx) => {
         const url = img.url || img.base64;
-        if (url) {
-          images.push({ url, label: idx === 0 ? 'Frente' : `Imagem ${idx + 1}` });
+        if (url && !addedUrls.has(url)) {
+          images.push({ url, label: `Imagem ${idx + 1}` });
+          addedUrls.add(url);
         }
       });
     }
