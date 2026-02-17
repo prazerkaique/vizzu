@@ -334,21 +334,6 @@ export function AppLayout({
  <i className="fas fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
  </button>
 
- {/* Galeria */}
- <button
- onClick={() => navigateTo('gallery')}
- title="Galeria"
- className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' +
- (currentPage === 'gallery'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
- }
- >
- <i className="fas fa-images w-4 text-[10px]"></i>{!sidebarCollapsed && 'Galeria'}
- </button>
-
  {/* Produtos */}
  <button
  onClick={() => navigateTo('products')}
@@ -413,6 +398,21 @@ export function AppLayout({
  }
  >
  <i className="fas fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
+ </button>
+
+ {/* Galeria */}
+ <button
+ onClick={() => navigateTo('gallery')}
+ title="Galeria"
+ className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' +
+ (currentPage === 'gallery'
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ )
+ }
+ >
+ <i className="fas fa-images w-4 text-[10px]"></i>{!sidebarCollapsed && 'Galeria'}
  </button>
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme !== 'light' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
