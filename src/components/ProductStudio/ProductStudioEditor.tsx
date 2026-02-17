@@ -996,23 +996,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  setUploadingRef(true);
  try {
- // Criar FormData para upload
- const formData = new FormData();
- formData.append('file', file);
- formData.append('product_id', product.id);
- formData.append('user_id', userId);
- formData.append('angle', angleWithoutRef);
-
- // Fazer upload via API (supondo que existe um endpoint para isso)
- // Por enquanto, vamos usar o supabase client diretamente
  const fileName = `${userId}/${product.id}/original_${angleWithoutRef}_${Date.now()}.${file.name.split('.').pop()}`;
-
- // Upload para o storage
- const { createClient } = await import('@supabase/supabase-js');
- const supabase = createClient(
- 'https://dbdqiqehuapcicejnzyd.supabase.co',
- 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiZHFpcWVodWFwY2ljZWpuenlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NjkwNTAsImV4cCI6MjA1MjU0NTA1MH0.gHFzWFLKHrNsRNB-8P8R1WKp_c__-Ft5NfvkwHPF_Ns'
- );
 
  const { error: uploadError } = await supabase.storage
  .from('products')
