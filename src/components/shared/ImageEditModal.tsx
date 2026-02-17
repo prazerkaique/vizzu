@@ -345,9 +345,12 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={handleClose} />
 
-      <div className={
-        'relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden ' + cardBg
-      }>
+      <div
+        className={
+          'relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden ' + cardBg
+        }
+        onClick={e => e.stopPropagation()}
+      >
         {/* ═══ HEADER ═══ */}
         <div className={
           'flex items-center justify-between px-5 py-3.5 border-b flex-shrink-0 ' +
