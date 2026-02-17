@@ -876,6 +876,35 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
           ))}
         </div>
 
+        {/* ═══ ANTES/DEPOIS ═══ */}
+        {(() => {
+          const origUrl = product.originalImages?.front?.url || (product.images?.[0]?.url);
+          const latestPs = [...(product.generatedImages?.productStudio || [])].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+          const psUrl = latestPs[0]?.images.find(img => img.angle === 'front')?.url || latestPs[0]?.images[0]?.url;
+          if (!origUrl || !psUrl) return null;
+          return (
+            <div className={'px-4 pt-3 pb-1 border-b ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
+              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[9px] uppercase tracking-wider font-medium mb-2'}>
+                <i className="fas fa-arrow-right-arrow-left mr-1 text-[8px]"></i>Antes / Depois
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className={'rounded-lg overflow-hidden border cursor-zoom-in ' + (isDark ? 'border-neutral-800' : 'border-gray-200')} onClick={() => openViewer(origUrl, { alt: 'Original' })}>
+                  <OptimizedImage src={origUrl} size="preview" alt="Antes" className="w-full aspect-square" objectFit="contain" />
+                  <div className={'text-center py-1 border-t text-[8px] font-medium uppercase tracking-wider ' + (isDark ? 'border-neutral-800 text-neutral-500 bg-neutral-900/50' : 'border-gray-200 text-gray-400 bg-gray-50')}>
+                    Antes
+                  </div>
+                </div>
+                <div className={'rounded-lg overflow-hidden border cursor-zoom-in border-[#FF6B6B]/20'} onClick={() => openViewer(psUrl, { alt: 'Depois' })}>
+                  <OptimizedImage src={psUrl} size="preview" alt="Depois" className="w-full aspect-square" objectFit="contain" />
+                  <div className="text-center py-1 border-t border-[#FF6B6B]/15 text-[8px] font-medium uppercase tracking-wider text-[#FF6B6B] bg-[#FF6B6B]/[0.03]">
+                    Depois
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ═══ CONTENT ═══ */}
         <div className="flex-1 overflow-y-auto p-4">
           {tabContentMap[activeTab]?.()}

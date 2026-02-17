@@ -400,7 +400,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </button>
             <div>
               <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                Gerar novamente
+                <i className="fas fa-sliders text-[#FF6B6B] mr-1.5 text-[10px]"></i>Refinar
               </h2>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                 {angleName} — {product.name}

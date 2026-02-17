@@ -685,7 +685,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
 
   return (
     <>
- <div className="flex-1 overflow-y-auto p-4 md:p-6">
+ <div className="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6">
  <div className="max-w-6xl mx-auto">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
