@@ -37,8 +37,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             </HistoryProvider>
             </PlansProvider>
           )}
-        </AuthProvider>
         <ImageViewer />
+        </AuthProvider>
         </ImageViewerProvider>
       </UIProvider>
     </ErrorBoundary>
