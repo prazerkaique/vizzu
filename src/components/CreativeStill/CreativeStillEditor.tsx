@@ -927,16 +927,16 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
 
             {/* 5. Créditos + Botão Gerar */}
             <div className="space-y-3 pt-2">
-              {/* Cálculo de créditos */}
+              {/* Badge de créditos */}
               <div className={'rounded-xl p-3 flex items-center justify-between ' + (isDark ? 'bg-neutral-900 border border-neutral-800' : 'bg-gray-50 border border-gray-200')}>
                 <div className="flex items-center gap-2">
                   <i className={'fas fa-coins text-sm ' + (hasEnoughCredits ? 'text-amber-500' : 'text-red-500')}></i>
-                  <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-sm font-medium'}>
-                    {selectedAngles.length} {selectedAngles.length === 1 ? 'ângulo' : 'ângulos'} × {creditCost} {creditCost === 1 ? 'crédito' : 'créditos'}
+                  <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
+                    1 a 2 créditos por foto
                   </span>
                 </div>
                 <span className={' text-sm font-bold ' + (hasEnoughCredits ? (isDark ? 'text-white' : 'text-gray-900') : 'text-red-500')}>
-                  = {totalCredits} {totalCredits === 1 ? 'crédito' : 'créditos'}
+                  {totalCredits} {totalCredits === 1 ? 'crédito' : 'créditos'}
                 </span>
               </div>
               {!hasEnoughCredits && (

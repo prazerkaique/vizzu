@@ -812,22 +812,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  {/* Seta esquerda */}
  <button
  onClick={(e) => setCardView(look.id, 'front', e)}
- className={'absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
- (currentView === 'front'
- ? 'bg-[#FF6B6B]/100 text-white'
- : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
- }
+ className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all bg-black/50 text-white/70 hover:bg-black/70 hover:text-white"
  >
  <i className="fas fa-chevron-left text-[8px]"></i>
  </button>
  {/* Seta direita */}
  <button
  onClick={(e) => setCardView(look.id, 'back', e)}
- className={'absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all ' +
- (currentView === 'back'
- ? 'bg-[#FF6B6B]/100 text-white'
- : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white')
- }
+ className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all bg-black/50 text-white/70 hover:bg-black/70 hover:text-white"
  >
  <i className="fas fa-chevron-right text-[8px]"></i>
  </button>
@@ -840,13 +832,13 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  <button
  onClick={(e) => setCardView(look.id, 'front', e)}
  className={'w-1.5 h-1.5 rounded-full transition-all ' +
- (currentView === 'front' ? 'bg-[#FF6B6B]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
+ (currentView === 'front' ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80')
  }
  />
  <button
  onClick={(e) => setCardView(look.id, 'back', e)}
  className={'w-1.5 h-1.5 rounded-full transition-all ' +
- (currentView === 'back' ? 'bg-[#FF6B6B]/100 scale-125' : 'bg-white/50 hover:bg-white/80')
+ (currentView === 'back' ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/80')
  }
  />
  </div>

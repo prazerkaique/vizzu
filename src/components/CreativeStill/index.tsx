@@ -158,8 +158,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   // ── States para duas listas separadas ──
   const [withStillsCollapsed, setWithStillsCollapsed] = useState(false);
   const [withoutStillsCollapsed, setWithoutStillsCollapsed] = useState(false);
-  const [visibleWithStills, setVisibleWithStills] = useState(20);
-  const [visibleWithoutStills, setVisibleWithoutStills] = useState(20);
+  const [visibleWithStills, setVisibleWithStills] = useState(500);
+  const [visibleWithoutStills, setVisibleWithoutStills] = useState(500);
 
   const isDark = theme !== 'light';
   const { openViewer } = useImageViewer();
@@ -185,7 +185,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         .eq('user_id', userId)
         .neq('status', 'failed')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(500);
       if (data) setGenerations(data as CreativeStillGeneration[]);
     } catch (err) {
       console.error('[CS] Erro ao carregar gerações:', err);
@@ -273,8 +273,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
 
   // Reset paginação quando filtros mudam
   useEffect(() => {
-    setVisibleWithStills(20);
-    setVisibleWithoutStills(20);
+    setVisibleWithStills(500);
+    setVisibleWithoutStills(500);
   }, [searchQuery, filterCategoryGroup, filterCategory, filterCollection, filterColor, filterGender]);
 
   // ── GERAR ──
@@ -918,7 +918,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                 {!withoutStillsCollapsed && visibleWithoutStills < productsWithoutStills.length && (
                   <div className="flex justify-center mt-4">
                     <button
-                      onClick={() => setVisibleWithoutStills(prev => prev + 20)}
+                      onClick={() => setVisibleWithoutStills(prev => prev + 500)}
                       className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
                     >
                       <i className="fas fa-chevron-down text-xs"></i>
@@ -1018,7 +1018,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                 {!withStillsCollapsed && visibleWithStills < productsWithStills.length && (
                   <div className="flex justify-center mt-4">
                     <button
-                      onClick={() => setVisibleWithStills(prev => prev + 20)}
+                      onClick={() => setVisibleWithStills(prev => prev + 500)}
                       className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-6 py-2.5 border rounded-xl font-medium text-sm flex items-center gap-2 transition-colors'}
                     >
                       <i className="fas fa-chevron-down text-xs"></i>

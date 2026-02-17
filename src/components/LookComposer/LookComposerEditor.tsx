@@ -2271,9 +2271,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Só Frente</p>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera uma imagem frontal do look</p>
  </div>
- <div className="text-right">
- <span className="text-[#FF6B6B] font-semibold text-sm">{RESOLUTION_COST[resolution]} crédito{RESOLUTION_COST[resolution] > 1 ? 's' : ''}</span>
- </div>
  {viewsMode === 'front' && (
  <i className="fas fa-check-circle text-[#FF6B6B]"></i>
  )}
@@ -2292,9 +2289,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className="flex-1">
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm'}>Frente e Costas</p>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>Gera duas imagens: vista frontal e traseira</p>
- </div>
- <div className="text-right">
- <span className="text-[#FF6B6B] font-semibold text-sm">{RESOLUTION_COST[resolution] * 2} crédito{RESOLUTION_COST[resolution] * 2 > 1 ? 's' : ''}</span>
  </div>
  {viewsMode === 'front-back' && (
  <i className="fas fa-check-circle text-[#FF6B6B]"></i>
@@ -2665,6 +2659,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  Próximo<i className="fas fa-arrow-right ml-2"></i>
  </button>
  ) : (
+ <>
  <button
  onClick={handleGenerate}
  disabled={isGenerating || isAnyGenerationRunning || !canProceed('views')}
@@ -2675,9 +2670,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ) : isAnyGenerationRunning ? (
  <><i className="fas fa-clock mr-2"></i>Aguardando...</>
  ) : (
- <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'} ({creditsNeeded} crédito{creditsNeeded > 1 ? 's' : ''})</>
+ <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'}</>
  )}
  </button>
+ <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] text-center mt-1'}>
+ <i className="fas fa-coins mr-1 text-amber-500"></i>
+ 1 a 2 créditos por foto
+ </p>
+ </>
  )}
  </div>
  </div>
