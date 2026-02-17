@@ -416,6 +416,18 @@ export function GalleryPage() {
                         >
                           <i className="fas fa-download text-xs" />
                         </button>
+
+                        {item.productId && (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <EcommerceExportButton
+                              images={[{ url: item.imageUrl, label: item.productName || 'Imagem' }]}
+                              productId={item.productId}
+                              tool="gallery"
+                              compact
+                              className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm hover:bg-white/30 flex items-center justify-center transition-all"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
