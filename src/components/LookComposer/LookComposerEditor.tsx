@@ -137,11 +137,13 @@ const PRESET_BACKGROUNDS: Array<{
 }> = [
  { id: 'solid-color', name: 'Cor Sólida', url: '', category: 'solid', icon: 'fa-palette', sceneHint: 'solid colored background, studio lighting, model standing on matching colored floor' },
  { id: 'photo-studio', name: 'Estúdio Fotográfico', url: '/studio-bg-example.jpeg', category: 'estudio', icon: 'fa-camera', sceneHint: 'professional photo studio with gray seamless backdrop and floor, soft studio lighting' },
- { id: 'green-garden', name: 'Jardim Verde', url: 'https://images.unsplash.com/photo-1558293842-c0fd3db86157?w=1200', category: 'natureza', icon: 'fa-leaf', sceneHint: 'lush green garden with grass, model standing naturally on the grass, natural daylight, outdoor setting' },
- { id: 'minimalist-room', name: 'Sala Minimalista', url: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200', category: 'interior', icon: 'fa-couch', sceneHint: 'modern minimalist room interior, model standing on wooden floor, natural light from large windows' },
- { id: 'mountain-trail', name: 'Trilha na Montanha', url: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=1200', category: 'natureza', icon: 'fa-mountain', sceneHint: 'scenic mountain hiking trail, model standing on rocky trail path, mountains in background, outdoor adventure setting' },
- { id: 'urban-street', name: 'Rua Urbana', url: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1200', category: 'urbano', icon: 'fa-city', sceneHint: 'urban city street with graffiti walls, model standing on concrete sidewalk, street photography style' },
- { id: 'subway-station', name: 'Estação de Metrô', url: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?w=1200', category: 'urbano', icon: 'fa-train-subway', sceneHint: 'subway station platform, model standing on tiled platform floor, urban underground setting with dramatic lighting' },
+ { id: 'subway-station', name: 'Estação de Metrô', url: '/bg-metro.png', category: 'urbano', icon: 'fa-train-subway', sceneHint: 'subway station platform with colorful graffiti wall, model standing on tiled platform floor, urban underground setting with dramatic lighting' },
+ { id: 'beach-promenade', name: 'Calçadão da Praia', url: '/bg-calcadao-praia.png', category: 'natureza', icon: 'fa-umbrella-beach', sceneHint: 'beachside promenade with palm trees, model standing on tiled walkway, golden hour sunlight, tropical coastal setting' },
+ { id: 'botanical-garden', name: 'Jardim Botânico', url: '/bg-jardim-botanico.png', category: 'natureza', icon: 'fa-leaf', sceneHint: 'lush botanical garden pathway with tropical plants, model standing on stone path, natural dappled sunlight, green foliage' },
+ { id: 'european-garden', name: 'Jardim Europeu', url: '/bg-jardim-europeu.png', category: 'natureza', icon: 'fa-fountain', sceneHint: 'elegant european formal garden with fountain, roses and hedges, model standing on stone pathway, romantic misty atmosphere' },
+ { id: 'rooftop', name: 'Rooftop', url: '/bg-rooftop.png', category: 'urbano', icon: 'fa-building', sceneHint: 'modern rooftop terrace with city skyline, string lights overhead, model standing on concrete floor, golden hour sunset' },
+ { id: 'cafe', name: 'Cafeteria', url: '/bg-cafeteria.png', category: 'interior', icon: 'fa-mug-hot', sceneHint: 'stylish cafe interior with brick walls, wooden furniture, warm natural light from large windows, model standing on wooden floor' },
+ { id: 'tropical-beach', name: 'Praia', url: '/bg-praia.png', category: 'natureza', icon: 'fa-water', sceneHint: 'tropical beach with white sand and palm trees, turquoise ocean water, model standing on sandy beach, golden hour lighting' },
 ];
 
 // Tipo para fundo salvo
