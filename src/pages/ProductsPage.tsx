@@ -98,7 +98,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   const [analyzingProductId, setAnalyzingProductId] = useState<string | null>(null);
   const [pendingAnalysisProductId, setPendingAnalysisProductId] = useState<string | null>(null);
 
-  const { theme, navigateTo, setSettingsTab, successNotification, setSuccessNotification, showToast } = useUI();
+  const { theme, isV2, navigateTo, setSettingsTab, successNotification, setSuccessNotification, showToast } = useUI();
   const { user } = useAuth();
   const { products, setProducts, loadUserProducts, deleteProduct: handleDeleteProduct, deleteSelectedProducts, isProductOptimized, getProductDisplayImage, getOptimizedImages, getOriginalImages } = useProducts();
   const { historyLogs, setHistoryLogs, addHistoryLog } = useHistory();
@@ -689,11 +689,11 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  <div className="max-w-6xl mx-auto">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ {!isV2 && <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-box text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
- </div>
+ </div>}
  <div>
- <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Produtos</h1>
+ <h1 className={(isV2 ? 'text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.1] text-gray-900' : (theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold')}>Produtos</h1>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Gerencie seu catálogo</p>
  </div>
  </div>

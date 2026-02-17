@@ -131,7 +131,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onCancelSubscription,
  onLogout,
 }) => {
- const { theme, selectedTheme, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
+ const { theme, selectedTheme, isV2, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
  const { allPlans, masterFeatures, planIncluded, planPersona, planCta } = usePlans();
@@ -222,11 +222,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {/* Header */}
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ {!isV2 && <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-cog text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
- </div>
+ </div>}
  <div>
- <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Configurações</h1>
+ <h1 className={(isV2 ? 'text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.1] text-gray-900' : (theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold')}>Configurações</h1>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic hidden md:block'}>Gerencie sua conta e preferências</p>
  </div>
  </div>

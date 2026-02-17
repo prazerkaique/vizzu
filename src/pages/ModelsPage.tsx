@@ -176,7 +176,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  // Combinar modelos default + do usuário
  const allModels = [...DEFAULT_MODELS, ...savedModels];
  const isDefaultModel = (id: string) => id.startsWith('default-');
- const { theme, navigateTo, showToast } = useUI();
+ const { theme, isV2, navigateTo, showToast } = useUI();
  const { user } = useAuth();
  const { isGeneratingModels, setIsGeneratingModels, modelsMinimized, setModelsMinimized, modelsProgress, setModelsProgress } = useGeneration();
 
@@ -978,11 +978,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {/* Header */}
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-3">
- <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+ {!isV2 && <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
  <i className={'fas fa-user-tie text-sm ' + (theme !== 'light' ? 'text-neutral-200' : 'text-[#1A1A1A]')}></i>
- </div>
+ </div>}
  <div>
- <h1 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Modelos Salvos</h1>
+ <h1 className={(isV2 ? 'text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.1] text-gray-900' : (theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold')}>Modelos Salvos</h1>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Crie e gerencie seus modelos de IA</p>
  </div>
  </div>

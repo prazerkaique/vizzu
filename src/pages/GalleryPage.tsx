@@ -33,7 +33,7 @@ function formatDate(iso: string): string {
 }
 
 export function GalleryPage() {
-  const { theme } = useUI();
+  const { theme, isV2 } = useUI();
   const isDark = theme !== 'light';
   const { allItems, stats, isLoading } = useGalleryData();
   const { openViewer } = useImageViewer();
@@ -153,11 +153,11 @@ export function GalleryPage() {
       {/* ── Header (padrão Products/Clients: ícone frosted glass + título) ── */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+          {!isV2 && <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
             <i className={'fas fa-images text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')} />
-          </div>
+          </div>}
           <div>
-            <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Galeria</h1>
+            <h1 className={(isV2 ? 'text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.1] text-gray-900' : (isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold')}>Galeria</h1>
             <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Todas as suas criações</p>
           </div>
         </div>
