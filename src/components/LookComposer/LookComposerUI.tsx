@@ -518,6 +518,16 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  }`}
  >
  <OptimizedImage src={getOptimizedProductImage(p)} alt={p.name} className="w-full h-full p-1" size="thumb" objectFit="contain" />
+ {/* Badge frente/costas */}
+ {p.originalImages?.back?.url ? (
+ <div className="absolute top-0.5 right-0.5 flex items-center gap-px bg-green-600/80 text-white text-[6px] font-bold px-1 py-px rounded leading-none" title="Frente + Costas">
+ F|B
+ </div>
+ ) : (
+ <div className="absolute top-0.5 right-0.5 flex items-center gap-px bg-neutral-500/70 text-white text-[6px] font-bold px-1 py-px rounded leading-none" title="Só frente">
+ F
+ </div>
+ )}
  <div className={`absolute inset-x-0 bottom-0 text-white text-[8px] p-1 truncate transition-opacity ${
  theme !== 'light' ? 'bg-gradient-to-t from-black/90 to-transparent' : 'bg-gradient-to-t from-black/80 to-transparent'
  }`}>

@@ -403,6 +403,57 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // Verificar se plano permite 4K
  const canUse4K = currentPlan ? canUseResolution(currentPlan, '4k') : false;
 
+ // Estado para upload de foto de costas inline
+ const [uploadingBackFor, setUploadingBackFor] = useState<string | null>(null);
+ const backImageInputRef = React.useRef<HTMLInputElement>(null);
+ const [pendingUploadProductId, setPendingUploadProductId] = useState<string | null>(null);
+
+ const handleUploadBackImage = useCallback(async (file: File, productId: string) => {
+ if (!userId) return;
+ setUploadingBackFor(productId);
+ try {
+ const fileName = `${userId}/${productId}/original_back_${Date.now()}.${file.name.split('.').pop()}`;
+ const { error: uploadError } = await supabase.storage
+ .from('products')
+ .upload(fileName, file, { upsert: true });
+ if (uploadError) throw uploadError;
+
+ const publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${fileName}`;
+
+ const { data: imageData, error: insertError } = await supabase
+ .from('product_images')
+ .insert({
+ product_id: productId,
+ user_id: userId,
+ type: 'original',
+ angle: 'back',
+ storage_path: fileName,
+ url: publicUrl,
+ file_name: file.name,
+ mime_type: file.type,
+ is_primary: false
+ })
+ .select()
+ .single();
+ if (insertError) throw insertError;
+
+ const targetProduct = products.find(p => p.id === productId);
+ if (targetProduct) {
+ onUpdateProduct(productId, {
+ originalImages: {
+ ...targetProduct.originalImages,
+ back: { id: imageData.id, url: publicUrl, name: file.name }
+ }
+ });
+ }
+ } catch (error) {
+ console.error('Erro ao fazer upload da foto de costas:', error);
+ } finally {
+ setUploadingBackFor(null);
+ setPendingUploadProductId(null);
+ }
+ }, [userId, products, onUpdateProduct]);
+
  // Usar estado global se disponível
  const isGenerating = onSetGenerating ? globalIsGenerating : localIsGenerating;
  const currentProgress = onSetProgress ? generationProgress : localProgress;
@@ -2320,9 +2371,22 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
  )}
 
- {/* Aviso se produtos não têm foto de costas */}
+ {/* Aviso se produtos não têm foto de costas — com upload inline */}
  {viewsMode === 'front-back' && productsWithoutBackImage.length > 0 && (
  <div className={(isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-4 border'}>
+ <input
+ type="file"
+ ref={backImageInputRef}
+ accept="image/*"
+ className="hidden"
+ onChange={(e) => {
+ const file = e.target.files?.[0];
+ if (file && pendingUploadProductId) {
+ handleUploadBackImage(file, pendingUploadProductId);
+ }
+ e.target.value = '';
+ }}
+ />
  <div className="flex items-start gap-3">
  <div className={(isDark ? 'bg-amber-500/20' : 'bg-amber-100') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
  <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-exclamation-triangle'}></i>
@@ -2332,20 +2396,34 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {productsWithoutBackImage.length === 1 ? 'Produto sem foto de costas' : 'Produtos sem foto de costas'}
  </h4>
  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed mb-2'}>
- Para gerar a imagem de costas, você precisa cadastrar a foto de costas dos seguintes produtos:
+ Adicione a foto de costas para gerar a imagem de costas:
  </p>
- <ul className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs space-y-1'}>
+ <ul className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs space-y-2'}>
  {productsWithoutBackImage.map((p) => (
  <li key={p.id} className="flex items-center gap-2">
+ {uploadingBackFor === p.id ? (
+ <>
+ <i className="fas fa-spinner fa-spin text-coral text-[10px]"></i>
+ <span className="font-medium text-coral">Enviando...</span>
+ </>
+ ) : (
+ <>
  <i className="fas fa-times-circle text-red-400 text-[10px]"></i>
- <span className="font-medium">{p.name}</span>
- <span className={(isDark ? 'text-neutral-500' : 'text-gray-400')}>({p.sku})</span>
+ <span className="font-medium flex-1">{p.name}</span>
+ <button
+ onClick={() => {
+ setPendingUploadProductId(p.id);
+ backImageInputRef.current?.click();
+ }}
+ className={(isDark ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300' : 'bg-amber-100 hover:bg-amber-200 text-amber-700') + ' text-[10px] font-semibold px-2 py-1 rounded-md transition-colors'}
+ >
+ <i className="fas fa-upload mr-1"></i>Subir costas
+ </button>
+ </>
+ )}
  </li>
  ))}
  </ul>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] mt-2'}>
- Acesse o Product Studio para adicionar as fotos de costas.
- </p>
  </div>
  </div>
  </div>
