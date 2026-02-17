@@ -1679,7 +1679,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ))}
  </div>
  <div className="flex-1 min-w-0">
+ <div className="flex items-center gap-1.5">
  <p className={(isDark ? 'text-white' : 'text-gray-900') + ' font-medium text-sm truncate'}>{product.name}</p>
+ {product.originalImages?.back?.url ? (
+ <span className="bg-green-600/80 text-white text-[8px] font-bold px-1.5 py-0.5 rounded leading-none flex-shrink-0" title="Frente + Costas">F|B</span>
+ ) : (
+ <span className="bg-neutral-500/70 text-white text-[8px] font-bold px-1.5 py-0.5 rounded leading-none flex-shrink-0" title="Só frente">F</span>
+ )}
+ </div>
  <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>{product.sku}</p>
  {product.category && (
  <span className={(isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') + ' px-2 py-0.5 rounded text-[10px] mt-1 inline-block'}>{product.category}</span>

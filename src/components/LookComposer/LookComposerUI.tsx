@@ -395,6 +395,15 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  >
  <i className="fas fa-times"></i>
  </button>
+ {/* Badge F|B no slot preenchido */}
+ {item.productId && (() => {
+ const lp = products.find(p => p.id === item.productId);
+ return lp?.originalImages?.back?.url ? (
+ <div className="absolute top-0 left-0 bg-green-600/80 text-white text-[5px] font-bold px-0.5 rounded-br leading-none py-px">F|B</div>
+ ) : (
+ <div className="absolute top-0 left-0 bg-neutral-500/70 text-white text-[5px] font-bold px-0.5 rounded-br leading-none py-px">F</div>
+ );
+ })()}
  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white text-[6px] font-medium px-1 py-0.5 text-center truncate">
  {slot.label}
  </div>
