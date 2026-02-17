@@ -136,6 +136,26 @@ export const PLANS: Plan[] = [
   }
 ];
 
+// Plano interno para testes — acesso total, sem Stripe, sem renovação
+export const TEST_PLAN: Plan = {
+  id: 'test',
+  name: 'Test',
+  limit: 9999,
+  productLimit: -1,
+  priceMonthly: 0,
+  priceYearly: 0,
+  creditPrice: 0,
+  maxResolution: '4k',
+  hasWatermark: false,
+  features: [
+    'Acesso total (interno)',
+    'Produtos ilimitados',
+    'Resolução 2K + 4K',
+    'Sem marca d\'água',
+    'Sem renovação automática',
+  ]
+};
+
 export const CREDIT_PACKAGES = [10, 25, 50, 100];
 
 export const DEFAULT_MASTER_FEATURES = [
@@ -159,6 +179,7 @@ export const DEFAULT_PLAN_PERSONA: Record<string, string> = {
   pro: 'Para criadores e freelancers',
   premier: 'Para equipes de marketing',
   enterprise: 'Para operações de alto volume',
+  test: 'Plano interno para testes',
 };
 
 export const DEFAULT_PLAN_CTA: Record<string, string> = {
@@ -167,6 +188,7 @@ export const DEFAULT_PLAN_CTA: Record<string, string> = {
   pro: 'Escolher Pro',
   premier: 'Desbloquear Premier',
   enterprise: 'Falar com especialista',
+  test: '',
 };
 
 export const DEFAULT_PLAN_INCLUDED: Record<string, string[]> = {
@@ -175,4 +197,5 @@ export const DEFAULT_PLAN_INCLUDED: Record<string, string[]> = {
   pro: ['Vizzu Product Studio®', 'Vizzu Look Composer®', 'Vizzu Still Criativo®', 'Vizzu Provador®', 'Geração de Imagens em 2K e 4K', 'Modelos IA personalizados', 'Agente WhatsApp', 'Imagens sem marca d\'água'],
   premier: ['Vizzu Product Studio®', 'Vizzu Look Composer®', 'Vizzu Still Criativo®', 'Vizzu Provador®', 'Geração de Imagens em 2K e 4K', 'Modelos IA personalizados', 'Agente WhatsApp', 'Imagens sem marca d\'água', 'Integração e-commerce', 'Suporte prioritário'],
   enterprise: ['Vizzu Product Studio®', 'Vizzu Look Composer®', 'Vizzu Still Criativo®', 'Vizzu Provador®', 'Geração de Imagens em 2K e 4K', 'Modelos IA personalizados', 'Agente WhatsApp', 'Imagens sem marca d\'água', 'Integração e-commerce', 'Suporte prioritário', 'Produtos ilimitados', 'API dedicada'],
+  test: ['Vizzu Product Studio®', 'Vizzu Look Composer®', 'Vizzu Still Criativo®', 'Vizzu Provador®', 'Geração de Imagens em 2K e 4K', 'Modelos IA personalizados', 'Agente WhatsApp', 'Imagens sem marca d\'água', 'Integração e-commerce', 'Suporte prioritário', 'Produtos ilimitados'],
 };
