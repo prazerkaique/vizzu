@@ -13,6 +13,7 @@ import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
 import type { VizzuTheme } from '../../contexts/UIContext';
+import { useUI } from '../../contexts/UIContext';
 import { useGeneration } from '../../contexts/GenerationContext';
 
 interface LookComposerEditorProps {
@@ -311,6 +312,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onDeductEditCredits,
 }) => {
  const { addCompletedProduct } = useGeneration();
+ const { showToast } = useUI();
  // Estado da fase atual
  const [currentStep, setCurrentStep] = useState<Step>('product');
 
@@ -1122,7 +1124,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // Gerar look
  const handleGenerate = async () => {
  if (isAnyGenerationRunning) {
- alert('Aguarde a geração atual terminar.');
+ showToast('Aguarde a geração atual terminar.', 'info');
+ return;
+ }
+
+ if (viewsMode === 'front-back' && productsWithoutBackImage.length > 0) {
+ const names = productsWithoutBackImage.map(p => p.name).join(', ');
+ showToast(
+   `Adicione fotos de costas para gerar frente e costas: ${names}`,
+   'error'
+ );
  return;
  }
 
@@ -1132,12 +1143,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  // Validações
  if (!selectedModel && modelTab !== 'create') {
- alert('Selecione um modelo para continuar.');
+ showToast('Selecione um modelo para continuar.', 'error');
  return;
  }
 
  if (!userId) {
- alert('Usuário não identificado.');
+ showToast('Usuário não identificado.', 'error');
  return;
  }
 
@@ -1625,7 +1636,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  0
  );
  }
- alert(`Erro ao gerar look: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+ showToast(`Erro ao gerar look: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, 'error');
  }
  } finally {
  const setGenerating = onSetGenerating || setLocalIsGenerating;
@@ -2747,8 +2758,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <>
  <button
  onClick={handleGenerate}
- disabled={isGenerating || isAnyGenerationRunning || !canProceed('views')}
- className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-[#FF6B6B] cursor-wait' : !canProceed('views') ? (isDark ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
+ disabled={isGenerating || isAnyGenerationRunning}
+ className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-[#FF6B6B] cursor-wait' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
  >
  {isGenerating ? (
  <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando{viewsMode === 'front-back' ? ' 2 imagens' : ''}...</>
