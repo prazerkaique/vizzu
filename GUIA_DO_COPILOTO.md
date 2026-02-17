@@ -114,11 +114,13 @@ Lojistas e equipes de marketing de e-commerce no Brasil.
 | PWA | Service Worker com cache versioning |
 
 ### Arquitetura do Frontend
-- 53 arquivos TypeScript, ~1.5 MB source
+- 55+ arquivos TypeScript, ~1.6 MB source
 - 7 Contexts: Auth, UI, Products, Clients, History, Generation, Plans
+- 4 temas: light, dark, high-contrast, **V2 Clean** (ver seção "Tema V2 Clean")
 - Code splitting com lazy loading nos componentes pesados
 - App.tsx refatorado (de ~8k → ~800 linhas)
-- APIs centralizadas em `src/lib/api/` (studio.ts, billing.ts)
+- APIs centralizadas em `src/lib/api/` (studio.ts, billing.ts, shopify.ts)
+- Página Galeria com hook dedicado `useGalleryData` (ver seção "Página Galeria")
 
 ---
 
@@ -189,6 +191,9 @@ Não existe custo variável por ferramenta. O custo é sempre baseado na quantid
 |---|---|
 | Light mode (fundo) | `#f7f5f2` (creme quente) |
 | Light mode (sidebar) | `#efebe6` |
+| **V2 Clean (fundo)** | `#FFFFFF` (branco puro) |
+| **V2 Clean (sidebar)** | `#FFFFFF` (branco puro) |
+| **V2 Clean (sidebar ativa)** | `#E6E7EB` (cinza neutro) |
 | Dark mode (fundo) | `#000000` |
 | Dark mode (superfícies) | `#1A1A1A` |
 | Bordas | `#e5e6ea` |
@@ -212,13 +217,15 @@ Usado em: botões CTA, barra de progresso, nav ativa, ícone mobile central.
 
 | Fonte | Tipo | Uso |
 |---|---|---|
-| **Plus Jakarta Sans** | Sans-serif | Corpo, headings, UI geral (400–800) |
+| **Plus Jakarta Sans** | Sans-serif | Corpo, headings, UI geral (400–800). No V2 hero headings: `text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.1]` |
 | **Inria Serif** | Serif | Tagline "Estúdio de Bolso", textos decorativos (300–700) |
+| **DM Serif Display** | Serif Display | Fonte secundária do V2 (italic). Substitui Inria Serif via CSS override `.font-serif` quando V2 ativo. Google Fonts, carregada em `index.html`. Tailwind class: `font-serif-display` |
 
 ### Filosofia de Design
 
 - **Minimalista**: Poucas sombras, linhas limpas, whitespace generoso
-- **Quente e acessível**: Fundo creme, acentos coral
+- **Quente e acessível**: Fundo creme, acentos coral (Light mode)
+- **V2 Clean**: Branco puro, sem ícones nos stats, labels uppercase, gradiente coral→laranja nas barras, hero headings grandes
 - **Mobile-first**: PWA otimizado, safe areas, swipe navigation
 - **Dark mode completo**: Glassmorphism com backdrop-blur
 - **Cantos arredondados**: `rounded-xl` (12px) é o padrão para cards e botões
@@ -1232,4 +1239,128 @@ USING (bucket_id = 'products' AND (storage.foldername(name))[1] = 'models' AND (
 
 ---
 
-*Última atualização: 12 de Fevereiro de 2026 — Sessão 14*
+## Tema V2 Clean — Arquitetura (Sessão 15 — 17 de Fevereiro de 2026)
+
+### O que é
+Quarto tema do app, variante "clean & minimal" do light mode. Fundo branco puro, sem ícones nos stats do dashboard, labels uppercase, gradiente coral→laranja nas barras de uso, hero headings grandes.
+
+### Tipo VizzuTheme
+```ts
+type VizzuTheme = 'light' | 'dark' | 'high-contrast' | 'v2';
+```
+
+### Arquitetura selectedTheme / theme / isV2
+
+**Problema**: Existem ~1329 ocorrências de `theme !== 'light'` em 50+ arquivos. Mudar todas seria impraticável e frágil.
+
+**Solução**: O V2 se comporta internamente como `'light'` para renderização:
+```ts
+// UIContext.tsx
+const [selectedTheme, setSelectedTheme] = useState<VizzuTheme>(...);
+const theme: VizzuTheme = selectedTheme === 'v2' ? 'light' : selectedTheme;
+const isV2 = selectedTheme === 'v2';
+```
+
+| Variável | O que é | Uso |
+|---|---|---|
+| `selectedTheme` | Valor real salvo (`'v2'`) | Select de tema, localStorage |
+| `theme` | Valor de renderização (`'light'` quando V2) | Todas as condicionais `theme !== 'light'` existentes |
+| `isV2` | Boolean `true` se V2 | Customizações específicas V2 (JS) |
+
+### CSS Overrides (`src/index.css`)
+Classe `html.theme-v2` no `<html>` (mesma abordagem do HC com `html.theme-hc`):
+
+| Seletor | Efeito |
+|---|---|
+| `[class*="bg-cream"]`, `[class*="bg-[#f7f5f2]"]` | → `#FFFFFF` |
+| `html.theme-v2 body` | → `#FFFFFF` |
+| `[class*="bg-[#efebe6]"]` | → `#FFFFFF` (sidebar) |
+| `[class*="text-gray-3"]` | → `#6B7280` (contraste +2 shades) |
+| `[class*="text-gray-4"]` | → `#4B5563` |
+| `[class*="text-gray-5"]` | → `#374151` |
+| `[class*="text-gray-6"]` | → `#1F2937` |
+| `[class*="border-gray-2"]` | → `#D1D5DB` |
+| `.font-serif` | → DM Serif Display |
+| `@media (display-mode: standalone) html.theme-v2 body` | → `#FFFFFF` (PWA) |
+
+### Customizações JS por `isV2`
+- **Dashboard**: Stats sem ícones, labels uppercase, barras gradiente coral→laranja, ícone gráfico coral
+- **Sidebar**: Active `bg-[#E6E7EB] text-[#111827]`, inactive `text-[#6B7280]` (helper `sidebarNavClass()`)
+- **Hero headings (7 páginas)**: `text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.1]`, ícone frosted glass hidden
+- **PWA meta theme-color**: `#FFFFFF` (branco puro)
+
+### Arquivos modificados para V2
+| Arquivo | Alteração |
+|---|---|
+| `src/contexts/UIContext.tsx` | `selectedTheme`, `theme`, `isV2`, toggle `theme-v2`, meta theme-color |
+| `src/index.css` | ~100 linhas de overrides V2 (backgrounds, texto, bordas, fonte, PWA) |
+| `src/components/Layout/AppLayout.tsx` | `sidebarNavClass()` helper, 6 botões sidebar refatorados |
+| `src/pages/DashboardPage.tsx` | Stats array-based, V2 sem ícones, uppercase, barras gradiente |
+| `src/pages/SettingsPage.tsx` | `selectedTheme` no select, opção V2 |
+| `src/pages/ProductsPage.tsx` | Hero heading V2, ícone hidden |
+| `src/pages/ClientsPage.tsx` | Hero heading V2, ícone hidden |
+| `src/pages/ModelsPage.tsx` | Hero heading V2, ícone hidden |
+| `src/pages/GalleryPage.tsx` | Hero heading V2, ícone hidden |
+| `src/pages/CreateHubPage.tsx` | Hero heading V2, ícone hidden |
+| `index.html` | Google Fonts: DM Serif Display adicionada |
+| `tailwind.config.js` | `font-serif-display` family |
+
+### Regras para manter o V2
+1. **Nunca adicionar `selectedTheme === 'v2'` em condicionais existentes** — o `theme` derivado como `'light'` já resolve
+2. **Usar `isV2` apenas para customizações visuais específicas** (esconder ícones, mudar heading size, etc.)
+3. **CSS overrides com `[class*="..."]`** para pegar variantes Tailwind (ex: `bg-cream/95`)
+4. **Novos componentes**: não precisam de tratamento V2 especial se já usam `theme !== 'light'`
+
+---
+
+## Página Galeria (Sessão 15 — 17 de Fevereiro de 2026)
+
+### O que é
+Página central para ver TODAS as imagens geradas pela IA, de todas as features, com filtros, paginação, download em massa e export Shopify.
+
+### Arquivos
+| Arquivo | Descrição |
+|---|---|
+| `src/pages/GalleryPage.tsx` | Página completa (header, stats, filtros, grid, paginação, seleção, modais) |
+| `src/hooks/useGalleryData.ts` | Hook de dados: merge ProductsContext + Supabase queries (CS + Provador) |
+
+### Fontes de dados (3)
+1. **ProductsContext** (já em memória) — PS, LC, SR, CC → iterar `product.generatedImages.*`
+2. **Supabase query** — `creative_still_generations` where `status='completed'`
+3. **Supabase query** — `client_looks`
+
+### Tipo unificado
+```ts
+interface GalleryItem {
+  id: string;                    // "ps-{id}", "cs-{genId}-{idx}", "lc-{id}", etc.
+  imageUrl: string;
+  featureType: FeatureType;      // 'product-studio' | 'creative-still' | 'look-composer' | 'studio-ready' | 'cenario-criativo' | 'provador'
+  productId?: string;
+  productName?: string;
+  originalImageUrl?: string;     // Para antes/depois
+  clientName?: string;           // Para provador
+  createdAt: string;
+  metadata?: { angle?, sessionId?, generationId?, variationIndex?, resolution?, view? }
+}
+```
+
+### Features da página
+- **Stats chips**: contagem total + por feature (clicável = filtro)
+- **Search**: debounce 300ms, filtra por productName/clientName
+- **Grid responsivo**: `grid-cols-2 sm:3 md:4 lg:5 xl:6`
+- **Badges de feature**: cor/ícone distintos por feature
+- **Paginação**: 24 itens/página
+- **Modo seleção**: checkbox em cada card, barra de ações no bottom
+- **Download**: `DownloadModal` individual e em massa (grouped por feature)
+- **Export Shopify**: `EcommerceExportButton` com imagens selecionadas
+- **Zoom**: `useImageViewer` para full-screen
+
+### Navegação
+- Page type `'gallery'` adicionado em UIContext
+- Sidebar desktop: botão "Galeria" com `fa-images` (abaixo de Clientes)
+- Swipe pages: `'gallery'` entre dashboard e products
+- Bottom nav mobile: **não mudou** (mantém 5 botões)
+
+---
+
+*Última atualização: 17 de Fevereiro de 2026 — Sessão 15*
