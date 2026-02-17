@@ -190,17 +190,17 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  if (initialProduct) {
  // Determinar slot baseado na categoria do produto
  const categoryToSlot: Record<string, keyof LookComposition> = {
- 'Chapéu': 'head', 'Boné': 'head', 'Gorro': 'head', 'Touca': 'head', 'Boina': 'head', 'Turbante': 'head',
+ 'Chapéu': 'head', 'Boné': 'head', 'Gorro': 'head', 'Viseira': 'head', 'Touca': 'head', 'Boina': 'head', 'Turbante': 'head',
  'Camiseta': 'top', 'Camisa': 'top', 'Blusa': 'top', 'Top': 'top', 'Cropped': 'top', 'Regata': 'top',
  'Moletom': 'top', 'Suéter': 'top', 'Cardigan': 'top', 'Jaqueta': 'top', 'Blazer': 'top', 'Colete': 'top',
- 'Vestido': 'top', 'Macacão': 'top', 'Conjunto': 'top', 'Jardineira': 'top',
+ 'Vestido': 'top', 'Macacão': 'top', 'Conjunto': 'top', 'Pijama': 'top', 'Jardineira': 'top',
  'Calça': 'bottom', 'Shorts': 'bottom', 'Bermuda': 'bottom', 'Saia': 'bottom', 'Legging': 'bottom',
  'Tênis': 'feet', 'Sapato': 'feet', 'Sandália': 'feet', 'Chinelo': 'feet', 'Bota': 'feet', 'Sapatilha': 'feet',
- 'Bolsa': 'accessory1', 'Mochila': 'accessory1', 'Carteira': 'accessory1', 'Cinto': 'accessory1',
- 'Óculos': 'accessory2', 'Relógio': 'accessory2', 'Colar': 'accessory2', 'Brinco': 'accessory2', 'Pulseira': 'accessory2',
+ 'Bolsa': 'accessory1', 'Mochila': 'accessory1', 'Pochete': 'accessory1', 'Carteira': 'accessory1', 'Cinto': 'accessory1',
+ 'Óculos': 'accessory2', 'Relógio': 'accessory2', 'Colar': 'accessory2', 'Brinco': 'accessory2', 'Pulseira': 'accessory2', 'Gravata': 'accessory2',
  };
 
- const FULLPIECE_CATS = ['Vestido', 'Vestidos', 'Macacão', 'Macacões', 'Conjunto', 'Conjuntos', 'Jardineira', 'Jardineiras'];
+ const FULLPIECE_CATS = ['Vestido', 'Vestidos', 'Macacão', 'Macacões', 'Conjunto', 'Conjuntos', 'Pijama', 'Pijamas', 'Jardineira', 'Jardineiras'];
  const slot = categoryToSlot[initialProduct.category || ''] || 'top';
  const isFullpiece = FULLPIECE_CATS.some(c => c.toLowerCase() === (initialProduct.category || '').toLowerCase());
  const imageUrl = initialProduct.images?.[0]?.url || initialProduct.images?.[0]?.base64 || '';

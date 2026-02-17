@@ -7,33 +7,36 @@ import type { BulkProduct, BulkRawImage, CsvProductData } from './types';
 // Extraído de ProductsPage.tsx applyDetectedProduct()
 export const AI_TYPE_TO_CATEGORY: Record<string, string> = {
   'Boné': 'Bonés', 'Chapéu': 'Chapéus', 'Tiara': 'Tiaras', 'Lenço': 'Lenços',
+  'Gorro': 'Gorros', 'Viseira': 'Viseiras',
   'Camiseta': 'Camisetas', 'Blusa': 'Blusas', 'Regata': 'Regatas', 'Top': 'Tops',
   'Camisa': 'Camisas', 'Body': 'Bodies', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos',
   'Blazer': 'Blazers', 'Moletom': 'Moletons', 'Cropped': 'Tops', 'Suéter': 'Moletons',
-  'Cardigan': 'Casacos', 'Colete': 'Casacos',
+  'Cardigan': 'Casacos', 'Colete': 'Coletes', 'Lingerie': 'Bodies',
   'Calça': 'Calças', 'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Saia': 'Saias',
   'Legging': 'Leggings', 'Short Fitness': 'Shorts Fitness',
   'Vestido': 'Vestidos', 'Macacão': 'Macacões', 'Jardineira': 'Jardineiras',
-  'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+  'Conjunto': 'Conjuntos', 'Pijama': 'Pijamas', 'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+  'Sunga': 'Sungas',
   'Tênis': 'Tênis', 'Sandália': 'Sandálias', 'Bota': 'Botas', 'Sapato': 'Calçados',
   'Chinelo': 'Sandálias', 'Sapatilha': 'Calçados',
-  'Bolsa': 'Bolsas', 'Mochila': 'Bolsas', 'Cinto': 'Cintos', 'Relógio': 'Relógios',
+  'Bolsa': 'Bolsas', 'Mochila': 'Mochilas', 'Pochete': 'Pochetes', 'Necessaire': 'Pochetes',
+  'Cinto': 'Cintos', 'Relógio': 'Relógios',
   'Óculos': 'Óculos', 'Brinco': 'Bijuterias', 'Colar': 'Bijuterias', 'Pulseira': 'Bijuterias',
-  'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias',
-  'Gorro': 'Gorros', 'Viseira': 'Viseiras',
-  'Pochete': 'Bolsas', 'Necessaire': 'Bolsas',
+  'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias', 'Acessório': 'Outros Acessórios',
+  'Gravata': 'Gravatas', 'Meia': 'Meias', 'Cachecol': 'Cachecóis',
 };
 
 // ── Todas as categorias agrupadas ─────────────────────────────────
 export const ALL_CATEGORIES = [
-  'Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies',
+  'Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Coletes',
   'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts',
   'Bermudas', 'Saias', 'Leggings', 'Vestidos', 'Macacões', 'Jardineiras',
-  'Biquínis', 'Maiôs', 'Shorts Fitness',
+  'Conjuntos', 'Pijamas', 'Biquínis', 'Maiôs', 'Sungas', 'Shorts Fitness',
   'Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos',
   'Bonés', 'Chapéus', 'Gorros', 'Viseiras',
   'Bolsas', 'Mochilas', 'Pochetes', 'Necessaires',
-  'Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Acessórios', 'Tiaras', 'Lenços', 'Outros Acessórios',
+  'Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Gravatas', 'Cachecóis', 'Meias',
+  'Acessórios', 'Tiaras', 'Lenços', 'Outros Acessórios',
 ];
 
 // ── Normalização de texto ─────────────────────────────────────────

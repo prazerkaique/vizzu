@@ -6,12 +6,12 @@ import { compressImage } from '../utils/imageCompression';
 
 // Copiar de ProductsPage.tsx para reusar
 const CATEGORY_GROUPS = [
-  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
-  { id: 'parte-de-cima', label: 'Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+  { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Gorros', 'Viseiras', 'Tiaras', 'Lenços'] },
+  { id: 'parte-de-cima', label: 'Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Coletes', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
   { id: 'parte-de-baixo', label: 'Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
-  { id: 'pecas-inteiras', label: 'Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+  { id: 'pecas-inteiras', label: 'Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Conjuntos', 'Pijamas', 'Biquínis', 'Maiôs', 'Sungas'] },
   { id: 'calcados', label: 'Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
-  { id: 'acessorios', label: 'Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
+  { id: 'acessorios', label: 'Acessórios', items: ['Bolsas', 'Mochilas', 'Pochetes', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Gravatas', 'Cachecóis', 'Meias', 'Outros Acessórios'] },
 ];
 
 const COLORS = [
@@ -31,20 +31,36 @@ const COLORS = [
 
 const categoryMap: Record<string, string> = {
   'Boné': 'Bonés', 'Chapéu': 'Chapéus', 'Tiara': 'Tiaras', 'Lenço': 'Lenços',
+  'Gorro': 'Gorros', 'Viseira': 'Viseiras',
   'Camiseta': 'Camisetas', 'Blusa': 'Blusas', 'Regata': 'Regatas', 'Top': 'Tops',
   'Camisa': 'Camisas', 'Body': 'Bodies', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos',
   'Blazer': 'Blazers', 'Moletom': 'Moletons', 'Cropped': 'Tops', 'Suéter': 'Moletons',
-  'Cardigan': 'Casacos', 'Colete': 'Casacos',
+  'Cardigan': 'Casacos', 'Colete': 'Coletes', 'Lingerie': 'Bodies',
   'Calça': 'Calças', 'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Saia': 'Saias',
   'Legging': 'Leggings', 'Short Fitness': 'Shorts Fitness',
   'Vestido': 'Vestidos', 'Macacão': 'Macacões', 'Jardineira': 'Jardineiras',
-  'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+  'Conjunto': 'Conjuntos', 'Pijama': 'Pijamas', 'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+  'Sunga': 'Sungas',
   'Tênis': 'Tênis', 'Sandália': 'Sandálias', 'Bota': 'Botas', 'Sapato': 'Calçados',
   'Chinelo': 'Sandálias', 'Sapatilha': 'Calçados',
-  'Bolsa': 'Bolsas', 'Mochila': 'Bolsas', 'Cinto': 'Cintos', 'Relógio': 'Relógios',
+  'Bolsa': 'Bolsas', 'Mochila': 'Mochilas', 'Pochete': 'Pochetes', 'Necessaire': 'Pochetes',
+  'Cinto': 'Cintos', 'Relógio': 'Relógios',
   'Óculos': 'Óculos', 'Brinco': 'Bijuterias', 'Colar': 'Bijuterias', 'Pulseira': 'Bijuterias',
-  'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias',
+  'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias', 'Acessório': 'Outros Acessórios',
+  'Gravata': 'Gravatas', 'Meia': 'Meias', 'Cachecol': 'Cachecóis',
 };
+
+// Todas as categorias válidas (para fallback quando a IA retorna tipo já no plural ou desconhecido)
+const ALL_VALID_CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
+
+function resolveCategory(type: string): string {
+  // 1. Mapa singular→plural
+  if (categoryMap[type]) return categoryMap[type];
+  // 2. Tipo já é uma categoria válida (plural)?
+  if (ALL_VALID_CATEGORIES.includes(type)) return type;
+  // 3. Sem match
+  return '';
+}
 
 interface WizardProduct {
   name: string;
@@ -74,7 +90,7 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
   const [products, setProducts] = useState<WizardProduct[]>(() =>
     detectedProducts.map(dp => ({
       name: dp.suggestedName || dp.type,
-      category: categoryMap[dp.type] || '',
+      category: resolveCategory(dp.type),
       color: dp.color || '',
       brand: dp.brand || '',
       extraImages: {},
@@ -85,6 +101,7 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
   const [phase, setPhase] = useState<'review' | 'importing' | 'done'>('review');
   const [currentImporting, setCurrentImporting] = useState(0);
   const [importResults, setImportResults] = useState<{ success: string[]; failed: { name: string; error: string }[] }>({ success: [], failed: [] });
+  const [triedAdvance, setTriedAdvance] = useState(false);
 
   const product = products[currentStep];
   const totalProducts = products.length;
@@ -124,6 +141,11 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
   };
 
   const handleNext = () => {
+    if (!canAdvance) {
+      setTriedAdvance(true);
+      return;
+    }
+    setTriedAdvance(false);
     if (currentStep < totalProducts - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -132,7 +154,10 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
   };
 
   const handlePrev = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    if (currentStep > 0) {
+      setTriedAdvance(false);
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   const startImport = async () => {
@@ -288,23 +313,31 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
             {/* Campos editáveis */}
             <div className="space-y-3">
               <div>
-                <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome *</label>
+                <label className={(!product.name && triedAdvance ? 'text-[#FF6B6B]' : isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Nome *</label>
                 <input
                   type="text"
                   value={product.name}
-                  onChange={e => updateProduct(currentStep, { name: e.target.value })}
-                  className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                  onChange={e => { updateProduct(currentStep, { name: e.target.value }); setTriedAdvance(false); }}
+                  className={(!product.name && triedAdvance
+                    ? 'border-[#FF6B6B] ring-1 ring-[#FF6B6B]/30 ' + (isDark ? 'bg-neutral-800 text-white' : 'bg-gray-50 text-gray-900')
+                    : (isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900')
+                  ) + ' w-full px-3 py-2 border rounded-lg text-sm'}
                   placeholder="Nome do produto"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Categoria *</label>
+                  <label className={(!product.category && triedAdvance ? 'text-[#FF6B6B]' : isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>
+                    Categoria *
+                  </label>
                   <select
                     value={product.category}
-                    onChange={e => updateProduct(currentStep, { category: e.target.value, extraImages: {} })}
-                    className={(isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2 border rounded-lg text-sm'}
+                    onChange={e => { updateProduct(currentStep, { category: e.target.value, extraImages: {} }); setTriedAdvance(false); }}
+                    className={(!product.category && triedAdvance
+                      ? 'border-[#FF6B6B] ring-1 ring-[#FF6B6B]/30 ' + (isDark ? 'bg-neutral-800 text-white' : 'bg-gray-50 text-gray-900')
+                      : (isDark ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900')
+                    ) + ' w-full px-3 py-2 border rounded-lg text-sm'}
                   >
                     <option value="">Selecione</option>
                     {CATEGORY_GROUPS.map(group => (
@@ -313,6 +346,11 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
                       </optgroup>
                     ))}
                   </select>
+                  {!product.category && triedAdvance && (
+                    <p className="text-[#FF6B6B] text-[9px] mt-1">
+                      <i className="fas fa-exclamation-circle mr-0.5"></i>Defina a categoria para continuar
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' block text-[9px] font-medium uppercase tracking-wide mb-1'}>Cor</label>
@@ -391,12 +429,7 @@ export function RegisterAllWizard({ theme, detectedProducts, frontImage, userId,
               )}
               <button
                 onClick={handleNext}
-                disabled={!canAdvance}
-                className={'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ' + (
-                  canAdvance
-                    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
-                    : (isDark ? 'bg-neutral-800 text-neutral-600' : 'bg-gray-200 text-gray-400') + ' cursor-not-allowed'
-                )}
+                className={'flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'}
               >
                 {isLastProduct ? (
                   <>

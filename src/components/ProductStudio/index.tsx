@@ -50,12 +50,12 @@ interface ProductStudioProps {
 }
 
 const CATEGORY_GROUPS = [
- { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
- { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+ { id: 'cabeca', label: '👒 Cabeça', items: ['Bonés', 'Chapéus', 'Gorros', 'Viseiras', 'Tiaras', 'Lenços'] },
+ { id: 'parte-de-cima', label: '👕 Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Coletes', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
  { id: 'parte-de-baixo', label: '👖 Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
- { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+ { id: 'pecas-inteiras', label: '👗 Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Conjuntos', 'Pijamas', 'Biquínis', 'Maiôs', 'Sungas'] },
  { id: 'calcados', label: '👟 Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
- { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
+ { id: 'acessorios', label: '💍 Acessórios', items: ['Bolsas', 'Mochilas', 'Pochetes', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Gravatas', 'Cachecóis', 'Meias', 'Outros Acessórios'] },
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));

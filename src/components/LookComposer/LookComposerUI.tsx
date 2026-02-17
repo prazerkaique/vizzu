@@ -20,7 +20,7 @@ interface Props {
 // Categorias que ocupam tanto top quanto bottom (peças inteiras)
 const FULLPIECE_CATEGORIES = [
  'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Macacao', 'Jardineira', 'Jardineiras',
- 'Conjuntos', 'Conjunto', 'Jumpsuit',
+ 'Conjuntos', 'Conjunto', 'Pijamas', 'Pijama', 'Jumpsuit',
 ];
 
 const isFullpieceCategory = (category: string): boolean => {
@@ -29,12 +29,12 @@ const isFullpieceCategory = (category: string): boolean => {
 
 // Mapeamento de slots para categorias de produtos (case-insensitive, singular e plural)
 const SLOT_CATEGORY_MAP: Record<string, string[]> = {
- head: ['Bonés', 'Boné', 'Chapéus', 'Chapéu', 'Tiaras', 'Tiara', 'Lenços', 'Lenço', 'Gorro', 'Gorros', 'Touca', 'Toucas', 'Boina', 'Turbante'],
- top: ['Camisetas', 'Camiseta', 'Blusas', 'Blusa', 'Regatas', 'Regata', 'Tops', 'Top', 'Camisas', 'Camisa', 'Jaquetas', 'Jaqueta', 'Casacos', 'Casaco', 'Blazers', 'Blazer', 'Moletons', 'Moletom', 'Bodies', 'Body', 'Cropped', 'Croppeds', 'Colete', 'Coletes', 'Suéter', 'Cardigan', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto'],
- bottom: ['Calças', 'Calça', 'Shorts', 'Short', 'Bermudas', 'Bermuda', 'Saias', 'Saia', 'Leggings', 'Legging', 'Shorts Fitness', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto', 'Jardineira', 'Jardineiras'],
+ head: ['Bonés', 'Boné', 'Chapéus', 'Chapéu', 'Gorros', 'Gorro', 'Viseiras', 'Viseira', 'Tiaras', 'Tiara', 'Lenços', 'Lenço', 'Touca', 'Toucas', 'Boina', 'Turbante'],
+ top: ['Camisetas', 'Camiseta', 'Blusas', 'Blusa', 'Regatas', 'Regata', 'Tops', 'Top', 'Camisas', 'Camisa', 'Jaquetas', 'Jaqueta', 'Casacos', 'Casaco', 'Blazers', 'Blazer', 'Moletons', 'Moletom', 'Bodies', 'Body', 'Cropped', 'Croppeds', 'Colete', 'Coletes', 'Suéter', 'Cardigan', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto', 'Pijamas', 'Pijama'],
+ bottom: ['Calças', 'Calça', 'Shorts', 'Short', 'Bermudas', 'Bermuda', 'Saias', 'Saia', 'Leggings', 'Legging', 'Shorts Fitness', 'Vestidos', 'Vestido', 'Macacão', 'Macacões', 'Conjuntos', 'Conjunto', 'Pijamas', 'Pijama', 'Jardineira', 'Jardineiras'],
  feet: ['Tênis', 'Sandálias', 'Sandália', 'Botas', 'Bota', 'Calçados', 'Calçado', 'Sapato', 'Sapatos', 'Chinelo', 'Chinelos', 'Sapatilha', 'Sapatilhas'],
- accessory1: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Mochila', 'Mochilas', 'Carteira', 'Carteiras'],
- accessory2: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Colar', 'Colares', 'Brinco', 'Brincos', 'Pulseira', 'Pulseiras', 'Anel', 'Anéis'],
+ accessory1: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Pochetes', 'Pochete', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Mochila', 'Mochilas', 'Carteira', 'Carteiras', 'Gravatas', 'Gravata', 'Cachecóis', 'Cachecol'],
+ accessory2: ['Acessórios', 'Acessório', 'Bolsas', 'Bolsa', 'Cintos', 'Cinto', 'Relógios', 'Relógio', 'Óculos', 'Bijuterias', 'Bijuteria', 'Colar', 'Colares', 'Brinco', 'Brincos', 'Pulseira', 'Pulseiras', 'Anel', 'Anéis', 'Meias', 'Meia'],
 };
 
 const SLOTS = [

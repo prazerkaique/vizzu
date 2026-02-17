@@ -37,7 +37,7 @@ interface ParsedProduct {
   selected: boolean;
 }
 
-const CATEGORIES = ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness', 'Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs', 'Calçados', 'Tênis', 'Sandálias', 'Botas', 'Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Acessórios', 'Bonés', 'Chapéus', 'Tiaras', 'Lenços', 'Outros Acessórios'];
+const CATEGORIES = ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Coletes', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness', 'Vestidos', 'Macacões', 'Jardineiras', 'Conjuntos', 'Pijamas', 'Biquínis', 'Maiôs', 'Sungas', 'Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos', 'Bolsas', 'Mochilas', 'Pochetes', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Gravatas', 'Cachecóis', 'Meias', 'Acessórios', 'Bonés', 'Chapéus', 'Gorros', 'Viseiras', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
 // Mapeamento de colunas CSV → ângulos de imagem
 const FRONT_COLUMNS = ['frente', 'front', 'image_front', 'image', 'imagem', 'foto', 'image_link'];

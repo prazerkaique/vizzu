@@ -1144,6 +1144,146 @@ export const CATEGORY_ATTRIBUTES: CategoryAttributesMap = {
       ]
     }
   ],
+  'Conjuntos': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'casual', label: 'Casual', description: 'Conjunto para uso no dia a dia.' },
+        { id: 'fitness', label: 'Fitness', description: 'Conjunto para academia e treinos.' },
+        { id: 'social', label: 'Social', description: 'Conjunto elegante para ocasiões formais.' },
+        { id: 'praia', label: 'Praia', description: 'Conjunto para uso na praia ou piscina.' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo', description: 'Colado ao corpo, marca silhueta.' },
+        { id: 'regular', label: 'Regular', description: 'Ajustado com folga confortável.' },
+        { id: 'amplo', label: 'Amplo', description: 'Solto e fluido, movimento livre.' },
+      ]
+    }
+  ],
+  'Pijamas': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'curto', label: 'Curto', description: 'Shorts + camiseta/regata para noites quentes.' },
+        { id: 'longo', label: 'Longo', description: 'Calça + manga longa para noites frias.' },
+        { id: 'camisola', label: 'Camisola', description: 'Peça única tipo vestido para dormir.' },
+        { id: 'robe', label: 'Robe/Roupão', description: 'Roupão ou robe de amarrar.' },
+      ]
+    },
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo', description: 'Ajustado ao corpo tipo segunda pele.' },
+        { id: 'regular', label: 'Regular', description: 'Confortável com leve folga.' },
+        { id: 'amplo', label: 'Amplo', description: 'Bem folgado e solto, máximo conforto.' },
+      ]
+    }
+  ],
+  'Coletes': [
+    {
+      id: 'caimento',
+      label: 'Caimento',
+      options: [
+        { id: 'justo', label: 'Justo', description: 'Ajustado ao tronco, corte reto.' },
+        { id: 'regular', label: 'Regular', description: 'Levemente folgado, confortável.' },
+        { id: 'amplo', label: 'Amplo', description: 'Solto e oversized.' },
+      ]
+    },
+    {
+      id: 'comprimento',
+      label: 'Comprimento',
+      options: [
+        { id: 'curto', label: 'Curto', description: 'Termina na cintura.' },
+        { id: 'regular', label: 'Regular', description: 'Termina no quadril.' },
+        { id: 'longo', label: 'Longo', description: 'Abaixo do quadril, estilo colete longo.' },
+      ]
+    }
+  ],
+  'Sungas': [
+    {
+      id: 'cobertura',
+      label: 'Modelo',
+      options: [
+        { id: 'slip', label: 'Slip', description: 'Modelo tradicional, corte justo e lateral estreita.' },
+        { id: 'boxer', label: 'Boxer', description: 'Modelo shorts curto, maior cobertura.' },
+        { id: 'bermuda', label: 'Bermuda', description: 'Modelo mais longo tipo bermuda de praia.' },
+      ]
+    }
+  ],
+  'Gorros': [
+    {
+      id: 'estilo',
+      label: 'Estilo',
+      options: [
+        { id: 'beanie', label: 'Beanie', description: 'Gorro justo e rente à cabeça.' },
+        { id: 'touca', label: 'Touca', description: 'Gorro com caimento solto na ponta.' },
+        { id: 'pompom', label: 'Com pompom', description: 'Gorro com pompom decorativo no topo.' },
+      ]
+    }
+  ],
+  'Viseiras': [
+    {
+      id: 'estilo',
+      label: 'Estilo',
+      options: [
+        { id: 'esportiva', label: 'Esportiva', description: 'Viseira para prática esportiva.' },
+        { id: 'casual', label: 'Casual', description: 'Viseira para uso no dia a dia.' },
+        { id: 'praia', label: 'Praia', description: 'Viseira ampla para proteção solar.' },
+      ]
+    }
+  ],
+  'Pochetes': [
+    {
+      id: 'tamanho',
+      label: 'Tamanho',
+      options: [
+        { id: 'mini', label: 'Mini', description: 'Cabe celular e carteira apenas.' },
+        { id: 'media', label: 'Média', description: 'Tamanho padrão, cabe itens do dia a dia.' },
+        { id: 'grande', label: 'Grande', description: 'Maior capacidade, tipo shoulder bag.' },
+      ]
+    }
+  ],
+  'Gravatas': [
+    {
+      id: 'tipo',
+      label: 'Tipo',
+      options: [
+        { id: 'tradicional', label: 'Tradicional', description: 'Gravata longa clássica.' },
+        { id: 'borboleta', label: 'Borboleta', description: 'Gravata borboleta (bow tie).' },
+        { id: 'slim', label: 'Slim', description: 'Gravata fina e moderna.' },
+      ]
+    }
+  ],
+  'Cachecóis': [
+    {
+      id: 'tamanho',
+      label: 'Tamanho',
+      options: [
+        { id: 'curto', label: 'Curto', description: 'Cachecol curto tipo gola.' },
+        { id: 'medio', label: 'Médio', description: 'Tamanho padrão, dá uma volta no pescoço.' },
+        { id: 'longo', label: 'Longo', description: 'Cachecol longo, permite várias voltas ou usar caído.' },
+      ]
+    }
+  ],
+  'Meias': [
+    {
+      id: 'cano',
+      label: 'Cano',
+      options: [
+        { id: 'invisivel', label: 'Invisível', description: 'Sapatilha/no-show, não aparece com o calçado.' },
+        { id: 'curto', label: 'Curto', description: 'Soquete, cobre apenas o tornozelo.' },
+        { id: 'medio', label: 'Médio', description: 'Cano médio, até metade da canela.' },
+        { id: 'longo', label: 'Longo', description: 'Cano alto, até abaixo do joelho.' },
+      ]
+    }
+  ],
 };
 
 // ═══════════════════════════════════════════════════════════════

@@ -7,10 +7,10 @@ export type ProductType = 'clothing' | 'footwear' | 'headwear' | 'bag' | 'access
 
 // ── Listas de categorias ──────────────────────────────────────────
 export const CLOTHING_CATEGORIES = [
-  'Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies',
+  'Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Coletes',
   'Jaquetas', 'Casacos', 'Blazers', 'Moletons', 'Calças', 'Shorts',
   'Bermudas', 'Saias', 'Leggings', 'Vestidos', 'Macacões', 'Jardineiras',
-  'Biquínis', 'Maiôs', 'Shorts Fitness'
+  'Conjuntos', 'Pijamas', 'Biquínis', 'Maiôs', 'Sungas', 'Shorts Fitness'
 ];
 
 export const FOOTWEAR_CATEGORIES = ['Calçados', 'Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'];
@@ -19,7 +19,7 @@ export const HEADWEAR_CATEGORIES = ['Bonés', 'Chapéus', 'Gorros', 'Viseiras'];
 
 export const BAG_CATEGORIES = ['Bolsas', 'Mochilas', 'Pochetes', 'Necessaires'];
 
-export const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Acessórios', 'Tiaras', 'Lenços', 'Outros Acessórios'];
+export const ACCESSORY_CATEGORIES = ['Óculos', 'Bijuterias', 'Relógios', 'Cintos', 'Gravatas', 'Cachecóis', 'Meias', 'Acessórios', 'Tiaras', 'Lenços', 'Outros Acessórios'];
 
 // ── Detecção de tipo ──────────────────────────────────────────────
 export function getProductType(category: string | undefined | null): ProductType {

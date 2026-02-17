@@ -21,12 +21,12 @@ import { PRODUCTS_TOUR_STOPS } from '../components/onboarding/tourStops';
 import { useOnboarding } from '../hooks/useOnboarding';
 
 const CATEGORY_GROUPS = [
- { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Tiaras', 'Lenços'] },
- { id: 'parte-de-cima', label: 'Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
+ { id: 'cabeca', label: 'Cabeça', items: ['Bonés', 'Chapéus', 'Gorros', 'Viseiras', 'Tiaras', 'Lenços'] },
+ { id: 'parte-de-cima', label: 'Parte de Cima', items: ['Camisetas', 'Blusas', 'Regatas', 'Tops', 'Camisas', 'Bodies', 'Coletes', 'Jaquetas', 'Casacos', 'Blazers', 'Moletons'] },
  { id: 'parte-de-baixo', label: 'Parte de Baixo', items: ['Calças', 'Shorts', 'Bermudas', 'Saias', 'Leggings', 'Shorts Fitness'] },
- { id: 'pecas-inteiras', label: 'Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Biquínis', 'Maiôs'] },
+ { id: 'pecas-inteiras', label: 'Peças Inteiras', items: ['Vestidos', 'Macacões', 'Jardineiras', 'Conjuntos', 'Pijamas', 'Biquínis', 'Maiôs', 'Sungas'] },
  { id: 'calcados', label: 'Calçados', items: ['Tênis', 'Sandálias', 'Botas', 'Sapatos', 'Chinelos'] },
- { id: 'acessorios', label: 'Acessórios', items: ['Bolsas', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Mochilas', 'Outros Acessórios'] },
+ { id: 'acessorios', label: 'Acessórios', items: ['Bolsas', 'Mochilas', 'Pochetes', 'Cintos', 'Relógios', 'Óculos', 'Bijuterias', 'Gravatas', 'Cachecóis', 'Meias', 'Outros Acessórios'] },
 ];
 const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 const getCategoryGroupBySubcategory = (subcategory: string) => CATEGORY_GROUPS.find(g => g.items.includes(subcategory));
@@ -422,19 +422,23 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
   }) => {
    const categoryMap: Record<string, string> = {
    'Boné': 'Bonés', 'Chapéu': 'Chapéus', 'Tiara': 'Tiaras', 'Lenço': 'Lenços',
+   'Gorro': 'Gorros', 'Viseira': 'Viseiras',
    'Camiseta': 'Camisetas', 'Blusa': 'Blusas', 'Regata': 'Regatas', 'Top': 'Tops',
    'Camisa': 'Camisas', 'Body': 'Bodies', 'Jaqueta': 'Jaquetas', 'Casaco': 'Casacos',
    'Blazer': 'Blazers', 'Moletom': 'Moletons', 'Cropped': 'Tops', 'Suéter': 'Moletons',
-   'Cardigan': 'Casacos', 'Colete': 'Casacos',
+   'Cardigan': 'Casacos', 'Colete': 'Coletes', 'Lingerie': 'Bodies',
    'Calça': 'Calças', 'Shorts': 'Shorts', 'Bermuda': 'Bermudas', 'Saia': 'Saias',
    'Legging': 'Leggings', 'Short Fitness': 'Shorts Fitness',
    'Vestido': 'Vestidos', 'Macacão': 'Macacões', 'Jardineira': 'Jardineiras',
-   'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+   'Conjunto': 'Conjuntos', 'Pijama': 'Pijamas', 'Biquíni': 'Biquínis', 'Maiô': 'Maiôs',
+   'Sunga': 'Sungas',
    'Tênis': 'Tênis', 'Sandália': 'Sandálias', 'Bota': 'Botas', 'Sapato': 'Calçados',
    'Chinelo': 'Sandálias', 'Sapatilha': 'Calçados',
-   'Bolsa': 'Bolsas', 'Mochila': 'Bolsas', 'Cinto': 'Cintos', 'Relógio': 'Relógios',
+   'Bolsa': 'Bolsas', 'Mochila': 'Mochilas', 'Pochete': 'Pochetes', 'Necessaire': 'Pochetes',
+   'Cinto': 'Cintos', 'Relógio': 'Relógios',
    'Óculos': 'Óculos', 'Brinco': 'Bijuterias', 'Colar': 'Bijuterias', 'Pulseira': 'Bijuterias',
-   'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias',
+   'Anel': 'Bijuterias', 'Bijuteria': 'Bijuterias', 'Acessório': 'Outros Acessórios',
+   'Gravata': 'Gravatas', 'Meia': 'Meias', 'Cachecol': 'Cachecóis',
    };
    const categoryToPluralMap: Record<string, string> = { ...categoryMap };
    const fitToAttributeMap: Record<string, string> = {
@@ -1140,7 +1144,7 @@ export function ProductsPage({ productForCreation, setProductForCreation }: Prod
  const hasData = !!(getImage('front') || newProduct.name || newProduct.category);
  if (hasData) { setShowDiscardConfirm(true); return; }
  setShowCreateProduct(false); clearAllImages(); setEditingProduct(null);
- }} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full hidden md:flex items-center justify-center'}>
+ }} className={(theme !== 'light' ? 'bg-neutral-800 text-neutral-400 hover:text-white' : 'bg-gray-100 text-gray-500 hover:text-gray-700') + ' w-7 h-7 rounded-full flex items-center justify-center'}>
  <i className="fas fa-times text-xs"></i>
  </button>
  </div>
