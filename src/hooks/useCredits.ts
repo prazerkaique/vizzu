@@ -17,6 +17,9 @@ export const RESOLUTION_COST: Record<string, number> = {
   '4k': 2,
 };
 
+// Preço fixo por crédito avulso (deve bater com o Stripe)
+export const INDIVIDUAL_CREDIT_PRICE = 3.50;
+
 // Helper para verificar se plano permite resolução
 export const canUseResolution = (plan: { maxResolution: '2k' | '4k' }, resolution: '2k' | '4k'): boolean => {
   if (resolution === '2k') return true;

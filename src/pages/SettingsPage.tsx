@@ -3,7 +3,7 @@ import { CompanySettings } from '../types';
 import { useUI, type SettingsTab } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
-import { CREDIT_PACKAGES } from '../hooks/useCredits';
+import { CREDIT_PACKAGES, INDIVIDUAL_CREDIT_PRICE } from '../hooks/useCredits';
 import { usePlans } from '../contexts/PlansContext';
 import type { VizzuTheme } from '../contexts/UIContext';
 import { supabase } from '../services/supabaseClient';
@@ -650,7 +650,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {expandAllFeatures && !isTrial && !isEnterprise && (
  <li className={'flex items-center justify-between text-[10px] pt-1 mt-1 border-t ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
  <span className={theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'}>Crédito extra</span>
- <span className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {plan.creditPrice.toFixed(2).replace('.', ',')}</span>
+ <span className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' font-medium'}>R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}</span>
  </li>
  )}
  </ul>
@@ -724,7 +724,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  <div>
  <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Créditos adicionais</h4>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')} por crédito no plano {currentPlan.name}</p>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')} por crédito</p>
  </div>
  </div>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -738,7 +738,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-bold text-xl'}>{amount}</p>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-1'}>créditos</p>
  <p className={(theme !== 'light' ? 'text-neutral-300' : 'text-gray-700') + ' font-semibold text-xs'}>
- R$ {(amount * currentPlan.creditPrice).toFixed(2).replace('.', ',')}
+ R$ {(amount * INDIVIDUAL_CREDIT_PRICE).toFixed(2).replace('.', ',')}
  </p>
  </button>
  ))}

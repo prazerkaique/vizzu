@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect } from 'react';
-import { Plan, CREDIT_PACKAGES } from '../hooks/useCredits';
+import { Plan, CREDIT_PACKAGES, INDIVIDUAL_CREDIT_PRICE } from '../hooks/useCredits';
 import { usePlans } from '../contexts/PlansContext';
 import { supabase } from '../services/supabaseClient';
 import type { VizzuTheme } from '../contexts/UIContext';
@@ -74,9 +74,9 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  const actionText = ACTION_CONTEXT_TEXT[actionContext] || ACTION_CONTEXT_TEXT.generic;
 
- // Calcular preço dos créditos baseado no plano
+ // Calcular preço dos créditos (preço fixo — bate com Stripe)
  const getCreditPackagePrice = (amount: number) => {
- return (amount * currentPlan.creditPrice).toFixed(2).replace('.', ',');
+ return (amount * INDIVIDUAL_CREDIT_PRICE).toFixed(2).replace('.', ',');
  };
 
  // Encontrar próximo plano para upgrade
@@ -184,7 +184,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <div className="flex justify-center mb-4">
  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
  <i className="fas fa-crown"></i>
- Você tem o melhor preço: R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito
+ R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}/crédito
  </span>
  </div>
  )}
@@ -265,7 +265,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {currentPlan.id === 'basic' && nextPlan && (
  <p className={`text-[10px] text-center mt-4 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
  <i className="fas fa-info-circle mr-1"></i>
- No plano {nextPlan.name} você paga R$ {nextPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito (economia de {Math.round((1 - nextPlan.creditPrice / currentPlan.creditPrice) * 100)}%)
+ No plano {nextPlan.name} você ganha mais créditos mensais por um custo menor
  </p>
  )}
 
@@ -406,7 +406,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  {/* Preço por crédito */}
  <p className={`text-[10px] mt-3 pt-3 border-t ${isDark ? 'border-gray-200 text-zinc-500' : 'border-gray-200 text-gray-400'}`}>
- R$ {plan.creditPrice.toFixed(2).replace('.', ',')}/crédito
+ R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}/crédito
  </p>
  </div>
  );
@@ -423,7 +423,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
 
  <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- Seu preço: <span className="text-[#FF6B6B] font-semibold">R$ {currentPlan.creditPrice.toFixed(2).replace('.', ',')}/crédito</span> (baseado no plano {currentPlan.name})
+ Crédito avulso: <span className="text-[#FF6B6B] font-semibold">R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}/crédito</span>
  </p>
 
  {/* Grid de pacotes */}
