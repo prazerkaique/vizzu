@@ -45,7 +45,7 @@ export function OptimizedImage({
   }
 
   return (
-    <div className={'relative overflow-hidden ' + className} style={style} onClick={onClick}>
+    <div className={'relative overflow-hidden ' + (objectFit === 'contain' ? 'flex items-center justify-center ' : '') + className} style={style} onClick={onClick}>
       {!loaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-neutral-800 dark:to-neutral-700 animate-pulse" />
       )}
