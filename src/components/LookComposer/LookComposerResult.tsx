@@ -664,13 +664,13 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </p>
 
  <div className="grid grid-cols-5 gap-2">
- {/* Gerar Novamente */}
+ {/* Refinar */}
  <button
  onClick={onRegenerate}
  className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
  >
- <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-rotate text-sm'}></i>
- <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Refazer</span>
+ <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-sliders text-sm'}></i>
+ <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Refinar</span>
  </button>
 
  {/* Editar */}

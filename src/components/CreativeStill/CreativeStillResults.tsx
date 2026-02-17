@@ -469,10 +469,10 @@ export const CreativeStillResults: React.FC<Props> = ({
   </>
  )}
  <button
- onClick={onGenerateAgain}
+ onClick={onBackToHome}
  className={'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ' + (isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200')}
  >
- <i className="fas fa-redo text-xs"></i>Gerar Novas Variações
+ <i className="fas fa-sliders text-xs"></i>Refinar
  </button>
  <button
  onClick={onBackToHome}
