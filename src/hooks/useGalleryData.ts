@@ -9,12 +9,12 @@ import type { Product } from '../types';
 // Tipos da Galeria
 // ═══════════════════════════════════════════════════════════════
 
+// Cenário Criativo → mesclado em Still Criativo
+// Studio Ready / Modelo IA → mesclado em Product Studio
 export type FeatureType =
   | 'product-studio'
   | 'creative-still'
   | 'look-composer'
-  | 'studio-ready'
-  | 'cenario-criativo'
   | 'provador';
 
 export interface GalleryItem {
@@ -42,16 +42,14 @@ export interface GalleryStats {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Labels e cores por feature
+// Config por feature (ícone + label)
 // ═══════════════════════════════════════════════════════════════
 
-export const FEATURE_CONFIG: Record<FeatureType, { label: string; icon: string; color: string; bgClass: string }> = {
-  'product-studio': { label: 'Product Studio', icon: 'fa-camera', color: '#a855f7', bgClass: 'bg-purple-500' },
-  'creative-still': { label: 'Still Criativo', icon: 'fa-gem', color: '#FF6B6B', bgClass: 'bg-[#FF6B6B]' },
-  'look-composer': { label: 'Look Composer', icon: 'fa-layer-group', color: '#3b82f6', bgClass: 'bg-blue-500' },
-  'studio-ready': { label: 'Modelo IA', icon: 'fa-cube', color: '#22c55e', bgClass: 'bg-green-500' },
-  'cenario-criativo': { label: 'Cenário Criativo', icon: 'fa-mountain-sun', color: '#f59e0b', bgClass: 'bg-amber-500' },
-  'provador': { label: 'Provador', icon: 'fa-shirt', color: '#ec4899', bgClass: 'bg-pink-500' },
+export const FEATURE_CONFIG: Record<FeatureType, { label: string; icon: string }> = {
+  'product-studio': { label: 'Product Studio', icon: 'fa-camera' },
+  'creative-still': { label: 'Still Criativo', icon: 'fa-gem' },
+  'look-composer': { label: 'Look Composer', icon: 'fa-layer-group' },
+  'provador': { label: 'Provador', icon: 'fa-shirt' },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -71,7 +69,7 @@ function extractFromProducts(products: Product[]): GalleryItem[] {
 
     const originalUrl = getOriginalFrontUrl(product);
 
-    // Product Studio
+    // Product Studio (sessions com múltiplos ângulos)
     for (const session of gen.productStudio || []) {
       if (session.status !== 'ready') continue;
       for (const img of session.images) {
@@ -84,6 +82,32 @@ function extractFromProducts(products: Product[]): GalleryItem[] {
           originalImageUrl: originalUrl,
           createdAt: img.createdAt || session.createdAt,
           metadata: { angle: img.angle, sessionId: session.id },
+        });
+      }
+    }
+
+    // Studio Ready (antigo "Modelo IA") → mescla em Product Studio
+    for (const set of gen.studioReady || []) {
+      items.push({
+        id: `sr-${set.id}`,
+        imageUrl: set.images.front,
+        featureType: 'product-studio',
+        productId: product.id,
+        productName: product.name,
+        originalImageUrl: originalUrl,
+        createdAt: set.createdAt,
+        metadata: { generationId: set.id, view: 'front' },
+      });
+      if (set.images.back) {
+        items.push({
+          id: `sr-${set.id}-back`,
+          imageUrl: set.images.back,
+          featureType: 'product-studio',
+          productId: product.id,
+          productName: product.name,
+          originalImageUrl: originalUrl,
+          createdAt: set.createdAt,
+          metadata: { generationId: set.id, view: 'back' },
         });
       }
     }
@@ -114,38 +138,12 @@ function extractFromProducts(products: Product[]): GalleryItem[] {
       }
     }
 
-    // Studio Ready (Modelo IA sob medida)
-    for (const set of gen.studioReady || []) {
-      items.push({
-        id: `sr-${set.id}`,
-        imageUrl: set.images.front,
-        featureType: 'studio-ready',
-        productId: product.id,
-        productName: product.name,
-        originalImageUrl: originalUrl,
-        createdAt: set.createdAt,
-        metadata: { generationId: set.id, view: 'front' },
-      });
-      if (set.images.back) {
-        items.push({
-          id: `sr-${set.id}-back`,
-          imageUrl: set.images.back,
-          featureType: 'studio-ready',
-          productId: product.id,
-          productName: product.name,
-          originalImageUrl: originalUrl,
-          createdAt: set.createdAt,
-          metadata: { generationId: set.id, view: 'back' },
-        });
-      }
-    }
-
-    // Cenário Criativo
+    // Cenário Criativo → mescla em Still Criativo
     for (const set of gen.cenarioCriativo || []) {
       items.push({
         id: `cc-${set.id}`,
         imageUrl: set.images.front,
-        featureType: 'cenario-criativo',
+        featureType: 'creative-still',
         productId: product.id,
         productName: product.name,
         originalImageUrl: originalUrl,
@@ -156,7 +154,7 @@ function extractFromProducts(products: Product[]): GalleryItem[] {
         items.push({
           id: `cc-${set.id}-back`,
           imageUrl: set.images.back,
-          featureType: 'cenario-criativo',
+          featureType: 'creative-still',
           productId: product.id,
           productName: product.name,
           originalImageUrl: originalUrl,
@@ -208,7 +206,6 @@ export function useGalleryData() {
             const productName = gen.settings_snapshot?.product_name || 'Still Criativo';
             const productId = gen.product_id || undefined;
 
-            // Buscar original do produto se disponível
             const matchProduct = productId ? products.find(p => p.id === productId) : undefined;
             const originalUrl = matchProduct ? getOriginalFrontUrl(matchProduct) : undefined;
 
@@ -232,7 +229,7 @@ export function useGalleryData() {
       });
   }, [user?.id, products]);
 
-  // Itens de produtos (PS, LC, SR, CC)
+  // Itens de produtos (PS + SR mesclados, LC, CC mesclado em CS)
   const productItems = useMemo(() => extractFromProducts(products), [products]);
 
   // Itens do Provador
@@ -262,8 +259,6 @@ export function useGalleryData() {
       'product-studio': 0,
       'creative-still': 0,
       'look-composer': 0,
-      'studio-ready': 0,
-      'cenario-criativo': 0,
       'provador': 0,
     };
 
