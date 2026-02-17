@@ -144,6 +144,7 @@ const PRESET_BACKGROUNDS: Array<{
  { id: 'rooftop', name: 'Rooftop', url: '/bg-rooftop.png', category: 'urbano', icon: 'fa-building', sceneHint: 'modern rooftop terrace with city skyline, string lights overhead, model standing on concrete floor, golden hour sunset' },
  { id: 'cafe', name: 'Cafeteria', url: '/bg-cafeteria.png', category: 'interior', icon: 'fa-mug-hot', sceneHint: 'stylish cafe interior with brick walls, wooden furniture, warm natural light from large windows, model standing on wooden floor' },
  { id: 'tropical-beach', name: 'Praia', url: '/bg-praia.png', category: 'natureza', icon: 'fa-water', sceneHint: 'tropical beach with white sand and palm trees, turquoise ocean water, model standing on sandy beach, golden hour lighting' },
+ { id: 'sunset-beach', name: 'Praia Pôr do Sol', url: '/bg-praia-por-do-sol.png', category: 'natureza', icon: 'fa-sun', sceneHint: 'beach at golden sunset, dramatic orange sky, waves crashing, model standing on wet sand with sun reflection, warm golden light' },
 ];
 
 // Tipo para fundo salvo
