@@ -463,21 +463,21 @@ html.theme-hc ::-webkit-scrollbar-thumb:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
-/* TEMA V2 — Clean & Minimal (variante light com cores frias)     */
-/* Background cream (#F7F5F2) → cinza frio (#F9FAFB)             */
+/* TEMA V2 — Clean & Minimal (tudo branco puro)                   */
+/* Background cream (#F7F5F2) → branco (#FFFFFF)                  */
 /* Sidebar (#EFEBE6) → branco puro (#FFFFFF)                     */
 /* ═══════════════════════════════════════════════════════════════ */
 
 /* Background principal (attribute selector pega bg-cream E bg-cream/95 etc.) */
 html.theme-v2 [class*="bg-cream"],
 html.theme-v2 [class*="bg-[#f7f5f2]"] {
-  background-color: #F9FAFB !important;
+  background-color: #FFFFFF !important;
 }
 
 /* Body + root background */
 html.theme-v2,
 html.theme-v2 body {
-  background-color: #F9FAFB !important;
+  background-color: #FFFFFF !important;
 }
 
 /* Sidebar e cards secundários */
@@ -719,7 +719,7 @@ body.modal-open {
 
   /* V2 no PWA standalone */
   html.theme-v2 body {
-    background-color: #F9FAFB !important;
+    background-color: #FFFFFF !important;
   }
 
   /* Bottom nav no PWA - compacto, apenas safe-area necessária */
