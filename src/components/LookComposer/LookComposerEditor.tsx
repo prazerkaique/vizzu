@@ -136,7 +136,7 @@ const PRESET_BACKGROUNDS: Array<{
  sceneHint: string;
 }> = [
  { id: 'solid-color', name: 'Cor Sólida', url: '', category: 'solid', icon: 'fa-palette', sceneHint: 'solid colored background, studio lighting, model standing on matching colored floor' },
- { id: 'photo-studio', name: 'Estúdio Fotográfico', url: 'https://images.unsplash.com/photo-1604014237800-1c9102c219da?w=1200', category: 'estudio', icon: 'fa-camera', sceneHint: 'professional photo studio with white seamless backdrop and floor, soft studio lighting' },
+ { id: 'photo-studio', name: 'Estúdio Fotográfico', url: '/studio-bg-example.jpeg', category: 'estudio', icon: 'fa-camera', sceneHint: 'professional photo studio with gray seamless backdrop and floor, soft studio lighting' },
  { id: 'green-garden', name: 'Jardim Verde', url: 'https://images.unsplash.com/photo-1558293842-c0fd3db86157?w=1200', category: 'natureza', icon: 'fa-leaf', sceneHint: 'lush green garden with grass, model standing naturally on the grass, natural daylight, outdoor setting' },
  { id: 'minimalist-room', name: 'Sala Minimalista', url: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200', category: 'interior', icon: 'fa-couch', sceneHint: 'modern minimalist room interior, model standing on wooden floor, natural light from large windows' },
  { id: 'mountain-trail', name: 'Trilha na Montanha', url: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=1200', category: 'natureza', icon: 'fa-mountain', sceneHint: 'scenic mountain hiking trail, model standing on rocky trail path, mountains in background, outdoor adventure setting' },
@@ -2665,13 +2665,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  {currentStep === 'background' || currentStep === 'views' ? (
  backgroundType === 'studio' ? (
  // Fundo Estúdio Cinza
- <div className="w-full h-full min-h-[300px] rounded-lg bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center">
- <div className="text-center">
- <i className="fas fa-camera text-gray-500/50 text-5xl mb-3"></i>
- <p className="text-gray-600 text-sm font-medium">Fundo Estúdio Cinza</p>
- <p className="text-gray-500 text-xs">Fundo neutro profissional</p>
- </div>
- </div>
+ <img
+ src="/studio-bg-example.jpeg"
+ alt="Fundo Estúdio Cinza"
+ className="w-full h-full min-h-[300px] object-cover rounded-lg"
+ />
  ) : customBackground ? (
  // Fundo personalizado (upload)
  <img
