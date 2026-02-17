@@ -480,10 +480,10 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  const pct = (v: number) => totalCredits > 0 ? Math.round((v / totalCredits) * 100) : 0;
 
  const categories = [
-   { label: 'Vizzu Product Studio®', count: studioCount, pct: pct(studioCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-[#A855F7] to-indigo-500' },
-   { label: 'Vizzu Look Composer®', count: lookCount, pct: pct(lookCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-amber-500 to-[#FF9F43]' },
-   { label: 'Vizzu Provador®', count: provadorCount, pct: pct(provadorCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-[#FF6B6B] to-[#FF9F43]' },
-   { label: 'Vizzu Still Criativo®', count: stillCount, pct: pct(stillCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-emerald-500 to-teal-500' },
+   { label: 'Vizzu Product Studio®', count: studioCount, pct: pct(studioCount), gradient: isV2 ? 'from-[#FF6B6B] to-[#FF9F43]' : 'from-[#A855F7] to-indigo-500' },
+   { label: 'Vizzu Look Composer®', count: lookCount, pct: pct(lookCount), gradient: isV2 ? 'from-[#FF6B6B] to-[#FF9F43]' : 'from-amber-500 to-[#FF9F43]' },
+   { label: 'Vizzu Provador®', count: provadorCount, pct: pct(provadorCount), gradient: isV2 ? 'from-[#FF6B6B] to-[#FF9F43]' : 'from-[#FF6B6B] to-[#FF9F43]' },
+   { label: 'Vizzu Still Criativo®', count: stillCount, pct: pct(stillCount), gradient: isV2 ? 'from-[#FF6B6B] to-[#FF9F43]' : 'from-emerald-500 to-teal-500' },
    ...(otherCount > 0 ? [{ label: 'Outros', count: otherCount, pct: pct(otherCount), gradient: 'from-gray-400 to-gray-500' }] : []),
  ];
 
@@ -491,7 +491,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <div className={'rounded-2xl p-5 mb-4 ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
- <i className={'fas fa-chart-bar text-sm ' + (isV2 ? 'text-gray-400' : theme !== 'light' ? 'text-indigo-400' : 'text-indigo-500')}></i>
+ <i className={'fas fa-chart-bar text-sm ' + (isV2 ? 'text-[#FF6B6B]' : theme !== 'light' ? 'text-indigo-400' : 'text-indigo-500')}></i>
  <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
  </div>
  <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>{totalCredits} créditos usados</span>

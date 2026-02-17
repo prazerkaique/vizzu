@@ -133,7 +133,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('vizzu_theme', selectedTheme);
     const themeColorMeta = document.querySelector('meta[name="theme-color"]:not([media])') || document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', isV2 ? '#F9FAFB' : theme === 'light' ? '#F8F6F2' : '#000000');
+      themeColorMeta.setAttribute('content', isV2 ? '#FFFFFF' : theme === 'light' ? '#F8F6F2' : '#000000');
     }
     document.documentElement.classList.toggle('theme-hc', selectedTheme === 'high-contrast');
     document.documentElement.classList.toggle('theme-v2', isV2);
