@@ -782,6 +782,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <div>
  <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Integrações</h3>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Conecte o Vizzu com suas plataformas de e-commerce.</p>
+
+ {currentPlan.id === 'premier' || currentPlan.id === 'enterprise' ? (
  <div className="space-y-2">
 
  {/* Shopify — funcional */}
@@ -806,6 +808,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  ))}
  </div>
+ ) : (
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-6 text-center'}>
+ <div className={'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ' + (theme !== 'light' ? 'bg-amber-500/10' : 'bg-amber-50')}>
+ <i className="fas fa-lock text-xl text-amber-500"></i>
+ </div>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Disponível a partir do Premier</h4>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>
+ Integre o Vizzu com Shopify, WooCommerce e VTEX para sincronizar produtos e exportar imagens diretamente.
+ </p>
+ <button
+ onClick={() => { setSettingsTab('plan'); }}
+ className="px-5 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all"
+ >
+ <i className="fas fa-arrow-up mr-2"></i>
+ Fazer upgrade para Premier
+ </button>
+ </div>
+ )}
  </div>
  )}
 
