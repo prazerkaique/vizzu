@@ -462,6 +462,56 @@ html.theme-hc ::-webkit-scrollbar-thumb:hover {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════ */
+/* TEMA V2 — Clean & Minimal (variante light com cores frias)     */
+/* Background cream (#F7F5F2) → cinza frio (#F9FAFB)             */
+/* Sidebar (#EFEBE6) → branco puro (#FFFFFF)                     */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Background principal */
+html.theme-v2 .bg-cream,
+html.theme-v2 [class*="bg-[#f7f5f2]"] {
+  background-color: #F9FAFB !important;
+}
+
+/* Body + root background */
+html.theme-v2,
+html.theme-v2 body {
+  background-color: #F9FAFB !important;
+}
+
+/* Sidebar e cards secundários */
+html.theme-v2 [class*="bg-[#efebe6]"] {
+  background-color: #FFFFFF !important;
+}
+
+/* Bordas sidebar/dividers — tom mais frio */
+html.theme-v2 [class*="border-[#e5e6ea]"] {
+  border-color: #E5E7EB !important;
+}
+
+/* Texto sidebar — mais frio */
+html.theme-v2 [class*="text-[#373632]"] {
+  color: #111827 !important;
+}
+
+/* bg-white/80 cards → branco puro no V2 */
+html.theme-v2 [class*="bg-white/8"] {
+  background-color: #FFFFFF !important;
+}
+
+/* bg-white/60 → usa cor neutra fria (exceto sidebar active que é via JS) */
+html.theme-v2 [class*="bg-white/6"] {
+  background-color: rgba(255,255,255,0.8) !important;
+}
+
+/* bg-white/40 hover → hover frio sutil */
+html.theme-v2 [class*="bg-white/4"] {
+  background-color: rgba(243,244,246,0.6) !important;
+}
+
+/* ────────────────────────────────────────────────── */
+
 /* Line Clamp */
 .line-clamp-2 {
   display: -webkit-box;
@@ -495,7 +545,7 @@ html, body {
   overflow: hidden;
   height: 100%;
   height: 100dvh; /* Dynamic viewport height - considera barra do navegador */
-  background-color: #f7f5f2; /* Cream beige - cor base do app */
+  background-color: #f7f5f2; /* Cream beige - cor base do app (V2 overridden via .theme-v2) */
 }
 
 /* Container principal do app */

@@ -86,7 +86,7 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ setProductForCreation, onOpenClientDetail }: DashboardPageProps) {
- const { theme, navigateTo, setSettingsTab } = useUI();
+ const { theme, isV2, navigateTo, setSettingsTab } = useUI();
  const { user } = useAuth();
  const { products } = useProducts();
  const { clients, clientLooks } = useClients();
@@ -210,7 +210,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <div>
  <div className="flex items-center gap-2 mb-1">
  <h1 className={'text-xl font-extrabold ' + (theme !== 'light' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
- <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>
+ {!isV2 && <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>}
  </div>
  <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
  Bem-vindo, <span className="font-medium">{userName}</span>
@@ -375,7 +375,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <div className={'rounded-2xl p-5 mb-4 ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
- <i className={'fas fa-sparkles text-sm text-[#FF6B6B]'}></i>
+ {!isV2 && <i className={'fas fa-sparkles text-sm text-[#FF6B6B]'}></i>}
  <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Últimas Criações</h2>
  </div>
  {sortedCreations.length > 0 && (
@@ -444,45 +444,23 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
 
  {/* STATS GRID - 4 Cards (buttons para acessibilidade) */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
- {/* Produtos Cadastrados */}
- <button onClick={() => navigateTo('products')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ {[
+   { label: 'Produtos cadastrados', v2Label: 'PRODUTOS CADASTRADOS', value: products.length, icon: 'fa-box', color: 'text-[#FF6B6B]', onClick: () => navigateTo('products') },
+   { label: 'Produtos com imagens IA', v2Label: 'COM IMAGENS IA', value: dashboardStats.optimizedProducts, icon: 'fa-wand-magic-sparkles', color: 'text-[#A855F7]', onClick: () => navigateTo('product-studio') },
+   { label: 'Imagens geradas', v2Label: 'IMAGENS GERADAS', value: dashboardStats.totalGenerations, icon: 'fa-images', color: 'text-[#FF9F43]', onClick: () => { navigateTo('settings'); setSettingsTab('history'); } },
+   { label: 'Clientes cadastrados', v2Label: 'CLIENTES', value: clients.length, icon: 'fa-users', color: 'text-[#4ADE80]', onClick: () => navigateTo('clients') },
+ ].map((stat) => (
+ <button key={stat.label} onClick={stat.onClick} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : isV2 ? 'bg-white border border-gray-200' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
+ {!isV2 && (
  <div className="flex items-start justify-between mb-2">
- <i className="fas fa-box text-sm text-[#FF6B6B]"></i>
+ <i className={'fas ' + stat.icon + ' text-sm ' + stat.color}></i>
  <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
  </div>
- <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{products.length}</p>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos cadastrados</p>
+ )}
+ <p className={(isV2 ? 'text-3xl font-extrabold text-gray-900' : 'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900'))}>{stat.value}</p>
+ <p className={(isV2 ? 'text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1' : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]')}>{isV2 ? stat.v2Label : stat.label}</p>
  </button>
-
- {/* Produtos com Imagens IA */}
- <button onClick={() => navigateTo('product-studio')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
- <div className="flex items-start justify-between mb-2">
- <i className="fas fa-wand-magic-sparkles text-sm text-[#A855F7]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
- </div>
- <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{dashboardStats.optimizedProducts}</p>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Produtos com imagens IA</p>
- </button>
-
- {/* Imagens Geradas */}
- <button onClick={() => { navigateTo('settings'); setSettingsTab('history'); }} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
- <div className="flex items-start justify-between mb-2">
- <i className="fas fa-images text-sm text-[#FF9F43]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
- </div>
- <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{dashboardStats.totalGenerations}</p>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Imagens geradas</p>
- </button>
-
- {/* Clientes Cadastrados */}
- <button onClick={() => navigateTo('clients')} className={'rounded-xl p-4 cursor-pointer transition-transform active:scale-95 hover:scale-[1.02] text-left ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
- <div className="flex items-start justify-between mb-2">
- <i className="fas fa-users text-sm text-[#4ADE80]"></i>
- <i className={'fas fa-arrow-right text-[8px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-gray-300')}></i>
- </div>
- <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>{clients.length}</p>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>Clientes cadastrados</p>
- </button>
+ ))}
  </div>
 
  {/* USO DE CRÉDITOS - Todas as categorias */}
@@ -502,10 +480,10 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  const pct = (v: number) => totalCredits > 0 ? Math.round((v / totalCredits) * 100) : 0;
 
  const categories = [
-   { label: 'Vizzu Product Studio®', count: studioCount, pct: pct(studioCount), gradient: 'from-[#A855F7] to-indigo-500' },
-   { label: 'Vizzu Look Composer®', count: lookCount, pct: pct(lookCount), gradient: 'from-amber-500 to-[#FF9F43]' },
-   { label: 'Vizzu Provador®', count: provadorCount, pct: pct(provadorCount), gradient: 'from-[#FF6B6B] to-[#FF9F43]' },
-   { label: 'Vizzu Still Criativo®', count: stillCount, pct: pct(stillCount), gradient: 'from-emerald-500 to-teal-500' },
+   { label: 'Vizzu Product Studio®', count: studioCount, pct: pct(studioCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-[#A855F7] to-indigo-500' },
+   { label: 'Vizzu Look Composer®', count: lookCount, pct: pct(lookCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-amber-500 to-[#FF9F43]' },
+   { label: 'Vizzu Provador®', count: provadorCount, pct: pct(provadorCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-[#FF6B6B] to-[#FF9F43]' },
+   { label: 'Vizzu Still Criativo®', count: stillCount, pct: pct(stillCount), gradient: isV2 ? 'from-gray-400 to-gray-500' : 'from-emerald-500 to-teal-500' },
    ...(otherCount > 0 ? [{ label: 'Outros', count: otherCount, pct: pct(otherCount), gradient: 'from-gray-400 to-gray-500' }] : []),
  ];
 
@@ -513,7 +491,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <div className={'rounded-2xl p-5 mb-4 ' + (theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border border-neutral-800' : 'bg-white/80 backdrop-blur-xl border border-gray-200')}>
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2">
- <i className={'fas fa-chart-bar text-sm ' + (theme !== 'light' ? 'text-indigo-400' : 'text-indigo-500')}></i>
+ <i className={'fas fa-chart-bar text-sm ' + (isV2 ? 'text-gray-400' : theme !== 'light' ? 'text-indigo-400' : 'text-indigo-500')}></i>
  <h2 className={'text-sm font-semibold uppercase tracking-wide ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Uso de Créditos</h2>
  </div>
  <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>{totalCredits} créditos usados</span>

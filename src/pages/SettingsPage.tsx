@@ -131,7 +131,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onCancelSubscription,
  onLogout,
 }) => {
- const { theme, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
+ const { theme, selectedTheme, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
  const { allPlans, masterFeatures, planIncluded, planPersona, planCta } = usePlans();
@@ -213,6 +213,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
    { value: 'light', label: '☀ Claro' },
    { value: 'dark', label: '☾ Escuro' },
    { value: 'high-contrast', label: '◑ Alto Contraste AA' },
+   { value: 'v2', label: '◇ V2 Clean' },
  ];
 
  return (
@@ -371,7 +372,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
    Escolha a aparência do Vizzu
  </p>
  <select
-   value={theme}
+   value={selectedTheme}
    onChange={(e) => setTheme(e.target.value as VizzuTheme)}
    className="w-full max-w-xs px-3 py-2 rounded-lg text-sm font-medium border-2 border-gray-900 bg-white text-gray-900 dark:border-white dark:bg-black dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white"
    style={{ borderColor: theme !== 'light' ? '#fff' : '#111', backgroundColor: theme !== 'light' ? '#000' : '#fff', color: theme !== 'light' ? '#fff' : '#111' }}

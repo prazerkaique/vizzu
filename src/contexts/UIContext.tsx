@@ -3,9 +3,9 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 // Types (mesmos do App.tsx)
 export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings' | 'gallery';
 export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history';
-export type VizzuTheme = 'light' | 'dark' | 'high-contrast';
+export type VizzuTheme = 'light' | 'dark' | 'high-contrast' | 'v2';
 
-const VALID_THEMES: VizzuTheme[] = ['light', 'dark', 'high-contrast'];
+const VALID_THEMES: VizzuTheme[] = ['light', 'dark', 'high-contrast', 'v2'];
 
 interface ToastAction {
   label: string;
@@ -21,6 +21,8 @@ interface Toast {
 interface UIContextType {
   // Theme
   theme: VizzuTheme;
+  selectedTheme: VizzuTheme;
+  isV2: boolean;
   setTheme: React.Dispatch<React.SetStateAction<VizzuTheme>>;
 
   // Navigation
@@ -55,12 +57,14 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | null>(null);
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
-  // Theme
-  const [theme, setTheme] = useState<VizzuTheme>(() => {
+  // Theme — selectedTheme is the real stored value; theme is the "render" base (v2 → light)
+  const [selectedTheme, setSelectedTheme] = useState<VizzuTheme>(() => {
     const saved = localStorage.getItem('vizzu_theme');
     if (saved && VALID_THEMES.includes(saved as VizzuTheme)) return saved as VizzuTheme;
     return 'light';
   });
+  const theme: VizzuTheme = selectedTheme === 'v2' ? 'light' : selectedTheme;
+  const isV2 = selectedTheme === 'v2';
 
   // Navigation
   const [currentPage, setCurrentPage] = useState<Page>(() => {
@@ -124,15 +128,16 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('vizzu_currentPage', currentPage);
   }, [currentPage]);
 
-  // Persist theme + update PWA meta + toggle HC class
+  // Persist theme + update PWA meta + toggle HC/V2 class
   useEffect(() => {
-    localStorage.setItem('vizzu_theme', theme);
+    localStorage.setItem('vizzu_theme', selectedTheme);
     const themeColorMeta = document.querySelector('meta[name="theme-color"]:not([media])') || document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', theme === 'light' ? '#F8F6F2' : '#000000');
+      themeColorMeta.setAttribute('content', isV2 ? '#F9FAFB' : theme === 'light' ? '#F8F6F2' : '#000000');
     }
-    document.documentElement.classList.toggle('theme-hc', theme === 'high-contrast');
-  }, [theme]);
+    document.documentElement.classList.toggle('theme-hc', selectedTheme === 'high-contrast');
+    document.documentElement.classList.toggle('theme-v2', isV2);
+  }, [selectedTheme, theme, isV2]);
 
   // Persist sidebar
   useEffect(() => {
@@ -141,7 +146,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <UIContext.Provider value={{
-      theme, setTheme,
+      theme, selectedTheme, isV2, setTheme: setSelectedTheme,
       currentPage, navigateTo, goBack,
       settingsTab, setSettingsTab,
       showSettingsDropdown, setShowSettingsDropdown,

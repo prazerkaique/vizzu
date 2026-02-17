@@ -23,7 +23,7 @@ export function AppLayout({
  onBuyCredits,
  renderSwipePage,
 }: AppLayoutProps) {
- const { theme, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, dismissToast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
+ const { theme, isV2, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, dismissToast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
  const { user } = useAuth();
  const {
    isGeneratingProductStudio, productStudioMinimized, productStudioProgress, setProductStudioMinimized,
@@ -285,6 +285,12 @@ export function AppLayout({
 
  const isCreationPage = ['product-studio', 'provador', 'look-composer', 'lifestyle', 'creative-still'].includes(currentPage);
 
+ // Helper: sidebar nav button classes
+ const sidebarNavClass = (isActive: boolean) =>
+   isActive
+     ? (isV2 ? 'bg-[#E6E7EB] text-[#111827]' : theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+     : (isV2 ? 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6]' : theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40');
+
  // Limpar badge da feature específica quando navega para ela
  useEffect(() => {
    if (isCreationPage) {
@@ -324,11 +330,7 @@ export function AppLayout({
  onClick={() => navigateTo('dashboard')}
  title="Dashboard"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' +
- (currentPage === 'dashboard'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'dashboard')
  }
  >
  <i className="fas fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
@@ -339,11 +341,7 @@ export function AppLayout({
  onClick={() => navigateTo('products')}
  title="Produtos"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' +
- (currentPage === 'products'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'products')
  }
  >
  <i className="fas fa-box w-4 text-[10px]"></i>{!sidebarCollapsed && 'Produtos'}
@@ -375,11 +373,7 @@ export function AppLayout({
  onClick={() => navigateTo('models')}
  title="Modelos"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' +
- (currentPage === 'models'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'models')
  }
  >
  <i className="fas fa-user-tie w-4 text-[10px]"></i>{!sidebarCollapsed && 'Modelos'}
@@ -390,11 +384,7 @@ export function AppLayout({
  onClick={() => navigateTo('clients')}
  title="Clientes"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' +
- (currentPage === 'clients'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'clients')
  }
  >
  <i className="fas fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
@@ -405,11 +395,7 @@ export function AppLayout({
  onClick={() => navigateTo('gallery')}
  title="Galeria"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' +
- (currentPage === 'gallery'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'gallery')
  }
  >
  <i className="fas fa-images w-4 text-[10px]"></i>{!sidebarCollapsed && 'Galeria'}
@@ -442,11 +428,7 @@ export function AppLayout({
  onClick={() => sidebarCollapsed ? (navigateTo('settings'), setSettingsTab('profile')) : setShowSettingsDropdown(!showSettingsDropdown)}
  title="Configurações"
  className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : 'justify-between') + ' ' +
- (currentPage === 'settings'
- ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
- : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
- )
+ (sidebarCollapsed ? 'justify-center' : 'justify-between') + ' ' + sidebarNavClass(currentPage === 'settings')
  }
  >
  {sidebarCollapsed ? (
