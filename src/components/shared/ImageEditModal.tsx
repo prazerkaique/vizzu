@@ -256,13 +256,13 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
   if (!isOpen) return null;
 
-  const glassCard = isDark
-    ? 'bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)]'
-    : 'bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.08)]';
+  const cardBg = isDark
+    ? 'bg-neutral-900 border border-neutral-800 shadow-2xl'
+    : 'bg-white border border-gray-200 shadow-2xl';
 
-  const glassInner = isDark
-    ? 'bg-white/[0.03] border border-white/[0.06]'
-    : 'bg-white/50 border border-white/40';
+  const innerBg = isDark
+    ? 'bg-neutral-800 border border-neutral-700'
+    : 'bg-gray-50 border border-gray-200';
 
   const renderCompareImage = (src: string, label: string, target: 'before' | 'after') => {
     const isActive = hoverTarget === target;
@@ -271,14 +271,14 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     return (
       <div className={
         'rounded-xl overflow-hidden ' +
-        (isBefore ? glassInner : 'border border-[#FF6B6B]/20 bg-[#FF6B6B]/[0.03]')
+        (isBefore ? innerBg : 'border border-[#FF6B6B]/20 bg-[#FF6B6B]/[0.03]')
       }>
         <div
           className={
             'relative flex items-center justify-center p-2 md:p-3 cursor-zoom-in overflow-hidden ' +
             (isDark
-              ? (isBefore ? 'bg-black/20' : 'bg-black/10')
-              : (isBefore ? 'bg-gray-100/50' : 'bg-[#FF6B6B]/[0.02]'))
+              ? (isBefore ? 'bg-neutral-950' : 'bg-neutral-950')
+              : (isBefore ? 'bg-gray-100' : 'bg-gray-50'))
           }
           onMouseEnter={() => setHoverTarget(target)}
           onMouseLeave={() => setHoverTarget(null)}
@@ -319,8 +319,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
         <div className={
           'px-3 py-1.5 border-t flex items-center gap-2 ' +
           (isBefore
-            ? (isDark ? 'border-white/[0.06]' : 'border-gray-200/40')
-            : 'border-[#FF6B6B]/15')
+            ? (isDark ? 'border-neutral-700' : 'border-gray-200')
+            : 'border-[#FF6B6B]/20')
         }>
           <div className={
             'w-1.5 h-1.5 rounded-full ' +
@@ -343,22 +343,22 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={handleClose} />
 
       <div className={
-        'relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden ' + glassCard
+        'relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden ' + cardBg
       }>
         {/* ═══ HEADER ═══ */}
         <div className={
           'flex items-center justify-between px-5 py-3.5 border-b flex-shrink-0 ' +
-          (isDark ? 'border-white/[0.06]' : 'border-gray-200/60')
+          (isDark ? 'border-neutral-800' : 'border-gray-200')
         }>
           <div className="flex items-center gap-3">
             <button
               onClick={handleClose}
               className={
                 'w-8 h-8 rounded-xl flex items-center justify-center transition-all ' +
-                (isDark ? 'bg-white/[0.06] text-neutral-400 hover:bg-white/[0.12] hover:text-white' : 'bg-black/5 text-gray-500 hover:bg-black/10')
+                (isDark ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')
               }
             >
               <i className="fas fa-xmark text-sm"></i>
@@ -382,7 +382,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
             )}
             <div className={
               'flex items-center gap-1 px-2 py-1 rounded-lg ' +
-              (isDark ? 'bg-white/[0.06] border border-white/[0.08]' : 'bg-gray-100 border border-gray-200')
+              (isDark ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-100 border border-gray-200')
             }>
               <span className={(isDark ? 'text-white' : 'text-gray-900') + ' font-semibold text-[10px]'}>{regularBalance}</span>
               <i className="fas fa-coins text-yellow-400 text-[8px]"></i>
@@ -396,10 +396,10 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
           {/* ─── MODE: INPUT ─── */}
           {mode === 'input' && (
             <div className="p-5">
-              <div className={'rounded-xl overflow-hidden mb-4 ' + glassInner}>
+              <div className={'rounded-xl overflow-hidden mb-4 ' + innerBg}>
                 <div className={
                   'flex items-center justify-center p-3 ' +
-                  (isDark ? 'bg-black/20' : 'bg-gray-100/50')
+                  (isDark ? 'bg-neutral-950' : 'bg-gray-100')
                 }>
                   <img
                     src={currentImageUrl}
@@ -409,7 +409,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                 </div>
                 <div className={
                   'px-3 py-1.5 border-t flex items-center gap-2 ' +
-                  (isDark ? 'border-white/[0.06]' : 'border-gray-200/40')
+                  (isDark ? 'border-neutral-700' : 'border-gray-200')
                 }>
                   <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]"></div>
                   <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[9px] uppercase tracking-wider font-medium'}>
@@ -432,8 +432,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                   className={
                     'w-full px-3.5 py-2.5 rounded-xl text-xs resize-none transition-all focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 ' +
                     (isDark
-                      ? 'bg-white/[0.04] border border-white/[0.08] text-white placeholder-neutral-600'
-                      : 'bg-white/60 border border-gray-200/60 text-gray-900 placeholder-gray-400')
+                      ? 'bg-neutral-800 border border-neutral-700 text-white placeholder-neutral-600'
+                      : 'bg-white border border-gray-200 text-gray-900 placeholder-gray-400')
                   }
                 />
                 <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-[9px] mt-1 text-right'}>
@@ -449,7 +449,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                 </label>
 
                 {referencePreview ? (
-                  <div className={'relative rounded-xl overflow-hidden ' + glassInner}>
+                  <div className={'relative rounded-xl overflow-hidden ' + innerBg}>
                     <img src={referencePreview} alt="Referência" className="w-full h-28 object-contain p-2" />
                     <button
                       onClick={() => { setReferenceBase64(null); setReferencePreview(null); }}
@@ -469,8 +469,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                       (isDragging
                         ? 'border-[#FF6B6B] bg-[#FF6B6B]/10'
                         : isDark
-                          ? 'border-white/[0.1] bg-white/[0.02] hover:border-white/[0.18]'
-                          : 'border-gray-300/60 bg-white/30 hover:border-gray-400')
+                          ? 'border-neutral-700 bg-neutral-800/50 hover:border-neutral-600'
+                          : 'border-gray-300 bg-gray-50 hover:border-gray-400')
                     }
                   >
                     <i className={
@@ -495,7 +495,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                 />
               </div>
 
-              <div className={'rounded-xl p-3 mb-4 ' + glassInner}>
+              <div className={'rounded-xl p-3 mb-4 ' + innerBg}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <i className="fas fa-ticket text-[#FF9F43] text-[10px]"></i>
@@ -527,7 +527,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                   (correctionPrompt.trim() && hasEnoughCredits
                     ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:shadow-lg hover:shadow-[#FF6B6B]/25 hover:scale-[1.01] active:scale-[0.99]'
                     : isDark
-                      ? 'bg-white/[0.04] text-neutral-600 cursor-not-allowed'
+                      ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed')
                 }
               >
@@ -595,8 +595,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                     className={
                       'py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ' +
                       (isDark
-                        ? 'bg-white/[0.04] border border-white/[0.08] text-neutral-300 hover:bg-white/[0.08]'
-                        : 'bg-white/60 border border-gray-200/60 text-gray-700 hover:bg-white/80')
+                        ? 'bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50')
                     }
                   >
                     <i className="fas fa-arrow-left text-xs"></i>
