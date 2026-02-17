@@ -56,8 +56,8 @@ export function OptimizedImage({
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
         className={
-          'w-full h-full transition-opacity duration-300 ' +
-          (objectFit === 'contain' ? 'object-contain ' : 'object-cover ') +
+          'transition-opacity duration-300 ' +
+          (objectFit === 'contain' ? 'max-w-full max-h-full object-contain ' : 'w-full h-full object-cover ') +
           (loaded ? 'opacity-100' : 'opacity-0')
         }
         style={imgStyle}
