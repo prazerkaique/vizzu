@@ -468,8 +468,8 @@ html.theme-hc ::-webkit-scrollbar-thumb:hover {
 /* Sidebar (#EFEBE6) → branco puro (#FFFFFF)                     */
 /* ═══════════════════════════════════════════════════════════════ */
 
-/* Background principal */
-html.theme-v2 .bg-cream,
+/* Background principal (attribute selector pega bg-cream E bg-cream/95 etc.) */
+html.theme-v2 [class*="bg-cream"],
 html.theme-v2 [class*="bg-[#f7f5f2]"] {
   background-color: #F9FAFB !important;
 }
@@ -715,6 +715,11 @@ body.modal-open {
   /* Body no PWA - background deve cobrir toda a tela */
   body {
     background-color: #f7f5f2;
+  }
+
+  /* V2 no PWA standalone */
+  html.theme-v2 body {
+    background-color: #F9FAFB !important;
   }
 
   /* Bottom nav no PWA - compacto, apenas safe-area necessária */
