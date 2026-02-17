@@ -1674,7 +1674,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onClick={() => setCurrentImageIndex(idx)}
  title={img.type}
  >
- <OptimizedImage src={img.url} alt={img.type} className="w-full h-full" size="thumb" />
+ <OptimizedImage src={img.url} alt={img.type} className="w-full h-full p-1" size="thumb" objectFit="contain" />
  </div>
  ))}
  </div>
