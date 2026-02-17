@@ -51,6 +51,7 @@ import { ClientsPage } from './pages/ClientsPage';
 import { ModelsPage, DEFAULT_MODELS } from './pages/ModelsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CreateHubPage } from './pages/CreateHubPage';
+import { GalleryPage } from './pages/GalleryPage';
 import { AppLayout } from './components/Layout/AppLayout';
 
 // Expor funções de migração globalmente para uso via Console (F12)
@@ -997,6 +998,7 @@ function App() {
  const renderSwipePage = (page: Page): React.ReactNode => {
    switch (page) {
      case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />;
+     case 'gallery': return <GalleryPage />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
      case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
@@ -1015,6 +1017,7 @@ function App() {
  renderSwipePage={renderSwipePage}
  >
  {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />}
+ {currentPage === 'gallery' && <GalleryPage />}
  {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
 
  {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}

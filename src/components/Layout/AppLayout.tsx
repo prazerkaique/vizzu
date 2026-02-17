@@ -96,7 +96,7 @@ export function AppLayout({
  }, []);
 
  // ── Instagram-style swipe navigation (PWA only) ──
- const SWIPE_PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
+ const SWIPE_PAGES: Page[] = ['dashboard', 'gallery', 'products', 'create', 'models', 'clients'];
  const mainContentRef = useRef<HTMLDivElement>(null);
  const adjacentContentRef = useRef<HTMLDivElement>(null);
  const [swipeAdjacentPage, setSwipeAdjacentPage] = useState<Page | null>(null);
@@ -127,7 +127,7 @@ export function AppLayout({
    const THRESHOLD = 0.3;
    const VELOCITY = 500;
    const TRANSITION = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)';
-   const PAGES: Page[] = ['dashboard', 'products', 'create', 'models', 'clients'];
+   const PAGES: Page[] = ['dashboard', 'gallery', 'products', 'create', 'models', 'clients'];
 
    const getAdjacentPage = (dir: 'left' | 'right'): Page | null => {
      const idx = PAGES.indexOf(currentPageRef.current);
@@ -332,6 +332,21 @@ export function AppLayout({
  }
  >
  <i className="fas fa-home w-4 text-[10px]"></i>{!sidebarCollapsed && 'Dashboard'}
+ </button>
+
+ {/* Galeria */}
+ <button
+ onClick={() => navigateTo('gallery')}
+ title="Galeria"
+ className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' +
+ (currentPage === 'gallery'
+ ? (theme !== 'light' ? 'bg-gradient-to-r from-[#FF6B6B]/15 to-[#FF9F43]/15 text-white' : 'bg-white/60 text-[#373632]')
+ : (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-900' : 'text-[#373632] hover:text-[#373632] hover:bg-white/40')
+ )
+ }
+ >
+ <i className="fas fa-images w-4 text-[10px]"></i>{!sidebarCollapsed && 'Galeria'}
  </button>
 
  {/* Produtos */}

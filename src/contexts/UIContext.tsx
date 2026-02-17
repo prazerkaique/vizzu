@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 // Types (mesmos do App.tsx)
-export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings';
+export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings' | 'gallery';
 export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history';
 export type VizzuTheme = 'light' | 'dark' | 'high-contrast';
 
