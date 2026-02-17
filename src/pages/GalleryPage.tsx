@@ -5,6 +5,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useImageViewer } from '../components/ImageViewer';
 import { OptimizedImage } from '../components/OptimizedImage';
 import DownloadModal, { type DownloadImageGroup } from '../components/shared/DownloadModal';
+import { EcommerceExportButton } from '../components/shared/EcommerceExportButton';
 import type { DownloadableImage } from '../utils/downloadSizes';
 
 // ═══════════════════════════════════════════════════════════════
@@ -146,13 +147,19 @@ export function GalleryPage() {
 
   // ═══ RENDER ═══
   return (
-    <div className="p-4 pb-24 md:p-6 md:pb-6 max-w-[1600px] mx-auto">
+    <div className="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6">
+      <div className="max-w-[1600px] mx-auto">
 
-      {/* ── Header (mesmo padrão do Dashboard: título + subtítulo, sem caixa de ícone) ── */}
+      {/* ── Header (padrão Products/Clients: ícone frosted glass + título) ── */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className={`text-xl font-extrabold ${textPrimary}`}>Galeria</h1>
-          <p className={`text-xs ${textSecondary} mt-0.5`}>Todas as suas criações</p>
+        <div className="flex items-center gap-3">
+          <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (isDark ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
+            <i className={'fas fa-images text-sm ' + (isDark ? 'text-neutral-200' : 'text-[#1A1A1A]')} />
+          </div>
+          <div>
+            <h1 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-extrabold'}>Galeria</h1>
+            <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs font-serif italic'}>Todas as suas criações</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -510,6 +517,19 @@ export function GalleryPage() {
             <i className="fas fa-download text-[10px]" />
             Baixar
           </button>
+          {(() => {
+            const exportable = selectedItems.filter(i => i.productId);
+            if (exportable.length === 0) return null;
+            const firstProductId = exportable[0].productId!;
+            return (
+              <EcommerceExportButton
+                images={exportable.map(i => ({ url: i.imageUrl, label: i.productName || 'Imagem' }))}
+                productId={firstProductId}
+                tool="gallery"
+                compact
+              />
+            );
+          })()}
           <button
             onClick={cancelSelection}
             className={`px-3 py-2 rounded-xl text-xs ${isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
@@ -541,6 +561,7 @@ export function GalleryPage() {
           theme={theme}
         />
       )}
+      </div>
     </div>
   );
 }
