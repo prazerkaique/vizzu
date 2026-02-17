@@ -240,7 +240,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {[
  { id: 'profile' as SettingsTab, label: 'Perfil', icon: 'fa-user' },
  { id: 'plan' as SettingsTab, label: 'Planos & Créditos', icon: 'fa-credit-card' },
- { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug', badge: 'Em breve' },
+ { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
  ].map(tab => (
  <button
@@ -256,9 +256,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  >
  <i className={`fas ${tab.icon} text-[10px]`}></i>
  {tab.label}
- {'badge' in tab && tab.badge && (
- <span className={(theme !== 'light' ? 'bg-neutral-600 text-neutral-300' : 'bg-gray-300 text-gray-600') + ' text-[8px] px-1.5 py-0.5 rounded-full font-medium ml-0.5'}>{tab.badge}</span>
- )}
  </button>
  ))}
  </div>
