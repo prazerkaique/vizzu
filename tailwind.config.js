@@ -9,6 +9,7 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         serif: ['"Inria Serif"', 'Georgia', 'serif'],
+        'serif-display': ['"DM Serif Display"', 'Georgia', 'serif'],
       },
       colors: {
         cream: '#f7f5f2',

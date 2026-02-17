@@ -510,6 +510,11 @@ html.theme-v2 [class*="bg-white/4"] {
   background-color: rgba(243,244,246,0.6) !important;
 }
 
+/* Fonte serif → DM Serif Display no V2 */
+html.theme-v2 .font-serif {
+  font-family: 'DM Serif Display', Georgia, serif !important;
+}
+
 /* ────────────────────────────────────────────────── */
 
 /* Line Clamp */

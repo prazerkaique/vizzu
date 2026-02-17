@@ -209,7 +209,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
  <div className="flex items-center justify-between mb-6">
  <div>
  <div className="flex items-center gap-2 mb-1">
- <h1 className={'text-xl font-extrabold ' + (theme !== 'light' ? 'text-white' : 'text-[#1A1A1A]')}>Dashboard</h1>
+ <h1 className={(isV2 ? 'text-2xl font-extrabold tracking-tight font-serif-display text-gray-900' : 'text-xl font-extrabold ' + (theme !== 'light' ? 'text-white' : 'text-[#1A1A1A]'))}>Dashboard</h1>
  {!isV2 && <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>}
  </div>
  <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
