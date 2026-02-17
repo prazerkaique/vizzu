@@ -12,6 +12,8 @@ import { editStudioImage, saveCreativeStillEdit, saveCreativeStillSaveAsNew } fr
 import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 import { EcommerceExportButton } from '../shared/EcommerceExportButton';
+import { useWatermark } from '../../hooks/useWatermark';
+import { WatermarkOverlay } from '../shared/WatermarkOverlay';
 
 const LOADING_PHRASES = [
  "Preparando a composição criativa...",
@@ -94,6 +96,7 @@ export const CreativeStillResults: React.FC<Props> = ({
 
  const { user } = useAuth();
  const { showToast } = useUI();
+ const hasWatermark = useWatermark();
 
  const isDark = theme !== 'light';
 
@@ -396,9 +399,12 @@ export const CreativeStillResults: React.FC<Props> = ({
  : (isDark ? 'border-neutral-800 hover:border-neutral-700' : 'border-gray-200 hover:border-gray-300')
  )}
  >
- <div className={'aspect-[4/5] flex items-center justify-center ' + (isDark ? 'bg-neutral-900' : 'bg-gray-100')}>
+ <div className={'aspect-[4/5] relative flex items-center justify-center overflow-hidden ' + (isDark ? 'bg-neutral-900' : 'bg-gray-100')}>
  {url ? (
+ <>
  <OptimizedImage src={url} alt={`Variação ${vNum}`} className="w-full h-full" size="preview" />
+ {hasWatermark && <WatermarkOverlay />}
+ </>
  ) : (
  <div className="text-center">
  <i className={'fas fa-image text-4xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>

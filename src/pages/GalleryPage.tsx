@@ -7,6 +7,8 @@ import { OptimizedImage } from '../components/OptimizedImage';
 import DownloadModal, { type DownloadImageGroup } from '../components/shared/DownloadModal';
 import { EcommerceExportButton } from '../components/shared/EcommerceExportButton';
 import type { DownloadableImage } from '../utils/downloadSizes';
+import { useWatermark } from '../hooks/useWatermark';
+import { WatermarkOverlay } from '../components/shared/WatermarkOverlay';
 
 // ═══════════════════════════════════════════════════════════════
 // Galeria — Todas as gerações IA em um só lugar
@@ -37,6 +39,7 @@ export function GalleryPage() {
   const isDark = theme !== 'light';
   const { allItems, stats, isLoading } = useGalleryData();
   const { openViewer } = useImageViewer();
+  const hasWatermark = useWatermark();
 
   // ── Filtros ──
   const [activeFeature, setActiveFeature] = useState<FeatureType | null>(null);
@@ -345,6 +348,9 @@ export function GalleryPage() {
                       alt={item.productName || cfg.label}
                       className="w-full h-full object-cover"
                     />
+
+                    {/* Watermark overlay (only on generated images, not originals) */}
+                    {hasWatermark && !isShowingOriginal && <WatermarkOverlay />}
 
                     {/* Selection checkbox */}
                     {isSelecting && (

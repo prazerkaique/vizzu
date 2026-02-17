@@ -16,6 +16,8 @@ import type { DownloadableImage } from '../../utils/downloadSizes';
 import { editStudioImage, saveCreativeStillEdit, saveLookComposerEdit } from '../../lib/api/studio';
 import { EcommerceExportButton } from './EcommerceExportButton';
 import type { VizzuTheme } from '../../contexts/UIContext';
+import { useWatermark } from '../../hooks/useWatermark';
+import { WatermarkOverlay } from './WatermarkOverlay';
 
 // ── Types ──
 
@@ -108,6 +110,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 }) => {
   const isDark = theme !== 'light';
   const { openViewer } = useImageViewer();
+  const hasWatermark = useWatermark();
 
   // CS data (não está no Product, precisa buscar)
   const [csGenerations, setCsGenerations] = useState<CreativeStillGeneration[]>([]);
@@ -363,6 +366,9 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         onClick={() => !isConfirming && openViewer(imageUrl, { alt: altText })}
       >
         <OptimizedImage src={imageUrl} size="preview" alt={altText} className={'w-full ' + (opts?.aspect || 'aspect-square')} objectFit={opts?.objectFit} />
+
+        {/* Watermark overlay */}
+        {hasWatermark && <WatermarkOverlay />}
 
         {/* Bottom label (ex: ângulo) */}
         {opts?.bottomLabel && (

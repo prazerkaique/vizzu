@@ -18,6 +18,8 @@ import { submitReport } from '../../lib/api/reports';
 import { ImageEditModal } from '../shared/ImageEditModal';
 import { editStudioImage, saveLookComposerEdit } from '../../lib/api/studio';
 import { supabase } from '../../services/supabaseClient';
+import { useWatermark } from '../../hooks/useWatermark';
+import { WatermarkOverlay } from '../shared/WatermarkOverlay';
 
 type ExportQuality = 'high' | 'performance';
 
@@ -106,6 +108,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
 
  const { user } = useAuth();
  const { showToast } = useUI();
+ const hasWatermark = useWatermark();
 
  // Reveal animation on mount
  useEffect(() => {
@@ -431,6 +434,9 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  >
  {displayImage ? (
  <>
+ {/* Marca d'água (plano free) */}
+ {hasWatermark && !showOriginal && <WatermarkOverlay />}
+
  {/* Imagem normal */}
  <img
  src={getOptimizedImageUrl(displayImage, 'preview')}

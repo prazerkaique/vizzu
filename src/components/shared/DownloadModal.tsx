@@ -8,9 +8,11 @@ import DownloadProgressModal from './DownloadProgressModal';
 import { StarRating } from './StarRating';
 import { DOWNLOAD_PRESETS, getDownloadUrl, buildFilename, type DownloadableImage, type DownloadPreset } from '../../utils/downloadSizes';
 import { generateZipFromImages, type ZipProgress } from '../../utils/zipDownload';
-import { smartDownload } from '../../utils/downloadHelper';
+import { smartDownload, traditionalDownload } from '../../utils/downloadHelper';
 import { submitDownloadRating } from '../../lib/api/ratings';
 import { useAuth } from '../../contexts/AuthContext';
+import { useWatermark } from '../../hooks/useWatermark';
+import { applyWatermark } from '../../utils/watermark';
 import type { VizzuTheme } from '../../contexts/UIContext';
 
 // ── Types ──
@@ -47,6 +49,7 @@ export default function DownloadModal({
 }: DownloadModalProps) {
   const isDark = theme !== 'light';
   const { user } = useAuth();
+  const hasWatermark = useWatermark();
 
   // ── Flatten images ──
   const allImages = useMemo(() => {
@@ -143,6 +146,8 @@ export default function DownloadModal({
   );
 
   // ── Download handlers ──
+  const watermarkTransform = hasWatermark ? applyWatermark : undefined;
+
   const handlePresetDownload = useCallback(async (preset: DownloadPreset) => {
     if (selectedImages.length === 0) return;
 
@@ -150,7 +155,14 @@ export default function DownloadModal({
       const img = selectedImages[0];
       const url = getDownloadUrl(img.url, preset);
       const filename = buildFilename(productName, img.featurePrefix, img.label, preset);
-      await smartDownload(url, { filename });
+      if (hasWatermark) {
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const stamped = await applyWatermark(blob);
+        traditionalDownload(stamped, filename.includes('.') ? filename : `${filename}.png`);
+      } else {
+        await smartDownload(url, { filename });
+      }
       setStep(3);
       return;
     }
@@ -158,22 +170,22 @@ export default function DownloadModal({
     const abort = new AbortController();
     zipAbortRef.current = abort;
     setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
-    await generateZipFromImages(selectedImages, productName, setZipProgress, abort.signal, [preset]);
+    await generateZipFromImages(selectedImages, productName, setZipProgress, abort.signal, [preset], watermarkTransform);
     setZipProgress(null);
     zipAbortRef.current = null;
     setStep(3);
-  }, [selectedImages, productName]);
+  }, [selectedImages, productName, hasWatermark, watermarkTransform]);
 
   const handleDownloadAll = useCallback(async () => {
     if (selectedImages.length === 0) return;
     const abort = new AbortController();
     zipAbortRef.current = abort;
     setZipProgress({ phase: 'downloading', current: 0, total: 0, percentage: 0 });
-    await generateZipFromImages(selectedImages, productName, setZipProgress, abort.signal);
+    await generateZipFromImages(selectedImages, productName, setZipProgress, abort.signal, undefined, watermarkTransform);
     setZipProgress(null);
     zipAbortRef.current = null;
     setStep(3);
-  }, [selectedImages, productName]);
+  }, [selectedImages, productName, watermarkTransform]);
 
   const handleCancelZip = useCallback(() => {
     zipAbortRef.current?.abort();

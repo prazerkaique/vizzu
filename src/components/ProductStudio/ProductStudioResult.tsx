@@ -17,6 +17,8 @@ import { supabase } from '../../services/supabaseClient';
 import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
 import { EcommerceExportButton } from '../shared/EcommerceExportButton';
+import { useWatermark } from '../../hooks/useWatermark';
+import { WatermarkOverlay } from '../shared/WatermarkOverlay';
 
 interface ProductStudioResultProps {
  product: Product;
@@ -106,6 +108,7 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
 
  const { user } = useAuth();
  const { showToast } = useUI();
+ const hasWatermark = useWatermark();
 
  // Reveal animation on mount
  useEffect(() => {
@@ -419,6 +422,9 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
    </div>
   )}
  </div>
+
+ {/* Watermark overlay (only on generated images) */}
+ {hasWatermark && !showOriginal && <WatermarkOverlay />}
  </>
  ) : (
  <div className="flex flex-col items-center gap-2">

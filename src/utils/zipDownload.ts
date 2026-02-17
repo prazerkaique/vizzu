@@ -55,7 +55,8 @@ export async function generateZipDownload(
   zipFilename: string,
   onProgress?: (progress: ZipProgress) => void,
   signal?: AbortSignal,
-  presets?: DownloadPreset[]
+  presets?: DownloadPreset[],
+  transformBlob?: (blob: Blob) => Promise<Blob>
 ): Promise<boolean> {
   const JSZip = (await import('jszip')).default;
   const zip = new JSZip();
@@ -100,7 +101,8 @@ export async function generateZipDownload(
     try {
       const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const blob = await response.blob();
+      let blob = await response.blob();
+      if (transformBlob) blob = await transformBlob(blob);
       zip.file(`${folderPath}/${filename}`, blob);
     } catch (err) {
       console.warn(`[ZIP] Falha ao baixar ${downloadUrl}:`, err);
@@ -132,7 +134,8 @@ export async function generateZipFromImages(
   productName: string,
   onProgress?: (progress: ZipProgress) => void,
   signal?: AbortSignal,
-  presets?: DownloadPreset[]
+  presets?: DownloadPreset[],
+  transformBlob?: (blob: Blob) => Promise<Blob>
 ): Promise<boolean> {
   const sanitized = productName.replace(/[<>:"/\\|?*]/g, '').trim();
   const zipFilename = `${sanitized}_Vizzu.zip`;
@@ -144,5 +147,5 @@ export async function generateZipFromImages(
     imageLabel: img.label,
   }));
 
-  return generateZipDownload(entries, zipFilename, onProgress, signal, presets);
+  return generateZipDownload(entries, zipFilename, onProgress, signal, presets, transformBlob);
 }
