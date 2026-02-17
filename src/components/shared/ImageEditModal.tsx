@@ -634,8 +634,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                     (isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600')
                   }
                 >
-                  <i className="fas fa-rotate text-[10px]"></i>
-                  Gerar novamente
+                  <i className="fas fa-sliders text-[10px]"></i>
+                  Refinar novamente
                 </button>
               </div>
             </div>
