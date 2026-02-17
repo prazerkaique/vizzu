@@ -2689,7 +2689,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <OptimizedImage
  src={productImages[currentImageIndex]?.url}
  alt={product.name}
- className="max-w-full max-h-[400px] object-contain rounded-lg"
+ className="w-full h-full max-h-[400px] rounded-lg"
  size="preview"
  objectFit="contain"
  />
