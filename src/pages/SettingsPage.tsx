@@ -24,7 +24,7 @@ interface SettingsPageProps {
  onBuyCredits: (amount: number) => void;
  onUpgradePlan: (planId: string) => void;
  onSetBillingPeriod: (period: string) => void;
- onCancelSubscription: () => void;
+ onCancelSubscription: () => Promise<void>;
  onLogout: () => void;
 }
 
@@ -1052,8 +1052,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onConfirm={async () => {
  setIsCancelling(true);
  try {
- onCancelSubscription();
+ await onCancelSubscription();
  setShowCancelModal(false);
+ } catch {
+ // Toast de erro já é mostrado pelo handler
  } finally {
  setIsCancelling(false);
  }

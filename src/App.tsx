@@ -268,11 +268,9 @@ function App() {
  }
  };
 
- // Handler para cancelar assinatura
+ // Handler para cancelar assinatura (confirmação já feita pelo ConfirmModal do SettingsPage)
  const handleCancelSubscription = async () => {
  if (!user?.id) return;
- const confirmed = window.confirm('Tem certeza que deseja cancelar sua assinatura? Você continuará tendo acesso até o fim do período atual.');
- if (!confirmed) return;
  try {
  const result = await cancelSubscription({ userId: user.id });
  if (result.success) {
