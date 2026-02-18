@@ -185,6 +185,15 @@ function App() {
  }
  }, [currentPlan.id]);
 
+ // Master: alterar créditos direto no Supabase
+ const handleMasterSetCredits = async (credits: number) => {
+ if (currentPlan.id !== 'master' || !user?.id) return;
+ const { error } = await supabase.from('user_credits').update({ balance: credits }).eq('user_id', user.id);
+ if (error) { showToast('Erro ao atualizar créditos: ' + error.message, 'error'); return; }
+ setCredits(credits);
+ showToast(`Créditos alterados para ${credits}`, 'success');
+ };
+
  // Função para verificar créditos e mostrar modal se insuficientes
  const checkCreditsAndShowModal = (
  creditsNeeded: number,
@@ -1064,6 +1073,7 @@ function App() {
  restoreModal={restoreModal}
  onLogout={handleLogout}
  onBuyCredits={() => { setCreditModalContext({ creditsNeeded: 1, actionContext: 'generic' }); setShowCreditModal(true); }}
+ onMasterSetCredits={currentPlan.id === 'master' ? handleMasterSetCredits : undefined}
  renderSwipePage={renderSwipePage}
  >
  {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />}

@@ -11,7 +11,75 @@ interface AppLayoutProps {
  restoreModal: (id: string) => void;
  onLogout: () => void;
  onBuyCredits?: () => void;
+ onMasterSetCredits?: (credits: number) => void;
  renderSwipePage?: (page: Page) => React.ReactNode;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Sidebar Credits Box — editável para plano Master
+// ═══════════════════════════════════════════════════════════════
+function SidebarCreditsBox({ userCredits, currentPlan, sidebarCollapsed, isDark, onAdd, onMasterSetCredits }: {
+ userCredits: number; currentPlan: any; sidebarCollapsed: boolean; isDark: boolean;
+ onAdd: () => void; onMasterSetCredits?: (credits: number) => void;
+}) {
+ const [editing, setEditing] = useState(false);
+ const [editValue, setEditValue] = useState('');
+ const isMaster = currentPlan.id === 'master';
+
+ const handleSave = () => {
+  const num = parseInt(editValue, 10);
+  if (!isNaN(num) && num >= 0 && onMasterSetCredits) {
+   onMasterSetCredits(num);
+  }
+  setEditing(false);
+ };
+
+ return (
+  <div className={(isDark ? 'bg-neutral-900' : 'bg-white/40') + ' rounded-xl p-3 transition-all' + (userCredits <= 5 && !isMaster ? ' ring-2 ring-red-500/50' : '') + (isMaster ? ' ring-1 ring-[#FF6B6B]/30' : '')}>
+  {!sidebarCollapsed ? (
+  <>
+  <div className="flex items-center justify-between mb-1.5">
+  <span className={'text-[9px] font-medium uppercase tracking-wide ' + (isMaster ? 'text-[#FF6B6B]' : isDark ? 'text-neutral-400' : 'text-[#373632]/60')}>
+   {isMaster ? '⚡ Master' : 'Créditos'}
+  </span>
+  {isMaster ? (
+   <button onClick={() => { setEditValue(String(userCredits)); setEditing(!editing); }} className="text-[#FF6B6B] text-[9px] font-medium hover:text-[#FF9F43] transition-colors">
+   {editing ? 'Cancelar' : 'Editar'}
+   </button>
+  ) : (
+   <button onClick={onAdd} className={(isDark ? 'text-[#FF6B6B] hover:text-[#FF6B6B]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
+  )}
+  </div>
+  {editing && isMaster ? (
+  <div className="flex gap-1.5 mt-1">
+   <input
+   type="number"
+   value={editValue}
+   onChange={e => setEditValue(e.target.value)}
+   onKeyDown={e => e.key === 'Enter' && handleSave()}
+   className={'w-full px-2 py-1.5 rounded-lg text-sm font-bold outline-none ' + (isDark ? 'bg-neutral-800 text-white border border-neutral-700 focus:border-[#FF6B6B]' : 'bg-white text-gray-900 border border-gray-300 focus:border-[#FF6B6B]')}
+   autoFocus
+   />
+   <button onClick={handleSave} className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-bold hover:opacity-90 transition-opacity flex-shrink-0">
+   OK
+   </button>
+  </div>
+  ) : (
+  <p className={'text-xl font-bold ' + (isDark ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
+  )}
+  <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
+  <div className={((userCredits <= currentPlan.limit * 0.2 && !isMaster ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full')} style={{ width: isMaster ? '100%' : Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
+  </div>
+  {userCredits <= 5 && !isMaster && <p className="text-[9px] text-red-400 mt-1.5 font-medium">Saldo baixo</p>}
+  </>
+  ) : (
+  <div className="text-center">
+  <p className={'text-xs font-bold ' + (isMaster ? 'text-[#FF6B6B]' : userCredits <= 5 ? 'text-red-400' : isDark ? 'text-white' : 'text-[#373632]')}>{userCredits}</p>
+  <p className={'text-[8px] ' + (isMaster ? 'text-[#FF6B6B]/70' : userCredits <= 5 ? 'text-red-400/70' : isDark ? 'text-neutral-500' : 'text-[#373632]/40')}>{isMaster ? 'master' : 'cred.'}</p>
+  </div>
+  )}
+  </div>
+ );
 }
 
 export function AppLayout({
@@ -21,6 +89,7 @@ export function AppLayout({
  restoreModal,
  onLogout,
  onBuyCredits,
+ onMasterSetCredits,
  renderSwipePage,
 }: AppLayoutProps) {
  const { theme, isV2, currentPage, navigateTo, goBack, setSettingsTab, showSettingsDropdown, setShowSettingsDropdown, sidebarCollapsed, setSidebarCollapsed, toast, dismissToast, successNotification, showVideoTutorial, setShowVideoTutorial } = useUI();
@@ -402,26 +471,7 @@ export function AppLayout({
  </button>
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme !== 'light' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
- <div className={(theme !== 'light' ? 'bg-neutral-900' : 'bg-white/40') + ' rounded-xl p-3 transition-all' + (userCredits <= 5 ? ' ring-2 ring-red-500/50' : '')}>
- {!sidebarCollapsed ? (
- <>
- <div className="flex items-center justify-between mb-1.5">
- <span className={'text-[9px] font-medium uppercase tracking-wide ' + (theme !== 'light' ? 'text-neutral-400' : 'text-[#373632]/60')}>Créditos</span>
- <button onClick={() => { navigateTo('settings'); setSettingsTab('plan'); }} className={(theme !== 'light' ? 'text-[#FF6B6B] hover:text-[#FF6B6B]' : 'text-[#373632] hover:text-[#373632]/80') + ' text-[9px] font-medium'}>+ Add</button>
- </div>
- <p className={'text-xl font-bold ' + (theme !== 'light' ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
- <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
- <div className={((userCredits <= currentPlan.limit * 0.2 ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full')} style={{ width: Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
- </div>
- {userCredits <= 5 && <p className="text-[9px] text-red-400 mt-1.5 font-medium">Saldo baixo</p>}
- </>
- ) : (
- <div className="text-center">
- <p className={'text-xs font-bold ' + (userCredits <= 5 ? 'text-red-400' : (theme !== 'light' ? 'text-white' : 'text-[#373632]'))}>{userCredits}</p>
- <p className={'text-[8px] ' + (userCredits <= 5 ? 'text-red-400/70' : (theme !== 'light' ? 'text-neutral-500' : 'text-[#373632]/40'))}>cred.</p>
- </div>
- )}
- </div>
+ <SidebarCreditsBox userCredits={userCredits} currentPlan={currentPlan} sidebarCollapsed={sidebarCollapsed} isDark={theme !== 'light'} onAdd={() => { navigateTo('settings'); setSettingsTab('plan'); }} onMasterSetCredits={onMasterSetCredits} />
  {/* Configurações com Dropdown */}
  <div className="relative">
  <button
