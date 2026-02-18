@@ -475,16 +475,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  </div>
 
- {/* Modal para reler os termos */}
- {showTermsModal && (
- <TermsAcceptanceModal
- isOpen={true}
- onAccept={async () => { setShowTermsModal(false); return true; }}
- isLoading={false}
- readOnly
- />
- )}
-
  {/* P1: Salvar com dirty state + loading */}
  <button
  onClick={handleSaveProfile}
@@ -1046,6 +1036,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  featurePrefix: 'historico',
  }))}
  theme={theme}
+ />
+
+ {/* Modal para reler os termos (fora de qualquer tab/scroll container) */}
+ <TermsAcceptanceModal
+  isOpen={showTermsModal}
+  onAccept={async () => true}
+  isLoading={false}
+  readOnly
+  onClose={() => setShowTermsModal(false)}
  />
  </div>
  );

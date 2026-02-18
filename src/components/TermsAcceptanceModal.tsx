@@ -18,9 +18,11 @@ interface Props {
   isLoading: boolean;
   /** Modo leitura — mostra "Fechar" em vez de checkbox+aceitar */
   readOnly?: boolean;
+  /** Callback para fechar no modo readOnly */
+  onClose?: () => void;
 }
 
-export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoading, readOnly }) => {
+export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoading, readOnly, onClose }) => {
   const [accepted, setAccepted] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -124,7 +126,7 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
           {readOnly ? (
             <button
               type="button"
-              onClick={() => onAccept()}
+              onClick={onClose || (() => onAccept())}
               className="w-full py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all bg-gray-900 text-white hover:bg-gray-800 active:scale-[0.995]"
             >
               Fechar
