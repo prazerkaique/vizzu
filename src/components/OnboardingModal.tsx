@@ -20,6 +20,13 @@ const SEGMENTS = [
   'Outro',
 ];
 
+const SALES_CHANNELS = [
+  { value: 'ecommerce', label: 'E-commerce (loja virtual)' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'redes-sociais', label: 'Redes sociais (Instagram, etc.)' },
+  { value: 'outros', label: 'Outros' },
+];
+
 function formatWhatsApp(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
   if (digits.length === 0) return '';
@@ -33,18 +40,42 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [segment, setSegment] = useState('');
+  const [segmentCustom, setSegmentCustom] = useState('');
+  const [sellsOnline, setSellsOnline] = useState<boolean | null>(null);
+  const [salesChannels, setSalesChannels] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [instagramOpened, setInstagramOpened] = useState(false);
 
   if (!isOpen) return null;
 
-  const isStep1Valid = name.trim().length > 0 && whatsapp.replace(/\D/g, '').length >= 10 && segment !== '';
+  const finalSegment = segment === 'Outro' ? (segmentCustom.trim() || 'Outro') : segment;
+  const isStep1Valid =
+    name.trim().length > 0 &&
+    whatsapp.replace(/\D/g, '').length >= 10 &&
+    segment !== '' &&
+    (segment !== 'Outro' || segmentCustom.trim().length > 0) &&
+    sellsOnline !== null &&
+    (sellsOnline === false || salesChannels.length > 0);
+
+  const toggleChannel = (ch: string) => {
+    setSalesChannels(prev =>
+      prev.includes(ch) ? prev.filter(c => c !== ch) : [...prev, ch]
+    );
+  };
 
   const handleContinue = async () => {
     if (!isStep1Valid) return;
     setError('');
 
-    const success = await onSaveProfile(name, whatsapp, segment);
+    // Montar segmento completo com info de venda online
+    let fullSegment = finalSegment;
+    if (sellsOnline) {
+      fullSegment += ` | Vende online: ${salesChannels.join(', ')}`;
+    } else {
+      fullSegment += ' | Não vende online';
+    }
+
+    const success = await onSaveProfile(name, whatsapp, fullSegment);
     if (success) {
       setStep(2);
     } else {
@@ -68,7 +99,7 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
     >
       <div
         className="relative w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col"
-        style={{ maxHeight: 'min(90vh, 90dvh)' }}
+        style={{ maxHeight: 'min(92vh, 92dvh)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -153,7 +184,7 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
                 </label>
                 <select
                   value={segment}
-                  onChange={e => setSegment(e.target.value)}
+                  onChange={e => { setSegment(e.target.value); if (e.target.value !== 'Outro') setSegmentCustom(''); }}
                   className={`w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 focus:border-[#FF6B6B] transition-colors appearance-none bg-white ${segment ? 'text-gray-900' : 'text-gray-400'}`}
                 >
                   <option value="" disabled>Selecione seu segmento</option>
@@ -161,6 +192,69 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
+
+                {/* Campo para especificar "Outro" */}
+                {segment === 'Outro' && (
+                  <input
+                    type="text"
+                    value={segmentCustom}
+                    onChange={e => setSegmentCustom(e.target.value)}
+                    placeholder="Especifique seu segmento"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 focus:border-[#FF6B6B] transition-colors mt-2"
+                    autoFocus
+                  />
+                )}
+              </div>
+
+              {/* Vende online? */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Você vende online? *
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setSellsOnline(true); }}
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${sellsOnline === true
+                      ? 'border-[#FF6B6B] bg-[#FF6B6B]/5 text-[#FF6B6B]'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                  >
+                    Sim
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSellsOnline(false); setSalesChannels([]); }}
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${sellsOnline === false
+                      ? 'border-[#FF6B6B] bg-[#FF6B6B]/5 text-[#FF6B6B]'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                  >
+                    Não
+                  </button>
+                </div>
+
+                {/* Canais de venda */}
+                {sellsOnline === true && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-gray-500">Por onde você vende?</p>
+                    <div className="flex flex-wrap gap-2">
+                      {SALES_CHANNELS.map(ch => (
+                        <button
+                          key={ch.value}
+                          type="button"
+                          onClick={() => toggleChannel(ch.value)}
+                          className={`px-3.5 py-2 rounded-lg border text-xs font-medium transition-all ${salesChannels.includes(ch.value)
+                            ? 'border-[#FF6B6B] bg-[#FF6B6B]/5 text-[#FF6B6B]'
+                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          }`}
+                        >
+                          {ch.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {error && (
@@ -186,24 +280,27 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
               {/* Botão abrir Instagram */}
               <button
                 onClick={handleOpenInstagram}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-[#E1306C] hover:text-[#E1306C] transition-colors mb-3"
-              >
-                <i className="fab fa-instagram"></i>
-                Abrir Instagram
-                <i className="fas fa-external-link-alt text-[10px] opacity-50"></i>
-              </button>
-
-              {/* Botão "Já segui" */}
-              <button
-                onClick={handleFinish}
-                className={`w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-bold text-white transition-all ${instagramOpened
-                  ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:shadow-[#FF6B6B]/25 scale-100'
-                  : 'bg-gray-300 hover:bg-gray-400'
+                className={`w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-bold transition-all ${instagramOpened
+                  ? 'border-2 border-green-500 bg-green-50 text-green-600'
+                  : 'bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white hover:shadow-lg hover:shadow-[#FD1D1D]/25'
                 }`}
               >
-                <i className="fas fa-check"></i>
-                Já segui! Liberar meus créditos
+                <i className="fab fa-instagram"></i>
+                {instagramOpened ? 'Instagram aberto!' : 'Seguir @vizzu.pro'}
+                {!instagramOpened && <i className="fas fa-external-link-alt text-[10px] opacity-70"></i>}
+                {instagramOpened && <i className="fas fa-check text-xs"></i>}
               </button>
+
+              {/* Botão "Já segui" — só aparece após abrir Instagram */}
+              {instagramOpened && (
+                <button
+                  onClick={handleFinish}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:shadow-[#FF6B6B]/25 transition-all mt-3 animate-[fadeIn_0.3s_ease-out]"
+                >
+                  <i className="fas fa-gift"></i>
+                  Já segui! Liberar meus créditos
+                </button>
+              )}
             </div>
           )}
         </div>
