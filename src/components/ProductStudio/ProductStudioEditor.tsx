@@ -20,6 +20,7 @@ import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { useGeneration } from '../../contexts/GenerationContext';
 import { useProducts } from '../../contexts/ProductsContext';
 import { useSystemLoad } from '../../hooks/useSystemLoad';
+import { SlowServerBanner } from '../shared/SlowServerBanner';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { StudioEditModal } from './StudioEditModal';
@@ -193,6 +194,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Mensagem de alta demanda (exibida no loading)
  const [highDemandMessage, setHighDemandMessage] = useState<string | null>(null);
+ // Timestamp de início da geração para o SlowServerBanner
+ const [psStartTime, setPsStartTime] = useState<number | null>(null);
 
  // Estados de edição do produto
  const [editMode, setEditMode] = useState(false);
@@ -606,6 +609,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  setGenerating(true);
  setProgress(10);
+ setPsStartTime(pending.startTime);
 
  // Restaurar ângulos selecionados da geração pendente
  if (pending.angles?.length > 0) {
@@ -953,6 +957,21 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  };
 
+ // "Continuar em segundo plano" — libera lock mas mantém localStorage pending
+ const handleContinueInBackground = () => {
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ const setProg = onSetProgress || setLocalProgress;
+ setGen(false);
+ setProg(0);
+ setPsStartTime(null);
+ setCompletedAngleStatuses([]);
+ setGenerationFinalStatus(null);
+ generationFinalStatusRef.current = null;
+ setCurrentGenerationId(null);
+ if (onSetMinimized) onSetMinimized(false);
+ // NÃO limpar pending PS generation — App.tsx usa para detectar conclusão em background
+ };
+
  // ═══════════════════════════════════════════════════════════════
  // Callbacks para página de resultado
  // ═══════════════════════════════════════════════════════════════
@@ -1272,6 +1291,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setRetryAttempts({});
  setRetryingAngle(null);
  setCurrentGenerationId(null);
+ setPsStartTime(Date.now());
 
  // Salvar geração pendente (sem generationId por enquanto — será atualizado após resposta)
  savePendingPSGeneration({
@@ -3010,15 +3030,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </p>
  </div>
 
- {/* Aviso de alta demanda */}
- {highDemandMessage && (
- <div className={`w-full max-w-xs mb-4 px-4 py-3 rounded-xl border ${theme !== 'light' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
-   <div className="flex items-center gap-2">
-     <i className={`fas fa-clock text-sm ${theme !== 'light' ? 'text-amber-400' : 'text-amber-600'}`}></i>
-     <p className={`text-xs ${theme !== 'light' ? 'text-amber-300' : 'text-amber-700'}`}>
-       {highDemandMessage}
-     </p>
-   </div>
+ {/* Aviso de alta demanda + botão segundo plano */}
+ {psStartTime && (
+ <div className="w-full max-w-xs">
+ <SlowServerBanner
+ startTime={psStartTime}
+ onContinueInBackground={handleContinueInBackground}
+ />
  </div>
  )}
 

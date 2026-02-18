@@ -15,6 +15,7 @@ import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits'
 import type { VizzuTheme } from '../../contexts/UIContext';
 import { useUI } from '../../contexts/UIContext';
 import { useGeneration } from '../../contexts/GenerationContext';
+import { SlowServerBanner } from '../shared/SlowServerBanner';
 
 interface LookComposerEditorProps {
  product: Product;
@@ -609,23 +610,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }
  }, 5000);
 
- // Timeout de 5 minutos
- const timeout = setTimeout(() => {
- clearInterval(pollInterval);
- clearPendingGeneration();
- setGenerating(false);
- setProgress(0);
- setRestoredLookItems([]);
- setRestoredProductThumbnail(null);
- setRestoredModelThumbnail(null);
- setGenerationStartTime(null);
- setTimerStep(0);
- alert('A geração expirou após 5 minutos. Tente novamente.');
- }, 5 * 60 * 1000);
+ // Sem timeout hard — o polling continua até completar ou o usuário clicar "segundo plano"
+ // O sistema de background check do App.tsx detecta gerações concluídas via localStorage
 
  return () => {
  clearInterval(pollInterval);
- clearTimeout(timeout);
  };
  }, [userId, checkPendingGeneration, onSetGenerating, onSetProgress]);
 
@@ -1052,6 +1041,20 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  if (onSetMinimized) onSetMinimized(true);
  };
 
+ // "Continuar em segundo plano" — libera lock mas mantém localStorage pending
+ const handleContinueInBackground = () => {
+ const setGenerating = onSetGenerating || setLocalIsGenerating;
+ const setProgress = onSetProgress || setLocalProgress;
+ setGenerating(false);
+ setProgress(0);
+ setRestoredLookItems([]);
+ setRestoredProductThumbnail(null);
+ setRestoredModelThumbnail(null);
+ setGenerationStartTime(null);
+ setTimerStep(0);
+ // NÃO limpar pending generation — App.tsx usa para detectar conclusão em background
+ };
+
  const handleMaximize = () => {
  if (onSetMinimized) onSetMinimized(false);
  };
@@ -1411,6 +1414,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setProgress(Math.round(mapped));
  },
  });
+
+ // Se polling timeout, tratar como geração em background (não é erro)
+ if ((resultFront as any)._timeout) {
+ console.warn('[LC] Polling timeout — geração continua no servidor em background');
+ // Manter pending para background check detectar conclusão
+ keepPendingOnError = true;
+ showToast('A geração está demorando mais que o esperado. Ela continua rodando e aparecerá na sua Galeria.', 'info');
+ return;
+ }
 
  if (!resultFront.success || !resultFront.generation?.image_url) {
  throw new Error(resultFront.error || resultFront.message || 'Erro ao gerar imagem de frente');
@@ -2901,6 +2913,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <span className={`text-sm font-bold ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>{currentProgress}%</span>
  </div>
  </div>
+
+ {/* Aviso de alta demanda + botão segundo plano */}
+ {generationStartTime && (
+ <SlowServerBanner
+ startTime={generationStartTime}
+ onContinueInBackground={handleContinueInBackground}
+ />
+ )}
 
  {/* Minimize Button */}
  <button

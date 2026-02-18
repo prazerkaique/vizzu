@@ -143,6 +143,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('');
+  const [csStartTime, setCsStartTime] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleStillsCount, setVisibleStillsCount] = useState(6);
   const [selectedStill, setSelectedStill] = useState<CreativeStillGeneration | null>(null);
@@ -293,6 +294,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     setGenerationProgress(10);
     onSetProgress?.(10);
     setLoadingText('');
+    setCsStartTime(Date.now());
     setView('results');
 
     // Salvar pending no localStorage para sobreviver F5/fechamento
@@ -412,9 +414,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       onSetProgress?.(Math.round(currentProg));
     }, 1000);
 
-    // Polling — multi-worker: mínimo 5 min, ou 3 min por ângulo (Gemini ~90s + fila + S3)
+    // Polling — multi-worker: mínimo 10 min, ou 5 min por variação (Gemini pode estar lento)
     const POLL_INTERVAL = 3000;
-    const POLL_TIMEOUT = Math.max(params.variationsCount * 180000, 300000);
+    const POLL_TIMEOUT = Math.max(params.variationsCount * 300000, 600000);
     const pollStart = Date.now();
 
     try {
@@ -606,6 +608,15 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           setView('editor');
         }}
         isMinimized={isMinimized}
+        generationStartTime={csStartTime}
+        onContinueInBackground={() => {
+          setIsGenerating(false);
+          onSetGenerating?.(false);
+          setGenerationProgress(0);
+          onSetProgress?.(0);
+          setCsStartTime(null);
+          // NÃO limpar localStorage pending — App.tsx usa para detectar conclusão em background
+        }}
         editBalance={editBalance}
         regularBalance={userCredits}
         onDeductEditCredits={onDeductEditCredits}

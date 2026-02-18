@@ -708,8 +708,9 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
         if (elapsedMs > 30000) {
           pendingTooLongChecks++;
           console.warn(`[ModeloIA] Geração ainda pending após ${Math.round(elapsedMs / 1000)}s (check ${pendingTooLongChecks})`);
-          // Após 3 checks consecutivos em pending depois de 30s = ~39s total
-          if (pendingTooLongChecks >= 3) {
+          // Após 20 checks consecutivos em pending depois de 30s = ~90s total
+          // (Gemini pode estar lento, dar tempo ao N8N para atualizar status)
+          if (pendingTooLongChecks >= 20) {
             throw new Error('O servidor de geração não respondeu. Tente novamente.');
           }
         }
@@ -719,7 +720,9 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       }
     }
 
-    throw new Error('Timeout aguardando geração da imagem');
+    // Timeout de polling atingido — retornar flag para o frontend tratar como background
+    console.warn('[ModeloIA] Polling timeout atingido — geração pode continuar no servidor');
+    return { success: false, _timeout: true } as any;
   }
 
   return data;
@@ -1034,9 +1037,6 @@ interface GenerateModelImagesResponse {
  * Custo: 2 créditos (debitados pelo workflow N8N)
  */
 export async function generateModelImages(params: GenerateModelImagesParams): Promise<GenerateModelImagesResponse> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 240000); // 4 minutos
-
   try {
     const response = await fetch(`${N8N_BASE_URL}/vizzu/generate-model-images`, {
       method: 'POST',
@@ -1050,8 +1050,13 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
         prompt: params.prompt,
         referenceImageUrls: params.referenceImageUrls,
       }),
-      signal: controller.signal,
     });
+
+    // 502/504 = webhook timeout, mas o workflow CONTINUA rodando no N8N
+    if (response.status === 502 || response.status === 504) {
+      console.warn(`[Models] Timeout do webhook (${response.status}) — workflow continua no servidor`);
+      return { success: false, _serverTimeout: true } as any;
+    }
 
     const data = await response.json();
 
@@ -1060,8 +1065,10 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
     }
 
     return data;
-  } finally {
-    clearTimeout(timeoutId);
+  } catch (fetchError) {
+    // Erro de rede (Failed to fetch, timeout, etc.) — workflow pode estar rodando
+    console.warn('[Models] Erro de rede — workflow pode estar rodando no servidor:', fetchError);
+    return { success: false, _serverTimeout: true } as any;
   }
 }
 

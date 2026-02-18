@@ -19,6 +19,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
+import { SlowServerBanner } from '../shared/SlowServerBanner';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { PROVADOR_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -69,6 +70,10 @@ interface Props {
  currentPlan?: Plan;
  // Callback para abrir modal de planos (quando tentar usar 4K sem permissão)
  onOpenPlanModal?: () => void;
+ // Timestamp de início da geração para o banner de alta demanda
+ generationStartTime?: number | null;
+ // Callback para "Continuar em segundo plano"
+ onContinueInBackground?: () => void;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -115,6 +120,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onBack,
  currentPlan,
  onOpenPlanModal,
+ generationStartTime,
+ onContinueInBackground,
 }) => {
  // Estados do Wizard
  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -1691,6 +1698,14 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* Aviso de alta demanda + botão segundo plano */}
+ {generationStartTime && onContinueInBackground && (
+ <SlowServerBanner
+ startTime={generationStartTime}
+ onContinueInBackground={onContinueInBackground}
+ />
  )}
 
  {/* Botao Minimizar */}

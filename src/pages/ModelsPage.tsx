@@ -549,6 +549,18 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  });
 
  clearInterval(progressInterval);
+
+ // Se timeout do servidor, a geração continua em background
+ if ((result as any)._serverTimeout) {
+ console.warn('[Models] Server timeout — geração continua no servidor');
+ showToast('A geração está demorando mais que o esperado. Ela continua rodando e aparecerá quando pronta.', 'info');
+ // NÃO remover localStorage pending — App.tsx detecta conclusão
+ setModelGenerationStep('done');
+ setModelGenerationProgress(95);
+ setModelsProgress(95);
+ return;
+ }
+
  setModelGenerationProgress(100);
  setModelsProgress(100);
  setModelGenerationStep('done');
@@ -757,6 +769,17 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    });
 
    clearInterval(progressInterval);
+
+   // Se timeout do servidor, a geração continua em background
+   if ((result as any)._serverTimeout) {
+     console.warn('[Models] Server timeout — geração real continua no servidor');
+     showToast('A geração está demorando mais que o esperado. Ela continua rodando e aparecerá quando pronta.', 'info');
+     setModelGenerationStep('done');
+     setModelGenerationProgress(95);
+     setModelsProgress(95);
+     return;
+   }
+
    setModelGenerationProgress(100);
    setModelsProgress(100);
    setModelGenerationStep('done');

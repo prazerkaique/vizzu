@@ -14,6 +14,7 @@ import type { DownloadableImage } from '../../utils/downloadSizes';
 import { EcommerceExportButton } from '../shared/EcommerceExportButton';
 import { useWatermark } from '../../hooks/useWatermark';
 import { WatermarkOverlay } from '../shared/WatermarkOverlay';
+import { SlowServerBanner } from '../shared/SlowServerBanner';
 
 const LOADING_PHRASES = [
  "Preparando a composição criativa...",
@@ -47,6 +48,8 @@ interface Props {
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  onVariationUpdated?: (index: number, newUrl: string) => void;
  onVariationAdded?: (newUrl: string) => void;
+ generationStartTime?: number | null;
+ onContinueInBackground?: () => void;
 }
 
 /** Get the list of variation URLs from a generation, with retrocompat fallback */
@@ -85,6 +88,8 @@ export const CreativeStillResults: React.FC<Props> = ({
  onDeductEditCredits,
  onVariationUpdated,
  onVariationAdded,
+ generationStartTime,
+ onContinueInBackground,
 }) => {
  const { openViewer } = useImageViewer();
  const [selectedVariation, setSelectedVariation] = useState<number | null>(null);
@@ -276,6 +281,14 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* Aviso de alta demanda + botão segundo plano */}
+ {generationStartTime && onContinueInBackground && (
+ <SlowServerBanner
+ startTime={generationStartTime}
+ onContinueInBackground={onContinueInBackground}
+ />
  )}
 
  {/* Botão minimizar (padrão PS — embaixo, botão largo) */}

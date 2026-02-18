@@ -128,6 +128,7 @@ function App() {
  } = useGeneration();
 
  const [provadorClient, setProvadorClient] = useState<Client | null>(null);
+ const [provadorStartTime, setProvadorStartTime] = useState<number | null>(null);
  const [createClientFromProvador, setCreateClientFromProvador] = useState(false);
  const [pendingClientDetail, setPendingClientDetail] = useState<Client | null>(null);
  const [selectedSavedLook, setSelectedSavedLook] = useState<ClientLook | null>(null);
@@ -742,6 +743,7 @@ function App() {
  setIsGeneratingProvador(true);
  setProvadorProgress(0);
  setProvadorLoadingIndex(0);
+ setProvadorStartTime(Date.now());
 
  // Salvar geração pendente no localStorage (sobrevive ao F5 / fechamento)
  try {
@@ -1133,6 +1135,14 @@ function App() {
  onBack={goBack}
  currentPlan={currentPlan}
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
+ generationStartTime={provadorStartTime}
+ onContinueInBackground={() => {
+ setIsGeneratingProvador(false);
+ setProvadorProgress(0);
+ setProvadorStartTime(null);
+ setProvadorMinimized(false);
+ // NÃO limpar localStorage pending — App.tsx usa para detectar conclusão em background
+ }}
  />
  </Suspense>
  </div>
