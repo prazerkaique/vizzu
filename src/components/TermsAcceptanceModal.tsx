@@ -30,12 +30,15 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
 
   // Detectar scroll para esconder o fade de "tem mais conteúdo"
   useEffect(() => {
+    if (!isOpen) return;
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
       const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
       if (nearBottom) setShowScrollHint(false);
     };
+    // Checar na montagem (conteúdo pode ser curto)
+    onScroll();
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [isOpen]);
@@ -69,7 +72,6 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback para navegadores sem clipboard API
       const textarea = document.createElement('textarea');
       textarea.value = termsText;
       textarea.style.position = 'fixed';
@@ -91,18 +93,18 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
   };
 
   const handleClose = () => {
-    if (onClose) {
-      onClose();
-    }
+    if (onClose) onClose();
   };
 
   return (
     <div
       className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+      style={{ isolation: 'isolate' }}
       onClick={readOnly ? handleClose : undefined}
     >
       <div
-        className="relative w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] sm:mx-4"
+        className="relative w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col"
+        style={{ maxHeight: 'min(95vh, 95dvh)', height: 'min(95vh, 95dvh)', maxWidth: readOnly ? '42rem' : undefined }}
         onClick={e => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -115,14 +117,14 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
                 onClick={handleClose}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <i className="fas fa-times"></i>
+                <i className="fas fa-times text-sm"></i>
               </button>
             )}
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight mt-4" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight mt-3" style={{ fontFamily: "'DM Serif Display', serif" }}>
             Termos de Uso e Política de Privacidade
           </h2>
-          <p className="text-xs text-gray-400 mt-1.5">
+          <p className="text-xs text-gray-400 mt-1">
             Versão {CURRENT_TERMS_VERSION} — {TERMS_EFFECTIVE_DATE}
           </p>
           {!readOnly && (
@@ -133,75 +135,73 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
         </div>
 
         {/* ── Divisor ── */}
-        <div className="mx-5 sm:mx-8 border-t border-gray-200" />
+        <div className="mx-5 sm:mx-8 border-t border-gray-200 flex-shrink-0" />
 
-        {/* ── Corpo scrollável ── */}
-        <div className="relative flex-1 min-h-0">
-          <div
-            ref={scrollRef}
-            className="absolute inset-0 overflow-y-auto overscroll-contain px-5 sm:px-8 py-5"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {/* TERMOS DE USO */}
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
-              Termos de Uso
-            </p>
+        {/* ── Corpo scrollável (padrão flex-1 + min-h-0 + overflow) ── */}
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-8 py-5"
+          style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+        >
+          {/* TERMOS DE USO */}
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
+            Termos de Uso
+          </p>
 
-            {TERMS_SECTIONS.map(section => (
-              <div key={section.id} className="mb-5">
-                <h4 className="text-[13px] font-bold text-gray-900 mb-1">
-                  {section.title}
-                </h4>
-                <p className="text-[13px] text-gray-500 leading-[1.7] whitespace-pre-line">
-                  {section.content}
-                </p>
-              </div>
-            ))}
-
-            {/* Divisor entre seções */}
-            <div className="border-t border-gray-200 my-8" />
-
-            {/* POLÍTICA DE PRIVACIDADE */}
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
-              Política de Privacidade
-            </p>
-
-            {PRIVACY_SECTIONS.map(section => (
-              <div key={section.id} className="mb-5">
-                <h4 className="text-[13px] font-bold text-gray-900 mb-1">
-                  {section.title}
-                </h4>
-                <p className="text-[13px] text-gray-500 leading-[1.7] whitespace-pre-line">
-                  {section.content}
-                </p>
-              </div>
-            ))}
-
-            {/* Rodapé legal */}
-            <div className="border-t border-gray-100 mt-6 pt-4 pb-2">
-              <p className="text-[11px] text-gray-400 text-center">
-                {LEGAL_FOOTER}
+          {TERMS_SECTIONS.map(section => (
+            <div key={section.id} className="mb-5">
+              <h4 className="text-[13px] font-bold text-gray-900 mb-1">
+                {section.title}
+              </h4>
+              <p className="text-[13px] text-gray-500 leading-[1.7] whitespace-pre-line">
+                {section.content}
               </p>
             </div>
-          </div>
+          ))}
 
-          {/* Fade inferior indicando mais conteúdo */}
-          {showScrollHint && (
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-          )}
+          {/* Divisor entre seções */}
+          <div className="border-t border-gray-200 my-8" />
+
+          {/* POLÍTICA DE PRIVACIDADE */}
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
+            Política de Privacidade
+          </p>
+
+          {PRIVACY_SECTIONS.map(section => (
+            <div key={section.id} className="mb-5">
+              <h4 className="text-[13px] font-bold text-gray-900 mb-1">
+                {section.title}
+              </h4>
+              <p className="text-[13px] text-gray-500 leading-[1.7] whitespace-pre-line">
+                {section.content}
+              </p>
+            </div>
+          ))}
+
+          {/* Rodapé legal */}
+          <div className="border-t border-gray-100 mt-6 pt-4 pb-2">
+            <p className="text-[11px] text-gray-400 text-center">
+              {LEGAL_FOOTER}
+            </p>
+          </div>
         </div>
 
+        {/* ── Fade indicando mais conteúdo ── */}
+        {showScrollHint && (
+          <div className="absolute bottom-[60px] left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        )}
+
         {/* ── Footer fixo ── */}
-        <div className="flex-shrink-0 px-5 sm:px-8 py-4 border-t border-gray-200">
+        <div className="flex-shrink-0 px-5 sm:px-8 py-4 border-t border-gray-200 bg-white sm:rounded-b-2xl">
           {readOnly ? (
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleCopy}
-                className={`flex-shrink-0 px-4 py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all border ${
+                className={`flex-shrink-0 px-4 py-3 rounded-xl font-semibold text-sm tracking-wide transition-all border ${
                   copied
                     ? 'bg-green-50 border-green-200 text-green-600'
-                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                 }`}
               >
                 <i className={`fas ${copied ? 'fa-check' : 'fa-copy'} mr-1.5`}></i>
@@ -210,7 +210,7 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all bg-gray-900 text-white hover:bg-gray-800 active:scale-[0.995]"
+                className="flex-1 py-3 rounded-xl font-semibold text-sm tracking-wide transition-all bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-700 active:scale-[0.995]"
               >
                 Fechar
               </button>
