@@ -64,39 +64,38 @@ export const LowCreditsBanner: React.FC<Props> = ({
   return (
     <div
       key={bannerKey}
-      className="relative bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white overflow-hidden"
+      className="relative bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white overflow-hidden animate-[softBlink_3s_ease-in-out_infinite]"
     >
-      {/* Faixa principal */}
-      <div className="relative z-10 flex items-center justify-center gap-4 px-4 py-3 md:py-3.5">
-        {/* Ícone animado */}
-        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 animate-pulse">
-          <i className={`fas ${msg.icon} text-sm text-white`}></i>
-        </div>
+      {/* Faixa compacta */}
+      <div className="relative z-10 flex items-center justify-center gap-3 px-4 py-1.5">
+        <i className={`fas ${msg.icon} text-[10px] text-white/90`}></i>
 
-        {/* Texto */}
-        <div className="flex items-center gap-2 flex-wrap justify-center">
-          <span className="text-sm md:text-base font-bold tracking-tight font-serif">{msg.text}</span>
-          <span className="text-xs md:text-sm font-medium text-white/80">{msg.sub}</span>
-        </div>
+        <span className="text-xs font-bold tracking-tight">{msg.text}</span>
+        <span className="text-[10px] font-medium text-white/70 hidden sm:inline">{msg.sub}</span>
 
-        {/* CTA */}
         <button
           onClick={onBuyCredits}
-          className="flex-shrink-0 px-5 py-2 rounded-xl text-xs md:text-sm font-extrabold bg-white text-[#FF6B6B] hover:bg-white/90 shadow-lg shadow-black/10 hover:shadow-xl hover:scale-105 transition-all active:scale-95"
+          className="flex-shrink-0 px-3.5 py-1 rounded-lg text-[10px] font-extrabold bg-white text-[#FF6B6B] hover:bg-white/90 shadow-sm hover:scale-105 transition-all active:scale-95"
         >
           {msg.cta}
         </button>
 
-        {/* Dismiss (só para créditos baixos) */}
         {isLowCredits && (
           <button
             onClick={() => setDismissed(true)}
-            className="ml-1 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/20 text-white/70 hover:text-white flex-shrink-0"
+            className="w-5 h-5 rounded-full flex items-center justify-center transition-colors hover:bg-white/20 text-white/60 hover:text-white flex-shrink-0"
           >
-            <i className="fas fa-times text-xs"></i>
+            <i className="fas fa-times text-[8px]"></i>
           </button>
         )}
       </div>
+
+      <style>{`
+        @keyframes softBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.82; }
+        }
+      `}</style>
     </div>
   );
 };
