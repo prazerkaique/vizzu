@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import {
   TERMS_SECTIONS,
   PRIVACY_SECTIONS,
-  TERMS_SUMMARY,
   TERMS_EFFECTIVE_DATE,
   CURRENT_TERMS_VERSION,
   LEGAL_FOOTER,
@@ -84,19 +83,6 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
 
         {/* ── Scrollable Body ── */}
         <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
-          {/* Resumo */}
-          <div className="bg-gradient-to-br from-orange-50 to-rose-50 rounded-xl p-4 mb-5 border border-orange-100/60">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Resumo</p>
-            <ul className="space-y-1.5">
-              {TERMS_SUMMARY.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-[#FF6B6B] mt-0.5 flex-shrink-0">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Tabs */}
           <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
             <button
