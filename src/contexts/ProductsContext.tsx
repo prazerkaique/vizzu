@@ -232,43 +232,11 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     // 1. Esconder otimisticamente
     setProducts(prev => prev.filter(p => p.id !== product.id));
 
-    // 2. Deletar IMEDIATAMENTE do banco
+    // 2. Deletar via RPC (SECURITY DEFINER — bypassa RLS)
     try {
-      // Desvincular gerações (FK generations.product_id → products.id)
-      await supabase
-        .from('generations')
-        .update({ product_id: null })
-        .eq('product_id', product.id);
-
-      // Desvincular creative stills (FK creative_still_generations.product_id → products.id)
-      await supabase
-        .from('creative_still_generations')
-        .update({ product_id: null })
-        .eq('product_id', product.id);
-
-      // Remover mapeamento Shopify (FK ecommerce_product_map.vizzu_product_id → products.id)
-      await supabase
-        .from('ecommerce_product_map')
-        .delete()
-        .eq('vizzu_product_id', product.id);
-
-      // Remover exports Shopify (FK ecommerce_image_exports.vizzu_product_id → products.id)
-      await supabase
-        .from('ecommerce_image_exports')
-        .delete()
-        .eq('vizzu_product_id', product.id);
-
-      // Deletar imagens
-      await supabase
-        .from('product_images')
-        .delete()
-        .eq('product_id', product.id);
-
-      // Deletar produto
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', product.id);
+      const { error } = await supabase.rpc('delete_product_cascade', {
+        p_product_id: product.id,
+      });
 
       if (error) {
         console.error('Erro ao deletar produto:', error);
@@ -293,49 +261,16 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
     onDone?.();
 
-    // 2. Deletar IMEDIATAMENTE do banco
+    // 2. Deletar via RPC (SECURITY DEFINER — bypassa RLS)
     try {
-      // Desvincular gerações
-      await supabase
-        .from('generations')
-        .update({ product_id: null })
-        .in('product_id', selectedIds);
-
-      // Desvincular creative stills
-      await supabase
-        .from('creative_still_generations')
-        .update({ product_id: null })
-        .in('product_id', selectedIds);
-
-      // Remover mapeamento Shopify
-      await supabase
-        .from('ecommerce_product_map')
-        .delete()
-        .in('vizzu_product_id', selectedIds);
-
-      // Remover exports Shopify
-      await supabase
-        .from('ecommerce_image_exports')
-        .delete()
-        .in('vizzu_product_id', selectedIds);
-
-      // Deletar imagens
-      await supabase
-        .from('product_images')
-        .delete()
-        .in('product_id', selectedIds);
-
-      // Deletar produtos
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .in('id', selectedIds);
-
-      if (error) {
-        console.error('Erro ao deletar produtos:', error);
-        showToast('Erro ao excluir produtos: ' + error.message, 'error');
-        if (user?.id) loadUserProducts(user.id);
-        return;
+      for (const id of selectedIds) {
+        const { error } = await supabase.rpc('delete_product_cascade', {
+          p_product_id: id,
+        });
+        if (error) {
+          console.error(`Erro ao deletar produto ${id}:`, error);
+          throw error;
+        }
       }
       showToast(`${count} produto${count > 1 ? 's' : ''} excluído${count > 1 ? 's' : ''}`, 'success');
       addHistoryLog('Produtos excluídos', `${count} produto${count > 1 ? 's foram removidos' : ' foi removido'} do catálogo`, 'success', productsToDelete, 'manual', 0);
