@@ -1,6 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useUI } from '../contexts/UIContext';
 import { useGeneration } from '../contexts/GenerationContext';
+import { useShopifyConnection } from '../hooks/useShopifyConnection';
+import { supabase } from '../services/supabaseClient';
 import { useGalleryData, FEATURE_CONFIG, type FeatureType, type GalleryItem, type GalleryGroup } from '../hooks/useGalleryData';
 import { useDebounce } from '../hooks/useDebounce';
 import { useImageViewer } from '../components/ImageViewer';
@@ -49,6 +51,21 @@ export function GalleryPage() {
   }, [completedProducts]);
   const { openViewer } = useImageViewer();
   const hasWatermark = useWatermark();
+
+  // ── Shopify: IDs de produtos mapeados (para mostrar botão export só onde faz sentido) ──
+  const { connection } = useShopifyConnection();
+  const [mappedProductIds, setMappedProductIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!connection?.id) { setMappedProductIds(new Set()); return; }
+    supabase
+      .from('ecommerce_product_map')
+      .select('vizzu_product_id')
+      .eq('connection_id', connection.id)
+      .then(({ data }) => {
+        if (data) setMappedProductIds(new Set(data.map(r => r.vizzu_product_id)));
+      });
+  }, [connection?.id]);
 
   // ── Filtros ──
   const [activeFeature, setActiveFeature] = useState<FeatureType | null>(null);
@@ -490,7 +507,7 @@ export function GalleryPage() {
                                 <i className="fas fa-download text-xs" />
                               </button>
 
-                              {item.productId && (
+                              {item.productId && mappedProductIds.has(item.productId) && (
                                 <div onClick={(e) => e.stopPropagation()}>
                                   <EcommerceExportButton
                                     images={[{ url: item.imageUrl, label: item.productName || 'Imagem' }]}
@@ -608,7 +625,7 @@ export function GalleryPage() {
             Baixar
           </button>
           {(() => {
-            const exportable = selectedItems.filter(i => i.productId);
+            const exportable = selectedItems.filter(i => i.productId && mappedProductIds.has(i.productId));
             if (exportable.length === 0) return null;
             const firstProductId = exportable[0].productId!;
             return (
