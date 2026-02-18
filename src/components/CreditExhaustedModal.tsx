@@ -8,6 +8,8 @@ import { usePlans } from '../contexts/PlansContext';
 import { supabase } from '../services/supabaseClient';
 import type { VizzuTheme } from '../contexts/UIContext';
 
+const MAX_FEATURES_COLLAPSED = 4;
+
 interface Props {
  isOpen: boolean;
  onClose: () => void;
@@ -52,7 +54,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  const [isAnimating, setIsAnimating] = useState(false);
  const [generationsToday, setGenerationsToday] = useState<number | null>(null);
 
- const { plans } = usePlans();
+ const { plans, allPlans, masterFeatures, planIncluded, planPersona, planCta } = usePlans();
  const isDark = theme !== 'light';
  const isInsufficient = currentCredits > 0 && currentCredits < creditsNeeded;
  const isZero = currentCredits === 0;
@@ -289,18 +291,21 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  );
 
  // ═══════════════════════════════════════════════════════════════
- // CAMADA 2: Modal Expandido (Planos)
+ // CAMADA 2: Modal Expandido (Planos — espelho do SettingsPage)
  // ═══════════════════════════════════════════════════════════════
- const renderExpandedModal = () => (
- <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} ${isDark ? 'bg-white/95 border border-gray-200' : 'bg-white border border-gray-200'}`} style={{ backdropFilter: 'blur(20px)' }}>
+ const renderExpandedModal = () => {
+ const displayPlans = allPlans.filter(p => p.id !== 'test');
+
+ return (
+ <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} bg-white border border-gray-200`} style={{ backdropFilter: 'blur(20px)' }}>
  {/* Header */}
- <div className={`sticky top-0 z-10 flex items-center justify-between p-4 border-b ${isDark ? 'bg-white/95 border-gray-200' : 'bg-white border-gray-200'}`}>
+ <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b bg-white border-gray-200">
  {isProactive ? (
  <div />
  ) : (
  <button
  onClick={handleBackToCompact}
- className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+ className="flex items-center gap-2 text-sm font-medium transition-colors text-gray-500 hover:text-gray-900"
  >
  <i className="fas fa-arrow-left"></i>
  Voltar
@@ -308,7 +313,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  )}
  <button
  onClick={onClose}
- className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-gray-50 text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
+ className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100 text-gray-400"
  >
  <i className="fas fa-times"></i>
  </button>
@@ -317,156 +322,242 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <div className="overflow-y-auto max-h-[calc(90vh-60px)] p-6">
  {/* Título */}
  <div className="text-center mb-6">
- <h2 className={`text-2xl font-bold font-serif mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
- {isProactive ? 'Planos e Créditos' : 'Escolha o melhor plano para você'}
- </h2>
- <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+ <h2 className="text-3xl font-bold font-serif mb-2 text-gray-900">Planos e Preços</h2>
+ <p className="text-sm text-gray-500">
  {isProactive
   ? <>Você tem <span className="text-[#FF6B6B] font-semibold">{currentCredits}</span> crédito{currentCredits !== 1 ? 's' : ''}. Recarregue ou faça upgrade para criar sem parar.</>
-  : 'Transforme suas fotos de produtos em imagens profissionais com IA'}
+  : 'Escolha o plano ideal para seu negócio'}
  </p>
  </div>
 
- {/* Toggle Mensal/Anual */}
- <div className="flex justify-center mb-8">
- <div className={`inline-flex items-center gap-1 p-1 rounded-full ${isDark ? 'bg-gray-50' : 'bg-gray-100'}`}>
- <button
- onClick={() => onSetBillingPeriod('monthly')}
- className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${billingPeriod === 'monthly' ? 'bg-white text-gray-900 ' : isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
- >
- Mensal
- </button>
- <button
- onClick={() => onSetBillingPeriod('yearly')}
- className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${billingPeriod === 'yearly' ? 'bg-white text-gray-900 ' : isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
- >
- Anual
- <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">-20%</span>
- </button>
+ {/* Card de assinatura atual */}
+ <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl p-5 mb-6 max-w-2xl mx-auto">
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div>
+ <p className="text-[10px] uppercase tracking-wider font-medium mb-1 text-gray-400">Plano Atual</p>
+ <p className="text-sm font-bold text-gray-900">{currentPlan.name}</p>
+ </div>
+ <div>
+ <p className="text-[10px] uppercase tracking-wider font-medium mb-1 text-gray-400">Período</p>
+ <p className="text-sm font-bold text-gray-900">{billingPeriod === 'yearly' ? 'Anual' : 'Mensal'}</p>
+ </div>
+ <div>
+ <p className="text-[10px] uppercase tracking-wider font-medium mb-1 text-gray-400">Créditos</p>
+ <p className="text-sm font-bold text-gray-900">{currentCredits}</p>
+ </div>
+ {daysUntilRenewal && daysUntilRenewal <= 30 && (
+ <div>
+ <p className="text-[10px] uppercase tracking-wider font-medium mb-1 text-gray-400">Renova em</p>
+ <p className="text-sm font-bold text-gray-900">{daysUntilRenewal} dias</p>
+ </div>
+ )}
  </div>
  </div>
 
- {/* Cards de Planos */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
- {plans.filter(p => p.id !== 'enterprise' && p.id !== 'test').map((plan) => {
- const isCurrentPlan = plan.id === currentPlan.id;
+ {/* Toggle Mensal/Anual */}
+ <div className="flex items-center justify-center gap-3 mb-6">
+ <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-gray-900' : 'text-gray-400'}`}>Mensal</span>
+ <button
+ onClick={() => onSetBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
+ className={`relative w-12 h-6 rounded-full transition-colors ${billingPeriod === 'yearly' ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : 'bg-gray-300'}`}
+ >
+ <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${billingPeriod === 'yearly' ? 'translate-x-7' : 'translate-x-1'}`}></div>
+ </button>
+ <span className={`text-sm font-medium ${billingPeriod === 'yearly' ? 'text-gray-900' : 'text-gray-400'}`}>Anual</span>
+ </div>
+
+ {/* Social proof */}
+ {generationsToday !== null && generationsToday > 10 && (
+ <div className="flex items-center justify-center gap-4 mb-6">
+ <div className="flex -space-x-2">
+ {[1,2,3,4].map(i => (
+ <div key={i} className="bg-gray-200 border-white w-6 h-6 rounded-full border-2 flex items-center justify-center">
+ <i className="fas fa-user text-gray-400 text-[7px]"></i>
+ </div>
+ ))}
+ </div>
+ <p className="text-xs text-gray-500">
+ <span className="text-gray-900 font-medium">{generationsToday.toLocaleString('pt-BR')}</span> imagens geradas hoje
+ </p>
+ </div>
+ )}
+
+ {/* Cards dos Planos — espelho do SettingsPage */}
+ <div className={`grid grid-cols-1 sm:grid-cols-2 ${displayPlans.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-3 mb-6`}>
+ {displayPlans.map(plan => {
+ const isCurrentPlanCard = plan.id === currentPlan.id;
+ const isTrialPlan = plan.id === 'free';
+ const isEnterprise = plan.id === 'enterprise';
+ const isPro = plan.id === 'pro';
  const isPremier = plan.id === 'premier';
- const price = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;
+ const price = (isTrialPlan || isEnterprise) ? 0 : (billingPeriod === 'monthly' ? plan.priceMonthly : plan.priceYearly);
+ const persona = planPersona[plan.id] || '';
+ const annualSavings = (isTrialPlan || isEnterprise) ? 0 : Math.round((plan.priceMonthly - plan.priceYearly) * 12);
+ const included = planIncluded[plan.id] || new Set();
+ const allFeatures = masterFeatures.map(f => ({ name: f, has: included.has(f) }));
+ const collapsedFeatures = allFeatures.slice(0, MAX_FEATURES_COLLAPSED);
 
  return (
  <div
  key={plan.id}
- className={`relative rounded-2xl p-5 transition-all ${isCurrentPlan ? 'ring-2 ring-[#FF6B6B]' : ''} ${isPremier ? 'ring-2 ring-amber-500' : ''} ${isDark ? 'bg-gray-50/50 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}
+ className={`relative rounded-2xl p-5 transition-all flex flex-col ${
+ isCurrentPlanCard
+  ? 'bg-white border-2 border-[#FF9F43] shadow-sm'
+  : isTrialPlan
+   ? 'bg-gray-50/80 border border-dashed border-gray-300'
+   : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm'
+ }`}
  >
  {/* Badge */}
- {isCurrentPlan && (
- <div className="absolute -top-3 left-1/2 -translate-x-1/2">
- <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#FF6B6B] text-white uppercase">
- Plano Atual
- </span>
+ {isCurrentPlanCard && (
+ <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+ <span className="px-3 py-1 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[10px] font-bold rounded-full whitespace-nowrap">SEU PLANO</span>
  </div>
  )}
- {isPremier && !isCurrentPlan && (
- <div className="absolute -top-3 left-1/2 -translate-x-1/2">
- <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500 text-white uppercase flex items-center gap-1">
- <i className="fas fa-star text-[8px]"></i>
- Melhor Valor
- </span>
+ {isPro && !isCurrentPlanCard && (
+ <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+ <span className="bg-gray-800 text-white px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap">MAIS POPULAR</span>
+ </div>
+ )}
+ {isPremier && !isCurrentPlanCard && (
+ <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+ <span className="bg-gray-800 text-white px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap">MELHOR VALOR</span>
  </div>
  )}
 
- {/* Nome do plano */}
- <h3 className={`text-lg font-bold font-serif mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
- {plan.name}
- </h3>
+ <div className="pt-1 flex flex-col flex-1">
+ <h3 className="text-lg font-bold font-serif text-gray-900">{plan.name}</h3>
+ <p className="text-[10px] text-gray-400 mb-2">{persona}</p>
 
- {/* Créditos */}
- <p className={`text-sm mb-3 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- <span className="text-[#FF6B6B] font-semibold">{plan.limit}</span> créditos/mês
- </p>
+ {/* Gerações em destaque */}
+ <div className="mb-3">
+ {isEnterprise ? (
+ <span className="text-xl font-extrabold text-gray-900">Sob consulta</span>
+ ) : (
+ <>
+ <span className="text-3xl font-extrabold text-gray-900">{plan.limit}</span>
+ <span className="text-xs text-gray-500 ml-1">gerações{isTrialPlan ? '' : '/mês'}</span>
+ </>
+ )}
+ </div>
 
  {/* Preço */}
- <div className="mb-4">
- <span className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
- R$ {price.toFixed(2).replace('.', ',')}
+ <div className="mb-1">
+ {isEnterprise ? (
+ <span className="text-xl font-bold text-gray-900">Personalizado</span>
+ ) : isTrialPlan ? (
+ <span className="text-xl font-bold text-gray-900">Grátis</span>
+ ) : (
+ <>
+ <span className="text-xl font-bold text-gray-900">
+ R$ {Number.isInteger(price) ? price : price.toFixed(2).replace('.', ',')}
  </span>
- <span className={`text-sm ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>/mês</span>
- </div>
-
- {/* Botão */}
- <button
- onClick={() => !isCurrentPlan && onUpgradePlan(plan.id)}
- disabled={isCurrentPlan}
- className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${isCurrentPlan ? isDark ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF6B9D] text-white hover:opacity-90 hover:-translate-y-0.5'}`}
- >
- {isCurrentPlan ? 'Plano Atual' : plan.priceMonthly > currentPlan.priceMonthly ? 'Fazer upgrade' : 'Mudar plano'}
- </button>
-
- {/* Features */}
- <div className="mt-4 space-y-2">
- {plan.features.slice(0, 4).map((feature, idx) => (
- <div key={idx} className={`flex items-start gap-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
- <i className="fas fa-check text-emerald-500 mt-0.5 text-[10px]"></i>
- <span>{feature}</span>
- </div>
- ))}
- {plan.features.length > 4 && (
- <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
- +{plan.features.length - 4} recursos
- </p>
+ <span className="text-xs text-gray-400">/mês</span>
+ </>
  )}
  </div>
 
- {/* Preço por crédito */}
- <p className={`text-[10px] mt-3 pt-3 border-t ${isDark ? 'border-gray-200 text-zinc-500' : 'border-gray-200 text-gray-400'}`}>
- R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}/crédito
+ {/* Economia anual */}
+ {!isTrialPlan && !isEnterprise && billingPeriod === 'yearly' ? (
+ <p className="text-emerald-600 text-[10px] font-medium mb-3">
+ <i className="fas fa-tag text-[8px] mr-1"></i>
+ Economize R$ {annualSavings.toLocaleString('pt-BR')}/ano
  </p>
+ ) : (
+ <div className="mb-3 h-[14px]">
+ {isTrialPlan && <span className="text-gray-400 text-[10px]">Uso único, não renova</span>}
+ {isEnterprise && <span className="text-gray-400 text-[10px]">Valores sob medida</span>}
+ </div>
+ )}
+
+ {/* Features */}
+ <ul className="space-y-1.5 mb-3 flex-1">
+ {collapsedFeatures.map((feat, i) => (
+ <li key={i} className="flex items-start gap-2 text-[11px]">
+ {feat.has ? (
+ <i className="fas fa-check text-[9px] mt-0.5 shrink-0 text-emerald-500/70"></i>
+ ) : (
+ <span className="w-[9px] shrink-0"></span>
+ )}
+ <span className={feat.has ? 'text-gray-600' : 'text-gray-300'}>{feat.name}</span>
+ </li>
+ ))}
+ </ul>
+
+ {/* Botão CTA */}
+ <button
+ onClick={() => {
+ if (isCurrentPlanCard) return;
+ if (isEnterprise) {
+ window.open('https://wa.me/5544991534082?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Enterprise%20da%20Vizzu.', '_blank');
+ return;
+ }
+ onUpgradePlan(plan.id);
+ }}
+ disabled={isCurrentPlanCard}
+ className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+ isCurrentPlanCard
+  ? 'bg-gray-100 text-gray-400 cursor-default'
+  : isPro
+   ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+   : 'bg-gray-900 hover:bg-gray-800 text-white'
+ }`}
+ >
+ {isCurrentPlanCard ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{planCta[plan.id] || 'Falar conosco'}</>) : (() => {
+ const currentIndex = displayPlans.findIndex(p => p.id === currentPlan.id);
+ const planIndex = displayPlans.findIndex(p => p.id === plan.id);
+ return planIndex < currentIndex ? 'Fazer downgrade' : (planCta[plan.id] || 'Assinar');
+ })()}
+ </button>
+ </div>
  </div>
  );
  })}
  </div>
 
- {/* Seção de Créditos Avulsos */}
- <div className={`rounded-2xl p-5 ${isDark ? 'bg-gray-50/30 border border-gray-200' : 'bg-gray-50 border border-gray-200'}`}>
- <div className="flex items-center gap-2 mb-4">
- <i className="fas fa-credit-card text-[#FF6B6B]"></i>
- <h3 className={`text-lg font-bold font-serif ${isDark ? 'text-white' : 'text-gray-900'}`}>
- Comprar Créditos Avulsos
- </h3>
+ {/* Meios de pagamento */}
+ <div className="flex items-center justify-center gap-3 mb-6">
+ <span className="text-gray-400 text-[10px]">Pagamento seguro via</span>
+ <div className="flex items-center gap-2">
+ <span className="bg-gray-100 text-gray-500 border-gray-200 px-2 py-0.5 rounded text-[10px] font-medium border">Pix</span>
+ <span className="bg-gray-100 text-gray-500 border-gray-200 px-2 py-0.5 rounded text-[10px] font-medium border">Cartão</span>
+ <span className="bg-gray-100 text-gray-500 border-gray-200 px-2 py-0.5 rounded text-[10px] font-medium border">Boleto</span>
+ </div>
+ <i className="fas fa-lock text-[9px] text-gray-300"></i>
  </div>
 
- <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- Crédito avulso: <span className="text-[#FF6B6B] font-semibold">R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}/crédito</span>
- </p>
+ {/* Seção de Créditos Avulsos — espelho do SettingsPage */}
+ <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5">
+ <div className="flex items-center gap-3 mb-4">
+ <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 border border-gray-200">
+ <i className="fas fa-coins text-sm text-gray-600"></i>
+ </div>
+ <div>
+ <h4 className="font-semibold text-sm text-gray-900">Créditos adicionais</h4>
+ <p className="text-xs text-gray-400">R$ {INDIVIDUAL_CREDIT_PRICE.toFixed(2).replace('.', ',')}/crédito</p>
+ </div>
+ </div>
 
- {/* Grid de pacotes */}
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
  {CREDIT_PACKAGES.map((amount) => (
  <button
  key={amount}
- onClick={() => setSelectedCredits(amount)}
- className={`p-3 rounded-xl border-2 transition-all ${selectedCredits === amount ? 'border-[#FF6B6B] bg-[#FF6B6B]/10' : isDark ? 'border-gray-200 hover:border-zinc-600' : 'border-gray-200 hover:border-gray-300'}`}
+ onClick={() => { setSelectedCredits(amount); onBuyCredits(amount); }}
+ className="bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300 border rounded-xl p-3 transition-all text-center group"
  >
- <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{amount}</p>
- <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>créditos</p>
- <p className={`text-sm font-semibold mt-1 ${selectedCredits === amount ? 'text-[#FF6B6B]' : isDark ? 'text-gray-600' : 'text-gray-700'}`}>
+ <p className="text-xl font-bold text-gray-900">{amount}</p>
+ <p className="text-[10px] text-gray-400 mb-1">créditos</p>
+ <p className="text-xs font-semibold text-gray-700">
  R$ {getCreditPackagePrice(amount)}
  </p>
  </button>
  ))}
  </div>
-
- <button
- onClick={() => onBuyCredits(selectedCredits)}
- className="w-full py-3 bg-gradient-to-r from-[#FF6B6B] to-[#FF6B9D] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all"
- >
- <i className="fas fa-shopping-cart mr-2"></i>
- Comprar {selectedCredits} créditos - R$ {getCreditPackagePrice(selectedCredits)}
- </button>
  </div>
  </div>
  </div>
  );
+ };
 
  // ═══════════════════════════════════════════════════════════════
  // RENDER

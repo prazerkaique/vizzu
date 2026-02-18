@@ -2,8 +2,7 @@
 // VIZZU - Banner de Créditos Baixos (Paywall Layer 1)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import React, { useState } from 'react';
 import type { VizzuTheme } from '../contexts/UIContext';
 
 interface Props {
@@ -20,19 +19,11 @@ export const LowCreditsBanner: React.FC<Props> = ({
   onBuyCredits,
 }) => {
   const [dismissed, setDismissed] = useState(false);
-  const [generationsToday, setGenerationsToday] = useState<number | null>(null);
 
   const isDark = theme !== 'light';
   const isTrialExhausted = currentPlanId === 'free' && userCredits === 0;
   const isLowCredits = userCredits > 0 && userCredits <= 3;
   const isZero = userCredits === 0 && currentPlanId !== 'free';
-
-  // Buscar contagem de gerações do dia (social proof)
-  useEffect(() => {
-    supabase.rpc('count_generations_today').then(({ data }) => {
-      if (data !== null) setGenerationsToday(data);
-    });
-  }, []);
 
   // Não mostra se não se aplica ou foi dispensado
   if (dismissed || (!isTrialExhausted && !isLowCredits && !isZero)) return null;
@@ -40,11 +31,13 @@ export const LowCreditsBanner: React.FC<Props> = ({
   // Reset dismiss ao trocar de estado (ex: comprou créditos e gastou de novo)
   const bannerKey = `${userCredits}-${currentPlanId}`;
 
+  const isUrgent = isTrialExhausted || isZero;
+
   const getMessage = () => {
     if (isTrialExhausted) {
       return {
         icon: 'fa-rocket',
-        text: 'Seu teste gratuito acabou! Escolha um plano para continuar criando imagens profissionais.',
+        text: 'Seu teste gratuito acabou! Escolha um plano para continuar criando.',
         cta: 'Ver planos',
       };
     }
@@ -52,12 +45,12 @@ export const LowCreditsBanner: React.FC<Props> = ({
       return {
         icon: 'fa-bolt',
         text: 'Seus créditos acabaram. Recarregue para continuar gerando.',
-        cta: 'Comprar créditos',
+        cta: 'Recarregar',
       };
     }
     return {
-      icon: 'fa-exclamation-triangle',
-      text: `Você tem apenas ${userCredits} crédito${userCredits !== 1 ? 's' : ''} restante${userCredits !== 1 ? 's' : ''}.`,
+      icon: 'fa-coins',
+      text: `Restam apenas ${userCredits} crédito${userCredits !== 1 ? 's' : ''} na sua conta.`,
       cta: 'Comprar mais',
     };
   };
@@ -67,29 +60,30 @@ export const LowCreditsBanner: React.FC<Props> = ({
   return (
     <div
       key={bannerKey}
-      className={`relative flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium transition-all ${
-        isTrialExhausted || isZero
+      className={`relative flex items-center justify-center gap-3 px-4 py-2.5 text-xs font-medium transition-all ${
+        isUrgent
           ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
           : isDark
-            ? 'bg-amber-500/15 text-amber-300 border-b border-amber-500/20'
-            : 'bg-amber-50 text-amber-700 border-b border-amber-200'
+            ? 'bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 text-gray-300 border-b border-[#FF6B6B]/15'
+            : 'bg-gradient-to-r from-[#FF6B6B]/5 to-[#FF9F43]/5 text-gray-700 border-b border-[#FF6B6B]/10'
       }`}
     >
-      <i className={`fas ${msg.icon} text-[10px]`}></i>
-      <span>{msg.text}</span>
+      <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+        isUrgent
+          ? 'bg-white/20'
+          : isDark ? 'bg-[#FF6B6B]/20' : 'bg-[#FF6B6B]/10'
+      }`}>
+        <i className={`fas ${msg.icon} text-[9px] ${isUrgent ? 'text-white' : 'text-[#FF6B6B]'}`}></i>
+      </div>
 
-      {generationsToday !== null && generationsToday > 10 && (
-        <span className={`hidden sm:inline ${isTrialExhausted || isZero ? 'text-white/70' : isDark ? 'text-amber-400/60' : 'text-amber-500/60'}`}>
-          · {generationsToday.toLocaleString('pt-BR')} imagens geradas hoje no Vizzu
-        </span>
-      )}
+      <span className="font-medium">{msg.text}</span>
 
       <button
         onClick={onBuyCredits}
-        className={`ml-2 px-3 py-1 rounded-full text-[10px] font-bold transition-all hover:scale-105 ${
-          isTrialExhausted || isZero
-            ? 'bg-white text-[#FF6B6B] hover:bg-white/90'
-            : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
+        className={`ml-1 px-3.5 py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-105 ${
+          isUrgent
+            ? 'bg-white text-[#FF6B6B] hover:bg-white/90 shadow-sm'
+            : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm shadow-[#FF6B6B]/20'
         }`}
       >
         {msg.cta}
@@ -99,8 +93,8 @@ export const LowCreditsBanner: React.FC<Props> = ({
       {isLowCredits && (
         <button
           onClick={() => setDismissed(true)}
-          className={`ml-1 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-            isDark ? 'hover:bg-white/10 text-amber-400/60' : 'hover:bg-amber-200/50 text-amber-400'
+          className={`ml-0.5 w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
+            isDark ? 'hover:bg-white/10 text-gray-500' : 'hover:bg-gray-200/50 text-gray-400'
           }`}
         >
           <i className="fas fa-times text-[8px]"></i>
