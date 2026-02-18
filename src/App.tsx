@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
+import { TermsAcceptanceModal } from './components/TermsAcceptanceModal';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 
 // Lazy loading com retry: se o chunk falhar (deploy novo invalidou hash),
@@ -37,6 +38,7 @@ import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
 import { useClients } from './contexts/ClientsContext';
 import { useCredits } from './hooks/useCredits';
+import { useTermsAcceptance } from './hooks/useTermsAcceptance';
 import { usePlans } from './contexts/PlansContext';
 import { useGeneration } from './contexts/GenerationContext';
 import { supabase } from './services/supabaseClient';
@@ -84,6 +86,8 @@ function App() {
 
  // Auth state from context
  const { user, isAuthenticated, login, loginDemo, logout } = useAuth();
+ // Terms acceptance
+ const { hasAccepted: hasAcceptedTerms, isLoading: isTermsLoading, acceptTerms } = useTermsAcceptance(user?.id);
  // History from context
  const { addHistoryLog, loadUserHistory } = useHistory();
  // Products from context
@@ -992,6 +996,21 @@ function App() {
  }}
  />
  );
+ }
+
+ // TERMS CHECK — modal obrigatório de termos de uso
+ if (hasAcceptedTerms === null) {
+  return <LoadingSkeleton theme={theme} />;
+ }
+
+ if (!hasAcceptedTerms) {
+  return (
+   <TermsAcceptanceModal
+    isOpen={true}
+    onAccept={acceptTerms}
+    isLoading={isTermsLoading}
+   />
+  );
  }
 
  // Renderiza página para swipe adjacente (Instagram-style)
