@@ -16,9 +16,11 @@ interface Props {
   isOpen: boolean;
   onAccept: () => Promise<boolean>;
   isLoading: boolean;
+  /** Modo leitura — mostra "Fechar" em vez de checkbox+aceitar */
+  readOnly?: boolean;
 }
 
-export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoading }) => {
+export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoading, readOnly }) => {
   const [accepted, setAccepted] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -119,40 +121,52 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
 
         {/* ── Footer fixo ── */}
         <div className="flex-shrink-0 px-5 sm:px-8 py-4 border-t border-gray-200">
-          <label className="flex items-start gap-3 cursor-pointer mb-3 select-none">
-            <input
-              type="checkbox"
-              checked={accepted}
-              onChange={e => setAccepted(e.target.checked)}
-              className="mt-0.5 w-[18px] h-[18px] rounded border-gray-300 accent-[#FF6B6B] cursor-pointer flex-shrink-0"
-            />
-            <span className="text-[13px] text-gray-600 leading-snug">
-              Li e concordo com os <strong className="text-gray-800">Termos de Uso</strong> e a <strong className="text-gray-800">Política de Privacidade</strong>.
-            </span>
-          </label>
+          {readOnly ? (
+            <button
+              type="button"
+              onClick={() => onAccept()}
+              className="w-full py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all bg-gray-900 text-white hover:bg-gray-800 active:scale-[0.995]"
+            >
+              Fechar
+            </button>
+          ) : (
+            <>
+              <label className="flex items-start gap-3 cursor-pointer mb-3 select-none">
+                <input
+                  type="checkbox"
+                  checked={accepted}
+                  onChange={e => setAccepted(e.target.checked)}
+                  className="mt-0.5 w-[18px] h-[18px] rounded border-gray-300 accent-[#FF6B6B] cursor-pointer flex-shrink-0"
+                />
+                <span className="text-[13px] text-gray-600 leading-snug">
+                  Li e concordo com os <strong className="text-gray-800">Termos de Uso</strong> e a <strong className="text-gray-800">Política de Privacidade</strong>.
+                </span>
+              </label>
 
-          <button
-            type="button"
-            onClick={handleAccept}
-            disabled={!accepted || isLoading}
-            className={`w-full py-3.5 rounded-xl text-white font-semibold text-sm tracking-wide transition-all ${
-              accepted && !isLoading
-                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:scale-[1.005] active:scale-[0.995]'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Salvando...
-              </span>
-            ) : (
-              'Aceitar e Continuar'
-            )}
-          </button>
+              <button
+                type="button"
+                onClick={handleAccept}
+                disabled={!accepted || isLoading}
+                className={`w-full py-3.5 rounded-xl text-white font-semibold text-sm tracking-wide transition-all ${
+                  accepted && !isLoading
+                    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:scale-[1.005] active:scale-[0.995]'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Salvando...
+                  </span>
+                ) : (
+                  'Aceitar e Continuar'
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

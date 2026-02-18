@@ -12,6 +12,8 @@ import DownloadModal from '../components/shared/DownloadModal';
 import type { DownloadableImage } from '../utils/downloadSizes';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { useShopifyConnection } from '../hooks/useShopifyConnection';
+import { TermsAcceptanceModal } from '../components/TermsAcceptanceModal';
+import { CURRENT_TERMS_VERSION } from '../content/termsContent';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -207,6 +209,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  setIsSavingProfile(false);
  }
  };
+
+ // Termos aceitos — carregar data e IP do aceite
+ const [termsAcceptance, setTermsAcceptance] = useState<{ accepted_at: string; ip_address: string | null } | null>(null);
+ const [showTermsModal, setShowTermsModal] = useState(false);
+ useEffect(() => {
+  if (!user?.id) return;
+  supabase
+   .from('terms_acceptance')
+   .select('accepted_at, ip_address')
+   .eq('user_id', user.id)
+   .order('accepted_at', { ascending: false })
+   .limit(1)
+   .maybeSingle()
+   .then(({ data }) => { if (data) setTermsAcceptance(data); });
+ }, [user?.id]);
 
  // Theme options
  const themeOptions: { value: VizzuTheme; label: string }[] = [
@@ -433,6 +450,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </button>
  </div>
  </div>
+
+ {/* Termos de Uso aceitos */}
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <div className="flex items-center justify-between">
+ <div>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Termos de Uso e Privacidade</h3>
+ {termsAcceptance ? (
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>
+ Aceito em {new Date(termsAcceptance.accepted_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+ {termsAcceptance.ip_address && <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400')}> — IP {termsAcceptance.ip_address}</span>}
+ <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400')}> — v{CURRENT_TERMS_VERSION}</span>
+ </p>
+ ) : (
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mt-1'}>Carregando...</p>
+ )}
+ </div>
+ <button
+ onClick={() => setShowTermsModal(true)}
+ className={(theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700') + ' px-4 py-2 rounded-lg text-xs font-semibold transition-colors'}
+ >
+ Ver Termos
+ </button>
+ </div>
+ </div>
+
+ {/* Modal para reler os termos */}
+ {showTermsModal && (
+ <TermsAcceptanceModal
+ isOpen={true}
+ onAccept={async () => { setShowTermsModal(false); return true; }}
+ isLoading={false}
+ readOnly
+ />
+ )}
 
  {/* P1: Salvar com dirty state + loading */}
  <button
