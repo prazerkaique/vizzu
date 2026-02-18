@@ -133,7 +133,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onCancelSubscription,
  onLogout,
 }) => {
- const { theme, selectedTheme, isV2, setTheme, settingsTab, setSettingsTab, showToast } = useUI();
+ const { theme, selectedTheme, isV2, setTheme, settingsTab, setSettingsTab, showToast, navigateTo } = useUI();
  const { user } = useAuth();
  const { historyLogs, setHistoryLogs } = useHistory();
  const { allPlans, masterFeatures, planIncluded, planPersona, planCta } = usePlans();
@@ -278,6 +278,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {tab.label}
  </button>
  ))}
+ <button
+ onClick={() => navigateTo('clients')}
+ className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+ theme !== 'light'
+ ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+ : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+ }`}
+ >
+ <i className="fas fa-users text-[10px]"></i>
+ Clientes
+ </button>
  </div>
 
  {/* ═══════ PERFIL (unificado) ═══════ */}

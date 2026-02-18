@@ -165,7 +165,7 @@ export function AppLayout({
  }, []);
 
  // ── Instagram-style swipe navigation (PWA only) ──
- const SWIPE_PAGES: Page[] = ['dashboard', 'gallery', 'products', 'create', 'models', 'clients'];
+ const SWIPE_PAGES: Page[] = ['dashboard', 'gallery', 'products', 'create', 'models'];
  const mainContentRef = useRef<HTMLDivElement>(null);
  const adjacentContentRef = useRef<HTMLDivElement>(null);
  const [swipeAdjacentPage, setSwipeAdjacentPage] = useState<Page | null>(null);
@@ -196,7 +196,7 @@ export function AppLayout({
    const THRESHOLD = 0.3;
    const VELOCITY = 500;
    const TRANSITION = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)';
-   const PAGES: Page[] = ['dashboard', 'gallery', 'products', 'create', 'models', 'clients'];
+   const PAGES: Page[] = ['dashboard', 'gallery', 'products', 'create', 'models'];
 
    const getAdjacentPage = (dir: 'left' | 'right'): Page | null => {
      const idx = PAGES.indexOf(currentPageRef.current);
@@ -429,11 +429,6 @@ export function AppLayout({
  }
  >
  <i className="fas fa-wand-magic-sparkles text-[10px]"></i>{!sidebarCollapsed && 'Criar'}
- {completedFeatures.length > 0 && (
-   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-white text-[#FF6B6B] text-[10px] font-bold shadow-md animate-bounce">
-     {completedFeatures.length}
-   </span>
- )}
  </button>
  </div>
 
@@ -448,26 +443,20 @@ export function AppLayout({
  <i className="fas fa-user-tie w-4 text-[10px]"></i>{!sidebarCollapsed && 'Modelos'}
  </button>
 
- {/* Clientes */}
- <button
- onClick={() => navigateTo('clients')}
- title="Clientes"
- className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
- (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'clients')
- }
- >
- <i className="fas fa-users w-4 text-[10px]"></i>{!sidebarCollapsed && 'Clientes'}
- </button>
-
  {/* Galeria */}
  <button
  onClick={() => navigateTo('gallery')}
  title="Galeria"
- className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+ className={'relative w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
  (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'gallery')
  }
  >
  <i className="fas fa-images w-4 text-[10px]"></i>{!sidebarCollapsed && 'Galeria'}
+ {completedFeatures.length > 0 && (
+   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF6B6B] text-white text-[10px] font-bold shadow-md animate-bounce">
+     {completedFeatures.length}
+   </span>
+ )}
  </button>
 
  {/* Master — visível apenas para plano master */}
@@ -525,6 +514,12 @@ export function AppLayout({
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >
  <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
+ </button>
+ <button
+ onClick={() => { navigateTo('clients'); setShowSettingsDropdown(false); }}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+ >
+ <i className="fas fa-users w-4 text-[10px] text-center"></i>Clientes
  </button>
  <div className={(theme !== 'light' ? 'border-neutral-700' : 'border-[#e5e6ea]') + ' border-t'}></div>
  <button
@@ -621,20 +616,20 @@ export function AppLayout({
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center transition-transform ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? 'bg-gradient-to-br from-[#FF6B6B] to-[#FF9F43] scale-110' : 'bg-[#373632]')}>
  <img src="/vizzu-icon-white.png" alt="Vizzu" className="h-[38px] w-auto" />
  </div>
- {completedFeatures.length > 0 && (
-   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF6B6B] text-white text-[10px] font-bold shadow-md animate-bounce">
-     {completedFeatures.length}
-   </span>
- )}
  <span className={'block text-[9px] font-medium mt-0.5 text-center ' + ((currentPage === 'create' || currentPage === 'provador' || currentPage === 'look-composer' || currentPage === 'lifestyle' || currentPage === 'creative-still' || currentPage === 'product-studio') ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-500'))}>Criar</span>
  </button>
  <button onClick={() => navigateTo('models')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'models' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
  <i className="fas fa-user-tie text-sm"></i>
  <span className="text-[9px] font-medium">Modelos</span>
  </button>
- <button onClick={() => navigateTo('clients')} className={'flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'clients' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
- <i className="fas fa-users text-sm"></i>
- <span className="text-[9px] font-medium">Clientes</span>
+ <button onClick={() => navigateTo('gallery')} className={'relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ' + (currentPage === 'gallery' ? (theme !== 'light' ? 'text-white' : 'text-neutral-900') : (theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'))}>
+ <i className="fas fa-images text-sm"></i>
+ <span className="text-[9px] font-medium">Galeria</span>
+ {completedFeatures.length > 0 && (
+   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#FF6B6B] text-white text-[10px] font-bold shadow-md animate-bounce">
+     {completedFeatures.length}
+   </span>
+ )}
  </button>
  </div>
  </nav>
