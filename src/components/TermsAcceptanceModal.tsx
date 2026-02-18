@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // VIZZU - Modal de Aceite dos Termos de Uso
-// Estilo contrato: texto corrido, seções numeradas, scroll
+// Padrão Netflix/Airbnb: fullscreen mobile, texto corrido, clean
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   TERMS_SECTIONS,
   PRIVACY_SECTIONS,
@@ -20,6 +20,20 @@ interface Props {
 
 export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoading }) => {
   const [accepted, setAccepted] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Detectar scroll para esconder o fade de "tem mais conteúdo"
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+      if (nearBottom) setShowScrollHint(false);
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -29,81 +43,91 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
-        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col"
-        style={{ maxHeight: 'min(92vh, 860px)' }}
+        className="relative w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] sm:mx-4"
         onClick={e => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200">
-          <div className="flex items-center gap-3 mb-2">
-            <img src="/Logo2Black.png" alt="Vizzu" className="h-7" />
-          </div>
-          <h2 className="text-lg font-bold text-gray-900" style={{ fontFamily: "'DM Serif Display', serif" }}>
+        <div className="flex-shrink-0 px-5 sm:px-8 pt-5 sm:pt-6 pb-4">
+          <img src="/Logo2Black.png" alt="Vizzu" className="h-6 mb-4" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>
             Termos de Uso e Política de Privacidade
           </h2>
-          <p className="text-xs text-gray-400 mt-1">
-            Versão {CURRENT_TERMS_VERSION} — Vigência: {TERMS_EFFECTIVE_DATE}
+          <p className="text-xs text-gray-400 mt-1.5">
+            Versão {CURRENT_TERMS_VERSION} — {TERMS_EFFECTIVE_DATE}
+          </p>
+          <p className="text-sm text-gray-500 mt-3 leading-relaxed">
+            Ao utilizar o Vizzu, você concorda com os termos abaixo. Leia com atenção antes de continuar.
           </p>
         </div>
 
-        {/* ── Corpo scrollável (texto corrido estilo contrato) ── */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0">
-          {/* ── TERMOS DE USO ── */}
-          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-            Termos de Uso
-          </h3>
+        {/* ── Divisor ── */}
+        <div className="mx-5 sm:mx-8 border-t border-gray-200" />
 
-          {TERMS_SECTIONS.map(section => (
-            <div key={section.id} className="mb-5">
-              <h4 className="text-sm font-bold text-gray-800 mb-1.5">
-                {section.title}
-              </h4>
-              <div className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
-                {section.content}
-              </div>
-            </div>
-          ))}
-
-          {/* ── Divisor ── */}
-          <div className="border-t border-gray-200 my-6" />
-
-          {/* ── POLÍTICA DE PRIVACIDADE ── */}
-          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-            Política de Privacidade
-          </h3>
-
-          {PRIVACY_SECTIONS.map(section => (
-            <div key={section.id} className="mb-5">
-              <h4 className="text-sm font-bold text-gray-800 mb-1.5">
-                {section.title}
-              </h4>
-              <div className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
-                {section.content}
-              </div>
-            </div>
-          ))}
-
-          {/* Legal footer */}
-          <div className="border-t border-gray-100 mt-6 pt-4">
-            <p className="text-[11px] text-gray-400 text-center italic">
-              {LEGAL_FOOTER}
+        {/* ── Corpo scrollável ── */}
+        <div className="relative flex-1 min-h-0">
+          <div ref={scrollRef} className="overflow-y-auto h-full px-5 sm:px-8 py-5">
+            {/* TERMOS DE USO */}
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Termos de Uso
             </p>
+
+            {TERMS_SECTIONS.map(section => (
+              <div key={section.id} className="mb-5">
+                <h4 className="text-[13px] font-bold text-gray-900 mb-1">
+                  {section.title}
+                </h4>
+                <p className="text-[13px] text-gray-500 leading-[1.7] whitespace-pre-line">
+                  {section.content}
+                </p>
+              </div>
+            ))}
+
+            {/* Divisor entre seções */}
+            <div className="border-t border-gray-200 my-8" />
+
+            {/* POLÍTICA DE PRIVACIDADE */}
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-4">
+              Política de Privacidade
+            </p>
+
+            {PRIVACY_SECTIONS.map(section => (
+              <div key={section.id} className="mb-5">
+                <h4 className="text-[13px] font-bold text-gray-900 mb-1">
+                  {section.title}
+                </h4>
+                <p className="text-[13px] text-gray-500 leading-[1.7] whitespace-pre-line">
+                  {section.content}
+                </p>
+              </div>
+            ))}
+
+            {/* Rodapé legal */}
+            <div className="border-t border-gray-100 mt-6 pt-4 pb-2">
+              <p className="text-[11px] text-gray-400 text-center">
+                {LEGAL_FOOTER}
+              </p>
+            </div>
           </div>
+
+          {/* Fade inferior indicando mais conteúdo */}
+          {showScrollHint && (
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          )}
         </div>
 
-        {/* ── Footer (fixo) ── */}
-        <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl">
-          <label className="flex items-start gap-3 cursor-pointer mb-4 select-none">
+        {/* ── Footer fixo ── */}
+        <div className="flex-shrink-0 px-5 sm:px-8 py-4 border-t border-gray-200">
+          <label className="flex items-start gap-3 cursor-pointer mb-3 select-none">
             <input
               type="checkbox"
               checked={accepted}
               onChange={e => setAccepted(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-[#FF6B6B] cursor-pointer flex-shrink-0"
+              className="mt-0.5 w-[18px] h-[18px] rounded border-gray-300 accent-[#FF6B6B] cursor-pointer flex-shrink-0"
             />
-            <span className="text-sm text-gray-700 leading-snug">
-              Li e aceito os <strong>Termos de Uso</strong> e a <strong>Política de Privacidade</strong> do Vizzu.
+            <span className="text-[13px] text-gray-600 leading-snug">
+              Li e concordo com os <strong className="text-gray-800">Termos de Uso</strong> e a <strong className="text-gray-800">Política de Privacidade</strong>.
             </span>
           </label>
 
@@ -111,10 +135,10 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
             type="button"
             onClick={handleAccept}
             disabled={!accepted || isLoading}
-            className={`w-full py-3 rounded-xl text-white font-semibold text-sm transition-all ${
+            className={`w-full py-3.5 rounded-xl text-white font-semibold text-sm tracking-wide transition-all ${
               accepted && !isLoading
-                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]'
-                : 'bg-gray-300 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:scale-[1.005] active:scale-[0.995]'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
             {isLoading ? (
