@@ -62,7 +62,7 @@ export interface CreativeStillProps {
   products: Product[];
   userCredits: number;
   userId?: string;
-  onAddHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number) => void;
+  onAddHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string, resolution?: '2k' | '4k') => void;
   onCheckCredits?: (creditsNeeded: number, actionContext: string) => boolean;
   currentPlan?: Plan;
   onBack?: () => void;
@@ -505,7 +505,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
           'success',
           [params.product],
           'ai',
-          creditsNeeded
+          creditsNeeded,
+          undefined,
+          params.resolution as '2k' | '4k'
         );
       }
     } catch (err) {

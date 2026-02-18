@@ -237,6 +237,7 @@ export interface HistoryLog {
   cost: number;
   itemsCount?: number;
   imageUrl?: string;
+  resolution?: '2k' | '4k';
   createdAt?: Date;
 }
 

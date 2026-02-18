@@ -947,6 +947,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  {log.cost} crédito{log.cost !== 1 ? 's' : ''}
  </span>
  )}
+ {log.resolution && (
+ <span className={log.resolution === '4k' ? 'text-purple-500 font-semibold' : (theme !== 'light' ? 'text-neutral-500' : 'text-gray-400')}>
+ <i className="fas fa-expand mr-1"></i>
+ {log.resolution.toUpperCase()}
+ </span>
+ )}
  {log.itemsCount && log.itemsCount > 0 && (
  <span className={theme !== 'light' ? 'text-neutral-500' : 'text-gray-400'}>
  <i className="fas fa-box mr-1"></i>

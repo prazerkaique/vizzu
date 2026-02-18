@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 interface HistoryContextType {
   historyLogs: HistoryLog[];
   setHistoryLogs: React.Dispatch<React.SetStateAction<HistoryLog[]>>;
-  addHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string) => void;
+  addHistoryLog: (action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string, resolution?: '2k' | '4k') => void;
   loadUserHistory: (userId: string) => Promise<void>;
 }
 
@@ -97,7 +97,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const addHistoryLog = useCallback((action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string) => {
+  const addHistoryLog = useCallback((action: string, details: string, status: 'success' | 'error' | 'pending', items: Product[], method: 'manual' | 'auto' | 'api' | 'ai' | 'bulk' | 'system', cost: number, imageUrl?: string, resolution?: '2k' | '4k') => {
     const newLog: HistoryLog = {
       id: `log-${Date.now()}`,
       date: new Date().toISOString(),
@@ -109,6 +109,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
       cost,
       itemsCount: items.length,
       imageUrl,
+      resolution,
       createdAt: new Date(),
     };
     setHistoryLogs(prev => [newLog, ...prev].slice(0, 100));

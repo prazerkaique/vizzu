@@ -21,7 +21,7 @@ interface LookComposerEditorProps {
  products: Product[];
  userCredits: number;
  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
- onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number, imageUrl?: string) => void;
+ onAddHistoryLog: (action: string, details: string, status: HistoryLog['status'], items: Product[], method: HistoryLog['method'], cost: number, imageUrl?: string, resolution?: '2k' | '4k') => void;
  onBack: () => void;
  onCheckCredits?: (creditsNeeded: number, actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic') => boolean;
  theme?: VizzuTheme;
@@ -1586,7 +1586,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  [product],
  'ai',
  creditsNeeded,
- frontImageUrl
+ frontImageUrl,
+ resolution
  );
  }
 
