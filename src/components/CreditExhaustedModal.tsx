@@ -294,7 +294,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  // CAMADA 2: Modal Expandido (Planos — espelho do SettingsPage)
  // ═══════════════════════════════════════════════════════════════
  const renderExpandedModal = () => {
- const displayPlans = allPlans.filter(p => p.id !== 'test');
+ const displayPlans = allPlans.filter(p => p.id !== 'test' && p.id !== 'master');
 
  return (
  <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} bg-white border border-gray-200`} style={{ backdropFilter: 'blur(20px)' }}>

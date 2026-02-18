@@ -533,7 +533,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const PLAN_INCLUDED = planIncluded;
  const PLAN_PERSONA = planPersona;
  const PLAN_CTA = planCta;
- const ALL_DISPLAY_PLANS = allPlans.filter(p => p.id !== 'test');
+ const ALL_DISPLAY_PLANS = allPlans.filter(p => p.id !== 'test' && p.id !== 'master');
  const MAX_COLLAPSED = 5;
 
  return (

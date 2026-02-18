@@ -176,6 +176,15 @@ function App() {
  // Plans from context
  const { plans } = usePlans();
 
+ // Master plan: ativa debug do SlowServerBanner (threshold 10s)
+ useEffect(() => {
+ if (currentPlan.id === 'master') {
+ localStorage.setItem('vizzu-debug-slow', '10000');
+ } else {
+ localStorage.removeItem('vizzu-debug-slow');
+ }
+ }, [currentPlan.id]);
+
  // Função para verificar créditos e mostrar modal se insuficientes
  const checkCreditsAndShowModal = (
  creditsNeeded: number,

@@ -17,6 +17,10 @@ export const SlowServerBanner: React.FC<Props> = ({
   onContinueInBackground,
   showDiscreteLink = true,
 }) => {
+  // Debug: localStorage.setItem('vizzu-debug-slow', '10000') → banner aparece em 10s
+  const debugMs = typeof window !== 'undefined' ? Number(localStorage.getItem('vizzu-debug-slow')) : 0;
+  const effectiveThreshold = debugMs > 0 ? debugMs : thresholdMs;
+
   const [elapsed, setElapsed] = useState(Date.now() - startTime);
 
   useEffect(() => {
@@ -26,7 +30,7 @@ export const SlowServerBanner: React.FC<Props> = ({
     return () => clearInterval(interval);
   }, [startTime]);
 
-  const showWarning = elapsed >= thresholdMs;
+  const showWarning = elapsed >= effectiveThreshold;
 
   return (
     <div className="w-full flex flex-col items-center gap-3 mt-4">
