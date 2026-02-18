@@ -267,7 +267,7 @@ export async function cancelSubscription(params: CancelSubscriptionParams): Prom
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao cancelar assinatura');
+    throw new Error(data.error || data.message || 'Erro ao cancelar assinatura');
   }
 
   return data;

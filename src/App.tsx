@@ -281,7 +281,7 @@ function App() {
  }
  } catch (e: any) {
  console.error('Error canceling subscription:', e);
- showToast('Erro ao cancelar assinatura', 'error');
+ showToast(e.message || 'Erro ao cancelar assinatura', 'error');
  }
  };
 
