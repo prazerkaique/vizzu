@@ -606,7 +606,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  setGenerating(true);
  setProgress(10);
- setPsStartTime(pending.startTime);
+ // Usar Date.now() (não pending.startTime) para o banner contar
+ // a partir de quando o usuário VOLTOU a ver, não desde o início original
+ setPsStartTime(Date.now());
 
  // Restaurar ângulos selecionados da geração pendente
  if (pending.angles?.length > 0) {

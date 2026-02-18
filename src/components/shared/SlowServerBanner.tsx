@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface Props {
   /** Timestamp (Date.now()) de quando a geração começou */
   startTime: number;
-  /** Tempo em ms para mostrar o banner de alta demanda (default: 240000 = 4 min) */
+  /** Tempo em ms para mostrar o banner de alta demanda (default: 300000 = 5 min) */
   thresholdMs?: number;
   /** Callback ao clicar "Continuar em segundo plano" */
   onContinueInBackground: () => void;
@@ -13,7 +13,7 @@ interface Props {
 
 export const SlowServerBanner: React.FC<Props> = ({
   startTime,
-  thresholdMs = 240000,
+  thresholdMs = 300000,
   onContinueInBackground,
   showDiscreteLink = true,
 }) => {
