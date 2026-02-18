@@ -37,10 +37,10 @@ function formatDate(iso: string): string {
   }
 }
 
-export function GalleryPage() {
+export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number }) {
   const { theme, isV2 } = useUI();
   const isDark = theme !== 'light';
-  const { allItems, groupedItems, stats, isLoading } = useGalleryData();
+  const { allItems, groupedItems, stats, isLoading } = useGalleryData(galleryRefreshKey);
   const { completedProducts } = useGeneration();
 
   // IDs de produtos com geração recém-concluída (para badge "NOVO")

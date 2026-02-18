@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Client, ClientPhoto, ClientLook } from '../types';
 import { supabase } from '../services/supabaseClient';
 import { useUI } from './UIContext';
+import { useAuth } from './AuthContext';
 
 interface ClientsContextType {
   clients: Client[];
@@ -9,6 +10,7 @@ interface ClientsContextType {
   clientLooks: ClientLook[];
   setClientLooks: React.Dispatch<React.SetStateAction<ClientLook[]>>;
   loadUserClients: (userId: string) => Promise<void>;
+  refreshClients: () => void;
   saveClientToSupabase: (client: Client, userId: string) => Promise<void>;
   deleteClientFromSupabase: (clientId: string) => Promise<void>;
   uploadClientPhoto: (userId: string, clientId: string, photo: ClientPhoto) => Promise<{ url: string; storagePath: string } | null>;
@@ -21,6 +23,7 @@ const ClientsContext = createContext<ClientsContextType | null>(null);
 
 export function ClientsProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useUI();
+  const { user } = useAuth();
 
   const [clients, setClients] = useState<Client[]>(() => {
     const saved = localStorage.getItem('vizzu_clients');
@@ -187,6 +190,11 @@ export function ClientsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [saveClientToSupabase]);
 
+  // Refresh para Realtime — recarrega clientes do user logado
+  const refreshClients = useCallback(() => {
+    if (user?.id) loadUserClients(user.id);
+  }, [user?.id, loadUserClients]);
+
   const uploadClientPhoto = useCallback(async (userId: string, clientId: string, photo: ClientPhoto): Promise<{ url: string; storagePath: string } | null> => {
     try {
       const base64Data = photo.base64.replace(/^data:image\/\w+;base64,/, '');
@@ -279,7 +287,7 @@ export function ClientsProvider({ children }: { children: React.ReactNode }) {
     <ClientsContext.Provider value={{
       clients, setClients,
       clientLooks, setClientLooks,
-      loadUserClients,
+      loadUserClients, refreshClients,
       saveClientToSupabase, deleteClientFromSupabase,
       uploadClientPhoto, saveClientPhotoToDb, loadClientPhotos,
       getClientPhoto,

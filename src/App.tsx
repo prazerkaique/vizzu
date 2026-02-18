@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { CreditExhaustedModal } from './components/CreditExhaustedModal';
 import { TermsAcceptanceModal } from './components/TermsAcceptanceModal';
@@ -38,6 +38,7 @@ import { useHistory } from './contexts/HistoryContext';
 import { useProducts } from './contexts/ProductsContext';
 import { useClients } from './contexts/ClientsContext';
 import { useCredits } from './hooks/useCredits';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
 import { useTermsAcceptance } from './hooks/useTermsAcceptance';
 import { usePlans } from './contexts/PlansContext';
 import { useGeneration } from './contexts/GenerationContext';
@@ -329,6 +330,23 @@ function App() {
  console.error('Erro ao carregar modelos:', error);
  }
  };
+
+ // ── Realtime: atualização automática sem F5 ──
+ const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
+ const bumpGallery = useCallback(() => setGalleryRefreshKey(k => k + 1), []);
+ const refreshModels = useCallback(() => {
+   if (user?.id) loadSavedModels(user.id);
+ }, [user?.id]);
+
+ useRealtimeSync({
+   userId: user?.id,
+   refreshProducts: () => { if (user?.id) loadUserProducts(user.id); },
+   refreshCredits: refreshBilling,
+   refreshClients: () => { if (user?.id) loadUserClients(user.id); },
+   bumpGallery,
+   refreshModels,
+   refreshShopify: () => {},
+ });
 
  // Load user data when user changes (triggered by AuthContext)
  const prevUserIdRef = useRef<string | null>(null);
@@ -1059,7 +1077,7 @@ function App() {
  const renderSwipePage = (page: Page): React.ReactNode => {
    switch (page) {
      case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />;
-     case 'gallery': return <GalleryPage />;
+     case 'gallery': return <GalleryPage galleryRefreshKey={galleryRefreshKey} />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
      case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
@@ -1079,7 +1097,7 @@ function App() {
  renderSwipePage={renderSwipePage}
  >
  {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />}
- {currentPage === 'gallery' && <GalleryPage />}
+ {currentPage === 'gallery' && <GalleryPage galleryRefreshKey={galleryRefreshKey} />}
  {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
 
  {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}

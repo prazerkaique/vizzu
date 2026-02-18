@@ -10,6 +10,7 @@ interface ProductsContextType {
   products: Product[];
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   loadUserProducts: (userId: string) => Promise<void>;
+  refreshProducts: () => void;
   updateProduct: (productId: string, updates: Partial<Product>) => void;
   deleteProduct: (product: Product) => void;
   deleteSelectedProducts: (selectedIds: string[], onDone?: () => void) => void;
@@ -218,6 +219,11 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [showToast]);
 
+  // Refresh para Realtime — recarrega produtos do user logado
+  const refreshProducts = useCallback(() => {
+    if (user?.id) loadUserProducts(user.id);
+  }, [user?.id, loadUserProducts]);
+
   const updateProduct = useCallback((productId: string, updates: Partial<Product>) => {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p));
   }, []);
@@ -386,7 +392,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   return (
     <ProductsContext.Provider value={{
       products, setProducts,
-      loadUserProducts, updateProduct,
+      loadUserProducts, refreshProducts, updateProduct,
       deleteProduct, deleteSelectedProducts,
       isProductOptimized, getProductDisplayImage,
       getOptimizedImages, getOriginalImages,

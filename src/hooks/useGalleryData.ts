@@ -181,7 +181,7 @@ function extractFromProducts(products: Product[]): GalleryItem[] {
 // Hook principal
 // ═══════════════════════════════════════════════════════════════
 
-export function useGalleryData() {
+export function useGalleryData(refreshKey?: number) {
   const { products } = useProducts();
   const { clients, clientLooks } = useClients();
   const { user } = useAuth();
@@ -236,7 +236,7 @@ export function useGalleryData() {
         }
         setIsLoadingCS(false);
       });
-  }, [user?.id, products]);
+  }, [user?.id, products, refreshKey]);
 
   // Itens de produtos (PS + SR mesclados, LC, CC mesclado em CS)
   const productItems = useMemo(() => extractFromProducts(products), [products]);
