@@ -2995,9 +2995,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={`absolute inset-0 backdrop-blur-2xl ${theme !== 'light' ? 'bg-black/80' : 'bg-white/30'}`}></div>
 
  {/* Container do conteúdo */}
- <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-4 max-h-[100dvh] overflow-y-auto">
+ <div className="relative z-10 flex flex-col items-center justify-center max-w-md mx-auto p-4 max-h-[100dvh]">
  {/* Motion personalizado em loop (crop 20% cada lado para esconder watermark) */}
- <div className="w-44 h-44 mb-4 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0">
+ <div className="w-28 h-28 md:w-44 md:h-44 mb-2 md:mb-4 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0">
  <img
  src="/Scene-1.gif"
  alt=""
@@ -3007,17 +3007,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
 
  {/* Título */}
- <h2 className={`text-xl font-bold font-serif mb-1 text-center ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
+ <h2 className={`text-base md:text-xl font-bold font-serif mb-0.5 text-center ${theme !== 'light' ? 'text-white' : 'text-gray-900'}`}>
  Criando suas fotos...
  </h2>
 
  {/* Frase de loading */}
- <p className={`text-sm mb-4 text-center min-h-[20px] transition-all duration-300 ${theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'}`}>
+ <p className={`text-xs md:text-sm mb-2 md:mb-4 text-center min-h-[16px] transition-all duration-300 ${theme !== 'light' ? 'text-neutral-400' : 'text-gray-500'}`}>
  {currentLoadingText}
  </p>
 
  {/* Barra de progresso */}
- <div className="w-full max-w-xs mb-3">
+ <div className="w-full max-w-xs mb-2">
  <div className={`h-1.5 rounded-full overflow-hidden ${theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-200'}`}>
  <div
  className="h-full bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] rounded-full transition-all duration-500"
@@ -3040,8 +3040,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
 
  {/* Cards dos ângulos sendo gerados */}
- <div className="w-full max-w-xs mb-4">
- <div className="flex flex-col gap-1.5">
+ <div className="w-full max-w-xs mb-2">
+ <div className="flex flex-col gap-1">
  {selectedAngles.map((angleId, idx) => {
  // v9: usar estado REAL do polling incremental (se disponível)
  const angleStatus = completedAngleStatuses.find(a => a.angle === angleId);
@@ -3074,7 +3074,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return (
  <div
  key={angleId}
- className={`flex items-center gap-3 px-3 py-2 rounded-xl border transition-all duration-500 ${
+ className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-500 ${
  isAngleDone
  ? (theme !== 'light' ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200')
  : isAngleFailed
@@ -3085,7 +3085,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }`}
  >
  {/* Ícone do ângulo */}
- <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-all duration-500 ${
+ <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] transition-all duration-500 ${
  isAngleDone
  ? 'bg-green-500/20 text-green-400'
  : isAngleFailed
@@ -3099,7 +3099,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  {/* Label + thumbnail */}
  <div className="flex-1 min-w-0">
- <span className={`text-sm font-medium transition-all duration-500 ${
+ <span className={`text-xs font-medium transition-all duration-500 ${
  isAngleDone
  ? (theme !== 'light' ? 'text-green-400' : 'text-green-600')
  : isAngleFailed
@@ -3120,7 +3120,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <img
  src={angleStatus.url}
  alt={label}
- className="w-7 h-7 rounded-lg object-cover border border-green-500/30"
+ className="w-6 h-6 rounded-md object-cover border border-green-500/30"
  />
  )}
 
@@ -3204,7 +3204,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        <span>Minimizar e continuar navegando</span>
      </button>
 
-     <p className={`text-xs mt-3 text-center ${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'}`}>
+     <p className={`text-[10px] mt-2 text-center ${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'}`}>
        A geração continuará em segundo plano
      </p>
 
