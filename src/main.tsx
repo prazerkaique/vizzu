@@ -35,9 +35,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 </ClientsProvider>
               </ProductsProvider>
             </HistoryProvider>
+            <ImageViewer />
             </PlansProvider>
           )}
-        <ImageViewer />
         </AuthProvider>
         </ImageViewerProvider>
       </UIProvider>
