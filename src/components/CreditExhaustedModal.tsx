@@ -57,11 +57,14 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  const isInsufficient = currentCredits > 0 && currentCredits < creditsNeeded;
  const isZero = currentCredits === 0;
  const isTrial = currentPlan.id === 'free';
+ // Compra proativa: usuário clicou em "Comprar mais" sem ter tentado gerar
+ const isProactive = currentCredits >= creditsNeeded && actionContext === 'generic';
 
  // Reset layer when modal opens + fetch social proof
  useEffect(() => {
  if (isOpen) {
- setLayer(1);
+ // Compra proativa → abre direto na Layer 2 (planos completos)
+ setLayer(isProactive ? 2 : 1);
  setIsAnimating(true);
  setTimeout(() => setIsAnimating(false), 300);
  supabase.rpc('count_generations_today').then(({ data }) => {
@@ -133,16 +136,20 @@ export const CreditExhaustedModal: React.FC<Props> = ({
 
  {/* Título */}
  <h2 className={`text-xl font-bold font-serif text-center mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
- {isTrial && isZero
-  ? 'Gostou do que viu?'
-  : isInsufficient
-   ? 'Quase lá!'
-   : 'Recarregue e continue criando'}
+ {isProactive
+  ? 'Recarregue seus créditos'
+  : isTrial && isZero
+   ? 'Gostou do que viu?'
+   : isInsufficient
+    ? 'Quase lá!'
+    : 'Recarregue e continue criando'}
  </h2>
 
  {/* Subtítulo */}
  <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- {isTrial && isZero ? (
+ {isProactive ? (
+ <>Garanta mais créditos para continuar criando sem interrupções. Você tem <span className="text-[#FF6B6B] font-semibold">{currentCredits}</span> crédito{currentCredits !== 1 ? 's' : ''} restante{currentCredits !== 1 ? 's' : ''}.</>
+ ) : isTrial && isZero ? (
  <>Seu teste gratuito de 5 imagens acabou. Escolha um plano para continuar transformando seus produtos.</>
  ) : isInsufficient ? (
  <>Faltam <span className="text-[#FF6B6B] font-semibold">{creditsNeeded - currentCredits}</span> créditos para {actionText}. Recarregue e sua imagem fica pronta.</>
@@ -288,6 +295,9 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} ${isDark ? 'bg-white/95 border border-gray-200' : 'bg-white border border-gray-200'}`} style={{ backdropFilter: 'blur(20px)' }}>
  {/* Header */}
  <div className={`sticky top-0 z-10 flex items-center justify-between p-4 border-b ${isDark ? 'bg-white/95 border-gray-200' : 'bg-white border-gray-200'}`}>
+ {isProactive ? (
+ <div />
+ ) : (
  <button
  onClick={handleBackToCompact}
  className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
@@ -295,6 +305,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <i className="fas fa-arrow-left"></i>
  Voltar
  </button>
+ )}
  <button
  onClick={onClose}
  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-gray-50 text-gray-500' : 'hover:bg-gray-100 text-gray-400'}`}
@@ -307,10 +318,12 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {/* Título */}
  <div className="text-center mb-6">
  <h2 className={`text-2xl font-bold font-serif mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
- Escolha o melhor plano para você
+ {isProactive ? 'Planos e Créditos' : 'Escolha o melhor plano para você'}
  </h2>
  <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
- Transforme suas fotos de produtos em imagens profissionais com IA
+ {isProactive
+  ? <>Você tem <span className="text-[#FF6B6B] font-semibold">{currentCredits}</span> crédito{currentCredits !== 1 ? 's' : ''}. Recarregue ou faça upgrade para criar sem parar.</>
+  : 'Transforme suas fotos de produtos em imagens profissionais com IA'}
  </p>
  </div>
 
