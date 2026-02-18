@@ -946,10 +946,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  if (backgroundMode === 'saved') return !!selectedPreset;
  return !!customBackground || !!selectedPreset;
  case 'views':
- // Se for só frente, pode avançar
- if (viewsMode === 'front') return true;
- // Se for frente e costas, só pode avançar se todos produtos tiverem foto de costas
- return productsWithoutBackImage.length === 0;
+ // Sempre pode avançar — produtos sem foto de costas usam a de frente como fallback
+ return true;
  default:
  return false;
  }
@@ -1147,10 +1145,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  if (viewsMode === 'front-back' && productsWithoutBackImage.length > 0) {
  const names = productsWithoutBackImage.map(p => p.name).join(', ');
  showToast(
-   `Adicione fotos de costas para gerar frente e costas: ${names}`,
-   'error'
+   `${names}: sem foto de costas — usaremos a frente como referência. O resultado pode variar.`,
+   'info'
  );
- return;
+ // Não bloqueia — continua gerando com fallback
  }
 
  if (onCheckCredits && !onCheckCredits(creditsNeeded, 'lifestyle')) {
@@ -1251,12 +1249,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  const mainDetailImageUrl = product.originalImages?.detail?.url || undefined;
 
  // Obter imagem de costas do produto principal (se viewsMode === 'front-back')
- // Se o produto não precisa de costas (acessório), usa a imagem de frente
- const productNeedsBack = needsBackImage(product.category);
- const backImageUrl = product.originalImages?.back?.url ||
- (!productNeedsBack ? imageUrl : ''); // Acessórios usam imagem de frente
- const backImageId = product.originalImages?.back?.id ||
- (!productNeedsBack ? imageId : '');
+ // Fallback: se não tem foto de costas, usa a de frente como referência (igual Product Studio)
+ const backImageUrl = product.originalImages?.back?.url || imageUrl;
+ const backImageId = product.originalImages?.back?.id || imageId;
 
  // Construir lookItemsBack para modo composer com frente e costas
  let lookItemsBack: Array<{
@@ -1274,10 +1269,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // Buscar o produto do look para pegar a imagem de costas
  const lookProduct = item.productId ? products.find(p => p.id === item.productId) : null;
 
- // Verificar se este produto precisa de foto de costas
- const itemNeedsBack = needsBackImage(lookProduct?.category);
-
- // Se não precisa de costas (acessório), usa a imagem de frente
+ // Fallback: se não tem foto de costas, usa a de frente como referência (igual Product Studio)
  const frontImage = lookProduct?.originalImages?.front?.url ||
  lookProduct?.images?.[0]?.url ||
  lookProduct?.images?.[0]?.base64 ||
@@ -1285,10 +1277,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  const frontImgId = lookProduct?.originalImages?.front?.id ||
  lookProduct?.images?.[0]?.id || '';
 
- const backImage = lookProduct?.originalImages?.back?.url ||
- (!itemNeedsBack ? frontImage : ''); // Acessórios usam imagem de frente
- const backImgId = lookProduct?.originalImages?.back?.id ||
- (!itemNeedsBack ? frontImgId : '');
+ const backImage = lookProduct?.originalImages?.back?.url || frontImage;
+ const backImgId = lookProduct?.originalImages?.back?.id || frontImgId;
 
  const detailUrl = lookProduct?.originalImages?.detail?.url || undefined;
  return {
@@ -2415,7 +2405,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
  )}
 
- {/* Aviso se produtos não têm foto de costas — com upload inline */}
+ {/* Aviso se produtos não têm foto de costas — informativo com upload opcional */}
  {viewsMode === 'front-back' && productsWithoutBackImage.length > 0 && (
  <div className={(isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200') + ' rounded-xl p-4 border'}>
  <input
@@ -2433,14 +2423,14 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  />
  <div className="flex items-start gap-3">
  <div className={(isDark ? 'bg-amber-500/20' : 'bg-amber-100') + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
- <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-exclamation-triangle'}></i>
+ <i className={(isDark ? 'text-amber-400' : 'text-amber-600') + ' fas fa-info-circle'}></i>
  </div>
  <div className="flex-1">
  <h4 className={(isDark ? 'text-amber-400' : 'text-amber-700') + ' font-semibold text-sm mb-1'}>
  {productsWithoutBackImage.length === 1 ? 'Produto sem foto de costas' : 'Produtos sem foto de costas'}
  </h4>
  <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed mb-2'}>
- Adicione a foto de costas para gerar a imagem de costas:
+ A imagem de costas será gerada usando a foto de frente como referência. O resultado pode não ser idêntico ao produto real. Para melhores resultados, adicione a foto de costas:
  </p>
  <ul className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs space-y-2'}>
  {productsWithoutBackImage.map((p) => (
@@ -2452,7 +2442,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </>
  ) : (
  <>
- <i className="fas fa-times-circle text-red-400 text-[10px]"></i>
+ <i className="fas fa-image text-amber-400 text-[10px]"></i>
  <span className="font-medium flex-1">{p.name}</span>
  <button
  onClick={() => {
@@ -2478,17 +2468,17 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <div className={(isDark ? 'bg-green-500/10 border-green-500/20' : 'bg-green-50 border-green-200') + ' rounded-xl p-3 border'}>
  <p className={(isDark ? 'text-green-400' : 'text-green-600') + ' text-xs'}>
  <i className="fas fa-check-circle mr-2"></i>
- Todos os produtos e o modelo têm foto de costas. Você pode gerar frente e costas!
+ Todos os produtos e o modelo têm foto de costas!
  </p>
  </div>
  )}
 
  {/* Sucesso parcial - produtos ok mas modelo sem costas */}
  {viewsMode === 'front-back' && productsWithoutBackImage.length === 0 && !modelHasBackImage && selectedModel && (
- <div className={(isDark ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-200') + ' rounded-xl p-3 border'}>
- <p className={(isDark ? 'text-blue-400' : 'text-blue-600') + ' text-xs'}>
- <i className="fas fa-info-circle mr-2"></i>
- Produtos OK. A imagem de costas usará a referência frontal do modelo.
+ <div className={(isDark ? 'bg-green-500/10 border-green-500/20' : 'bg-green-50 border-green-200') + ' rounded-xl p-3 border'}>
+ <p className={(isDark ? 'text-green-400' : 'text-green-600') + ' text-xs'}>
+ <i className="fas fa-check-circle mr-2"></i>
+ Produtos OK. O modelo usará a referência frontal para as costas.
  </p>
  </div>
  )}
