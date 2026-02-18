@@ -534,6 +534,7 @@ interface ModeloIAParams {
   // Parâmetros para indicar que é imagem de costas (UPDATE ao invés de INSERT)
   isBackView?: boolean;              // Se true, é geração de imagem de costas
   frontGenerationId?: string;        // ID da geração de frente (para fazer UPDATE)
+  frontGeneratedUrl?: string;        // URL da imagem de frente já gerada (referência para coerência costas)
   // Callback de progresso (opcional)
   onProgress?: (progress: number) => void;  // Callback chamado durante polling com progresso 0-100
   // Resolução da imagem gerada
@@ -613,6 +614,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
       // Parâmetros para indicar que é imagem de costas
       isBackView: params.isBackView || false,
       frontGenerationId: params.frontGenerationId || null,
+      frontGeneratedUrl: params.frontGeneratedUrl || null,
       // Se for back view, vincular à geração de frente via campo linked_to
       linkedTo: params.isBackView ? params.frontGenerationId : null,
       // Resolução da imagem (2k ou 4k)

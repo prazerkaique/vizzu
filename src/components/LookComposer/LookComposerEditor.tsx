@@ -1463,6 +1463,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  backgroundPrompt: backgroundPromptFinal,
  solidColor: solidColorFinal,
  sceneHint: sceneHintFinal,
+ frontGeneratedUrl: frontImageUrl, // V2: imagem de frente gerada para coerência
  modelDetails: selectedModel ? (
  selectedModel.modelType === 'real'
  ? 'Use the reference image as the exact person. Preserve face, body shape, and all physical features exactly as shown in the reference photo. Back view, from behind.'
