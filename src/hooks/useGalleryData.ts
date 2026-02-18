@@ -41,6 +41,15 @@ export interface GalleryStats {
   byFeature: Record<FeatureType, number>;
 }
 
+export interface GalleryGroup {
+  groupKey: string;
+  groupLabel: string;
+  featureType: FeatureType;
+  productId?: string;
+  newestAt: string;
+  items: GalleryItem[];
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Config por feature (ícone + label)
 // ═══════════════════════════════════════════════════════════════
@@ -269,8 +278,47 @@ export function useGalleryData() {
     return { total: allItems.length, byFeature };
   }, [allItems]);
 
+  // Agrupamento por produto + feature
+  const groupedItems = useMemo<GalleryGroup[]>(() => {
+    const map = new Map<string, GalleryGroup>();
+
+    for (const item of allItems) {
+      const key = item.productId
+        ? `${item.productId}::${item.featureType}`
+        : item.clientName
+          ? `client::${item.clientName}::${item.featureType}`
+          : `solo::${item.id}`;
+
+      const existing = map.get(key);
+      if (existing) {
+        existing.items.push(item);
+        if (item.createdAt > existing.newestAt) existing.newestAt = item.createdAt;
+      } else {
+        map.set(key, {
+          groupKey: key,
+          groupLabel: item.productName || item.clientName || 'Sem nome',
+          featureType: item.featureType,
+          productId: item.productId,
+          newestAt: item.createdAt || '',
+          items: [item],
+        });
+      }
+    }
+
+    const groups = Array.from(map.values());
+    // Grupos ordenados por mais recente primeiro
+    groups.sort((a, b) => b.newestAt.localeCompare(a.newestAt));
+    // Dentro de cada grupo, itens do mais antigo ao mais recente (ordem dos ângulos)
+    for (const g of groups) {
+      g.items.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+    }
+
+    return groups;
+  }, [allItems]);
+
   return {
     allItems,
+    groupedItems,
     stats,
     isLoading: isLoadingCS,
   };

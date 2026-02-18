@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // VIZZU - Ecommerce Export Modal (multi-imagem, multi-plataforma)
 // Exporta imagens otimizadas para Shopify/Magento/VTEX
+// Portal + bottom-sheet mobile + draggable
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { exportImageToShopify } from '../../lib/api/shopify';
 import type { VizzuTheme } from '../../contexts/UIContext';
 
@@ -86,12 +88,19 @@ export function EcommerceExportModal({
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<ExportResult[]>([]);
 
+  // Drag state
+  const modalRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
+
   const resetAndClose = useCallback(() => {
     setStep('select');
     setSelected(new Set(images.map((_, i) => i)));
     setExportType('add');
     setProgress(0);
     setResults([]);
+    // Reset drag position
+    dragRef.current = { active: false, startX: 0, startY: 0, x: 0, y: 0 };
+    if (modalRef.current) modalRef.current.style.transform = '';
     onClose();
   }, [images, onClose]);
 
@@ -152,6 +161,27 @@ export function EcommerceExportModal({
     setStep('done');
   };
 
+  // Drag handlers (pointer events = mouse + touch)
+  const onDragStart = (e: React.PointerEvent) => {
+    const d = dragRef.current;
+    d.active = true;
+    d.startX = e.clientX - d.x;
+    d.startY = e.clientY - d.y;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const onDragMove = (e: React.PointerEvent) => {
+    if (!dragRef.current.active || !modalRef.current) return;
+    const d = dragRef.current;
+    d.x = e.clientX - d.startX;
+    d.y = e.clientY - d.startY;
+    modalRef.current.style.transform = `translate(${d.x}px, ${d.y}px)`;
+  };
+
+  const onDragEnd = () => {
+    dragRef.current.active = false;
+  };
+
   const selectedCount = selected.size;
   const successCount = results.filter(r => r.success).length;
   const failCount = results.filter(r => !r.success).length;
@@ -162,19 +192,30 @@ export function EcommerceExportModal({
   const border = isDark ? 'border-neutral-800' : 'border-gray-200';
   const textPrimary = isDark ? 'text-white' : 'text-gray-900';
   const textSecondary = isDark ? 'text-neutral-400' : 'text-gray-500';
-  const cardBg = isDark ? 'bg-neutral-800' : 'bg-gray-50';
   const cardBorder = isDark ? 'border-neutral-700' : 'border-gray-200';
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => e.target === e.currentTarget && step !== 'exporting' && resetAndClose()}
     >
-      <div className={`${bg} border ${border} rounded-2xl shadow-xl w-[90%] max-w-md overflow-hidden`}>
+      <div
+        ref={modalRef}
+        className={`${bg} border ${border} rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:w-[90%] max-w-md max-h-[85vh] overflow-y-auto overflow-x-hidden`}
+      >
+        {/* ─── Drag handle ──────────────────────── */}
+        <div
+          className="flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none select-none"
+          onPointerDown={onDragStart}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+        >
+          <div className={`w-10 h-1 rounded-full ${isDark ? 'bg-neutral-600' : 'bg-gray-300'}`} />
+        </div>
 
         {/* ─── Header ──────────────────────────────── */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b ${isDark ? 'border-neutral-800' : 'border-gray-100'}`}>
+        <div className={`flex items-center justify-between px-4 py-2 border-b ${isDark ? 'border-neutral-800' : 'border-gray-100'}`}>
           <div className="flex items-center gap-2">
             <i className={`${plat.icon} text-sm`} style={{ color: plat.color }} />
             <h3 className={`${textPrimary} font-semibold text-sm`}>
@@ -374,4 +415,6 @@ export function EcommerceExportModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
