@@ -61,7 +61,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const [selectedTheme, setSelectedTheme] = useState<VizzuTheme>(() => {
     const saved = localStorage.getItem('vizzu_theme');
     if (saved && VALID_THEMES.includes(saved as VizzuTheme)) return saved as VizzuTheme;
-    return 'light';
+    return 'v2'; // V2 Clean é o tema padrão ("Claro")
   });
   const theme: VizzuTheme = selectedTheme === 'v2' ? 'light' : selectedTheme;
   const isV2 = selectedTheme === 'v2';

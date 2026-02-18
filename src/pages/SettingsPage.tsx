@@ -229,10 +229,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  // Theme options
  const themeOptions: { value: VizzuTheme; label: string }[] = [
-   { value: 'light', label: '☀ Claro' },
+   { value: 'v2', label: '☀ Claro' },
    { value: 'dark', label: '☾ Escuro' },
    { value: 'high-contrast', label: '◑ Alto Contraste AA' },
-   { value: 'v2', label: '◇ V2 Clean' },
+   { value: 'light', label: '◇ Legacy' },
  ];
 
  return (
