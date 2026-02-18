@@ -469,6 +469,19 @@ export function AppLayout({
  >
  <i className="fas fa-images w-4 text-[10px]"></i>{!sidebarCollapsed && 'Galeria'}
  </button>
+
+ {/* Master — visível apenas para plano master */}
+ {currentPlan?.id === 'master' && (
+ <button
+ onClick={() => navigateTo('master')}
+ title="Master"
+ className={'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ' +
+ (sidebarCollapsed ? 'justify-center' : '') + ' ' + sidebarNavClass(currentPage === 'master')
+ }
+ >
+ <i className="fas fa-crown w-4 text-[10px] text-[#FF6B6B]"></i>{!sidebarCollapsed && <span className="text-[#FF6B6B]">Master</span>}
+ </button>
+ )}
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme !== 'light' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
  <SidebarCreditsBox userCredits={userCredits} currentPlan={currentPlan} sidebarCollapsed={sidebarCollapsed} isDark={theme !== 'light'} onAdd={() => { navigateTo('settings'); setSettingsTab('plan'); }} onMasterSetCredits={onMasterSetCredits} />

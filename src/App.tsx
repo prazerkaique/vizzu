@@ -56,6 +56,7 @@ import { ModelsPage, DEFAULT_MODELS } from './pages/ModelsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CreateHubPage } from './pages/CreateHubPage';
 import { GalleryPage } from './pages/GalleryPage';
+import { MasterPage } from './pages/MasterPage';
 import { AppLayout } from './components/Layout/AppLayout';
 
 // Expor funções de migração globalmente para uso via Console (F12)
@@ -1258,6 +1259,8 @@ function App() {
  {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />}
 
  {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
+
+ {currentPage === 'master' && currentPlan.id === 'master' && <MasterPage />}
 
  {/* Shopify deep link handler */}
  <Suspense fallback={null}>
