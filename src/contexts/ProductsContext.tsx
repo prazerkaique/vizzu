@@ -252,6 +252,12 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         .delete()
         .eq('vizzu_product_id', product.id);
 
+      // Remover exports Shopify (FK ecommerce_image_exports.vizzu_product_id → products.id)
+      await supabase
+        .from('ecommerce_image_exports')
+        .delete()
+        .eq('vizzu_product_id', product.id);
+
       // Deletar imagens
       await supabase
         .from('product_images')
@@ -304,6 +310,12 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       // Remover mapeamento Shopify
       await supabase
         .from('ecommerce_product_map')
+        .delete()
+        .in('vizzu_product_id', selectedIds);
+
+      // Remover exports Shopify
+      await supabase
+        .from('ecommerce_image_exports')
         .delete()
         .in('vizzu_product_id', selectedIds);
 
