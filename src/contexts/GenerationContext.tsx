@@ -179,17 +179,19 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      return next;
    });
  }, []);
- const clearAllCompletedFeatures = useCallback(() => {
-   setCompletedFeatures([]);
-   try { localStorage.setItem(COMPLETED_FEATURES_KEY, '[]'); } catch { /* ignore */ }
- }, []);
-
  // Notificações por produto — persistido em localStorage para sobreviver a refresh/saída
  const COMPLETED_PRODUCTS_KEY = 'vizzu-completed-products';
  const readCompletedProducts = (): Record<string, string[]> => {
    try { return JSON.parse(localStorage.getItem(COMPLETED_PRODUCTS_KEY) || '{}'); } catch { return {}; }
  };
  const [completedProducts, setCompletedProducts] = useState<Record<string, string[]>>(readCompletedProducts);
+
+ const clearAllCompletedFeatures = useCallback(() => {
+   setCompletedFeatures([]);
+   setCompletedProducts({});
+   try { localStorage.setItem(COMPLETED_FEATURES_KEY, '[]'); } catch { /* ignore */ }
+   try { localStorage.setItem(COMPLETED_PRODUCTS_KEY, '{}'); } catch { /* ignore */ }
+ }, []);
  const addCompletedProduct = useCallback((page: string, productId: string) => {
    setCompletedProducts(prev => {
      const existing = prev[page] || [];
