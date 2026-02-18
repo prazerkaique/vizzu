@@ -172,40 +172,37 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
   }, []);
 
   // ── Delete helpers ──
-  const markDeleted = useCallback((ids: string[]) => {
-    setDeletedIds(prev => {
-      const next = new Set(prev);
-      ids.forEach(id => next.add(id));
-      return next;
-    });
+  // Retorna IDs a marcar como deletados + se precisa refresh de produtos
+  const getIdsToMark = useCallback((item: GalleryItem): string[] => {
+    const prefix = item.id.split('-')[0];
+    if (prefix === 'sr' || prefix === 'lc' || prefix === 'cc') {
+      const genId = item.metadata?.generationId;
+      return genId ? [`${prefix}-${genId}`, `${prefix}-${genId}-back`] : [item.id];
+    }
+    return [item.id];
   }, []);
 
-  const deleteOneItem = useCallback(async (item: GalleryItem) => {
+  // Só faz operação no banco — sem state updates
+  const deleteFromDB = useCallback(async (item: GalleryItem) => {
     const prefix = item.id.split('-')[0];
 
     switch (prefix) {
       case 'ps': {
-        // ps-{product_images.id}
         const imgId = item.id.slice(3);
         await supabase.from('product_images').delete().eq('id', imgId);
-        markDeleted([item.id]);
-        refreshProducts();
-        break;
+        return true; // needs product refresh
       }
       case 'sr':
       case 'lc':
       case 'cc': {
-        // sr-{genId} or sr-{genId}-back → delete all product_images for this generation
         const genId = item.metadata?.generationId;
         if (genId) {
           await supabase.from('product_images').delete().eq('generation_id', genId);
-          markDeleted([`${prefix}-${genId}`, `${prefix}-${genId}-back`]);
-          refreshProducts();
+          return true;
         }
-        break;
+        return false;
       }
       case 'cs': {
-        // cs-{genId}-{idx}
         const parts = item.id.split('-');
         const genId = parts[1];
         const idx = parseInt(parts[2]);
@@ -218,41 +215,50 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
           const urls: string[] = data.variation_urls || [];
           if (urls.length <= 1) {
             await supabase.from('creative_still_generations').delete().eq('id', genId);
-            markDeleted([item.id]);
           } else {
             const newUrls = urls.filter((_: string, i: number) => i !== idx);
-            await supabase
-              .from('creative_still_generations')
-              .update({ variation_urls: newUrls })
-              .eq('id', genId);
-            markDeleted([item.id]);
+            await supabase.from('creative_still_generations').update({ variation_urls: newUrls }).eq('id', genId);
           }
         }
-        break;
+        return false;
       }
       case 'pv': {
-        // pv-{client_looks.id}
         const lookId = item.id.slice(3);
         await supabase.from('client_looks').delete().eq('id', lookId);
-        markDeleted([item.id]);
-        break;
+        return false;
       }
+      default:
+        return false;
     }
-  }, [markDeleted, refreshProducts]);
+  }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
     setIsDeleting(true);
     try {
-      if (bulkDeleteTarget) {
-        const items = allItems.filter(i => selectedIds.has(i.id) && !deletedIds.has(i.id));
-        for (const item of items) {
-          await deleteOneItem(item);
-        }
-        cancelSelection();
-        setBulkDeleteTarget(false);
-      } else if (deleteTarget) {
-        await deleteOneItem(deleteTarget);
+      const items = bulkDeleteTarget
+        ? allItems.filter(i => selectedIds.has(i.id) && !deletedIds.has(i.id))
+        : deleteTarget ? [deleteTarget] : [];
+
+      // 1. Marcar todos como deletados DE UMA VEZ (1 re-render)
+      const allIdsToMark = items.flatMap(getIdsToMark);
+      if (allIdsToMark.length > 0) {
+        setDeletedIds(prev => {
+          const next = new Set(prev);
+          allIdsToMark.forEach(id => next.add(id));
+          return next;
+        });
       }
+
+      // 2. DB deletes (sem state updates)
+      let needsProductRefresh = false;
+      for (const item of items) {
+        const needsRefresh = await deleteFromDB(item);
+        if (needsRefresh) needsProductRefresh = true;
+      }
+
+      // 3. Um único refresh no final
+      if (needsProductRefresh) refreshProducts();
+      if (bulkDeleteTarget) cancelSelection();
     } catch (err) {
       console.error('[Gallery] Erro ao excluir:', err);
     } finally {
@@ -260,7 +266,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
       setDeleteTarget(null);
       setBulkDeleteTarget(false);
     }
-  }, [bulkDeleteTarget, deleteTarget, allItems, selectedIds, deletedIds, deleteOneItem, cancelSelection]);
+  }, [bulkDeleteTarget, deleteTarget, allItems, selectedIds, deletedIds, getIdsToMark, deleteFromDB, refreshProducts, cancelSelection]);
 
   // ── Download helpers ──
   const makeDownloadImage = (item: GalleryItem): DownloadableImage => ({
