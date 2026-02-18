@@ -240,6 +240,18 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         .update({ product_id: null })
         .eq('product_id', product.id);
 
+      // Desvincular creative stills (FK creative_still_generations.product_id → products.id)
+      await supabase
+        .from('creative_still_generations')
+        .update({ product_id: null })
+        .eq('product_id', product.id);
+
+      // Remover mapeamento Shopify (FK ecommerce_product_map.vizzu_product_id → products.id)
+      await supabase
+        .from('ecommerce_product_map')
+        .delete()
+        .eq('vizzu_product_id', product.id);
+
       // Deletar imagens
       await supabase
         .from('product_images')
@@ -282,6 +294,18 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         .from('generations')
         .update({ product_id: null })
         .in('product_id', selectedIds);
+
+      // Desvincular creative stills
+      await supabase
+        .from('creative_still_generations')
+        .update({ product_id: null })
+        .in('product_id', selectedIds);
+
+      // Remover mapeamento Shopify
+      await supabase
+        .from('ecommerce_product_map')
+        .delete()
+        .in('vizzu_product_id', selectedIds);
 
       // Deletar imagens
       await supabase
