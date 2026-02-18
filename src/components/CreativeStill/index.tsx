@@ -76,6 +76,7 @@ export interface CreativeStillProps {
   editBalance?: number;
   onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
   setProductForCreation?: (p: Product | null) => void;
+  onUpdateProduct?: (productId: string, updates: Partial<Product>) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -131,6 +132,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   editBalance = 0,
   onDeductEditCredits,
   setProductForCreation: setProductForCreationProp,
+  onUpdateProduct,
 }) => {
   const { shouldShowTour } = useOnboarding();
   const { addCompletedProduct, completedProducts, clearCompletedProduct } = useGeneration();
@@ -644,6 +646,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         onGenerate={handleGenerate}
         onOpenPlanModal={onOpenPlanModal}
         isGenerating={isGenerating}
+        onUpdateProduct={onUpdateProduct}
       />
     );
   }

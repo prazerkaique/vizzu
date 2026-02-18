@@ -228,26 +228,26 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      return;
    }
 
-   // Atualizar frase a cada 11 segundos (11 frases em ~121 segundos)
+   // Atualizar frase a cada ~14 segundos (11 frases em ~150 segundos)
    const phraseInterval = setInterval(() => {
      setProvadorLoadingIndex(prev => (prev + 1) % PROVADOR_LOADING_PHRASES.length);
-   }, 11000);
+   }, 13600);
 
-   // Progresso calibrado para ~120 segundos até 100%
-   // 0-50%: ~32s (50/0.78 * 0.5s)
-   // 50-80%: ~48s (30/0.31 * 0.5s)
-   // 80-100%: ~40s (20/0.25 * 0.5s)
+   // Progresso calibrado para ~150 segundos até 100%
+   // 0-50%: ~40s (50/0.625 * 0.5s)
+   // 50-80%: ~60s (30/0.25 * 0.5s)
+   // 80-100%: ~50s (20/0.20 * 0.5s)
    const progressInterval = setInterval(() => {
      setProvadorProgress(prev => {
        if (prev >= 100) return 100;
 
        let increment: number;
        if (prev < 50) {
-         increment = 0.78;
+         increment = 0.625;
        } else if (prev < 80) {
-         increment = 0.31;
-       } else {
          increment = 0.25;
+       } else {
+         increment = 0.20;
        }
 
        return Math.min(100, prev + increment);

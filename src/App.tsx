@@ -810,7 +810,7 @@ function App() {
  if (result.credits_remaining !== undefined) {
  setCredits(result.credits_remaining);
  }
- addHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', 3);
+ addHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', creditsNeeded);
 
  // Auto-salvar look no Supabase para não perder se o app fechar
  const imageUrl = result.generation.image_url;
@@ -1189,6 +1189,7 @@ function App() {
  editBalance={editBalance}
  onDeductEditCredits={deductEditCredits}
  setProductForCreation={setProductForCreation}
+ onUpdateProduct={handleUpdateProduct}
  />
  </Suspense>
  </div>

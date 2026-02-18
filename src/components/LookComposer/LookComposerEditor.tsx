@@ -2767,13 +2767,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  ) : isAnyGenerationRunning ? (
  <><i className="fas fa-clock mr-2"></i>Aguardando...</>
  ) : (
- <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'}</>
+ <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'} ({creditsNeeded} {creditsNeeded === 1 ? 'crédito' : 'créditos'})</>
  )}
  </button>
- <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] text-center mt-1'}>
- <i className="fas fa-coins mr-1 text-amber-500"></i>
- 1 a 2 créditos por foto
- </p>
  </>
  )}
  </div>

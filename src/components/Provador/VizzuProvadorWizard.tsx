@@ -1499,13 +1499,9 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  {isGenerating ? (
  <><i className="fas fa-spinner fa-spin"></i>Gerando...</>
  ) : (
- <><i className="fas fa-wand-magic-sparkles"></i>Criar</>
+ <><i className="fas fa-wand-magic-sparkles"></i>Criar ({creditsNeeded} {creditsNeeded === 1 ? 'crédito' : 'créditos'})</>
  )}
  </button>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px] text-center mt-1'}>
- <i className="fas fa-coins mr-1 text-amber-500"></i>
- 1 a 2 créditos por foto
- </p>
 
  {/* Botoes WhatsApp e Download */}
  <div className="flex gap-2">

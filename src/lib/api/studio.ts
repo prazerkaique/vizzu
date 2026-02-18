@@ -280,9 +280,12 @@ export async function pollStudioGeneration(generationId: string): Promise<Studio
   // Se erro de autenticação, tentar refresh do token
   if (result.error) {
     const errMsg = result.error.message || '';
+    console.warn('[pollStudio] Erro na query:', result.error.code, errMsg);
     if (errMsg.includes('JWT') || errMsg.includes('expired') || (result.error as any).code === 'PGRST301') {
+      console.log('[pollStudio] Tentando refresh do token...');
       const { error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError) {
+        console.error('[pollStudio] Refresh falhou:', refreshError);
         return { generationStatus: 'unknown', completedAngles: [], error_message: 'Sessão expirada. Faça login novamente.' };
       }
       // Retry após refresh
@@ -296,6 +299,7 @@ export async function pollStudioGeneration(generationId: string): Promise<Studio
 
   const generation = result.data;
   if (result.error || !generation) {
+    console.warn('[pollStudio] Sem dados para generation', generationId, '| erro:', result.error?.code, result.error?.message);
     return { generationStatus: 'unknown', completedAngles: [] };
   }
 
@@ -325,6 +329,10 @@ export async function pollStudioGeneration(generationId: string): Promise<Studio
   else if (generation.status === 'partial') generationStatus = 'partial';
   else if (generation.status === 'failed' || generation.status === 'error') generationStatus = 'failed';
   else if (generation.status === 'processing') generationStatus = 'processing';
+
+  if (completedAngles.length > 0 || generationStatus !== 'processing') {
+    console.log('[pollStudio]', generationId.slice(0, 8), '| status:', generationStatus, '| ângulos:', completedAngles.length, completedAngles.map(a => a.angle + ':' + a.status).join(','));
+  }
 
   return {
     generationStatus,

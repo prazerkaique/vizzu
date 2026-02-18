@@ -15,6 +15,8 @@ import { usePromptMentions } from './usePromptMentions';
 import { parsePromptMentions, buildMentionMap } from './promptParser';
 import type { CompositionProduct, ParsedPrompt } from './promptParser';
 import type { VizzuTheme } from '../../contexts/UIContext';
+import { supabase } from '../../services/supabaseClient';
+import { useProducts } from '../../contexts/ProductsContext';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -148,6 +150,7 @@ interface CreativeStillEditorProps {
   onGenerate: (params: CreativeStillGenerateParams) => void;
   onOpenPlanModal?: () => void;
   isGenerating?: boolean;
+  onUpdateProduct?: (productId: string, updates: Partial<Product>) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -164,8 +167,16 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   onGenerate,
   onOpenPlanModal,
   isGenerating,
+  onUpdateProduct,
+  userId,
 }) => {
   const isDark = theme !== 'light';
+
+  // Produto atualizado direto do context (evita delay do useEffect chain)
+  const { products: allProducts } = useProducts();
+  const currentProduct = useMemo(() => {
+    return allProducts.find(p => p.id === product.id) || product;
+  }, [allProducts, product]);
 
   // ── States ──
   const [selectedAngles, setSelectedAngles] = useState<string[]>(['front']);
@@ -183,6 +194,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const [compositionProducts, setCompositionProducts] = useState<CompositionProduct[]>([]);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [uploadingRef, setUploadingRef] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Tipo do produto e ângulos disponíveis (condicionais por categoria) ──
@@ -191,9 +203,10 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
 
   // Para cada ângulo do config, resolver a melhor imagem (PS otimizada > original)
   // Ângulos SEM imagem ainda aparecem (mas desabilitados)
+  // Usa currentProduct para atualização imediata após upload de referência
   const angleImages = useMemo(() => {
     const result: Array<{ angle: string; label: string; url: string | null; isOptimized: boolean; icon: string; hasImage: boolean }> = [];
-    const psImages = product.generatedImages?.productStudio || [];
+    const psImages = currentProduct.generatedImages?.productStudio || [];
 
     for (const cfg of anglesConfig) {
       let url: string | null = null;
@@ -209,24 +222,24 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
       }
       // 2. Fallback para original
       if (!url) {
-        const origKey = cfg.id as keyof typeof product.originalImages;
-        const origImg = product.originalImages?.[origKey];
+        const origKey = cfg.id as keyof typeof currentProduct.originalImages;
+        const origImg = currentProduct.originalImages?.[origKey];
         if (origImg && typeof origImg === 'object' && 'url' in origImg) {
           url = (origImg as any).url;
         }
       }
       // 3. Fallback para array legado
-      if (!url && cfg.id === 'front' && product.images?.[0]?.url) {
-        url = product.images[0].url;
+      if (!url && cfg.id === 'front' && currentProduct.images?.[0]?.url) {
+        url = currentProduct.images[0].url;
       }
-      if (!url && cfg.id === 'back' && product.images?.[1]?.url) {
-        url = product.images[1].url;
+      if (!url && cfg.id === 'back' && currentProduct.images?.[1]?.url) {
+        url = currentProduct.images[1].url;
       }
 
       result.push({ angle: cfg.id, label: cfg.label, url, isOptimized, icon: cfg.icon, hasImage: !!url });
     }
     return result;
-  }, [product, anglesConfig]);
+  }, [currentProduct, anglesConfig]);
 
   // Mapa de referências disponíveis (quais ângulos têm foto)
   const availableReferences = useMemo(() => {
@@ -331,6 +344,61 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   const selectAllAngles = useCallback(() => {
     setSelectedAngles(angleImages.map(a => a.angle));
   }, [angleImages]);
+
+  // Upload de referência diretamente do modal de aviso
+  const handleAddReference = useCallback(async (file: File) => {
+    if (!angleWithoutRef || !userId || !onUpdateProduct) return;
+
+    // back_detail sem ref de costas → upload como 'back'
+    const targetAngle = (angleWithoutRef === 'back_detail' && !availableReferences['back'])
+      ? 'back'
+      : angleWithoutRef;
+
+    setUploadingRef(true);
+    try {
+      const fileName = `${userId}/${product.id}/original_${targetAngle}_${Date.now()}.${file.name.split('.').pop()}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${fileName}`;
+
+      const { data: imageData, error: insertError } = await supabase
+        .from('product_images')
+        .insert({
+          product_id: product.id,
+          user_id: userId,
+          type: 'original',
+          angle: targetAngle,
+          storage_path: fileName,
+          url: publicUrl,
+          file_name: file.name,
+          mime_type: file.type,
+          is_primary: false
+        })
+        .select()
+        .single();
+      if (insertError) throw insertError;
+
+      onUpdateProduct(product.id, {
+        originalImages: {
+          ...product.originalImages,
+          [targetAngle]: { id: imageData.id, url: publicUrl, storagePath: fileName }
+        }
+      });
+
+      setShowNoRefModal(false);
+      setSelectedAngles(prev => [...prev, angleWithoutRef]);
+      setAngleWithoutRef(null);
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro ao adicionar imagem de referência. Tente novamente.');
+    } finally {
+      setUploadingRef(false);
+    }
+  }, [angleWithoutRef, userId, product.id, product.originalImages, onUpdateProduct, availableReferences]);
 
   const handleOptimize = useCallback(async () => {
     if (!prompt.trim() || isOptimizing) return;
@@ -963,7 +1031,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 }
               >
                 <i className="fas fa-sparkles text-xs"></i>
-                Gerar {selectedAngles.length} {selectedAngles.length === 1 ? 'ângulo' : 'ângulos'}
+                Gerar {selectedAngles.length} {selectedAngles.length === 1 ? 'ângulo' : 'ângulos'} ({totalCredits} {totalCredits === 1 ? 'crédito' : 'créditos'})
               </button>
             </div>
           </div>
@@ -1031,6 +1099,32 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                 <i className="fas fa-check"></i>
                 <span>{noRefModalMode === 'detail-tip' ? 'Entendi, gerar assim mesmo' : 'Continuar mesmo assim'}</span>
               </button>
+
+              {/* CTA: Adicionar foto de referência */}
+              {userId && onUpdateProduct && (
+                <label className="block">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleAddReference(file);
+                    }}
+                    disabled={uploadingRef}
+                  />
+                  <div className={`w-full px-4 py-3 rounded-xl font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-2 ${
+                    isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  } ${uploadingRef ? 'opacity-50 cursor-wait' : ''}`}>
+                    {uploadingRef ? (
+                      <><i className="fas fa-spinner fa-spin"></i><span>Enviando...</span></>
+                    ) : (
+                      <><i className="fas fa-upload"></i><span>Adicionar foto de referência</span></>
+                    )}
+                  </div>
+                </label>
+              )}
+
               <button
                 onClick={() => { setShowNoRefModal(false); setAngleWithoutRef(null); }}
                 className={(isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600') + ' w-full px-4 py-2 text-sm transition-all text-center'}
@@ -1042,7 +1136,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
               <div className={(isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') + ' flex items-start gap-3 rounded-xl p-3 border'}>
                 <i className={'fas fa-lightbulb mt-0.5 ' + (isDark ? 'text-amber-400' : 'text-amber-500')}></i>
                 <p className={(isDark ? 'text-amber-300/80' : 'text-amber-700') + ' text-xs'}>
-                  Para melhores resultados, envie fotos de todos os ângulos do produto no cadastro. Quanto mais referências, mais fiel será o resultado.
+                  Fotos de referência ajudam a IA a reproduzir seu produto com mais fidelidade. Envie a foto e o ângulo será desbloqueado automaticamente.
                 </p>
               </div>
             </div>

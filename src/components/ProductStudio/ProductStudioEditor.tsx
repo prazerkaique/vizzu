@@ -184,7 +184,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const { showToast } = useUI();
  const { addCompletedProduct } = useGeneration();
  const { checkLoad } = useSystemLoad();
- const { loadUserProducts } = useProducts();
+ const { products: allProducts, loadUserProducts } = useProducts();
+
+ // Produto atualizado direto do context (evita delay do useEffect chain)
+ const currentProduct = useMemo(() => {
+   return allProducts.find(p => p.id === product.id) || product;
+ }, [allProducts, product]);
 
  // Mensagem de alta demanda (exibida no loading)
  const [highDemandMessage, setHighDemandMessage] = useState<string | null>(null);
@@ -264,6 +269,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Refs para evitar stale closure no polling
  const generationFinalStatusRef = useRef<string | null>(null);
  const completedAngleStatusesRef = useRef<StudioAngleStatus[]>([]);
+ // Contagem de falhas consecutivas no polling (status 'unknown' = query falhou)
+ const consecutiveUnknownRef = useRef<number>(0);
+ // Ref do interval de polling para cleanup no unmount
+ const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
  // ID da geração atual (sobrevive ao cleanup do polling)
  const [currentGenerationId, setCurrentGenerationId] = useState<string | null>(null);
 
@@ -301,7 +310,52 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  try {
  // v9: polling por generationId (incremental)
  if (pending.generationId) {
- const pollResult = await pollStudioGeneration(pending.generationId);
+ let pollResult = await pollStudioGeneration(pending.generationId);
+
+ // ═══ Recuperação de falhas de polling (status 'unknown' = query falhou) ═══
+ if (pollResult.generationStatus === 'unknown') {
+   consecutiveUnknownRef.current += 1;
+   const fails = consecutiveUnknownRef.current;
+
+   // Após 5 falhas (~15s): forçar refresh da sessão auth
+   if (fails === 5) {
+     console.warn('[PS Polling] 5 falhas consecutivas — forçando refresh de sessão');
+     const { supabase } = await import('../../services/supabaseClient');
+     await supabase.auth.refreshSession();
+     // Retry imediato com sessão fresca
+     pollResult = await pollStudioGeneration(pending.generationId);
+   }
+
+   // Após 10+ falhas (~30s): tentar fallback v8 (buscar por product_id)
+   if (fails >= 10 && fails % 5 === 0) {
+     console.warn('[PS Polling] Fallback v8: buscando geração por product_id');
+     const { supabase } = await import('../../services/supabaseClient');
+     const { data: altGen } = await supabase
+       .from('generations')
+       .select('id, status, output_urls')
+       .eq('user_id', userId)
+       .eq('product_id', pending.productId)
+       .in('status', ['completed', 'partial'])
+       .not('output_urls', 'is', null)
+       .order('created_at', { ascending: false })
+       .limit(1)
+       .maybeSingle();
+
+     if (altGen && altGen.output_urls) {
+       console.log('[PS Polling] Fallback encontrou geração completa:', altGen.id);
+       // Redirecionar polling para o ID que funcionou
+       pending.generationId = altGen.id;
+       savePendingPSGeneration(pending);
+       pollResult = await pollStudioGeneration(altGen.id);
+       if (pollResult.generationStatus !== 'unknown') {
+         consecutiveUnknownRef.current = 0; // Reset
+       }
+     }
+   }
+ } else {
+   // Query funcionou — resetar contador de falhas
+   consecutiveUnknownRef.current = 0;
+ }
 
  // Atualizar ângulos completados (UI reflete em tempo real)
  if (pollResult.completedAngles.length > 0) {
@@ -323,6 +377,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const elapsedMs = Date.now() - pending.startTime;
    const timeProgress = Math.min(Math.round(10 + (elapsedMs / 120000) * 40), 50);
    setProgress(timeProgress);
+   // Log a cada 30s quando nada muda (diagnóstico de stuck)
+   if (elapsedMs > 30000 && Math.round(elapsedMs / 1000) % 30 < 4) {
+     console.warn('[PS Polling] Sem ângulos há', Math.round(elapsedMs / 1000), 's | genStatus:', pollResult.generationStatus, '| unknowns:', consecutiveUnknownRef.current, '| genId:', pending.generationId?.slice(0, 8));
+   }
  }
 
  // Geração terminou?
@@ -573,6 +631,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  };
  }, [userId, product.id]);
 
+ // Cleanup do polling de startIncrementalPolling no unmount
+ useEffect(() => {
+ return () => {
+ if (pollingIntervalRef.current) {
+   clearInterval(pollingIntervalRef.current);
+   pollingIntervalRef.current = null;
+ }
+ };
+ }, []);
+
  // Rotacionar frases de loading
  useEffect(() => {
  if (!isGenerating) return;
@@ -596,38 +664,39 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const productType = getProductType(editedProduct.category || product.category);
  const availableAngles = ANGLES_CONFIG[productType];
 
- // Obter todas as imagens do produto
+ // Obter todas as imagens do produto (usa currentProduct para atualização imediata)
  const productImages = useMemo(() => {
  const images: { url: string; type: string }[] = [];
+ const oi = currentProduct.originalImages;
 
- if (product.originalImages?.front?.url) {
- images.push({ url: product.originalImages.front.url, type: 'Frente' });
+ if (oi?.front?.url) {
+ images.push({ url: oi.front.url, type: 'Frente' });
  }
- if (product.originalImages?.back?.url) {
- images.push({ url: product.originalImages.back.url, type: 'Costas' });
+ if (oi?.back?.url) {
+ images.push({ url: oi.back.url, type: 'Costas' });
  }
- if (product.originalImages?.['side-left']?.url) {
- images.push({ url: product.originalImages['side-left'].url, type: 'Lateral Esq.' });
+ if (oi?.['side-left']?.url) {
+ images.push({ url: oi['side-left'].url, type: 'Lateral Esq.' });
  }
- if (product.originalImages?.['side-right']?.url) {
- images.push({ url: product.originalImages['side-right'].url, type: 'Lateral Dir.' });
+ if (oi?.['side-right']?.url) {
+ images.push({ url: oi['side-right'].url, type: 'Lateral Dir.' });
  }
- if (product.originalImages?.top?.url) {
- images.push({ url: product.originalImages.top.url, type: 'Cima' });
+ if (oi?.top?.url) {
+ images.push({ url: oi.top.url, type: 'Cima' });
  }
- if (product.originalImages?.frontDetail?.url) {
- images.push({ url: product.originalImages.frontDetail.url, type: 'Detalhe Frente' });
+ if (oi?.frontDetail?.url) {
+ images.push({ url: oi.frontDetail.url, type: 'Detalhe Frente' });
  }
- if (product.originalImages?.backDetail?.url) {
- images.push({ url: product.originalImages.backDetail.url, type: 'Detalhe Costas' });
+ if (oi?.backDetail?.url) {
+ images.push({ url: oi.backDetail.url, type: 'Detalhe Costas' });
  }
- if (product.originalImages?.detail?.url && !product.originalImages?.frontDetail?.url) {
- images.push({ url: product.originalImages.detail.url, type: 'Detalhe' });
+ if (oi?.detail?.url && !oi?.frontDetail?.url) {
+ images.push({ url: oi.detail.url, type: 'Detalhe' });
  }
 
  // Fallback para array de imagens legado
- if (images.length === 0 && product.images) {
- product.images.forEach((img, idx) => {
+ if (images.length === 0 && currentProduct.images) {
+ currentProduct.images.forEach((img, idx) => {
  const url = img.url || img.base64;
  if (url) {
  images.push({ url, type: `Foto ${idx + 1}` });
@@ -636,7 +705,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
 
  return images;
- }, [product]);
+ }, [currentProduct]);
 
  // Obter imagens geradas do Product Studio
  const generatedImages = useMemo(() => {
@@ -701,6 +770,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Mapear quais imagens de referência estão disponíveis
  // IMPORTANTE: Só considera disponível se tiver o ID (necessário para a API)
+ // Usa currentProduct para atualização imediata após upload de referência
  const availableReferences = useMemo(() => {
  const refs: Record<ProductStudioAngle, boolean> = {
  'front': false,
@@ -716,24 +786,25 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  'folded': false,
  };
 
+ const oi = currentProduct.originalImages;
  // Verificar originalImages - PRECISA ter ID para funcionar
- if (product.originalImages?.front?.id) refs.front = true;
- if (product.originalImages?.back?.id) refs.back = true;
- if (product.originalImages?.['side-left']?.id) refs['side-left'] = true;
- if (product.originalImages?.['side-right']?.id) refs['side-right'] = true;
- if (product.originalImages?.top?.id) refs.top = true;
- if (product.originalImages?.detail?.id || product.originalImages?.frontDetail?.id) refs.detail = true;
- if (product.originalImages?.frontDetail?.id) refs.front_detail = true;
- if (product.originalImages?.backDetail?.id) refs.back_detail = true;
- if (product.originalImages?.['45-left']?.id) refs['45-left'] = true;
- if (product.originalImages?.['45-right']?.id) refs['45-right'] = true;
+ if (oi?.front?.id) refs.front = true;
+ if (oi?.back?.id) refs.back = true;
+ if (oi?.['side-left']?.id) refs['side-left'] = true;
+ if (oi?.['side-right']?.id) refs['side-right'] = true;
+ if (oi?.top?.id) refs.top = true;
+ if (oi?.detail?.id || oi?.frontDetail?.id) refs.detail = true;
+ if (oi?.frontDetail?.id) refs.front_detail = true;
+ if (oi?.backDetail?.id) refs.back_detail = true;
+ if (oi?.['45-left']?.id) refs['45-left'] = true;
+ if (oi?.['45-right']?.id) refs['45-right'] = true;
 
  // Fallback: se não tem originalImages mas tem images legado (com ID)
- if (!refs.front && product.images?.[0]?.id) refs.front = true;
- if (!refs.back && product.images?.[1]?.id) refs.back = true;
+ if (!refs.front && currentProduct.images?.[0]?.id) refs.front = true;
+ if (!refs.back && currentProduct.images?.[1]?.id) refs.back = true;
 
  return refs;
- }, [product]);
+ }, [currentProduct]);
 
  // Labels amigáveis para os ângulos
  const angleLabels: Record<ProductStudioAngle, string> = {
@@ -797,17 +868,22 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Front é obrigatório — não pode desmarcar
  if (angle === 'front') return;
 
- // Se já está selecionado, remove
- if (selectedAngles.includes(angle)) {
- setSelectedAngles(prev => prev.filter(a => a !== angle));
- return;
- }
-
- // AVISO: costas ou detalhe costas SEM foto de costas
- if ((angle === 'back' || angle === 'back_detail') && !availableReferences['back']) {
+ // BLOQUEADO: ângulo sem referência base obrigatória — abre modal de upload
+ const baseRef = (angle === 'back' || angle === 'back_detail')
+   ? 'back' as ProductStudioAngle
+   : (angle === 'front_detail' || angle === 'folded')
+     ? null
+     : angle;
+ if (baseRef && !availableReferences[baseRef]) {
  setAngleWithoutRef(angle);
  setNoRefModalMode('warning');
  setShowNoRefModal(true);
+ return;
+ }
+
+ // Se já está selecionado, remove
+ if (selectedAngles.includes(angle)) {
+ setSelectedAngles(prev => prev.filter(a => a !== angle));
  return;
  }
 
@@ -827,19 +903,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  return;
  }
 
- // AVISO: outros ângulos sem referência (permite continuar)
- if (angle !== 'folded' && !availableReferences[angle]) {
- setAngleWithoutRef(angle);
- setNoRefModalMode('warning');
- setShowNoRefModal(true);
- return;
- }
-
  // Tem referência ou não precisa - adiciona normalmente
  setSelectedAngles(prev => [...prev, angle]);
  };
 
- // Selecionar todos os ângulos disponíveis (inclui todos, mesmo sem referência)
+ // Selecionar todos os ângulos disponíveis
  const selectAllAngles = () => {
  setSelectedAngles(availableAngles.map(a => a.id));
  };
@@ -994,9 +1062,14 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const handleAddReference = async (file: File) => {
  if (!angleWithoutRef || !userId) return;
 
+ // Para back_detail, a ref necessária é 'back' (não 'back_detail')
+ const targetAngle = (angleWithoutRef === 'back_detail' && !availableReferences['back'])
+   ? 'back' as ProductStudioAngle
+   : angleWithoutRef;
+
  setUploadingRef(true);
  try {
- const fileName = `${userId}/${product.id}/original_${angleWithoutRef}_${Date.now()}.${file.name.split('.').pop()}`;
+ const fileName = `${userId}/${product.id}/original_${targetAngle}_${Date.now()}.${file.name.split('.').pop()}`;
 
  const { error: uploadError } = await supabase.storage
  .from('products')
@@ -1013,7 +1086,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  product_id: product.id,
  user_id: userId,
  type: 'original',
- angle: angleWithoutRef,
+ angle: targetAngle,
  storage_path: fileName,
  url: publicUrl,
  file_name: file.name,
@@ -1028,7 +1101,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Atualizar o produto com a nova referência
  const newOriginalImages = {
  ...product.originalImages,
- [angleWithoutRef]: {
+ [targetAngle]: {
  id: imageData.id,
  url: publicUrl,
  storagePath: fileName
@@ -1054,6 +1127,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  // Iniciar polling incremental (usado tanto por v9 direto quanto por fallback)
  const startIncrementalPolling = useCallback(() => {
+ // Limpar interval anterior se existir (previne duplicatas)
+ if (pollingIntervalRef.current) {
+   clearInterval(pollingIntervalRef.current);
+   pollingIntervalRef.current = null;
+ }
+ consecutiveUnknownRef.current = 0; // Reset contagem de falhas
+
  const pollStart = Date.now();
  const pending = getPendingPSGeneration();
  const numAngles = pending?.angles?.length || 5;
@@ -1063,6 +1143,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (Date.now() - pollStart > maxPollMs) {
    console.warn(`[Studio] Polling timeout — parando após ${Math.round(maxPollMs / 60000)} minutos`);
    clearInterval(pollInterval);
+   pollingIntervalRef.current = null;
    clearPendingPSGeneration();
    setGenerationFinalStatus('failed');
    const setGen = onSetGenerating || setLocalIsGenerating;
@@ -1103,6 +1184,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const result = await checkPendingPSGeneration();
  if (result === 'completed') {
    clearInterval(pollInterval);
+   pollingIntervalRef.current = null;
    const setGen = onSetGenerating || setLocalIsGenerating;
    const setProg = onSetProgress || setLocalProgress;
    setProg(100);
@@ -1117,12 +1199,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  }, 3000); // v9: poll a cada 3s (mais rápido que v8)
 
+ pollingIntervalRef.current = pollInterval;
  return pollInterval;
  }, [checkPendingPSGeneration, onSetGenerating, onSetMinimized, onSetProgress]);
 
  // Gerar imagens
  const handleGenerate = async () => {
  if (selectedAngles.length === 0) return;
+
+ // Usar selectedAngles direto — usuário pode escolher gerar sem referência
+ const safeAngles = selectedAngles;
+ if (safeAngles.length === 0) return;
 
  // Lock instantâneo — previne clique duplo no MESMO tick
  if (isSubmitting) return;
@@ -1192,7 +1279,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  productName: product.name,
  userId: userId!,
  startTime: Date.now(),
- angles: selectedAngles,
+ angles: safeAngles,
  });
 
  try {
@@ -1214,7 +1301,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  userId: userId,
  imageId: imageIds.front!,
  referenceImages: Object.keys(referenceImages).length > 0 ? referenceImages : undefined,
- angles: selectedAngles,
+ angles: safeAngles,
  presentationStyle: productType === 'clothing' ? presentationStyle : 'flat-lay',
  fabricFinish: (productType === 'clothing' ? presentationStyle : 'flat-lay') === 'flat-lay' ? fabricFinish : 'natural',
  productInfo: {
@@ -1239,7 +1326,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    productName: product.name,
    userId: userId!,
    startTime: Date.now(),
-   angles: selectedAngles,
+   angles: safeAngles,
    generationId: response.generation_id,
  });
 
@@ -1252,7 +1339,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (onAddHistoryLog) {
    onAddHistoryLog(
      'Product Studio',
-     `Geração iniciada: ${selectedAngles.length} fotos de "${product.name}"`,
+     `Geração iniciada: ${safeAngles.length} fotos de "${product.name}"`,
      'success',
      [product],
      'ai',
@@ -2061,12 +2148,19 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {availableAngles.map(angle => {
  const isSelected = selectedAngles.includes(angle.id);
  const isFront = angle.id === 'front';
- // Nenhum ângulo é bloqueado — todos podem ser selecionados (com aviso)
- const isBlocked = false;
+ // Bloqueado se precisa de referência base e não tem
+ // back/back_detail precisam de ref 'back'; side-left/side-right/top/detail precisam da ref correspondente
+ // front_detail e folded derivam da frente, nunca bloqueados
+ const needsBaseRef = angle.id === 'back' || angle.id === 'back_detail'
+   ? 'back' as ProductStudioAngle
+   : (angle.id === 'front_detail' || angle.id === 'folded')
+     ? null // Não precisa de ref própria
+     : angle.id;
+ const missingBaseRef = needsBaseRef !== null && !isFront && !availableReferences[needsBaseRef];
  // Tem referência completa (incluindo detalhe específico)
  const hasRef = isFront || angle.id === 'folded' || availableReferences[angle.id];
  // Tem referência base mas falta detalhe específico (dica suave)
- const hasDetailTip = !isBlocked && (
+ const hasDetailTip = !missingBaseRef && (
  (angle.id === 'front_detail' && !availableReferences['front_detail']) ||
  (angle.id === 'back_detail' && availableReferences['back'] && !availableReferences['back_detail'])
  );
@@ -2074,11 +2168,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <button
  key={angle.id}
  onClick={() => toggleAngle(angle.id)}
- disabled={isBlocked}
  className={'p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ' +
- (isBlocked
- ? (theme !== 'light' ? 'bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50' : 'bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed opacity-50')
- : (isFront || isSelected)
+ ((isFront || isSelected)
  ? (theme !== 'light' ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-100 border-gray-900 text-gray-900')
  : (theme !== 'light'
  ? 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
@@ -2086,24 +2177,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )
  }
  >
- {/* Indicador: bloqueado (cadeado vermelho) */}
- {isBlocked && (
- <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
- theme !== 'light' ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-500'
- }`}>
- <i className="fas fa-lock"></i>
- </div>
- )}
  {/* Indicador: dica de detalhe (info azul) */}
- {!isBlocked && hasDetailTip && !isSelected && (
+ {hasDetailTip && !isSelected && (
  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
  theme !== 'light' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-500'
  }`}>
  <i className="fas fa-info"></i>
  </div>
  )}
- {/* Indicador: sem referência (aviso âmbar) */}
- {!isFront && !isBlocked && !hasDetailTip && !hasRef && (
+ {/* Indicador: sem referência base (aviso âmbar) */}
+ {!isFront && !hasDetailTip && (missingBaseRef || (!hasRef && !isSelected)) && (
  <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
  theme !== 'light' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-500'
  }`}>
@@ -2112,16 +2195,16 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  )}
  <i className={`fas ${angle.icon} text-xl`}></i>
  <span className="text-xs font-medium">{angle.label}</span>
- {(isFront || isSelected) && !isBlocked && (
+ {(isFront || isSelected) && (
  <i className="fas fa-check-circle text-green-400 text-sm"></i>
  )}
- {isBlocked && (
- <span className={(theme !== 'light' ? 'text-red-400/60' : 'text-red-400') + " text-[10px]"}>Sem foto costas</span>
- )}
- {!isFront && !isBlocked && hasDetailTip && !isSelected && (
+ {!isFront && hasDetailTip && !isSelected && (
  <span className={(theme !== 'light' ? 'text-blue-400/60' : 'text-blue-400') + " text-[10px]"}>Sem detalhe</span>
  )}
- {!isFront && !isBlocked && !hasDetailTip && !hasRef && !isSelected && (
+ {!isFront && !hasDetailTip && missingBaseRef && !isSelected && (
+ <span className={(theme !== 'light' ? 'text-amber-400/60' : 'text-amber-400') + " text-[10px]"}>Sem ref.</span>
+ )}
+ {!isFront && !hasDetailTip && !missingBaseRef && !hasRef && !isSelected && (
  <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + " text-[10px]"}>Sem ref.</span>
  )}
  </button>
@@ -2148,12 +2231,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <i className={"fas fa-exclamation text-[8px] " + (theme !== 'light' ? 'text-amber-400' : 'text-amber-500')}></i>
  </div>
  <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Sem referência</span>
- </div>
- <div className="flex items-center gap-1.5">
- <div className={"w-4 h-4 rounded-full flex items-center justify-center " + (theme !== 'light' ? "bg-red-500/20" : "bg-red-100")}>
- <i className={"fas fa-lock text-[8px] " + (theme !== 'light' ? 'text-red-400' : 'text-red-500')}></i>
- </div>
- <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + " text-[10px]"}>Bloqueado</span>
  </div>
  </div>
  </div>
@@ -2610,13 +2687,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  </div>
  </div>
 
- {/* Explicação de créditos */}
- <div className={(theme !== 'light' ? 'bg-neutral-800/50' : 'bg-gray-50') + ' rounded-lg p-3 mt-3'}>
- <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
- <i className="fas fa-coins mr-1 text-amber-500"></i>
- 1 a 2 créditos por foto
- </p>
- </div>
  </div>
 
  {/* Botão Criar */}
@@ -2645,7 +2715,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  ) : (
  <>
  <i className="fas fa-wand-magic-sparkles"></i>
- <span>Criar {selectedAngles.length > 0 ? `${selectedAngles.length} Foto${selectedAngles.length > 1 ? 's' : ''}` : 'Fotos'}</span>
+ <span>Criar {selectedAngles.length > 0 ? `${selectedAngles.length} Foto${selectedAngles.length > 1 ? 's' : ''}` : 'Fotos'} ({creditsNeeded} {creditsNeeded === 1 ? 'crédito' : 'créditos'})</span>
  </>
  )}
  </button>
@@ -2750,20 +2820,26 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + " relative z-10 w-full max-w-md rounded-2xl border overflow-hidden"}>
  {/* Header com ícone */}
  <div className="p-6 pb-4 text-center">
- {noRefModalMode === 'blocked' ? (
- <>
- <div className={"w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center " + (theme !== 'light' ? "bg-red-500/20" : "bg-red-100")}>
- <i className={"fas fa-lock text-2xl " + (theme !== 'light' ? 'text-red-400' : 'text-red-500')}></i>
+ {noRefModalMode === 'blocked' ? (() => {
+ const neededRef = (angleWithoutRef === 'back' || angleWithoutRef === 'back_detail') ? 'costas'
+   : angleWithoutRef === 'side-left' ? 'lateral esquerda'
+   : angleWithoutRef === 'side-right' ? 'lateral direita'
+   : angleWithoutRef === 'top' ? 'vista superior'
+   : angleWithoutRef === 'detail' ? 'detalhe'
+   : angleLabels[angleWithoutRef].toLowerCase();
+ return <>
+ <div className={"w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center " + (theme !== 'light' ? "bg-amber-500/20" : "bg-amber-100")}>
+ <i className={"fas fa-camera-retro text-2xl " + (theme !== 'light' ? 'text-amber-400' : 'text-amber-500')}></i>
  </div>
  <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + " text-lg font-semibold font-serif mb-2"}>
- Foto de costas necessária
+ Foto de referência necessária
  </h3>
  <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + " text-sm"}>
  Para gerar o ângulo <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{angleLabels[angleWithoutRef]}</span>,
- é necessário ter uma foto de costas do produto no cadastro.
+ adicione uma foto de <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold'}>{neededRef}</span> do produto.
  </p>
- </>
- ) : noRefModalMode === 'detail-tip' ? (
+ </>;
+ })() : noRefModalMode === 'detail-tip' ? (
  <>
  <div className={"w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center " + (theme !== 'light' ? "bg-blue-500/20" : "bg-blue-100")}>
  <i className={"fas fa-info-circle text-2xl " + (theme !== 'light' ? 'text-blue-400' : 'text-blue-500')}></i>
@@ -2838,7 +2914,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  ) : (
  <>
  <i className="fas fa-upload"></i>
- <span>{noRefModalMode === 'blocked' ? 'Adicionar foto de costas' : 'Adicionar foto de referência'}</span>
+ <span>Adicionar foto de referência</span>
  </>
  )}
  </div>
@@ -2860,10 +2936,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Dica contextual */}
  <div className="px-6 pb-6">
  {noRefModalMode === 'blocked' ? (
- <div className={(theme !== 'light' ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
- <i className={"fas fa-exclamation-triangle mt-0.5 " + (theme !== 'light' ? 'text-red-400' : 'text-red-500')}></i>
- <p className={(theme !== 'light' ? 'text-red-400/80' : 'text-red-600') + " text-xs"}>
- Sem a foto de costas, não é possível gerar ângulos de costas ou detalhe de costas com qualidade.
+ <div className={(theme !== 'light' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200') + " flex items-start gap-3 rounded-xl p-3 border"}>
+ <i className={"fas fa-lightbulb mt-0.5 " + (theme !== 'light' ? 'text-amber-400' : 'text-amber-500')}></i>
+ <p className={(theme !== 'light' ? 'text-amber-400/80' : 'text-amber-600') + " text-xs"}>
+ Fotos de referência ajudam a IA a reproduzir seu produto com mais fidelidade. Envie a foto e o ângulo será desbloqueado automaticamente.
  </p>
  </div>
  ) : noRefModalMode === 'detail-tip' ? (
