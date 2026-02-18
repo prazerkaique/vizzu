@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useUI } from '../contexts/UIContext';
+import { useGeneration } from '../contexts/GenerationContext';
 import { useGalleryData, FEATURE_CONFIG, type FeatureType, type GalleryItem } from '../hooks/useGalleryData';
 import { useDebounce } from '../hooks/useDebounce';
 import { useImageViewer } from '../components/ImageViewer';
@@ -38,6 +39,14 @@ export function GalleryPage() {
   const { theme, isV2 } = useUI();
   const isDark = theme !== 'light';
   const { allItems, stats, isLoading } = useGalleryData();
+  const { completedProducts } = useGeneration();
+
+  // IDs de produtos com geração recém-concluída (para badge "NOVO")
+  const newProductIds = useMemo(() => {
+    const ids = new Set<string>();
+    Object.values(completedProducts).forEach(productIds => productIds.forEach(id => ids.add(id)));
+    return ids;
+  }, [completedProducts]);
   const { openViewer } = useImageViewer();
   const hasWatermark = useWatermark();
 
@@ -317,6 +326,7 @@ export function GalleryPage() {
                 ? item.originalImageUrl
                 : item.imageUrl;
               const isSelected = selectedIds.has(item.id);
+              const isNew = item.productId ? newProductIds.has(item.productId) : false;
 
               return (
                 <div
@@ -377,6 +387,13 @@ export function GalleryPage() {
                       <i className={`fas ${cfg.icon} text-[6px]`} />
                       <span className="hidden sm:inline">{cfg.label.split(' ')[0]}</span>
                     </div>
+
+                    {/* Badge NOVO para itens recém-gerados */}
+                    {isNew && (
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-green-500 text-white text-[8px] font-bold animate-pulse">
+                        NOVO
+                      </div>
+                    )}
 
                     {/* Hover overlay */}
                     {!isSelecting && (

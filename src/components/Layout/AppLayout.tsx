@@ -362,12 +362,12 @@ export function AppLayout({
 
  // Limpar badge da feature específica quando navega para ela
  useEffect(() => {
-   if (isCreationPage) {
+   if (currentPage === 'gallery') {
+     clearAllCompletedFeatures();
+   } else if (isCreationPage) {
      clearCompletedFeature(currentPage);
-   } else if (currentPage === 'create') {
-     // Não limpa automaticamente — badges ficam nos cards do hub
    }
- }, [currentPage, isCreationPage, clearCompletedFeature]);
+ }, [currentPage, isCreationPage, clearCompletedFeature, clearAllCompletedFeatures]);
 
  return (
  <div
