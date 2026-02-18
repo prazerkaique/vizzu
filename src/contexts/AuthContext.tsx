@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('vizzu_history');
           localStorage.removeItem('vizzu_company_settings');
           localStorage.removeItem('vizzu_credits_data');
+          localStorage.removeItem('vizzu_onboarding_completed');
         }
         localStorage.setItem('vizzu_last_user_id', userId);
 
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem('vizzu_history');
           localStorage.removeItem('vizzu_company_settings');
           localStorage.removeItem('vizzu_credits_data');
+          localStorage.removeItem('vizzu_onboarding_completed');
         }
         localStorage.setItem('vizzu_last_user_id', userId);
 
@@ -109,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('vizzu_clients');
     localStorage.removeItem('vizzu_history');
     localStorage.removeItem('vizzu_company_settings');
+    localStorage.removeItem('vizzu_onboarding_completed');
     setUser(null);
     setIsAuthenticated(false);
   }, []);

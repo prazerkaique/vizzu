@@ -19,6 +19,8 @@ export interface CompanySettings {
   name: string;
   cnpj?: string;
   instagram?: string;
+  whatsapp?: string;
+  segment?: string;
   targetAudience: string;
   voiceTone: 'formal' | 'casual' | 'divertido' | 'luxo' | 'jovem';
   voiceExamples?: string;

@@ -170,6 +170,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  name: '',
  cnpj: '',
  instagram: '',
+ whatsapp: '',
+ segment: '',
  targetAudience: '',
  voiceTone: 'casual' as const,
  voiceExamples: '',
@@ -358,6 +360,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
  placeholder="@sualoja"
  />
+ </div>
+ <div>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>WhatsApp</label>
+ <input
+ type="tel"
+ value={companySettings.whatsapp || ''}
+ onChange={(e) => setCompanySettings({ ...companySettings, whatsapp: e.target.value })}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
+ placeholder="(11) 99999-9999"
+ />
+ </div>
+ <div>
+ <label className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' block text-[10px] font-medium uppercase tracking-wide mb-1.5'}>Segmento</label>
+ <select
+ value={companySettings.segment || ''}
+ onChange={(e) => setCompanySettings({ ...companySettings, segment: e.target.value })}
+ className={(theme !== 'light' ? 'bg-neutral-800 border-neutral-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900') + ' w-full px-3 py-2.5 border rounded-lg text-sm'}
+ >
+ <option value="">Selecione</option>
+ <option value="Moda Feminina">Moda Feminina</option>
+ <option value="Moda Masculina">Moda Masculina</option>
+ <option value="Calçados">Calçados</option>
+ <option value="Acessórios">Acessórios</option>
+ <option value="Infantil">Infantil</option>
+ <option value="Fitness">Fitness</option>
+ <option value="Praia">Praia</option>
+ <option value="Cosméticos">Cosméticos</option>
+ <option value="Decoração">Decoração</option>
+ <option value="Outro">Outro</option>
+ </select>
  </div>
  </div>
  </div>

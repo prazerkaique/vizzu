@@ -45,6 +45,8 @@ import { supabase } from './services/supabaseClient';
 import { generateProvador, sendWhatsAppMessage } from './lib/api/studio';
 import { cancelSubscription } from './lib/api/billing';
 import { smartDownload } from './utils/downloadHelper';
+import { useOnboardingProfile } from './hooks/useOnboardingProfile';
+import { OnboardingModal } from './components/OnboardingModal';
 // import { getReviewedReports, markReportsNotified } from './lib/api/reports'; // TODO: habilitar com tabela generation_reports
 import { runFullMigration, runProductMigration, runStorageMigration } from './utils/imageMigration';
 import { DashboardPage } from './pages/DashboardPage';
@@ -88,6 +90,8 @@ function App() {
  const { user, isAuthenticated, login, loginDemo, logout } = useAuth();
  // Terms acceptance
  const { hasAccepted: hasAcceptedTerms, isLoading: isTermsLoading, acceptTerms } = useTermsAcceptance(user?.id);
+ // Onboarding profile
+ const { hasCompletedOnboarding, isLoading: isOnboardingLoading, saveProfile: saveOnboardingProfile, completeOnboarding } = useOnboardingProfile(user?.id);
  // History from context
  const { addHistoryLog, loadUserHistory } = useHistory();
  // Products from context
@@ -1009,6 +1013,22 @@ function App() {
     isOpen={true}
     onAccept={acceptTerms}
     isLoading={isTermsLoading}
+   />
+  );
+ }
+
+ // ONBOARDING CHECK — modal obrigatório de perfil da loja
+ if (hasCompletedOnboarding === null) {
+  return <LoadingSkeleton theme={theme} />;
+ }
+
+ if (!hasCompletedOnboarding) {
+  return (
+   <OnboardingModal
+    isOpen={true}
+    onSaveProfile={saveOnboardingProfile}
+    onComplete={completeOnboarding}
+    isLoading={isOnboardingLoading}
    />
   );
  }
