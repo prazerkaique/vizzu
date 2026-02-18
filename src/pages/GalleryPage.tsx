@@ -353,16 +353,18 @@ export function GalleryPage() {
                       — {group.items.length} {group.items.length === 1 ? 'imagem' : 'imagens'}
                     </span>
                   </div>
-                  {isSelecting && (
-                    <button
-                      onClick={() => selectGroup(group)}
-                      className={`flex-shrink-0 ml-2 text-[10px] font-medium transition-colors ${
-                        allGroupSelected ? 'text-[#FF6B6B]' : textSecondary + ' hover:text-[#FF6B6B]'
-                      }`}
-                    >
-                      {allGroupSelected ? 'Desmarcar' : 'Selecionar'}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      if (!isSelecting) setIsSelecting(true);
+                      selectGroup(group);
+                    }}
+                    className={`flex-shrink-0 ml-2 text-[10px] font-medium transition-colors ${
+                      allGroupSelected ? 'text-[#FF6B6B]' : textSecondary + ' hover:text-[#FF6B6B]'
+                    }`}
+                  >
+                    <i className={`fas fa-${allGroupSelected ? 'square-minus' : 'square-check'} mr-1`} />
+                    {allGroupSelected ? 'Desmarcar' : 'Selecionar'}
+                  </button>
                 </div>
 
                 {/* ── Group items grid ── */}
