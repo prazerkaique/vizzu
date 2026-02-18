@@ -12,6 +12,8 @@ import { EcommerceExportButton } from '../components/shared/EcommerceExportButto
 import type { DownloadableImage } from '../utils/downloadSizes';
 import { useWatermark } from '../hooks/useWatermark';
 import { WatermarkOverlay } from '../components/shared/WatermarkOverlay';
+import { useProducts } from '../contexts/ProductsContext';
+import { ConfirmModal } from '../components/shared/ConfirmModal';
 
 // ═══════════════════════════════════════════════════════════════
 // Galeria — Todas as gerações IA agrupadas por produto/feature
@@ -86,9 +88,19 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
   const [downloadItem, setDownloadItem] = useState<GalleryItem | null>(null);
   const [showBulkDownload, setShowBulkDownload] = useState(false);
 
-  // ── Filtered groups ──
+  // ── Delete ──
+  const { refreshProducts } = useProducts();
+  const [deleteTarget, setDeleteTarget] = useState<GalleryItem | null>(null);
+  const [bulkDeleteTarget, setBulkDeleteTarget] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+
+  // ── Filtered groups (exclui deletedIds) ──
   const filteredGroups = useMemo(() => {
-    let groups = groupedItems;
+    let groups = groupedItems.map(g => {
+      const visible = g.items.filter(i => !deletedIds.has(i.id));
+      return visible.length === g.items.length ? g : { ...g, items: visible };
+    }).filter(g => g.items.length > 0);
 
     if (activeFeature) {
       groups = groups.filter(g => g.featureType === activeFeature);
@@ -102,7 +114,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
     }
 
     return groups;
-  }, [groupedItems, activeFeature, debouncedSearch]);
+  }, [groupedItems, activeFeature, debouncedSearch, deletedIds]);
 
   const filteredItemCount = useMemo(() =>
     filteredGroups.reduce((sum, g) => sum + g.items.length, 0),
@@ -158,6 +170,97 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
       return next;
     });
   }, []);
+
+  // ── Delete helpers ──
+  const markDeleted = useCallback((ids: string[]) => {
+    setDeletedIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.add(id));
+      return next;
+    });
+  }, []);
+
+  const deleteOneItem = useCallback(async (item: GalleryItem) => {
+    const prefix = item.id.split('-')[0];
+
+    switch (prefix) {
+      case 'ps': {
+        // ps-{product_images.id}
+        const imgId = item.id.slice(3);
+        await supabase.from('product_images').delete().eq('id', imgId);
+        markDeleted([item.id]);
+        refreshProducts();
+        break;
+      }
+      case 'sr':
+      case 'lc':
+      case 'cc': {
+        // sr-{genId} or sr-{genId}-back → delete all product_images for this generation
+        const genId = item.metadata?.generationId;
+        if (genId) {
+          await supabase.from('product_images').delete().eq('generation_id', genId);
+          markDeleted([`${prefix}-${genId}`, `${prefix}-${genId}-back`]);
+          refreshProducts();
+        }
+        break;
+      }
+      case 'cs': {
+        // cs-{genId}-{idx}
+        const parts = item.id.split('-');
+        const genId = parts[1];
+        const idx = parseInt(parts[2]);
+        const { data } = await supabase
+          .from('creative_still_generations')
+          .select('variation_urls')
+          .eq('id', genId)
+          .single();
+        if (data) {
+          const urls: string[] = data.variation_urls || [];
+          if (urls.length <= 1) {
+            await supabase.from('creative_still_generations').delete().eq('id', genId);
+            markDeleted([item.id]);
+          } else {
+            const newUrls = urls.filter((_: string, i: number) => i !== idx);
+            await supabase
+              .from('creative_still_generations')
+              .update({ variation_urls: newUrls })
+              .eq('id', genId);
+            markDeleted([item.id]);
+          }
+        }
+        break;
+      }
+      case 'pv': {
+        // pv-{client_looks.id}
+        const lookId = item.id.slice(3);
+        await supabase.from('client_looks').delete().eq('id', lookId);
+        markDeleted([item.id]);
+        break;
+      }
+    }
+  }, [markDeleted, refreshProducts]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      if (bulkDeleteTarget) {
+        const items = allItems.filter(i => selectedIds.has(i.id) && !deletedIds.has(i.id));
+        for (const item of items) {
+          await deleteOneItem(item);
+        }
+        cancelSelection();
+        setBulkDeleteTarget(false);
+      } else if (deleteTarget) {
+        await deleteOneItem(deleteTarget);
+      }
+    } catch (err) {
+      console.error('[Gallery] Erro ao excluir:', err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
+      setBulkDeleteTarget(false);
+    }
+  }, [bulkDeleteTarget, deleteTarget, allItems, selectedIds, deletedIds, deleteOneItem, cancelSelection]);
 
   // ── Download helpers ──
   const makeDownloadImage = (item: GalleryItem): DownloadableImage => ({
@@ -518,6 +621,17 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
                                   />
                                 </div>
                               )}
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteTarget(item);
+                                }}
+                                className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm text-white hover:bg-red-500/70 flex items-center justify-center transition-all"
+                                title="Excluir"
+                              >
+                                <i className="fas fa-trash-alt text-xs" />
+                              </button>
                             </div>
                           )}
                         </div>
@@ -638,6 +752,13 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
             );
           })()}
           <button
+            onClick={() => setBulkDeleteTarget(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-medium transition-colors"
+          >
+            <i className="fas fa-trash-alt text-[10px]" />
+            Excluir
+          </button>
+          <button
             onClick={cancelSelection}
             className={`px-3 py-2 rounded-xl text-xs ${isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'} transition-colors`}
           >
@@ -665,6 +786,26 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
           onClose={() => setShowBulkDownload(false)}
           productName="Seleção Galeria"
           groups={bulkDownloadGroups}
+          theme={theme}
+        />
+      )}
+
+      {/* ── Delete confirm modal ── */}
+      {(deleteTarget || bulkDeleteTarget) && (
+        <ConfirmModal
+          isOpen
+          onCancel={() => { setDeleteTarget(null); setBulkDeleteTarget(false); }}
+          onConfirm={handleDeleteConfirm}
+          title={bulkDeleteTarget ? `Excluir ${selectedIds.size} imagen${selectedIds.size > 1 ? 's' : ''}` : 'Excluir imagem'}
+          description={
+            bulkDeleteTarget
+              ? `Tem certeza que deseja excluir ${selectedIds.size} imagen${selectedIds.size > 1 ? 's' : ''} selecionada${selectedIds.size > 1 ? 's' : ''}?`
+              : 'Esta imagem gerada será excluída permanentemente.'
+          }
+          consequences={['Esta ação não pode ser desfeita']}
+          confirmLabel="Excluir"
+          variant="danger"
+          isLoading={isDeleting}
           theme={theme}
         />
       )}
