@@ -610,11 +610,21 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }
  }, 5000);
 
- // Sem timeout hard — o polling continua até completar ou o usuário clicar "segundo plano"
- // O sistema de background check do App.tsx detecta gerações concluídas via localStorage
+ // Safety net: 12 minutos — parar polling silenciosamente, manter pending para background check
+ const hardTimeout = setTimeout(() => {
+ clearInterval(pollInterval);
+ const setGenerating = onSetGenerating || setLocalIsGenerating;
+ const setProgress = onSetProgress || setLocalProgress;
+ setGenerating(false);
+ setProgress(0);
+ setGenerationStartTime(null);
+ setTimerStep(0);
+ // NÃO limpar pending — App.tsx detecta conclusão em background
+ }, 12 * 60 * 1000);
 
  return () => {
  clearInterval(pollInterval);
+ clearTimeout(hardTimeout);
  };
  }, [userId, checkPendingGeneration, onSetGenerating, onSetProgress]);
 

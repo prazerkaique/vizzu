@@ -10,7 +10,7 @@ const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
 
 // Configurações de polling para geração assíncrona
 const POLLING_INTERVAL_MS = 3000; // 3 segundos entre cada verificação
-const POLLING_TIMEOUT_MS = 600000; // 10 minutos de timeout máximo
+const POLLING_TIMEOUT_MS = 720000; // 12 minutos de timeout máximo
 const ESTIMATED_GENERATION_TIME_MS = 120000; // 2 minutos estimados para geração
 
 /**

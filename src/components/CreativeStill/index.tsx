@@ -414,9 +414,9 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       onSetProgress?.(Math.round(currentProg));
     }, 1000);
 
-    // Polling — multi-worker: mínimo 10 min, ou 5 min por variação (Gemini pode estar lento)
+    // Polling — multi-worker: mínimo 12 min, ou 5 min por variação (Gemini pode estar lento)
     const POLL_INTERVAL = 3000;
-    const POLL_TIMEOUT = Math.max(params.variationsCount * 300000, 600000);
+    const POLL_TIMEOUT = Math.max(params.variationsCount * 300000, 720000);
     const pollStart = Date.now();
 
     try {

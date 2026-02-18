@@ -300,13 +300,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const pending = getPendingPSGeneration();
  if (!pending || !userId) return 'polling';
 
- // Expirar após 10 minutos (safety net absoluto)
+ // Safety net: após 12 minutos, parar polling mas manter pending para background check
  const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
- if (elapsedMinutes > 10) {
- clearPendingPSGeneration();
- generationFinalStatusRef.current = 'failed';
- setGenerationFinalStatus('failed');
- showToast('A geração demorou mais que o esperado e foi cancelada. Seus créditos foram devolvidos.', 'error');
+ if (elapsedMinutes > 12) {
+ // NÃO limpar pending — App.tsx detecta conclusão em background
  return 'completed';
  }
 
