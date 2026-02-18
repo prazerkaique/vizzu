@@ -3,38 +3,52 @@ import React, { useState, useEffect } from 'react';
 interface Props {
   /** Timestamp (Date.now()) de quando a geração começou */
   startTime: number;
-  /** Tempo em ms para mostrar o banner de alta demanda (default: 300000 = 5 min) */
+  /** Tempo em ms para mostrar o banner de alta demanda (default: 480000 = 8 min) */
   thresholdMs?: number;
   /** Callback ao clicar "Continuar em segundo plano" */
   onContinueInBackground: () => void;
-  /** Mostrar link discreto desde o início (default: true) */
+  /** Mostrar link discreto (default: true) — aparece após 2 min */
   showDiscreteLink?: boolean;
+  /** Delay em ms para mostrar o link discreto (default: 120000 = 2 min) */
+  discreteLinkDelayMs?: number;
 }
 
 export const SlowServerBanner: React.FC<Props> = ({
   startTime,
-  thresholdMs = 300000,
+  thresholdMs = 480000,
   onContinueInBackground,
   showDiscreteLink = true,
+  discreteLinkDelayMs = 120000,
 }) => {
-  // Debug: localStorage.setItem('vizzu-debug-slow', '10000') → banner aparece em 10s
-  const debugMs = typeof window !== 'undefined' ? Number(localStorage.getItem('vizzu-debug-slow')) : 0;
+  // Debug: toggle no Painel Master seta 'vizzu-debug-slow' = '10000' (10s)
+  const debugMs = typeof window !== 'undefined' ? Number(localStorage.getItem('vizzu-debug-slow') || '0') : 0;
   const effectiveThreshold = debugMs > 0 ? debugMs : thresholdMs;
+  const effectiveDiscreteDelay = debugMs > 0 ? Math.min(debugMs / 2, 5000) : discreteLinkDelayMs;
 
-  const [elapsed, setElapsed] = useState(Date.now() - startTime);
+  // Proteção: se startTime é no futuro ou muito antigo (>30 min), ignorar e usar "agora"
+  const safeStartTime = (() => {
+    const now = Date.now();
+    const diff = now - startTime;
+    if (diff < 0 || diff > 1800000) return now;
+    return startTime;
+  })();
+
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
+    setElapsed(Date.now() - safeStartTime);
     const interval = setInterval(() => {
-      setElapsed(Date.now() - startTime);
+      setElapsed(Date.now() - safeStartTime);
     }, 1000);
     return () => clearInterval(interval);
-  }, [startTime]);
+  }, [safeStartTime]);
 
   const showWarning = elapsed >= effectiveThreshold;
+  const showLink = showDiscreteLink && elapsed >= effectiveDiscreteDelay && !showWarning;
 
   return (
     <div className="w-full flex flex-col items-center gap-3 mt-4">
-      {/* Banner de alta demanda — aparece após threshold */}
+      {/* Banner de alta demanda — aparece após threshold (8 min) */}
       {showWarning && (
         <div className="w-full max-w-md mx-auto rounded-2xl overflow-hidden border border-[#FF6B6B]/20 bg-gradient-to-br from-white to-orange-50 shadow-lg shadow-[#FF6B6B]/10 animate-[fadeInScale_0.5s_ease-out]">
           {/* Barra gradiente no topo */}
@@ -68,8 +82,8 @@ export const SlowServerBanner: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Link discreto — sempre visível (antes do banner aparecer) */}
-      {showDiscreteLink && !showWarning && (
+      {/* Link discreto — aparece após 2 min (antes do banner de alta demanda) */}
+      {showLink && (
         <button
           onClick={onContinueInBackground}
           className="text-xs text-gray-400 hover:text-[#FF6B6B] transition-colors flex items-center gap-1.5 group"

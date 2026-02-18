@@ -177,14 +177,15 @@ function App() {
  // Plans from context
  const { plans } = usePlans();
 
- // Master plan: ativa debug do SlowServerBanner (threshold 10s)
+ // Limpeza única: remover flag de debug legado que era setado automaticamente para master
+ // Após esta limpeza, o toggle no Painel Master controla manualmente
  useEffect(() => {
- if (currentPlan.id === 'master') {
- localStorage.setItem('vizzu-debug-slow', '10000');
- } else {
- localStorage.removeItem('vizzu-debug-slow');
+ const cleaned = localStorage.getItem('vizzu-debug-slow-cleaned');
+ if (!cleaned) {
+   localStorage.removeItem('vizzu-debug-slow');
+   localStorage.setItem('vizzu-debug-slow-cleaned', '1');
  }
- }, [currentPlan.id]);
+ }, []);
 
  // Master: alterar créditos direto no Supabase
  const handleMasterSetCredits = async (credits: number) => {

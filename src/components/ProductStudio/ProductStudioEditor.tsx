@@ -624,6 +624,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setTimeout(() => {
    setGenerating(false);
    setProgress(0);
+   setPsStartTime(null);
    if (onSetMinimized) onSetMinimized(false);
  }, 1000);
  }
@@ -1168,6 +1169,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const setProg = onSetProgress || setLocalProgress;
    setGen(false);
    setProg(0);
+   setPsStartTime(null);
    setIsSubmitting(false);
    if (onSetMinimized) onSetMinimized(false);
    // Se já tiver ângulos parciais prontos, mostrar resultados mesmo com timeout
@@ -1211,6 +1213,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    setTimeout(() => {
      setGen(false);
      setProg(0);
+     setPsStartTime(null);
      if (onSetMinimized) onSetMinimized(false);
      setIsSubmitting(false);
    }, 1000);
@@ -1444,6 +1447,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setIsSubmitting(false);
  setGenerating(false);
  setProgress(0);
+ setPsStartTime(null);
  if (onSetMinimized) onSetMinimized(false);
 
  } catch (error) {
@@ -1472,6 +1476,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setIsSubmitting(false);
  setGenerating(false);
  setProgress(0);
+ setPsStartTime(null);
  if (onSetMinimized) onSetMinimized(false);
  }
  }

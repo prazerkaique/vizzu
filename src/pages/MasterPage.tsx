@@ -50,6 +50,9 @@ export function MasterPage() {
   const [editEditBalance, setEditEditBalance] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
 
+  // Debug toggles
+  const [debugSlowBanner, setDebugSlowBanner] = useState(() => !!localStorage.getItem('vizzu-debug-slow'));
+
   // ── Auth ──
   const handleUnlock = async () => {
     if (!password.trim()) return;
@@ -525,6 +528,42 @@ export function MasterPage() {
             </div>
           </div>
         )}
+
+        {/* ═══ SEÇÃO: FERRAMENTAS DE DEBUG ═══ */}
+        <div className={cardClass + ' p-5'}>
+          <h2 className={'text-lg font-bold font-serif mb-4 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+            <i className="fas fa-flask text-[#FF9F43] mr-2 text-sm"></i>Debug & Testes
+          </h2>
+          <div className="space-y-3">
+            {/* Toggle: SlowServerBanner */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={isDark ? 'text-white text-sm font-medium' : 'text-gray-900 text-sm font-medium'}>
+                  Banner "Alta demanda"
+                </p>
+                <p className={isDark ? 'text-neutral-500 text-xs' : 'text-gray-400 text-xs'}>
+                  Exibe o card de alta demanda em 10s (em vez de 8 min)
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (debugSlowBanner) {
+                    localStorage.removeItem('vizzu-debug-slow');
+                    setDebugSlowBanner(false);
+                    showToast('Debug banner desativado', 'info');
+                  } else {
+                    localStorage.setItem('vizzu-debug-slow', '10000');
+                    setDebugSlowBanner(true);
+                    showToast('Debug banner ativado — aparecerá em 10s na próxima geração', 'info');
+                  }
+                }}
+                className={`relative w-12 h-7 rounded-full transition-colors ${debugSlowBanner ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : isDark ? 'bg-neutral-700' : 'bg-gray-300'}`}
+              >
+                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${debugSlowBanner ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Empty state */}
         {!userData && !searchLoading && (
