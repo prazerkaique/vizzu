@@ -810,7 +810,7 @@ function App() {
  if (result.credits_remaining !== undefined) {
  setCredits(result.credits_remaining);
  }
- addHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', creditsNeeded);
+ addHistoryLog('Provador gerado', `Look para ${client.firstName}`, 'success', [], 'ai', creditsNeeded, undefined, resolution);
 
  // Auto-salvar look no Supabase para não perder se o app fechar
  const imageUrl = result.generation.image_url;
