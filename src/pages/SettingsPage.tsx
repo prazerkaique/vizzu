@@ -168,7 +168,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
    if (!user?.id || !subscription?.stripe_customer_id) return;
    setInvoicesLoading(true);
    try {
-     const data = await getInvoices(user.id);
+     const data = await getInvoices(subscription!.stripe_customer_id!);
      setInvoices(data);
    } catch {
      // Silencioso — seção simplesmente não mostra faturas
