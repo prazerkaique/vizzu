@@ -148,6 +148,7 @@ interface GenerationContextType {
 
  // Computed
  isAnyGenerationRunning: boolean;
+ isQueueFull: boolean;  // true quando background generations >= MAX_CONCURRENT
 
  // Notificações de geração concluída (lista de pages: 'product-studio', 'provador', etc.)
  completedFeatures: string[];
@@ -605,6 +606,9 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
 
  const localGenerating = anyFeatureGenerating;
 
+ const processingBgCount = backgroundGenerations.filter(g => g.status === 'processing').length;
+ const isQueueFull = processingBgCount >= MAX_CONCURRENT;
+
  // BroadcastChannel: sincronizar estado de geração entre abas.
  // Usa um único objeto de canal para enviar E receber — assim
  // postMessage() não ecoa para a própria aba (spec BroadcastChannel).
@@ -652,6 +656,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      isGeneratingModels, setIsGeneratingModels,
      modelsProgress, setModelsProgress,
      isAnyGenerationRunning,
+     isQueueFull,
      completedFeatures, addCompletedFeature, clearCompletedFeature, clearAllCompletedFeatures,
      completedProducts, addCompletedProduct, clearCompletedProduct,
      minimizedModals, setMinimizedModals,

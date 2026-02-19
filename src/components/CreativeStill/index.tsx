@@ -131,7 +131,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   onUpdateProduct,
 }) => {
   const { shouldShowTour } = useOnboarding();
-  const { addCompletedProduct, completedProducts, clearCompletedProduct, addBackgroundGeneration } = useGeneration();
+  const { addCompletedProduct, completedProducts, clearCompletedProduct, addBackgroundGeneration, isQueueFull } = useGeneration();
   const [view, setView] = useState<View>('listing');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
@@ -662,6 +662,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         onGenerate={handleGenerate}
         onOpenPlanModal={onOpenPlanModal}
         isGenerating={isGenerating}
+        isQueueFull={isQueueFull}
         onUpdateProduct={onUpdateProduct}
       />
     );

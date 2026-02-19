@@ -150,6 +150,7 @@ interface CreativeStillEditorProps {
   onGenerate: (params: CreativeStillGenerateParams) => void;
   onOpenPlanModal?: () => void;
   isGenerating?: boolean;
+  isQueueFull?: boolean;
   onUpdateProduct?: (productId: string, updates: Partial<Product>) => void;
 }
 
@@ -167,6 +168,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   onGenerate,
   onOpenPlanModal,
   isGenerating,
+  isQueueFull,
   onUpdateProduct,
   userId,
 }) => {
@@ -484,7 +486,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   }, []);
 
   const handleGenerate = useCallback(() => {
-    if (!prompt.trim() || isGenerating) return;
+    if (!prompt.trim() || isGenerating || isQueueFull) return;
     const finalPrompt = optimizedPromptText || optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
     const parsed = parsePromptMentions(prompt.trim(), mention.mentionItems);
     onGenerate({
@@ -505,9 +507,9 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
         label: `@produto${i + 1}`,
       })),
     });
-  }, [prompt, isGenerating, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate, compositionProducts, mention.mentionItems, getProductFrontUrl]);
+  }, [prompt, isGenerating, isQueueFull, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate, compositionProducts, mention.mentionItems, getProductFrontUrl]);
 
-  const canGenerate = prompt.trim().length > 5 && hasEnoughCredits && !isGenerating && selectedAngles.length > 0;
+  const canGenerate = prompt.trim().length > 5 && hasEnoughCredits && !isGenerating && !isQueueFull && selectedAngles.length > 0;
 
   // ═══════════════════════════════════════════════════════════════
   // RENDER

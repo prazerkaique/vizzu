@@ -179,7 +179,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onDeductEditCredits,
 }) => {
  const { showToast, navigateTo } = useUI();
- const { addCompletedProduct, addBackgroundGeneration } = useGeneration();
+ const { addCompletedProduct, addBackgroundGeneration, isQueueFull } = useGeneration();
  const { checkLoad } = useSystemLoad();
  const { products: allProducts, loadUserProducts } = useProducts();
 
@@ -1228,6 +1228,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Verificar se JÁ está gerando nesta feature (previne duplo clique)
  if (isGenerating) {
  setIsSubmitting(false);
+ return;
+ }
+
+ // Fila de background cheia
+ if (isQueueFull) {
+ setIsSubmitting(false);
+ showToast('Limite de 5 gerações simultâneas atingido. Aguarde uma terminar.', 'info');
  return;
  }
 
@@ -2704,11 +2711,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Botão Criar */}
  <button
  onClick={() => handleGenerate()}
- disabled={selectedAngles.length === 0 || isGenerating || isSubmitting || userCredits < creditsNeeded}
+ disabled={selectedAngles.length === 0 || isGenerating || isSubmitting || userCredits < creditsNeeded || isQueueFull}
  className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
  (isGenerating
  ? 'bg-[#FF9F43] cursor-wait'
- : (selectedAngles.length === 0 || userCredits < creditsNeeded)
+ : (selectedAngles.length === 0 || userCredits < creditsNeeded || isQueueFull)
  ? (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50'
  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 '
  )
@@ -2718,6 +2725,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <>
  <i className="fas fa-spinner fa-spin"></i>
  <span>Gerando... {currentProgress}%</span>
+ </>
+ ) : isQueueFull ? (
+ <>
+ <i className="fas fa-clock"></i>
+ <span>Fila cheia (5/5)</span>
  </>
  ) : (
  <>

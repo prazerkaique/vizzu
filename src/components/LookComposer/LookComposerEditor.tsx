@@ -311,7 +311,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  editBalance = 0,
  onDeductEditCredits,
 }) => {
- const { addCompletedProduct, addBackgroundGeneration, updateBackgroundGeneration } = useGeneration();
+ const { addCompletedProduct, addBackgroundGeneration, updateBackgroundGeneration, isQueueFull } = useGeneration();
  const { showToast, navigateTo } = useUI();
  const bgGenIdRef = useRef<string | null>(null);
  const activeGenIdRef = useRef<string | null>(null); // generationId disponível durante geração (via callback)
@@ -1143,6 +1143,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // Gerar look
  const handleGenerate = async () => {
  if (isGenerating) {
+ return;
+ }
+
+ if (isQueueFull) {
+ showToast('Limite de 5 gerações simultâneas atingido. Aguarde uma terminar.', 'info');
  return;
  }
 
@@ -2790,11 +2795,13 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <>
  <button
  onClick={handleGenerate}
- disabled={isGenerating}
- className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating ? 'bg-[#FF6B6B] cursor-wait' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
+ disabled={isGenerating || isQueueFull}
+ className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isQueueFull ? 'bg-[#FF6B6B] cursor-wait' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
  >
  {isGenerating ? (
  <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando{viewsMode === 'front-back' ? ' 2 imagens' : ''}...</>
+ ) : isQueueFull ? (
+ <><i className="fas fa-clock mr-2"></i>Fila cheia (5/5)</>
  ) : (
  <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'} ({creditsNeeded} {creditsNeeded === 1 ? 'crédito' : 'créditos'})</>
  )}
