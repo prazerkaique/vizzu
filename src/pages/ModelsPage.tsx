@@ -178,7 +178,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const isDefaultModel = (id: string) => id.startsWith('default-');
  const { theme, isV2, navigateTo, showToast } = useUI();
  const { user } = useAuth();
- const { isGeneratingModels, setIsGeneratingModels, modelsMinimized, setModelsMinimized, modelsProgress, setModelsProgress } = useGeneration();
+ const { isGeneratingModels, setIsGeneratingModels, modelsProgress, setModelsProgress } = useGeneration();
 
  const { openViewer } = useImageViewer();
 
@@ -579,8 +579,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  } finally {
  setGeneratingModelImages(false);
  setIsGeneratingModels(false);
- setModelsMinimized(false);
- }
+  }
  };
 
  const saveModel = async () => {
@@ -798,8 +797,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  } finally {
    setGeneratingModelImages(false);
    setIsGeneratingModels(false);
-   setModelsMinimized(false);
- }
+    }
  };
 
  // Salva modelo real APÓS geração pela IA
@@ -1166,7 +1164,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
 
  {/* CREATE MODEL WIZARD MODAL */}
- {showCreateModel && !modelsMinimized && (
+ {showCreateModel && (
  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => { if (!generatingModelImages) { setShowCreateModel(false); setEditingModel(null); } }}>
  <div className={(theme !== 'light' ? 'bg-neutral-900/95 backdrop-blur-2xl border-neutral-800' : 'bg-white/95 backdrop-blur-2xl border-gray-200') + ' rounded-t-2xl md:rounded-2xl border w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col safe-area-bottom-sheet'} onClick={(e) => e.stopPropagation()}>
  {/* Drag handle - mobile */}
@@ -1403,10 +1401,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
  <button
-   onClick={() => { setModelsMinimized(true); }}
+   onClick={() => { setShowCreateModel(false); showToast('Geração em andamento. Quando terminar, ela aparecerá aqui.', 'info'); }}
    className="mt-3 w-full py-2.5 rounded-xl text-sm font-medium transition-colors bg-white/10 hover:bg-white/20 text-[#FF6B6B] border border-[#FF6B6B]/20"
  >
-   <i className="fas fa-compress-alt mr-2"></i>Minimizar e continuar navegando
+   <i className="fas fa-arrow-down-to-line mr-2"></i>Continuar em segundo plano
  </button>
  </div>
  )}
@@ -1953,10 +1951,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
  <button
-   onClick={() => { setModelsMinimized(true); }}
+   onClick={() => { setShowCreateModel(false); showToast('Geração em andamento. Quando terminar, ela aparecerá aqui.', 'info'); }}
    className="mt-3 w-full py-2.5 rounded-xl text-sm font-medium transition-colors bg-white/10 hover:bg-white/20 text-[#FF6B6B] border border-[#FF6B6B]/20"
  >
-   <i className="fas fa-compress-alt mr-2"></i>Minimizar e continuar navegando
+   <i className="fas fa-arrow-down-to-line mr-2"></i>Continuar em segundo plano
  </button>
  </div>
  )}

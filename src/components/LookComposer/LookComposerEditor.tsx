@@ -2,7 +2,7 @@
 // VIZZU - Look Composer Editor (Página 2 - Faseada)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Product, HistoryLog, SavedModel, LookComposition, MODEL_OPTIONS } from '../../types';
 import { LookComposer as StudioLookComposer } from './LookComposerUI';
 import { generateModeloIA } from '../../lib/api/studio';
@@ -15,7 +15,7 @@ import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits'
 import type { VizzuTheme } from '../../contexts/UIContext';
 import { useUI } from '../../contexts/UIContext';
 import { useGeneration } from '../../contexts/GenerationContext';
-import { SlowServerBanner } from '../shared/SlowServerBanner';
+
 
 interface LookComposerEditorProps {
  product: Product;
@@ -35,11 +35,9 @@ interface LookComposerEditorProps {
  modelLimit?: number;
  // Props para geração global
  isGenerating?: boolean;
- isMinimized?: boolean;
  generationProgress?: number;
  generationText?: string;
  onSetGenerating?: (value: boolean) => void;
- onSetMinimized?: (value: boolean) => void;
  onSetProgress?: (value: number) => void;
  onSetLoadingText?: (value: string) => void;
  isAnyGenerationRunning?: boolean;
@@ -302,11 +300,9 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  onClearPendingModel,
  modelLimit = 10,
  isGenerating: globalIsGenerating = false,
- isMinimized = false,
  generationProgress = 0,
  generationText = '',
  onSetGenerating,
- onSetMinimized,
  onSetProgress,
  onSetLoadingText,
  isAnyGenerationRunning = false,
@@ -315,8 +311,10 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  editBalance = 0,
  onDeductEditCredits,
 }) => {
- const { addCompletedProduct } = useGeneration();
- const { showToast } = useUI();
+ const { addCompletedProduct, addBackgroundGeneration, updateBackgroundGeneration } = useGeneration();
+ const { showToast, navigateTo } = useUI();
+ const bgGenIdRef = useRef<string | null>(null);
+ const activeGenIdRef = useRef<string | null>(null); // generationId disponível durante geração (via callback)
  // Estado da fase atual
  const [currentStep, setCurrentStep] = useState<Step>('product');
 
@@ -482,15 +480,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  // ═══════════════════════════════════════════════════════════════
  // VERIFICAR GERAÇÃO PENDENTE AO CARREGAR (sobrevive ao F5)
  // ═══════════════════════════════════════════════════════════════
- const checkPendingGeneration = useCallback(async () => {
+ const checkPendingGeneration = useCallback(async (): Promise<'polling' | 'completed' | { status: 'failed'; message: string }> => {
  const pending = getPendingGeneration();
- if (!pending || !userId) return;
+ if (!pending || !userId) return 'completed';
 
- // Verificar se a geração ainda está em andamento (menos de 5 minutos)
+ // Verificar se a geração ainda está em andamento (menos de 10 minutos)
  const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
- if (elapsedMinutes > 5) {
+ if (elapsedMinutes > 10) {
  clearPendingGeneration();
- return;
+ return 'completed';
  }
 
  // Verificar se a imagem já foi gerada no Supabase
@@ -610,16 +608,16 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  }
  }, 5000);
 
- // Safety net: 12 minutos — parar polling silenciosamente, manter pending para background check
+ // Safety net: 12 minutos — parar polling e limpar pending
  const hardTimeout = setTimeout(() => {
  clearInterval(pollInterval);
+ clearPendingGeneration();
  const setGenerating = onSetGenerating || setLocalIsGenerating;
  const setProgress = onSetProgress || setLocalProgress;
  setGenerating(false);
  setProgress(0);
  setGenerationStartTime(null);
  setTimerStep(0);
- // NÃO limpar pending — App.tsx detecta conclusão em background
  }, 12 * 60 * 1000);
 
  return () => {
@@ -627,6 +625,15 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  clearTimeout(hardTimeout);
  };
  }, [userId, checkPendingGeneration, onSetGenerating, onSetProgress]);
+
+ // Safety net: se showResult ficou true mas isGenerating não fechou, forçar fechamento
+ useEffect(() => {
+ if (showResult && generatedImageUrl && isGenerating) {
+ console.warn('[LC] Safety net: showResult=true mas isGenerating ainda true — forçando fechamento');
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ setGen(false);
+ }
+ }, [showResult, generatedImageUrl, isGenerating]);
 
  // Rotacionar frases de loading
  useEffect(() => {
@@ -1044,28 +1051,25 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  e.stopPropagation();
  };
 
- // Minimizar/Maximizar
- const handleMinimize = () => {
- if (onSetMinimized) onSetMinimized(true);
- };
+ // handleMinimize removido — unificado em handleContinueInBackground
 
- // "Continuar em segundo plano" — libera lock mas mantém localStorage pending
+ // "Continuar em segundo plano" — fecha overlay, toast, navega para galeria
  const handleContinueInBackground = () => {
- const setGenerating = onSetGenerating || setLocalIsGenerating;
- const setProgress = onSetProgress || setLocalProgress;
- setGenerating(false);
- setProgress(0);
- setRestoredLookItems([]);
- setRestoredProductThumbnail(null);
- setRestoredModelThumbnail(null);
- setGenerationStartTime(null);
- setTimerStep(0);
- // NÃO limpar pending generation — App.tsx usa para detectar conclusão em background
+ bgGenIdRef.current = addBackgroundGeneration({
+   feature: 'look-composer',
+   featureLabel: 'Look Composer',
+   productName: product.name,
+   productId: product.id,
+   generationId: activeGenIdRef.current || generationId || undefined,
+   table: 'generations',
+   progress: generationProgress,
+ });
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ setGen(false);
+ showToast('Geração em andamento. Quando terminar, ela aparecerá na Galeria.', 'info');
+ navigateTo('gallery');
  };
 
- const handleMaximize = () => {
- if (onSetMinimized) onSetMinimized(false);
- };
 
  // Handlers da tela de resultado
  const handleResultSave = () => {
@@ -1174,6 +1178,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setPhraseIndex(0);
  setGenerationStartTime(Date.now()); // Iniciar timer de 2 minutos
  setTimerStep(0);
+ activeGenIdRef.current = null; // Limpar ID da geração anterior
 
  let keepPendingOnError = false;
  try {
@@ -1413,6 +1418,8 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  const mapped = 5 + ((p - 10) / 85) * (frontProgressMax - 5);
  setProgress(Math.round(mapped));
  },
+ // generationId disponível antes do polling (para "Continuar em segundo plano")
+ onGenerationId: (id) => { activeGenIdRef.current = id; },
  });
 
  // Se polling timeout, tratar como geração em background (não é erro)
@@ -1623,6 +1630,12 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setGeneratedBackImageUrl(backImageUrlResult || null);
  setGenerationId(frontGenerationId);
 
+ // Atualizar background generation se existir
+ if (bgGenIdRef.current) {
+   updateBackgroundGeneration(bgGenIdRef.current, { status: 'completed', progress: 100, generationId: frontGenerationId });
+   bgGenIdRef.current = null;
+ }
+
  // Aguardar um pouco e mostrar o resultado
  setTimeout(() => {
  const setGenerating = onSetGenerating || setLocalIsGenerating;
@@ -1633,6 +1646,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  return; // Não executar o finally ainda
 
  } catch (error) {
+ // Atualizar background generation se existir
+ if (bgGenIdRef.current) {
+   updateBackgroundGeneration(bgGenIdRef.current, { status: 'failed', progress: 0 });
+   bgGenIdRef.current = null;
+ }
  // Se foi interrupção de rede (F5/fechamento), manter pending key — a geração pode estar rodando no servidor
  const msg = error instanceof Error ? error.message : '';
  const isNetworkAbort = msg.includes('Failed to fetch') || msg.includes('Load failed') || msg.includes('NetworkError') || msg.includes('AbortError');
@@ -1667,7 +1685,6 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  setRestoredModelThumbnail(null);
  setGenerationStartTime(null);
  setTimerStep(0);
- if (onSetMinimized) onSetMinimized(false);
  }
  };
 
@@ -2793,7 +2810,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
 
  {/* MODAL DE LOADING - Com steps e thumbnails */}
- {isGenerating && !isMinimized && (
+ {isGenerating && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  <div className={`absolute inset-0 backdrop-blur-2xl ${theme !== 'light' ? 'bg-black/80' : 'bg-white/30'}`}></div>
  <div className="relative z-10 flex flex-col items-center justify-center max-w-lg mx-auto p-6 w-full">
@@ -2915,21 +2932,28 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  </div>
  </div>
 
- {/* Aviso de alta demanda + botão segundo plano */}
- {generationStartTime && (
- <SlowServerBanner
- startTime={generationStartTime}
- onContinueInBackground={handleContinueInBackground}
- />
- )}
-
- {/* Minimize Button */}
+ {/* Segundo Plano Button */}
  <button
- onClick={handleMinimize}
+ onClick={handleContinueInBackground}
  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700' : 'bg-white/80 hover:bg-white text-gray-700 border border-gray-200/60 shadow-sm'}`}
  >
- <i className="fas fa-minus"></i>
- <span>Minimizar e continuar navegando</span>
+ <i className="fas fa-arrow-down-to-line"></i>
+ <span>Continuar em segundo plano</span>
+ </button>
+
+ <button
+ onClick={() => {
+   clearPendingGeneration();
+   const setGen = onSetGenerating || setLocalIsGenerating;
+   const setProg = onSetProgress || setLocalProgress;
+   setGen(false);
+   setProg(0);
+   setGenerationStartTime(null);
+   setTimerStep(0);
+ }}
+ className={`mt-3 text-xs transition-all ${theme !== 'light' ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+ >
+ Cancelar geração
  </button>
  </div>
  </div>

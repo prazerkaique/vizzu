@@ -14,7 +14,7 @@ import type { DownloadableImage } from '../../utils/downloadSizes';
 import { EcommerceExportButton } from '../shared/EcommerceExportButton';
 import { useWatermark } from '../../hooks/useWatermark';
 import { WatermarkOverlay } from '../shared/WatermarkOverlay';
-import { SlowServerBanner } from '../shared/SlowServerBanner';
+
 
 const LOADING_PHRASES = [
  "Preparando a composição criativa...",
@@ -40,9 +40,7 @@ interface Props {
  loadingText: string;
  onBackToHome: () => void;
  onGenerateAgain: () => void;
- onMinimize?: () => void;
  onCancel?: () => void;
- isMinimized?: boolean;
  editBalance?: number;
  regularBalance?: number;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
@@ -80,9 +78,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  loadingText,
  onBackToHome,
  onGenerateAgain,
- onMinimize,
  onCancel,
- isMinimized,
  editBalance = 0,
  regularBalance = 0,
  onDeductEditCredits,
@@ -214,7 +210,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  // ============================================================
  // LOADING STATE (padrão Product Studio)
  // ============================================================
- if (isGenerating && !isMinimized) {
+ if (isGenerating) {
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur pesado (padrão PS) */}
@@ -283,27 +279,19 @@ export const CreativeStillResults: React.FC<Props> = ({
  </div>
  )}
 
- {/* Aviso de alta demanda + botão segundo plano */}
- {generationStartTime && onContinueInBackground && (
- <SlowServerBanner
- startTime={generationStartTime}
- onContinueInBackground={onContinueInBackground}
- />
- )}
-
- {/* Botão minimizar (padrão PS — embaixo, botão largo) */}
- {onMinimize && (
+ {/* Botão segundo plano */}
+ {onContinueInBackground && (
  <>
  <button
- onClick={onMinimize}
+ onClick={onContinueInBackground}
  className={'flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ' + (isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm')}
  >
- <i className="fas fa-minus"></i>
- <span>Minimizar e continuar navegando</span>
+ <i className="fas fa-arrow-down-to-line"></i>
+ <span>Continuar em segundo plano</span>
  </button>
 
  <p className={(isDark ? 'text-neutral-600' : 'text-gray-400') + ' text-xs mt-3 text-center'}>
- A geração continuará em segundo plano
+ Você será notificado quando terminar
  </p>
  </>
  )}

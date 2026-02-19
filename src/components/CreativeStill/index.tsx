@@ -5,7 +5,7 @@
 // Camada 3: Resultados (grid de variações)
 // ═══════════════════════════════════════════════════════════════
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Product,
   CreativeStillGeneration,
@@ -71,8 +71,6 @@ export interface CreativeStillProps {
   onClearInitialProduct?: () => void;
   onSetGenerating?: (value: boolean) => void;
   onSetProgress?: (value: number) => void;
-  onSetMinimized?: (value: boolean) => void;
-  isMinimized?: boolean;
   editBalance?: number;
   onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
   setProductForCreation?: (p: Product | null) => void;
@@ -127,15 +125,13 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   onClearInitialProduct,
   onSetGenerating,
   onSetProgress,
-  onSetMinimized,
-  isMinimized,
   editBalance = 0,
   onDeductEditCredits,
   setProductForCreation: setProductForCreationProp,
   onUpdateProduct,
 }) => {
   const { shouldShowTour } = useOnboarding();
-  const { addCompletedProduct, completedProducts, clearCompletedProduct } = useGeneration();
+  const { addCompletedProduct, completedProducts, clearCompletedProduct, addBackgroundGeneration } = useGeneration();
   const [view, setView] = useState<View>('listing');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentGeneration, setCurrentGeneration] = useState<CreativeStillGeneration | null>(null);
@@ -148,6 +144,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const [visibleStillsCount, setVisibleStillsCount] = useState(6);
   const [selectedStill, setSelectedStill] = useState<CreativeStillGeneration | null>(null);
   const [lastGenerateParams, setLastGenerateParams] = useState<CreativeStillGenerateParams | null>(null);
+  const activeCSGenIdRef = useRef<string | null>(null); // generationId disponível durante geração
 
   // ── Filtros (padrão Product Studio) ──
   const [showFilters, setShowFilters] = useState(false);
@@ -403,6 +400,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
     }
 
     const generationId = insertedGen.id;
+    activeCSGenIdRef.current = generationId; // Disponível para "Continuar em segundo plano"
 
     // Progresso suave
     let currentProg = 10;
@@ -598,24 +596,27 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         loadingText={loadingText}
         onBackToHome={handleBackToEditor}
         onGenerateAgain={() => lastGenerateParams && handleGenerate(lastGenerateParams)}
-        onMinimize={() => onSetMinimized?.(true)}
         onCancel={() => {
           setIsGenerating(false);
           setGenerationProgress(0);
           setLoadingText('');
           setCurrentGeneration(null);
-          onSetMinimized?.(false);
           setView('editor');
         }}
-        isMinimized={isMinimized}
         generationStartTime={csStartTime}
         onContinueInBackground={() => {
+          addBackgroundGeneration({
+            feature: 'creative-still',
+            featureLabel: 'Still Criativo',
+            productName: selectedProduct?.name || '',
+            productId: selectedProduct?.id,
+            generationId: activeCSGenIdRef.current || currentGeneration?.id,
+            table: 'creative_still_generations',
+            progress: generationProgress,
+          });
           setIsGenerating(false);
-          onSetGenerating?.(false);
-          setGenerationProgress(0);
-          onSetProgress?.(0);
-          setCsStartTime(null);
-          // NÃO limpar localStorage pending — App.tsx usa para detectar conclusão em background
+          showToast('Geração em andamento. Quando terminar, ela aparecerá na Galeria.', 'info');
+          navigateTo('gallery');
         }}
         editBalance={editBalance}
         regularBalance={userCredits}

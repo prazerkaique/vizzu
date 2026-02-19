@@ -38,11 +38,9 @@ interface LookComposerProps {
  onClearPendingModel?: () => void;
  modelLimit?: number;
  isGenerating?: boolean;
- isMinimized?: boolean;
  generationProgress?: number;
  generationText?: string;
  onSetGenerating?: (value: boolean) => void;
- onSetMinimized?: (value: boolean) => void;
  editBalance?: number;
  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  onSetProgress?: (value: number) => void;
@@ -122,11 +120,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onClearPendingModel,
  modelLimit = 10,
  isGenerating = false,
- isMinimized = false,
  generationProgress = 0,
  generationText = '',
  onSetGenerating,
- onSetMinimized,
  onSetProgress,
  onSetLoadingText,
  isAnyGenerationRunning = false,
@@ -688,11 +684,9 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  onClearPendingModel={onClearPendingModel}
  modelLimit={modelLimit}
  isGenerating={isGenerating}
- isMinimized={isMinimized}
  generationProgress={generationProgress}
  generationText={generationText}
  onSetGenerating={onSetGenerating}
- onSetMinimized={onSetMinimized}
  onSetProgress={onSetProgress}
  onSetLoadingText={onSetLoadingText}
  isAnyGenerationRunning={isAnyGenerationRunning}

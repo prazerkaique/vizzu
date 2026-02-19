@@ -106,20 +106,16 @@ function App() {
  // Generation states from context
  const {
    isGeneratingProductStudio, setIsGeneratingProductStudio,
-   productStudioMinimized, setProductStudioMinimized,
    productStudioProgress, setProductStudioProgress,
    productStudioLoadingText, setProductStudioLoadingText,
    isGeneratingLookComposer, setIsGeneratingLookComposer,
-   lookComposerMinimized, setLookComposerMinimized,
    lookComposerProgress, setLookComposerProgress,
    lookComposerLoadingText, setLookComposerLoadingText,
    isGeneratingProvador, setIsGeneratingProvador,
-   provadorMinimized, setProvadorMinimized,
    provadorProgress, setProvadorProgress,
    provadorLoadingIndex, setProvadorLoadingIndex,
    provadorLoadingText,
    isGeneratingCreativeStill, setIsGeneratingCreativeStill,
-   creativeStillMinimized, setCreativeStillMinimized,
    creativeStillProgress, setCreativeStillProgress,
    isGeneratingModels,
    isAnyGenerationRunning,
@@ -127,6 +123,8 @@ function App() {
    closeMinimizedModal,
    addCompletedProduct,
    addCompletedFeature,
+   setIsPro,
+   addBackgroundGeneration,
  } = useGeneration();
 
  const [provadorClient, setProvadorClient] = useState<Client | null>(null);
@@ -177,6 +175,12 @@ function App() {
 
  // Plans from context
  const { plans } = usePlans();
+
+ // Sincronizar isPro com o plano atual do usuário
+ const PRO_PLAN_IDS = ['pro', 'premier', 'enterprise', 'master'];
+ useEffect(() => {
+   setIsPro(PRO_PLAN_IDS.includes(currentPlan.id));
+ }, [currentPlan.id, setIsPro]);
 
  // Limpeza única: remover flag de debug legado que era setado automaticamente para master
  // Após esta limpeza, o toggle no Painel Master controla manualmente
@@ -1113,11 +1117,9 @@ function App() {
  onCheckCredits={checkCreditsAndShowModal}
  userId={user?.id}
  isGenerating={isGeneratingProductStudio}
- isMinimized={productStudioMinimized}
  generationProgress={productStudioProgress}
  generationText={productStudioLoadingText}
  onSetGenerating={setIsGeneratingProductStudio}
- onSetMinimized={setProductStudioMinimized}
  onSetProgress={setProductStudioProgress}
  onSetLoadingText={setProductStudioLoadingText}
  isAnyGenerationRunning={isAnyGenerationRunning}
@@ -1163,22 +1165,31 @@ function App() {
  onGenerateAIMessage={handleProvadorGenerateAIMessage}
  clientLooks={clientLooks}
  isGenerating={isGeneratingProvador}
- isMinimized={provadorMinimized}
  generationProgress={provadorProgress}
  loadingText={provadorLoadingText}
- onSetMinimized={setProvadorMinimized}
  initialProduct={productForCreation}
  onClearInitialProduct={() => setProductForCreation(null)}
  onBack={goBack}
  currentPlan={currentPlan}
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  generationStartTime={provadorStartTime}
+ onCancelGeneration={() => {
+   setIsGeneratingProvador(false);
+   setProvadorProgress(0);
+   setProvadorStartTime(null);
+ }}
  onContinueInBackground={() => {
- setIsGeneratingProvador(false);
- setProvadorProgress(0);
- setProvadorStartTime(null);
- setProvadorMinimized(false);
- // NÃO limpar localStorage pending — App.tsx usa para detectar conclusão em background
+   addBackgroundGeneration({
+     feature: 'provador',
+     featureLabel: 'Vizzu Provador',
+     productName: provadorClient ? `${provadorClient.firstName} ${provadorClient.lastName}` : '',
+     productId: provadorClient?.id,
+     table: 'generations',
+     progress: provadorProgress,
+   });
+   setIsGeneratingProvador(false);
+   showToast('Geração em andamento. Quando terminar, ela aparecerá na Galeria.', 'info');
+   navigateTo('gallery');
  }}
  />
  </Suspense>
@@ -1213,11 +1224,9 @@ function App() {
  onClearPendingModel={() => setLcPendingModelId(null)}
  modelLimit={(() => { const plan = user?.plan || 'free'; return plan === 'free' ? 1 : 10; })()}
  isGenerating={isGeneratingLookComposer}
- isMinimized={lookComposerMinimized}
  generationProgress={lookComposerProgress}
  generationText={lookComposerLoadingText}
  onSetGenerating={setIsGeneratingLookComposer}
- onSetMinimized={setLookComposerMinimized}
  onSetProgress={setLookComposerProgress}
  onSetLoadingText={setLookComposerLoadingText}
  isAnyGenerationRunning={isAnyGenerationRunning}
@@ -1251,8 +1260,6 @@ function App() {
  onClearInitialProduct={() => setProductForCreation(null)}
  onSetGenerating={setIsGeneratingCreativeStill}
  onSetProgress={setCreativeStillProgress}
- onSetMinimized={setCreativeStillMinimized}
- isMinimized={creativeStillMinimized}
  editBalance={editBalance}
  onDeductEditCredits={deductEditCredits}
  setProductForCreation={setProductForCreation}

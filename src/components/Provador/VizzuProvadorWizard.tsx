@@ -19,7 +19,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
-import { SlowServerBanner } from '../shared/SlowServerBanner';
+
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { PROVADOR_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
@@ -57,10 +57,8 @@ interface Props {
  onGenerateAIMessage: (clientName: string) => Promise<string>;
  clientLooks: ClientLook[];
  isGenerating: boolean;
- isMinimized: boolean;
  generationProgress: number;
  loadingText: string;
- onSetMinimized: (minimized: boolean) => void;
  // Produto pré-selecionado (vindo do modal de detalhes)
  initialProduct?: Product | null;
  onClearInitialProduct?: () => void;
@@ -74,6 +72,8 @@ interface Props {
  generationStartTime?: number | null;
  // Callback para "Continuar em segundo plano"
  onContinueInBackground?: () => void;
+ // Callback para cancelar a geração (fechar overlay)
+ onCancelGeneration?: () => void;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -111,10 +111,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onGenerateAIMessage,
  clientLooks,
  isGenerating,
- isMinimized,
  generationProgress,
  loadingText,
- onSetMinimized,
  initialProduct,
  onClearInitialProduct,
  onBack,
@@ -122,6 +120,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  onOpenPlanModal,
  generationStartTime,
  onContinueInBackground,
+ onCancelGeneration,
 }) => {
  // Estados do Wizard
  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -1643,7 +1642,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
 
  {/* Modal de Loading Fullscreen */}
- {isGenerating && !isMinimized && (
+ {isGenerating && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
  <div className={`absolute inset-0 backdrop-blur-2xl ${theme !== 'light' ? 'bg-black/80' : 'bg-white/30'}`}></div>
@@ -1700,26 +1699,27 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </div>
  )}
 
- {/* Aviso de alta demanda + botão segundo plano */}
- {generationStartTime && onContinueInBackground && (
- <SlowServerBanner
- startTime={generationStartTime}
- onContinueInBackground={onContinueInBackground}
- />
- )}
-
- {/* Botao Minimizar */}
+ {/* Botao Segundo Plano */}
  <button
- onClick={() => onSetMinimized(true)}
+ onClick={() => onContinueInBackground?.()}
  className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-colors ${theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
  >
- <i className="fas fa-minus"></i>
- <span>Minimizar e continuar navegando</span>
+ <i className="fas fa-arrow-down-to-line"></i>
+ <span>Continuar em segundo plano</span>
  </button>
 
- <p className="text-neutral-600 text-xs mt-3 text-center">
- A geracao continuara em segundo plano
+ <p className="text-neutral-600 text-xs mt-2 text-center">
+ Você será notificado quando terminar
  </p>
+
+ {onCancelGeneration && (
+ <button
+   onClick={onCancelGeneration}
+   className={`mt-3 text-xs transition-all ${theme !== 'light' ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+ >
+   Cancelar geração
+ </button>
+ )}
  </div>
  </div>
  )}

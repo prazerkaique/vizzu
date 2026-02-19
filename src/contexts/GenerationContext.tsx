@@ -1,4 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import {
+  pollStudioGeneration,
+  pollGenerationSimple,
+  pollCreativeStillGeneration,
+  pollModelGeneration,
+} from '../lib/api/studio';
+
+// ═══════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════
 
 export type MinimizedModal = {
  id: string;
@@ -7,6 +17,31 @@ export type MinimizedModal = {
  type: 'createModel' | 'modelDetail' | 'createProduct' | 'productDetail' | 'createClient' | 'clientDetail';
  progress?: number;
 };
+
+export type FeatureType = 'product-studio' | 'look-composer' | 'creative-still' | 'provador' | 'models';
+
+export interface BackgroundGeneration {
+  id: string;
+  feature: FeatureType;
+  featureLabel: string;
+  productName: string;
+  productId?: string;
+  generationId?: string;
+  table?: 'generations' | 'creative_still_generations' | 'saved_models';
+  progress: number;
+  status: 'processing' | 'completed' | 'failed';
+  startTime: number;
+  angles?: string[];
+  completedAngles?: number;
+  // Per-item URLs (preenchidos pelo polling conforme completam)
+  angleStatuses?: Array<{ angle: string; url?: string; status: 'pending' | 'completed' | 'failed' }>;
+  completedImageUrl?: string;   // LC/Provador: URL da imagem quando pronta
+  variationUrls?: string[];     // CS: URLs das variações conforme completam
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
 
 const PROVADOR_LOADING_PHRASES = [
  { text: 'Analisando a foto do cliente...', icon: 'fa-camera' },
@@ -22,12 +57,55 @@ const PROVADOR_LOADING_PHRASES = [
  { text: 'Finalizando sua imagem...', icon: 'fa-check-circle' },
 ];
 
+const BG_STORAGE_KEY = 'vizzu-background-generations';
+const MAX_CONCURRENT = 5;
+const POLL_INTERVAL_MS = 5000;
+const HARD_TIMEOUT_MS = 30 * 60 * 1000; // 30 min
+const GENERATION_CHANNEL = 'vizzu-generation-sync';
+
+// ═══════════════════════════════════════════════════════════════
+// localStorage helpers
+// ═══════════════════════════════════════════════════════════════
+
+function readBgGenerations(): BackgroundGeneration[] {
+  try {
+    const raw = localStorage.getItem(BG_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Limpar entries stale (>30 min em processing ou completed/failed)
+    const now = Date.now();
+    const clean = parsed.filter((g: BackgroundGeneration) => {
+      if (g.status !== 'processing') return false; // remover completed/failed persistidos
+      if (now - g.startTime > HARD_TIMEOUT_MS) return false; // remover expirados
+      return true;
+    });
+    if (clean.length !== parsed.length) persistBgGenerations(clean);
+    return clean;
+  } catch { return []; }
+}
+
+function persistBgGenerations(gens: BackgroundGeneration[]) {
+  try { localStorage.setItem(BG_STORAGE_KEY, JSON.stringify(gens)); } catch { /* ignore */ }
+}
+
+/** Progresso simulado baseado no tempo decorrido (ease-out) */
+function simulateProgress(startTime: number): number {
+  const elapsed = Date.now() - startTime;
+  const estimatedTotal = 120000; // 2 min
+  const normalized = Math.min(elapsed / estimatedTotal, 1.5);
+  const eased = 1 - Math.pow(1 - Math.min(normalized, 1), 2);
+  return Math.round(5 + 85 * eased); // 5% → 90%
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONTEXT INTERFACE
+// ═══════════════════════════════════════════════════════════════
+
 interface GenerationContextType {
  // Product Studio
  isGeneratingProductStudio: boolean;
  setIsGeneratingProductStudio: React.Dispatch<React.SetStateAction<boolean>>;
- productStudioMinimized: boolean;
- setProductStudioMinimized: React.Dispatch<React.SetStateAction<boolean>>;
  productStudioProgress: number;
  setProductStudioProgress: React.Dispatch<React.SetStateAction<number>>;
  productStudioLoadingText: string;
@@ -36,8 +114,6 @@ interface GenerationContextType {
  // Look Composer
  isGeneratingLookComposer: boolean;
  setIsGeneratingLookComposer: React.Dispatch<React.SetStateAction<boolean>>;
- lookComposerMinimized: boolean;
- setLookComposerMinimized: React.Dispatch<React.SetStateAction<boolean>>;
  lookComposerProgress: number;
  setLookComposerProgress: React.Dispatch<React.SetStateAction<number>>;
  lookComposerLoadingText: string;
@@ -46,8 +122,6 @@ interface GenerationContextType {
  // Provador
  isGeneratingProvador: boolean;
  setIsGeneratingProvador: React.Dispatch<React.SetStateAction<boolean>>;
- provadorMinimized: boolean;
- setProvadorMinimized: React.Dispatch<React.SetStateAction<boolean>>;
  provadorProgress: number;
  setProvadorProgress: React.Dispatch<React.SetStateAction<number>>;
  provadorLoadingIndex: number;
@@ -57,16 +131,12 @@ interface GenerationContextType {
  // Creative Still
  isGeneratingCreativeStill: boolean;
  setIsGeneratingCreativeStill: React.Dispatch<React.SetStateAction<boolean>>;
- creativeStillMinimized: boolean;
- setCreativeStillMinimized: React.Dispatch<React.SetStateAction<boolean>>;
  creativeStillProgress: number;
  setCreativeStillProgress: React.Dispatch<React.SetStateAction<number>>;
 
  // Models
  isGeneratingModels: boolean;
  setIsGeneratingModels: React.Dispatch<React.SetStateAction<boolean>>;
- modelsMinimized: boolean;
- setModelsMinimized: React.Dispatch<React.SetStateAction<boolean>>;
  modelsProgress: number;
  setModelsProgress: React.Dispatch<React.SetStateAction<number>>;
 
@@ -88,12 +158,26 @@ interface GenerationContextType {
  minimizedModals: MinimizedModal[];
  setMinimizedModals: React.Dispatch<React.SetStateAction<MinimizedModal[]>>;
  closeMinimizedModal: (id: string) => void;
+
+ // Background Generations (Queue System)
+ backgroundGenerations: BackgroundGeneration[];
+ addBackgroundGeneration: (gen: Omit<BackgroundGeneration, 'id' | 'startTime' | 'status'>) => string;
+ removeBackgroundGeneration: (id: string) => void;
+ updateBackgroundGeneration: (id: string, updates: Partial<BackgroundGeneration>) => void;
+ clearCompletedBackgroundGenerations: () => void;
+ activeBackgroundIndex: number;
+ setActiveBackgroundIndex: React.Dispatch<React.SetStateAction<number>>;
+
+ // Plan awareness
+ isPro: boolean;
+ setIsPro: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GenerationContext = createContext<GenerationContextType | null>(null);
 
-// BroadcastChannel para sincronizar estado entre abas (v9 4.2)
-const GENERATION_CHANNEL = 'vizzu-generation-sync';
+// ═══════════════════════════════════════════════════════════════
+// PROVIDER
+// ═══════════════════════════════════════════════════════════════
 
 export function GenerationProvider({ children }: { children: React.ReactNode }) {
  // Geração em outra aba (recebido via BroadcastChannel)
@@ -101,33 +185,198 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
 
  // Product Studio
  const [isGeneratingProductStudio, setIsGeneratingProductStudio] = useState(false);
- const [productStudioMinimized, setProductStudioMinimized] = useState(false);
  const [productStudioProgress, setProductStudioProgress] = useState(0);
  const [productStudioLoadingText, setProductStudioLoadingText] = useState('');
 
  // Look Composer
  const [isGeneratingLookComposer, setIsGeneratingLookComposer] = useState(false);
- const [lookComposerMinimized, setLookComposerMinimized] = useState(false);
  const [lookComposerProgress, setLookComposerProgress] = useState(0);
  const [lookComposerLoadingText, setLookComposerLoadingText] = useState('');
 
  // Provador
  const [isGeneratingProvador, setIsGeneratingProvador] = useState(false);
- const [provadorMinimized, setProvadorMinimized] = useState(false);
  const [provadorLoadingIndex, setProvadorLoadingIndex] = useState(0);
  const [provadorProgress, setProvadorProgress] = useState(0);
 
  // Creative Still
  const [isGeneratingCreativeStill, setIsGeneratingCreativeStill] = useState(false);
- const [creativeStillMinimized, setCreativeStillMinimized] = useState(false);
  const [creativeStillProgress, setCreativeStillProgress] = useState(0);
 
  // Models
  const [isGeneratingModels, setIsGeneratingModels] = useState(false);
- const [modelsMinimized, setModelsMinimized] = useState(false);
  const [modelsProgress, setModelsProgress] = useState(0);
 
- // Notificações de geração concluída — persistido em localStorage para sobreviver a refresh/saída
+ // ───── Background Generations (Queue System) ─────
+ const [backgroundGenerations, setBackgroundGenerations] = useState<BackgroundGeneration[]>(readBgGenerations);
+ const [activeBackgroundIndex, setActiveBackgroundIndex] = useState(0);
+ const [isPro, setIsPro] = useState(false);
+ const bgRef = useRef<BackgroundGeneration[]>([]);
+ bgRef.current = backgroundGenerations;
+
+ const addBackgroundGeneration = useCallback((gen: Omit<BackgroundGeneration, 'id' | 'startTime' | 'status'>): string => {
+   const id = crypto.randomUUID();
+   const newGen: BackgroundGeneration = {
+     ...gen,
+     id,
+     status: 'processing',
+     startTime: Date.now(),
+   };
+   setBackgroundGenerations(prev => {
+     // Remover entries antigas da mesma feature (evita duplicatas)
+     const withoutOld = prev.filter(g => g.feature !== gen.feature);
+     if (withoutOld.filter(g => g.status === 'processing').length >= MAX_CONCURRENT) {
+       console.warn('[BgGen] Limite de gerações simultâneas atingido');
+       return prev;
+     }
+     const next = [...withoutOld, newGen];
+     persistBgGenerations(next);
+     return next;
+   });
+   return id;
+ }, []);
+
+ const removeBackgroundGeneration = useCallback((id: string) => {
+   setBackgroundGenerations(prev => {
+     const next = prev.filter(g => g.id !== id);
+     persistBgGenerations(next);
+     return next;
+   });
+   // Ajustar index se necessário
+   setActiveBackgroundIndex(prev => {
+     const remaining = bgRef.current.filter(g => g.id !== id).length;
+     return prev >= remaining ? Math.max(0, remaining - 1) : prev;
+   });
+ }, []);
+
+ const updateBackgroundGeneration = useCallback((id: string, updates: Partial<BackgroundGeneration>) => {
+   setBackgroundGenerations(prev => {
+     const idx = prev.findIndex(g => g.id === id);
+     if (idx === -1) return prev;
+     const updated = { ...prev[idx], ...updates };
+     const next = [...prev];
+     next[idx] = updated;
+     persistBgGenerations(next);
+     return next;
+   });
+ }, []);
+
+ const clearCompletedBackgroundGenerations = useCallback(() => {
+   setBackgroundGenerations(prev => {
+     const next = prev.filter(g => g.status === 'processing');
+     persistBgGenerations(next);
+     return next;
+   });
+ }, []);
+
+ // ───── Polling centralizado para background generations ─────
+ const hasProcessingBg = backgroundGenerations.some(g => g.status === 'processing');
+
+ useEffect(() => {
+   if (!hasProcessingBg) return;
+
+   const poll = async () => {
+     const currentGens = bgRef.current.filter(g => g.status === 'processing');
+
+     for (const gen of currentGens) {
+       // Hard timeout de 30 min
+       if (Date.now() - gen.startTime > HARD_TIMEOUT_MS) {
+         updateBackgroundGeneration(gen.id, { status: 'failed', progress: 0 });
+         continue;
+       }
+
+       // Sem generationId = não conseguimos pollar, só simular progresso
+       if (!gen.generationId) {
+         updateBackgroundGeneration(gen.id, { progress: simulateProgress(gen.startTime) });
+         continue;
+       }
+
+       try {
+         if (gen.feature === 'product-studio') {
+           const psResult = await pollStudioGeneration(gen.generationId);
+           const completedCount = psResult.completedAngles?.length || 0;
+           const totalAngles = gen.angles?.length || 5;
+           const psStatus = psResult.generationStatus === 'completed' ? 'completed'
+             : psResult.generationStatus === 'failed' ? 'failed'
+             : psResult.generationStatus === 'partial' ? 'completed'
+             : 'processing';
+           const psProgress = psStatus === 'completed' ? 100
+             : psStatus === 'failed' ? 0
+             : totalAngles > 0 ? Math.round((completedCount / totalAngles) * 90) + 5
+             : simulateProgress(gen.startTime);
+           updateBackgroundGeneration(gen.id, {
+             status: psStatus as BackgroundGeneration['status'],
+             progress: psProgress,
+             completedAngles: completedCount,
+             angleStatuses: psResult.completedAngles.map(a => ({
+               angle: a.angle,
+               url: a.url,
+               status: (a.status === 'completed' ? 'completed' : 'failed') as 'completed' | 'failed',
+             })),
+           });
+         } else if (gen.feature === 'creative-still') {
+           const csResult = await pollCreativeStillGeneration(gen.generationId);
+           updateBackgroundGeneration(gen.id, {
+             status: csResult.status === 'completed' ? 'completed'
+               : csResult.status === 'failed' ? 'failed'
+               : 'processing',
+             progress: csResult.status === 'completed' ? 100
+               : csResult.status === 'failed' ? 0
+               : simulateProgress(gen.startTime),
+             variationUrls: csResult.variationUrls,
+           });
+         } else if (gen.feature === 'models') {
+           const mdResult = await pollModelGeneration(gen.generationId);
+           updateBackgroundGeneration(gen.id, {
+             status: mdResult.status === 'completed' ? 'completed'
+               : mdResult.status === 'failed' ? 'failed'
+               : 'processing',
+             progress: mdResult.status === 'completed' ? 100
+               : mdResult.status === 'failed' ? 0
+               : simulateProgress(gen.startTime),
+           });
+         } else {
+           // Look Composer, Provador → tabela generations
+           const result = await pollGenerationSimple(gen.generationId);
+           updateBackgroundGeneration(gen.id, {
+             status: result.status === 'completed' ? 'completed'
+               : result.status === 'failed' ? 'failed'
+               : 'processing',
+             progress: result.status === 'completed' ? 100
+               : result.status === 'failed' ? 0
+               : simulateProgress(gen.startTime),
+             completedImageUrl: result.imageUrl,
+           });
+         }
+       } catch (err) {
+         // Ignorar erros de polling (rede, etc.) — retry no próximo ciclo
+         console.warn('[BgGen] Erro no polling de', gen.id, err);
+       }
+     }
+   };
+
+   // Poll imediatamente + intervalo
+   poll();
+   const interval = setInterval(poll, POLL_INTERVAL_MS);
+   return () => clearInterval(interval);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [hasProcessingBg]);
+
+ // Auto-remover gerações concluídas/falhadas após 8s
+ useEffect(() => {
+   const finishedGens = backgroundGenerations.filter(g => g.status === 'completed' || g.status === 'failed');
+   if (finishedGens.length === 0) return;
+
+   const timers = finishedGens.map((gen, i) =>
+     setTimeout(() => {
+       removeBackgroundGeneration(gen.id);
+     }, 2000 + i * 500) // Rápido: Realtime já atualizou a galeria
+   );
+
+   return () => timers.forEach(clearTimeout);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [backgroundGenerations.filter(g => g.status !== 'processing').length]);
+
+ // ───── Notificações de geração concluída ─────
  const COMPLETED_FEATURES_KEY = 'vizzu-completed-features';
  const readCompletedFeatures = (): string[] => {
    try { return JSON.parse(localStorage.getItem(COMPLETED_FEATURES_KEY) || '[]'); } catch { return []; }
@@ -179,7 +428,56 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      return next;
    });
  }, []);
- // Notificações por produto — persistido em localStorage para sobreviver a refresh/saída
+
+ // Também detectar conclusão de background generations e limpar estado da feature
+ const prevBgStatusRef = useRef<Record<string, string>>({});
+ useEffect(() => {
+   const prevStatuses = prevBgStatusRef.current;
+   for (const gen of backgroundGenerations) {
+     const prevStatus = prevStatuses[gen.id];
+     if (prevStatus === 'processing' && (gen.status === 'completed' || gen.status === 'failed')) {
+       // Limpar estado da feature
+       switch (gen.feature) {
+         case 'product-studio':
+           setIsGeneratingProductStudio(false);
+           setProductStudioProgress(gen.status === 'completed' ? 100 : 0);
+           break;
+         case 'look-composer':
+           setIsGeneratingLookComposer(false);
+           setLookComposerProgress(gen.status === 'completed' ? 100 : 0);
+           break;
+         case 'provador':
+           setIsGeneratingProvador(false);
+           setProvadorProgress(gen.status === 'completed' ? 100 : 0);
+           break;
+         case 'creative-still':
+           setIsGeneratingCreativeStill(false);
+           setCreativeStillProgress(gen.status === 'completed' ? 100 : 0);
+           break;
+         case 'models':
+           setIsGeneratingModels(false);
+           setModelsProgress(gen.status === 'completed' ? 100 : 0);
+           break;
+       }
+       // Notificação de conclusão
+       if (gen.status === 'completed') {
+         addCompletedFeature(gen.feature);
+         if (gen.productId) {
+           addCompletedProduct(gen.feature, gen.productId);
+         }
+       }
+     }
+   }
+   // Atualizar ref
+   const next: Record<string, string> = {};
+   for (const gen of backgroundGenerations) {
+     next[gen.id] = gen.status;
+   }
+   prevBgStatusRef.current = next;
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [backgroundGenerations]);
+
+ // ───── Notificações por produto ─────
  const COMPLETED_PRODUCTS_KEY = 'vizzu-completed-products';
  const readCompletedProducts = (): Record<string, string[]> => {
    try { return JSON.parse(localStorage.getItem(COMPLETED_PRODUCTS_KEY) || '{}'); } catch { return {}; }
@@ -236,9 +534,6 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
    }, 13600);
 
    // Progresso calibrado para ~150 segundos até 100%
-   // 0-50%: ~40s (50/0.625 * 0.5s)
-   // 50-80%: ~60s (30/0.25 * 0.5s)
-   // 80-100%: ~50s (20/0.20 * 0.5s)
    const progressInterval = setInterval(() => {
      setProvadorProgress(prev => {
        if (prev >= 100) return 100;
@@ -263,7 +558,20 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  }, [isGeneratingProvador]);
 
  const provadorLoadingText = PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...';
- const localGenerating = isGeneratingProvador || isGeneratingProductStudio || isGeneratingLookComposer || isGeneratingCreativeStill || isGeneratingModels;
+
+ // ───── Lock de geração (plan-aware) ─────
+
+ const anyFeatureGenerating =
+   isGeneratingProductStudio || isGeneratingLookComposer ||
+   isGeneratingProvador || isGeneratingCreativeStill || isGeneratingModels;
+
+ const processingBgCount = backgroundGenerations.filter(g => g.status === 'processing').length;
+
+ // Pro+: só bloqueia se overlay ativo ou 5+ gerações simultâneas em background
+ // Free/Basic: qualquer geração ativa (overlay ou background) bloqueia
+ const localGenerating = isPro
+   ? (anyFeatureGenerating || processingBgCount >= MAX_CONCURRENT)
+   : (anyFeatureGenerating || processingBgCount > 0);
 
  // BroadcastChannel: sincronizar estado de geração entre abas
  useEffect(() => {
@@ -300,29 +608,32 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  return (
    <GenerationContext.Provider value={{
      isGeneratingProductStudio, setIsGeneratingProductStudio,
-     productStudioMinimized, setProductStudioMinimized,
      productStudioProgress, setProductStudioProgress,
      productStudioLoadingText, setProductStudioLoadingText,
      isGeneratingLookComposer, setIsGeneratingLookComposer,
-     lookComposerMinimized, setLookComposerMinimized,
      lookComposerProgress, setLookComposerProgress,
      lookComposerLoadingText, setLookComposerLoadingText,
      isGeneratingProvador, setIsGeneratingProvador,
-     provadorMinimized, setProvadorMinimized,
      provadorProgress, setProvadorProgress,
      provadorLoadingIndex, setProvadorLoadingIndex,
      provadorLoadingText,
      isGeneratingCreativeStill, setIsGeneratingCreativeStill,
-     creativeStillMinimized, setCreativeStillMinimized,
      creativeStillProgress, setCreativeStillProgress,
      isGeneratingModels, setIsGeneratingModels,
-     modelsMinimized, setModelsMinimized,
      modelsProgress, setModelsProgress,
      isAnyGenerationRunning,
      completedFeatures, addCompletedFeature, clearCompletedFeature, clearAllCompletedFeatures,
      completedProducts, addCompletedProduct, clearCompletedProduct,
      minimizedModals, setMinimizedModals,
      closeMinimizedModal,
+     // Background Generations (Queue System)
+     backgroundGenerations,
+     addBackgroundGeneration,
+     removeBackgroundGeneration,
+     updateBackgroundGeneration,
+     clearCompletedBackgroundGenerations,
+     activeBackgroundIndex, setActiveBackgroundIndex,
+     isPro, setIsPro,
    }}>
      {children}
    </GenerationContext.Provider>

@@ -20,7 +20,7 @@ import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { useGeneration } from '../../contexts/GenerationContext';
 import { useProducts } from '../../contexts/ProductsContext';
 import { useSystemLoad } from '../../hooks/useSystemLoad';
-import { SlowServerBanner } from '../shared/SlowServerBanner';
+
 import { ReportModal } from '../ReportModal';
 import { submitReport } from '../../lib/api/reports';
 import { StudioEditModal } from './StudioEditModal';
@@ -79,11 +79,9 @@ interface ProductStudioEditorProps {
  userId?: string;
  // Props para geração global
  isGenerating?: boolean;
- isMinimized?: boolean;
  generationProgress?: number;
  generationText?: string;
  onSetGenerating?: (value: boolean) => void;
- onSetMinimized?: (value: boolean) => void;
  onSetProgress?: (value: number) => void;
  onSetLoadingText?: (value: string) => void;
  isAnyGenerationRunning?: boolean;
@@ -168,11 +166,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  userId,
  // Props de geração global
  isGenerating: globalIsGenerating = false,
- isMinimized = false,
  generationProgress = 0,
  generationText = '',
  onSetGenerating,
- onSetMinimized,
  onSetProgress,
  onSetLoadingText,
  isAnyGenerationRunning = false,
@@ -182,8 +178,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  editBalance = 0,
  onDeductEditCredits,
 }) => {
- const { showToast } = useUI();
- const { addCompletedProduct } = useGeneration();
+ const { showToast, navigateTo } = useUI();
+ const { addCompletedProduct, addBackgroundGeneration } = useGeneration();
  const { checkLoad } = useSystemLoad();
  const { products: allProducts, loadUserProducts } = useProducts();
 
@@ -298,12 +294,12 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  // Retorna 'polling' para continuar, 'completed' para parar (tudo pronto ou falha total)
  const checkPendingPSGeneration = useCallback(async (): Promise<'polling' | 'completed'> => {
  const pending = getPendingPSGeneration();
- if (!pending || !userId) return 'polling';
+ if (!pending || !userId) return 'completed';
 
- // Safety net: após 12 minutos, parar polling mas manter pending para background check
+ // Safety net: após 12 minutos, parar polling e limpar pending
  const elapsedMinutes = (Date.now() - pending.startTime) / 1000 / 60;
  if (elapsedMinutes > 12) {
- // NÃO limpar pending — App.tsx detecta conclusão em background
+ clearPendingPSGeneration();
  return 'completed';
  }
 
@@ -620,13 +616,10 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  const result = await checkPendingPSGeneration();
  if (result === 'completed') {
  clearInterval(interval);
- setProgress(100);
- setTimeout(() => {
-   setGenerating(false);
-   setProgress(0);
-   setPsStartTime(null);
-   if (onSetMinimized) onSetMinimized(false);
- }, 1000);
+ // Fechar loading imediatamente
+ setGenerating(false);
+ setProgress(0);
+ setPsStartTime(null);
  }
  }, 3000);
 
@@ -644,6 +637,15 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  }
  };
  }, []);
+
+ // Safety net: se showResult ficou true mas isGenerating não fechou, forçar fechamento
+ useEffect(() => {
+ if (showResult && currentSession && isGenerating) {
+ console.warn('[PS] Safety net: showResult=true mas isGenerating ainda true — forçando fechamento');
+ const setGen = onSetGenerating || setLocalIsGenerating;
+ setGen(false);
+ }
+ }, [showResult, currentSession, isGenerating]);
 
  // Rotacionar frases de loading
  useEffect(() => {
@@ -950,26 +952,23 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setEditMode(false);
  };
 
- // Minimizar modal
- const handleMinimize = () => {
- if (onSetMinimized) {
- onSetMinimized(true);
- }
- };
 
- // "Continuar em segundo plano" — libera lock mas mantém localStorage pending
+ // "Continuar em segundo plano" — fecha overlay, toast, navega para galeria
  const handleContinueInBackground = () => {
+ addBackgroundGeneration({
+   feature: 'product-studio',
+   featureLabel: 'Product Studio',
+   productName: product.name,
+   productId: product.id,
+   generationId: getPendingPSGeneration()?.generationId || currentGenerationId || undefined,
+   table: 'generations',
+   progress: currentProgress,
+   angles: selectedAngles,
+ });
  const setGen = onSetGenerating || setLocalIsGenerating;
- const setProg = onSetProgress || setLocalProgress;
  setGen(false);
- setProg(0);
- setPsStartTime(null);
- setCompletedAngleStatuses([]);
- setGenerationFinalStatus(null);
- generationFinalStatusRef.current = null;
- setCurrentGenerationId(null);
- if (onSetMinimized) onSetMinimized(false);
- // NÃO limpar pending PS generation — App.tsx usa para detectar conclusão em background
+ showToast('Geração em andamento. Quando terminar, ela aparecerá na Galeria.', 'info');
+ navigateTo('gallery');
  };
 
  // ═══════════════════════════════════════════════════════════════
@@ -1071,11 +1070,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  };
 
  // Maximizar modal (voltar do minimizado)
- const handleMaximize = () => {
- if (onSetMinimized) {
- onSetMinimized(false);
- }
- };
 
  // Função para adicionar referência a um ângulo (chamada pelo modal)
  const handleAddReference = async (file: File) => {
@@ -1171,7 +1165,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    setProg(0);
    setPsStartTime(null);
    setIsSubmitting(false);
-   if (onSetMinimized) onSetMinimized(false);
    // Se já tiver ângulos parciais prontos, mostrar resultados mesmo com timeout
    if (completedAngleStatusesRef.current && completedAngleStatusesRef.current.length > 0) {
      const partialAngles = completedAngleStatusesRef.current.filter(a => a.status === 'completed' && a.url);
@@ -1207,22 +1200,17 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    pollingIntervalRef.current = null;
    const setGen = onSetGenerating || setLocalIsGenerating;
    const setProg = onSetProgress || setLocalProgress;
-   setProg(100);
-
-   // Sempre fechar loading após conclusão — tela de resultados cuida do resto
-   setTimeout(() => {
-     setGen(false);
-     setProg(0);
-     setPsStartTime(null);
-     if (onSetMinimized) onSetMinimized(false);
-     setIsSubmitting(false);
-   }, 1000);
+   // Fechar loading imediatamente — sem delay de 1s que pode se perder se componente desmontar
+   setGen(false);
+   setProg(0);
+   setPsStartTime(null);
+   setIsSubmitting(false);
  }
  }, 3000); // v9: poll a cada 3s (mais rápido que v8)
 
  pollingIntervalRef.current = pollInterval;
  return pollInterval;
- }, [checkPendingPSGeneration, onSetGenerating, onSetMinimized, onSetProgress]);
+ }, [checkPendingPSGeneration, onSetGenerating, onSetProgress]);
 
  // Gerar imagens
  const handleGenerate = async () => {
@@ -1448,7 +1436,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setGenerating(false);
  setProgress(0);
  setPsStartTime(null);
- if (onSetMinimized) onSetMinimized(false);
 
  } catch (error) {
  const msg = error instanceof Error ? error.message : '';
@@ -1477,7 +1464,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  setGenerating(false);
  setProgress(0);
  setPsStartTime(null);
- if (onSetMinimized) onSetMinimized(false);
  }
  }
  };
@@ -1591,7 +1577,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
        setShowResult(true);
        setGen(false);
        setProg(0);
-       if (onSetMinimized) onSetMinimized(false);
      }, 1000);
    }
  }, [completedAngleStatuses, generationFinalStatus]);
@@ -1661,7 +1646,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    const setProg = onSetProgress || setLocalProgress;
    setGen(false);
    setProg(0);
-   if (onSetMinimized) onSetMinimized(false);
    setRetryAttempts({});
    setRetryingAngle(null);
    setIsSubmitting(false);
@@ -2994,7 +2978,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* ═══════════════════════════════════════════════════════════════ */}
  {/* MODAL DE LOADING - Full Screen com Blur */}
  {/* ═══════════════════════════════════════════════════════════════ */}
- {isGenerating && !isMinimized && (
+ {isGenerating && (
  <div className="fixed inset-0 z-50 flex items-center justify-center">
  {/* Backdrop com blur */}
  <div className={`absolute inset-0 backdrop-blur-2xl ${theme !== 'light' ? 'bg-black/80' : 'bg-white/30'}`}></div>
@@ -3033,16 +3017,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {currentProgress}%
  </p>
  </div>
-
- {/* Aviso de alta demanda + botão segundo plano */}
- {psStartTime && (
- <div className="w-full max-w-xs">
- <SlowServerBanner
- startTime={psStartTime}
- onContinueInBackground={handleContinueInBackground}
- />
- </div>
- )}
 
  {/* Cards dos ângulos sendo gerados */}
  <div className="w-full max-w-xs mb-2">
@@ -3200,21 +3174,26 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    </>
  ) : (
    <>
-     {/* Ainda gerando — minimizar e cancelar */}
+     {/* Ainda gerando — segundo plano */}
      <button
-       onClick={handleMinimize}
+       onClick={handleContinueInBackground}
        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${theme !== 'light' ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-white/80 hover:bg-white border border-gray-200/60 text-gray-700 shadow-sm'}`}
      >
-       <i className="fas fa-minus"></i>
-       <span>Minimizar e continuar navegando</span>
+       <i className="fas fa-arrow-down-to-line"></i>
+       <span>Continuar em segundo plano</span>
      </button>
 
      <p className={`text-[10px] mt-2 text-center ${theme !== 'light' ? 'text-neutral-600' : 'text-gray-400'}`}>
-       A geração continuará em segundo plano
+       Você será notificado quando terminar
      </p>
 
      <button
        onClick={() => {
+         // Parar polling ativo
+         if (pollingIntervalRef.current) {
+           clearInterval(pollingIntervalRef.current);
+           pollingIntervalRef.current = null;
+         }
          clearPendingPSGeneration();
          setCompletedAngleStatuses([]);
          setGenerationFinalStatus(null);
@@ -3226,7 +3205,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
          const setProg = onSetProgress || setLocalProgress;
          setGen(false);
          setProg(0);
-         if (onSetMinimized) onSetMinimized(false);
+         setPsStartTime(null);
+         setIsSubmitting(false);
        }}
        className={`mt-4 text-xs transition-all ${theme !== 'light' ? 'text-neutral-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
      >

@@ -11,6 +11,15 @@ export default {
         serif: ['"Inria Serif"', 'Georgia', 'serif'],
         'serif-display': ['"DM Serif Display"', 'Georgia', 'serif'],
       },
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 2s ease-in-out infinite',
+      },
       colors: {
         cream: '#f7f5f2',
         brand: {

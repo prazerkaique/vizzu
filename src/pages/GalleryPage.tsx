@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useUI } from '../contexts/UIContext';
-import { useGeneration } from '../contexts/GenerationContext';
+import { useGeneration, type BackgroundGeneration } from '../contexts/GenerationContext';
 import { useShopifyConnection } from '../hooks/useShopifyConnection';
 import { supabase } from '../services/supabaseClient';
 import { useGalleryData, FEATURE_CONFIG, type FeatureType, type GalleryItem, type GalleryGroup } from '../hooks/useGalleryData';
@@ -14,6 +14,7 @@ import { useWatermark } from '../hooks/useWatermark';
 import { WatermarkOverlay } from '../components/shared/WatermarkOverlay';
 import { useProducts } from '../contexts/ProductsContext';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
+import { ANGLE_LABELS } from '../utils/angleLabels';
 
 // ═══════════════════════════════════════════════════════════════
 // Galeria — Todas as gerações IA agrupadas por produto/feature
@@ -43,7 +44,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
   const { theme, isV2 } = useUI();
   const isDark = theme !== 'light';
   const { allItems, groupedItems, stats, isLoading } = useGalleryData(galleryRefreshKey);
-  const { completedProducts } = useGeneration();
+  const { completedProducts, backgroundGenerations } = useGeneration();
 
   // IDs de produtos com geração recém-concluída (para badge "NOVO")
   const newProductIds = useMemo(() => {
@@ -121,12 +122,95 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
     [filteredGroups]
   );
 
+  // ── Converter background generations em grupos da galeria ──
+  const bgGroups = useMemo(() => {
+    const processing = backgroundGenerations.filter(g => g.status === 'processing');
+    if (processing.length === 0) return [];
+
+    // Filtrar por feature ativa se houver
+    const filtered = activeFeature
+      ? processing.filter(g => g.feature === activeFeature)
+      : processing;
+
+    return filtered.map((gen): GalleryGroup & { _isBgGen: true } => {
+      const items: (GalleryItem & { _isPlaceholder?: boolean })[] = [];
+
+      if (gen.feature === 'product-studio' && gen.angles) {
+        for (const angle of gen.angles) {
+          const angleStatus = gen.angleStatuses?.find(a => a.angle === angle);
+          items.push({
+            id: `bg-${gen.id}-${angle}`,
+            imageUrl: angleStatus?.url || '',
+            featureType: 'product-studio',
+            productId: gen.productId,
+            productName: gen.productName,
+            createdAt: new Date(gen.startTime).toISOString(),
+            metadata: { angle },
+            _isPlaceholder: !angleStatus?.url,
+          });
+        }
+      } else if (gen.feature === 'look-composer') {
+        items.push({
+          id: `bg-${gen.id}-front`,
+          imageUrl: gen.completedImageUrl || '',
+          featureType: 'look-composer',
+          productId: gen.productId,
+          productName: gen.productName,
+          createdAt: new Date(gen.startTime).toISOString(),
+          metadata: { view: 'front' },
+          _isPlaceholder: !gen.completedImageUrl,
+        });
+      } else if (gen.feature === 'creative-still') {
+        const urls = gen.variationUrls || [];
+        const count = Math.max(urls.length, 4);
+        for (let i = 0; i < count; i++) {
+          items.push({
+            id: `bg-${gen.id}-v${i}`,
+            imageUrl: urls[i] || '',
+            featureType: 'creative-still',
+            productId: gen.productId,
+            productName: gen.productName,
+            createdAt: new Date(gen.startTime).toISOString(),
+            metadata: { variationIndex: i },
+            _isPlaceholder: !urls[i],
+          });
+        }
+      } else {
+        // Provador ou outro
+        items.push({
+          id: `bg-${gen.id}`,
+          imageUrl: gen.completedImageUrl || '',
+          featureType: (gen.feature as FeatureType) || 'provador',
+          productName: gen.productName,
+          createdAt: new Date(gen.startTime).toISOString(),
+          _isPlaceholder: !gen.completedImageUrl,
+        });
+      }
+
+      return {
+        groupKey: `bg-${gen.id}`,
+        groupLabel: gen.productName,
+        featureType: (gen.feature as FeatureType) || 'product-studio',
+        productId: gen.productId,
+        newestAt: new Date(gen.startTime).toISOString(),
+        items,
+        _isBgGen: true as const,
+      };
+    });
+  }, [backgroundGenerations, activeFeature]);
+
+  // ── Merge: bg groups no topo + completed groups ──
+  const allGroups = useMemo(() =>
+    [...bgGroups, ...filteredGroups],
+    [bgGroups, filteredGroups]
+  );
+
   // ── Paginação calc (por grupos) ──
-  const totalPages = Math.max(1, Math.ceil(filteredGroups.length / GROUPS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(allGroups.length / GROUPS_PER_PAGE));
   const paginatedGroups = useMemo(() => {
     const start = (currentPage - 1) * GROUPS_PER_PAGE;
-    return filteredGroups.slice(start, start + GROUPS_PER_PAGE);
-  }, [filteredGroups, currentPage]);
+    return allGroups.slice(start, start + GROUPS_PER_PAGE);
+  }, [allGroups, currentPage]);
 
   // Resetar página ao mudar filtro
   const handleFeatureFilter = useCallback((f: FeatureType | null) => {
@@ -444,7 +528,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
       )}
 
       {/* ── Empty state ── */}
-      {!isLoading && filteredGroups.length === 0 && (
+      {!isLoading && allGroups.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20">
           <i className={`fas fa-images text-3xl mb-3 ${textMuted}`} />
           <p className={`text-sm font-medium ${textPrimary} mb-1`}>
@@ -459,11 +543,12 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
       )}
 
       {/* ── Grid agrupado por produto/feature ── */}
-      {!isLoading && filteredGroups.length > 0 && (
+      {!isLoading && allGroups.length > 0 && (
         <>
           {paginatedGroups.map(group => {
             const groupCfg = FEATURE_CONFIG[group.featureType];
-            const allGroupSelected = isSelecting && group.items.every(i => selectedIds.has(i.id));
+            const isBgGroup = (group as any)._isBgGen === true;
+            const allGroupSelected = isSelecting && !isBgGroup && group.items.every(i => selectedIds.has(i.id));
 
             return (
               <div key={group.groupKey} className="mb-5">
@@ -475,28 +560,78 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
                       <span className="hidden sm:inline">{groupCfg.label}</span>
                     </div>
                     <span className={`text-xs font-semibold truncate ${textPrimary}`}>{group.groupLabel}</span>
-                    <span className={`text-[10px] flex-shrink-0 ${textMuted}`}>
-                      — {group.items.length} {group.items.length === 1 ? 'imagem' : 'imagens'}
-                    </span>
+                    {isBgGroup ? (
+                      <span className="flex items-center gap-1 text-[10px] flex-shrink-0 text-[#FF6B6B]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B6B] animate-pulse" />
+                        Gerando...
+                      </span>
+                    ) : (
+                      <span className={`text-[10px] flex-shrink-0 ${textMuted}`}>
+                        — {group.items.length} {group.items.length === 1 ? 'imagem' : 'imagens'}
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      if (!isSelecting) setIsSelecting(true);
-                      selectGroup(group);
-                    }}
-                    className={`flex-shrink-0 ml-2 text-[10px] font-medium transition-colors ${
-                      allGroupSelected ? 'text-[#FF6B6B]' : textSecondary + ' hover:text-[#FF6B6B]'
-                    }`}
-                  >
-                    <i className={`fas fa-${allGroupSelected ? 'square-minus' : 'square-check'} mr-1`} />
-                    {allGroupSelected ? 'Desmarcar' : 'Selecionar'}
-                  </button>
+                  {!isBgGroup && (
+                    <button
+                      onClick={() => {
+                        if (!isSelecting) setIsSelecting(true);
+                        selectGroup(group);
+                      }}
+                      className={`flex-shrink-0 ml-2 text-[10px] font-medium transition-colors ${
+                        allGroupSelected ? 'text-[#FF6B6B]' : textSecondary + ' hover:text-[#FF6B6B]'
+                      }`}
+                    >
+                      <i className={`fas fa-${allGroupSelected ? 'square-minus' : 'square-check'} mr-1`} />
+                      {allGroupSelected ? 'Desmarcar' : 'Selecionar'}
+                    </button>
+                  )}
                 </div>
 
                 {/* ── Group items grid ── */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                   {group.items.map(item => {
                     const cfg = FEATURE_CONFIG[item.featureType];
+                    const isPlaceholder = (item as any)._isPlaceholder === true;
+
+                    /* ── Shimmer placeholder card (geração em andamento) ── */
+                    if (isPlaceholder) {
+                      const angleLabel = item.metadata?.angle
+                        ? (ANGLE_LABELS[item.metadata.angle] || item.metadata.angle)
+                        : cfg.label;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`rounded-lg border overflow-hidden select-none ${
+                            isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className={`relative aspect-square overflow-hidden ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}`}>
+                            {/* Shimmer animation overlay */}
+                            <div className="absolute inset-0 overflow-hidden">
+                              <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                            </div>
+                            {/* Centered label */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+                              <i className={`fas fa-wand-magic-sparkles text-lg ${isDark ? 'text-neutral-500' : 'text-gray-400'}`} />
+                              <span className={`text-[10px] font-medium ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
+                                Criando imagem...
+                              </span>
+                            </div>
+                            {/* Feature badge */}
+                            <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] font-bold flex items-center gap-1 opacity-70">
+                              <i className={`fas ${cfg.icon} text-[6px]`} />
+                              <span className="hidden sm:inline">{cfg.label.split(' ')[0]}</span>
+                            </div>
+                          </div>
+                          <div className="p-2">
+                            <p className={`text-[10px] font-medium truncate ${textPrimary}`}>{angleLabel}</p>
+                            <p className={`text-[8px] font-medium uppercase tracking-wide ${textMuted}`}>Gerando...</p>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    /* ── Normal image card ── */
                     const isShowingOriginal = showingOriginal.has(item.id);
                     const displayUrl = isShowingOriginal && item.originalImageUrl
                       ? item.originalImageUrl

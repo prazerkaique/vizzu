@@ -27,11 +27,9 @@ interface ProductStudioProps {
  userId?: string;
  // Estados de geração em background
  isGenerating?: boolean;
- isMinimized?: boolean;
  generationProgress?: number;
  generationText?: string;
  onSetGenerating?: (value: boolean) => void;
- onSetMinimized?: (value: boolean) => void;
  onSetProgress?: (value: number) => void;
  onSetLoadingText?: (value: string) => void;
  isAnyGenerationRunning?: boolean;
@@ -74,11 +72,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  theme = 'dark',
  userId,
  isGenerating = false,
- isMinimized = false,
  generationProgress = 0,
  generationText = '',
  onSetGenerating,
- onSetMinimized,
  onSetProgress,
  onSetLoadingText,
  isAnyGenerationRunning = false,
@@ -310,11 +306,9 @@ export const ProductStudio: React.FC<ProductStudioProps> = ({
  theme={theme}
  userId={userId}
  isGenerating={isGenerating}
- isMinimized={isMinimized}
  generationProgress={generationProgress}
  generationText={generationText}
  onSetGenerating={onSetGenerating}
- onSetMinimized={onSetMinimized}
  onSetProgress={onSetProgress}
  onSetLoadingText={onSetLoadingText}
  isAnyGenerationRunning={isAnyGenerationRunning}

@@ -537,6 +537,8 @@ interface ModeloIAParams {
   frontGeneratedUrl?: string;        // URL da imagem de frente já gerada (referência para coerência costas)
   // Callback de progresso (opcional)
   onProgress?: (progress: number) => void;  // Callback chamado durante polling com progresso 0-100
+  // Callback de generationId disponível (chamado assim que a API responde, antes do polling)
+  onGenerationId?: (id: string) => void;
   // Resolução da imagem gerada
   resolution?: '2k' | '4k';
 }
@@ -647,6 +649,11 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
     const startTime = Date.now();
     let consecutiveErrors = 0;
     let pendingTooLongChecks = 0;
+
+    // Notificar generationId assim que disponível (antes do polling)
+    if (params.onGenerationId) {
+      params.onGenerationId(generationId);
+    }
 
     // Notificar progresso inicial
     if (params.onProgress) {
@@ -1493,4 +1500,92 @@ export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<S
       error: error.message || 'Erro ao enviar WhatsApp',
     };
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POLLING GENÉRICO PARA FILA DE GERAÇÕES EM BACKGROUND
+// ═══════════════════════════════════════════════════════════════
+
+export interface GenericPollResult {
+  status: 'processing' | 'completed' | 'partial' | 'failed' | 'unknown';
+  progress?: number;
+  imageUrl?: string;
+  error?: string;
+}
+
+/**
+ * Poll Look Composer / Provador generation (tabela `generations`)
+ * Retorna status + imagem gerada
+ */
+export async function pollGenerationSimple(generationId: string): Promise<GenericPollResult> {
+  const { data, error } = await supabase
+    .from('generations')
+    .select('id, status, output_image_url, error_message')
+    .eq('id', generationId)
+    .single();
+
+  if (error || !data) return { status: 'unknown', error: error?.message };
+
+  const status = data.status === 'completed' ? 'completed'
+    : data.status === 'failed' || data.status === 'error' ? 'failed'
+    : 'processing';
+
+  return {
+    status,
+    imageUrl: data.output_image_url || undefined,
+    progress: status === 'completed' ? 100 : status === 'failed' ? 0 : undefined,
+    error: data.error_message || undefined,
+  };
+}
+
+/**
+ * Poll Creative Still generation (tabela `creative_still_generations`)
+ * Retorna status + contagem de variações prontas
+ */
+export async function pollCreativeStillGeneration(generationId: string): Promise<GenericPollResult & { variationCount?: number; totalVariations?: number; variationUrls?: string[] }> {
+  const { data, error } = await supabase
+    .from('creative_still_generations')
+    .select('id, status, variation_urls, error_message')
+    .eq('id', generationId)
+    .single();
+
+  if (error || !data) return { status: 'unknown', error: error?.message };
+
+  const status = data.status === 'completed' ? 'completed'
+    : data.status === 'failed' ? 'failed'
+    : 'processing';
+
+  let variationUrls = data.variation_urls as any;
+  if (typeof variationUrls === 'string') {
+    try { variationUrls = JSON.parse(variationUrls); } catch { variationUrls = []; }
+  }
+  const variationCount = Array.isArray(variationUrls) ? variationUrls.length : 0;
+
+  return {
+    status,
+    variationCount,
+    variationUrls: Array.isArray(variationUrls) ? variationUrls as string[] : [],
+    progress: status === 'completed' ? 100 : status === 'failed' ? 0 : undefined,
+    error: data.error_message || undefined,
+  };
+}
+
+/**
+ * Poll Models generation (tabela `saved_models`)
+ * Retorna status + se o modelo está pronto
+ */
+export async function pollModelGeneration(modelId: string): Promise<GenericPollResult> {
+  const { data, error } = await supabase
+    .from('saved_models')
+    .select('id, status, images')
+    .eq('id', modelId)
+    .single();
+
+  if (error || !data) return { status: 'unknown', error: error?.message };
+
+  const isReady = data.status === 'ready' && data.images;
+  return {
+    status: isReady ? 'completed' : 'processing',
+    progress: isReady ? 100 : undefined,
+  };
 }
