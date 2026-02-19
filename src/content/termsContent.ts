@@ -3,8 +3,8 @@
 // Versão 1.0 — Fevereiro 2026
 // ═══════════════════════════════════════════════════════════════
 
-export const CURRENT_TERMS_VERSION = '1.0';
-export const TERMS_EFFECTIVE_DATE = '18 de fevereiro de 2026';
+export const CURRENT_TERMS_VERSION = '1.1';
+export const TERMS_EFFECTIVE_DATE = '19 de fevereiro de 2026';
 
 export interface TermsSection {
   id: string;
@@ -53,7 +53,7 @@ Compartilhar credenciais de acesso com outras pessoas é proibido e pode levar �
   {
     id: 'tecnologia-ia',
     title: '4. Sobre a inteligência artificial',
-    content: `O Vizzu utiliza modelos de IA de terceiros (incluindo Google Gemini) para gerar imagens. É importante que você saiba:
+    content: `O Vizzu utiliza inteligência artificial para gerar imagens profissionais dos seus produtos. É importante que você saiba:
 
 • Resultados não são garantidos — A IA pode gerar imagens que não correspondam exatamente ao esperado em cores, proporções ou detalhes do produto original.
 
@@ -68,7 +68,7 @@ Trabalhamos continuamente para melhorar a qualidade das imagens, mas não podemo
   {
     id: 'filtros-seguranca',
     title: '5. Filtros de segurança e conteúdo sensível',
-    content: `A inteligência artificial possui filtros automáticos de segurança (fornecidos pelo Google) que analisam o conteúdo das imagens durante a geração.
+    content: `A inteligência artificial possui filtros automáticos de segurança que analisam o conteúdo das imagens durante a geração.
 
 Esses filtros podem bloquear a geração de imagens que o sistema considere sensíveis. Na prática, isso significa que:
 
@@ -87,7 +87,7 @@ Trabalhamos para minimizar falsos positivos, mas não garantimos que todas as ca
 
 • O Vizzu NÃO usa as fotos dos seus produtos para treinar inteligência artificial. Suas imagens são usadas exclusivamente para gerar o resultado que você pediu.
 
-• As imagens são processadas pelo Google Gemini API (serviço pago), que conforme seus termos não utiliza dados de APIs pagas para treinamento de modelos.
+• As imagens são processadas por serviços de IA pagos, que conforme seus termos não utilizam dados de APIs pagas para treinamento de modelos.
 
 • Podemos usar dados anônimos e agregados (como quantidade de gerações, tipos de produto mais populares, taxas de sucesso) para melhorar a plataforma, sem possibilidade de identificar você ou seus produtos.
 
@@ -131,7 +131,7 @@ Créditos não utilizados ao final de cada ciclo mensal não são cumulativos e 
 
 • Qualidade das imagens — Não garantimos que toda imagem gerada será perfeita. A tecnologia de IA está em constante evolução e variações nos resultados são esperadas.
 
-• Disponibilidade — Buscamos manter a plataforma disponível 24 horas, mas interrupções podem ocorrer por manutenção (avisamos com 24h de antecedência), falhas em serviços de terceiros (Google, Stripe, Supabase) ou força maior.
+• Disponibilidade — Buscamos manter a plataforma disponível 24 horas, mas interrupções podem ocorrer por manutenção (avisamos com 24h de antecedência), falhas em serviços de terceiros ou força maior.
 
 • Limite de indenização — Em qualquer situação, a responsabilidade total do Vizzu será limitada ao valor que você pagou nos últimos 3 meses.
 
@@ -266,11 +266,10 @@ Dados de integrações: Se você conectar sua loja Shopify, coletamos dados dos 
     title: '4. Com quem compartilhamos',
     content: `Compartilhamos dados estritamente com os parceiros necessários para o funcionamento do Vizzu:
 
-• Google (Gemini API) — Suas imagens de produtos são enviadas temporariamente para gerar as imagens por IA. Servidores nos EUA.
-• Stripe — Processa seus pagamentos. Servidores nos EUA.
-• Supabase — Armazena os dados da sua conta. Servidores no Brasil (São Paulo).
-• Vercel — Hospeda a aplicação web. CDN global.
-• Shopify — Se você conectar sua loja, sincronizamos produtos e exportamos imagens. Servidores no Canadá.
+• Provedores de inteligência artificial — Suas imagens de produtos são enviadas temporariamente para gerar as imagens por IA.
+• Processador de pagamentos — Processa seus pagamentos de forma segura. O Vizzu não armazena dados do seu cartão.
+• Infraestrutura e hospedagem — Serviços que armazenam os dados da sua conta e hospedam a plataforma.
+• Integrações de e-commerce — Se você conectar sua loja, sincronizamos produtos e exportamos imagens.
 
 As transferências internacionais de dados seguem as salvaguardas exigidas pela LGPD (art. 33), incluindo cláusulas contratuais padrão e certificações de segurança dos parceiros.
 
@@ -279,11 +278,11 @@ O Vizzu NÃO vende, aluga ou comercializa seus dados pessoais a terceiros.`,
   {
     id: 'transferencia',
     title: '5. Transferência internacional',
-    content: `Alguns dos nossos parceiros processam dados fora do Brasil (Google nos EUA, Stripe nos EUA, Vercel globalmente, Shopify no Canadá).
+    content: `Alguns dos nossos parceiros processam dados fora do Brasil.
 
 Garantimos que essas transferências seguem as regras da LGPD (art. 33), com contratos de processamento de dados (DPA) assinados com cada parceiro e medidas técnicas de segurança como criptografia em trânsito e em repouso.
 
-Seus dados principais (conta, produtos, imagens, histórico) ficam armazenados no Brasil, no Supabase (região São Paulo).`,
+Seus dados principais (conta, produtos, imagens, histórico) ficam armazenados no Brasil.`,
   },
   {
     id: 'cookies',
