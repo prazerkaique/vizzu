@@ -1142,8 +1142,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
 
  // Gerar look
  const handleGenerate = async () => {
- if (isAnyGenerationRunning) {
- showToast('Aguarde a geração atual terminar.', 'info');
+ if (isGenerating) {
  return;
  }
 
@@ -2791,13 +2790,11 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  <>
  <button
  onClick={handleGenerate}
- disabled={isGenerating || isAnyGenerationRunning}
- className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating || isAnyGenerationRunning ? 'bg-[#FF6B6B] cursor-wait' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
+ disabled={isGenerating}
+ className={'flex-1 py-3 rounded-xl font-semibold text-sm transition-all ' + (isGenerating ? 'bg-[#FF6B6B] cursor-wait' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 ') + ' text-white'}
  >
  {isGenerating ? (
  <><i className="fas fa-spinner fa-spin mr-2"></i>Gerando{viewsMode === 'front-back' ? ' 2 imagens' : ''}...</>
- ) : isAnyGenerationRunning ? (
- <><i className="fas fa-clock mr-2"></i>Aguardando...</>
  ) : (
  <><i className="fas fa-wand-magic-sparkles mr-2"></i>Gerar {viewsMode === 'front-back' ? '2 Looks' : 'Look'} ({creditsNeeded} {creditsNeeded === 1 ? 'crédito' : 'créditos'})</>
  )}

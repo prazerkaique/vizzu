@@ -1225,10 +1225,9 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  if (isSubmitting) return;
  setIsSubmitting(true);
 
- // Verificar se há alguma geração rodando
- if (isAnyGenerationRunning) {
+ // Verificar se JÁ está gerando nesta feature (previne duplo clique)
+ if (isGenerating) {
  setIsSubmitting(false);
- alert('Aguarde a geração atual terminar antes de iniciar uma nova.');
  return;
  }
 
@@ -2705,11 +2704,11 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  {/* Botão Criar */}
  <button
  onClick={() => handleGenerate()}
- disabled={selectedAngles.length === 0 || isGenerating || isSubmitting || userCredits < creditsNeeded || isAnyGenerationRunning}
+ disabled={selectedAngles.length === 0 || isGenerating || isSubmitting || userCredits < creditsNeeded}
  className={'w-full py-4 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ' +
  (isGenerating
  ? 'bg-[#FF9F43] cursor-wait'
- : (selectedAngles.length === 0 || userCredits < creditsNeeded || isAnyGenerationRunning)
+ : (selectedAngles.length === 0 || userCredits < creditsNeeded)
  ? (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-300') + ' cursor-not-allowed opacity-50'
  : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:opacity-90 '
  )
@@ -2719,11 +2718,6 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  <>
  <i className="fas fa-spinner fa-spin"></i>
  <span>Gerando... {currentProgress}%</span>
- </>
- ) : isAnyGenerationRunning ? (
- <>
- <i className="fas fa-clock"></i>
- <span>Aguardando outra geração...</span>
  </>
  ) : (
  <>
