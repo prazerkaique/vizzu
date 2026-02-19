@@ -4,7 +4,9 @@ import {
   pollGenerationSimple,
   pollCreativeStillGeneration,
   pollModelGeneration,
+  findGenerationId,
 } from '../lib/api/studio';
+import { supabase } from '../services/supabaseClient';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -26,6 +28,7 @@ export interface BackgroundGeneration {
   featureLabel: string;
   productName: string;
   productId?: string;
+  userId?: string;       // Para self-healing lookup quando generationId está ausente
   generationId?: string;
   table?: 'generations' | 'creative_still_generations' | 'saved_models';
   progress: number;
@@ -73,11 +76,13 @@ function readBgGenerations(): BackgroundGeneration[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Limpar entries stale (>30 min em processing ou completed/failed)
+    // Limpar entries stale
     const now = Date.now();
     const clean = parsed.filter((g: BackgroundGeneration) => {
       if (g.status !== 'processing') return false; // remover completed/failed persistidos
-      if (now - g.startTime > HARD_TIMEOUT_MS) return false; // remover expirados
+      if (now - g.startTime > HARD_TIMEOUT_MS) return false; // remover expirados (>30 min)
+      // Entries sem generationId por mais de 5 min são órfãs → limpar
+      if (!g.generationId && now - g.startTime > 5 * 60 * 1000) return false;
       return true;
     });
     if (clean.length !== parsed.length) persistBgGenerations(clean);
@@ -277,6 +282,16 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
    const poll = async () => {
      const currentGens = bgRef.current.filter(g => g.status === 'processing');
 
+     // Obter userId da sessão para entries antigas sem userId
+     let sessionUserId: string | null = null;
+     const needsUserId = currentGens.some(g => !g.generationId && !g.userId);
+     if (needsUserId) {
+       try {
+         const { data: { session } } = await supabase.auth.getSession();
+         sessionUserId = session?.user?.id || null;
+       } catch { /* ignore */ }
+     }
+
      for (const gen of currentGens) {
        // Hard timeout de 30 min
        if (Date.now() - gen.startTime > HARD_TIMEOUT_MS) {
@@ -284,9 +299,28 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
          continue;
        }
 
-       // Sem generationId = não conseguimos pollar, só simular progresso
+       // Sem generationId → self-healing: buscar no Supabase
        if (!gen.generationId) {
-         updateBackgroundGeneration(gen.id, { progress: simulateProgress(gen.startTime) });
+         const uid = gen.userId || sessionUserId;
+         if (uid && gen.productId) {
+           try {
+             const foundId = await findGenerationId(uid, gen.productId, gen.feature, gen.startTime - 60000);
+             if (foundId) {
+               console.log('[BgGen] Self-healing: encontrou generationId', foundId.slice(0, 8), 'para', gen.productName);
+               updateBackgroundGeneration(gen.id, { generationId: foundId });
+               continue; // Próximo ciclo fará polling normal
+             }
+           } catch (err) {
+             console.warn('[BgGen] Erro no self-healing lookup:', err);
+           }
+         }
+         // Sem generationId há mais de 5 min → marcar como failed
+         if (Date.now() - gen.startTime > 5 * 60 * 1000) {
+           console.warn('[BgGen] Entry sem generationId há 5+ min, removendo:', gen.productName);
+           updateBackgroundGeneration(gen.id, { status: 'failed', progress: 0 });
+         } else {
+           updateBackgroundGeneration(gen.id, { progress: simulateProgress(gen.startTime) });
+         }
          continue;
        }
 

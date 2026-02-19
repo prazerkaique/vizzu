@@ -1184,6 +1184,7 @@ function App() {
      featureLabel: 'Vizzu Provador',
      productName: provadorClient ? `${provadorClient.firstName} ${provadorClient.lastName}` : '',
      productId: provadorClient?.id,
+     userId: user?.id,
      table: 'generations',
      progress: provadorProgress,
    });

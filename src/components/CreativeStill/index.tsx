@@ -610,6 +610,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             featureLabel: 'Still Criativo',
             productName: selectedProduct?.name || '',
             productId: selectedProduct?.id,
+            userId: userId,
             generationId: activeCSGenIdRef.current || currentGeneration?.id,
             table: 'creative_still_generations',
             progress: generationProgress,

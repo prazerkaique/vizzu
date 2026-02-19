@@ -1514,6 +1514,46 @@ export interface GenericPollResult {
 }
 
 /**
+ * Self-healing: buscar generationId no Supabase quando a entry não tem
+ * Procura a geração mais recente do produto/feature/user criada após `since`
+ */
+export async function findGenerationId(
+  userId: string,
+  productId: string,
+  feature: string,
+  since: number,
+): Promise<string | null> {
+  const sinceISO = new Date(since).toISOString();
+
+  if (feature === 'creative-still') {
+    const { data } = await supabase
+      .from('creative_still_generations')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('product_id', productId)
+      .gte('created_at', sinceISO)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data?.id || null;
+  }
+
+  if (feature === 'models') return null; // saved_models não tem product_id
+
+  // PS, LC, Provador → tabela generations
+  const { data } = await supabase
+    .from('generations')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+    .gte('created_at', sinceISO)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.id || null;
+}
+
+/**
  * Poll Look Composer / Provador generation (tabela `generations`)
  * Retorna status + imagem gerada
  */

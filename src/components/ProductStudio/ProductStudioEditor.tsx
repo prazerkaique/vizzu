@@ -960,6 +960,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
    featureLabel: 'Product Studio',
    productName: product.name,
    productId: product.id,
+   userId: userId,
    generationId: getPendingPSGeneration()?.generationId || currentGenerationId || undefined,
    table: 'generations',
    progress: currentProgress,

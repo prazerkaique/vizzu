@@ -1060,6 +1060,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
    featureLabel: 'Look Composer',
    productName: product.name,
    productId: product.id,
+   userId: userId || undefined,
    generationId: activeGenIdRef.current || generationId || undefined,
    table: 'generations',
    progress: generationProgress,
