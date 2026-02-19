@@ -164,6 +164,7 @@ function App() {
  currentPlan,
  billingPeriod,
  daysUntilRenewal,
+ subscription,
  isCheckoutLoading,
  deductEditCredits,
  purchaseCredits,
@@ -1283,7 +1284,7 @@ function App() {
  {/* CLIENTS */}
  {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />}
 
- {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
+ {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} subscription={subscription} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
 
  {currentPage === 'master' && currentPlan.id === 'master' && <MasterPage />}
 

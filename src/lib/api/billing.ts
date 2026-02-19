@@ -368,6 +368,47 @@ export function calculateDaysUntilRenewal(subscription?: UserSubscription): numb
 }
 
 // ═══════════════════════════════════════════════════════════════
+// BUSCAR FATURAS (STRIPE INVOICES)
+// ═══════════════════════════════════════════════════════════════
+
+export interface StripeInvoice {
+  id: string;
+  number: string | null;
+  created: number;       // Unix timestamp
+  amount_paid: number;   // Em centavos
+  currency: string;
+  status: string;        // paid, open, draft, void, uncollectible
+  hosted_invoice_url: string | null;
+  invoice_pdf: string | null;
+  description: string | null;
+}
+
+/**
+ * Busca faturas do Stripe para o usuário
+ */
+export async function getInvoices(userId: string): Promise<StripeInvoice[]> {
+  try {
+    const response = await fetch(`${N8N_BASE_URL}/vizzu/get-invoices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      console.warn('Erro ao buscar invoices:', data.error);
+      return [];
+    }
+
+    return data.invoices || [];
+  } catch (err) {
+    console.warn('Erro ao buscar invoices:', err);
+    return [];
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // HELPER: VERIFICAR SE PODE USAR CRÉDITOS
 // ═══════════════════════════════════════════════════════════════
 

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CompanySettings } from '../types';
 import { useUI, type SettingsTab } from '../contexts/UIContext';
+import { getInvoices, type StripeInvoice } from '../lib/api/billing';
 import { useAuth } from '../contexts/AuthContext';
 import { useHistory } from '../contexts/HistoryContext';
 import { CREDIT_PACKAGES, INDIVIDUAL_CREDIT_PRICE } from '../hooks/useCredits';
@@ -20,6 +21,7 @@ interface SettingsPageProps {
  currentPlan: any;
  billingPeriod: string;
  daysUntilRenewal: number;
+ subscription?: import('../lib/api/billing').UserSubscription | null;
  isCheckoutLoading: boolean;
  onBuyCredits: (amount: number) => void;
  onUpgradePlan: (planId: string) => void;
@@ -126,6 +128,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  currentPlan,
  billingPeriod,
  daysUntilRenewal,
+ subscription,
  isCheckoutLoading,
  onBuyCredits,
  onUpgradePlan,
@@ -156,6 +159,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  // Download de imagens do histórico
  const [showHistoryDownload, setShowHistoryDownload] = useState(false);
+
+ // Faturas Stripe
+ const [invoices, setInvoices] = useState<StripeInvoice[]>([]);
+ const [invoicesLoading, setInvoicesLoading] = useState(false);
+
+ const loadInvoices = useCallback(async () => {
+   if (!user?.id || !subscription?.stripe_customer_id) return;
+   setInvoicesLoading(true);
+   try {
+     const data = await getInvoices(user.id);
+     setInvoices(data);
+   } catch {
+     // Silencioso — seção simplesmente não mostra faturas
+   } finally {
+     setInvoicesLoading(false);
+   }
+ }, [user?.id, subscription?.stripe_customer_id]);
+
+ useEffect(() => {
+   if (settingsTab === 'plan' && subscription?.stripe_customer_id) {
+     loadInvoices();
+   }
+ }, [settingsTab, subscription?.stripe_customer_id, loadInvoices]);
 
  // P11: Paginação do histórico
  const [historyVisible, setHistoryVisible] = useState(HISTORY_PAGE_SIZE);
@@ -829,6 +855,77 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </div>
  </div>
+
+ {/* Histórico de Cobranças (Stripe Invoices) */}
+ {subscription?.stripe_customer_id && (
+ <div className={(theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-6'}>
+ <div className="flex items-center gap-3 mb-4">
+ <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
+ <i className={'fas fa-file-invoice text-sm ' + (theme !== 'light' ? 'text-neutral-300' : 'text-gray-600')}></i>
+ </div>
+ <div>
+ <h4 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm'}>Histórico de Cobranças</h4>
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Suas faturas e pagamentos</p>
+ </div>
+ </div>
+
+ {invoicesLoading ? (
+ <div className="space-y-3">
+ {[1, 2, 3].map(i => (
+   <div key={i} className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl h-14 animate-pulse'} />
+ ))}
+ </div>
+ ) : invoices.length === 0 ? (
+ <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs text-center py-6'}>
+ Nenhuma fatura encontrada
+ </p>
+ ) : (
+ <div className="space-y-2">
+ {invoices.map(inv => {
+   const date = new Date(inv.created * 1000);
+   const formattedDate = date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+   const amount = (inv.amount_paid / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+   const isPaid = inv.status === 'paid';
+   const isOpen = inv.status === 'open';
+
+   return (
+   <div key={inv.id} className={(theme !== 'light' ? 'bg-neutral-800/60 border-neutral-700/50 hover:bg-neutral-800' : 'bg-gray-50 border-gray-200/60 hover:bg-gray-100') + ' border rounded-xl px-4 py-3 transition-colors'}>
+     <div className="flex items-center justify-between gap-3">
+       <div className="flex items-center gap-3 min-w-0 flex-1">
+         <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isPaid ? 'bg-green-500/10' : isOpen ? 'bg-yellow-500/10' : (theme !== 'light' ? 'bg-neutral-700' : 'bg-gray-200'))}>
+           <i className={'fas text-xs ' + (isPaid ? 'fa-check text-green-500' : isOpen ? 'fa-clock text-yellow-500' : 'fa-xmark ' + (theme !== 'light' ? 'text-neutral-400' : 'text-gray-400'))}></i>
+         </div>
+         <div className="min-w-0">
+           <div className="flex items-center gap-2">
+             <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium'}>{inv.number || inv.id.slice(-8).toUpperCase()}</span>
+             <span className={'text-[10px] px-1.5 py-0.5 rounded-full font-medium ' + (isPaid ? 'bg-green-500/10 text-green-500' : isOpen ? 'bg-yellow-500/10 text-yellow-500' : (theme !== 'light' ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500'))}>
+               {isPaid ? 'Pago' : isOpen ? 'Pendente' : inv.status}
+             </span>
+           </div>
+           <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-0.5'}>{formattedDate}</p>
+         </div>
+       </div>
+       <div className="flex items-center gap-3 flex-shrink-0">
+         <span className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>{amount}</span>
+         {inv.hosted_invoice_url && (
+           <a
+             href={inv.hosted_invoice_url}
+             target="_blank"
+             rel="noopener noreferrer"
+             className={'text-[10px] font-medium flex items-center gap-1 px-2 py-1 rounded-lg transition-colors ' + (theme !== 'light' ? 'text-neutral-400 hover:text-white hover:bg-neutral-700' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200')}
+           >
+             Ver fatura <i className="fas fa-arrow-up-right-from-square text-[8px]"></i>
+           </a>
+         )}
+       </div>
+     </div>
+   </div>
+   );
+ })}
+ </div>
+ )}
+ </div>
+ )}
 
  {/* FAQ */}
  <div className={(theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5'}>
