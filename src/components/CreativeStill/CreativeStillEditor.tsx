@@ -183,8 +183,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
   // ── States ──
   const [selectedAngles, setSelectedAngles] = useState<string[]>(['front']);
   const [prompt, setPrompt] = useState('');
-  const [optimizedPromptText, setOptimizedPromptText] = useState('');
-  const [showOptimized, setShowOptimized] = useState(false);
+  const [isPromptOptimized, setIsPromptOptimized] = useState(false);
   const [referenceImages, setReferenceImages] = useState<Array<{ base64: string; preview: string }>>([]);
   const [frameRatio, setFrameRatio] = useState('4:5');
   const [resolution, setResolution] = useState<Resolution>(() => getPreferredResolution() as Resolution);
@@ -282,7 +281,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
     compositionProducts,
     prompt,
     setPrompt,
-    onPromptChange: () => { setOptimizedPromptText(''); setShowOptimized(false); },
+    onPromptChange: () => { setIsPromptOptimized(false); },
   });
 
   // Helper: pega imagem frontal de um produto (para composição)
@@ -415,7 +414,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
           product_category: product.category || '',
           product_color: product.color || '',
           selectedAngles,
-          refCount: referenceImages.length,
+          referenceCount: referenceImages.length,
           compositionProducts: compositionProducts.map((cp, i) => ({
             product_name: cp.product.name || `Produto ${i + 1}`,
           })),
@@ -424,19 +423,11 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
       const data = await resp.json();
       if (data.success && data.improvedPrompt) {
         setPrompt(data.improvedPrompt);
-        setOptimizedPromptText('');
-        setShowOptimized(false);
-      } else {
-        // Fallback: otimização local
-        const opt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
-        setOptimizedPromptText(opt);
-        setShowOptimized(true);
+        setIsPromptOptimized(true);
       }
+      // Se falhar, não faz nada — o prompt do usuário continua como está
     } catch {
-      // Fallback: otimização local
-      const opt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
-      setOptimizedPromptText(opt);
-      setShowOptimized(true);
+      // Silencioso — o prompt original do usuário continua editável
     } finally {
       setIsOptimizing(false);
     }
@@ -487,7 +478,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
 
   const handleGenerate = useCallback(() => {
     if (!prompt.trim() || isGenerating || isQueueFull) return;
-    const finalPrompt = optimizedPromptText || optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
+    const finalPrompt = optimizePrompt(prompt.trim(), product, referenceImages.length, compositionProducts);
     const parsed = parsePromptMentions(prompt.trim(), mention.mentionItems);
     onGenerate({
       product,
@@ -507,7 +498,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
         label: `@produto${i + 1}`,
       })),
     });
-  }, [prompt, isGenerating, isQueueFull, optimizedPromptText, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate, compositionProducts, mention.mentionItems, getProductFrontUrl]);
+  }, [prompt, isGenerating, isQueueFull, product, selectedAngles, selectedImageUrls, referenceImages, frameRatio, resolution, onGenerate, compositionProducts, mention.mentionItems, getProductFrontUrl]);
 
   const canGenerate = prompt.trim().length > 5 && hasEnoughCredits && !isGenerating && !isQueueFull && selectedAngles.length > 0;
 
@@ -788,31 +779,17 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
                     className={'absolute right-3 top-3 w-8 h-8 rounded-lg flex items-center justify-center transition-all ' +
                       (isOptimizing
                         ? 'bg-amber-500/20 text-amber-400 animate-pulse cursor-wait'
-                        : isDark
-                          ? 'bg-white/10 text-neutral-400 hover:text-amber-400 hover:bg-amber-500/20'
-                          : 'bg-gray-100 text-gray-400 hover:text-amber-500 hover:bg-amber-50'
+                        : isPromptOptimized
+                          ? (isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-50 text-green-500')
+                          : isDark
+                            ? 'bg-white/10 text-neutral-400 hover:text-amber-400 hover:bg-amber-500/20'
+                            : 'bg-gray-100 text-gray-400 hover:text-amber-500 hover:bg-amber-50'
                       )}
                   >
-                    <i className={'fas ' + (isOptimizing ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles') + ' text-xs'}></i>
+                    <i className={'fas ' + (isOptimizing ? 'fa-spinner fa-spin' : isPromptOptimized ? 'fa-check' : 'fa-wand-magic-sparkles') + ' text-xs'}></i>
                   </button>
                 )}
               </div>
-              {optimizedPromptText && (
-                <div className="mt-2">
-                  <button
-                    onClick={() => setShowOptimized(!showOptimized)}
-                    className={'flex items-center gap-2 text-xs font-medium transition-all ' + (isDark ? 'text-amber-400 hover:text-amber-300' : 'text-amber-600 hover:text-amber-700')}
-                  >
-                    <i className={'fas fa-chevron-' + (showOptimized ? 'up' : 'down') + ' text-[9px]'}></i>
-                    {showOptimized ? 'Ocultar' : 'Ver'} prompt otimizado
-                  </button>
-                  {showOptimized && (
-                    <div className={'mt-2 rounded-xl p-3 text-xs leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto ' + (isDark ? 'bg-neutral-900/80 border border-neutral-700 text-neutral-400' : 'bg-gray-50 border border-gray-200 text-gray-600')}>
-                      {optimizedPromptText}
-                    </div>
-                  )}
-                </div>
-              )}
               {/* Hint de @ mentions */}
               {prompt.trim().length > 0 && !prompt.includes('@') && (
                 <div className={'mt-2 rounded-lg px-3 py-2 flex items-start gap-2 ' + (isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200')}>
