@@ -594,48 +594,43 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
 
  const provadorLoadingText = PROVADOR_LOADING_PHRASES[provadorLoadingIndex]?.text || 'Gerando...';
 
- // ───── Lock de geração (plan-aware) ─────
+ // ───── Lock de geração ─────
+ // Só bloqueia quando overlay está ativo (geração em primeiro plano).
+ // Background generations NÃO bloqueiam — o limite de concorrência
+ // é aplicado dentro de addBackgroundGeneration (MAX_CONCURRENT).
 
  const anyFeatureGenerating =
    isGeneratingProductStudio || isGeneratingLookComposer ||
    isGeneratingProvador || isGeneratingCreativeStill || isGeneratingModels;
 
- const processingBgCount = backgroundGenerations.filter(g => g.status === 'processing').length;
+ const localGenerating = anyFeatureGenerating;
 
- // Pro+: só bloqueia se overlay ativo ou 5+ gerações simultâneas em background
- // Free/Basic: qualquer geração ativa (overlay ou background) bloqueia
- const localGenerating = isPro
-   ? (anyFeatureGenerating || processingBgCount >= MAX_CONCURRENT)
-   : (anyFeatureGenerating || processingBgCount > 0);
+ // BroadcastChannel: sincronizar estado de geração entre abas.
+ // Usa um único objeto de canal para enviar E receber — assim
+ // postMessage() não ecoa para a própria aba (spec BroadcastChannel).
+ const channelRef = useRef<BroadcastChannel | null>(null);
 
- // BroadcastChannel: sincronizar estado de geração entre abas
  useEffect(() => {
-   if (typeof BroadcastChannel === 'undefined') return; // SSR/fallback
+   if (typeof BroadcastChannel === 'undefined') return;
 
-   const channel = new BroadcastChannel(GENERATION_CHANNEL);
-
-   channel.onmessage = (event) => {
+   const ch = new BroadcastChannel(GENERATION_CHANNEL);
+   ch.onmessage = (event) => {
      if (event.data?.type === 'generation_started') {
        setOtherTabGenerating(true);
      } else if (event.data?.type === 'generation_completed') {
        setOtherTabGenerating(false);
      }
    };
+   channelRef.current = ch;
 
-   return () => channel.close();
+   return () => { ch.close(); channelRef.current = null; };
  }, []);
 
  // Broadcast quando estado de geração local muda
  useEffect(() => {
-   if (typeof BroadcastChannel === 'undefined') return;
-
-   try {
-     const channel = new BroadcastChannel(GENERATION_CHANNEL);
-     channel.postMessage({
-       type: localGenerating ? 'generation_started' : 'generation_completed',
-     });
-     channel.close();
-   } catch { /* ignore */ }
+   channelRef.current?.postMessage({
+     type: localGenerating ? 'generation_started' : 'generation_completed',
+   });
  }, [localGenerating]);
 
  const isAnyGenerationRunning = localGenerating || otherTabGenerating;
