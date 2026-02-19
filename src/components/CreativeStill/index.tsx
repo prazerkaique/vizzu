@@ -614,6 +614,7 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
             generationId: activeCSGenIdRef.current || currentGeneration?.id,
             table: 'creative_still_generations',
             progress: generationProgress,
+            variationsCount: lastGenerateParams?.variationsCount || 1,
           });
           setIsGenerating(false);
           showToast('Geração em andamento. Quando terminar, ela aparecerá na Galeria.', 'info');

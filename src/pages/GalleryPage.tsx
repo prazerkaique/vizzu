@@ -162,7 +162,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
         });
       } else if (gen.feature === 'creative-still') {
         const urls = gen.variationUrls || [];
-        const count = Math.max(urls.length, 4);
+        const count = Math.max(urls.length, gen.variationsCount || 1);
         for (let i = 0; i < count; i++) {
           items.push({
             id: `bg-${gen.id}-v${i}`,

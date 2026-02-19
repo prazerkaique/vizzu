@@ -40,6 +40,7 @@ export interface BackgroundGeneration {
   angleStatuses?: Array<{ angle: string; url?: string; status: 'pending' | 'completed' | 'failed' }>;
   completedImageUrl?: string;   // LC/Provador: URL da imagem quando pronta
   variationUrls?: string[];     // CS: URLs das variações conforme completam
+  variationsCount?: number;     // CS: quantas variações foram solicitadas
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -227,8 +228,8 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
      startTime: Date.now(),
    };
    setBackgroundGenerations(prev => {
-     // Remover entries antigas da mesma feature (evita duplicatas)
-     const withoutOld = prev.filter(g => g.feature !== gen.feature);
+     // Remover entry duplicada do mesmo produto+feature (evita duplicatas)
+     const withoutOld = prev.filter(g => !(g.feature === gen.feature && g.productId === gen.productId));
      if (withoutOld.filter(g => g.status === 'processing').length >= MAX_CONCURRENT) {
        console.warn('[BgGen] Limite de gerações simultâneas atingido');
        return prev;
