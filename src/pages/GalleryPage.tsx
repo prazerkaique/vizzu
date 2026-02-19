@@ -353,11 +353,19 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
   }, [bulkDeleteTarget, deleteTarget, allItems, selectedIds, deletedIds, getIdsToMark, deleteFromDB, refreshProducts, cancelSelection]);
 
   // ── Download helpers ──
-  const makeDownloadImage = (item: GalleryItem): DownloadableImage => ({
-    url: item.imageUrl,
-    label: item.productName || item.clientName || FEATURE_CONFIG[item.featureType].label,
-    featurePrefix: item.featureType,
-  });
+  const ANGLE_LABEL_MAP: Record<string, string> = {
+    'front': 'Frente', 'back': 'Costas', 'side-left': 'Lateral Esq.', 'side-right': 'Lateral Dir.',
+    '45-left': '45° Esq.', '45-right': '45° Dir.', 'top': 'Topo', 'detail': 'Detalhe',
+    'front_detail': 'Detalhe Frente', 'back_detail': 'Detalhe Costas', 'folded': 'Dobrada',
+  };
+
+  const makeDownloadImage = (item: GalleryItem): DownloadableImage => {
+    const baseName = item.productName || item.clientName || FEATURE_CONFIG[item.featureType].label;
+    const angle = item.metadata?.angle || item.metadata?.view;
+    const angleLabel = angle ? ANGLE_LABEL_MAP[angle] || angle : '';
+    const label = angleLabel ? `${baseName} - ${angleLabel}` : baseName;
+    return { url: item.imageUrl, label, featurePrefix: item.featureType };
+  };
 
   const selectedItems = useMemo(() =>
     allItems.filter(i => selectedIds.has(i.id)),

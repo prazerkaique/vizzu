@@ -508,12 +508,14 @@ export const LookComposer: React.FC<LookComposerProps> = ({
  const [downloadAllGroups, setDownloadAllGroups] = useState<{ groups: DownloadImageGroup[]; productName: string } | null>(null);
 
  const handleDownloadAllLooks = useCallback((pwl: ProductWithLooks) => {
+   const multiLook = pwl.allLooks.length > 1;
    const groups: DownloadImageGroup[] = pwl.allLooks.map((look, i) => {
+     const prefix = multiLook ? `Look ${i + 1} - ` : '';
      const imgs: DownloadableImage[] = [
-       { url: look.imageUrl, label: 'Frente', featurePrefix: 'VLookComposer' },
+       { url: look.imageUrl, label: `${prefix}Frente`, featurePrefix: 'VLookComposer' },
      ];
      if (look.backImageUrl) {
-       imgs.push({ url: look.backImageUrl, label: 'Costas', featurePrefix: 'VLookComposer' });
+       imgs.push({ url: look.backImageUrl, label: `${prefix}Costas`, featurePrefix: 'VLookComposer' });
      }
      const date = new Date(look.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
      return { label: `Look ${i + 1} (${date})`, featurePrefix: 'VLookComposer', images: imgs };

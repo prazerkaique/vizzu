@@ -83,11 +83,14 @@ export async function generateZipDownload(
   // Download com concorrência limitada a 3
   report('downloading');
 
+  // Rastrear nomes usados para evitar colisão (JSZip sobrescreve duplicatas silenciosamente)
+  const usedPaths = new Set<string>();
+
   await pooledMap(downloads, 3, async ({ entry, preset }) => {
     if (signal?.aborted) return;
 
     const downloadUrl = getDownloadUrl(entry.url, preset);
-    const filename = buildFilename(
+    let filename = buildFilename(
       entry.productName,
       entry.featurePrefix,
       entry.imageLabel,
@@ -98,12 +101,25 @@ export async function generateZipDownload(
     const presetFolder = preset.id === 'original' ? 'Original' : preset.label.split(' \u00b7 ')[0];
     const folderPath = `${entry.featurePrefix}/${presetFolder}`;
 
+    // Deduplicar: se já existe arquivo com mesmo caminho, adicionar sufixo numérico
+    let fullPath = `${folderPath}/${filename}`;
+    if (usedPaths.has(fullPath)) {
+      const dotIdx = filename.lastIndexOf('.');
+      const base = dotIdx > 0 ? filename.slice(0, dotIdx) : filename;
+      const ext = dotIdx > 0 ? filename.slice(dotIdx) : '';
+      let counter = 2;
+      while (usedPaths.has(`${folderPath}/${base} (${counter})${ext}`)) counter++;
+      filename = `${base} (${counter})${ext}`;
+      fullPath = `${folderPath}/${filename}`;
+    }
+    usedPaths.add(fullPath);
+
     try {
       const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       let blob = await response.blob();
       if (transformBlob) blob = await transformBlob(blob);
-      zip.file(`${folderPath}/${filename}`, blob);
+      zip.file(fullPath, blob);
     } catch (err) {
       console.warn(`[ZIP] Falha ao baixar ${downloadUrl}:`, err);
       // Pula imagens que falharam — não trava o ZIP inteiro

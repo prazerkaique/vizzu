@@ -325,17 +325,18 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     );
     if (csImgs.length) groups.push({ label: 'Vizzu Still Criativo®', featurePrefix: 'VCreativeStill', images: csImgs });
 
-    const lcImgs: DownloadableImage[] = lcLooks.flatMap(look => {
-      const imgs: DownloadableImage[] = [{ url: look.images.front, label: 'Frente', featurePrefix: 'VLookComposer' }];
-      if (look.images.back) imgs.push({ url: look.images.back, label: 'Costas', featurePrefix: 'VLookComposer' });
+    const lcImgs: DownloadableImage[] = lcLooks.flatMap((look, li) => {
+      const prefix = lcLooks.length > 1 ? `Look ${li + 1} - ` : '';
+      const imgs: DownloadableImage[] = [{ url: look.images.front, label: `${prefix}Frente`, featurePrefix: 'VLookComposer' }];
+      if (look.images.back) imgs.push({ url: look.images.back, label: `${prefix}Costas`, featurePrefix: 'VLookComposer' });
       return imgs;
     });
     if (lcImgs.length) groups.push({ label: 'Vizzu Look Composer®', featurePrefix: 'VLookComposer', images: lcImgs });
 
-    const srImgs: DownloadableImage[] = srImages.map(img => ({ url: img.images.front, label: 'Studio Ready', featurePrefix: 'VStudioReady' }));
+    const srImgs: DownloadableImage[] = srImages.map((img, i) => ({ url: img.images.front, label: srImages.length > 1 ? `Studio Ready ${i + 1}` : 'Studio Ready', featurePrefix: 'VStudioReady' }));
     if (srImgs.length) groups.push({ label: 'Vizzu Studio Ready®', featurePrefix: 'VStudioReady', images: srImgs });
 
-    const ccImgs: DownloadableImage[] = ccImages.map(img => ({ url: img.images.front, label: 'Cenário', featurePrefix: 'VCenario' }));
+    const ccImgs: DownloadableImage[] = ccImages.map((img, i) => ({ url: img.images.front, label: ccImages.length > 1 ? `Cenário ${i + 1}` : 'Cenário', featurePrefix: 'VCenario' }));
     if (ccImgs.length) groups.push({ label: 'Vizzu Cenário Criativo®', featurePrefix: 'VCenario', images: ccImgs });
 
     return groups;
