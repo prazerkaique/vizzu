@@ -39,6 +39,7 @@ import { useProducts } from './contexts/ProductsContext';
 import { useClients } from './contexts/ClientsContext';
 import { useCredits } from './hooks/useCredits';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
+import { useRemoteGenerationSync } from './hooks/useRemoteGenerationSync';
 import { useTermsAcceptance } from './hooks/useTermsAcceptance';
 import { usePlans } from './contexts/PlansContext';
 import { useGeneration } from './contexts/GenerationContext';
@@ -192,6 +193,18 @@ function App() {
    localStorage.setItem('vizzu-debug-slow-cleaned', '1');
  }
  }, []);
+
+ // Listener: quando N8N usa fallback (fal.ai), avisar o usuário
+ useEffect(() => {
+   const handler = () => {
+     showToast(
+       'Nossos servidores de IA estão com alta demanda. As gerações podem demorar mais do que o esperado.',
+       'info'
+     );
+   };
+   window.addEventListener('vizzu:fallback-provider', handler);
+   return () => window.removeEventListener('vizzu:fallback-provider', handler);
+ }, [showToast]);
 
  // Master: alterar créditos direto no Supabase
  const handleMasterSetCredits = async (credits: number) => {
@@ -350,6 +363,9 @@ function App() {
    refreshModels,
    refreshShopify: () => {},
  });
+
+ // Sincronização cross-device: hidrata gerações ativas do Supabase + Realtime INSERT
+ useRemoteGenerationSync();
 
  // Load user data when user changes (triggered by AuthContext)
  const prevUserIdRef = useRef<string | null>(null);

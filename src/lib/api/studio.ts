@@ -8,6 +8,45 @@ import { supabase } from '../../services/supabaseClient';
 
 const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
 
+// Timeout de 7 minutos para chamadas de geração (fallback 3 camadas pode demorar)
+const GENERATION_TIMEOUT_MS = 420000;
+
+/**
+ * Fetch com timeout de 7 min para chamadas de geração.
+ * Drop-in replacement para fetch() — adiciona AbortController automaticamente.
+ */
+async function generationFetch(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), GENERATION_TIMEOUT_MS);
+  try {
+    const resp = await fetch(url, { ...init, signal: controller.signal });
+    clearTimeout(timeoutId);
+    // Detectar fallback provider (não-bloqueante, via clone)
+    try {
+      resp.clone().json().then(d => notifyFallbackIfNeeded(d)).catch(() => {});
+    } catch { /* ignore */ }
+    return resp;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+}
+
+/**
+ * Detecta se a IA usou fallback (fal.ai) e notifica o frontend via CustomEvent.
+ * Componentes escutam 'vizzu:fallback-provider' para mostrar toast.
+ */
+function notifyFallbackIfNeeded(data: unknown) {
+  try {
+    const d = data as Record<string, unknown>;
+    const provider = d?.aiProvider as string
+      || (d?.model_config as Record<string, unknown>)?.aiProvider as string;
+    if (provider && provider !== 'gemini-oficial') {
+      window.dispatchEvent(new CustomEvent('vizzu:fallback-provider', { detail: { provider } }));
+    }
+  } catch { /* ignore */ }
+}
+
 /**
  * Traduz erros técnicos da API para mensagens amigáveis ao usuário
  */
@@ -87,7 +126,7 @@ interface StudioReadyResponse {
  * Custo: 1 crédito
  */
 export async function generateStudioReady(params: StudioReadyParams): Promise<StudioReadyResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/studio-ready`, {
+  const response = await generationFetch(`${N8N_BASE_URL}/vizzu/studio-ready`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -220,7 +259,7 @@ export interface StudioPollResult {
 export async function generateProductStudioV2(params: ProductStudioV2Params): Promise<ProductStudioV2Response> {
   let response: Response;
   try {
-    response = await fetch(`${N8N_BASE_URL}/vizzu/studio/generate`, {
+    response = await generationFetch(`${N8N_BASE_URL}/vizzu/studio/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -399,7 +438,7 @@ interface RetryStudioAngleResponse {
  */
 export async function retryStudioAngle(params: RetryStudioAngleParams): Promise<RetryStudioAngleResponse> {
   try {
-    const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/angle`, {
+    const response = await generationFetch(`${N8N_BASE_URL}/vizzu/studio/angle`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -469,7 +508,7 @@ interface CenarioParams {
  * Custo: 2 créditos
  */
 export async function generateCenario(params: CenarioParams): Promise<StudioReadyResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/cenario-criativo`, {
+  const response = await generationFetch(`${N8N_BASE_URL}/vizzu/cenario-criativo`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -599,7 +638,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
 
   const fullUrl = `${N8N_BASE_URL}/vizzu/modelo-ia-v2`;
 
-  const response = await fetch(fullUrl, {
+  const response = await generationFetch(fullUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -814,7 +853,7 @@ interface RefineParams {
  * Custo: 1 crédito
  */
 export async function refineImage(params: RefineParams): Promise<StudioReadyResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/refine`, {
+  const response = await generationFetch(`${N8N_BASE_URL}/vizzu/refine`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -994,13 +1033,9 @@ interface ProvadorResponse {
  */
 export async function generateProvador(params: ProvadorParams): Promise<ProvadorResponse> {
   let response: Response;
-  // Timeout de 5 minutos — fallback 3 camadas pode demorar
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 300000);
   try {
-    response = await fetch(`${N8N_BASE_URL}/vizzu/provador`, {
+    response = await generationFetch(`${N8N_BASE_URL}/vizzu/provador`, {
       method: 'POST',
-      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -1016,12 +1051,10 @@ export async function generateProvador(params: ProvadorParams): Promise<Provador
       }),
     });
   } catch (fetchError) {
-    clearTimeout(timeoutId);
     // Erro de rede (Failed to fetch, timeout, etc.) — workflow pode estar rodando
     console.warn('[Provador] Erro de rede — workflow pode estar rodando no servidor:', fetchError);
     throw new Error(humanizeApiError('timeout'));
   }
-  clearTimeout(timeoutId);
 
   // 502/504 = webhook timeout, mas o workflow CONTINUA rodando no N8N
   if (response.status === 502 || response.status === 504) {
@@ -1091,7 +1124,7 @@ interface GenerateModelImagesResponse {
  */
 export async function generateModelImages(params: GenerateModelImagesParams): Promise<GenerateModelImagesResponse> {
   try {
-    const response = await fetch(`${N8N_BASE_URL}/vizzu/generate-model-images`, {
+    const response = await generationFetch(`${N8N_BASE_URL}/vizzu/generate-model-images`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1270,7 +1303,7 @@ interface EditStudioImageResponse {
  */
 export async function editStudioImage(params: EditStudioImageParams): Promise<EditStudioImageResponse> {
   try {
-    const response = await fetch(`${N8N_BASE_URL}/vizzu/studio/edit`, {
+    const response = await generationFetch(`${N8N_BASE_URL}/vizzu/studio/edit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
