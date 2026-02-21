@@ -8,6 +8,26 @@ import { supabase } from '../../services/supabaseClient';
 
 const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
 
+/**
+ * Traduz erros técnicos da API para mensagens amigáveis ao usuário
+ */
+function humanizeApiError(raw: string): string {
+  const lower = raw.toLowerCase();
+  if (lower.includes('503') || lower.includes('unavailable') || lower.includes('high demand') || lower.includes('overloaded')) {
+    return 'Nossos servidores de IA estão com alta demanda no momento. Por favor, tente novamente em alguns minutos. Pedimos desculpas pelo inconveniente!';
+  }
+  if (lower.includes('429') || lower.includes('rate limit') || lower.includes('quota')) {
+    return 'Limite de requisições atingido. Aguarde alguns instantes e tente novamente.';
+  }
+  if (lower.includes('safety') || lower.includes('blocked') || lower.includes('harm')) {
+    return 'A IA não conseguiu gerar esta imagem por restrições de segurança. Tente ajustar o prompt.';
+  }
+  if (lower.includes('timeout') || lower.includes('deadline')) {
+    return 'O servidor demorou demais para responder. Tente novamente.';
+  }
+  return raw;
+}
+
 // Configurações de polling para geração assíncrona
 const POLLING_INTERVAL_MS = 3000; // 3 segundos entre cada verificação
 const POLLING_TIMEOUT_MS = 720000; // 12 minutos de timeout máximo
@@ -95,7 +115,7 @@ export async function generateStudioReady(params: StudioReadyParams): Promise<St
   }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar imagem');
+    throw new Error(humanizeApiError(data.message || 'Erro ao gerar imagem'));
   }
 
   return data;
@@ -260,7 +280,7 @@ export async function generateProductStudioV2(params: ProductStudioV2Params): Pr
   }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar imagens');
+    throw new Error(humanizeApiError(data.message || 'Erro ao gerar imagens'));
   }
 
   return data;
@@ -419,12 +439,17 @@ export async function retryStudioAngle(params: RetryStudioAngleParams): Promise<
     }
 
     if (!response.ok) {
-      return { success: false, error: data.message || 'Erro ao regenerar ângulo.' };
+      return { success: false, error: humanizeApiError(data.message || 'Erro ao regenerar ângulo.') };
+    }
+
+    // N8N retorna 200 mesmo para erros — humanizar se falhou
+    if (data && !data.success && data.error) {
+      return { ...data, error: humanizeApiError(data.error) };
     }
 
     return data;
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+    return { success: false, error: humanizeApiError(err instanceof Error ? err.message : 'Erro de rede.') };
   }
 }
 
@@ -473,7 +498,7 @@ export async function generateCenario(params: CenarioParams): Promise<StudioRead
   }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar cenário');
+    throw new Error(humanizeApiError(data.message || 'Erro ao gerar cenário'));
   }
 
   return data;
@@ -525,7 +550,7 @@ interface ModeloIAParams {
   solidColor?: string;               // Cor sólida (hex) para fundo
   sceneHint?: string;                // Dica de cena para melhorar o prompt (ex: "model standing on grass")
   // Enquadramento (framing) - como a câmera enquadra o modelo
-  framing?: 'full-body' | 'upper-half' | 'lower-half' | 'face' | 'feet';
+  framing?: 'full-body' | 'upper-half' | 'lower-half' | 'face' | 'feet' | 'product-focus';
   // Parâmetros de ângulos (frente/costas)
   viewsMode?: 'front' | 'front-back';
   backImageId?: string;              // ID da imagem de costas do produto principal
@@ -640,7 +665,7 @@ export async function generateModeloIA(params: ModeloIAParams): Promise<StudioRe
   }
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar modelo');
+    throw new Error(humanizeApiError(data.message || 'Erro ao gerar modelo'));
   }
 
   // Se a resposta indica processamento assíncrono, fazer polling
@@ -806,7 +831,7 @@ export async function refineImage(params: RefineParams): Promise<StudioReadyResp
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao refinar imagem');
+    throw new Error(humanizeApiError(data.message || 'Erro ao refinar imagem'));
   }
 
   return data;
@@ -845,7 +870,7 @@ export async function deleteGeneration(params: DeleteGenerationParams): Promise<
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao deletar geração');
+    throw new Error(humanizeApiError(data.message || 'Erro ao deletar geração'));
   }
 
   return data;
@@ -911,7 +936,7 @@ export async function generateCaption(params: GenerateCaptionParams): Promise<Ge
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar legenda');
+    throw new Error(humanizeApiError(data.message || 'Erro ao gerar legenda'));
   }
 
   return data;
@@ -968,27 +993,40 @@ interface ProvadorResponse {
  * Custo: 3 créditos
  */
 export async function generateProvador(params: ProvadorParams): Promise<ProvadorResponse> {
-  const response = await fetch(`${N8N_BASE_URL}/vizzu/provador`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      userId: params.userId,
-      clientId: params.clientId,
-      clientName: params.clientName,
-      clientPhoto: params.clientPhoto,
-      lookComposition: params.lookComposition,
-      notes: params.notes || '',
-      // Resolução da imagem (2k ou 4k)
-      resolution: params.resolution || '2k',
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${N8N_BASE_URL}/vizzu/provador`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: params.userId,
+        clientId: params.clientId,
+        clientName: params.clientName,
+        clientPhoto: params.clientPhoto,
+        lookComposition: params.lookComposition,
+        notes: params.notes || '',
+        // Resolução da imagem (2k ou 4k)
+        resolution: params.resolution || '2k',
+      }),
+    });
+  } catch (fetchError) {
+    // Erro de rede (Failed to fetch, timeout, etc.) — workflow pode estar rodando
+    console.warn('[Provador] Erro de rede — workflow pode estar rodando no servidor:', fetchError);
+    throw new Error(humanizeApiError('timeout'));
+  }
+
+  // 502/504 = webhook timeout, mas o workflow CONTINUA rodando no N8N
+  if (response.status === 502 || response.status === 504) {
+    console.warn(`[Provador] Timeout do webhook (${response.status}) — workflow continua no servidor`);
+    throw new Error('O servidor está processando sua imagem. Aguarde alguns instantes e tente novamente.');
+  }
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Erro ao gerar provador');
+    throw new Error(humanizeApiError(data.message || 'Erro ao gerar provador'));
   }
 
   return data;
@@ -1067,10 +1105,13 @@ export async function generateModelImages(params: GenerateModelImagesParams): Pr
       return { success: false, _serverTimeout: true } as any;
     }
 
-    const data = await response.json();
+    const rawData = await response.json();
+    // N8N respondToWebhook v1 com respondWith:"json" pode double-encode (retorna string ao invés de objeto)
+    const data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+    console.log('[Models API] status:', response.status, '| success:', data?.success, '| hasImages:', !!(data?.model?.images));
 
     if (!response.ok) {
-      throw new Error(data.message || 'Erro ao gerar imagens do modelo');
+      throw new Error(humanizeApiError(data.message || 'Erro ao gerar imagens do modelo'));
     }
 
     return data;
@@ -1171,7 +1212,7 @@ export async function analyzeProductImage(params: AnalyzeProductImageParams): Pr
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Erro ao analisar imagem');
+      throw new Error(humanizeApiError(data.message || 'Erro ao analisar imagem'));
     }
 
     return data;
@@ -1265,12 +1306,17 @@ export async function editStudioImage(params: EditStudioImageParams): Promise<Ed
     }
 
     if (!response.ok) {
-      return { success: false, error: data.message || 'Erro ao editar imagem.' };
+      return { success: false, error: humanizeApiError(data.message || 'Erro ao editar imagem.') };
+    }
+
+    // N8N retorna 200 mesmo para erros — humanizar se falhou
+    if (data && !data.success && data.error) {
+      return { ...data, error: humanizeApiError(data.error) };
     }
 
     return data;
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+    return { success: false, error: humanizeApiError(err instanceof Error ? err.message : 'Erro de rede.') };
   }
 }
 
@@ -1462,12 +1508,17 @@ export async function analyzeProductAngles(params: AnalyzeProductAnglesParams): 
     }
 
     if (!response.ok) {
-      return { success: false, error: data.message || 'Erro ao analisar produto.' };
+      return { success: false, error: humanizeApiError(data.message || 'Erro ao analisar produto.') };
+    }
+
+    // N8N retorna 200 mesmo para erros — humanizar se falhou
+    if (data && !data.success && data.error) {
+      return { ...data, error: humanizeApiError(data.error) };
     }
 
     return data;
   } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Erro de rede.' };
+    return { success: false, error: humanizeApiError(err instanceof Error ? err.message : 'Erro de rede.') };
   }
 }
 
@@ -1489,7 +1540,7 @@ export async function sendWhatsAppMessage(params: SendWhatsAppParams): Promise<S
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.error || 'Erro ao enviar WhatsApp');
+      throw new Error(humanizeApiError(data.message || data.error || 'Erro ao enviar WhatsApp'));
     }
 
     return data;
