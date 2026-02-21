@@ -278,16 +278,34 @@ export function useGalleryData(refreshKey?: number) {
     return { total: allItems.length, byFeature };
   }, [allItems]);
 
-  // Agrupamento por produto + feature
+  // Agrupamento por sessão/geração (cada batch de ângulos ou geração é um grupo separado)
   const groupedItems = useMemo<GalleryGroup[]>(() => {
     const map = new Map<string, GalleryGroup>();
 
     for (const item of allItems) {
-      const key = item.productId
-        ? `${item.productId}::${item.featureType}`
-        : item.clientName
-          ? `client::${item.clientName}::${item.featureType}`
-          : `solo::${item.id}`;
+      // Agrupar por sessão/geração individual — NÃO misturar gerações diferentes do mesmo produto
+      let key: string;
+      if (item.featureType === 'product-studio' && item.metadata?.sessionId) {
+        // PS: cada sessão de ângulos é um grupo
+        key = `ps-session::${item.metadata.sessionId}`;
+      } else if (item.featureType === 'product-studio' && item.metadata?.generationId) {
+        // Studio Ready (mesclado em PS): cada geração é um grupo
+        key = `sr-gen::${item.metadata.generationId}`;
+      } else if (item.featureType === 'creative-still' && item.metadata?.generationId) {
+        // CS + Cenário Criativo: cada geração é um grupo
+        key = `cs-gen::${item.metadata.generationId}`;
+      } else if (item.featureType === 'look-composer' && item.metadata?.generationId) {
+        // LC: cada geração (frente + costas) é um grupo
+        key = `lc-gen::${item.metadata.generationId}`;
+      } else if (item.clientName) {
+        // Provador: agrupar por cliente
+        key = `client::${item.clientName}::${item.featureType}`;
+      } else if (item.productId) {
+        // Fallback: itens antigos sem metadata de sessão — agrupar por produto
+        key = `${item.productId}::${item.featureType}`;
+      } else {
+        key = `solo::${item.id}`;
+      }
 
       const existing = map.get(key);
       if (existing) {

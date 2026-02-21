@@ -163,25 +163,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  // Faturas Stripe
  const [invoices, setInvoices] = useState<StripeInvoice[]>([]);
  const [invoicesLoading, setInvoicesLoading] = useState(false);
+ const [invoicesError, setInvoicesError] = useState<string | null>(null);
+
+ const isPaidPlan = subscription && subscription.plan_id !== 'free';
 
  const loadInvoices = useCallback(async () => {
-   if (!user?.id || !subscription?.stripe_customer_id) return;
+   if (!user?.id) return;
    setInvoicesLoading(true);
+   setInvoicesError(null);
    try {
-     const data = await getInvoices(subscription!.stripe_customer_id!);
+     const data = await getInvoices(user.id);
      setInvoices(data);
-   } catch {
-     // Silencioso — seção simplesmente não mostra faturas
+   } catch (err: any) {
+     setInvoicesError(err?.message || String(err));
    } finally {
      setInvoicesLoading(false);
    }
- }, [user?.id, subscription?.stripe_customer_id]);
+ }, [user?.id]);
 
  useEffect(() => {
-   if (settingsTab === 'plan' && subscription?.stripe_customer_id) {
+   if (settingsTab === 'plan' && isPaidPlan) {
      loadInvoices();
    }
- }, [settingsTab, subscription?.stripe_customer_id, loadInvoices]);
+ }, [settingsTab, isPaidPlan, loadInvoices]);
 
  // P11: Paginação do histórico
  const [historyVisible, setHistoryVisible] = useState(HISTORY_PAGE_SIZE);
@@ -857,7 +861,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Histórico de Cobranças (Stripe Invoices) */}
- {subscription?.stripe_customer_id && (
+ {isPaidPlan && (
  <div className={(theme !== 'light' ? 'bg-neutral-900/80 backdrop-blur-xl border-neutral-800' : 'bg-white border-gray-200 shadow-sm') + ' border rounded-2xl p-5 mb-6'}>
  <div className="flex items-center gap-3 mb-4">
  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (theme !== 'light' ? 'bg-neutral-800 border border-neutral-700' : 'bg-gray-50 border border-gray-200')}>
@@ -875,6 +879,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
    <div key={i} className={(theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100') + ' rounded-xl h-14 animate-pulse'} />
  ))}
  </div>
+ ) : invoicesError ? (
+ <p className="text-red-400 text-xs text-center py-6">
+ Erro: {invoicesError}
+ </p>
  ) : invoices.length === 0 ? (
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs text-center py-6'}>
  Nenhuma fatura encontrada

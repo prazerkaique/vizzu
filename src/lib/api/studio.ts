@@ -8,11 +8,11 @@ import { supabase } from '../../services/supabaseClient';
 
 const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
 
-// Timeout de 7 minutos para chamadas de geração (fallback 3 camadas pode demorar)
-const GENERATION_TIMEOUT_MS = 420000;
+// Timeout de 10 minutos para chamadas de geração (fallback 3 camadas pode demorar)
+const GENERATION_TIMEOUT_MS = 600000;
 
 /**
- * Fetch com timeout de 7 min para chamadas de geração.
+ * Fetch com timeout de 10 min para chamadas de geração.
  * Drop-in replacement para fetch() — adiciona AbortController automaticamente.
  */
 async function generationFetch(url: string, init?: RequestInit): Promise<Response> {

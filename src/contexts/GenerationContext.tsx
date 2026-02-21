@@ -34,6 +34,7 @@ export interface BackgroundGeneration {
   progress: number;
   status: 'processing' | 'completed' | 'failed';
   startTime: number;
+  lastActivityAt?: number; // Última vez que houve progresso real (novo ângulo, variação, etc.)
   angles?: string[];
   completedAngles?: number;
   // Per-item URLs (preenchidos pelo polling conforme completam)
@@ -65,6 +66,7 @@ const BG_STORAGE_KEY = 'vizzu-background-generations';
 const MAX_CONCURRENT = 5;
 const POLL_INTERVAL_MS = 5000;
 const HARD_TIMEOUT_MS = 30 * 60 * 1000; // 30 min
+const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 min sem progresso → considerar travada
 const GENERATION_CHANNEL = 'vizzu-generation-sync';
 
 // ═══════════════════════════════════════════════════════════════
@@ -168,7 +170,7 @@ interface GenerationContextType {
 
  // Background Generations (Queue System)
  backgroundGenerations: BackgroundGeneration[];
- addBackgroundGeneration: (gen: Omit<BackgroundGeneration, 'id' | 'startTime' | 'status'>) => string;
+ addBackgroundGeneration: (gen: Omit<BackgroundGeneration, 'id' | 'startTime' | 'status'> & { startTime?: number }, opts?: { skipIfDuplicate?: boolean }) => string | null;
  removeBackgroundGeneration: (id: string) => void;
  updateBackgroundGeneration: (id: string, updates: Partial<BackgroundGeneration>) => void;
  clearCompletedBackgroundGenerations: () => void;
@@ -220,26 +222,43 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
  const bgRef = useRef<BackgroundGeneration[]>([]);
  bgRef.current = backgroundGenerations;
 
- const addBackgroundGeneration = useCallback((gen: Omit<BackgroundGeneration, 'id' | 'startTime' | 'status'>): string => {
+ const addBackgroundGeneration = useCallback((
+   gen: Omit<BackgroundGeneration, 'id' | 'startTime' | 'status'> & { startTime?: number },
+   opts?: { skipIfDuplicate?: boolean },
+ ): string | null => {
    const id = crypto.randomUUID();
+   const now = Date.now();
    const newGen: BackgroundGeneration = {
      ...gen,
      id,
      status: 'processing',
-     startTime: Date.now(),
+     startTime: gen.startTime ?? now,
+     lastActivityAt: now,
    };
+   let added = true;
    setBackgroundGenerations(prev => {
+     // skipIfDuplicate: se já existe entry ativa para este generationId ou feature+productId, não substituir
+     if (opts?.skipIfDuplicate) {
+       const hasExisting = prev.some(g =>
+         g.status === 'processing' && (
+           (gen.generationId && g.generationId === gen.generationId) ||
+           (g.feature === gen.feature && g.productId === gen.productId)
+         )
+       );
+       if (hasExisting) { added = false; return prev; }
+     }
      // Remover entry duplicada do mesmo produto+feature (evita duplicatas)
      const withoutOld = prev.filter(g => !(g.feature === gen.feature && g.productId === gen.productId));
      if (withoutOld.filter(g => g.status === 'processing').length >= MAX_CONCURRENT) {
        console.warn('[BgGen] Limite de gerações simultâneas atingido');
+       added = false;
        return prev;
      }
      const next = [...withoutOld, newGen];
      persistBgGenerations(next);
      return next;
    });
-   return id;
+   return added ? id : null;
  }, []);
 
  const removeBackgroundGeneration = useCallback((id: string) => {
@@ -301,6 +320,21 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
          continue;
        }
 
+       // Inactivity timeout: se nenhum progresso real há 5+ min e geração tem 10+ min
+       const activityRef = gen.lastActivityAt || gen.startTime;
+       if (Date.now() - activityRef > INACTIVITY_TIMEOUT_MS && Date.now() - gen.startTime > 10 * 60 * 1000) {
+         const hasPartialResults = (gen.completedAngles && gen.completedAngles > 0) ||
+           (gen.completedImageUrl) || (gen.variationUrls && gen.variationUrls.length > 0);
+         console.warn('[BgGen] Inatividade detectada para', gen.productName,
+           '— último progresso há', Math.round((Date.now() - activityRef) / 60000), 'min',
+           hasPartialResults ? '(parcial)' : '(sem resultados)');
+         updateBackgroundGeneration(gen.id, {
+           status: hasPartialResults ? 'completed' : 'failed',
+           progress: hasPartialResults ? 100 : 0,
+         });
+         continue;
+       }
+
        // Sem generationId → self-healing: buscar no Supabase
        if (!gen.generationId) {
          const uid = gen.userId || sessionUserId;
@@ -339,10 +373,13 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
              : psStatus === 'failed' ? 0
              : totalAngles > 0 ? Math.round((completedCount / totalAngles) * 90) + 5
              : simulateProgress(gen.startTime);
+           // Detectar progresso real: novo ângulo completou
+           const hadProgress = completedCount > (gen.completedAngles || 0);
            updateBackgroundGeneration(gen.id, {
              status: psStatus as BackgroundGeneration['status'],
              progress: psProgress,
              completedAngles: completedCount,
+             ...(hadProgress || psStatus !== 'processing' ? { lastActivityAt: Date.now() } : {}),
              angleStatuses: psResult.completedAngles.map(a => ({
                angle: a.angle,
                url: a.url,
@@ -351,6 +388,9 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
            });
          } else if (gen.feature === 'creative-still') {
            const csResult = await pollCreativeStillGeneration(gen.generationId);
+           const prevUrls = gen.variationUrls?.length || 0;
+           const newUrls = csResult.variationUrls?.length || 0;
+           const hadProgress = newUrls > prevUrls;
            updateBackgroundGeneration(gen.id, {
              status: csResult.status === 'completed' ? 'completed'
                : csResult.status === 'failed' ? 'failed'
@@ -359,6 +399,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
                : csResult.status === 'failed' ? 0
                : simulateProgress(gen.startTime),
              variationUrls: csResult.variationUrls,
+             ...(hadProgress || csResult.status !== 'processing' ? { lastActivityAt: Date.now() } : {}),
            });
          } else if (gen.feature === 'models') {
            const mdResult = await pollModelGeneration(gen.generationId);
@@ -369,10 +410,12 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
              progress: mdResult.status === 'completed' ? 100
                : mdResult.status === 'failed' ? 0
                : simulateProgress(gen.startTime),
+             ...(mdResult.status !== 'processing' ? { lastActivityAt: Date.now() } : {}),
            });
          } else {
            // Look Composer, Provador → tabela generations
            const result = await pollGenerationSimple(gen.generationId);
+           const hadImageProgress = result.imageUrl && !gen.completedImageUrl;
            updateBackgroundGeneration(gen.id, {
              status: result.status === 'completed' ? 'completed'
                : result.status === 'failed' ? 'failed'
@@ -380,6 +423,7 @@ export function GenerationProvider({ children }: { children: React.ReactNode }) 
              progress: result.status === 'completed' ? 100
                : result.status === 'failed' ? 0
                : simulateProgress(gen.startTime),
+             ...(hadImageProgress || result.status !== 'processing' ? { lastActivityAt: Date.now() } : {}),
              completedImageUrl: result.imageUrl,
            });
          }

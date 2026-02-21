@@ -97,6 +97,13 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  }
  }, [expandedSlot]);
 
+ // Produto principal ocupa só 1 slot de roupa (top OU bottom, mas não ambos)?
+ // Ex: Camiseta (top) ou Calça (bottom) — NÃO pode ter vestido/macacão na composição
+ // Ex: Pulseira (nenhum slot) ou Vestido (ambos) — pode ter peças inteiras
+ const mainBlocksTop = lockedSlots.includes('top');
+ const mainBlocksBottom = lockedSlots.includes('bottom');
+ const mainBlocksSingleClothingSlot = (mainBlocksTop || mainBlocksBottom) && !(mainBlocksTop && mainBlocksBottom);
+
  // Filtra produtos por categoria do slot
  const getFilteredProducts = () => {
  let filtered = productsWithImages;
@@ -108,6 +115,12 @@ export const LookComposer: React.FC<Props> = ({ products, composition, onChange,
  const allowed = allowedCategories.map(c => c.toLowerCase());
  filtered = filtered.filter(p => allowed.includes((p.category || '').toLowerCase()));
  }
+ }
+
+ // Se o produto principal ocupa 1 slot de roupa (top OU bottom), bloquear peças inteiras
+ // (vestido na composição conflitaria com a camiseta/calça que já ocupa um dos slots)
+ if (mainBlocksSingleClothingSlot) {
+ filtered = filtered.filter(p => !isFullpieceCategory(p.category || ''));
  }
 
  // Filtrar por busca

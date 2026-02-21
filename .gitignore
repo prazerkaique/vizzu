@@ -1,57 +1,29 @@
-# Dependencies
+# ============================================
+# VIZZU .gitignore
+# ============================================
+
+# ---------- Dependências ----------
 node_modules/
 .pnp
 .pnp.js
 
-# Build outputs
+# ---------- Build ----------
 dist/
 build/
 .vite/
-
-# Environment variables (IMPORTANTE: nunca commitar!)
-.env
-.env.local
-.env.*.local
-.env.development
-.env.production
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Editor directories
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Test coverage
-coverage/
-
-# TypeScript cache
 *.tsbuildinfo
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# ---------- Variáveis de ambiente (NUNCA commitar!) ----------
+.env
+.env.*
+.env.local
+.env.*.local
 
-# Vercel
-.vercel
+# ---------- Credenciais e scripts sensíveis (NUNCA commitar!) ----------
+scripts/
+workflow-generate-model-images*.json
 
-# Debug
-debug.log
-
-# n8n workflows (contém credenciais - NUNCA commitar!)
+# ---------- N8N workflows (contêm credenciais) ----------
 n8n/
 n8n-*.json
 n8n-*.js
@@ -60,12 +32,43 @@ n8n-versao-final/
 **/n8n-*.json
 **/n8n-*.cjs
 
-# Scripts com credenciais (NUNCA commitar!)
-scripts/
-
-# Workflows antigos com credenciais
-workflow-generate-model-images*.json
-
-# Documentação interna (não commitar)
+# ---------- Documentação interna ----------
 OTIMIZACOES_PROXIMOS_PASSOS.md
 MEMORIA_DE_CHAT.md
+BOAS_PRATICAS_PROMPTS_GEMINI.md
+MELHORIAS.md
+PLANO-*.md
+
+# ---------- Screenshots e prints ----------
+/*.png
+
+# ---------- Logs ----------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+debug.log
+
+# ---------- Editor / IDE ----------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Temporários ----------
+tmp/
+temp/
+*.tmp
+
+# ---------- Vercel ----------
+.vercel
+
+# ---------- Testes ----------
+coverage/

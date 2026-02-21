@@ -386,12 +386,12 @@ export interface StripeInvoice {
 /**
  * Busca faturas do Stripe para o usuário
  */
-export async function getInvoices(stripeCustomerId: string): Promise<StripeInvoice[]> {
+export async function getInvoices(userId: string): Promise<StripeInvoice[]> {
   try {
     const response = await fetch(`${N8N_BASE_URL}/vizzu/get-invoices`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stripe_customer_id: stripeCustomerId }),
+      body: JSON.stringify({ user_id: userId }),
     });
 
     const data = await response.json();

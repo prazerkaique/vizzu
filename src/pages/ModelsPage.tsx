@@ -217,6 +217,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  const [modelGenerationProgress, setModelGenerationProgress] = useState(0);
  const [modelGenerationStep, setModelGenerationStep] = useState<'front' | 'back' | 'done'>('front');
  const [modelPreviewImages, setModelPreviewImages] = useState<{ front?: string; back?: string } | null>(null);
+ const [generatedModelId, setGeneratedModelId] = useState<string | null>(null);
  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
  const [draggingPhotoType, setDraggingPhotoType] = useState<'front' | 'back' | 'face' | null>(null);
  const [showPhotoSourcePicker, setShowPhotoSourcePicker] = useState<'front' | 'back' | 'face' | null>(null);
@@ -342,23 +343,33 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  try {
  const { data: model } = await supabase
  .from('saved_models')
- .select('status')
+ .select('status, images')
  .eq('id', data.modelId)
  .single();
  if (model?.status === 'ready') {
  clearInterval(pollInterval);
  localStorage.removeItem('vizzu_pending_model');
  setPendingModelBanner(null);
+ // Carregar imagens do banco para mostrar no wizard (se ainda aberto)
+ const images = typeof model.images === 'string' ? JSON.parse(model.images) : model.images;
+ if (images && (images.front || images.back)) {
+   setModelPreviewImages(images);
+   setGeneratedModelId(data.modelId);
+   setGeneratingModelImages(false);
+   setModelGenerationProgress(100);
+   setModelsProgress(100);
+   setModelGenerationStep('done');
+ }
  await loadSavedModels();
  }
  } catch (e) { /* silencioso */ }
  }, 5000);
- // Limpar após 5 minutos
+ // Limpar após 10 minutos (aumentado para suportar retries lentos)
  const timeout = setTimeout(() => {
  clearInterval(pollInterval);
  localStorage.removeItem('vizzu_pending_model');
  setPendingModelBanner(null);
- }, 300000);
+ }, 600000);
  return () => { clearInterval(pollInterval); clearTimeout(timeout); };
  } catch (e) { localStorage.removeItem('vizzu_pending_model'); }
  }, [user?.id]);
@@ -403,6 +414,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setEditingModel(null);
  setModelPreviewImages(null);
  setGeneratingModelImages(false);
+ setGeneratedModelId(null);
  };
 
  // Processa arquivo de imagem (HEIC→PNG + compressão)
@@ -497,7 +509,53 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setModelsProgress(0);
  setModelGenerationStep('front');
 
- const modelId = 'preview-' + Date.now();
+ // Salvar modelo no banco ANTES de chamar N8N (evita perder imagens se webhook der timeout)
+ let modelId = generatedModelId;
+ try {
+ if (!modelId) {
+   const modelData = {
+     user_id: user.id,
+     name: newModel.name.trim(),
+     model_type: 'ai' as const,
+     gender: newModel.gender,
+     ethnicity: newModel.ethnicity,
+     skin_tone: newModel.skinTone,
+     body_type: newModel.bodyType,
+     age_range: newModel.ageRange,
+     height: newModel.height,
+     hair_color: newModel.hairColor,
+     hair_style: newModel.hairStyle,
+     eye_color: newModel.eyeColor,
+     expression: newModel.expression,
+     bust_size: newModel.gender === 'woman' && newModel.ageRange !== 'child' ? newModel.bustSize : null,
+     waist_type: newModel.ageRange !== 'child' ? newModel.waistType : null,
+     physical_notes: newModel.physicalNotes || null,
+     hair_notes: newModel.hairNotes || null,
+     skin_notes: newModel.skinNotes || null,
+     status: 'generating',
+     images: {},
+   };
+   const { data: savedModel, error: saveError } = await supabase
+     .from('saved_models')
+     .insert(modelData)
+     .select()
+     .single();
+   if (saveError) throw saveError;
+   modelId = savedModel.id;
+   setGeneratedModelId(modelId);
+   await loadSavedModels();
+ } else {
+   // Regeneração: voltar status para 'generating'
+   await supabase.from('saved_models').update({ status: 'generating', images: {} }).eq('id', modelId);
+   await loadSavedModels();
+ }
+ } catch (error) {
+ console.error('Erro ao preparar modelo:', error);
+ showToast('Erro ao preparar modelo. Tente novamente.', 'error');
+ setGeneratingModelImages(false);
+ setIsGeneratingModels(false);
+ return;
+ }
 
  // Salvar no localStorage para sobreviver F5
  localStorage.setItem('vizzu_pending_model', JSON.stringify({
@@ -523,6 +581,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  }, 1000);
 
  try {
+ console.log('[Models] Chamando N8N com modelId:', modelId);
  const result = await generateModelImages({
  modelId,
  userId: user.id,
@@ -549,16 +608,48 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  });
 
  clearInterval(progressInterval);
+ console.log('[Models] Resultado N8N:', JSON.stringify({ success: result?.success, hasModel: !!result?.model, hasImages: !!(result?.model?.images), timeout: !!(result as any)?._serverTimeout }));
 
- // Se timeout do servidor, a geração continua em background
+ // Se timeout do servidor, manter wizard em "gerando" e pollar o banco
  if ((result as any)._serverTimeout) {
- console.warn('[Models] Server timeout — geração continua no servidor');
- showToast('A geração está demorando mais que o esperado. Ela continua rodando e aparecerá quando pronta.', 'info');
- // NÃO remover localStorage pending — App.tsx detecta conclusão
- setModelGenerationStep('done');
- setModelGenerationProgress(95);
- setModelsProgress(95);
- return;
+ console.warn('[Models] Server timeout — iniciando polling para modelId:', modelId);
+ showToast('A geração está demorando mais que o esperado. Aguarde, ela continua rodando.', 'info');
+ // NÃO setar generatingModelImages=false — manter wizard mostrando progress
+ const pollId = setInterval(async () => {
+   try {
+     const { data: m } = await supabase.from('saved_models').select('status, images').eq('id', modelId).single();
+     if (m?.status === 'ready') {
+       clearInterval(pollId);
+       localStorage.removeItem('vizzu_pending_model');
+       const imgs = typeof m.images === 'string' ? JSON.parse(m.images) : m.images;
+       if (imgs && (imgs.front || imgs.back)) {
+         setModelPreviewImages(imgs);
+       }
+       setModelGenerationProgress(100);
+       setModelsProgress(100);
+       setModelGenerationStep('done');
+       setGeneratingModelImages(false);
+       setIsGeneratingModels(false);
+       await loadSavedModels();
+     } else if (m?.status === 'error') {
+       clearInterval(pollId);
+       localStorage.removeItem('vizzu_pending_model');
+       setGeneratingModelImages(false);
+       setIsGeneratingModels(false);
+       showToast('Erro ao gerar modelo. Tente novamente.', 'error');
+       await loadSavedModels();
+     }
+   } catch (e) { /* silencioso */ }
+ }, 5000);
+ // Safety timeout: 10 min
+ setTimeout(() => {
+   clearInterval(pollId);
+   localStorage.removeItem('vizzu_pending_model');
+   setGeneratingModelImages(false);
+   setIsGeneratingModels(false);
+   loadSavedModels();
+ }, 600000);
+ return; // NÃO executa finally
  }
 
  setModelGenerationProgress(100);
@@ -568,6 +659,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  if (result.success && result.model?.images) {
  setModelPreviewImages(result.model.images);
+ setGeneratingModelImages(false);
+ setIsGeneratingModels(false);
  } else {
  throw new Error(result.error || 'Erro ao gerar preview');
  }
@@ -576,7 +669,11 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  localStorage.removeItem('vizzu_pending_model');
  console.error('Erro ao gerar preview:', error);
  showToast('Erro ao gerar preview do modelo. Tente novamente.', 'error');
- } finally {
+ // Marcar modelo como erro no banco
+ if (modelId) {
+   await supabase.from('saved_models').update({ status: 'error' }).eq('id', modelId);
+   await loadSavedModels();
+ }
  setGeneratingModelImages(false);
  setIsGeneratingModels(false);
   }
@@ -587,6 +684,16 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  setSavingModel(true);
  try {
+ // Se o modelo já foi criado durante a geração, apenas confirmar
+ if (generatedModelId) {
+   const resultId = generatedModelId;
+   await loadSavedModels();
+   setShowCreateModel(false);
+   resetModelWizard();
+   onModelCreated?.(resultId);
+   return { id: resultId };
+ }
+
  const hasPreview = modelPreviewImages && (modelPreviewImages.front || modelPreviewImages.back);
 
  const modelData = {
@@ -689,7 +796,47 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  setModelsProgress(0);
  setModelGenerationStep('front');
 
- const modelId = 'preview-' + Date.now();
+ // Salvar modelo no banco ANTES de chamar N8N
+ let modelId = generatedModelId;
+ try {
+   if (!modelId) {
+     const modelData = {
+       user_id: user.id,
+       name: newModel.name.trim(),
+       model_type: 'real' as const,
+       gender: newModel.gender,
+       ethnicity: 'other',
+       skin_tone: 'medium',
+       body_type: 'average',
+       age_range: 'adult',
+       height: 'medium',
+       hair_color: 'brown',
+       hair_style: 'straight',
+       eye_color: 'brown',
+       expression: 'neutral',
+       status: 'generating',
+       images: {},
+     };
+     const { data: savedModel, error: saveError } = await supabase
+       .from('saved_models')
+       .insert(modelData)
+       .select()
+       .single();
+     if (saveError) throw saveError;
+     modelId = savedModel.id;
+     setGeneratedModelId(modelId);
+     await loadSavedModels();
+   } else {
+     await supabase.from('saved_models').update({ status: 'generating', images: {} }).eq('id', modelId);
+     await loadSavedModels();
+   }
+ } catch (error) {
+   console.error('Erro ao preparar modelo:', error);
+   showToast('Erro ao preparar modelo. Tente novamente.', 'error');
+   setGeneratingModelImages(false);
+   setIsGeneratingModels(false);
+   return;
+ }
 
  // F5 recovery
  localStorage.setItem('vizzu_pending_model', JSON.stringify({
@@ -747,6 +894,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
      '• Camera: Canon EOS R5, 85mm f/1.4',
    ].join('\n');
 
+   console.log('[Models Real] Chamando N8N com modelId:', modelId);
    const result = await generateModelImages({
      modelId,
      userId: user.id,
@@ -768,14 +916,45 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    });
 
    clearInterval(progressInterval);
+   console.log('[Models Real] Resultado N8N:', JSON.stringify({ success: result?.success, hasModel: !!result?.model, hasImages: !!(result?.model?.images), timeout: !!(result as any)?._serverTimeout }));
 
-   // Se timeout do servidor, a geração continua em background
+   // Se timeout do servidor, manter wizard em "gerando" e pollar o banco
    if ((result as any)._serverTimeout) {
-     console.warn('[Models] Server timeout — geração real continua no servidor');
-     showToast('A geração está demorando mais que o esperado. Ela continua rodando e aparecerá quando pronta.', 'info');
-     setModelGenerationStep('done');
-     setModelGenerationProgress(95);
-     setModelsProgress(95);
+     console.warn('[Models] Server timeout modelo real — iniciando polling para modelId:', modelId);
+     showToast('A geração está demorando mais que o esperado. Aguarde, ela continua rodando.', 'info');
+     const pollId = setInterval(async () => {
+       try {
+         const { data: m } = await supabase.from('saved_models').select('status, images').eq('id', modelId).single();
+         if (m?.status === 'ready') {
+           clearInterval(pollId);
+           localStorage.removeItem('vizzu_pending_model');
+           const imgs = typeof m.images === 'string' ? JSON.parse(m.images) : m.images;
+           if (imgs && (imgs.front || imgs.back)) {
+             setModelPreviewImages(imgs);
+           }
+           setModelGenerationProgress(100);
+           setModelsProgress(100);
+           setModelGenerationStep('done');
+           setGeneratingModelImages(false);
+           setIsGeneratingModels(false);
+           await loadSavedModels();
+         } else if (m?.status === 'error') {
+           clearInterval(pollId);
+           localStorage.removeItem('vizzu_pending_model');
+           setGeneratingModelImages(false);
+           setIsGeneratingModels(false);
+           showToast('Erro ao gerar modelo. Tente novamente.', 'error');
+           await loadSavedModels();
+         }
+       } catch (e) { /* silencioso */ }
+     }, 5000);
+     setTimeout(() => {
+       clearInterval(pollId);
+       localStorage.removeItem('vizzu_pending_model');
+       setGeneratingModelImages(false);
+       setIsGeneratingModels(false);
+       loadSavedModels();
+     }, 600000);
      return;
    }
 
@@ -786,6 +965,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
    if (result.success && result.model?.images) {
      setModelPreviewImages(result.model.images);
+     setGeneratingModelImages(false);
+     setIsGeneratingModels(false);
    } else {
      throw new Error(result.error || 'Erro ao gerar preview');
    }
@@ -794,7 +975,10 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    localStorage.removeItem('vizzu_pending_model');
    console.error('Erro ao gerar preview modelo real:', error);
    showToast('Erro ao gerar preview do modelo. Tente novamente.', 'error');
- } finally {
+   if (modelId) {
+     await supabase.from('saved_models').update({ status: 'error' }).eq('id', modelId);
+     await loadSavedModels();
+   }
    setGeneratingModelImages(false);
    setIsGeneratingModels(false);
     }
@@ -806,6 +990,20 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
 
  setSavingModel(true);
  try {
+   // Se o modelo já foi criado durante a geração, apenas atualizar ref e confirmar
+   if (generatedModelId) {
+     await supabase.from('saved_models')
+       .update({ reference_image_url: realModelReferenceUrls.front || null })
+       .eq('id', generatedModelId);
+     const resultId = generatedModelId;
+     await loadSavedModels();
+     setShowCreateModel(false);
+     resetModelWizard();
+     showToast(`Modelo "${newModel.name}" criado com sucesso!`, 'success');
+     onModelCreated?.(resultId);
+     return { id: resultId };
+   }
+
    const modelData = {
      user_id: user.id,
      name: newModel.name.trim(),
@@ -953,7 +1151,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
    </div>
   )}
   {model.status === 'generating' && (
-   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+   <div className="absolute inset-0 bg-neutral-900 flex items-center justify-center">
    <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center">
     <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
    </div>
@@ -2127,7 +2325,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {!generatingModelImages && modelPreviewImages && (
  <>
  <button
- onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
+ onClick={() => { if (generatedModelId) { supabase.from('saved_models').delete().eq('id', generatedModelId).then(() => loadSavedModels()); } setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
  className={(theme !== 'light' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
  >
  <i className="fas fa-trash"></i>
@@ -2210,7 +2408,7 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {!generatingModelImages && modelPreviewImages && (
  <>
  <button
- onClick={() => { setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
+ onClick={() => { if (generatedModelId) { supabase.from('saved_models').delete().eq('id', generatedModelId).then(() => loadSavedModels()); } setModelPreviewImages(null); setShowCreateModel(false); resetModelWizard(); }}
  className={(theme !== 'light' ? 'text-red-400 hover:text-red-300' : 'text-red-500 hover:text-red-600') + ' px-2 py-2 text-sm font-medium transition-colors'}
  >
  <i className="fas fa-trash"></i>

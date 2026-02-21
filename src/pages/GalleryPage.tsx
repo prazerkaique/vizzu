@@ -124,7 +124,8 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
 
   // ── Converter background generations em grupos da galeria ──
   const bgGroups = useMemo(() => {
-    const processing = backgroundGenerations.filter(g => g.status === 'processing');
+    // Só incluir features que existem no FEATURE_CONFIG da galeria (exclui 'models' e qualquer tipo inesperado)
+    const processing = backgroundGenerations.filter(g => g.status === 'processing' && g.feature in FEATURE_CONFIG);
     if (processing.length === 0) return [];
 
     // Filtrar por feature ativa se houver
@@ -199,11 +200,30 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
     });
   }, [backgroundGenerations, activeFeature]);
 
-  // ── Merge: bg groups no topo + completed groups ──
-  const allGroups = useMemo(() =>
-    [...bgGroups, ...filteredGroups],
-    [bgGroups, filteredGroups]
-  );
+  // ── Merge: bg groups no topo + completed groups (com deduplicação) ──
+  const allGroups = useMemo(() => {
+    if (bgGroups.length === 0) return filteredGroups;
+
+    // Coletar generationIds das gerações em andamento para excluir duplicatas
+    const bgGenIds = new Set<string>();
+    for (const bg of backgroundGenerations) {
+      if (bg.status !== 'processing') continue;
+      if (bg.generationId) bgGenIds.add(bg.generationId);
+    }
+
+    // Filtrar grupos regulares que já estão representados nos bgGroups
+    const deduped = bgGenIds.size > 0
+      ? filteredGroups.filter(group => {
+          // Se algum item do grupo tem sessionId/generationId que bate com bgGen ativo, excluir
+          return !group.items.some(item => {
+            const genId = item.metadata?.sessionId || item.metadata?.generationId;
+            return genId && bgGenIds.has(genId);
+          });
+        })
+      : filteredGroups;
+
+    return [...bgGroups, ...deduped];
+  }, [bgGroups, filteredGroups, backgroundGenerations]);
 
   // ── Paginação calc (por grupos) ──
   const totalPages = Math.max(1, Math.ceil(allGroups.length / GROUPS_PER_PAGE));
@@ -360,7 +380,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
   };
 
   const makeDownloadImage = (item: GalleryItem): DownloadableImage => {
-    const baseName = item.productName || item.clientName || FEATURE_CONFIG[item.featureType].label;
+    const baseName = item.productName || item.clientName || FEATURE_CONFIG[item.featureType]?.label || 'Imagem';
     const angle = item.metadata?.angle || item.metadata?.view;
     const angleLabel = angle ? ANGLE_LABEL_MAP[angle] || angle : '';
     const label = angleLabel ? `${baseName} - ${angleLabel}` : baseName;
@@ -380,7 +400,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
       grouped[key].push(item);
     }
     return Object.entries(grouped).map(([ft, items]) => ({
-      label: FEATURE_CONFIG[ft as FeatureType].label,
+      label: FEATURE_CONFIG[ft as FeatureType]?.label || ft,
       featurePrefix: ft,
       images: items.map(makeDownloadImage),
     }));
@@ -555,6 +575,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
         <>
           {paginatedGroups.map(group => {
             const groupCfg = FEATURE_CONFIG[group.featureType];
+            if (!groupCfg) return null; // Feature desconhecida — skip
             const isBgGroup = (group as any)._isBgGen === true;
             const allGroupSelected = isSelecting && !isBgGroup && group.items.every(i => selectedIds.has(i.id));
 
@@ -599,6 +620,7 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                   {group.items.map(item => {
                     const cfg = FEATURE_CONFIG[item.featureType];
+                    if (!cfg) return null; // Feature desconhecida — skip
                     const isPlaceholder = (item as any)._isPlaceholder === true;
 
                     /* ── Shimmer placeholder card (geração em andamento) ── */
@@ -613,17 +635,12 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
                             isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200'
                           }`}
                         >
-                          <div className={`relative aspect-square overflow-hidden ${isDark ? 'bg-neutral-700' : 'bg-gray-200'}`}>
-                            {/* Shimmer animation overlay */}
-                            <div className="absolute inset-0 overflow-hidden">
-                              <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                            </div>
-                            {/* Centered label */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
-                              <i className={`fas fa-wand-magic-sparkles text-lg ${isDark ? 'text-neutral-500' : 'text-gray-400'}`} />
-                              <span className={`text-[10px] font-medium ${isDark ? 'text-neutral-400' : 'text-gray-500'}`}>
-                                Criando imagem...
-                              </span>
+                          <div className={`relative aspect-square overflow-hidden ${isDark ? 'bg-neutral-900' : 'bg-neutral-900'}`}>
+                            {/* Motion GIF (padrão Vizzu — Scene-1.gif) */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center">
+                                <img src="/Scene-1.gif" alt="" className="h-full object-cover" style={{ width: '140%', maxWidth: 'none' }} />
+                              </div>
                             </div>
                             {/* Feature badge */}
                             <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white text-[8px] font-bold flex items-center gap-1 opacity-70">

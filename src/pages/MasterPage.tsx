@@ -11,6 +11,28 @@ interface Metrics {
   plans: { plan: string; count: number }[];
 }
 
+interface UserRow {
+  email: string;
+  plan_id: string;
+  whatsapp?: string | null;
+}
+
+interface MasterExtras {
+  recent_users: (UserRow & { created_at: string })[];
+  provider_stats: Record<string, number>;
+  active_users_7d: number;
+  active_users_30d: number;
+  top_users: (UserRow & { generation_count: number })[];
+  generations_by_feature: { feature: string; count: number }[];
+  failure_rate: { total_7d: number; failed_7d: number };
+  generation_trend: { today: number; yesterday: number; days_7d: number; days_30d: number };
+  low_credit_users: (UserRow & { balance: number })[];
+  recent_errors: { generation_type: string; error_message: string; created_at: string; email: string }[];
+  hourly_distribution: { hour: number; success: number; errors: number }[];
+  shopify_stats: { connections: number; exports: number };
+  paid_users: number;
+}
+
 interface UserData {
   user_id: string;
   subscription: any;
@@ -37,6 +59,9 @@ export function MasterPage() {
   // Metrics
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
+
+  // Extras (recent users + provider stats)
+  const [extras, setExtras] = useState<MasterExtras | null>(null);
 
   // User search
   const [searchEmail, setSearchEmail] = useState('');
@@ -92,9 +117,25 @@ export function MasterPage() {
     }
   }, [storedPassword, showToast]);
 
+  // ── Extras (recent users + provider stats) ──
+  const loadExtras = useCallback(async () => {
+    if (!storedPassword) return;
+    try {
+      const { data, error } = await supabase.rpc('master_get_extras', { p_password: storedPassword });
+      if (error) throw error;
+      if (data?.error) return; // RPC não existe ainda — silently skip
+      setExtras(data);
+    } catch {
+      // Se a RPC não existe ainda, ignora silenciosamente
+    }
+  }, [storedPassword]);
+
   useEffect(() => {
-    if (isUnlocked && storedPassword) loadMetrics();
-  }, [isUnlocked, storedPassword, loadMetrics]);
+    if (isUnlocked && storedPassword) {
+      loadMetrics();
+      loadExtras();
+    }
+  }, [isUnlocked, storedPassword, loadMetrics, loadExtras]);
 
   // ── User search ──
   const searchUser = async () => {
@@ -164,6 +205,41 @@ export function MasterPage() {
   const labelClass = isDark ? 'text-neutral-400 text-xs font-medium' : 'text-gray-500 text-xs font-medium';
   const valueClass = isDark ? 'text-white text-sm font-semibold' : 'text-gray-900 text-sm font-semibold';
 
+  // ── Plan badge helper ──
+  const planBadge = (planId: string) => (
+    <span className={'px-2 py-0.5 rounded-full text-[10px] font-medium capitalize flex-shrink-0 ' + (
+      planId === 'free' ? (isDark ? 'bg-neutral-700 text-neutral-300' : 'bg-gray-200 text-gray-600') :
+      planId === 'starter' ? 'bg-blue-500/15 text-blue-400' :
+      planId === 'pro' ? 'bg-purple-500/15 text-purple-400' :
+      planId === 'premier' ? 'bg-amber-500/15 text-amber-400' :
+      'bg-green-500/15 text-green-400'
+    )}>{planId}</span>
+  );
+
+  // ── Contact button helper ──
+  const contactBtn = (user: { email: string; whatsapp?: string | null }) => {
+    const hasWa = user.whatsapp && user.whatsapp.trim().length >= 8;
+    const cleanPhone = hasWa ? user.whatsapp!.replace(/\D/g, '') : '';
+    const url = hasWa
+      ? `https://wa.me/${cleanPhone.startsWith('55') ? cleanPhone : '55' + cleanPhone}`
+      : `mailto:${user.email}`;
+    const icon = hasWa ? 'fab fa-whatsapp' : 'fas fa-envelope';
+    const color = hasWa ? 'text-green-400 hover:text-green-300' : 'text-blue-400 hover:text-blue-300';
+    const title = hasWa ? `WhatsApp: ${user.whatsapp}` : `Email: ${user.email}`;
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={e => e.stopPropagation()}
+        title={title}
+        className={'flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ' + color + ' ' + (isDark ? 'hover:bg-neutral-700' : 'hover:bg-gray-200')}
+      >
+        <i className={icon + ' text-sm'}></i>
+      </a>
+    );
+  };
+
   // ═══════════════════════════════════════
   // PASSWORD MODAL
   // ═══════════════════════════════════════
@@ -221,7 +297,7 @@ export function MasterPage() {
             </div>
           </div>
           <button
-            onClick={loadMetrics}
+            onClick={() => { loadMetrics(); loadExtras(); }}
             disabled={metricsLoading}
             className={'px-3 py-2 rounded-xl text-xs font-medium transition-all ' + (isDark ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
           >
@@ -229,21 +305,78 @@ export function MasterPage() {
           </button>
         </div>
 
-        {/* ═══ SEÇÃO 1: MÉTRICAS ═══ */}
+        {/* ═══ SEÇÃO 1: MÉTRICAS PRINCIPAIS ═══ */}
         {metrics && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {/* Total Users */}
             <div className={cardClass + ' p-4'}>
               <p className={labelClass}>Usuários totais</p>
               <p className={'text-2xl font-bold mt-1 ' + (isDark ? 'text-white' : 'text-gray-900')}>{metrics.total_users}</p>
+              {extras && (
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+                  {extras.active_users_7d} ativos (7d) / {extras.active_users_30d} (30d)
+                </p>
+              )}
             </div>
+            {/* Generations Today */}
             <div className={cardClass + ' p-4'}>
               <p className={labelClass}>Gerações hoje</p>
-              <p className={'text-2xl font-bold mt-1 ' + (isDark ? 'text-white' : 'text-gray-900')}>{metrics.generations_today}</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className={'text-2xl font-bold ' + (isDark ? 'text-white' : 'text-gray-900')}>{metrics.generations_today}</p>
+                {extras && extras.generation_trend && (() => {
+                  const diff = extras.generation_trend.today - extras.generation_trend.yesterday;
+                  if (diff === 0) return null;
+                  return (
+                    <span className={'text-xs font-medium ' + (diff > 0 ? 'text-green-400' : 'text-red-400')}>
+                      {diff > 0 ? '+' : ''}{diff} vs ontem
+                    </span>
+                  );
+                })()}
+              </div>
+              {extras?.generation_trend && (
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+                  7d: {extras.generation_trend.days_7d} | 30d: {extras.generation_trend.days_30d}
+                </p>
+              )}
             </div>
+            {/* Success Rate */}
+            <div className={cardClass + ' p-4'}>
+              <p className={labelClass}>Uptime servidor (7d)</p>
+              {extras?.failure_rate ? (() => {
+                const { total_7d, failed_7d } = extras.failure_rate;
+                const rate = total_7d > 0 ? ((total_7d - failed_7d) / total_7d * 100) : 100;
+                return (
+                  <>
+                    <p className={'text-2xl font-bold mt-1 ' + (rate >= 95 ? 'text-green-400' : rate >= 85 ? 'text-yellow-400' : 'text-red-400')}>
+                      {rate.toFixed(1)}%
+                    </p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+                      {failed_7d} erro{failed_7d !== 1 ? 's' : ''} de servidor em {total_7d} gerações
+                    </p>
+                  </>
+                );
+              })() : (
+                <p className={'text-2xl font-bold mt-1 ' + (isDark ? 'text-white' : 'text-gray-900')}>—</p>
+              )}
+            </div>
+            {/* Paid Users */}
+            <div className={cardClass + ' p-4'}>
+              <p className={labelClass}>Pagantes</p>
+              <p className={'text-2xl font-bold mt-1 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                {extras?.paid_users ?? '—'}
+              </p>
+              {extras && metrics.total_users > 0 && (
+                <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-0.5'}>
+                  {((extras.paid_users / metrics.total_users) * 100).toFixed(1)}% de conversão
+                </p>
+              )}
+            </div>
+            {/* Credits */}
             <div className={cardClass + ' p-4'}>
               <p className={labelClass}>Créditos em circulação</p>
               <p className={'text-2xl font-bold mt-1 ' + (isDark ? 'text-white' : 'text-gray-900')}>{Number(metrics.total_credits).toLocaleString()}</p>
             </div>
+            {/* Plans */}
             <div className={cardClass + ' p-4'}>
               <p className={labelClass}>Planos</p>
               <div className="mt-1 space-y-0.5">
@@ -256,6 +389,375 @@ export function MasterPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ═══ SEÇÃO 2: ÚLTIMOS CADASTROS + TOP USERS ═══ */}
+        {extras && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Últimos Cadastros */}
+              <div className={cardClass + ' p-5'}>
+                <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                  <i className="fas fa-user-plus text-[#FF6B6B] text-xs"></i>Últimos Cadastros
+                </h3>
+                {extras.recent_users?.length > 0 ? (
+                  <div className="space-y-2">
+                    {extras.recent_users.map((u, i) => (
+                      <div key={i} className={'flex items-center gap-3 p-2.5 rounded-xl cursor-pointer hover:ring-1 hover:ring-[#FF6B6B]/30 transition-all ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}
+                        onClick={() => { setSearchEmail(u.email); }}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FF6B6B]/20 to-[#FF9F43]/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#FF6B6B] text-xs font-bold">{u.email?.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{u.email}</p>
+                          <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>
+                            {new Date(u.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        {contactBtn(u)}
+                        {planBadge(u.plan_id)}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Nenhum usuário</p>
+                )}
+              </div>
+
+              {/* Top 5 Usuários */}
+              <div className={cardClass + ' p-5'}>
+                <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                  <i className="fas fa-trophy text-[#FF9F43] text-xs"></i>Top Usuários
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal'}>30 dias</span>
+                </h3>
+                {extras.top_users?.length > 0 ? (
+                  <div className="space-y-2">
+                    {extras.top_users.map((u, i) => {
+                      const maxCount = extras.top_users[0]?.generation_count || 1;
+                      const pct = (u.generation_count / maxCount) * 100;
+                      return (
+                        <div key={i} className={'relative overflow-hidden flex items-center gap-3 p-2.5 rounded-xl cursor-pointer hover:ring-1 hover:ring-[#FF6B6B]/30 transition-all ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}
+                          onClick={() => { setSearchEmail(u.email); }}
+                        >
+                          <div className={'absolute inset-0 rounded-xl opacity-10 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'} style={{ width: `${pct}%` }} />
+                          <span className={'text-xs font-bold w-5 text-center flex-shrink-0 ' + (i === 0 ? 'text-[#FF9F43]' : isDark ? 'text-neutral-500' : 'text-gray-400')}>
+                            {i === 0 ? <i className="fas fa-crown"></i> : `#${i + 1}`}
+                          </span>
+                          <div className="flex-1 min-w-0 relative">
+                            <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{u.email}</p>
+                          </div>
+                          <span className={'text-xs font-bold relative ' + (isDark ? 'text-white' : 'text-gray-900')}>{u.generation_count}</span>
+                          {contactBtn(u)}
+                          {planBadge(u.plan_id)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Sem dados</p>
+                )}
+              </div>
+            </div>
+
+            {/* ═══ SEÇÃO 3: FEATURES + PROVIDERS ═══ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Gerações por Feature */}
+              <div className={cardClass + ' p-5'}>
+                <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                  <i className="fas fa-chart-bar text-[#FF6B6B] text-xs"></i>Gerações por Feature
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal'}>30 dias</span>
+                </h3>
+                {extras.generations_by_feature?.length > 0 ? (() => {
+                  const FEATURE_LABELS: Record<string, string> = {
+                    product_studio: 'Product Studio', studio: 'Product Studio', studio_ready: 'Product Studio',
+                    look_composer: 'Look Composer', modelo_ia: 'Look Composer', lifestyle: 'Look Composer', 'modelo-ia': 'Look Composer',
+                    creative_still: 'Creative Still', cenario: 'Cenário Criativo', 'cenario-criativo': 'Cenário Criativo',
+                    provador: 'Provador', refine: 'Studio Edit', colorize: 'Colorize',
+                  };
+                  const FEATURE_COLORS: Record<string, string> = {
+                    product_studio: 'from-[#FF6B6B] to-[#FF9F43]', studio: 'from-[#FF6B6B] to-[#FF9F43]', studio_ready: 'from-[#FF6B6B] to-[#FF9F43]',
+                    look_composer: 'from-blue-500 to-blue-400', modelo_ia: 'from-blue-500 to-blue-400', lifestyle: 'from-blue-500 to-blue-400', 'modelo-ia': 'from-blue-500 to-blue-400',
+                    creative_still: 'from-violet-500 to-violet-400', cenario: 'from-purple-500 to-purple-400', 'cenario-criativo': 'from-purple-500 to-purple-400',
+                    provador: 'from-emerald-500 to-emerald-400', refine: 'from-amber-500 to-amber-400', colorize: 'from-pink-500 to-pink-400',
+                  };
+                  const total = extras.generations_by_feature.reduce((s, f) => s + f.count, 0);
+                  const maxCount = extras.generations_by_feature[0]?.count || 1;
+                  return (
+                    <div className="space-y-2.5">
+                      {extras.generations_by_feature.map((f, i) => {
+                        const pct = (f.count / maxCount) * 100;
+                        return (
+                          <div key={i}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>{FEATURE_LABELS[f.feature] || f.feature}</span>
+                              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-bold'}>
+                                {f.count} <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' font-normal'}>({total > 0 ? (f.count / total * 100).toFixed(0) : 0}%)</span>
+                              </span>
+                            </div>
+                            <div className={'h-2 rounded-full overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                              <div className={'h-full rounded-full bg-gradient-to-r ' + (FEATURE_COLORS[f.feature] || 'from-gray-400 to-gray-300')} style={{ width: `${Math.max(pct, 3)}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1'}>Total: {total} gerações</p>
+                    </div>
+                  );
+                })() : (
+                  <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Sem dados</p>
+                )}
+              </div>
+
+              {/* Provider Stats */}
+              <div className={cardClass + ' p-5'}>
+                <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                  <i className="fas fa-robot text-[#FF9F43] text-xs"></i>Providers IA
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal'}>30 dias</span>
+                </h3>
+                {extras.provider_stats && Object.keys(extras.provider_stats).length > 0 ? (() => {
+                  const entries = Object.entries(extras.provider_stats).sort((a, b) => b[1] - a[1]);
+                  const total = entries.reduce((sum, [, v]) => sum + v, 0);
+                  const PROVIDER_LABELS: Record<string, string> = {
+                    'gemini-oficial': 'Gemini (API direta)', 'fal-gemini': 'Gemini (fal.ai)', 'fal-seedream': 'Seedream 4.5 (fal.ai)',
+                  };
+                  const PROVIDER_COLORS: Record<string, string> = {
+                    'gemini-oficial': 'from-blue-500 to-blue-400', 'fal-gemini': 'from-[#FF6B6B] to-[#FF9F43]', 'fal-seedream': 'from-emerald-500 to-emerald-400',
+                  };
+                  return (
+                    <div className="space-y-2.5">
+                      {entries.map(([provider, count]) => {
+                        const pct = total > 0 ? (count / total * 100) : 0;
+                        return (
+                          <div key={provider}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs'}>{PROVIDER_LABELS[provider] || provider}</span>
+                              <span className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-bold'}>{count} <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' font-normal'}>({pct.toFixed(0)}%)</span></span>
+                            </div>
+                            <div className={'h-2 rounded-full overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}>
+                              <div className={'h-full rounded-full bg-gradient-to-r ' + (PROVIDER_COLORS[provider] || 'from-gray-400 to-gray-300')} style={{ width: `${Math.max(pct, 3)}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mt-1'}>
+                        Fallback: {entries.filter(([p]) => p !== 'gemini-oficial').reduce((s, [, v]) => s + v, 0)} ({total > 0 ? (entries.filter(([p]) => p !== 'gemini-oficial').reduce((s, [, v]) => s + v, 0) / total * 100).toFixed(1) : '0'}%)
+                      </p>
+                    </div>
+                  );
+                })() : (
+                  <div className="text-center py-6">
+                    <i className={'fas fa-chart-bar text-2xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-200')}></i>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Sem dados ainda</p>
+                    <p className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' text-[10px] mt-1'}>Aparece quando os workflows com fallback forem ativados</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ═══ SEÇÃO 3B: GRÁFICO DE PICO ═══ */}
+            {extras.hourly_distribution && extras.hourly_distribution.length > 0 && (() => {
+              // Preencher as 24 horas (SQL pode pular horas sem dados)
+              const hourMap = new Map<number, { success: number; errors: number }>();
+              extras.hourly_distribution.forEach(h => hourMap.set(h.hour, { success: h.success, errors: h.errors }));
+              const hours = Array.from({ length: 24 }, (_, i) => ({
+                hour: i,
+                success: hourMap.get(i)?.success || 0,
+                errors: hourMap.get(i)?.errors || 0,
+              }));
+
+              const maxSuccess = Math.max(...hours.map(h => h.success), 1);
+              const maxErrors = Math.max(...hours.map(h => h.errors), 1);
+              const peakHour = hours.reduce((best, h) => h.success > best.success ? h : best, hours[0]);
+              const errorPeakHour = hours.reduce((best, h) => h.errors > best.errors ? h : best, hours[0]);
+              const totalSuccess = hours.reduce((s, h) => s + h.success, 0);
+              const totalErrors = hours.reduce((s, h) => s + h.errors, 0);
+
+              return (
+                <div className={cardClass + ' p-5'}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className={'text-sm font-bold font-serif flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                      <i className="fas fa-clock text-[#FF6B6B] text-xs"></i>Horários de Pico
+                      <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal'}>últimos 7 dias (BRT)</span>
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]"></div>
+                        <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>Sucesso ({totalSuccess})</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-red-500"></div>
+                        <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>Erros servidor ({totalErrors})</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chart */}
+                  <div className="relative" style={{ height: '200px' }}>
+                    {/* Success area (top half) */}
+                    <div className="absolute inset-x-0 top-0" style={{ height: '60%' }}>
+                      <div className="flex items-end h-full gap-[2px] px-0.5">
+                        {hours.map(h => {
+                          const pct = maxSuccess > 0 ? (h.success / maxSuccess) * 100 : 0;
+                          const isPeak = h.hour === peakHour.hour && h.success > 0;
+                          return (
+                            <div key={h.hour} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                              {/* Tooltip */}
+                              <div className={'absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-lg text-[10px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none ' + (isDark ? 'bg-neutral-700 text-white' : 'bg-gray-800 text-white')}>
+                                {h.hour}h: {h.success} ok, {h.errors} srv erro{h.errors !== 1 ? 's' : ''}
+                              </div>
+                              <div
+                                className={'w-full rounded-t-sm transition-all duration-300 ' + (isPeak ? 'bg-gradient-to-t from-[#FF6B6B] to-[#FF9F43] shadow-sm shadow-[#FF6B6B]/30' : isDark ? 'bg-gradient-to-t from-[#FF6B6B]/60 to-[#FF9F43]/40 group-hover:from-[#FF6B6B] group-hover:to-[#FF9F43]' : 'bg-gradient-to-t from-[#FF6B6B]/50 to-[#FF9F43]/30 group-hover:from-[#FF6B6B]/80 group-hover:to-[#FF9F43]/60')}
+                                style={{ height: `${Math.max(pct, h.success > 0 ? 4 : 0)}%` }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Divider line (zero axis) */}
+                    <div className={'absolute inset-x-0 border-t ' + (isDark ? 'border-neutral-700' : 'border-gray-200')} style={{ top: '60%' }} />
+
+                    {/* Error area (bottom portion) */}
+                    <div className="absolute inset-x-0" style={{ top: '60%', height: '28%' }}>
+                      <div className="flex items-start h-full gap-[2px] px-0.5">
+                        {hours.map(h => {
+                          const pct = maxErrors > 0 ? (h.errors / maxErrors) * 100 : 0;
+                          const isErrorPeak = h.hour === errorPeakHour.hour && h.errors > 0;
+                          return (
+                            <div key={h.hour} className="flex-1 flex flex-col items-center h-full group">
+                              <div
+                                className={'w-full rounded-b-sm transition-all duration-300 ' + (isErrorPeak ? 'bg-red-500 shadow-sm shadow-red-500/30' : isDark ? 'bg-red-500/40 group-hover:bg-red-500/70' : 'bg-red-400/30 group-hover:bg-red-400/60')}
+                                style={{ height: `${Math.max(pct, h.errors > 0 ? 8 : 0)}%` }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Hour labels */}
+                    <div className="absolute inset-x-0 bottom-0 flex gap-[2px] px-0.5" style={{ height: '12%' }}>
+                      {hours.map(h => (
+                        <div key={h.hour} className="flex-1 flex items-center justify-center">
+                          {h.hour % 3 === 0 && (
+                            <span className={(isDark ? 'text-neutral-600' : 'text-gray-300') + ' text-[9px]'}>{h.hour}h</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  <div className={'flex items-center justify-between mt-3 pt-3 border-t ' + (isDark ? 'border-neutral-800' : 'border-gray-100')}>
+                    <div className="flex items-center gap-1.5">
+                      <i className="fas fa-arrow-up text-[8px] text-green-400"></i>
+                      <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>
+                        Pico: <span className={'font-bold ' + (isDark ? 'text-white' : 'text-gray-900')}>{peakHour.hour}h</span> ({peakHour.success} gerações)
+                      </span>
+                    </div>
+                    {errorPeakHour.errors > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <i className="fas fa-arrow-down text-[8px] text-red-400"></i>
+                        <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px]'}>
+                          Pico de erros: <span className="font-bold text-red-400">{errorPeakHour.hour}h</span> ({errorPeakHour.errors} falhas)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ═══ SEÇÃO 4: ALERTAS — CRÉDITOS BAIXOS + ERROS ═══ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Créditos acabando */}
+              <div className={cardClass + ' p-5'}>
+                <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                  <i className="fas fa-exclamation-triangle text-amber-400 text-xs"></i>Créditos Baixos
+                  <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal'}>{'< 5 créditos'}</span>
+                </h3>
+                {extras.low_credit_users?.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {extras.low_credit_users.map((u, i) => (
+                      <div key={i} className={'flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:ring-1 hover:ring-[#FF6B6B]/30 transition-all ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}
+                        onClick={() => { setSearchEmail(u.email); }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{u.email}</p>
+                        </div>
+                        <span className={'text-xs font-bold ' + (u.balance <= 0 ? 'text-red-400' : 'text-amber-400')}>{u.balance}</span>
+                        {contactBtn(u)}
+                        {planBadge(u.plan_id)}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <i className={'fas fa-check-circle text-lg mb-1 text-green-400'}></i>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Todos com saldo OK</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Erros Recentes */}
+              <div className={cardClass + ' p-5'}>
+                <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+                  <i className="fas fa-server text-red-400 text-xs"></i>Erros de Servidor
+                </h3>
+                {extras.recent_errors?.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {extras.recent_errors.map((e, i) => {
+                      const FEATURE_LABELS: Record<string, string> = {
+                        product_studio: 'PS', studio: 'PS', studio_ready: 'PS',
+                        look_composer: 'LC', modelo_ia: 'LC', lifestyle: 'LC', 'modelo-ia': 'LC',
+                        creative_still: 'CS', cenario: 'Cenário', 'cenario-criativo': 'Cenário',
+                        provador: 'Provador', refine: 'Edit',
+                      };
+                      return (
+                        <div key={i} className={'p-2 rounded-xl ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 text-[10px] font-medium">
+                              {FEATURE_LABELS[e.generation_type] || e.generation_type}
+                            </span>
+                            <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>
+                              {new Date(e.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] truncate'}>{e.email}</span>
+                          </div>
+                          <p className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[10px] truncate'}>{e.error_message || 'Sem mensagem de erro'}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <i className={'fas fa-check-circle text-lg mb-1 text-green-400'}></i>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>Nenhum erro de servidor</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ═══ SEÇÃO 5: SHOPIFY ═══ */}
+            {extras.shopify_stats && (extras.shopify_stats.connections > 0 || extras.shopify_stats.exports > 0) && (
+              <div className={cardClass + ' p-4'}>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <i className="fab fa-shopify text-[#96bf48] text-sm"></i>
+                    <span className={labelClass}>Lojas conectadas</span>
+                    <span className={'text-sm font-bold ' + (isDark ? 'text-white' : 'text-gray-900')}>{extras.shopify_stats.connections}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-upload text-[#FF6B6B] text-xs"></i>
+                    <span className={labelClass}>Imagens exportadas</span>
+                    <span className={'text-sm font-bold ' + (isDark ? 'text-white' : 'text-gray-900')}>{extras.shopify_stats.exports}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* ═══ SEÇÃO 2: BUSCA DE USUÁRIO ═══ */}

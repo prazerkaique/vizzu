@@ -164,7 +164,7 @@ type BackgroundType = 'studio' | 'custom' | 'prompt';
 type BackgroundMode = 'preset' | 'upload' | 'prompt' | 'saved';
 type PoseMode = 'default' | 'custom';
 type ViewsMode = 'front' | 'front-back';
-type FramingMode = 'full-body' | 'upper-half' | 'lower-half' | 'face' | 'feet';
+type FramingMode = 'full-body' | 'upper-half' | 'lower-half' | 'face' | 'feet' | 'product-focus';
 
 // Opções de enquadramento
 const FRAMING_OPTIONS: { id: FramingMode; label: string; icon: string; description: string }[] = [
@@ -173,54 +173,60 @@ const FRAMING_OPTIONS: { id: FramingMode; label: string; icon: string; descripti
  { id: 'lower-half', label: 'Metade de baixo', icon: 'fa-shoe-prints', description: 'Da cintura pra baixo' },
  { id: 'face', label: 'Rosto', icon: 'fa-face-smile', description: 'Close-up no rosto/cabeça' },
  { id: 'feet', label: 'Pés', icon: 'fa-socks', description: 'Close-up nos pés' },
+ { id: 'product-focus', label: 'Foco no Produto', icon: 'fa-magnifying-glass-plus', description: 'Zoom no produto com detalhes nítidos' },
 ];
 
 // Mapeamento: categoria → opções permitidas + default
 const CATEGORY_TO_FRAMING: Record<string, { options: FramingMode[]; default: FramingMode }> = {
  // Cabeça
- 'Bonés': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
- 'Chapéus': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
- 'Tiaras': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
- 'Lenços': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ 'Bonés': { options: ['face', 'product-focus', 'upper-half', 'full-body'], default: 'face' },
+ 'Chapéus': { options: ['face', 'product-focus', 'upper-half', 'full-body'], default: 'face' },
+ 'Tiaras': { options: ['face', 'product-focus', 'upper-half', 'full-body'], default: 'face' },
+ 'Lenços': { options: ['face', 'product-focus', 'upper-half', 'full-body'], default: 'face' },
  // Topo
- 'Camisetas': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Blusas': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Regatas': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Tops': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Camisas': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Jaquetas': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Casacos': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Blazers': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Moletons': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Bodies': { options: ['upper-half', 'full-body'], default: 'full-body' },
+ 'Camisetas': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Blusas': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Regatas': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Tops': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Camisas': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Jaquetas': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Casacos': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Blazers': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Moletons': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Bodies': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
  // Baixo
- 'Calças': { options: ['lower-half', 'full-body'], default: 'full-body' },
- 'Shorts': { options: ['lower-half', 'full-body'], default: 'full-body' },
- 'Bermudas': { options: ['lower-half', 'full-body'], default: 'full-body' },
- 'Saias': { options: ['lower-half', 'full-body'], default: 'full-body' },
- 'Leggings': { options: ['lower-half', 'full-body'], default: 'full-body' },
- 'Shorts Fitness': { options: ['lower-half', 'full-body'], default: 'full-body' },
+ 'Calças': { options: ['full-body', 'lower-half', 'product-focus'], default: 'full-body' },
+ 'Shorts': { options: ['full-body', 'lower-half', 'product-focus'], default: 'full-body' },
+ 'Bermudas': { options: ['full-body', 'lower-half', 'product-focus'], default: 'full-body' },
+ 'Saias': { options: ['full-body', 'lower-half', 'product-focus'], default: 'full-body' },
+ 'Leggings': { options: ['full-body', 'lower-half', 'product-focus'], default: 'full-body' },
+ 'Shorts Fitness': { options: ['full-body', 'lower-half', 'product-focus'], default: 'full-body' },
  // Peças inteiras
- 'Vestidos': { options: ['full-body', 'upper-half'], default: 'full-body' },
- 'Macacões': { options: ['full-body', 'upper-half'], default: 'full-body' },
- 'Jardineiras': { options: ['full-body', 'upper-half'], default: 'full-body' },
+ 'Vestidos': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Macacões': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
+ 'Jardineiras': { options: ['full-body', 'upper-half', 'product-focus'], default: 'full-body' },
  // Pés
- 'Tênis': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
- 'Sandálias': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
- 'Botas': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
- 'Calçados': { options: ['feet', 'lower-half', 'full-body'], default: 'feet' },
+ 'Tênis': { options: ['feet', 'product-focus', 'lower-half', 'full-body'], default: 'feet' },
+ 'Sandálias': { options: ['feet', 'product-focus', 'lower-half', 'full-body'], default: 'feet' },
+ 'Botas': { options: ['feet', 'product-focus', 'lower-half', 'full-body'], default: 'feet' },
+ 'Calçados': { options: ['feet', 'product-focus', 'lower-half', 'full-body'], default: 'feet' },
  // Acessórios de rosto
- 'Óculos': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
- 'Bijuterias': { options: ['face', 'upper-half', 'full-body'], default: 'face' },
+ 'Óculos': { options: ['face', 'product-focus', 'upper-half', 'full-body'], default: 'face' },
+ 'Bijuterias': { options: ['product-focus', 'face', 'upper-half', 'full-body'], default: 'product-focus' },
+ 'Brincos': { options: ['product-focus', 'face', 'upper-half', 'full-body'], default: 'product-focus' },
  // Acessórios de corpo
- 'Bolsas': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Cintos': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Relógios': { options: ['upper-half', 'full-body'], default: 'full-body' },
- 'Acessórios': { options: ['face', 'upper-half', 'full-body'], default: 'full-body' },
+ 'Bolsas': { options: ['product-focus', 'upper-half', 'full-body'], default: 'full-body' },
+ 'Cintos': { options: ['product-focus', 'upper-half', 'full-body'], default: 'full-body' },
+ 'Relógios': { options: ['product-focus', 'upper-half', 'full-body'], default: 'product-focus' },
+ 'Pulseiras': { options: ['product-focus', 'upper-half', 'full-body'], default: 'product-focus' },
+ 'Anéis': { options: ['product-focus', 'upper-half', 'full-body'], default: 'product-focus' },
+ 'Colares': { options: ['product-focus', 'upper-half', 'full-body'], default: 'product-focus' },
+ 'Correntes': { options: ['product-focus', 'upper-half', 'full-body'], default: 'product-focus' },
+ 'Acessórios': { options: ['product-focus', 'face', 'upper-half', 'full-body'], default: 'product-focus' },
 };
 
 const getFramingForCategory = (category: string): { options: FramingMode[]; default: FramingMode } => {
- return CATEGORY_TO_FRAMING[category] || { options: ['full-body', 'upper-half', 'lower-half', 'face', 'feet'], default: 'full-body' };
+ return CATEGORY_TO_FRAMING[category] || { options: ['full-body', 'upper-half', 'lower-half', 'face', 'feet', 'product-focus'], default: 'full-body' };
 };
 
 // Interface para os steps de loading com thumbnails
