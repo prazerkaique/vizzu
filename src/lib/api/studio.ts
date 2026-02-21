@@ -994,9 +994,13 @@ interface ProvadorResponse {
  */
 export async function generateProvador(params: ProvadorParams): Promise<ProvadorResponse> {
   let response: Response;
+  // Timeout de 5 minutos — fallback 3 camadas pode demorar
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 300000);
   try {
     response = await fetch(`${N8N_BASE_URL}/vizzu/provador`, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -1012,10 +1016,12 @@ export async function generateProvador(params: ProvadorParams): Promise<Provador
       }),
     });
   } catch (fetchError) {
+    clearTimeout(timeoutId);
     // Erro de rede (Failed to fetch, timeout, etc.) — workflow pode estar rodando
     console.warn('[Provador] Erro de rede — workflow pode estar rodando no servidor:', fetchError);
     throw new Error(humanizeApiError('timeout'));
   }
+  clearTimeout(timeoutId);
 
   // 502/504 = webhook timeout, mas o workflow CONTINUA rodando no N8N
   if (response.status === 502 || response.status === 504) {
