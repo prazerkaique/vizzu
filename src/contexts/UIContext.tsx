@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 
 // Types (mesmos do App.tsx)
 export type Page = 'dashboard' | 'create' | 'studio' | 'provador' | 'look-composer' | 'lifestyle' | 'creative-still' | 'product-studio' | 'models' | 'products' | 'clients' | 'settings' | 'gallery' | 'master';
-export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history';
+export type SettingsTab = 'profile' | 'plan' | 'integrations' | 'history' | 'clients';
 export type VizzuTheme = 'light' | 'dark' | 'high-contrast' | 'v2';
 
 const VALID_THEMES: VizzuTheme[] = ['light', 'dark', 'high-contrast', 'v2'];

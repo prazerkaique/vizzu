@@ -15,6 +15,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { useShopifyConnection } from '../hooks/useShopifyConnection';
 import { TermsAcceptanceModal } from '../components/TermsAcceptanceModal';
 import { CURRENT_TERMS_VERSION } from '../content/termsContent';
+import { ClientsPage } from './ClientsPage';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -161,6 +162,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  // P5: Modal de confirmação para cancelar assinatura
  const [showCancelModal, setShowCancelModal] = useState(false);
 
+ // Clients embedded states
+ const [showCreateClientEmbed, setShowCreateClientEmbed] = useState(false);
+
  const [isCancelling, setIsCancelling] = useState(false);
 
  // Download de imagens do histórico
@@ -297,6 +301,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  { id: 'profile' as SettingsTab, label: 'Perfil', icon: 'fa-user' },
  { id: 'plan' as SettingsTab, label: 'Planos & Créditos', icon: 'fa-credit-card' },
  { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
+ { id: 'clients' as SettingsTab, label: 'Clientes', icon: 'fa-users' },
  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
  ].map(tab => (
  <button
@@ -1013,6 +1018,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  )}
  </div>
+ )}
+
+ {/* ═══════ CLIENTES ═══════ */}
+ {settingsTab === 'clients' && (
+ <ClientsPage
+   showCreateClient={showCreateClientEmbed}
+   setShowCreateClient={setShowCreateClientEmbed}
+   createClientFromProvador={false}
+   setCreateClientFromProvador={() => {}}
+   setProvadorClient={() => {}}
+   embedded
+ />
  )}
 
  {/* ═══════ HISTÓRICO ═══════ */}

@@ -75,6 +75,10 @@ export function MasterPage() {
   const [editEditBalance, setEditEditBalance] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
 
+  // Recent purchases & generations
+  const [recentPurchases, setRecentPurchases] = useState<any[]>([]);
+  const [recentGenerations, setRecentGenerations] = useState<any[]>([]);
+
   // Debug toggles
   const [debugSlowBanner, setDebugSlowBanner] = useState(() => !!localStorage.getItem('vizzu-debug-slow'));
 
@@ -130,12 +134,39 @@ export function MasterPage() {
     }
   }, [storedPassword]);
 
+  // ── Recent purchases (credit_transactions with type 'purchase' or 'subscription') ──
+  const loadRecentPurchases = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('credit_transactions')
+        .select('id, type, amount, description, created_at, user_id')
+        .in('type', ['purchase', 'subscription', 'plan_upgrade', 'credit_purchase', 'add'])
+        .order('created_at', { ascending: false })
+        .limit(10);
+      setRecentPurchases(data || []);
+    } catch { /* silent */ }
+  }, []);
+
+  // ── Recent generations ──
+  const loadRecentGenerations = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('generations')
+        .select('id, type, status, output_urls, created_at, user_id')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      setRecentGenerations(data || []);
+    } catch { /* silent */ }
+  }, []);
+
   useEffect(() => {
     if (isUnlocked && storedPassword) {
       loadMetrics();
       loadExtras();
+      loadRecentPurchases();
+      loadRecentGenerations();
     }
-  }, [isUnlocked, storedPassword, loadMetrics, loadExtras]);
+  }, [isUnlocked, storedPassword, loadMetrics, loadExtras, loadRecentPurchases, loadRecentGenerations]);
 
   // ── User search ──
   const searchUser = async () => {
@@ -758,6 +789,87 @@ export function MasterPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ═══ SEÇÃO 6: COMPRAS RECENTES ═══ */}
+        {recentPurchases.length > 0 && (
+          <div className={cardClass + ' p-5'}>
+            <h2 className={'text-lg font-bold font-serif mb-4 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+              <i className="fas fa-receipt text-[#FF9F43] mr-2 text-sm"></i>Compras Recentes
+            </h2>
+            <div className="space-y-2">
+              {recentPurchases.map(p => (
+                <div key={p.id} className={'flex items-center justify-between py-2 px-3 rounded-lg ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ' + (
+                      p.amount > 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+                    )}>
+                      <i className={'fas text-xs ' + (p.amount > 0 ? 'fa-plus text-green-500' : 'fa-minus text-red-500')}></i>
+                    </div>
+                    <div className="min-w-0">
+                      <p className={'text-xs font-medium truncate ' + (isDark ? 'text-white' : 'text-gray-900')}>{p.description || p.type}</p>
+                      <p className={labelClass + ' truncate'}>{p.user_id?.slice(0, 8)}... · {new Date(p.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                  <span className={'text-sm font-bold flex-shrink-0 ml-3 ' + (p.amount > 0 ? 'text-green-500' : 'text-red-500')}>
+                    {p.amount > 0 ? '+' : ''}{p.amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ SEÇÃO 7: ÚLTIMAS GERAÇÕES ═══ */}
+        {recentGenerations.length > 0 && (
+          <div className={cardClass + ' p-5'}>
+            <h2 className={'text-lg font-bold font-serif mb-4 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+              <i className="fas fa-images text-[#FF6B6B] mr-2 text-sm"></i>Últimas Gerações
+            </h2>
+            <div className="space-y-2">
+              {recentGenerations.map(g => {
+                const urls: string[] = (() => {
+                  if (!g.output_urls) return [];
+                  if (typeof g.output_urls === 'string') try { return JSON.parse(g.output_urls); } catch { return []; }
+                  return Array.isArray(g.output_urls) ? g.output_urls : [];
+                })();
+                const firstUrl = urls[0];
+                const featureLabels: Record<string, string> = {
+                  'product-studio': 'Product Studio',
+                  'creative-still': 'Still Criativo',
+                  'look-composer': 'Look Composer',
+                  'provador': 'Provador',
+                  'model': 'Modelo IA',
+                };
+                const statusColors: Record<string, string> = {
+                  completed: 'text-green-500',
+                  processing: 'text-yellow-500',
+                  failed: 'text-red-500',
+                };
+                return (
+                  <div key={g.id} className={'flex items-center gap-3 py-2 px-3 rounded-lg ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}>
+                    {firstUrl ? (
+                      <img src={firstUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className={'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ' + (isDark ? 'bg-neutral-700' : 'bg-gray-200')}>
+                        <i className={'fas fa-image text-xs ' + (isDark ? 'text-neutral-500' : 'text-gray-400')}></i>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={'text-xs font-medium ' + (isDark ? 'text-white' : 'text-gray-900')}>{featureLabels[g.type] || g.type}</span>
+                        <span className={'text-[10px] font-medium ' + (statusColors[g.status] || labelClass)}>
+                          {g.status === 'completed' ? 'OK' : g.status === 'processing' ? 'Gerando...' : g.status}
+                        </span>
+                        {urls.length > 1 && <span className={labelClass}>({urls.length} imgs)</span>}
+                      </div>
+                      <p className={labelClass}>{g.user_id?.slice(0, 8)}... · {new Date(g.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* ═══ SEÇÃO 2: BUSCA DE USUÁRIO ═══ */}

@@ -25,6 +25,8 @@ interface ClientsPageProps {
  setProvadorClient: (client: Client | null) => void;
  pendingClientDetail?: Client | null;
  clearPendingClientDetail?: () => void;
+ /** Quando true, esconde header/stats e renderiza apenas o conteúdo (para embutir em Settings) */
+ embedded?: boolean;
 }
 
 export const ClientsPage: React.FC<ClientsPageProps> = ({
@@ -35,6 +37,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
  setProvadorClient,
  pendingClientDetail,
  clearPendingClientDetail,
+ embedded = false,
 }) => {
  const { theme, isV2, navigateTo, showToast, successNotification, setSuccessNotification } = useUI();
  const { openViewer } = useImageViewer();
@@ -530,8 +533,10 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
  return (
   <>
    {/* CLIENTS LIST */}
-   <div className="flex-1 overflow-y-auto p-4 md:p-6">
-    <div className="max-w-5xl mx-auto">
+   <div className={embedded ? '' : 'flex-1 overflow-y-auto p-4 md:p-6'}>
+    <div className={embedded ? '' : 'max-w-5xl mx-auto'}>
+     {!embedded && (
+     <>
      <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
        {!isV2 && <div className={'w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-xl ' + (theme !== 'light' ? 'bg-white/10 border border-white/15' : 'bg-white/60 border border-gray-200/60 shadow-sm')}>
@@ -565,8 +570,28 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({
        <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>VIP</p>
       </div>
      </div>
+     </>
+     )}
 
-     {clients.length > 0 && (
+     {/* Embedded: botão compacto + busca inline */}
+     {embedded && (
+      <div className="flex items-center justify-between mb-3">
+       <div className="flex items-center gap-3 flex-1">
+        {clients.length > 0 && (
+         <div className="relative flex-1">
+          <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
+          <input type="text" placeholder="Buscar cliente..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 text-white' : 'bg-white border-gray-200 text-gray-900') + ' w-full pl-9 pr-3 py-2 border rounded-lg text-xs'} />
+         </div>
+        )}
+        <span className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-xs whitespace-nowrap'}>{clients.length} cliente{clients.length !== 1 ? 's' : ''}</span>
+       </div>
+       <button onClick={() => setShowCreateClient(true)} className="ml-3 px-3 py-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-lg font-medium text-xs whitespace-nowrap">
+        <i className="fas fa-plus mr-1.5"></i>Novo
+       </button>
+      </div>
+     )}
+
+     {!embedded && clients.length > 0 && (
       <div className="mb-4">
        <div className="relative">
         <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs'}></i>
