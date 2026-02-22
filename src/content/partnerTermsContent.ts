@@ -45,7 +45,7 @@ Assinatura anual:
 • Plano Premier → 200 créditos para o indicador
 • Plano Master → 400 créditos para o indicador
 
-Assinatura mensal: 30% do valor anual (pagamento único).
+Assinatura mensal: 30% do valor da assinatura mensal (pagamento único).
 • Plano Basic → 12 créditos | Pro → 30 | Premier → 60 | Master → 120
 
 Todos os indicados recebem 10 créditos bônus imediatamente, independentemente do plano escolhido.

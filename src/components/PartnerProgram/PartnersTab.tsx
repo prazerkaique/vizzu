@@ -186,7 +186,7 @@ export const PartnersTab: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            <p className={mutedClass + ' text-[10px] mt-2'}>Indicações mensais rendem 30% do bônus anual. Pagamento único por indicação.</p>
+            <p className={mutedClass + ' text-[10px] mt-2'}>Indicações mensais rendem 30% do valor da assinatura mensal. Pagamento único por indicação.</p>
           </div>
         </div>
 
@@ -299,7 +299,7 @@ export const PartnersTab: React.FC = () => {
               ))}
             </tbody>
           </table>
-          <p className={mutedClass + ' text-[10px] mt-2'}>Indicações mensais rendem 30% do bônus anual. Pagamento único por indicação.</p>
+          <p className={mutedClass + ' text-[10px] mt-2'}>Indicações mensais rendem 30% do valor da assinatura mensal. Pagamento único por indicação.</p>
         </div>
       </div>
 
