@@ -85,10 +85,9 @@ export const PartnerTermsModal: React.FC<Props> = ({ isOpen, onAccept, isLoading
   return (
     <div
       className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center"
-      style={{ isolation: 'isolate' }}
       onClick={readOnly ? handleClose : undefined}
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
       <div
         className="relative w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col"
         style={{ maxHeight: 'min(90vh, 90dvh)', height: 'auto', maxWidth: readOnly ? '42rem' : undefined }}
@@ -148,7 +147,7 @@ export const PartnerTermsModal: React.FC<Props> = ({ isOpen, onAccept, isLoading
 
         {/* Fade */}
         {showScrollHint && (
-          <div className="absolute bottom-[60px] left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          <div className="absolute left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" style={{ bottom: 'calc(3.5rem + 1px)' }} />
         )}
 
         {/* Footer */}

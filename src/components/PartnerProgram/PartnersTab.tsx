@@ -31,6 +31,8 @@ const FAQ = [
   { q: 'O que acontece se o indicado cancelar?', a: 'Se o cancelamento ocorrer dentro dos 7 dias de holdback, a recompensa é cancelada automaticamente. Após os 7 dias, os créditos já são seus.' },
 ];
 
+const serifFont = { fontFamily: "'DM Serif Display', serif" };
+
 export const PartnersTab: React.FC = () => {
   const { theme, isV2 } = useUI();
   const { user } = useAuth();
@@ -110,23 +112,26 @@ export const PartnersTab: React.FC = () => {
   }
 
   // =============================================
-  // TELA PRÉ-ACEITE — Hero comercial
+  // TELA PRÉ-ACEITE — Hero com identidade Vizzu
   // =============================================
   if (!hasAcceptedTerms) {
     return (
       <div className="space-y-5">
-        {/* Hero banner */}
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] p-8 md:p-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        {/* Hero — sutil, identidade Vizzu */}
+        <div className={'relative rounded-2xl overflow-hidden p-8 md:p-10 border ' + (theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200')}>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[#FF6B6B]/8 to-[#FF9F43]/8 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#FF6B6B]/5 to-transparent rounded-full translate-y-1/2 -translate-x-1/2"></div>
           <div className="relative text-center max-w-lg mx-auto">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/20 backdrop-blur-sm mx-auto mb-4">
-              <i className="fas fa-gift text-2xl text-white"></i>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] mx-auto mb-5">
+              <i className="fas fa-gift text-xl text-white"></i>
             </div>
-            <h2 className={(isV2 ? 'text-3xl md:text-4xl font-extrabold tracking-tight' : 'text-2xl md:text-3xl font-bold') + ' text-white mb-3 leading-tight'}>
-              Ganhe até 400 créditos por indicação
+            <h2
+              className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-2xl md:text-3xl mb-3 leading-tight'}
+              style={serifFont}
+            >
+              Ganhe até <span className="text-[#FF6B6B]">400 créditos</span> por indicação
             </h2>
-            <p className="text-white/80 text-sm md:text-base leading-relaxed">
+            <p className={subClass + ' text-sm leading-relaxed max-w-sm mx-auto'}>
               Indique amigos para o Vizzu. Quando eles assinarem, vocês dois ganham créditos grátis.
             </p>
           </div>
@@ -137,7 +142,7 @@ export const PartnersTab: React.FC = () => {
           {STEPS_PRE.map(step => (
             <div key={step.num} className={cardClass + ' flex items-start gap-4'}>
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10">
+                <div className={'w-12 h-12 rounded-xl flex items-center justify-center ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-50')}>
                   <i className={'fas ' + step.icon + ' text-lg text-[#FF6B6B]'}></i>
                 </div>
                 <span className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white">
@@ -154,7 +159,7 @@ export const PartnersTab: React.FC = () => {
 
         {/* Tabela de recompensas */}
         <div className={cardClass}>
-          <h3 className={headingClass + ' mb-1'}>Quanto você ganha</h3>
+          <h3 className={headingClass + ' mb-1'} style={serifFont}>Quanto você ganha</h3>
           <p className={subClass + ' mb-4'}>Créditos por indicação que assinar um plano</p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -181,7 +186,7 @@ export const PartnersTab: React.FC = () => {
                 ))}
               </tbody>
             </table>
-            <p className={mutedClass + ' text-[10px] mt-2'}>Mensal = 30% do anual. Pagamento único por indicação.</p>
+            <p className={mutedClass + ' text-[10px] mt-2'}>Indicações mensais rendem 30% do bônus anual. Pagamento único por indicação.</p>
           </div>
         </div>
 
@@ -190,7 +195,6 @@ export const PartnersTab: React.FC = () => {
           onClick={() => setShowTermsModal(true)}
           className="w-full py-4 rounded-xl text-white font-semibold text-base bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:shadow-lg hover:shadow-[#FF6B6B]/20 hover:scale-[1.005] active:scale-[0.995] transition-all"
         >
-          <i className="fas fa-rocket mr-2"></i>
           Quero participar
         </button>
 
@@ -216,7 +220,7 @@ export const PartnersTab: React.FC = () => {
             <i className="fas fa-link text-white text-xs"></i>
           </div>
           <div>
-            <h3 className={headingClass}>Compartilhe e ganhe</h3>
+            <h3 className={headingClass} style={serifFont}>Compartilhe e ganhe</h3>
             <p className={subClass}>Cada pessoa que assinar pelo seu link gera créditos para vocês dois</p>
           </div>
         </div>
@@ -267,9 +271,9 @@ export const PartnersTab: React.FC = () => {
         ))}
       </div>
 
-      {/* Tabela "Quanto você ganha" — subida para 3a posição */}
+      {/* Tabela "Quanto você ganha" */}
       <div className={cardClass}>
-        <h3 className={headingClass + ' mb-3'}>Quanto você ganha</h3>
+        <h3 className={headingClass + ' mb-3'} style={serifFont}>Quanto você ganha</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -295,13 +299,13 @@ export const PartnersTab: React.FC = () => {
               ))}
             </tbody>
           </table>
-          <p className={mutedClass + ' text-[10px] mt-2'}>Mensal = 30% do valor anual. Pagamento único por indicação.</p>
+          <p className={mutedClass + ' text-[10px] mt-2'}>Indicações mensais rendem 30% do bônus anual. Pagamento único por indicação.</p>
         </div>
       </div>
 
-      {/* Como funciona — 3 steps (textos curtos) */}
+      {/* Como funciona — 3 steps */}
       <div className={cardClass}>
-        <h3 className={headingClass + ' mb-4'}>Como funciona</h3>
+        <h3 className={headingClass + ' mb-4'} style={serifFont}>Como funciona</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {STEPS_POST.map((step, i) => (
             <div key={i} className="flex items-start gap-3">
@@ -325,7 +329,7 @@ export const PartnersTab: React.FC = () => {
       {/* Lista de indicações */}
       <div className={cardClass}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className={headingClass}>Suas indicações</h3>
+          <h3 className={headingClass} style={serifFont}>Suas indicações</h3>
           <span className={mutedClass + ' text-[10px]'}>{referrals.length} total</span>
         </div>
         {referrals.length === 0 ? (
@@ -372,7 +376,7 @@ export const PartnersTab: React.FC = () => {
       {payouts.length > 0 && (
         <div className={cardClass}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className={headingClass}>Cronograma de resgates</h3>
+            <h3 className={headingClass} style={serifFont}>Cronograma de resgates</h3>
             {stats.creditsAvailable > 0 && (
               <button
                 onClick={handleClaim}
@@ -431,7 +435,7 @@ export const PartnersTab: React.FC = () => {
 
       {/* FAQ */}
       <div className={cardClass}>
-        <h3 className={headingClass + ' mb-3'}>Perguntas frequentes</h3>
+        <h3 className={headingClass + ' mb-3'} style={serifFont}>Perguntas frequentes</h3>
         <div className="space-y-2">
           {FAQ.map((faq, i) => (
             <details key={i} className={'group rounded-xl border p-3 ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
