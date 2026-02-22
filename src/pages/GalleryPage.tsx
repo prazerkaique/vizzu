@@ -46,9 +46,11 @@ function formatDate(iso: string): string {
 interface GalleryPageProps {
   galleryRefreshKey?: number;
   setProductForCreation?: (p: Product | null) => void;
+  /** Nome do produto para filtrar ao abrir (vindo do Dashboard) */
+  initialSearch?: string;
 }
 
-export function GalleryPage({ galleryRefreshKey, setProductForCreation }: GalleryPageProps) {
+export function GalleryPage({ galleryRefreshKey, setProductForCreation, initialSearch }: GalleryPageProps) {
   const { theme, isV2, navigateTo, showToast } = useUI();
   const { user } = useAuth();
   const isDark = theme !== 'light';
@@ -81,8 +83,16 @@ export function GalleryPage({ galleryRefreshKey, setProductForCreation }: Galler
 
   // ── Filtros ──
   const [activeFeature, setActiveFeature] = useState<FeatureType | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearch || '');
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Atualizar busca quando vem do Dashboard com produto diferente
+  useEffect(() => {
+    if (initialSearch !== undefined) {
+      setSearchTerm(initialSearch);
+      setCurrentPage(1);
+    }
+  }, [initialSearch]);
 
   // ── Paginação ──
   const [currentPage, setCurrentPage] = useState(1);

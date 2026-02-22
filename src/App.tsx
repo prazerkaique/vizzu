@@ -350,6 +350,11 @@ function App() {
  // ── Realtime: atualização automática sem F5 ──
  const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
  const bumpGallery = useCallback(() => setGalleryRefreshKey(k => k + 1), []);
+ const [gallerySearch, setGallerySearch] = useState('');
+ // Limpar filtro da galeria quando sai dela (evita filtro "grudado")
+ useEffect(() => {
+   if (currentPage !== 'gallery') setGallerySearch('');
+ }, [currentPage]);
  const refreshModels = useCallback(() => {
    if (user?.id) loadSavedModels(user.id);
  }, [user?.id]);
@@ -1095,8 +1100,8 @@ function App() {
  // Renderiza página para swipe adjacente (Instagram-style)
  const renderSwipePage = (page: Page): React.ReactNode => {
    switch (page) {
-     case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />;
-     case 'gallery': return <GalleryPage galleryRefreshKey={galleryRefreshKey} setProductForCreation={setProductForCreation} />;
+     case 'dashboard': return <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} onNavigateToGallery={(name) => { setGallerySearch(name); navigateTo('gallery'); }} />;
+     case 'gallery': return <GalleryPage galleryRefreshKey={galleryRefreshKey} setProductForCreation={setProductForCreation} initialSearch={gallerySearch} />;
      case 'products': return <ProductsPage productForCreation={productForCreation} setProductForCreation={setProductForCreation} />;
      case 'create': return <CreateHubPage userCredits={userCredits} />;
      case 'models': return <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />;
@@ -1116,8 +1121,8 @@ function App() {
  onMasterSetCredits={currentPlan.id === 'master' ? handleMasterSetCredits : undefined}
  renderSwipePage={renderSwipePage}
  >
- {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} />}
- {currentPage === 'gallery' && <GalleryPage galleryRefreshKey={galleryRefreshKey} setProductForCreation={setProductForCreation} />}
+ {currentPage === 'dashboard' && <DashboardPage setProductForCreation={setProductForCreation} onOpenClientDetail={(client) => { setPendingClientDetail(client); navigateTo('clients'); }} onNavigateToGallery={(name) => { setGallerySearch(name); navigateTo('gallery'); }} />}
+ {currentPage === 'gallery' && <GalleryPage galleryRefreshKey={galleryRefreshKey} setProductForCreation={setProductForCreation} initialSearch={gallerySearch} />}
  {currentPage === 'create' && <CreateHubPage userCredits={userCredits} />}
 
  {/* PRODUCT STUDIO - Monta quando ativo ou gerando */}

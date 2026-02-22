@@ -83,9 +83,11 @@ const TIPS = [
 interface DashboardPageProps {
   setProductForCreation?: (p: Product | null) => void;
   onOpenClientDetail?: (client: Client) => void;
+  /** Seta filtro de busca na galeria antes de navegar */
+  onNavigateToGallery?: (productName: string) => void;
 }
 
-export function DashboardPage({ setProductForCreation, onOpenClientDetail }: DashboardPageProps) {
+export function DashboardPage({ setProductForCreation, onOpenClientDetail, onNavigateToGallery }: DashboardPageProps) {
  const { theme, isV2, navigateTo, setSettingsTab } = useUI();
  const { user } = useAuth();
  const { products } = useProducts();
@@ -358,17 +360,12 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail }: Das
      navigateTo('provador' as Page);
      return;
    }
-   // Look Composer: ir para galeria (sem pré-selecionar produto)
-   if (creation.type === 'look') {
-     navigateTo('look-composer' as Page);
-     return;
+   // Todos os demais: navegar para galeria filtrada pelo produto
+   if (onNavigateToGallery && creation.name) {
+     onNavigateToGallery(creation.name);
+   } else {
+     navigateTo('gallery' as Page);
    }
-   // Demais: pré-selecionar produto e navegar
-   if (creation.productId && setProductForCreation) {
-     const product = products.find(p => p.id === creation.productId);
-     if (product) setProductForCreation(product);
-   }
-   navigateTo((featurePage[creation.type] || 'create') as Page);
  };
 
  return (
