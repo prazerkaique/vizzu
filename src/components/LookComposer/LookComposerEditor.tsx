@@ -15,6 +15,7 @@ import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits'
 import type { VizzuTheme } from '../../contexts/UIContext';
 import { useUI } from '../../contexts/UIContext';
 import { useGeneration } from '../../contexts/GenerationContext';
+import { getStoragePublicUrl } from '../../utils/supabaseStorage';
 
 
 interface LookComposerEditorProps {
@@ -428,7 +429,7 @@ export const LookComposerEditor: React.FC<LookComposerEditorProps> = ({
  .upload(fileName, file, { upsert: true });
  if (uploadError) throw uploadError;
 
- const publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${fileName}`;
+ const publicUrl = getStoragePublicUrl('products', fileName);
 
  const { data: imageData, error: insertError } = await supabase
  .from('product_images')

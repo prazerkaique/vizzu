@@ -16,6 +16,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const initialLoadDone = useRef(false);
+  const wasAuthenticated = useRef(false);
+
+  // Manter ref atualizado para usar no listener de auth
+  useEffect(() => { wasAuthenticated.current = isAuthenticated; }, [isAuthenticated]);
 
   // Check for existing Supabase session on mount
   useEffect(() => {
@@ -48,7 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initialLoadDone.current = true;
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Detectar sessao expirada (refresh falhou)
+      if (event === 'SIGNED_OUT' && initialLoadDone.current && wasAuthenticated.current) {
+        window.dispatchEvent(new CustomEvent('vizzu-session-expired'));
+      }
+
       if (session?.user) {
         const userId = session.user.id;
         const userEmail = session.user.email;
@@ -112,6 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('vizzu_history');
     localStorage.removeItem('vizzu_company_settings');
     localStorage.removeItem('vizzu_onboarding_completed');
+    localStorage.removeItem('vizzu_pending_model');
+    localStorage.removeItem('vizzu-debug-slow');
+    localStorage.removeItem('vizzu-debug-slow-cleaned');
+    // Limpar termos aceitos (todas as versoes)
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('vizzu_terms_accepted_'))
+      .forEach(k => localStorage.removeItem(k));
+    // Limpar sessionStorage (senha Master)
+    sessionStorage.removeItem('vizzu_master_pw');
+    sessionStorage.removeItem('vizzu_master_unlocked');
     setUser(null);
     setIsAuthenticated(false);
   }, []);

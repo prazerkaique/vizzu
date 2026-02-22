@@ -250,8 +250,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
       return false;
     } catch (e: any) {
       console.error('Error adding credits:', e);
-      setLocalData(prev => ({ ...prev, credits: prev.credits + amount }));
-      return true;
+      return false;
     }
   }, [userId, enableBackend]);
 

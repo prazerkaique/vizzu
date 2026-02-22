@@ -17,6 +17,7 @@ import type { CompositionProduct, ParsedPrompt } from './promptParser';
 import type { VizzuTheme } from '../../contexts/UIContext';
 import { supabase } from '../../services/supabaseClient';
 import { useProducts } from '../../contexts/ProductsContext';
+import { getStoragePublicUrl } from '../../utils/supabaseStorage';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -364,7 +365,7 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
         .upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${fileName}`;
+      const publicUrl = getStoragePublicUrl('products', fileName);
 
       const { data: imageData, error: insertError } = await supabase
         .from('product_images')
@@ -405,7 +406,8 @@ export const CreativeStillEditor: React.FC<CreativeStillEditorProps> = ({
     if (!prompt.trim() || isOptimizing) return;
     setIsOptimizing(true);
     try {
-      const resp = await fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/optimize-prompt', {
+      const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
+      const resp = await fetch(`${N8N_BASE_URL}/vizzu/still/optimize-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

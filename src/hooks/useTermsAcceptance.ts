@@ -21,13 +21,14 @@ export function useTermsAcceptance(userId: string | undefined): UseTermsAcceptan
       return;
     }
 
-    // 1. Checar localStorage (instantâneo)
-    if (localStorage.getItem(LS_KEY) === userId) {
+    // 1. localStorage como cache rapido (UX instantanea)
+    const cachedLocally = localStorage.getItem(LS_KEY) === userId;
+    if (cachedLocally) {
       setHasAccepted(true);
-      return;
+      // Verificar em background — se Supabase discorda, resetar
     }
 
-    // 2. Checar Supabase (cross-device)
+    // 2. Checar Supabase (cross-device, source of truth)
     const check = async () => {
       try {
         const { data, error } = await supabase
@@ -44,11 +45,16 @@ export function useTermsAcceptance(userId: string | undefined): UseTermsAcceptan
           localStorage.setItem(LS_KEY, userId);
           setHasAccepted(true);
         } else {
+          // Supabase diz "nao aceitou" — resetar cache se existia
+          if (cachedLocally) {
+            localStorage.removeItem(LS_KEY);
+          }
           setHasAccepted(false);
         }
       } catch (err) {
         console.error('[useTermsAcceptance] Erro ao verificar:', err);
-        setHasAccepted(false);
+        // Em caso de erro de rede, nao bloquear se cache existia
+        if (!cachedLocally) setHasAccepted(false);
       }
     };
 

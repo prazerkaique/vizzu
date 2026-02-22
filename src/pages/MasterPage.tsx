@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useUI } from '../contexts/UIContext';
 
-const SESSION_KEY = 'vizzu_master_unlocked';
 
 interface Metrics {
   total_users: number;
@@ -59,12 +58,12 @@ export function MasterPage() {
 
   // Auth state
   const [password, setPassword] = useState('');
-  const [isUnlocked, setIsUnlocked] = useState(() => sessionStorage.getItem(SESSION_KEY) === 'true');
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Stored password for RPCs
-  const [storedPassword, setStoredPassword] = useState(() => sessionStorage.getItem('vizzu_master_pw') || '');
+  // Stored password for RPCs (apenas em memoria, nao persiste entre abas)
+  const [storedPassword, setStoredPassword] = useState('');
 
   // Metrics
   const [metrics, setMetrics] = useState<Metrics | null>(null);
@@ -103,8 +102,6 @@ export function MasterPage() {
       const { data, error } = await supabase.rpc('master_verify_password', { p_password: password });
       if (error) throw error;
       if (data === true) {
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        sessionStorage.setItem('vizzu_master_pw', password);
         setStoredPassword(password);
         setIsUnlocked(true);
       } else {
@@ -217,8 +214,31 @@ export function MasterPage() {
   };
 
   // ── Update user ──
+  const ALLOWED_FIELDS = ['plan_id', 'credits', 'edit_balance', 'status'];
+  const ALLOWED_PLANS = ['free', 'starter', 'basic', 'pro', 'premier', 'enterprise', 'test', 'master'];
+
   const updateField = async (field: string, value: string) => {
     if (!userData || !storedPassword) return;
+
+    // Validacao: campo permitido
+    if (!ALLOWED_FIELDS.includes(field)) {
+      showToast(`Campo "${field}" nao permitido`, 'error');
+      return;
+    }
+    // Validacao por campo
+    if (field === 'plan_id' && !ALLOWED_PLANS.includes(value)) {
+      showToast('Plano invalido', 'error');
+      return;
+    }
+    if ((field === 'credits' || field === 'edit_balance') && (isNaN(Number(value)) || Number(value) < 0 || Number(value) > 999999)) {
+      showToast('Valor de creditos invalido (0-999999)', 'error');
+      return;
+    }
+    if (field === 'status' && !['active', 'cancelled', 'trialing', 'past_due'].includes(value)) {
+      showToast('Status invalido', 'error');
+      return;
+    }
+
     setSaving(field);
     try {
       const { data, error } = await supabase.rpc('master_update_user', {

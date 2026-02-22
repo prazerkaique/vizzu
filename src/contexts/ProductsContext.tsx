@@ -213,9 +213,17 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         console.warn('[Products] Nenhum produto encontrado para este usuário');
         setProducts([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Products] Erro ao carregar produtos:', error);
-      showToast('Erro ao carregar produtos. Verifique sua conexão.', 'error');
+      const isAuthError = error?.message?.includes('JWT') ||
+                          error?.code === 'PGRST301' ||
+                          error?.status === 401;
+      if (isAuthError) {
+        setProducts([]);
+        showToast('Sessão expirada. Faça login novamente.', 'error');
+      } else {
+        showToast('Erro ao carregar produtos. Verifique sua conexão.', 'error');
+      }
     }
   }, [showToast]);
 

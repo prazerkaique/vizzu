@@ -540,7 +540,8 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
         };
 
         // Chamar webhook N8N
-        fetch('https://n8nwebhook.brainia.store/webhook/vizzu/still/generate-simple', {
+        const N8N_BASE_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || '';
+        fetch(`${N8N_BASE_URL}/vizzu/still/generate-simple`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

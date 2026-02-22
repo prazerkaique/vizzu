@@ -209,6 +209,15 @@ function App() {
    return () => window.removeEventListener('vizzu:fallback-provider', handler);
  }, [showToast]);
 
+ // Listener: sessao expirada (token refresh falhou)
+ useEffect(() => {
+   const handler = () => {
+     showToast('Sessão expirada. Faça login novamente.', 'error');
+   };
+   window.addEventListener('vizzu-session-expired', handler);
+   return () => window.removeEventListener('vizzu-session-expired', handler);
+ }, [showToast]);
+
  // Master: alterar créditos direto no Supabase
  const handleMasterSetCredits = async (credits: number) => {
  if (currentPlan.id !== 'master' || !user?.id) return;

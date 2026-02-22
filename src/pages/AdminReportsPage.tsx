@@ -13,7 +13,7 @@ import {
  reviewReport,
 } from '../lib/api/reports';
 
-const ADMIN_EMAIL = 'kaiquelearner@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || '';
 
 const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
  'product-studio': { label: 'Product Studio', icon: 'fa-camera', color: 'from-[#FF6B6B] to-[#FF9F43]' },

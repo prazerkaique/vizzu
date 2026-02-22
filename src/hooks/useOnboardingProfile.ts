@@ -21,10 +21,11 @@ export function useOnboardingProfile(userId: string | undefined): UseOnboardingP
       return;
     }
 
-    // 1. localStorage (instantâneo)
-    if (localStorage.getItem(LS_KEY) === userId) {
+    // 1. localStorage como cache rapido (UX instantanea)
+    const cachedLocally = localStorage.getItem(LS_KEY) === userId;
+    if (cachedLocally) {
       setHasCompleted(true);
-      return;
+      // Verificar em background — se Supabase discorda, resetar
     }
 
     // 2. Checar Supabase
@@ -56,11 +57,15 @@ export function useOnboardingProfile(userId: string | undefined): UseOnboardingP
           return;
         }
 
+        // Supabase diz "nao completo" — resetar cache se existia
+        if (cachedLocally) {
+          localStorage.removeItem(LS_KEY);
+        }
         setHasCompleted(false);
       } catch (err) {
         console.error('[useOnboardingProfile] Erro ao verificar:', err);
-        // Em caso de erro, não bloquear o usuário
-        setHasCompleted(false);
+        // Em caso de erro de rede, nao bloquear o usuario (manter cache se existia)
+        if (!cachedLocally) setHasCompleted(false);
       }
     };
 

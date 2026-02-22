@@ -9,6 +9,7 @@ import { generateProductStudioV2, pollStudioGeneration, retryStudioAngle, Produc
 import { ProductStudioResult } from './ProductStudioResult';
 import DownloadModal from '../shared/DownloadModal';
 import type { DownloadableImage } from '../../utils/downloadSizes';
+import { getStoragePublicUrl } from '../../utils/supabaseStorage';
 import { ResolutionSelector, Resolution } from '../ResolutionSelector';
 import { Resolution4KConfirmModal, has4KConfirmation, savePreferredResolution, getPreferredResolution } from '../Resolution4KConfirmModal';
 import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits';
@@ -1091,7 +1092,7 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
 
  if (uploadError) throw uploadError;
 
- const publicUrl = `https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/${fileName}`;
+ const publicUrl = getStoragePublicUrl('products', fileName);
 
  // Inserir registro na tabela product_images
  const { data: imageData, error: insertError } = await supabase
@@ -2323,13 +2324,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={(e) => {
  e.stopPropagation();
  setExpandedStyleImage({
- url: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png',
+ url: getStoragePublicUrl('products', '314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png'),
  label: 'Flat Lay'
  });
  }}
  >
  <OptimizedImage
- src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png"
+ src={getStoragePublicUrl('products', '314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_flatlay_2K_38960141-980e-47f2-b84b-848d21da7430.png')}
  alt="Flat Lay"
  className="w-full h-32 object-cover"
  size="thumb"
@@ -2350,13 +2351,13 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={(e) => {
  e.stopPropagation();
  setExpandedStyleImage({
- url: 'https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png',
+ url: getStoragePublicUrl('products', '314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png'),
  label: 'Ghost Mannequin'
  });
  }}
  >
  <OptimizedImage
- src="https://dbdqiqehuapcicejnzyd.supabase.co/storage/v1/object/public/products/314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png"
+ src={getStoragePublicUrl('products', '314df8ec-687f-44d6-bc11-f00f0bab2bde/e587218a-950f-43f6-8de4-ff65e6c4608d/studio_front_ghost_2K_27315fcf-1e7c-481f-a9e6-c9ff9db9bfd4.png')}
  alt="Ghost Mannequin"
  className="w-full h-32 object-cover"
  size="thumb"

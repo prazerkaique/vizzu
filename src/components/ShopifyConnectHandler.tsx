@@ -37,6 +37,12 @@ export const ShopifyConnectHandler: React.FC = () => {
 
     if (!shop || !sig || !ts) return;
 
+    // Validar formato do dominio Shopify
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/.test(shop)) {
+      console.warn('[ShopifyConnect] Dominio invalido:', shop);
+      return;
+    }
+
     processedRef.current = true;
     setShopName(shop.replace('.myshopify.com', ''));
 
