@@ -15,6 +15,7 @@ interface Props {
  onClose: () => void;
  creditsNeeded: number;
  currentCredits: number;
+ editBalance?: number;
  currentPlan: Plan;
  billingPeriod: 'monthly' | 'yearly';
  actionContext: 'studio' | 'cenario' | 'lifestyle' | 'video' | 'provador' | 'generic';
@@ -40,6 +41,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  onClose,
  creditsNeeded,
  currentCredits,
+ editBalance = 0,
  currentPlan,
  billingPeriod,
  actionContext,
@@ -172,7 +174,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {!isTrial && (
  <div className={`text-center text-xs mb-6 ${isDark ? 'text-zinc-500' : 'text-gray-400'}`}>
  <i className="fas fa-wallet mr-1.5"></i>
- Seu saldo atual: <span className="font-semibold">{currentCredits} créditos</span>
+ Seu saldo atual: <span className="font-semibold">{currentCredits} créditos</span>{editBalance > 0 && <span className="text-emerald-400 ml-1">+ {editBalance} edição</span>}
  {daysUntilRenewal && daysUntilRenewal <= 30 && (
  <span className="ml-1">· Renova em {daysUntilRenewal} dias</span>
  )}
@@ -343,7 +345,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
  <div>
  <p className="text-[10px] uppercase tracking-wider font-medium mb-1 text-gray-400">Créditos</p>
- <p className="text-sm font-bold text-gray-900">{currentCredits}</p>
+ <p className="text-sm font-bold text-gray-900">{currentCredits}{editBalance > 0 && <span className="text-emerald-500 text-xs ml-1">+{editBalance}</span>}</p>
  </div>
  {daysUntilRenewal && daysUntilRenewal <= 30 && (
  <div>

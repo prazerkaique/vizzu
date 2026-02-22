@@ -545,13 +545,13 @@ export const ProductStudioResult: React.FC<ProductStudioResultProps> = ({
 
  <div className="grid grid-cols-4 gap-2">
 
- {/* Refinar */}
+ {/* Edição IA */}
  <button
  onClick={() => onDeductEditCredits ? setShowEditModal(true) : onRegenerate()}
  className="p-2.5 rounded-lg border border-[#FF6B6B]/30 bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 hover:from-[#FF6B6B]/20 hover:to-[#FF9F43]/20 transition-all flex flex-col items-center gap-1"
  >
- <i className="fas fa-sliders text-sm bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent"></i>
- <span className="text-[9px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent">Refinar</span>
+ <i className="fas fa-wand-magic-sparkles text-sm bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent"></i>
+ <span className="text-[9px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent">Edição IA</span>
  </button>
 
  {/* Zoom */}

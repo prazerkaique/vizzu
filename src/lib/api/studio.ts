@@ -849,8 +849,8 @@ interface RefineParams {
 }
 
 /**
- * Refinar - Ajusta uma imagem gerada anteriormente
- * Custo: 1 crédito
+ * Edição IA - Ajusta uma imagem gerada anteriormente
+ * Custo: 1 crédito de edição
  */
 export async function refineImage(params: RefineParams): Promise<StudioReadyResponse> {
   const response = await generationFetch(`${N8N_BASE_URL}/vizzu/refine`, {

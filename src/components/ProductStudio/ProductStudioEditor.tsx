@@ -1896,8 +1896,8 @@ export const ProductStudioEditor: React.FC<ProductStudioEditorProps> = ({
  onClick={() => setShowEditModalEditor(true)}
  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] hover:from-[#FF5252] hover:to-[#FF8F2F] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#FF6B6B]/20"
  >
- <i className="fas fa-sliders text-sm text-white"></i>
- <span className="text-white text-sm font-semibold">Refinar</span>
+ <i className="fas fa-wand-magic-sparkles text-sm text-white"></i>
+ <span className="text-white text-sm font-semibold">Edição IA</span>
  </button>
  </div>
  )}

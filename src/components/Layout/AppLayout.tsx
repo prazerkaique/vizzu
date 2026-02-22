@@ -7,6 +7,7 @@ import { LowCreditsBanner } from '../LowCreditsBanner';
 interface AppLayoutProps {
  children: React.ReactNode;
  userCredits: number;
+ editBalance?: number;
  currentPlan: any;
  restoreModal: (id: string) => void;
  onLogout: () => void;
@@ -18,8 +19,8 @@ interface AppLayoutProps {
 // ═══════════════════════════════════════════════════════════════
 // Sidebar Credits Box — editável para plano Master
 // ═══════════════════════════════════════════════════════════════
-function SidebarCreditsBox({ userCredits, currentPlan, sidebarCollapsed, isDark, onAdd, onMasterSetCredits }: {
- userCredits: number; currentPlan: any; sidebarCollapsed: boolean; isDark: boolean;
+function SidebarCreditsBox({ userCredits, editBalance, currentPlan, sidebarCollapsed, isDark, onAdd, onMasterSetCredits }: {
+ userCredits: number; editBalance: number; currentPlan: any; sidebarCollapsed: boolean; isDark: boolean;
  onAdd: () => void; onMasterSetCredits?: (credits: number) => void;
 }) {
  const [editing, setEditing] = useState(false);
@@ -65,7 +66,10 @@ function SidebarCreditsBox({ userCredits, currentPlan, sidebarCollapsed, isDark,
    </button>
   </div>
   ) : (
+  <div className="flex items-baseline gap-1">
   <p className={'text-xl font-bold ' + (isDark ? 'text-white' : 'text-[#373632]')}>{userCredits.toLocaleString()}</p>
+  {editBalance > 0 && <span className="text-xs text-emerald-400 font-semibold">+{editBalance}<i className="fas fa-pen-to-square text-[7px] ml-0.5"></i></span>}
+  </div>
   )}
   <div className={'mt-2 h-1.5 rounded-full overflow-hidden ' + (isDark ? 'bg-neutral-800' : 'bg-[#e5e6ea]')}>
   <div className={((userCredits <= currentPlan.limit * 0.2 && !isMaster ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]') + ' h-full rounded-full')} style={{ width: isMaster ? '100%' : Math.min(100, Math.max(5, (Math.min(userCredits, currentPlan.limit) / currentPlan.limit) * 100)) + '%' }}></div>
@@ -75,6 +79,7 @@ function SidebarCreditsBox({ userCredits, currentPlan, sidebarCollapsed, isDark,
   ) : (
   <div className="text-center">
   <p className={'text-xs font-bold ' + (isMaster ? 'text-[#FF6B6B]' : userCredits <= 5 ? 'text-red-400' : isDark ? 'text-white' : 'text-[#373632]')}>{userCredits}</p>
+  {editBalance > 0 && <p className="text-[7px] text-emerald-400 font-semibold">+{editBalance}</p>}
   <p className={'text-[8px] ' + (isMaster ? 'text-[#FF6B6B]/70' : userCredits <= 5 ? 'text-red-400/70' : isDark ? 'text-neutral-500' : 'text-[#373632]/40')}>{isMaster ? 'master' : 'cred.'}</p>
   </div>
   )}
@@ -85,6 +90,7 @@ function SidebarCreditsBox({ userCredits, currentPlan, sidebarCollapsed, isDark,
 export function AppLayout({
  children,
  userCredits,
+ editBalance,
  currentPlan,
  restoreModal,
  onLogout,
@@ -424,7 +430,7 @@ export function AppLayout({
  )}
  </nav>
  <div className={'p-3 border-t space-y-2 ' + (theme !== 'light' ? 'border-neutral-900' : 'border-[#e5e6ea]')}>
- <SidebarCreditsBox userCredits={userCredits} currentPlan={currentPlan} sidebarCollapsed={sidebarCollapsed} isDark={theme !== 'light'} onAdd={() => { navigateTo('settings'); setSettingsTab('plan'); }} onMasterSetCredits={onMasterSetCredits} />
+ <SidebarCreditsBox userCredits={userCredits} editBalance={editBalance ?? 0} currentPlan={currentPlan} sidebarCollapsed={sidebarCollapsed} isDark={theme !== 'light'} onAdd={() => { navigateTo('settings'); setSettingsTab('plan'); }} onMasterSetCredits={onMasterSetCredits} />
  {/* Configurações com Dropdown */}
  <div className="relative">
  <button
@@ -503,6 +509,7 @@ export function AppLayout({
  {!isCreationPage && onBuyCredits && (
   <LowCreditsBanner
    userCredits={userCredits}
+   editBalance={editBalance}
    currentPlanId={currentPlan?.id || 'free'}
    theme={theme as VizzuTheme}
    onBuyCredits={onBuyCredits}
@@ -524,7 +531,7 @@ export function AppLayout({
  className={'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ' + (userCredits <= 5 ? 'bg-red-500/15 text-red-400 border border-red-500/30' : (theme !== 'light' ? 'bg-white/10 text-neutral-300 border border-white/15' : 'bg-gray-100 text-gray-600 border border-gray-200'))}
  >
  <i className={'fas fa-coins text-[10px] ' + (userCredits <= 5 ? 'text-red-400' : 'text-[#FF9F43]')}></i>
- <span>{userCredits} créditos</span>
+ <span>{userCredits}{(editBalance ?? 0) > 0 && <span className="text-emerald-400">+{editBalance}</span>} créditos</span>
  </button>
  <button
  onClick={() => navigateTo('settings')}

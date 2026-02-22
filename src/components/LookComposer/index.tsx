@@ -1345,10 +1345,10 @@ export const LookComposer: React.FC<LookComposerProps> = ({
 
  <button
  onClick={() => setEditingGalleryLook(true)}
- className={(isDark ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600') + ' w-full py-2.5 rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+ className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
  >
- <i className="fas fa-pen-to-square"></i>
- Editar imagem {selectedLook.imageCount > 1 ? (selectedLookView === 'front' ? '(Frente)' : '(Costas)') : ''}
+ <i className="fas fa-wand-magic-sparkles"></i>
+ Edição IA {selectedLook.imageCount > 1 ? (selectedLookView === 'front' ? '(Frente)' : '(Costas)') : ''}
  </button>
 
  <button

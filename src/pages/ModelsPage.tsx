@@ -8,6 +8,8 @@ import { generateModelImages } from '../lib/api/studio';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { useImageViewer } from '../components/ImageViewer';
 import { ModelGridSkeleton } from '../components/LoadingSkeleton';
+import { ImageEditModal } from '../components/shared/ImageEditModal';
+import { editStudioImage } from '../lib/api/studio';
 import heic2any from 'heic2any';
 import { compressImage } from '../utils/imageCompression';
 
@@ -162,6 +164,8 @@ interface ModelsPageProps {
  showCreateModel: boolean;
  setShowCreateModel: (v: boolean) => void;
  userCredits?: number;
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
  onModelCreated?: (modelId: string) => void;
 }
 
@@ -171,6 +175,8 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  showCreateModel,
  setShowCreateModel,
  userCredits = 0,
+ editBalance = 0,
+ onDeductEditCredits,
  onModelCreated,
 }) => {
  // Combinar modelos default + do usuário
@@ -234,6 +240,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  // Fix 8: state para confirmação de delete
  const [showDeleteModelConfirm, setShowDeleteModelConfirm] = useState(false);
  const [deleteModelTarget, setDeleteModelTarget] = useState<SavedModel | null>(null);
+
+ // Edição IA de imagens do modelo
+ const [editingModelImage, setEditingModelImage] = useState<{ model: SavedModel; view: 'front' | 'back'; url: string } | null>(null);
 
  // Fix 10: loading state
  const [isLoadingModels, setIsLoadingModels] = useState(true);
@@ -1124,6 +1133,43 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  // Fix 17: separar default e user models filtrados
  const filteredDefaultModels = useMemo(() => DEFAULT_MODELS.filter(filterModel), [filterModel]);
  const filteredUserModels = useMemo(() => savedModels.filter(filterModel), [savedModels, filterModel]);
+
+ // ── Edição IA de imagens do modelo ──
+ const handleModelEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string; resolution?: '2k' | '4k' }) => {
+   if (!user || !editingModelImage) return { success: false, error: 'Dados insuficientes' };
+   try {
+     const result = await editStudioImage({
+       userId: user.id,
+       productId: editingModelImage.model.id,
+       generationId: editingModelImage.model.id,
+       angle: editingModelImage.view,
+       currentImageUrl: editingModelImage.url,
+       correctionPrompt: params.correctionPrompt,
+       referenceImageBase64: params.referenceImageBase64,
+       resolution: params.resolution || '2k',
+       productInfo: { name: editingModelImage.model.name },
+     });
+     return result;
+   } catch {
+     return { success: false, error: 'Erro ao editar imagem do modelo' };
+   }
+ }, [user, editingModelImage]);
+
+ const handleModelEditSave = useCallback(async (newImageUrl: string) => {
+   if (!editingModelImage || !user) return { success: false };
+   const model = editingModelImage.model;
+   const view = editingModelImage.view;
+   const newImages = { ...model.images, [view]: newImageUrl };
+   try {
+     await supabase.from('saved_models').update({ images: newImages }).eq('id', model.id).eq('user_id', user.id);
+     setSavedModels(prev => prev.map(m => m.id === model.id ? { ...m, images: newImages } : m));
+     if (showModelDetail?.id === model.id) setShowModelDetail({ ...model, images: newImages });
+     showToast('Imagem do modelo atualizada!', 'success');
+     return { success: true };
+   } catch {
+     return { success: false };
+   }
+ }, [editingModelImage, user, showModelDetail, setSavedModels, showToast]);
 
  // Fix 9 + render card extraído para reusar em ambas seções
  const renderModelCard = useCallback((model: SavedModel) => {
@@ -2593,8 +2639,9 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  {['front', 'back'].map((type) => {
  const imgUrl = showModelDetail.images[type as keyof typeof showModelDetail.images];
  return (
- <div key={type} className={'aspect-[3/4] rounded-xl overflow-hidden ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
+ <div key={type} className={'relative aspect-[3/4] rounded-xl overflow-hidden group/img ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-gray-100')}>
  {imgUrl ? (
+ <>
  <OptimizedImage
  src={imgUrl}
  alt={type === 'front' ? 'Frente' : 'Costas'}
@@ -2602,6 +2649,15 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  size="preview"
  onClick={() => openViewer(imgUrl, { alt: `${showModelDetail.name} - ${type === 'front' ? 'Frente' : 'Costas'}` })}
  />
+ {/* Edição IA overlay */}
+ <button
+   onClick={(e) => { e.stopPropagation(); setEditingModelImage({ model: showModelDetail, view: type as 'front' | 'back', url: imgUrl }); }}
+   className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover/img:opacity-100 transition-opacity px-3 py-1.5 rounded-lg bg-black/70 backdrop-blur-sm border border-white/10 flex items-center gap-1.5"
+ >
+   <i className="fas fa-wand-magic-sparkles text-[10px] text-[#FF6B6B]"></i>
+   <span className="text-[10px] font-medium text-white">Edição IA</span>
+ </button>
+ </>
  ) : (
  <div className="w-full h-full flex items-center justify-center">
  <i className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-300') + ' fas fa-image text-2xl'}></i>
@@ -2806,6 +2862,23 @@ export const ModelsPage: React.FC<ModelsPageProps> = ({
  </div>
  </div>
  </div>
+ )}
+
+ {/* Edição IA Modal */}
+ {editingModelImage && (
+ <ImageEditModal
+   isOpen={!!editingModelImage}
+   onClose={() => setEditingModelImage(null)}
+   currentImageUrl={editingModelImage.url}
+   imageName={`${editingModelImage.model.name} — ${editingModelImage.view === 'front' ? 'Frente' : 'Costas'}`}
+   editBalance={editBalance}
+   regularBalance={userCredits}
+   resolution="2k"
+   onGenerate={handleModelEditGenerate}
+   onSave={handleModelEditSave}
+   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, editingModelImage.model.id) : undefined}
+   theme={theme}
+ />
  )}
  </>
  );

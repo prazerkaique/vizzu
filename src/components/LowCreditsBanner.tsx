@@ -7,6 +7,7 @@ import type { VizzuTheme } from '../contexts/UIContext';
 
 interface Props {
   userCredits: number;
+  editBalance?: number;
   currentPlanId: string;
   theme: VizzuTheme;
   onBuyCredits: () => void;
@@ -14,6 +15,7 @@ interface Props {
 
 export const LowCreditsBanner: React.FC<Props> = ({
   userCredits,
+  editBalance = 0,
   currentPlanId,
   theme,
   onBuyCredits,
@@ -53,7 +55,7 @@ export const LowCreditsBanner: React.FC<Props> = ({
     return {
       icon: 'fa-fire-alt',
       emoji: '🔥',
-      text: `Apenas ${userCredits} crédito${userCredits !== 1 ? 's' : ''} restante${userCredits !== 1 ? 's' : ''}!`,
+      text: `Apenas ${userCredits} crédito${userCredits !== 1 ? 's' : ''} restante${userCredits !== 1 ? 's' : ''}${editBalance > 0 ? ` (+${editBalance} edição)` : ''}!`,
       sub: 'Garanta mais créditos antes que acabem.',
       cta: 'Comprar mais',
     };

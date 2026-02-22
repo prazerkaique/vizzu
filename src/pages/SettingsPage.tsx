@@ -18,6 +18,7 @@ import { CURRENT_TERMS_VERSION } from '../content/termsContent';
 
 interface SettingsPageProps {
  userCredits: number;
+ editBalance?: number;
  currentPlan: any;
  billingPeriod: string;
  daysUntilRenewal: number;
@@ -125,6 +126,7 @@ function ShopifyIntegrationCard({ theme }: { theme: VizzuTheme }) {
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
  userCredits,
+ editBalance = 0,
  currentPlan,
  billingPeriod,
  daysUntilRenewal,
@@ -155,6 +157,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
  // P5: Modal de confirmação para cancelar assinatura
  const [showCancelModal, setShowCancelModal] = useState(false);
+
  const [isCancelling, setIsCancelling] = useState(false);
 
  // Download de imagens do histórico
@@ -608,7 +611,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
  <div>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] uppercase tracking-wider font-medium mb-1'}>Créditos Restantes</p>
- <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>{userCredits.toLocaleString()}</p>
+ <p className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>
+ {userCredits.toLocaleString()}
+ {editBalance > 0 && <span className="text-emerald-400 text-xs font-semibold ml-1.5">+{editBalance} edição</span>}
+ </p>
  </div>
  </div>
  {/* P5: Cancelar com confirmação */}
@@ -859,6 +865,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  ))}
  </div>
  </div>
+
 
  {/* Histórico de Cobranças (Stripe Invoices) */}
  {isPaidPlan && (
@@ -1202,6 +1209,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   readOnly
   onClose={() => setShowTermsModal(false)}
  />
+
  </div>
  );
 };

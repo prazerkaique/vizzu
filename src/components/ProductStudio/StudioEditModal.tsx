@@ -25,7 +25,7 @@ interface StudioEditModalProps {
   productNotes?: string;
   onImageUpdated: (angle: string, newUrl: string) => void;
   onSaveAsNew?: (newImageUrl: string) => Promise<{ success: boolean }>;
-  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
+  onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular'; error?: string }>;
   theme?: VizzuTheme;
 }
 
@@ -57,6 +57,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
   const [lastSource, setLastSource] = useState<'edit' | 'regular' | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editResolution, setEditResolution] = useState<'2k' | '4k'>(resolution);
 
   // Zoom state
   const [zoomImage, setZoomImage] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const creditCost = resolution === '4k' ? 2 : 1;
+  const creditCost = editResolution === '4k' ? 2 : 1;
   const totalAvailable = editBalance + regularBalance;
   const hasEnoughCredits = totalAvailable >= creditCost;
   const willUseRegular = editBalance < creditCost;
@@ -85,6 +86,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
     setLastSource(null);
     setIsDragging(false);
     setIsGenerating(false);
+    setEditResolution(resolution);
     setZoomImage(null);
     setHoverTarget(null);
   }, []);
@@ -146,13 +148,10 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
 
   // ── Generate ───────────────────────────────────────────────
 
-  const handleGenerate = useCallback(async () => {
+  const doGenerate = useCallback(async () => {
+    if (isGenerating) return; // Guard contra duplo-clique
     if (!correctionPrompt.trim()) {
       showToast('Descreva a correção desejada', 'error');
-      return;
-    }
-    if (!hasEnoughCredits) {
-      showToast('Créditos insuficientes', 'error');
       return;
     }
     if (!user) return;
@@ -170,7 +169,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
         currentImageUrl: currentImage.url,
         correctionPrompt: correctionPrompt.trim(),
         referenceImageBase64: referenceBase64 || undefined,
-        resolution,
+        resolution: editResolution,
         productInfo: { name: product.name, category: product.category, color: product.color, description: product.description },
         studioBackground,
         studioShadow,
@@ -179,14 +178,15 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
       });
 
       if (result.success && result.new_image_url) {
-        // Check if workflow already deducted credits (v4+)
-        if (result.credits_deducted) {
-          // Workflow handled deduction — just set source for UI banner
-          setLastSource(result.credit_source || (editBalance >= creditCost ? 'edit' : 'regular'));
-        } else if (onDeductEditCredits) {
-          // Fallback: frontend deducts (backward compat with old workflow)
+        // Frontend SEMPRE deduz créditos (N8N não é confiável para isso)
+        if (onDeductEditCredits) {
           const deductResult = await onDeductEditCredits(creditCost, generationId);
-          setLastSource(deductResult.source || (editBalance >= creditCost ? 'edit' : 'regular'));
+          if (deductResult.success) {
+            setLastSource(deductResult.source || (editBalance >= creditCost ? 'edit' : 'regular'));
+          } else {
+            console.error('[StudioEditModal] Dedução de créditos FALHOU:', deductResult.error);
+            showToast('Aviso: erro ao deduzir créditos — ' + (deductResult.error || 'erro desconhecido'), 'error');
+          }
         }
         setNewImageUrl(result.new_image_url);
         setMode('compare');
@@ -202,10 +202,22 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
       setIsGenerating(false);
     }
   }, [
-    correctionPrompt, hasEnoughCredits, user, product, generationId, currentImage,
-    referenceBase64, resolution, studioBackground, studioShadow, productNotes,
+    correctionPrompt, hasEnoughCredits, isGenerating, user, product, generationId, currentImage,
+    referenceBase64, editResolution, studioBackground, studioShadow, productNotes,
     creditCost, editBalance, onDeductEditCredits, showToast,
   ]);
+
+  const handleGenerate = useCallback(() => {
+    if (!correctionPrompt.trim()) {
+      showToast('Descreva a correção desejada', 'error');
+      return;
+    }
+    if (!hasEnoughCredits) {
+      showToast('Créditos insuficientes', 'error');
+      return;
+    }
+    doGenerate();
+  }, [correctionPrompt, hasEnoughCredits, doGenerate, showToast]);
 
   // ── Compare Actions ────────────────────────────────────────
 
@@ -400,7 +412,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
             </button>
             <div>
               <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                <i className="fas fa-sliders text-[#FF6B6B] mr-1.5 text-[10px]"></i>Refinar
+                <i className="fas fa-wand-magic-sparkles text-[#FF6B6B] mr-1.5 text-[10px]"></i>Edição IA
               </h2>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                 {angleName} — {product.name}
@@ -460,7 +472,7 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
               {/* Prompt textarea */}
               <div className="mb-3">
                 <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-1.5 block'}>
-                  <i className="fas fa-rotate text-[#FF6B6B] mr-1.5 text-[10px]"></i>
+                  <i className="fas fa-wand-magic-sparkles text-[#FF6B6B] mr-1.5 text-[10px]"></i>
                   O que deseja corrigir?
                 </label>
                 <textarea
@@ -536,10 +548,46 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                 />
               </div>
 
-              {/* Cost info */}
+              {/* Resolution selector + Cost info */}
               <div className={
                 'rounded-xl p-3 mb-4 ' + innerBg
               }>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-expand text-[#FF6B6B] text-[10px]"></i>
+                    <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-[11px] font-semibold'}>
+                      Resolução
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setEditResolution('2k')}
+                      className={
+                        'px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ' +
+                        (editResolution === '2k'
+                          ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
+                          : isDark
+                            ? 'bg-neutral-800 text-neutral-400 hover:text-neutral-300'
+                            : 'bg-gray-200 text-gray-500 hover:text-gray-700')
+                      }
+                    >
+                      2K · 1 crédito
+                    </button>
+                    <button
+                      onClick={() => setEditResolution('4k')}
+                      className={
+                        'px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ' +
+                        (editResolution === '4k'
+                          ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
+                          : isDark
+                            ? 'bg-neutral-800 text-neutral-400 hover:text-neutral-300'
+                            : 'bg-gray-200 text-gray-500 hover:text-gray-700')
+                      }
+                    >
+                      4K · 2 créditos
+                    </button>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <i className="fas fa-ticket text-[#FF9F43] text-[10px]"></i>
@@ -576,8 +624,8 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed')
                 }
               >
-                <i className="fas fa-rotate"></i>
-                Gerar Correção
+                <i className="fas fa-wand-magic-sparkles"></i>
+                Gerar Edição
               </button>
 
               {!hasEnoughCredits && (
@@ -680,8 +728,8 @@ export const StudioEditModal: React.FC<StudioEditModalProps> = ({
                     (isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600')
                   }
                 >
-                  <i className="fas fa-sliders text-[10px]"></i>
-                  Refinar novamente
+                  <i className="fas fa-wand-magic-sparkles text-[10px]"></i>
+                  Editar novamente
                 </button>
               </div>
             </div>

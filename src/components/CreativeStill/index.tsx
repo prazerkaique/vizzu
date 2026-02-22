@@ -22,6 +22,13 @@ import { useGeneration } from '../../contexts/GenerationContext';
 import { FeatureTour } from '../onboarding/FeatureTour';
 import { CREATIVE_STILL_TOUR_STOPS } from '../onboarding/tourStops';
 import { useOnboarding } from '../../hooks/useOnboarding';
+import { ImageEditModal } from '../shared/ImageEditModal';
+import { editStudioImage, saveCreativeStillEdit, saveCreativeStillSaveAsNew } from '../../lib/api/studio';
+import DownloadModal from '../shared/DownloadModal';
+import type { DownloadableImage } from '../../utils/downloadSizes';
+import { EcommerceExportButton } from '../shared/EcommerceExportButton';
+import type { ExportableImage } from '../shared/EcommerceExportModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTES (exportadas para o Results)
@@ -166,6 +173,12 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const { currentPage, navigateTo, showToast } = useUI();
   const [hubProduct, setHubProduct] = useState<Product | null>(null);
 
+  // ── States para modal de detalhe expandido ──
+  const [editingDetailStill, setEditingDetailStill] = useState(false);
+  const [selectedVariationIndex, setSelectedVariationIndex] = useState(0);
+  const [showDetailDownload, setShowDetailDownload] = useState(false);
+  const { user } = useAuth();
+
   // ── Produto pré-selecionado (vindo de outra página) ──
   useEffect(() => {
     if (initialProduct) {
@@ -200,6 +213,73 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
   const recentStills = useMemo(() =>
     generations.filter(g => g.status === 'completed' && getFirstVariationUrl(g)),
   [generations]);
+
+  // ── Handlers para edição no modal de detalhe ──
+  const handleDetailEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string; resolution?: '2k' | '4k' }) => {
+    if (!selectedStill) return { success: false, error: 'Nenhum still selecionado.' };
+    const variations = selectedStill.variation_urls || [selectedStill.variation_1_url].filter(Boolean);
+    const currentUrl = variations[selectedVariationIndex] || variations[0];
+    if (!currentUrl) return { success: false, error: 'Nenhuma variação disponível.' };
+    const prod = products.find(p => p.id === selectedStill.product_id);
+    const origUrl = prod?.originalImages?.front?.url || prod?.images?.[0]?.url || '';
+    return editStudioImage({
+      userId: user?.id,
+      productId: selectedStill.product_id,
+      currentImageUrl: currentUrl,
+      correctionPrompt: params.correctionPrompt,
+      referenceImageBase64: params.referenceImageBase64,
+      resolution: params.resolution || '2k',
+      productInfo: { name: prod?.name, category: prod?.category, color: prod?.color, description: prod?.description },
+      originalImageUrl: origUrl,
+    });
+  }, [selectedStill, selectedVariationIndex, products, user]);
+
+  const handleDetailEditSave = useCallback(async (newImageUrl: string) => {
+    if (!selectedStill?.id) return { success: false };
+    // Atualizar local state
+    setGenerations(prev => prev.map(g => {
+      if (g.id !== selectedStill.id) return g;
+      const urls = [...(g.variation_urls || [])];
+      urls[selectedVariationIndex] = newImageUrl;
+      return { ...g, variation_urls: urls };
+    }));
+    setSelectedStill(prev => {
+      if (!prev) return prev;
+      const urls = [...(prev.variation_urls || [])];
+      urls[selectedVariationIndex] = newImageUrl;
+      return { ...prev, variation_urls: urls };
+    });
+    const result = await saveCreativeStillEdit({
+      generationId: selectedStill.id,
+      variationIndex: selectedVariationIndex,
+      newImageUrl,
+    });
+    if (!result.success) {
+      showToast('Imagem atualizada localmente, mas houve erro ao salvar no servidor.', 'info');
+    }
+    return result;
+  }, [selectedStill, selectedVariationIndex, showToast]);
+
+  const handleDetailEditSaveAsNew = useCallback(async (newImageUrl: string) => {
+    if (!selectedStill?.id) return { success: false };
+    // Atualizar local state — append nova variação
+    setGenerations(prev => prev.map(g => {
+      if (g.id !== selectedStill.id) return g;
+      return { ...g, variation_urls: [...(g.variation_urls || []), newImageUrl] };
+    }));
+    setSelectedStill(prev => {
+      if (!prev) return prev;
+      return { ...prev, variation_urls: [...(prev.variation_urls || []), newImageUrl] };
+    });
+    const result = await saveCreativeStillSaveAsNew({
+      generationId: selectedStill.id,
+      newImageUrl,
+    });
+    if (!result.success) {
+      showToast('Imagem salva localmente, mas houve erro ao persistir no servidor.', 'info');
+    }
+    return result;
+  }, [selectedStill, showToast]);
 
   // ── Produtos filtrados (mesma lógica do Product Studio) ──
   const hasActiveFilters = searchQuery || filterCategoryGroup || filterCategory || filterCollection || filterColor || filterGender || sortBy !== 'recent';
@@ -709,14 +789,6 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                 <i className="fas fa-clock-rotate-left mr-2 text-xs opacity-50"></i>
                 Últimos Stills
               </h2>
-              {recentStills.length > visibleStillsCount && (
-                <button
-                  onClick={() => setVisibleStillsCount(prev => prev + 6)}
-                  className={'text-xs font-medium transition-all ' + (isDark ? 'text-[#FF6B6B] hover:text-[#FF9F43]' : 'text-[#FF6B6B] hover:text-[#FF9F43]')}
-                >
-                  Ver mais +
-                </button>
-              )}
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
               {recentStills.slice(0, visibleStillsCount).map(gen => {
@@ -748,6 +820,17 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
                 );
               })}
             </div>
+            {recentStills.length > visibleStillsCount && (
+              <div className="flex justify-center mt-3">
+                <button
+                  onClick={() => setVisibleStillsCount(prev => prev + 6)}
+                  className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' px-4 py-2 border rounded-xl font-medium text-xs flex items-center gap-2 transition-colors'}
+                >
+                  <i className="fas fa-chevron-down text-[10px]"></i>
+                  Carregar mais ({recentStills.length - visibleStillsCount} restantes)
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -1053,72 +1136,211 @@ export const CreativeStill: React.FC<CreativeStillProps> = ({
       </div>
 
       {/* ── MODAL: Detalhes do Still ── */}
-      {selectedStill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedStill(null)}>
+      {selectedStill && (() => {
+        const snapshot = selectedStill.settings_snapshot as any;
+        const detailVariations = (selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean) as string[];
+        const varCount = detailVariations.length;
+        const refUrls: string[] = snapshot?.referenceImageUrls || [];
+        const promptText = snapshot?.optimizedPrompt || snapshot?.userPrompt || '';
+        const productName = snapshot?.product_name || 'Still Criativo';
+        return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setSelectedStill(null); setSelectedVariationIndex(0); }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
           <div
-            className={'relative rounded-2xl overflow-hidden max-w-3xl w-full max-h-[90vh] overflow-y-auto ' + (isDark ? 'bg-neutral-900 border border-neutral-700' : 'bg-white border border-gray-200 shadow-2xl')}
+            className={'relative rounded-2xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-hidden ' + (isDark ? 'bg-neutral-900 border border-neutral-700' : 'bg-white border border-gray-200 shadow-2xl')}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className={'flex items-center justify-between p-4 border-b ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
               <div>
-                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-bold'}>
-                  {(selectedStill.settings_snapshot as any)?.product_name || 'Still Criativo'}
+                <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold font-serif'}>
+                  {productName}
                 </h3>
                 <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-xs'}>
-                  {new Date(selectedStill.created_at).toLocaleDateString('pt-BR')} &middot; {selectedStill.variation_urls?.length || 1} {(selectedStill.variation_urls?.length || 1) === 1 ? 'variação' : 'variações'}
+                  {new Date(selectedStill.created_at).toLocaleDateString('pt-BR')} &middot; {varCount} {varCount === 1 ? 'variação' : 'variações'}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const prod = products.find(p => p.id === selectedStill.product_id);
-                    if (prod) { setSelectedStill(null); setHubProduct(prod); }
-                  }}
-                  className={'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + (isDark ? 'bg-white/10 text-neutral-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
-                >
-                  <i className="fas fa-th-large mr-1.5"></i>
-                  Todas
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentGeneration(selectedStill);
-                    setSelectedStill(null);
-                    // Encontrar o produto correspondente
-                    const prod = products.find(p => p.id === selectedStill.product_id);
-                    if (prod) setSelectedProduct(prod);
-                    setView('results');
-                  }}
-                  className={'px-3 py-1.5 rounded-lg text-xs font-medium transition-all ' + (isDark ? 'bg-white/10 text-neutral-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
-                >
-                  <i className="fas fa-expand mr-1.5"></i>
-                  Abrir
-                </button>
-                <button
-                  onClick={() => setSelectedStill(null)}
-                  className={'w-8 h-8 rounded-lg flex items-center justify-center transition-all ' + (isDark ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}
-                >
-                  <i className="fas fa-times text-sm"></i>
-                </button>
-              </div>
+              <button
+                onClick={() => { setSelectedStill(null); setSelectedVariationIndex(0); }}
+                className={'w-8 h-8 rounded-lg flex items-center justify-center transition-all ' + (isDark ? 'text-neutral-500 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}
+              >
+                <i className="fas fa-times text-sm"></i>
+              </button>
             </div>
-            {/* Grid de variações */}
-            <div className="p-4">
-              <div className={'grid gap-3 ' + ((selectedStill.variation_urls?.length || 1) === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-2')}>
-                {(selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean).map((url, i) => (
+
+            <div className="p-4 flex flex-col md:flex-row gap-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {/* Coluna esquerda — Imagens */}
+              <div className="md:w-2/3">
+                {varCount === 1 ? (
                   <div
-                    key={i}
-                    className={'rounded-xl overflow-hidden border cursor-zoom-in transition-all hover:border-[#FF6B6B]/50 ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}
-                    onClick={() => openViewer(url!, { alt: `Variação ${i + 1}` })}
+                    className={'rounded-xl overflow-hidden border cursor-zoom-in transition-all hover:border-[#FF6B6B]/50 ' + (isDark ? 'border-neutral-800 bg-neutral-800' : 'border-gray-200 bg-gray-100')}
+                    onClick={() => openViewer(detailVariations[0], { alt: 'Still Criativo' })}
                   >
-                    <OptimizedImage src={url!} alt={`Variação ${i + 1}`} className="w-full aspect-[4/5]" size="display" objectFit="contain" />
+                    <OptimizedImage src={detailVariations[0]} alt="Still Criativo" className="w-full h-auto max-h-[60vh] object-contain" size="display" objectFit="contain" />
                   </div>
-                ))}
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {detailVariations.map((url, i) => (
+                      <div
+                        key={i}
+                        className={'rounded-xl overflow-hidden border transition-all cursor-pointer ' +
+                          (selectedVariationIndex === i
+                            ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/30'
+                            : (isDark ? 'border-neutral-800 hover:border-neutral-600' : 'border-gray-200 hover:border-gray-400')
+                          )}
+                        onClick={() => setSelectedVariationIndex(i)}
+                        onDoubleClick={() => openViewer(url, { alt: `Variação ${i + 1}` })}
+                      >
+                        <OptimizedImage src={url} alt={`Variação ${i + 1}`} className="w-full aspect-[4/5]" size="display" objectFit="contain" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Coluna direita — Info + Ações */}
+              <div className="md:w-1/3 flex flex-col gap-3">
+                {/* Prompt utilizado */}
+                {promptText && (
+                  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-2'}>
+                      <i className="fas fa-comment-dots mr-2 text-[#FF6B6B]"></i>Prompt
+                      {snapshot?.optimizedPrompt && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] uppercase bg-purple-500/20 text-purple-400">IA</span>
+                      )}
+                    </h3>
+                    <p className={(isDark ? 'text-neutral-400' : 'text-gray-600') + ' text-xs leading-relaxed line-clamp-6'}>{promptText}</p>
+                  </div>
+                )}
+
+                {/* Imagens de referência */}
+                {refUrls.length > 0 && (
+                  <div className={(isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200') + ' rounded-xl border p-4'}>
+                    <h3 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold mb-2'}>
+                      <i className="fas fa-images mr-2 text-purple-400"></i>Referências
+                    </h3>
+                    <div className="flex gap-2 flex-wrap">
+                      {refUrls.map((url, i) => (
+                        <div
+                          key={i}
+                          className={'w-12 h-12 rounded-lg overflow-hidden border cursor-zoom-in ' + (isDark ? 'border-neutral-700' : 'border-gray-200')}
+                          onClick={() => openViewer(url, { alt: `Referência ${i + 1}` })}
+                        >
+                          <OptimizedImage src={url} alt={`Ref ${i + 1}`} className="w-full h-full" size="thumb" objectFit="cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Download + Shopify */}
+                <div className="flex gap-2 w-full">
+                  <button
+                    onClick={() => setShowDetailDownload(true)}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-bold text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+                  >
+                    <i className="fas fa-download"></i>
+                    Download ({varCount} {varCount === 1 ? 'imagem' : 'imagens'})
+                  </button>
+                  <EcommerceExportButton
+                    images={detailVariations.map((url, i) => ({ url, label: `Variação ${i + 1}` }))}
+                    productId={selectedStill.product_id}
+                    tool="creative_still"
+                    compact
+                  />
+                </div>
+
+                {/* Edição IA */}
+                <button
+                  onClick={() => setEditingDetailStill(true)}
+                  className="w-full py-2.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-medium text-xs transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+                >
+                  <i className="fas fa-wand-magic-sparkles"></i>
+                  Edição IA {varCount > 1 ? `(Variação ${selectedVariationIndex + 1})` : ''}
+                </button>
+
+                {/* Criar novo still */}
+                <button
+                  onClick={() => {
+                    const prod = products.find(p => p.id === selectedStill.product_id);
+                    if (prod) {
+                      setSelectedStill(null);
+                      setSelectedVariationIndex(0);
+                      setSelectedProduct(prod);
+                      setView('editor');
+                    }
+                  }}
+                  className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 text-white border-neutral-700' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200') + ' w-full py-2.5 border rounded-xl font-medium text-xs transition-colors flex items-center justify-center gap-2'}
+                >
+                  <i className="fas fa-plus"></i>
+                  Criar novo still
+                </button>
+
+                {/* Todas gerações + Abrir resultados */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const prod = products.find(p => p.id === selectedStill.product_id);
+                      if (prod) { setSelectedStill(null); setSelectedVariationIndex(0); setHubProduct(prod); }
+                    }}
+                    className={'flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ' + (isDark ? 'bg-white/10 text-neutral-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
+                  >
+                    <i className="fas fa-th-large mr-1.5"></i>Todas
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentGeneration(selectedStill);
+                      setSelectedStill(null);
+                      setSelectedVariationIndex(0);
+                      const prod = products.find(p => p.id === selectedStill.product_id);
+                      if (prod) setSelectedProduct(prod);
+                      setView('results');
+                    }}
+                    className={'flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ' + (isDark ? 'bg-white/10 text-neutral-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
+                  >
+                    <i className="fas fa-expand mr-1.5"></i>Abrir
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        );
+      })()}
+
+      {/* Modal de edição de still do detalhe */}
+      {selectedStill && editingDetailStill && (
+        <ImageEditModal
+          isOpen={editingDetailStill}
+          onClose={() => setEditingDetailStill(false)}
+          currentImageUrl={
+            ((selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean) as string[])[selectedVariationIndex] ||
+            ((selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean) as string[])[0] || ''
+          }
+          imageName={`Still - Variação ${selectedVariationIndex + 1}`}
+          editBalance={editBalance}
+          regularBalance={userCredits}
+          resolution="2k"
+          onGenerate={handleDetailEditGenerate}
+          onSave={handleDetailEditSave}
+          onSaveAsNew={handleDetailEditSaveAsNew}
+          onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, selectedStill.id) : undefined}
+          theme={theme}
+        />
+      )}
+
+      {/* Download Modal do detalhe */}
+      {selectedStill && showDetailDownload && (
+        <DownloadModal
+          isOpen={showDetailDownload}
+          onClose={() => setShowDetailDownload(false)}
+          images={((selectedStill.variation_urls || [selectedStill.variation_1_url]).filter(Boolean) as string[]).map((url, i) => ({
+            url,
+            label: `Variação ${i + 1}`,
+            featurePrefix: 'VCreativeStill',
+          }))}
+          productName={(selectedStill.settings_snapshot as any)?.product_name || 'Still Criativo'}
+        />
       )}
 
       {/* PRODUCT HUB MODAL */}

@@ -26,10 +26,11 @@ export interface ImageEditModalProps {
   onGenerate: (params: {
     correctionPrompt: string;
     referenceImageBase64?: string;
+    resolution?: '2k' | '4k';
   }) => Promise<GenerateResult>;
   onSave: (newImageUrl: string) => Promise<{ success: boolean }>;
   onSaveAsNew?: (newImageUrl: string) => Promise<{ success: boolean }>;
-  onDeductEditCredits?: (amount: number) => Promise<{ success: boolean; source?: string }>;
+  onDeductEditCredits?: (amount: number) => Promise<{ success: boolean; source?: string; error?: string }>;
   theme?: VizzuTheme;
 }
 
@@ -64,6 +65,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
   const [lastSource, setLastSource] = useState<'edit' | 'regular' | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editResolution, setEditResolution] = useState<'2k' | '4k'>(resolution);
 
   // Zoom state
   const [zoomImage, setZoomImage] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     return () => clearInterval(interval);
   }, [mode]);
 
-  const creditCost = resolution === '4k' ? 2 : 1;
+  const creditCost = editResolution === '4k' ? 2 : 1;
   const totalAvailable = editBalance + regularBalance;
   const hasEnoughCredits = totalAvailable >= creditCost;
   const willUseRegular = editBalance < creditCost;
@@ -100,6 +102,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     setLastSource(null);
     setIsDragging(false);
     setIsGenerating(false);
+    setEditResolution(resolution);
     setZoomImage(null);
     setHoverTarget(null);
   }, []);
@@ -162,6 +165,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
   // ── Generate ───────────────────────────────────────────────
 
   const handleGenerate = useCallback(async () => {
+    if (isGenerating) return; // Guard contra duplo-clique
     if (!correctionPrompt.trim()) {
       showToast('Descreva a correção desejada', 'error');
       return;
@@ -178,14 +182,19 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
       const result = await onGenerate({
         correctionPrompt: correctionPrompt.trim(),
         referenceImageBase64: referenceBase64 || undefined,
+        resolution: editResolution,
       });
 
       if (result.success && result.new_image_url) {
-        if (result.credits_deducted) {
-          setLastSource((result.credit_source as 'edit' | 'regular') || (editBalance >= creditCost ? 'edit' : 'regular'));
-        } else if (onDeductEditCredits) {
+        // Frontend SEMPRE deduz créditos (N8N não é confiável para isso)
+        if (onDeductEditCredits) {
           const deductResult = await onDeductEditCredits(creditCost);
-          setLastSource((deductResult.source as 'edit' | 'regular') || (editBalance >= creditCost ? 'edit' : 'regular'));
+          if (deductResult.success) {
+            setLastSource((deductResult.source as 'edit' | 'regular') || (editBalance >= creditCost ? 'edit' : 'regular'));
+          } else {
+            console.error('[ImageEditModal] Dedução de créditos FALHOU:', deductResult.error);
+            showToast('Aviso: erro ao deduzir créditos — ' + (deductResult.error || 'erro desconhecido'), 'error');
+          }
         }
         setNewImageUrl(result.new_image_url);
         setMode('compare');
@@ -200,7 +209,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [correctionPrompt, hasEnoughCredits, referenceBase64, creditCost, editBalance, onGenerate, onDeductEditCredits, showToast]);
+  }, [correctionPrompt, hasEnoughCredits, isGenerating, referenceBase64, creditCost, editBalance, onGenerate, onDeductEditCredits, showToast]);
 
   // ── Compare Actions ────────────────────────────────────────
 
@@ -368,7 +377,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
             </button>
             <div>
               <h2 className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-semibold'}>
-                <i className="fas fa-sliders text-[#FF6B6B] mr-1.5 text-[10px]"></i>Refinar
+                <i className="fas fa-wand-magic-sparkles text-[#FF6B6B] mr-1.5 text-[10px]"></i>Edição IA
               </h2>
               <p className={(isDark ? 'text-neutral-500' : 'text-gray-500') + ' text-[10px]'}>
                 {imageName}
@@ -423,7 +432,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
               <div className="mb-3">
                 <label className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-xs font-semibold mb-1.5 block'}>
-                  <i className="fas fa-rotate text-[#FF6B6B] mr-1.5 text-[10px]"></i>
+                  <i className="fas fa-wand-magic-sparkles text-[#FF6B6B] mr-1.5 text-[10px]"></i>
                   O que deseja corrigir?
                 </label>
                 <textarea
@@ -499,6 +508,42 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
               </div>
 
               <div className={'rounded-xl p-3 mb-4 ' + innerBg}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-expand text-[#FF6B6B] text-[10px]"></i>
+                    <span className={(isDark ? 'text-neutral-300' : 'text-gray-700') + ' text-[11px] font-semibold'}>
+                      Resolução
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setEditResolution('2k')}
+                      className={
+                        'px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ' +
+                        (editResolution === '2k'
+                          ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
+                          : isDark
+                            ? 'bg-neutral-800 text-neutral-400 hover:text-neutral-300'
+                            : 'bg-gray-200 text-gray-500 hover:text-gray-700')
+                      }
+                    >
+                      2K · 1 crédito
+                    </button>
+                    <button
+                      onClick={() => setEditResolution('4k')}
+                      className={
+                        'px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ' +
+                        (editResolution === '4k'
+                          ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white shadow-sm'
+                          : isDark
+                            ? 'bg-neutral-800 text-neutral-400 hover:text-neutral-300'
+                            : 'bg-gray-200 text-gray-500 hover:text-gray-700')
+                      }
+                    >
+                      4K · 2 créditos
+                    </button>
+                  </div>
+                </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <i className="fas fa-ticket text-[#FF9F43] text-[10px]"></i>
@@ -534,8 +579,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed')
                 }
               >
-                <i className="fas fa-rotate"></i>
-                Gerar Correção
+                <i className="fas fa-wand-magic-sparkles"></i>
+                Gerar Edição
               </button>
 
               {!hasEnoughCredits && (
@@ -637,8 +682,8 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
                     (isDark ? 'text-neutral-500 hover:text-neutral-300' : 'text-gray-400 hover:text-gray-600')
                   }
                 >
-                  <i className="fas fa-sliders text-[10px]"></i>
-                  Refinar novamente
+                  <i className="fas fa-wand-magic-sparkles text-[10px]"></i>
+                  Editar novamente
                 </button>
               </div>
             </div>

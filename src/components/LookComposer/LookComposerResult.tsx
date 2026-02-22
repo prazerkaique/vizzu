@@ -254,7 +254,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  // Edit callbacks
  const editingImageUrl = editingView === 'back' ? generatedBackImageUrl : generatedImageUrl;
 
- const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
+ const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string; resolution?: '2k' | '4k' }) => {
  if (!editingImageUrl) return { success: false, error: 'Nenhuma imagem selecionada.' };
  const origUrl = product?.originalImages?.front?.url || product?.images?.[0]?.url || '';
  return editStudioImage({
@@ -263,7 +263,7 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
   currentImageUrl: editingImageUrl,
   correctionPrompt: params.correctionPrompt,
   referenceImageBase64: params.referenceImageBase64,
-  resolution: '2k',
+  resolution: params.resolution || '2k',
   productInfo: { name: product?.name, category: product?.category, color: product?.color, description: product?.description },
   originalImageUrl: origUrl,
  });
@@ -670,22 +670,22 @@ export const LookComposerResult: React.FC<LookComposerResultProps> = ({
  </p>
 
  <div className="grid grid-cols-5 gap-2">
- {/* Refinar */}
+ {/* Gerar Novamente */}
  <button
  onClick={onRegenerate}
  className={(isDark ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700' : 'bg-gray-50 hover:bg-gray-100 border-gray-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
  >
- <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-sliders text-sm'}></i>
- <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Refinar</span>
+ <i className={(isDark ? 'text-neutral-300' : 'text-gray-600') + ' fas fa-arrows-rotate text-sm'}></i>
+ <span className={(isDark ? 'text-neutral-400' : 'text-gray-500') + ' text-[9px]'}>Gerar Nova</span>
  </button>
 
- {/* Editar */}
+ {/* Edição IA */}
  <button
  onClick={() => setEditingView(currentView)}
- className={(isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200') + ' p-2.5 rounded-lg border transition-all flex flex-col items-center gap-1'}
+ className="p-2.5 rounded-lg border border-[#FF6B6B]/30 bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 hover:from-[#FF6B6B]/20 hover:to-[#FF9F43]/20 transition-all flex flex-col items-center gap-1"
  >
- <i className="fas fa-pen text-emerald-400 text-sm"></i>
- <span className="text-emerald-400 text-[9px]">Editar</span>
+ <i className="fas fa-wand-magic-sparkles text-sm bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent"></i>
+ <span className="text-[9px] font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent">Edição IA</span>
  </button>
 
  {/* Zoom */}

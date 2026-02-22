@@ -1108,6 +1108,7 @@ function App() {
  return (
  <AppLayout
  userCredits={userCredits}
+ editBalance={editBalance}
  currentPlan={currentPlan}
  restoreModal={restoreModal}
  onLogout={handleLogout}
@@ -1190,6 +1191,8 @@ function App() {
  currentPlan={currentPlan}
  onOpenPlanModal={() => { navigateTo('settings'); setSettingsTab('plan'); }}
  generationStartTime={provadorStartTime}
+ editBalance={editBalance}
+ onDeductEditCredits={deductEditCredits}
  onCancelGeneration={() => {
    setIsGeneratingProvador(false);
    setProvadorProgress(0);
@@ -1290,7 +1293,7 @@ function App() {
  {/* MODELS — manter montado durante geração minimizada */}
  {(currentPage === 'models' || isGeneratingModels) && (
    <div style={{ display: currentPage === 'models' ? 'contents' : 'none' }}>
-     <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />
+     <ModelsPage savedModels={savedModels} setSavedModels={setSavedModels} showCreateModel={showCreateModel} setShowCreateModel={setShowCreateModel} userCredits={userCredits} editBalance={editBalance} onDeductEditCredits={deductEditCredits} onModelCreated={(modelId: string) => { if (modelCreationFromLC) { setLcPendingModelId(modelId); setModelCreationFromLC(false); navigateTo('look-composer'); } }} />
    </div>
  )}
 
@@ -1300,7 +1303,7 @@ function App() {
  {/* CLIENTS */}
  {currentPage === 'clients' && <ClientsPage showCreateClient={showCreateClient} setShowCreateClient={setShowCreateClient} createClientFromProvador={createClientFromProvador} setCreateClientFromProvador={setCreateClientFromProvador} setProvadorClient={setProvadorClient} pendingClientDetail={pendingClientDetail} clearPendingClientDetail={() => setPendingClientDetail(null)} />}
 
- {currentPage === 'settings' && <SettingsPage userCredits={userCredits} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} subscription={subscription} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
+ {currentPage === 'settings' && <SettingsPage userCredits={userCredits} editBalance={editBalance} currentPlan={currentPlan} billingPeriod={billingPeriod} daysUntilRenewal={daysUntilRenewal} subscription={subscription} isCheckoutLoading={isCheckoutLoading} onBuyCredits={handleBuyCredits} onUpgradePlan={handleUpgradePlanFromModal} onSetBillingPeriod={setBillingPeriod} onCancelSubscription={handleCancelSubscription} onLogout={handleLogout} />}
 
  {currentPage === 'master' && currentPlan.id === 'master' && <MasterPage />}
 
@@ -1315,6 +1318,7 @@ function App() {
  onClose={() => setShowCreditModal(false)}
  creditsNeeded={creditModalContext.creditsNeeded}
  currentCredits={userCredits}
+ editBalance={editBalance}
  currentPlan={currentPlan}
  billingPeriod={billingPeriod}
  actionContext={creditModalContext.actionContext}

@@ -347,25 +347,17 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
   // DEDUZIR CRÉDITOS DE EDIÇÃO
   // ═══════════════════════════════════════════════════════════════
 
-  const deductEditCredits = useCallback(async (amount: number, generationId?: string): Promise<{ success: boolean; source?: 'edit' | 'regular' }> => {
+  const deductEditCredits = useCallback(async (amount: number, generationId?: string): Promise<{ success: boolean; source?: 'edit' | 'regular'; error?: string }> => {
     // Verificação local
     const totalAvailable = (creditsData?.edit_balance ?? 0) + (creditsData?.balance ?? localData.credits);
-    if (totalAvailable < amount) return { success: false };
+    if (totalAvailable < amount) return { success: false, error: 'Créditos insuficientes' };
 
-    // Atualização otimista (UI imediata)
     const hasEditCredits = (creditsData?.edit_balance ?? 0) >= amount;
-    if (hasEditCredits) {
-      setCreditsData(prev => prev ? { ...prev, edit_balance: prev.edit_balance - amount } : null);
-    } else {
-      setLocalData(prev => ({ ...prev, credits: prev.credits - amount }));
-      if (creditsData) {
-        setCreditsData(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
-      }
-    }
 
-    // Chamar RPC no Supabase
+    // Chamar RPC no Supabase — SEM atualização otimista, só atualiza após sucesso real
     if (userId && enableBackend) {
       try {
+        console.log('[deductEditCredits] Chamando RPC: userId=' + userId + ', amount=' + amount + ', genId=' + (generationId || 'null'));
         const { data, error } = await supabase.rpc('deduct_edit_credits', {
           p_user_id: userId,
           p_amount: amount,
@@ -373,13 +365,15 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
         });
 
         if (error) {
-          console.error('[deductEditCredits] RPC error:', error);
-          return { success: false };
+          console.error('[deductEditCredits] RPC ERRO:', JSON.stringify(error));
+          return { success: false, error: 'RPC falhou: ' + (error.message || error.code || 'erro desconhecido') };
         }
 
-        const result = data as { success: boolean; source?: string; new_edit_balance?: number; new_balance?: number };
+        console.log('[deductEditCredits] RPC retornou:', JSON.stringify(data));
+
+        const result = data as { success: boolean; source?: string; error?: string; new_edit_balance?: number; new_balance?: number };
         if (result.success) {
-          // Sincronizar saldos reais
+          // Atualizar state com saldos REAIS do banco
           setCreditsData(prev => prev ? {
             ...prev,
             edit_balance: result.new_edit_balance ?? prev.edit_balance,
@@ -388,15 +382,89 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
           setLocalData(prev => ({ ...prev, credits: result.new_balance ?? prev.credits }));
           return { success: true, source: result.source as 'edit' | 'regular' };
         }
-        return { success: false };
-      } catch (err) {
-        console.error('[deductEditCredits] Error:', err);
-        return { success: hasEditCredits, source: hasEditCredits ? 'edit' : 'regular' };
+        console.error('[deductEditCredits] RPC retornou success=false:', result.error);
+        return { success: false, error: result.error || 'Dedução falhou no banco' };
+      } catch (err: any) {
+        console.error('[deductEditCredits] Exception:', err);
+        return { success: false, error: 'Exceção: ' + (err?.message || 'erro desconhecido') };
       }
     }
 
+    // Sem backend — fallback local
+    if (hasEditCredits) {
+      setCreditsData(prev => prev ? { ...prev, edit_balance: prev.edit_balance - amount } : null);
+    } else {
+      setLocalData(prev => ({ ...prev, credits: prev.credits - amount }));
+      if (creditsData) {
+        setCreditsData(prev => prev ? { ...prev, balance: prev.balance - amount } : null);
+      }
+    }
     return { success: true, source: hasEditCredits ? 'edit' : 'regular' };
   }, [creditsData, localData.credits, userId, enableBackend]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // TROCAR CRÉDITOS REGULARES → EDIÇÃO (taxa 1:2)
+  // ═══════════════════════════════════════════════════════════════
+
+  const exchangeCredits = useCallback(async (regularAmount: number): Promise<{
+    success: boolean;
+    error?: string;
+    editCredited?: number;
+    newBalance?: number;
+    newEditBalance?: number;
+  }> => {
+    if (!userId || !enableBackend) {
+      return { success: false, error: 'Não autenticado' };
+    }
+    if (regularAmount < 1 || regularAmount > (creditsData?.balance ?? 0)) {
+      return { success: false, error: 'Quantidade inválida' };
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('exchange_credits', {
+        p_user_id: userId,
+        p_regular_amount: regularAmount,
+      });
+
+      if (error) {
+        console.error('[exchangeCredits] RPC error:', error);
+        return { success: false, error: error.message };
+      }
+
+      const result = data as {
+        success: boolean;
+        error?: string;
+        regular_debited?: number;
+        edit_credited?: number;
+        new_balance?: number;
+        new_edit_balance?: number;
+      };
+
+      if (result.success) {
+        setCreditsData(prev => prev ? {
+          ...prev,
+          balance: result.new_balance ?? prev.balance,
+          edit_balance: result.new_edit_balance ?? prev.edit_balance,
+        } : null);
+        setLocalData(prev => ({
+          ...prev,
+          credits: result.new_balance ?? prev.credits,
+        }));
+
+        return {
+          success: true,
+          editCredited: result.edit_credited,
+          newBalance: result.new_balance,
+          newEditBalance: result.new_edit_balance,
+        };
+      }
+
+      return { success: false, error: result.error };
+    } catch (err: any) {
+      console.error('[exchangeCredits] Error:', err);
+      return { success: false, error: err.message };
+    }
+  }, [userId, enableBackend, creditsData]);
 
   // ═══════════════════════════════════════════════════════════════
   // ALTERAR PERÍODO DE COBRANÇA
@@ -445,6 +513,7 @@ export const useCredits = (options: UseCreditsOptions = {}) => {
     addCredits,
     applyPlanChange,
     deductEditCredits,
+    exchangeCredits,
     setBillingPeriod,
     setCredits,
     refresh,

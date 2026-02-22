@@ -18,6 +18,8 @@ import { RESOLUTION_COST, canUseResolution, Plan } from '../../hooks/useCredits'
 import { useAuth } from '../../contexts/AuthContext';
 import { useUI, type VizzuTheme } from '../../contexts/UIContext';
 import { ReportModal } from '../ReportModal';
+import { ImageEditModal } from '../shared/ImageEditModal';
+import { editStudioImage } from '../../lib/api/studio';
 import { submitReport } from '../../lib/api/reports';
 
 import { FeatureTour } from '../onboarding/FeatureTour';
@@ -74,6 +76,9 @@ interface Props {
  onContinueInBackground?: () => void;
  // Callback para cancelar a geração (fechar overlay)
  onCancelGeneration?: () => void;
+ // Edição IA
+ editBalance?: number;
+ onDeductEditCredits?: (amount: number, generationId?: string) => Promise<{ success: boolean; source?: 'edit' | 'regular' }>;
 }
 
 const PHOTO_TYPES: { id: ClientPhoto['type']; label: string; icon: string }[] = [
@@ -121,6 +126,8 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  generationStartTime,
  onContinueInBackground,
  onCancelGeneration,
+ editBalance = 0,
+ onDeductEditCredits,
 }) => {
  // Estados do Wizard
  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -141,6 +148,7 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  const [wasGeneratingProvador, setWasGeneratingProvador] = useState(false);
  const [lastGenerationId, setLastGenerationId] = useState<string | null>(null);
  const [showReportModal, setShowReportModal] = useState(false);
+ const [showEditModal, setShowEditModal] = useState(false);
 
  // Auth & UI para reports
  const { user } = useAuth();
@@ -568,6 +576,34 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  throw new Error(result.error || 'Erro ao enviar report');
  }
  };
+
+ // ── Edição IA handlers ──
+ const handleProvadorEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string; resolution?: '2k' | '4k' }) => {
+   if (!user || !generatedImage) return { success: false, error: 'Dados insuficientes' };
+   try {
+     const lookNames = Object.values(lookComposition).filter(Boolean).map(i => i!.name).join(', ');
+     const result = await editStudioImage({
+       userId: user.id,
+       productId: lastGenerationId || 'provador',
+       generationId: lastGenerationId || 'provador',
+       angle: 'front',
+       currentImageUrl: generatedImage,
+       correctionPrompt: params.correctionPrompt,
+       referenceImageBase64: params.referenceImageBase64,
+       resolution: params.resolution || (resolution as '2k' | '4k'),
+       productInfo: { name: lookNames || 'Provador Virtual' },
+     });
+     return result;
+   } catch {
+     return { success: false, error: 'Erro ao editar imagem' };
+   }
+ }, [user, generatedImage, lastGenerationId, lookComposition, resolution]);
+
+ const handleProvadorEditSave = useCallback(async (newImageUrl: string) => {
+   setGeneratedImage(newImageUrl);
+   showToast('Imagem atualizada!', 'success');
+   return { success: true };
+ }, [showToast]);
 
  const handleReset = () => {
  setSelectedClient(null);
@@ -1535,6 +1571,18 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  </button>
  </div>
 
+ {/* Edição IA */}
+ {generatedImage && !selectedSavedLook && (
+ <button
+ onClick={() => setShowEditModal(true)}
+ disabled={isGenerating}
+ className={`w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-[#FF6B6B]/30 bg-gradient-to-r from-[#FF6B6B]/10 to-[#FF9F43]/10 hover:from-[#FF6B6B]/20 hover:to-[#FF9F43]/20`}
+ >
+ <i className="fas fa-wand-magic-sparkles bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent"></i>
+ <span className="bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent font-semibold">Edição IA</span>
+ </button>
+ )}
+
  {/* Botao Report */}
  {generatedImage && !selectedSavedLook && (
  <button
@@ -1741,6 +1789,23 @@ export const VizzuProvadorWizard: React.FC<Props> = ({
  productName={selectedClient?.firstName || undefined}
  theme={theme}
  />
+
+ {/* Edição IA Modal */}
+ {generatedImage && (
+ <ImageEditModal
+   isOpen={showEditModal}
+   onClose={() => setShowEditModal(false)}
+   currentImageUrl={generatedImage}
+   imageName={selectedClient ? `Look — ${selectedClient.firstName}` : 'Provador Virtual'}
+   editBalance={editBalance}
+   regularBalance={userCredits}
+   resolution={resolution as '2k' | '4k'}
+   onGenerate={handleProvadorEditGenerate}
+   onSave={handleProvadorEditSave}
+   onDeductEditCredits={onDeductEditCredits ? (amount) => onDeductEditCredits(amount, lastGenerationId || undefined) : undefined}
+   theme={theme}
+ />
+ )}
 
  {/* ONBOARDING TOUR */}
  {shouldShowTour('provador') && (

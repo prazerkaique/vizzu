@@ -70,6 +70,8 @@ function getAngleLabel(angle: string): string {
     detail: 'Detalhe',
     front_detail: 'Det. Frente',
     back_detail: 'Det. Costas',
+    frontDetail: 'Det. Frente',
+    backDetail: 'Det. Costas',
     folded: 'Dobrada',
   };
   return labels[angle] || angle;
@@ -111,6 +113,11 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const isDark = theme !== 'light';
   const { openViewer } = useImageViewer();
   const hasWatermark = useWatermark();
+
+  // Carousel states (aba Originais)
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [carouselTouchStart, setCarouselTouchStart] = useState<number | null>(null);
+  const [carouselTouchEnd, setCarouselTouchEnd] = useState<number | null>(null);
 
   // CS data (não está no Product, precisa buscar)
   const [csGenerations, setCsGenerations] = useState<CreativeStillGeneration[]>([]);
@@ -173,16 +180,39 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const ccImages = product.generatedImages?.cenarioCriativo || [];
   const ccCount = ccImages.length;
 
+  // ── Fotos originais do produto ──
+  const originalPhotos = useMemo(() => {
+    const photos: { angle: string; url: string; label: string }[] = [];
+    const oi = product.originalImages;
+    if (oi) {
+      const angleOrder = ['front','back','side-left','side-right','45-left','45-right','top','frontDetail','backDetail','detail','folded'];
+      for (const angle of angleOrder) {
+        const img = (oi as any)[angle];
+        if (img?.url) photos.push({ angle, url: img.url, label: getAngleLabel(angle) });
+      }
+    }
+    // Fallback legacy
+    if (photos.length === 0 && product.images?.length) {
+      product.images.forEach((img, i) => {
+        if (img.url) photos.push({ angle: `img-${i}`, url: img.url, label: `Foto ${i + 1}` });
+      });
+    }
+    return photos;
+  }, [product]);
+
+  const originaisCount = originalPhotos.length;
+
   // ── Tabs ──
   const hasSalesData = !!(product.price || product.isForSale);
   const tabs: Tab[] = useMemo(() => [
-    { id: 'ps', label: 'Vizzu Product Studio®', icon: 'fa-camera', count: psCount },
+    { id: 'originais', label: 'Originais', icon: 'fa-image', count: originaisCount },
+    { id: 'ps', label: 'Otimizadas', icon: 'fa-camera', count: psCount },
     { id: 'cs', label: 'Vizzu Still Criativo®', icon: 'fa-gem', count: csCount },
     { id: 'lc', label: 'Vizzu Look Composer®', icon: 'fa-layer-group', count: lcCount },
     { id: 'sr', label: 'Vizzu Studio Ready®', icon: 'fa-cube', count: srCount },
     { id: 'cc', label: 'Vizzu Cenário Criativo®', icon: 'fa-mountain-sun', count: ccCount },
     { id: 'sales', label: 'Vendas', icon: 'fa-tag', count: hasSalesData ? 1 : 0 },
-  ], [psCount, csCount, lcCount, srCount, ccCount, hasSalesData]);
+  ], [originaisCount, psCount, csCount, lcCount, srCount, ccCount, hasSalesData]);
 
   // Auto-selecionar primeira aba com conteúdo
   const firstNonEmpty = tabs.find(t => t.count > 0)?.id || 'ps';
@@ -197,6 +227,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         setActiveTab(first);
       }
       // Reset states on open
+      setCarouselIndex(0);
       setConfirmDeleteId(null);
       setDeletingId(null);
       setPendingDeleteId(null);
@@ -239,7 +270,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   }, [product.id, userId, showToast, onRefreshProduct]);
 
   // ── Edit handlers ──
-  const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
+  const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string; resolution?: '2k' | '4k' }) => {
     if (!editingImage) return { success: false, error: 'Nenhuma imagem selecionada' };
     try {
       // Foto original do produto = referência de cor para o Gemini
@@ -250,7 +281,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         currentImageUrl: editingImage.url,
         correctionPrompt: params.correctionPrompt,
         referenceImageBase64: params.referenceImageBase64,
-        resolution,
+        resolution: params.resolution || resolution,
         productInfo: { name: product.name, category: product.category, color: product.color, description: product.description },
         originalImageUrl: origUrl,
       });
@@ -406,9 +437,9 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
             <button
               onClick={(e) => { e.stopPropagation(); setEditingImage(editInfo); }}
               className="w-7 h-7 rounded-full bg-black/60 backdrop-blur-sm text-white flex items-center justify-center hover:bg-[#FF6B6B] transition-colors"
-              title="Editar"
+              title="Edição IA"
             >
-              <i className="fas fa-pen text-[9px]"></i>
+              <i className="fas fa-wand-magic-sparkles text-[9px]"></i>
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(deleteKey); }}
@@ -448,30 +479,162 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
   // ── Tab content renderers ──
 
+  // ── Carrossel de fotos originais ──
+  const minSwipeDistance = 50;
+
+  const handleCarouselPrev = () => setCarouselIndex(i => Math.max(0, i - 1));
+  const handleCarouselNext = () => setCarouselIndex(i => Math.min(originalPhotos.length - 1, i + 1));
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setCarouselTouchEnd(null);
+    setCarouselTouchStart(e.targetTouches[0].clientX);
+  };
+  const onTouchMove = (e: React.TouchEvent) => setCarouselTouchEnd(e.targetTouches[0].clientX);
+  const onTouchEnd = () => {
+    if (carouselTouchStart === null || carouselTouchEnd === null) return;
+    const distance = carouselTouchStart - carouselTouchEnd;
+    if (Math.abs(distance) >= minSwipeDistance) {
+      if (distance > 0) handleCarouselNext();
+      else handleCarouselPrev();
+    }
+    setCarouselTouchStart(null);
+    setCarouselTouchEnd(null);
+  };
+
+  const renderOriginais = () => {
+    if (originalPhotos.length === 0) {
+      return (
+        <div className={'rounded-xl p-6 text-center ' + (isDark ? 'bg-neutral-900/50' : 'bg-gray-50')}>
+          <i className={'fas fa-image text-2xl mb-2 ' + (isDark ? 'text-neutral-700' : 'text-gray-300')}></i>
+          <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-xs'}>
+            Nenhuma foto cadastrada para este produto
+          </p>
+        </div>
+      );
+    }
+
+    const current = originalPhotos[carouselIndex] || originalPhotos[0];
+    const total = originalPhotos.length;
+
+    return (
+      <div className="space-y-3">
+        {/* Imagem principal com setas */}
+        <div
+          className="relative select-none"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Counter top-right */}
+          <div className="absolute top-2 right-2 z-10 px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm">
+            <span className="text-white text-[10px] font-medium">{carouselIndex + 1} / {total}</span>
+          </div>
+
+          {/* Badge ângulo top-left */}
+          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm">
+            <span className="text-white text-[10px] font-medium">{current.label}</span>
+          </div>
+
+          {/* Imagem */}
+          <div
+            className={'aspect-square rounded-xl overflow-hidden cursor-zoom-in ' + (isDark ? 'bg-neutral-800' : 'bg-gray-100')}
+            onClick={() => openViewer(current.url, { alt: current.label })}
+          >
+            <OptimizedImage src={current.url} size="full" alt={current.label} className="w-full h-full" objectFit="contain" />
+          </div>
+
+          {/* Seta esquerda */}
+          {carouselIndex > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCarouselPrev(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition-colors z-10"
+            >
+              <i className="fas fa-chevron-left text-xs"></i>
+            </button>
+          )}
+
+          {/* Seta direita */}
+          {carouselIndex < total - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCarouselNext(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition-colors z-10"
+            >
+              <i className="fas fa-chevron-right text-xs"></i>
+            </button>
+          )}
+        </div>
+
+        {/* Dots indicadores */}
+        {total > 1 && (
+          <div className="flex items-center justify-center gap-1.5">
+            {originalPhotos.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCarouselIndex(i)}
+                className={
+                  'h-1.5 rounded-full transition-all ' +
+                  (i === carouselIndex
+                    ? 'w-5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]'
+                    : 'w-1.5 ' + (isDark ? 'bg-neutral-700' : 'bg-gray-300'))
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Strip de thumbnails */}
+        {total >= 3 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-1">
+            {originalPhotos.map((photo, i) => (
+              <button
+                key={photo.angle}
+                onClick={() => setCarouselIndex(i)}
+                className={
+                  'w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ' +
+                  (i === carouselIndex
+                    ? 'border-[#FF6B6B] ring-1 ring-[#FF6B6B]/30'
+                    : isDark ? 'border-neutral-700 hover:border-neutral-500' : 'border-gray-200 hover:border-gray-400')
+                }
+              >
+                <OptimizedImage src={photo.url} size="thumb" alt={photo.label} className="w-full h-full" objectFit="cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderPS = () => {
     if (psCount === 0) return renderEmpty('Product Studio');
     const sorted = [...psSessions].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    const allPsImages = sorted.flatMap(session =>
+      session.images.map(img => ({ ...img, sessionDate: session.createdAt }))
+    );
+    const visible = allPsImages.slice(0, 8);
+    const hasMore = allPsImages.length > 8;
     return (
-      <div className="space-y-4">
-        {sorted.map(session => (
-          <div key={session.id}>
-            <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>
-              {formatDate(session.createdAt)} &middot; {session.images.length} {session.images.length === 1 ? 'foto' : 'fotos'}
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {session.images.map(img =>
-                renderImageWithActions(
-                  img.url,
-                  getAngleLabel(img.angle),
-                  `ps-${img.id}`,
-                  async () => { await supabase.from('product_images').delete().eq('id', img.id); },
-                  { url: img.url, name: `${product.name} — ${getAngleLabel(img.angle)}`, tab: 'ps', imageId: img.id },
-                  { bottomLabel: getAngleLabel(img.angle) }
-                )
-              )}
-            </div>
-          </div>
-        ))}
+      <div className="space-y-3">
+        <div className="grid grid-cols-4 gap-2">
+          {visible.map(img =>
+            renderImageWithActions(
+              img.url,
+              getAngleLabel(img.angle),
+              `ps-${img.id}`,
+              async () => { await supabase.from('product_images').delete().eq('id', img.id); },
+              { url: img.url, name: `${product.name} — ${getAngleLabel(img.angle)}`, tab: 'ps', imageId: img.id },
+              { bottomLabel: getAngleLabel(img.angle) }
+            )
+          )}
+        </div>
+        {hasMore && (
+          <button
+            onClick={() => handleShortcut('product-studio')}
+            className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full text-center py-2 text-xs font-medium transition-colors flex items-center justify-center gap-1.5'}
+          >
+            Ver todas ({allPsImages.length}) <i className="fas fa-arrow-right text-[9px]"></i>
+          </button>
+        )}
       </div>
     );
   };
@@ -486,41 +649,42 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
       );
     }
     if (csCount === 0) return renderEmpty('Still Criativo');
+    // Flatten all CS images with gen context for limit
+    const allCsImages = csGenerations.flatMap(gen => {
+      const urls = getCSVariationUrls(gen);
+      return urls.map((url, i) => ({ url, i, gen, urls }));
+    });
+    const visible = allCsImages.slice(0, 8);
+    const hasMore = allCsImages.length > 8;
     return (
-      <div className="space-y-4">
-        {csGenerations.map(gen => {
-          const urls = getCSVariationUrls(gen);
-          if (urls.length === 0) return null;
-          return (
-            <div key={gen.id}>
-              <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] mb-2'}>
-                {formatDate(gen.created_at)} &middot; {urls.length} {urls.length === 1 ? 'variação' : 'variações'}
-                {gen.resolution === '4k' && <span className="ml-1 px-1 py-0.5 bg-amber-500/20 text-amber-500 text-[8px] rounded">4K</span>}
-              </p>
-              <div className={'grid gap-2 ' + (urls.length === 1 ? 'grid-cols-2' : urls.length <= 3 ? 'grid-cols-3' : 'grid-cols-4')}>
-                {urls.map((url, i) =>
-                  renderImageWithActions(
-                    url,
-                    `Variação ${i + 1}`,
-                    `cs-${gen.id}-${i}`,
-                    async () => {
-                      // Se é a única variação, deleta a geração inteira
-                      if (urls.length === 1) {
-                        await supabase.from('creative_still_generations').delete().eq('id', gen.id);
-                      } else {
-                        // Remove a variação do array
-                        const newUrls = urls.filter((_, idx) => idx !== i);
-                        await supabase.from('creative_still_generations').update({ variation_urls: newUrls }).eq('id', gen.id);
-                      }
-                    },
-                    { url, name: `${product.name} — Still Variação ${i + 1}`, tab: 'cs', generationId: gen.id, variationIndex: i },
-                    { aspect: 'aspect-[4/5]', objectFit: 'contain' }
-                  )
-                )}
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-3">
+        <div className="grid grid-cols-4 gap-2">
+          {visible.map(({ url, i, gen, urls }) =>
+            renderImageWithActions(
+              url,
+              `Variação ${i + 1}`,
+              `cs-${gen.id}-${i}`,
+              async () => {
+                if (urls.length === 1) {
+                  await supabase.from('creative_still_generations').delete().eq('id', gen.id);
+                } else {
+                  const newUrls = urls.filter((_, idx) => idx !== i);
+                  await supabase.from('creative_still_generations').update({ variation_urls: newUrls }).eq('id', gen.id);
+                }
+              },
+              { url, name: `${product.name} — Still Variação ${i + 1}`, tab: 'cs', generationId: gen.id, variationIndex: i },
+              { aspect: 'aspect-[4/5]', objectFit: 'contain' }
+            )
+          )}
+        </div>
+        {hasMore && (
+          <button
+            onClick={() => handleShortcut('creative-still')}
+            className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full text-center py-2 text-xs font-medium transition-colors flex items-center justify-center gap-1.5'}
+          >
+            Ver todas ({allCsImages.length}) <i className="fas fa-arrow-right text-[9px]"></i>
+          </button>
+        )}
       </div>
     );
   };
@@ -528,34 +692,47 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const renderLC = () => {
     if (lcCount === 0) return renderEmpty('Look Composer');
     const sorted = [...lcLooks].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    const visible = sorted.slice(0, 8);
+    const hasMore = sorted.length > 8;
     return (
-      <div className="grid grid-cols-3 gap-2">
-        {sorted.map(look => (
-          <div key={look.id} className="relative">
-            {renderImageWithActions(
-              look.images.front,
-              'Look Composer',
-              `lc-${look.id}`,
-              async () => { await supabase.from('product_images').delete().eq('id', look.id); },
-              { url: look.images.front, name: `${product.name} — Look`, tab: 'lc', generationId: look.id, view: 'front' },
-              { aspect: 'aspect-[3/4]' }
-            )}
-            {look.images.back && (
-              <div className="absolute top-1 right-1 px-1 py-0.5 bg-black/60 text-white text-[7px] rounded pointer-events-none z-[5]">
-                F+C
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="space-y-3">
+        <div className="grid grid-cols-4 gap-2">
+          {visible.map(look => (
+            <div key={look.id} className="relative">
+              {renderImageWithActions(
+                look.images.front,
+                'Look Composer',
+                `lc-${look.id}`,
+                async () => { await supabase.from('product_images').delete().eq('id', look.id); },
+                { url: look.images.front, name: `${product.name} — Look`, tab: 'lc', generationId: look.id, view: 'front' },
+                { aspect: 'aspect-[3/4]' }
+              )}
+              {look.images.back && (
+                <div className="absolute top-1 right-1 px-1 py-0.5 bg-black/60 text-white text-[7px] rounded pointer-events-none z-[5]">
+                  F+C
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {hasMore && (
+          <button
+            onClick={() => handleShortcut('look-composer')}
+            className={(isDark ? 'text-neutral-400 hover:text-white' : 'text-gray-500 hover:text-gray-700') + ' w-full text-center py-2 text-xs font-medium transition-colors flex items-center justify-center gap-1.5'}
+          >
+            Ver todas ({sorted.length}) <i className="fas fa-arrow-right text-[9px]"></i>
+          </button>
+        )}
       </div>
     );
   };
 
   const renderSR = () => {
     if (srCount === 0) return renderEmpty('Studio Ready');
+    const visible = srImages.slice(0, 8);
     return (
-      <div className="grid grid-cols-3 gap-2">
-        {srImages.map(img =>
+      <div className="grid grid-cols-4 gap-2">
+        {visible.map(img =>
           renderImageWithActions(
             img.images.front,
             'Studio Ready',
@@ -570,9 +747,10 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
 
   const renderCC = () => {
     if (ccCount === 0) return renderEmpty('Cenário Criativo');
+    const visible = ccImages.slice(0, 8);
     return (
-      <div className="grid grid-cols-3 gap-2">
-        {ccImages.map(img =>
+      <div className="grid grid-cols-4 gap-2">
+        {visible.map(img =>
           renderImageWithActions(
             img.images.front,
             'Cenário Criativo',
@@ -766,6 +944,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   );
 
   const tabContentMap: Record<string, () => React.ReactNode> = {
+    originais: renderOriginais,
     ps: renderPS,
     cs: renderCS,
     lc: renderLC,
@@ -784,7 +963,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
       onClick={onClose}
     >
       <div
-        className={(isDark ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-lg overflow-hidden flex flex-col'}
+        className={(isDark ? 'bg-neutral-900' : 'bg-white') + ' rounded-t-2xl md:rounded-2xl w-full max-w-xl overflow-hidden flex flex-col'}
         style={{
           maxHeight: 'calc(92vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
           marginBottom: 'env(safe-area-inset-bottom, 0px)'

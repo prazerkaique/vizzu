@@ -159,7 +159,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  const resolution = resolutionProp;
  const creditCost = resolution === '4k' ? 2 : 1;
 
- const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string }) => {
+ const handleEditGenerate = useCallback(async (params: { correctionPrompt: string; referenceImageBase64?: string; resolution?: '2k' | '4k' }) => {
  if (!editingVariation) return { success: false, error: 'Nenhuma variação selecionada.' };
  const origUrl = product?.originalImages?.front?.url || product?.images?.[0]?.url || '';
  return editStudioImage({
@@ -168,7 +168,7 @@ export const CreativeStillResults: React.FC<Props> = ({
   currentImageUrl: editingVariation.url,
   correctionPrompt: params.correctionPrompt,
   referenceImageBase64: params.referenceImageBase64,
-  resolution,
+  resolution: params.resolution || resolution,
   productInfo: { name: product?.name, category: product?.category, color: product?.color, description: product?.description },
   originalImageUrl: origUrl,
  });
@@ -438,9 +438,9 @@ export const CreativeStillResults: React.FC<Props> = ({
  </button>
  <button
  onClick={() => setEditingVariation({ index, url })}
- className={(isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500') + ' text-xs font-medium'}
+ className="text-xs font-medium bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] bg-clip-text text-transparent hover:opacity-80"
  >
- <i className="fas fa-pen mr-1"></i>Editar
+ <i className="fas fa-wand-magic-sparkles mr-1"></i>Edição IA
  </button>
  <button
  onClick={() => { setReportVariationUrl(url); setShowReportModal(true); }}
@@ -479,7 +479,7 @@ export const CreativeStillResults: React.FC<Props> = ({
  onClick={onBackToHome}
  className={'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ' + (isDark ? 'bg-neutral-800 text-white hover:bg-neutral-700' : 'bg-gray-100 text-gray-900 hover:bg-gray-200')}
  >
- <i className="fas fa-sliders text-xs"></i>Refinar
+ <i className="fas fa-arrows-rotate text-xs"></i>Gerar Novamente
  </button>
  <button
  onClick={onBackToHome}
