@@ -9,6 +9,7 @@ import { OptimizedImage } from '../components/OptimizedImage';
 import { OnboardingProgress } from '../components/onboarding/OnboardingProgress';
 import { useOnboarding } from '../hooks/useOnboarding';
 import { supabase } from '../services/supabaseClient';
+import { PartnerDashboardCard } from '../components/PartnerProgram/PartnerDashboardCard';
 import type { Product, Client } from '../types';
 
 // ── 50 dicas rotativas (carrossel automático) ──
@@ -560,10 +561,10 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail, onNav
  );
  })()}
 
- {/* DICAS + PLANO - Grid 2:1 */}
+ {/* DICAS + PARCEIROS + PLANO - Grid 1:1:1 */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {/* Carrossel de dicas - 2 colunas */}
- <div className={'md:col-span-2 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme !== 'light' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
+ {/* Carrossel de dicas */}
+ <div className={'rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme !== 'light' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#373632]/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex items-center gap-4 w-full">
  <div className={'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + (theme !== 'light' ? 'bg-neutral-800' : 'bg-white/70')}>
@@ -574,15 +575,18 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail, onNav
  <h3 className={'text-sm font-semibold ' + (theme !== 'light' ? 'text-white' : 'text-gray-900')}>Dica</h3>
  <span className={(theme !== 'light' ? 'text-neutral-600' : 'text-gray-400') + ' text-[10px]'}>{tipIndex + 1}/{TIPS.length}</span>
  </div>
- <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-sm transition-opacity duration-300'}>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-600') + ' text-xs transition-opacity duration-300 line-clamp-3'}>
  {TIPS[tipIndex]}
  </p>
  </div>
  </div>
  </div>
 
- {/* Plano - 1 coluna */}
- <div className={'md:col-span-1 rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme !== 'light' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
+ {/* Parceiros */}
+ <PartnerDashboardCard />
+
+ {/* Plano */}
+ <div className={'rounded-2xl p-5 relative overflow-hidden flex items-center min-h-[120px] ' + (theme !== 'light' ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-[#efebe6] border border-[#e5e6ea]')}>
  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF6B6B]/10 to-[#FF9F43]/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
  <div className="relative flex flex-col w-full">
  <div className="flex items-center gap-3 mb-2">
