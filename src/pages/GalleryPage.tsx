@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useUI } from '../contexts/UIContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useGeneration, type BackgroundGeneration } from '../contexts/GenerationContext';
 import { useShopifyConnection } from '../hooks/useShopifyConnection';
 import { supabase } from '../services/supabaseClient';
@@ -9,12 +10,14 @@ import { useImageViewer } from '../components/ImageViewer';
 import { OptimizedImage } from '../components/OptimizedImage';
 import DownloadModal, { type DownloadImageGroup } from '../components/shared/DownloadModal';
 import { EcommerceExportButton } from '../components/shared/EcommerceExportButton';
+import { ProductHubModal } from '../components/shared/ProductHubModal';
 import type { DownloadableImage } from '../utils/downloadSizes';
 import { useWatermark } from '../hooks/useWatermark';
 import { WatermarkOverlay } from '../components/shared/WatermarkOverlay';
 import { useProducts } from '../contexts/ProductsContext';
 import { ConfirmModal } from '../components/shared/ConfirmModal';
 import { ANGLE_LABELS } from '../utils/angleLabels';
+import type { Product } from '../types';
 
 // ═══════════════════════════════════════════════════════════════
 // Galeria — Todas as gerações IA agrupadas por produto/feature
@@ -40,8 +43,14 @@ function formatDate(iso: string): string {
   }
 }
 
-export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number }) {
-  const { theme, isV2 } = useUI();
+interface GalleryPageProps {
+  galleryRefreshKey?: number;
+  setProductForCreation?: (p: Product | null) => void;
+}
+
+export function GalleryPage({ galleryRefreshKey, setProductForCreation }: GalleryPageProps) {
+  const { theme, isV2, navigateTo, showToast } = useUI();
+  const { user } = useAuth();
   const isDark = theme !== 'light';
   const { allItems, groupedItems, stats, isLoading } = useGalleryData(galleryRefreshKey);
   const { completedProducts, backgroundGenerations } = useGeneration();
@@ -89,8 +98,30 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
   const [downloadItem, setDownloadItem] = useState<GalleryItem | null>(null);
   const [showBulkDownload, setShowBulkDownload] = useState(false);
 
+  // ── Product Hub Modal ──
+  const { products, refreshProducts } = useProducts();
+  const [hubProduct, setHubProduct] = useState<Product | null>(null);
+
+  const openProductHub = useCallback((item: GalleryItem) => {
+    if (!item.productId) return;
+    const prod = products.find(p => p.id === item.productId);
+    if (prod) {
+      // Mapear featureType da galeria → tab do Hub
+      const featureToTab: Record<string, string> = {
+        'product-studio': 'ps',
+        'creative-still': 'cs',
+        'look-composer': 'lc',
+        'studio-ready': 'sr',
+        'cenario-criativo': 'cc',
+      };
+      setHubDefaultTab(featureToTab[item.featureType] || 'ps');
+      setHubProduct(prod);
+    }
+  }, [products]);
+
+  const [hubDefaultTab, setHubDefaultTab] = useState<string | undefined>();
+
   // ── Delete ──
-  const { refreshProducts } = useProducts();
   const [deleteTarget, setDeleteTarget] = useState<GalleryItem | null>(null);
   const [bulkDeleteTarget, setBulkDeleteTarget] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -675,6 +706,8 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
                         onClick={() => {
                           if (isSelecting) {
                             toggleSelect(item.id);
+                          } else if (item.productId) {
+                            openProductHub(item);
                           } else {
                             openViewer(displayUrl, {
                               alt: item.productName || item.clientName || cfg.label,
@@ -973,6 +1006,22 @@ export function GalleryPage({ galleryRefreshKey }: { galleryRefreshKey?: number 
           variant="danger"
           isLoading={isDeleting}
           theme={theme}
+        />
+      )}
+
+      {/* ── Product Hub Modal ── */}
+      {hubProduct && (
+        <ProductHubModal
+          isOpen={!!hubProduct}
+          onClose={() => setHubProduct(null)}
+          product={hubProduct}
+          theme={theme}
+          userId={user?.id}
+          navigateTo={navigateTo}
+          setProductForCreation={setProductForCreation || (() => {})}
+          showToast={showToast}
+          onRefreshProduct={() => refreshProducts()}
+          defaultTab={hubDefaultTab}
         />
       )}
       </div>
