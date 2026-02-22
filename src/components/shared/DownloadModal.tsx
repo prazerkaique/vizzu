@@ -33,6 +33,8 @@ interface DownloadModalProps {
   images?: DownloadableImage[];
   /** Modo agrupado — imagens por feature (usado no ProductHubModal) */
   groups?: DownloadImageGroup[];
+  /** featurePrefix do grupo a pré-selecionar ao abrir (ex: 'VProductStudio'). Se omitido, seleciona tudo */
+  preSelectedFeature?: string;
   theme?: VizzuTheme;
 }
 
@@ -45,6 +47,7 @@ export default function DownloadModal({
   originalImageUrl,
   images,
   groups,
+  preSelectedFeature,
   theme = 'dark',
 }: DownloadModalProps) {
   const isDark = theme !== 'light';
@@ -77,7 +80,20 @@ export default function DownloadModal({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
-      setSelected(new Set(allImages.map((_, i) => i)));
+      // Pré-selecionar apenas o grupo da feature ativa (ou tudo se não especificado)
+      if (preSelectedFeature && groups) {
+        const preSelected = new Set<number>();
+        let offset = 0;
+        for (const g of groups) {
+          if (g.featurePrefix === preSelectedFeature) {
+            for (let i = 0; i < g.images.length; i++) preSelected.add(offset + i);
+          }
+          offset += g.images.length;
+        }
+        setSelected(preSelected.size > 0 ? preSelected : new Set(allImages.map((_, i) => i)));
+      } else {
+        setSelected(new Set(allImages.map((_, i) => i)));
+      }
       setExpandedGroups(new Set(groups?.map((_, i) => i) || []));
       setZipProgress(null);
       setRating(0);

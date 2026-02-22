@@ -206,13 +206,12 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   const hasSalesData = !!(product.price || product.isForSale);
   const tabs: Tab[] = useMemo(() => [
     { id: 'originais', label: 'Originais', icon: 'fa-image', count: originaisCount },
-    { id: 'ps', label: 'Otimizadas', icon: 'fa-camera', count: psCount },
-    { id: 'cs', label: 'Vizzu Still Criativo®', icon: 'fa-gem', count: csCount },
-    { id: 'lc', label: 'Vizzu Look Composer®', icon: 'fa-layer-group', count: lcCount },
-    { id: 'sr', label: 'Vizzu Studio Ready®', icon: 'fa-cube', count: srCount },
-    { id: 'cc', label: 'Vizzu Cenário Criativo®', icon: 'fa-mountain-sun', count: ccCount },
-    { id: 'sales', label: 'Vendas', icon: 'fa-tag', count: hasSalesData ? 1 : 0 },
-  ], [originaisCount, psCount, csCount, lcCount, srCount, ccCount, hasSalesData]);
+    { id: 'ps', label: 'Product Studio', icon: 'fa-camera', count: psCount },
+    { id: 'cs', label: 'Still Criativo', icon: 'fa-gem', count: csCount },
+    { id: 'lc', label: 'Look Composer', icon: 'fa-layer-group', count: lcCount },
+    { id: 'sr', label: 'Studio Ready', icon: 'fa-cube', count: srCount },
+    { id: 'cc', label: 'Cenário Criativo', icon: 'fa-mountain-sun', count: ccCount },
+  ], [originaisCount, psCount, csCount, lcCount, srCount, ccCount]);
 
   // Auto-selecionar primeira aba com conteúdo
   const firstNonEmpty = tabs.find(t => t.count > 0)?.id || 'ps';
@@ -374,6 +373,16 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
   }, [psSessions, csGenerations, lcLooks, srImages, ccImages]);
 
   const totalDownloadableImages = downloadGroups.reduce((sum, g) => sum + g.images.length, 0);
+
+  // Mapear aba ativa → featurePrefix para pré-seleção no download
+  const tabToFeaturePrefix: Record<string, string | undefined> = {
+    originais: undefined, // seleciona tudo
+    ps: 'VProductStudio',
+    cs: 'VCreativeStill',
+    lc: 'VLookComposer',
+    sr: 'VStudioReady',
+    cc: 'VCenario',
+  };
 
   // Export e-commerce: imagens flat para o botão genérico
   const allExportableImages = useMemo(() => {
@@ -950,7 +959,6 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
     lc: renderLC,
     sr: renderSR,
     cc: renderCC,
-    sales: renderSales,
   };
 
   return (
@@ -1034,13 +1042,13 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         </div>
 
         {/* ═══ TABS ═══ */}
-        <div className={'flex items-center gap-1 px-4 py-2.5 border-b overflow-x-auto no-scrollbar ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
-          {tabs.filter(t => t.count > 0 || t.id === activeTab || t.id === 'sales').map(tab => (
+        <div className={'flex flex-wrap gap-1 px-4 py-2.5 border-b ' + (isDark ? 'border-neutral-800' : 'border-gray-200')}>
+          {tabs.filter(t => t.count > 0 || t.id === activeTab).map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0 ' +
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap ' +
                 (activeTab === tab.id
                   ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white'
                   : isDark
@@ -1097,6 +1105,7 @@ export const ProductHubModal: React.FC<ProductHubModalProps> = ({
         productName={product.name}
         originalImageUrl={product.originalImages?.front?.url || product.images?.[0]?.url}
         groups={downloadGroups}
+        preSelectedFeature={tabToFeaturePrefix[activeTab]}
         theme={theme}
       />
 
