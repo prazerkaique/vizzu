@@ -488,6 +488,12 @@ export function AppLayout({
  <i className="fas fa-plug w-4 text-[10px] text-center"></i>Integrações
  </button>
  <button
+ onClick={() => { navigateTo('settings'); setSettingsTab('partners'); setShowSettingsDropdown(false); }}
+ className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
+ >
+ <i className="fas fa-handshake w-4 text-[10px] text-center"></i>Parceiros
+ </button>
+ <button
  onClick={() => { navigateTo('clients'); setShowSettingsDropdown(false); }}
  className={'w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ' + (theme !== 'light' ? 'text-neutral-300 hover:bg-neutral-700' : 'text-gray-700 hover:bg-gray-100')}
  >

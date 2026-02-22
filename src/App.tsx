@@ -30,6 +30,7 @@ const ProductStudio = lazyRetry(() => import('./components/ProductStudio').then(
 const VizzuProvadorWizard = lazyRetry(() => import('./components/Provador/VizzuProvadorWizard').then(m => ({ default: m.VizzuProvadorWizard })));
 const CreativeStill = lazyRetry(() => import('./components/CreativeStill').then(m => ({ default: m.CreativeStill })));
 const ShopifyConnectHandler = lazyRetry(() => import('./components/ShopifyConnectHandler').then(m => ({ default: m.ShopifyConnectHandler })));
+const ReferralCaptureHandler = lazyRetry(() => import('./components/ReferralCaptureHandler').then(m => ({ default: m.ReferralCaptureHandler })));
 
 import { Product, Client, ClientPhoto, ClientLook, WhatsAppTemplate, LookComposition, SavedModel } from './types';
 import { useUI, type Page } from './contexts/UIContext';
@@ -217,6 +218,28 @@ function App() {
    window.addEventListener('vizzu-session-expired', handler);
    return () => window.removeEventListener('vizzu-session-expired', handler);
  }, [showToast]);
+
+ // Registrar referral após signup (ler localStorage, chamar RPC, limpar)
+ useEffect(() => {
+   if (!user?.id) return;
+   const refCode = localStorage.getItem('vizzu_referral_code');
+   if (!refCode) return;
+   (async () => {
+     try {
+       const { data } = await supabase.rpc('register_referral', { p_referred_id: user.id, p_referral_code: refCode });
+       const result = data as any;
+       if (result?.success) {
+         localStorage.removeItem('vizzu_referral_code');
+         console.log('[Referral] Indicação registrada com sucesso');
+       } else {
+         localStorage.removeItem('vizzu_referral_code');
+         console.log('[Referral] Não registrado:', result?.error);
+       }
+     } catch (err) {
+       console.error('[Referral] Erro:', err);
+     }
+   })();
+ }, [user?.id]);
 
  // Master: alterar créditos direto no Supabase
  const handleMasterSetCredits = async (credits: number) => {
@@ -1361,9 +1384,10 @@ function App() {
 
  {currentPage === 'master' && currentPlan.id === 'master' && <MasterPage />}
 
- {/* Shopify deep link handler */}
+ {/* Deep link handlers */}
  <Suspense fallback={null}>
    <ShopifyConnectHandler />
+   <ReferralCaptureHandler />
  </Suspense>
 
  {/* Modal de Créditos Esgotados */}

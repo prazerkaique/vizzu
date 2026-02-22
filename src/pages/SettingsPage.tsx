@@ -16,6 +16,7 @@ import { useShopifyConnection } from '../hooks/useShopifyConnection';
 import { TermsAcceptanceModal } from '../components/TermsAcceptanceModal';
 import { CURRENT_TERMS_VERSION } from '../content/termsContent';
 import { ClientsPage } from './ClientsPage';
+import { PartnersTab } from '../components/PartnerProgram/PartnersTab';
 
 interface SettingsPageProps {
  userCredits: number;
@@ -301,6 +302,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  { id: 'profile' as SettingsTab, label: 'Perfil', icon: 'fa-user' },
  { id: 'plan' as SettingsTab, label: 'Planos & Créditos', icon: 'fa-credit-card' },
  { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
+ { id: 'partners' as SettingsTab, label: 'Parceiros', icon: 'fa-handshake' },
  { id: 'clients' as SettingsTab, label: 'Clientes', icon: 'fa-users' },
  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
  { id: 'help' as SettingsTab, label: 'Ajuda', icon: 'fa-question-circle' },
@@ -1020,6 +1022,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  </div>
  )}
+
+ {/* ═══════ PARCEIROS ═══════ */}
+ {settingsTab === 'partners' && <PartnersTab />}
 
  {/* ═══════ CLIENTES ═══════ */}
  {settingsTab === 'clients' && (
