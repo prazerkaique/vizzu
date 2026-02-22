@@ -98,10 +98,16 @@ export const TermsAcceptanceModal: React.FC<Props> = ({ isOpen, onAccept, isLoad
 
   return (
     <div
-      className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center"
       style={{ isolation: 'isolate' }}
       onClick={readOnly ? handleClose : undefined}
     >
+      {/* Background — screenshot do app */}
+      <div className="absolute inset-0">
+        <img src="/Tela de Fundo cadastro.png" alt="" className="w-full h-full object-cover" />
+      </div>
+      {/* Overlay escuro com blur */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
       <div
         className="relative w-full sm:max-w-2xl bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col"
         style={{ maxHeight: 'min(95vh, 95dvh)', height: 'min(95vh, 95dvh)', maxWidth: readOnly ? '42rem' : undefined }}

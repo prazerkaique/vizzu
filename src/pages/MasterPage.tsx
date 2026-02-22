@@ -31,6 +31,16 @@ interface MasterExtras {
   hourly_distribution: { hour: number; success: number; errors: number }[];
   shopify_stats: { connections: number; exports: number };
   paid_users: number;
+  recent_purchases?: { id: string; type: string; amount: number; description: string; created_at: string; user_id: string; email?: string }[];
+  recent_generations?: { id: string; type: string; status: string; output_urls: any; created_at: string; user_id: string; email?: string }[];
+  recent_payers?: { email: string; plan_id: string; amount: number; created_at: string; whatsapp?: string | null }[];
+}
+
+interface BannerConfig {
+  active: boolean;
+  message: string;
+  link?: string;
+  linkLabel?: string;
 }
 
 interface UserData {
@@ -75,9 +85,11 @@ export function MasterPage() {
   const [editEditBalance, setEditEditBalance] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
 
-  // Recent purchases & generations
-  const [recentPurchases, setRecentPurchases] = useState<any[]>([]);
-  const [recentGenerations, setRecentGenerations] = useState<any[]>([]);
+  // Banner controls
+  const [bannerDemand, setBannerDemand] = useState<BannerConfig>({ active: false, message: 'Nossos servidores estão com alta demanda. As gerações podem demorar mais que o esperado.' });
+  const [bannerMaintenance, setBannerMaintenance] = useState<BannerConfig>({ active: false, message: 'Estamos realizando melhorias nos nossos servidores para oferecer ainda mais qualidade. Algumas funcionalidades podem estar temporariamente indisponíveis.' });
+  const [bannerPromo, setBannerPromo] = useState<BannerConfig>({ active: false, message: '', link: '', linkLabel: '' });
+  const [bannerSaving, setBannerSaving] = useState<string | null>(null);
 
   // Debug toggles
   const [debugSlowBanner, setDebugSlowBanner] = useState(() => !!localStorage.getItem('vizzu-debug-slow'));
@@ -134,39 +146,47 @@ export function MasterPage() {
     }
   }, [storedPassword]);
 
-  // ── Recent purchases (credit_transactions with type 'purchase' or 'subscription') ──
-  const loadRecentPurchases = useCallback(async () => {
+  // ── Load banners from app_config ──
+  const loadBanners = useCallback(async () => {
     try {
       const { data } = await supabase
-        .from('credit_transactions')
-        .select('id, type, amount, description, created_at, user_id')
-        .in('type', ['purchase', 'subscription', 'plan_upgrade', 'credit_purchase', 'add'])
-        .order('created_at', { ascending: false })
-        .limit(10);
-      setRecentPurchases(data || []);
+        .from('app_config')
+        .select('key, value')
+        .in('key', ['banner_demand', 'banner_maintenance', 'banner_promo']);
+      if (data) {
+        for (const row of data) {
+          const val = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+          if (row.key === 'banner_demand') setBannerDemand(v => ({ ...v, ...val }));
+          if (row.key === 'banner_maintenance') setBannerMaintenance(v => ({ ...v, ...val }));
+          if (row.key === 'banner_promo') setBannerPromo(v => ({ ...v, ...val }));
+        }
+      }
     } catch { /* silent */ }
   }, []);
 
-  // ── Recent generations ──
-  const loadRecentGenerations = useCallback(async () => {
+  // ── Save banner to app_config ──
+  const saveBanner = async (key: string, value: BannerConfig) => {
+    setBannerSaving(key);
     try {
-      const { data } = await supabase
-        .from('generations')
-        .select('id, type, status, output_urls, created_at, user_id')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      setRecentGenerations(data || []);
-    } catch { /* silent */ }
-  }, []);
+      const { error } = await supabase
+        .from('app_config')
+        .upsert({ key, value }, { onConflict: 'key' });
+      if (error) throw error;
+      showToast('Banner atualizado!', 'success');
+    } catch (e: any) {
+      showToast('Erro ao salvar banner: ' + e.message, 'error');
+    } finally {
+      setBannerSaving(null);
+    }
+  };
 
   useEffect(() => {
     if (isUnlocked && storedPassword) {
       loadMetrics();
       loadExtras();
-      loadRecentPurchases();
-      loadRecentGenerations();
+      loadBanners();
     }
-  }, [isUnlocked, storedPassword, loadMetrics, loadExtras, loadRecentPurchases, loadRecentGenerations]);
+  }, [isUnlocked, storedPassword, loadMetrics, loadExtras, loadBanners]);
 
   // ── User search ──
   const searchUser = async () => {
@@ -791,14 +811,44 @@ export function MasterPage() {
           </>
         )}
 
-        {/* ═══ SEÇÃO 6: COMPRAS RECENTES ═══ */}
-        {recentPurchases.length > 0 && (
+        {/* ═══ SEÇÃO 6: ÚLTIMOS PAGANTES ═══ */}
+        {extras?.recent_payers && extras.recent_payers.length > 0 && (
+          <div className={cardClass + ' p-5'}>
+            <h3 className={'text-sm font-bold font-serif mb-3 flex items-center gap-2 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+              <i className="fas fa-dollar-sign text-green-400 text-xs"></i>Últimos Pagantes
+            </h3>
+            <div className="space-y-2">
+              {extras.recent_payers.map((p, i) => (
+                <div key={i} className={'flex items-center gap-3 p-2.5 rounded-xl cursor-pointer hover:ring-1 hover:ring-[#FF6B6B]/30 transition-all ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}
+                  onClick={() => setSearchEmail(p.email)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-dollar-sign text-green-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-xs font-medium truncate'}>{p.email}</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>
+                      {new Date(p.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {p.amount > 0 && <span className="text-green-400 ml-2">+{p.amount} créditos</span>}
+                    </p>
+                  </div>
+                  {contactBtn(p)}
+                  {planBadge(p.plan_id)}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ SEÇÃO 6B: COMPRAS RECENTES (via RPC) ═══ */}
+        {extras?.recent_purchases && extras.recent_purchases.length > 0 && (
           <div className={cardClass + ' p-5'}>
             <h2 className={'text-lg font-bold font-serif mb-4 ' + (isDark ? 'text-white' : 'text-gray-900')}>
               <i className="fas fa-receipt text-[#FF9F43] mr-2 text-sm"></i>Compras Recentes
+              <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal ml-2'}>todos os usuários</span>
             </h2>
             <div className="space-y-2">
-              {recentPurchases.map(p => (
+              {extras.recent_purchases.map(p => (
                 <div key={p.id} className={'flex items-center justify-between py-2 px-3 rounded-lg ' + (isDark ? 'bg-neutral-800/50' : 'bg-gray-50')}>
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ' + (
@@ -808,7 +858,7 @@ export function MasterPage() {
                     </div>
                     <div className="min-w-0">
                       <p className={'text-xs font-medium truncate ' + (isDark ? 'text-white' : 'text-gray-900')}>{p.description || p.type}</p>
-                      <p className={labelClass + ' truncate'}>{p.user_id?.slice(0, 8)}... · {new Date(p.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className={labelClass + ' truncate'}>{p.email || p.user_id?.slice(0, 8) + '...'} · {new Date(p.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                   </div>
                   <span className={'text-sm font-bold flex-shrink-0 ml-3 ' + (p.amount > 0 ? 'text-green-500' : 'text-red-500')}>
@@ -820,14 +870,15 @@ export function MasterPage() {
           </div>
         )}
 
-        {/* ═══ SEÇÃO 7: ÚLTIMAS GERAÇÕES ═══ */}
-        {recentGenerations.length > 0 && (
+        {/* ═══ SEÇÃO 7: ÚLTIMAS GERAÇÕES (via RPC) ═══ */}
+        {extras?.recent_generations && extras.recent_generations.length > 0 && (
           <div className={cardClass + ' p-5'}>
             <h2 className={'text-lg font-bold font-serif mb-4 ' + (isDark ? 'text-white' : 'text-gray-900')}>
               <i className="fas fa-images text-[#FF6B6B] mr-2 text-sm"></i>Últimas Gerações
+              <span className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px] font-normal ml-2'}>todos os usuários</span>
             </h2>
             <div className="space-y-2">
-              {recentGenerations.map(g => {
+              {extras.recent_generations.map(g => {
                 const urls: string[] = (() => {
                   if (!g.output_urls) return [];
                   if (typeof g.output_urls === 'string') try { return JSON.parse(g.output_urls); } catch { return []; }
@@ -863,7 +914,7 @@ export function MasterPage() {
                         </span>
                         {urls.length > 1 && <span className={labelClass}>({urls.length} imgs)</span>}
                       </div>
-                      <p className={labelClass}>{g.user_id?.slice(0, 8)}... · {new Date(g.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className={labelClass}>{g.email || g.user_id?.slice(0, 8) + '...'} · {new Date(g.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                   </div>
                 );
@@ -1142,6 +1193,137 @@ export function MasterPage() {
             </div>
           </div>
         )}
+
+        {/* ═══ SEÇÃO: BANNERS & COMUNICAÇÕES ═══ */}
+        <div className={cardClass + ' p-5'}>
+          <h2 className={'text-lg font-bold font-serif mb-4 ' + (isDark ? 'text-white' : 'text-gray-900')}>
+            <i className="fas fa-bullhorn text-[#FF6B6B] mr-2 text-sm"></i>Banners & Comunicações
+          </h2>
+          <div className="space-y-4">
+
+            {/* Banner Alta Demanda */}
+            <div className={'p-4 rounded-xl border ' + (isDark ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-200 bg-gray-50')}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <i className="fas fa-clock text-amber-500 text-xs"></i>
+                  </div>
+                  <div>
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Alta Demanda</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Banner amarelo no topo para todos os usuários</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const updated = { ...bannerDemand, active: !bannerDemand.active };
+                    setBannerDemand(updated);
+                    saveBanner('banner_demand', updated);
+                  }}
+                  disabled={bannerSaving === 'banner_demand'}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${bannerDemand.active ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : isDark ? 'bg-neutral-700' : 'bg-gray-300'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${bannerDemand.active ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+              <input
+                type="text"
+                value={bannerDemand.message}
+                onChange={e => setBannerDemand(v => ({ ...v, message: e.target.value }))}
+                onBlur={() => saveBanner('banner_demand', bannerDemand)}
+                placeholder="Mensagem do banner..."
+                className={inputClass + ' w-full text-xs'}
+              />
+            </div>
+
+            {/* Banner Manutenção */}
+            <div className={'p-4 rounded-xl border ' + (isDark ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-200 bg-gray-50')}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <i className="fas fa-wrench text-blue-500 text-xs"></i>
+                  </div>
+                  <div>
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Servidores (Manutenção)</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Banner azul polido sobre manutenção</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const updated = { ...bannerMaintenance, active: !bannerMaintenance.active };
+                    setBannerMaintenance(updated);
+                    saveBanner('banner_maintenance', updated);
+                  }}
+                  disabled={bannerSaving === 'banner_maintenance'}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${bannerMaintenance.active ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : isDark ? 'bg-neutral-700' : 'bg-gray-300'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${bannerMaintenance.active ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+              <textarea
+                value={bannerMaintenance.message}
+                onChange={e => setBannerMaintenance(v => ({ ...v, message: e.target.value }))}
+                onBlur={() => saveBanner('banner_maintenance', bannerMaintenance)}
+                placeholder="Mensagem polida sobre manutenção..."
+                rows={2}
+                className={inputClass + ' w-full text-xs resize-none'}
+              />
+            </div>
+
+            {/* Banner Promo */}
+            <div className={'p-4 rounded-xl border ' + (isDark ? 'border-neutral-800 bg-neutral-800/30' : 'border-gray-200 bg-gray-50')}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] flex items-center justify-center">
+                    <i className="fas fa-bullhorn text-white text-xs"></i>
+                  </div>
+                  <div>
+                    <p className={(isDark ? 'text-white' : 'text-gray-900') + ' text-sm font-medium'}>Promoção</p>
+                    <p className={(isDark ? 'text-neutral-500' : 'text-gray-400') + ' text-[10px]'}>Banner coral com texto e link customizáveis</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const updated = { ...bannerPromo, active: !bannerPromo.active };
+                    setBannerPromo(updated);
+                    saveBanner('banner_promo', updated);
+                  }}
+                  disabled={bannerSaving === 'banner_promo'}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${bannerPromo.active ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43]' : isDark ? 'bg-neutral-700' : 'bg-gray-300'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${bannerPromo.active ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={bannerPromo.message}
+                  onChange={e => setBannerPromo(v => ({ ...v, message: e.target.value }))}
+                  onBlur={() => saveBanner('banner_promo', bannerPromo)}
+                  placeholder="Texto da promoção..."
+                  className={inputClass + ' w-full text-xs'}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="url"
+                    value={bannerPromo.link || ''}
+                    onChange={e => setBannerPromo(v => ({ ...v, link: e.target.value }))}
+                    onBlur={() => saveBanner('banner_promo', bannerPromo)}
+                    placeholder="Link (https://...)"
+                    className={inputClass + ' w-full text-xs'}
+                  />
+                  <input
+                    type="text"
+                    value={bannerPromo.linkLabel || ''}
+                    onChange={e => setBannerPromo(v => ({ ...v, linkLabel: e.target.value }))}
+                    onBlur={() => saveBanner('banner_promo', bannerPromo)}
+                    placeholder="Texto do botão"
+                    className={inputClass + ' w-full text-xs'}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ═══ SEÇÃO: FERRAMENTAS DE DEBUG ═══ */}
         <div className={cardClass + ' p-5'}>

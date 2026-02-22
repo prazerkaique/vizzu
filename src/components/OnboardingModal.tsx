@@ -37,6 +37,7 @@ function formatWhatsApp(value: string): string {
 
 export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComplete, isLoading }) => {
   const [step, setStep] = useState<1 | 2>(1);
+  const [userName, setUserName] = useState('');
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [segment, setSegment] = useState('');
@@ -50,6 +51,7 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
 
   const finalSegment = segment === 'Outro' ? (segmentCustom.trim() || 'Outro') : segment;
   const isStep1Valid =
+    userName.trim().length > 0 &&
     name.trim().length > 0 &&
     whatsapp.replace(/\D/g, '').length >= 10 &&
     segment !== '' &&
@@ -77,6 +79,22 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
 
     const success = await onSaveProfile(name, whatsapp, fullSegment);
     if (success) {
+      // Detectar gênero do nome via IA (genderize.io)
+      let userGender: 'male' | 'female' | 'unknown' = 'unknown';
+      try {
+        const firstName = userName.trim().split(' ')[0];
+        const resp = await fetch(`https://api.genderize.io/?name=${encodeURIComponent(firstName)}&country_id=BR`);
+        const data = await resp.json();
+        if (data.gender && data.probability > 0.85) {
+          userGender = data.gender;
+        }
+      } catch { /* fallback para unknown */ }
+
+      // Salvar nome + gênero no localStorage para welcome screen e saudações
+      try {
+        const existing = JSON.parse(localStorage.getItem('vizzu_company_settings') || '{}');
+        localStorage.setItem('vizzu_company_settings', JSON.stringify({ ...existing, userName: userName.trim(), userGender }));
+      } catch { /* ignore */ }
       setStep(2);
     } else {
       setError('Erro ao salvar. Tente novamente.');
@@ -94,9 +112,15 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
 
   return (
     <div
-      className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center"
       style={{ isolation: 'isolate' }}
     >
+      {/* Background — screenshot do app */}
+      <div className="absolute inset-0">
+        <img src="/Tela de Fundo cadastro.png" alt="" className="w-full h-full object-cover" />
+      </div>
+      {/* Overlay escuro com blur (mesmo estilo do ProductHubModal) */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
       <div
         className="relative w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col"
         style={{ maxHeight: 'min(92vh, 92dvh)' }}
@@ -143,6 +167,21 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
         <div className="flex-1 min-h-0 overflow-y-auto px-6 sm:px-8 py-5">
           {step === 1 ? (
             <div className="space-y-4">
+              {/* Seu nome */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  Seu nome *
+                </label>
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={e => setUserName(e.target.value)}
+                  placeholder="Ex: Maria"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 focus:border-[#FF6B6B] transition-colors"
+                  autoFocus
+                />
+              </div>
+
               {/* Nome da loja */}
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
@@ -154,7 +193,6 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
                   onChange={e => setName(e.target.value)}
                   placeholder="Ex: Moda Bella"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B6B]/30 focus:border-[#FF6B6B] transition-colors"
-                  autoFocus
                 />
               </div>
 
@@ -326,12 +364,7 @@ export const OnboardingModal: React.FC<Props> = ({ isOpen, onSaveProfile, onComp
               )}
             </button>
           ) : (
-            <button
-              onClick={handleFinish}
-              className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors py-2"
-            >
-              Pular por agora
-            </button>
+            <div className="py-2" />
           )}
         </div>
       </div>

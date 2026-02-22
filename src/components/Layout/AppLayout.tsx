@@ -3,6 +3,8 @@ import { useUI, type Page, type VizzuTheme } from '../../contexts/UIContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGeneration } from '../../contexts/GenerationContext';
 import { LowCreditsBanner } from '../LowCreditsBanner';
+import { AdminBanner } from '../AdminBanner';
+import { useAdminBanners } from '../../hooks/useAdminBanners';
 
 interface AppLayoutProps {
  children: React.ReactNode;
@@ -104,7 +106,20 @@ export function AppLayout({
    completedFeatures, clearCompletedFeature, clearAllCompletedFeatures,
    minimizedModals, closeMinimizedModal,
  } = useGeneration();
+ const { demandBanner, maintenanceBanner, promoBanner } = useAdminBanners();
 
+
+ // Nome do usuário do cadastro (onboarding)
+ const [displayUserName, setDisplayUserName] = useState('');
+ useEffect(() => {
+  try {
+   const saved = localStorage.getItem('vizzu_company_settings');
+   if (saved) {
+    const parsed = JSON.parse(saved);
+    if (parsed.userName) setDisplayUserName(parsed.userName);
+   }
+  } catch { /* ignore */ }
+ }, []);
 
  // Detecta se está rodando como PWA standalone (sem UI do browser)
  const [isPWA, setIsPWA] = useState(false);
@@ -494,16 +509,29 @@ export function AppLayout({
  </div>
  {!sidebarCollapsed && (
  <div className="flex-1 min-w-0">
- <p className={'text-xs font-medium truncate ' + (theme !== 'light' ? 'text-white' : 'text-[#373632]')}>{user?.name}</p>
+ <p className={'text-xs font-medium truncate ' + (theme !== 'light' ? 'text-white' : 'text-[#373632]')}>{displayUserName || user?.name}</p>
  <p className={'text-[9px] ' + (theme !== 'light' ? 'text-neutral-600' : 'text-[#373632]/60')}>Plano {currentPlan.name}</p>
  </div>
  )}
  </div>
+ {/* Botão Sair */}
+ <button
+  onClick={onLogout}
+  className={'flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors w-full ' + (sidebarCollapsed ? 'justify-center' : '') + ' ' + (theme !== 'light' ? 'text-neutral-500 hover:text-red-400 hover:bg-neutral-800' : 'text-[#373632]/40 hover:text-red-500 hover:bg-gray-100')}
+ >
+  <i className="fas fa-sign-out-alt text-[10px]"></i>
+  {!sidebarCollapsed && 'Sair'}
+ </button>
  </div>
  </aside>
 
  {/* MAIN CONTENT */}
  <main className={'flex-1 overflow-hidden flex flex-col md:pt-0 md:pb-0 ' + (!isCreationPage ? 'pt-12 pb-16' : '')} style={{ overscrollBehavior: 'contain' }}>
+
+ {/* ADMIN BANNERS */}
+ {!isCreationPage && (
+  <AdminBanner demandBanner={demandBanner} maintenanceBanner={maintenanceBanner} promoBanner={promoBanner} />
+ )}
 
  {/* LOW CREDITS BANNER */}
  {!isCreationPage && onBuyCredits && (

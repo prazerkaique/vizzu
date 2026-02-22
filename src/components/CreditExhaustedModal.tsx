@@ -8,7 +8,7 @@ import { usePlans } from '../contexts/PlansContext';
 import { supabase } from '../services/supabaseClient';
 import type { VizzuTheme } from '../contexts/UIContext';
 
-const MAX_FEATURES_COLLAPSED = 4;
+const MAX_FEATURES_COLLAPSED = 5;
 
 interface Props {
  isOpen: boolean;
@@ -23,6 +23,7 @@ interface Props {
  onBuyCredits: (amount: number) => void;
  onUpgradePlan: (planId: string) => void;
  onSetBillingPeriod: (period: 'monthly' | 'yearly') => void;
+ isCheckoutLoading?: boolean;
  theme?: VizzuTheme;
 }
 
@@ -49,6 +50,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  onBuyCredits,
  onUpgradePlan,
  onSetBillingPeriod,
+ isCheckoutLoading = false,
  theme = 'dark',
 }) => {
  const [layer, setLayer] = useState<1 | 2>(1);
@@ -228,29 +230,41 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  <>
   {/* CTA Principal */}
   <button
-  onClick={() => onBuyCredits(10)}
-  className="w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all hover:-translate-y-0.5"
+  onClick={() => { if (!isCheckoutLoading) onBuyCredits(10); }}
+  disabled={isCheckoutLoading}
+  className={'w-full py-3.5 bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2' + (isCheckoutLoading ? ' opacity-70 cursor-not-allowed' : ' hover:opacity-90 hover:-translate-y-0.5')}
   >
-  <i className="fas fa-bolt mr-2"></i>
-  Comprar 10 créditos - R$ {getCreditPackagePrice(10)}
+  {isCheckoutLoading ? (
+  <><i className="fas fa-circle-notch fa-spin text-xs"></i>Gerando link seguro...</>
+  ) : (
+  <><i className="fas fa-bolt mr-2"></i>Comprar 10 créditos - R$ {getCreditPackagePrice(10)}</>
+  )}
   </button>
 
   {/* CTA Secundário */}
   {nextPlan ? (
   <button
-  onClick={() => onUpgradePlan(nextPlan.id)}
-  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
+  onClick={() => { if (!isCheckoutLoading) onUpgradePlan(nextPlan.id); }}
+  disabled={isCheckoutLoading}
+  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all ${isCheckoutLoading ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-0.5'} ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
   >
-  <i className="fas fa-arrow-up mr-2"></i>
-  Fazer upgrade pro {nextPlan.name} - {nextPlan.limit} créd/mês
+  {isCheckoutLoading ? (
+  <><i className="fas fa-circle-notch fa-spin text-xs mr-2"></i>Processando...</>
+  ) : (
+  <><i className="fas fa-arrow-up mr-2"></i>Fazer upgrade pro {nextPlan.name} - {nextPlan.limit} créd/mês</>
+  )}
   </button>
   ) : (
   <button
-  onClick={() => onBuyCredits(25)}
-  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all hover:-translate-y-0.5 ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
+  onClick={() => { if (!isCheckoutLoading) onBuyCredits(25); }}
+  disabled={isCheckoutLoading}
+  className={`w-full py-3.5 rounded-xl font-semibold text-sm border transition-all ${isCheckoutLoading ? 'opacity-60 cursor-not-allowed' : 'hover:-translate-y-0.5'} ${isDark ? 'border-zinc-600 text-gray-600 hover:border-[#FF6B6B]/50 hover:text-[#FF6B6B]' : 'border-gray-300 text-gray-700 hover:border-[#FF6B6B] hover:text-[#FF6B6B]'}`}
   >
-  <i className="fas fa-plus mr-2"></i>
-  Comprar 25 créditos - R$ {getCreditPackagePrice(25)}
+  {isCheckoutLoading ? (
+  <><i className="fas fa-circle-notch fa-spin text-xs mr-2"></i>Processando...</>
+  ) : (
+  <><i className="fas fa-plus mr-2"></i>Comprar 25 créditos - R$ {getCreditPackagePrice(25)}</>
+  )}
   </button>
   )}
  </>
@@ -263,8 +277,9 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {[10, 25, 50].map(amount => (
  <button
  key={amount}
- onClick={() => onBuyCredits(amount)}
- className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isDark ? 'bg-gray-50 text-gray-500 hover:bg-[#FF6B6B]/20 hover:text-[#FF6B6B] hover:ring-1 hover:ring-[#FF6B6B]/50' : 'bg-gray-100 text-gray-600 hover:bg-[#FF6B6B]/5 hover:text-[#FF6B6B]'}`}
+ onClick={() => { if (!isCheckoutLoading) onBuyCredits(amount); }}
+ disabled={isCheckoutLoading}
+ className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isCheckoutLoading ? 'opacity-50 cursor-not-allowed' : ''} ${isDark ? 'bg-gray-50 text-gray-500 hover:bg-[#FF6B6B]/20 hover:text-[#FF6B6B] hover:ring-1 hover:ring-[#FF6B6B]/50' : 'bg-gray-100 text-gray-600 hover:bg-[#FF6B6B]/5 hover:text-[#FF6B6B]'}`}
  >
  {amount} créd. R${getCreditPackagePrice(amount)}
  </button>
@@ -296,7 +311,8 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  // CAMADA 2: Modal Expandido (Planos — espelho do SettingsPage)
  // ═══════════════════════════════════════════════════════════════
  const renderExpandedModal = () => {
- const displayPlans = allPlans.filter(p => p.id !== 'test' && p.id !== 'master');
+ const isOnPaidPlan = currentPlan.id !== 'free';
+ const displayPlans = allPlans.filter(p => p.id !== 'test' && p.id !== 'master' && !(p.id === 'free' && isOnPaidPlan));
 
  return (
  <div className={`relative w-full max-w-[1100px] max-h-[90vh] mx-4 rounded-2xl overflow-hidden transition-all duration-300 ${isAnimating ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'} bg-white border border-gray-200`} style={{ backdropFilter: 'blur(20px)' }}>
@@ -369,7 +385,6 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
 
  {/* Social proof */}
- {generationsToday !== null && generationsToday > 10 && (
  <div className="flex items-center justify-center gap-4 mb-6">
  <div className="flex -space-x-2">
  {[1,2,3,4].map(i => (
@@ -378,14 +393,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
  ))}
  </div>
- <p className="text-xs text-gray-500">
- <span className="text-gray-900 font-medium">{generationsToday.toLocaleString('pt-BR')}</span> imagens geradas hoje
- </p>
+ <p className="text-xs text-gray-500">Usado por <span className="text-gray-900 font-medium">+500 criadores</span> no Brasil</p>
  </div>
- )}
 
  {/* Cards dos Planos — espelho do SettingsPage */}
- <div className={`grid grid-cols-1 sm:grid-cols-2 ${displayPlans.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-3 mb-6`}>
+ <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${displayPlans.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} gap-3 mb-6`}>
  {displayPlans.map(plan => {
  const isCurrentPlanCard = plan.id === currentPlan.id;
  const isTrialPlan = plan.id === 'free';
@@ -424,6 +436,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {isPremier && !isCurrentPlanCard && (
  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
  <span className="bg-gray-800 text-white px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap">MELHOR VALOR</span>
+ </div>
+ )}
+ {isEnterprise && !isCurrentPlanCard && (
+ <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+ <span className="bg-purple-600 text-white px-3 py-1 text-[10px] font-bold rounded-full whitespace-nowrap">ENTERPRISE</span>
  </div>
  )}
 
@@ -486,30 +503,32 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  ))}
  </ul>
 
- {/* Botão CTA */}
+ {/* Botão CTA — espelho do SettingsPage */}
  <button
  onClick={() => {
- if (isCurrentPlanCard) return;
+ if (isCurrentPlanCard || isCheckoutLoading) return;
  if (isEnterprise) {
  window.open('https://wa.me/5544991534082?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20plano%20Enterprise%20da%20Vizzu.', '_blank');
  return;
  }
  onUpgradePlan(plan.id);
  }}
- disabled={isCurrentPlanCard}
+ disabled={isCurrentPlanCard || (isCheckoutLoading && !isEnterprise)}
  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
  isCurrentPlanCard
   ? 'bg-gray-100 text-gray-400 cursor-default'
+  : isCheckoutLoading && !isEnterprise
+   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
   : isPro
    ? 'bg-gradient-to-r from-[#FF6B6B] to-[#FF9F43] text-white hover:opacity-90'
+  : isTrialPlan
+   ? 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
    : 'bg-gray-900 hover:bg-gray-800 text-white'
  }`}
  >
- {isCurrentPlanCard ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{planCta[plan.id] || 'Falar conosco'}</>) : (() => {
- const currentIndex = displayPlans.findIndex(p => p.id === currentPlan.id);
- const planIndex = displayPlans.findIndex(p => p.id === plan.id);
- return planIndex < currentIndex ? 'Fazer downgrade' : (planCta[plan.id] || 'Assinar');
- })()}
+ {isCheckoutLoading && !isCurrentPlanCard && !isEnterprise ? (
+ <><i className="fas fa-circle-notch fa-spin text-xs"></i>Processando...</>
+ ) : isCurrentPlanCard ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>Falar com especialista</>) : isTrialPlan ? 'Testar grátis' : 'Contratar'}
  </button>
  </div>
  </div>
@@ -544,8 +563,9 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  {CREDIT_PACKAGES.map((amount) => (
  <button
  key={amount}
- onClick={() => { setSelectedCredits(amount); onBuyCredits(amount); }}
- className="bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300 border rounded-xl p-3 transition-all text-center group"
+ onClick={() => { if (!isCheckoutLoading) { setSelectedCredits(amount); onBuyCredits(amount); } }}
+ disabled={isCheckoutLoading}
+ className={'bg-gray-50 hover:bg-gray-100 border-gray-200 hover:border-gray-300 border rounded-xl p-3 transition-all text-center group' + (isCheckoutLoading ? ' opacity-60 cursor-not-allowed' : '')}
  >
  <p className="text-xl font-bold text-gray-900">{amount}</p>
  <p className="text-[10px] text-gray-400 mb-1">créditos</p>
@@ -556,6 +576,11 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  ))}
  </div>
  </div>
+
+ {/* Footer — link WhatsApp */}
+ <p className="text-gray-400 text-center text-xs mt-6">
+ Precisa de mais? <a href="https://wa.me/5544991534082?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20planos%20personalizados%20da%20Vizzu." target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900 underline">Entre em contato</a> para planos personalizados.
+ </p>
  </div>
  </div>
  );

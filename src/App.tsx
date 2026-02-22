@@ -49,6 +49,7 @@ import { cancelSubscription } from './lib/api/billing';
 import { smartDownload } from './utils/downloadHelper';
 import { useOnboardingProfile } from './hooks/useOnboardingProfile';
 import { OnboardingModal } from './components/OnboardingModal';
+import { WelcomeScreen } from './components/WelcomeScreen';
 // import { getReviewedReports, markReportsNotified } from './lib/api/reports'; // TODO: habilitar com tabela generation_reports
 import { runFullMigration, runProductMigration, runStorageMigration } from './utils/imageMigration';
 import { DashboardPage } from './pages/DashboardPage';
@@ -95,6 +96,8 @@ function App() {
  const { hasAccepted: hasAcceptedTerms, isLoading: isTermsLoading, acceptTerms } = useTermsAcceptance(user?.id);
  // Onboarding profile
  const { hasCompletedOnboarding, isLoading: isOnboardingLoading, saveProfile: saveOnboardingProfile, completeOnboarding } = useOnboardingProfile(user?.id);
+ // Welcome screen (só na primeira vez após aceitar termos)
+ const [showWelcome, setShowWelcome] = useState(false);
  // History from context
  const { addHistoryLog, loadUserHistory } = useHistory();
  // Products from context
@@ -232,11 +235,12 @@ function App() {
  // Handler para compra de créditos
  const handleBuyCredits = async (amount: number) => {
  try {
- showToast('Preparando pagamento... Você será redirecionado em instantes.', 'info');
+ showToast('Gerando link de pagamento seguro...', 'info');
  const result = await purchaseCredits(amount);
 
  if (result.checkoutUrl) {
  setShowCreditModal(false);
+ showToast('Checkout aberto em nova aba. Conclua o pagamento por lá.', 'success');
  // Tenta abrir em nova aba; se bloqueado (PWA), redireciona na mesma
  const newWindow = window.open(result.checkoutUrl, '_blank');
  if (!newWindow || newWindow.closed) {
@@ -259,12 +263,13 @@ function App() {
  // Handler para upgrade de plano
  const handleUpgradePlanFromModal = async (planId: string) => {
  try {
- showToast('Preparando pagamento... Você será redirecionado em instantes.', 'info');
+ showToast('Gerando link de pagamento seguro...', 'info');
  const result = await upgradePlan(planId);
  const plan = plans.find(p => p.id === planId);
 
  if (result.checkoutUrl) {
  setShowCreditModal(false);
+ showToast('Checkout aberto em nova aba. Conclua o pagamento por lá.', 'success');
  // Tenta abrir em nova aba; se bloqueado (PWA), redireciona na mesma
  const newWindow = window.open(result.checkoutUrl, '_blank');
  if (!newWindow || newWindow.closed) {
@@ -1066,33 +1071,68 @@ function App() {
  );
  }
 
- // TERMS CHECK — modal obrigatório de termos de uso
- if (hasAcceptedTerms === null) {
-  return <LoadingSkeleton theme={theme} />;
- }
-
- if (!hasAcceptedTerms) {
-  return (
-   <TermsAcceptanceModal
-    isOpen={true}
-    onAccept={acceptTerms}
-    isLoading={isTermsLoading}
-   />
-  );
- }
-
- // ONBOARDING CHECK — modal obrigatório de perfil da loja
+ // ONBOARDING CHECK — modal obrigatório de perfil da loja (ANTES dos termos)
  if (hasCompletedOnboarding === null) {
   return <LoadingSkeleton theme={theme} />;
  }
 
  if (!hasCompletedOnboarding) {
   return (
-   <OnboardingModal
+   <>
+    <OnboardingModal
+     isOpen={true}
+     onSaveProfile={saveOnboardingProfile}
+     onComplete={completeOnboarding}
+     isLoading={isOnboardingLoading}
+    />
+   </>
+  );
+ }
+
+ // TERMS CHECK — modal obrigatório de termos de uso (DEPOIS do onboarding)
+ if (hasAcceptedTerms === null) {
+  return <LoadingSkeleton theme={theme} />;
+ }
+
+ if (!hasAcceptedTerms) {
+  const handleAcceptTermsWithWelcome = async () => {
+   const success = await acceptTerms();
+   if (success && user?.id) {
+    const welcomeKey = `vizzu_welcome_shown_${user.id}`;
+    if (!localStorage.getItem(welcomeKey)) {
+     localStorage.setItem(welcomeKey, '1');
+     setShowWelcome(true);
+    }
+   }
+   return success;
+  };
+
+  return (
+   <TermsAcceptanceModal
     isOpen={true}
-    onSaveProfile={saveOnboardingProfile}
-    onComplete={completeOnboarding}
-    isLoading={isOnboardingLoading}
+    onAccept={handleAcceptTermsWithWelcome}
+    isLoading={isTermsLoading}
+   />
+  );
+ }
+
+ // WELCOME SCREEN — só na primeira vez após aceitar termos
+ if (showWelcome) {
+  const displayName = (() => {
+   try {
+    const saved = localStorage.getItem('vizzu_company_settings');
+    if (saved) {
+     const parsed = JSON.parse(saved);
+     return parsed.userName || parsed.name || '';
+    }
+   } catch { /* ignore */ }
+   return '';
+  })() || user?.email?.split('@')[0] || 'você';
+
+  return (
+   <WelcomeScreen
+    name={displayName}
+    onDone={() => setShowWelcome(false)}
    />
   );
  }
@@ -1331,6 +1371,7 @@ function App() {
  onBuyCredits={handleBuyCredits}
  onUpgradePlan={handleUpgradePlanFromModal}
  onSetBillingPeriod={setBillingPeriod}
+ isCheckoutLoading={isCheckoutLoading}
  theme={theme}
  />
  </AppLayout>

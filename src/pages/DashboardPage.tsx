@@ -194,12 +194,56 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail, onNav
  }, [products, clientLooks, totalStillsCount]);
 
  // ── Nome do usuário com fallback inteligente ──
+ const [genderState, setGenderState] = useState<'male' | 'female' | 'unknown'>('unknown');
+
  const userName = useMemo(() => {
-   const name = user?.name?.split(' ')[0];
-   if (name && name !== 'Usuário') return name;
-   if (user?.email) return user.email.split('@')[0];
-   return 'usuário';
+   let resolvedName = 'usuário';
+   try {
+     const saved = localStorage.getItem('vizzu_company_settings');
+     if (saved) {
+       const parsed = JSON.parse(saved);
+       if (parsed.userName) resolvedName = parsed.userName.split(' ')[0];
+     }
+   } catch { /* ignore */ }
+   if (resolvedName === 'usuário') {
+     const name = user?.name?.split(' ')[0];
+     if (name && name !== 'Usuário') resolvedName = name;
+     else if (user?.email) resolvedName = user.email.split('@')[0];
+   }
+   return resolvedName;
  }, [user]);
+
+ // Detectar gênero via IA na primeira vez (contas antigas que não passaram pelo onboarding novo)
+ useEffect(() => {
+   try {
+     const saved = localStorage.getItem('vizzu_company_settings');
+     const parsed = saved ? JSON.parse(saved) : {};
+     if (parsed.userGender) {
+       setGenderState(parsed.userGender);
+       return;
+     }
+   } catch { /* ignore */ }
+
+   // Sem gênero salvo — detectar agora
+   const nameToCheck = userName;
+   if (!nameToCheck || nameToCheck === 'usuário') return;
+
+   (async () => {
+     try {
+       const resp = await fetch(`https://api.genderize.io/?name=${encodeURIComponent(nameToCheck)}&country_id=BR`);
+       const data = await resp.json();
+       const detected: 'male' | 'female' | 'unknown' = (data.gender && data.probability > 0.85) ? data.gender : 'unknown';
+       setGenderState(detected);
+       // Salvar no localStorage pra não chamar de novo
+       try {
+         const existing = JSON.parse(localStorage.getItem('vizzu_company_settings') || '{}');
+         localStorage.setItem('vizzu_company_settings', JSON.stringify({ ...existing, userGender: detected }));
+       } catch { /* ignore */ }
+     } catch { /* fallback unknown */ }
+   })();
+ }, [userName]);
+
+ const greeting = genderState === 'female' ? 'Bem-vinda' : genderState === 'male' ? 'Bem-vindo' : 'Bem-vindo(a)';
 
  // ── Plano é o mais alto? ──
  const isTopPlan = currentPlan.id === 'enterprise' || currentPlan.id === 'premier';
@@ -215,7 +259,7 @@ export function DashboardPage({ setProductForCreation, onOpenClientDetail, onNav
  {!isV2 && <span className={'px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' + (theme !== 'light' ? 'bg-neutral-800 text-neutral-400' : 'bg-[#373632] text-white')}>{currentPlan.name}</span>}
  </div>
  <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-sm font-serif italic'}>
- Bem-vindo, <span className="font-medium">{userName}</span>
+ {greeting}, <span className="font-medium">{userName}</span>
  </p>
  </div>
  <button

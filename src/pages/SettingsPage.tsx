@@ -303,6 +303,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  { id: 'integrations' as SettingsTab, label: 'Integrações', icon: 'fa-plug' },
  { id: 'clients' as SettingsTab, label: 'Clientes', icon: 'fa-users' },
  { id: 'history' as SettingsTab, label: 'Histórico', icon: 'fa-clock-rotate-left' },
+ { id: 'help' as SettingsTab, label: 'Ajuda', icon: 'fa-question-circle' },
  ].map(tab => (
  <button
  key={tab.id}
@@ -1164,6 +1165,57 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  )}
  </div>
  )}
+ </div>
+ )}
+
+ {/* ═══════ AJUDA ═══════ */}
+ {settingsTab === 'help' && (
+ <div className="space-y-4">
+ {/* Card WhatsApp */}
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <div className="flex items-center gap-4">
+ <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+ <i className="fab fa-whatsapp text-2xl text-green-500"></i>
+ </div>
+ <div className="flex-1">
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-1'}>Fale com o suporte</h3>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs'}>
+ Tire suas dúvidas pelo WhatsApp. Respondemos de seg a sex, das 9h às 18h.
+ </p>
+ </div>
+ <a
+ href="https://wa.me/5544991534082"
+ target="_blank"
+ rel="noopener noreferrer"
+ className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 flex-shrink-0"
+ >
+ <i className="fab fa-whatsapp"></i>
+ Abrir WhatsApp
+ </a>
+ </div>
+ </div>
+
+ {/* FAQ */}
+ <div className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200') + ' rounded-xl border p-5'}>
+ <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' font-semibold text-sm mb-4'}>Perguntas Frequentes</h3>
+ <div className="space-y-3">
+ {[
+ { q: 'Como funciona o Vizzu?', a: 'O Vizzu usa inteligência artificial para gerar fotos profissionais dos seus produtos. Basta cadastrar o produto com uma foto e usar as ferramentas de criação.' },
+ { q: 'Quanto tempo demora uma geração?', a: 'Em média, cada geração leva de 30 segundos a 2 minutos, dependendo da ferramenta e da demanda dos servidores.' },
+ { q: 'Posso usar as imagens comercialmente?', a: 'Sim! Todas as imagens geradas são de uso comercial livre. Você pode usar em e-commerce, redes sociais, catálogos e onde mais precisar.' },
+ { q: 'O que faço se a geração falhar?', a: 'Se uma geração falhar, o crédito é devolvido automaticamente. Tente novamente em alguns minutos. Se o problema persistir, entre em contato pelo WhatsApp.' },
+ { q: 'Qual o horário de atendimento?', a: 'Nosso suporte funciona de segunda a sexta, das 9h às 18h (horário de Brasília).' },
+ ].map((faq, i) => (
+ <details key={i} className={'group rounded-xl border p-3 ' + (theme !== 'light' ? 'border-neutral-800' : 'border-gray-100')}>
+ <summary className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-xs font-medium cursor-pointer flex items-center justify-between'}>
+ {faq.q}
+ <i className="fas fa-chevron-down text-[8px] transition-transform group-open:rotate-180 ml-2 flex-shrink-0"></i>
+ </summary>
+ <p className={(theme !== 'light' ? 'text-neutral-400' : 'text-gray-500') + ' text-xs mt-2'}>{faq.a}</p>
+ </details>
+ ))}
+ </div>
+ </div>
  </div>
  )}
  </div>
