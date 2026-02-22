@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser({
           id: userId,
-          name: session.user.user_metadata?.full_name || 'Usuário',
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Usuário',
           email: userEmail || '',
           avatar: session.user.user_metadata?.avatar_url || '',
           plan: 'Free',
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser({
           id: userId,
-          name: session.user.user_metadata?.full_name || 'Usuário',
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Usuário',
           email: userEmail || '',
           avatar: session.user.user_metadata?.avatar_url || '',
           plan: 'Free',

@@ -29,6 +29,8 @@ interface SettingsPageProps {
  onSetBillingPeriod: (period: string) => void;
  onCancelSubscription: () => Promise<void>;
  onLogout: () => void;
+ /** Navegar para galeria filtrada por nome do produto */
+ onNavigateToGallery?: (productName: string) => void;
 }
 
 const HISTORY_PAGE_SIZE = 20;
@@ -137,6 +139,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  onSetBillingPeriod,
  onCancelSubscription,
  onLogout,
+ onNavigateToGallery,
 }) => {
  const { theme, selectedTheme, isV2, setTheme, settingsTab, setSettingsTab, showToast, navigateTo } = useUI();
  const { user } = useAuth();
@@ -233,7 +236,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  // Salvar nome via Supabase Auth
  if (isProfileDirty && profileName.trim()) {
  const { error } = await supabase.auth.updateUser({
- data: { name: profileName.trim() }
+ data: { full_name: profileName.trim(), name: profileName.trim() }
  });
  if (error) throw error;
  }
@@ -577,7 +580,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const PLAN_INCLUDED = planIncluded;
  const PLAN_PERSONA = planPersona;
  const PLAN_CTA = planCta;
- const ALL_DISPLAY_PLANS = allPlans.filter(p => p.id !== 'test' && p.id !== 'master');
+ const isOnPaidPlan = currentPlan.id !== 'free';
+ const ALL_DISPLAY_PLANS = allPlans.filter(p => p.id !== 'test' && p.id !== 'master' && !(p.id === 'free' && isOnPaidPlan));
  const MAX_COLLAPSED = 5;
 
  return (
@@ -655,7 +659,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  </div>
 
  {/* Cards dos Planos */}
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+ <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${ALL_DISPLAY_PLANS.length <= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'} gap-3 mb-4`}>
  {ALL_DISPLAY_PLANS.map(plan => {
  const isCurrentPlan = currentPlan.id === plan.id;
  const isTrial = plan.id === 'free';
@@ -803,11 +807,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  >
  {isCheckoutLoading && !isCurrentPlan && !isEnterprise ? (
  <><i className="fas fa-circle-notch fa-spin text-xs"></i>Processando...</>
- ) : isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>{PLAN_CTA[plan.id] || 'Falar conosco'}</>) : (() => {
- const currentIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === currentPlan.id);
- const planIndex = ALL_DISPLAY_PLANS.findIndex(p => p.id === plan.id);
- return planIndex < currentIndex ? 'Fazer downgrade' : (PLAN_CTA[plan.id] || 'Assinar');
- })()}
+ ) : isCurrentPlan ? 'Plano atual' : isEnterprise ? (<><i className="fab fa-whatsapp mr-1.5"></i>Falar com especialista</>) : isTrial ? 'Testar grátis' : 'Contratar'}
  </button>
  </div>
  </div>
@@ -980,7 +980,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  <h3 className={(theme !== 'light' ? 'text-white' : 'text-gray-900') + ' text-lg font-semibold mb-2 font-serif'}>Integrações</h3>
  <p className={(theme !== 'light' ? 'text-neutral-500' : 'text-gray-500') + ' text-xs mb-4'}>Conecte o Vizzu com suas plataformas de e-commerce.</p>
 
- {currentPlan.id === 'premier' || currentPlan.id === 'enterprise' ? (
+ {currentPlan.id === 'premier' || currentPlan.id === 'enterprise' || currentPlan.id === 'master' ? (
  <div className="space-y-2">
 
  {/* Shopify — funcional */}
@@ -1076,7 +1076,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
  const date = log.date ? new Date(log.date) : new Date();
 
  return (
- <div key={log.id} className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300') + ' rounded-xl border p-4 transition-colors'}>
+ <div key={log.id} onClick={() => {
+   if (!onNavigateToGallery) return;
+   // Extrair nome do produto das aspas no details, ou usar items
+   const quoted = log.details.match(/"([^"]+)"/);
+   const productName = log.items?.[0]?.name || quoted?.[1];
+   if (productName) onNavigateToGallery(productName);
+   else navigateTo('gallery');
+ }} className={(theme !== 'light' ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-white border-gray-200 hover:border-gray-300') + ' rounded-xl border p-4 transition-colors cursor-pointer'}>
  <div className="flex items-start gap-3">
  <div className={status.bg + ' w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0'}>
  <i className={'fas ' + status.icon + ' ' + status.color}></i>

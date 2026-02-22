@@ -258,7 +258,7 @@ export const CreditExhaustedModal: React.FC<Props> = ({
  </div>
 
  {/* Chips de créditos rápidos (para Pro e Premier) */}
- {(currentPlan.id === 'pro' || currentPlan.id === 'premier' || currentPlan.id === 'enterprise') && (
+ {(currentPlan.id === 'pro' || currentPlan.id === 'premier' || currentPlan.id === 'enterprise' || currentPlan.id === 'master') && (
  <div className="flex gap-2 justify-center mt-4">
  {[10, 25, 50].map(amount => (
  <button
